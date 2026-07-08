@@ -21,6 +21,7 @@ let wsPort = Number(process.env["PORT"] ?? 8787);
 const MAX_ROOMS = Number(process.env["MAX_ROOMS"] ?? 64);
 const MAX_PAYLOAD = 64 * 1024;
 const BIND_HOST = process.env["WS_HOST"] ?? "127.0.0.1";
+const SECRET_RE = /^[a-f0-9]{16}$/i;
 
 export type { ServerDebugSnapshot } from "./debugTypes";
 
@@ -39,17 +40,20 @@ export function getServerDebugSnapshot(): ServerDebugSnapshot {
   };
 }
 
-function getRoom(roomId: string): GameRoom | null {
-  let room = rooms.get(roomId);
-  if (!room) {
-    if (rooms.size >= MAX_ROOMS) return null;
-    room = new GameRoom({
-      roomId,
-      debug: serverDebugEnabled,
-      onEmpty: () => rooms.delete(roomId),
-    });
-    rooms.set(roomId, room);
+function getOrCreateRoom(roomId: string, secret: string): GameRoom | null {
+  const existing = rooms.get(roomId);
+  if (existing) {
+    if (!existing.matchesSecret(secret)) return null;
+    return existing;
   }
+  if (rooms.size >= MAX_ROOMS) return null;
+  const room = new GameRoom({
+    roomId,
+    secret,
+    debug: serverDebugEnabled,
+    onEmpty: () => rooms.delete(roomId),
+  });
+  rooms.set(roomId, room);
   return room;
 }
 
@@ -99,6 +103,8 @@ export function startGameServer(
 
         if (msg.type === "join") {
           const roomId = (msg.roomId || roomParam || "").trim();
+          const secret =
+            typeof msg.secret === "string" ? msg.secret.trim().toLowerCase() : "";
           if (!roomId || roomId === "default") {
             send(ws, { type: "error", message: "room id required" });
             return;
@@ -107,9 +113,17 @@ export function startGameServer(
             send(ws, { type: "error", message: "room id too long" });
             return;
           }
-          const room = getRoom(roomId);
+          if (!SECRET_RE.test(secret)) {
+            send(ws, { type: "error", message: "room secret required" });
+            return;
+          }
+          const room = getOrCreateRoom(roomId, secret);
           if (!room) {
-            send(ws, { type: "error", message: "server full" });
+            const exists = rooms.has(roomId);
+            send(ws, {
+              type: "error",
+              message: exists ? "invalid room secret" : "server full",
+            });
             return;
           }
           joinedRoom = room;

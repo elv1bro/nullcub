@@ -113,7 +113,7 @@ export function DedicatedBattleView({
     reset: false,
   });
 
-  const readMove = useMovementVectorRef(settings.controls);
+  const readMove = useMovementVectorRef(settings.controls, { gamepadIndex: 0 });
   const grabLRef = useBindingPressRef(settings.abilities.grabL);
   const grabRRef = useBindingPressRef(settings.abilities.grabR);
   const seqRef = useRef(0);
@@ -387,7 +387,7 @@ export function DedicatedBattleView({
     localCompositeRef,
     poseSnapRef,
     battleOverRef,
-    { skipPhysics: true, abilityFlagsOut: abilityFlagsRef },
+    { skipPhysics: true, abilityFlagsOut: abilityFlagsRef, gamepadIndex: 0 },
   );
 
   const localHud = useMemo(

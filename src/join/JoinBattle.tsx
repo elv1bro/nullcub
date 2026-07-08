@@ -31,7 +31,12 @@ export function JoinBattle() {
 
   useEffect(() => {
     const server = joinParams.server ?? "ws://127.0.0.1:8787";
-    const room = joinParams.room ?? "default";
+    const room = joinParams.room;
+    const secret = joinParams.secret;
+    if (!room || room === "default" || !secret) {
+      setStatusError("Нужны room и secret в hash (#room=…&secret=…)");
+      return;
+    }
     const url = buildWsUrl(server, room);
     let closed = false;
 
@@ -48,7 +53,12 @@ export function JoinBattle() {
 
     t.onOpen(() => {
       if (closed) return;
-      t.join(room, joinParams.name ?? profileNameRef.current, joinParams.role ?? undefined);
+      t.join(
+        room,
+        joinParams.name ?? profileNameRef.current,
+        secret,
+        joinParams.role ?? undefined,
+      );
     });
 
     const offLobby = t.onLobby((players) => {
@@ -68,7 +78,13 @@ export function JoinBattle() {
       t.close();
       setTransport(null);
     };
-  }, [joinParams.name, joinParams.room, joinParams.role, joinParams.server]);
+  }, [
+    joinParams.name,
+    joinParams.room,
+    joinParams.role,
+    joinParams.server,
+    joinParams.secret,
+  ]);
 
   const onReadyToggle = useCallback(() => {
     const next = !myReady;

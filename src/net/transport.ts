@@ -38,6 +38,13 @@ export type WsServerMessage =
   | { type: "opponent_left"; role: "player" | "opponent" };
 
 export type WsClientMessage =
-  | { type: "join"; roomId: string; name: string; role?: "player" | "opponent" }
+  | {
+      type: "join";
+      roomId: string;
+      name: string;
+      /** Секрет комнаты из duel code — обязателен для join. */
+      secret: string;
+      role?: "player" | "opponent";
+    }
   | { type: "ready"; ready: boolean }
   | { type: "input"; payload: NetInputPayload };

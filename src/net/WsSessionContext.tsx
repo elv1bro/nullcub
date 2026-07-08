@@ -16,6 +16,7 @@ import {
   defaultWsUrl,
   parseDuelCode,
   randomDuelRoomId,
+  randomDuelSecret,
   setDuelHash,
   WsNetTransport,
 } from "./wsClient";
@@ -41,6 +42,7 @@ export interface WsSessionValue {
     roomId: string,
     joinRole: "player" | "opponent",
     serverUrl?: string,
+    secret?: string,
   ) => void;
   joinByCode: (code: string, name: string) => void;
   sendReady: (ready: boolean) => void;
@@ -98,6 +100,7 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
     (
       url: string,
       room: string,
+      secret: string,
       name: string,
       joinRole?: "player" | "opponent",
     ) => {
@@ -124,7 +127,7 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
 
       t.onOpen(() => {
         if (closed) return;
-        t.join(room, name, joinRole);
+        t.join(room, name, secret, joinRole);
       });
 
       t.onClose((_code, reason) => {
@@ -170,14 +173,15 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
     (
       server: string,
       room: string,
+      secret: string,
       name: string,
       joinRole: "player" | "opponent",
     ) => {
-      const code = buildDuelCode(server, room);
+      const code = buildDuelCode(server, room, secret);
       setDuelCodeState(code);
       setShareUrl(buildDuelShareUrl(code));
       if (joinRole === "player") setDuelHash(code);
-      wireTransport(server, room, name, joinRole);
+      wireTransport(server, room, secret, name, joinRole);
     },
     [wireTransport],
   );
@@ -186,7 +190,8 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
     (name: string, fixedRoomId?: string) => {
       const server = defaultWsUrl();
       const room = fixedRoomId?.trim() || randomDuelRoomId();
-      beginRoom(server, room, name, "player");
+      const secret = randomDuelSecret();
+      beginRoom(server, room, secret, name, "player");
     },
     [beginRoom],
   );
@@ -197,8 +202,15 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
       roomId: string,
       joinRole: "player" | "opponent",
       serverUrl?: string,
+      secret?: string,
     ) => {
-      beginRoom(serverUrl ?? defaultWsUrl(), roomId, name, joinRole);
+      beginRoom(
+        serverUrl ?? defaultWsUrl(),
+        roomId,
+        secret ?? randomDuelSecret(),
+        name,
+        joinRole,
+      );
     },
     [beginRoom],
   );
@@ -213,7 +225,13 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
       setDuelCodeState(code.trim());
       setShareUrl(buildDuelShareUrl(code.trim()));
       setDuelHash(code.trim());
-      wireTransport(parsed.server, parsed.room, name, "opponent");
+      wireTransport(
+        parsed.server,
+        parsed.room,
+        parsed.secret,
+        name,
+        "opponent",
+      );
     },
     [wireTransport],
   );

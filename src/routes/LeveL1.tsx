@@ -681,8 +681,9 @@ export function LeveL1() {
       ? {
           skipPhysics: true,
           abilityFlagsOut: playerAbilityFlags,
+          gamepadIndex: 0,
         }
-      : undefined,
+      : { gamepadIndex: 0 },
   );
 
   const opponentAbilities = usePlayerAbilities(
@@ -694,6 +695,7 @@ export function LeveL1() {
       enabled: isLocal2P,
       abilities: settings.abilitiesP2,
       controls: settings.controlsP2,
+      gamepadIndex: isLocal2P ? 1 : null,
       ...(coreSim
         ? {
             skipPhysics: true,

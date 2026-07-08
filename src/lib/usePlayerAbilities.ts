@@ -1,5 +1,6 @@
 import { keyEventMatches } from "@/input/keyBindings";
 import { useMovementVectorRef } from "@/input/movementKeys";
+import { pollGamepadAbilityEdges } from "@/input/gamepad";
 import { cooldownRemaining } from "@/core/abilityTick";
 import type { AbilityBindings, ControlBindings } from "@/settings/SettingsContext";
 import { useSettings } from "@/settings/SettingsContext";
@@ -75,13 +76,20 @@ export function usePlayerAbilities(
       freeze: boolean;
       reset: boolean;
     }>;
+    /** Индекс геймпада (0 = первый). null/undefined = только клавиатура. */
+    gamepadIndex?: number | null;
   },
 ): AbilityCooldownView {
   const { settings } = useSettings();
   const active = options?.enabled !== false;
   const abilities = options?.abilities ?? settings.abilities;
   const controls = options?.controls ?? settings.controls;
-  const readMovement = useMovementVectorRef(controls, { includeArrows: false });
+  const gamepadIndex = options?.gamepadIndex ?? null;
+  const readMovement = useMovementVectorRef(controls, {
+    includeArrows: false,
+    gamepadIndex,
+  });
+  const gamepadBtnPrevRef = useRef<boolean[]>([]);
 
   const lastDashRef = useRef(0);
   const dashActiveUntilRef = useRef(0);
@@ -206,6 +214,17 @@ export function usePlayerAbilities(
     const flush = () => {
       const now = performance.now();
       const resetActive = resetUntilRef.current > now;
+      if (gamepadIndex != null) {
+        const edges = pollGamepadAbilityEdges(
+          gamepadBtnPrevRef.current,
+          gamepadIndex,
+        );
+        if (edges.dash) dashQueuedRef.current = true;
+        if (edges.flip) flipQueuedRef.current = true;
+        if (edges.freeze) freezeQueuedRef.current = true;
+        if (edges.reset) resetQueuedRef.current = true;
+      }
+
       let dash = false;
       let flip = false;
       let freeze = false;
@@ -278,7 +297,13 @@ export function usePlayerAbilities(
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [active, options?.skipPhysics, options?.abilityFlagsOut, poseSnapRef]);
+  }, [
+    active,
+    options?.skipPhysics,
+    options?.abilityFlagsOut,
+    poseSnapRef,
+    gamepadIndex,
+  ]);
 
   useEventBeforeUpdate(
     (_event: IEventTimestamped<Matter.Engine>) => {
@@ -288,6 +313,16 @@ export function usePlayerAbilities(
       if (!(head && composite)) return;
 
       const now = performance.now();
+      if (gamepadIndex != null) {
+        const edges = pollGamepadAbilityEdges(
+          gamepadBtnPrevRef.current,
+          gamepadIndex,
+        );
+        if (edges.dash) dashQueuedRef.current = true;
+        if (edges.flip) flipQueuedRef.current = true;
+        if (edges.freeze) freezeQueuedRef.current = true;
+        if (edges.reset) resetQueuedRef.current = true;
+      }
       const move = readMovement();
       const braceActive = braceUntilRef.current > now;
       braceActiveRef.current = braceActive;

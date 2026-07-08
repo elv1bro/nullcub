@@ -73,7 +73,7 @@ export function NetBattleGuest() {
   const faceMode = net.peers[0]?.faceMode ?? "video";
   const face = useNetFaceSync(faceMode, true);
 
-  const readMove = useMovementVectorRef(settings.controls);
+  const readMove = useMovementVectorRef(settings.controls, { gamepadIndex: 0 });
   const grabLRef = useBindingPressRef(settings.abilities.grabL);
   const grabRRef = useBindingPressRef(settings.abilities.grabR);
 
@@ -82,7 +82,7 @@ export function NetBattleGuest() {
     guestCompositeRef,
     poseSnapRef,
     battleOverRef,
-    { skipPhysics: true, abilityFlagsOut: abilityFlagsRef },
+    { skipPhysics: true, abilityFlagsOut: abilityFlagsRef, gamepadIndex: 0 },
   );
 
   useNetInputSender(

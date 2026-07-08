@@ -42,6 +42,8 @@ export interface RoomClient {
 
 export interface GameRoomOptions {
   roomId: string;
+  /** Секрет из duel code; join без совпадения отклоняется. */
+  secret: string;
   arenaSize?: number;
   onEmpty?: () => void;
   debug?: boolean;
@@ -53,6 +55,7 @@ export interface GameRoomOptions {
 
 export class GameRoom {
   readonly roomId: string;
+  readonly secret: string;
   readonly clients = new Map<string, RoomClient>();
   private session: BattleSession | null = null;
   private tickTimer: ReturnType<typeof setInterval> | null = null;
@@ -72,11 +75,24 @@ export class GameRoom {
 
   constructor(opts: GameRoomOptions) {
     this.roomId = opts.roomId;
+    this.secret = opts.secret;
     this.arenaSize = opts.arenaSize ?? 1000;
     this.debug = opts.debug ?? false;
     this.syncSettle = opts.syncSettle ?? process.env["VITEST"] === "true";
     this.spawnItems = opts.spawnItems ?? true;
     if (opts.onEmpty) this.onEmpty = opts.onEmpty;
+  }
+
+  /** Constant-time-ish compare для коротких hex-секретов. */
+  matchesSecret(candidate: string): boolean {
+    if (typeof candidate !== "string" || candidate.length !== this.secret.length) {
+      return false;
+    }
+    let diff = 0;
+    for (let i = 0; i < this.secret.length; i++) {
+      diff |= this.secret.charCodeAt(i) ^ candidate.charCodeAt(i);
+    }
+    return diff === 0;
   }
 
   private logEvent(message: string): void {

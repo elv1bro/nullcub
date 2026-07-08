@@ -64,7 +64,7 @@ expect(session.isBattleOver()).toBe(true);
 - Shared Matter engine: `destroy()` **не** вызывает `Engine.clear` если engine внешний.
 - Ability flags: one-shot (consume после чтения) в local и dedicated.
 - Dedicated snapshots: **ordered** codec, не body.id.
-- WS: join требует явный roomId; bind по умолчанию `127.0.0.1`.
+- WS: join требует явный roomId + 16-hex `secret` из duel code; bind по умолчанию `127.0.0.1`.
 - `GRAB_ENABLED=false` пока core grab parity не покрыта тестами.
 
 ## Добавляя фичу

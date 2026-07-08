@@ -11,6 +11,7 @@ const TICK_COUNT = Math.ceil((SIM_SECONDS * 1000) / TICK_MS);
 function startHeadlessDuel(roomId: string, opts?: { spawnItems?: boolean }) {
   const room = new GameRoom({
     roomId,
+    secret: "d".repeat(16),
     spawnItems: opts?.spawnItems ?? true,
   });
   room.addClient({
@@ -273,7 +274,7 @@ describe("headless duel stability", () => {
   });
 
   it("begins battle only after server settle (damage locked during spawn)", () => {
-    const room = new GameRoom({ roomId: "settle" });
+    const room = new GameRoom({ roomId: "settle", secret: "e".repeat(16) });
     room.addClient({
       id: "a",
       name: "A",

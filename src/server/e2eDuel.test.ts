@@ -9,7 +9,7 @@ import { startGameServer } from "./main";
 
 describe("GameRoom", () => {
   it("waits for ready before starting and then accepts input", () => {
-    const room = new GameRoom({ roomId: "test" });
+    const room = new GameRoom({ roomId: "test", secret: "a".repeat(16) });
     const sentA: unknown[] = [];
     const sentB: unknown[] = [];
 
@@ -54,7 +54,7 @@ describe("GameRoom", () => {
   });
 
   it("does not duplicate bodies in the physics world at battle start", () => {
-    const room = new GameRoom({ roomId: "dup-bodies" });
+    const room = new GameRoom({ roomId: "dup-bodies", secret: "b".repeat(16) });
     room.addClient({
       id: "a",
       name: "A",
@@ -111,6 +111,7 @@ describe("WS duel e2e", () => {
   });
 
   it("lobby → ready → start → snapshots for both clients", async () => {
+    const secret = "f".repeat(16);
     const joinClient = (room: string, role: "player" | "opponent") =>
       new Promise<{
         welcome: boolean;
@@ -130,7 +131,13 @@ describe("WS duel e2e", () => {
 
         ws.on("open", () => {
           ws.send(
-            JSON.stringify({ type: "join", roomId: room, name: role, role }),
+            JSON.stringify({
+              type: "join",
+              roomId: room,
+              name: role,
+              role,
+              secret,
+            }),
           );
         });
 
@@ -168,5 +175,65 @@ describe("WS duel e2e", () => {
     expect(a.snapshots).toBeGreaterThan(0);
     expect(b.started).toBe(true);
     expect(b.snapshots).toBeGreaterThan(0);
+  });
+
+  it("rejects join with wrong room secret", async () => {
+    const roomId = `sec-${Date.now()}`;
+    const good = "1".repeat(16);
+    const bad = "2".repeat(16);
+
+    const host = await new Promise<WebSocket>((resolve, reject) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${port}?room=${roomId}`);
+      ws.on("open", () => {
+        ws.send(
+          JSON.stringify({
+            type: "join",
+            roomId,
+            name: "host",
+            role: "player",
+            secret: good,
+          }),
+        );
+      });
+      ws.on("message", (data) => {
+        const msg = JSON.parse(String(data)) as { type: string };
+        if (msg.type === "welcome") resolve(ws);
+        if (msg.type === "error") reject(new Error("host rejected"));
+      });
+      ws.on("error", reject);
+    });
+
+    const err = await new Promise<string>((resolve, reject) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${port}?room=${roomId}`);
+      const timer = setTimeout(() => reject(new Error("timeout")), 4000);
+      ws.on("open", () => {
+        ws.send(
+          JSON.stringify({
+            type: "join",
+            roomId,
+            name: "intruder",
+            role: "opponent",
+            secret: bad,
+          }),
+        );
+      });
+      ws.on("message", (data) => {
+        const msg = JSON.parse(String(data)) as { type: string; message?: string };
+        if (msg.type === "error") {
+          clearTimeout(timer);
+          ws.close();
+          resolve(msg.message ?? "error");
+        }
+        if (msg.type === "welcome") {
+          clearTimeout(timer);
+          ws.close();
+          reject(new Error("should not welcome"));
+        }
+      });
+      ws.on("error", reject);
+    });
+
+    expect(err).toMatch(/secret/i);
+    host.close();
   });
 });

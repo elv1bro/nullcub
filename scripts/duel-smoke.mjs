@@ -15,6 +15,7 @@ import {
 const WS_PORT = 8795;
 const DEBUG_PORT = WS_PORT + 1;
 const ROOM = `smoke-${Date.now()}`;
+const SECRET = "a1b2c3d4e5f60718";
 const RUN_MS = 12_000;
 
 function portOpen(port) {
@@ -96,7 +97,15 @@ async function main() {
     new Promise((resolve, reject) => {
       const ws = new WebSocket(`ws://127.0.0.1:${WS_PORT}?room=${ROOM}`);
       ws.on("open", () => {
-        ws.send(JSON.stringify({ type: "join", roomId: ROOM, name: role, role }));
+        ws.send(
+          JSON.stringify({
+            type: "join",
+            roomId: ROOM,
+            name: role,
+            role,
+            secret: SECRET,
+          }),
+        );
       });
       ws.on("message", (raw) => {
         const msg = JSON.parse(String(raw));

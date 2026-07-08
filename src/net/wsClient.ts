@@ -76,11 +76,16 @@ export class WsNetTransport implements NetTransport {
     });
   }
 
-  join(roomId: string, name: string, role?: "player" | "opponent"): void {
+  join(
+    roomId: string,
+    name: string,
+    secret: string,
+    role?: "player" | "opponent",
+  ): void {
     this.send(
       role
-        ? { type: "join", roomId, name, role }
-        : { type: "join", roomId, name },
+        ? { type: "join", roomId, name, secret, role }
+        : { type: "join", roomId, name, secret },
     );
   }
 
@@ -194,8 +199,24 @@ export function randomDuelRoomId(): string {
   return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
 }
 
-export function buildDuelCode(serverUrl: string, roomId: string): string {
-  const raw = `${serverUrl}|${roomId}`;
+/** 16 hex chars — секрет комнаты в duel code. */
+export function randomDuelSecret(): string {
+  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  return (
+    Math.random().toString(16).slice(2, 10) + Math.random().toString(16).slice(2, 10)
+  );
+}
+
+export function buildDuelCode(
+  serverUrl: string,
+  roomId: string,
+  secret: string,
+): string {
+  const raw = `${serverUrl}|${roomId}|${secret}`;
   return btoa(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
@@ -219,20 +240,22 @@ export function isAllowedWsServer(server: string): boolean {
   }
 }
 
-export function parseDuelCode(code: string): { server: string; room: string } | null {
+export function parseDuelCode(
+  code: string,
+): { server: string; room: string; secret: string } | null {
   const trimmed = code.trim();
   if (!trimmed) return null;
   try {
     const b64 = trimmed.replace(/-/g, "+").replace(/_/g, "/");
     const pad = b64 + "===".slice((b64.length + 3) % 4);
     const raw = atob(pad);
-    const sep = raw.indexOf("|");
-    if (sep <= 0) return null;
-    const server = raw.slice(0, sep);
-    const room = raw.slice(sep + 1);
-    if (!server || !room) return null;
+    const parts = raw.split("|");
+    if (parts.length !== 3) return null;
+    const [server, room, secret] = parts;
+    if (!server || !room || !secret) return null;
+    if (!/^[a-f0-9]{16}$/i.test(secret)) return null;
     if (!isAllowedWsServer(server)) return null;
-    return { server, room };
+    return { server, room, secret: secret.toLowerCase() };
   } catch {
     return null;
   }
@@ -243,7 +266,12 @@ export function buildDuelShareUrl(code: string): string {
   return `${location.origin}${location.pathname}#duel=${encodeURIComponent(code)}`;
 }
 
-export function parseDuelHash(): { server: string; room: string; code: string } | null {
+export function parseDuelHash(): {
+  server: string;
+  room: string;
+  secret: string;
+  code: string;
+} | null {
   const params = new URLSearchParams(window.location.hash.slice(1));
   const code = params.get("duel");
   if (!code) return null;
@@ -261,14 +289,17 @@ export function setDuelHash(code: string): void {
 export function parseJoinHash(): {
   server: string | null;
   room: string | null;
+  secret: string | null;
   role: "player" | "opponent" | null;
   name: string | null;
 } {
   const params = new URLSearchParams(window.location.hash.slice(1));
   const role = params.get("role");
+  const secret = params.get("secret");
   return {
     server: params.get("server"),
     room: params.get("room"),
+    secret: secret && /^[a-f0-9]{16}$/i.test(secret) ? secret.toLowerCase() : null,
     role: role === "player" || role === "opponent" ? role : null,
     name: params.get("name"),
   };

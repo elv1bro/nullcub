@@ -4,7 +4,7 @@ import { GameRoom } from "./gameRoom";
 import { InputRateLimiter } from "./inputValidator";
 
 function startRoom() {
-  const room = new GameRoom({ roomId: "live-sim" });
+  const room = new GameRoom({ roomId: "live-sim", secret: "c".repeat(16) });
   room.addClient({
     id: "p",
     name: "Host",
