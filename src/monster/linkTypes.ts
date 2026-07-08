@@ -83,8 +83,9 @@ export function linkConstraintOptions(
     case "spring":
       return {
         ...base,
-        stiffness: 0.14,
-        damping: 0.05,
+        // Было 0.14 — в бою с AI flip/dash монстр расползался как желе.
+        stiffness: 0.45,
+        damping: 0.08,
         length: restLength,
       };
     case "rope":

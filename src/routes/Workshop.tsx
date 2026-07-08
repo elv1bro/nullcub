@@ -75,6 +75,7 @@ type DragRef = {
   x: number;
   y: number;
   fromBody: number | null;
+  linkMode: boolean;
 };
 
 type LeftTab = "params" | "library";
@@ -455,14 +456,28 @@ function WorkshopScene() {
 
       const hitIndex = bodyIndexAt(composite, point);
       if (hitIndex !== null) {
+        // Shift+LMB = режим связи; обычный ЛКМ = перемещение (раньше связь
+        // создавалась всегда, а move работал только после ПКМ-select).
+        const linkMode = e.shiftKey;
         dragRef.current = {
           x: e.clientX,
           y: e.clientY,
           fromBody: hitIndex,
+          linkMode,
         };
-        setLinkPreview({ from: hitIndex, x: point.x, y: point.y });
+        if (linkMode) {
+          setLinkPreview({ from: hitIndex, x: point.x, y: point.y });
+        } else {
+          setSelectedPartIndex(hitIndex);
+          setLinkPreview(null);
+        }
       } else {
-        dragRef.current = { x: e.clientX, y: e.clientY, fromBody: null };
+        dragRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          fromBody: null,
+          linkMode: false,
+        };
       }
     };
 
@@ -472,26 +487,22 @@ function WorkshopScene() {
       const point = pointFromEvent(e.clientX, e.clientY);
       if (!point) return;
 
-      const targetIndex = bodyIndexAt(composite, point);
-      const targetBody =
-        targetIndex !== null && targetIndex !== drag.fromBody
-          ? composite.bodies[targetIndex]
-          : null;
-      const end = targetBody?.position ?? point;
+      if (drag.linkMode) {
+        const targetIndex = bodyIndexAt(composite, point);
+        const targetBody =
+          targetIndex !== null && targetIndex !== drag.fromBody
+            ? composite.bodies[targetIndex]
+            : null;
+        const end = targetBody?.position ?? point;
+        setLinkPreview({ from: drag.fromBody, x: end.x, y: end.y });
+        return;
+      }
 
-      setLinkPreview({ from: drag.fromBody, x: end.x, y: end.y });
-
-      if (
-        !physicsPreview &&
-        drag.fromBody === selectedPartRef.current &&
-        !targetBody
-      ) {
-        const body = composite.bodies[drag.fromBody];
-        if (body) {
-          Body.setPosition(body, snapToGrid(point));
-          Body.setVelocity(body, { x: 0, y: 0 });
-          rebuildCompositeLinks(composite, linksRef.current);
-        }
+      const body = composite.bodies[drag.fromBody];
+      if (body) {
+        Body.setPosition(body, snapToGrid(point));
+        Body.setVelocity(body, { x: 0, y: 0 });
+        rebuildCompositeLinks(composite, linksRef.current);
       }
     };
 
@@ -508,10 +519,10 @@ function WorkshopScene() {
       const dx = e.clientX - drag.x;
       const dy = e.clientY - drag.y;
       const moved = dx * dx + dy * dy > 36;
-
       const endBody = bodyIndexAt(composite, point);
 
       if (
+        drag.linkMode &&
         drag.fromBody !== null &&
         endBody !== null &&
         drag.fromBody !== endBody
@@ -520,7 +531,7 @@ function WorkshopScene() {
         return;
       }
 
-      if (!moved && endBody === null) {
+      if (!moved && !drag.linkMode && endBody === null) {
         const linkIdx = linkIndexAt(composite, linksRef.current, point);
         if (linkIdx !== null) deleteLinkAt(linkIdx);
       }

@@ -102,6 +102,41 @@ function blockFill(kind: BlueprintDef["parts"][number]["blockKind"]): string {
   }
 }
 
+/** Все части достижимы от головы по undirected links. */
+export function partsConnectedToHead(def: BlueprintDef): boolean {
+  if (def.parts.length <= 1) return true;
+  const headIdx = def.parts.findIndex((p) => p.blockKind === "head");
+  if (headIdx < 0) return false;
+
+  const adj = new Map<number, number[]>();
+  for (let i = 0; i < def.parts.length; i++) adj.set(i, []);
+  for (const link of def.links) {
+    if (
+      link.a < 0 ||
+      link.b < 0 ||
+      link.a >= def.parts.length ||
+      link.b >= def.parts.length ||
+      link.a === link.b
+    ) {
+      continue;
+    }
+    adj.get(link.a)!.push(link.b);
+    adj.get(link.b)!.push(link.a);
+  }
+
+  const seen = new Set<number>([headIdx]);
+  const queue = [headIdx];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    for (const next of adj.get(cur) ?? []) {
+      if (seen.has(next)) continue;
+      seen.add(next);
+      queue.push(next);
+    }
+  }
+  return seen.size === def.parts.length;
+}
+
 export function validateBlueprint(
   def: BlueprintDef,
 ): { ok: true } | { ok: false; reason: string } {
@@ -116,11 +151,20 @@ export function validateBlueprint(
     ) {
       return { ok: false, reason: "needHurtbox" };
     }
+    if (def.parts.length > 1 && def.links.length === 0) {
+      return { ok: false, reason: "needLinks" };
+    }
+    if (!partsConnectedToHead(def)) {
+      return { ok: false, reason: "needConnected" };
+    }
   }
 
   if (def.kind === "item") {
     if (!def.parts.some((p) => p.blockKind === "grip")) {
       return { ok: false, reason: "needGrip" };
+    }
+    if (def.parts.length > 1 && def.links.length === 0) {
+      return { ok: false, reason: "needLinks" };
     }
   }
 

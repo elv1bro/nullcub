@@ -124,6 +124,8 @@ export interface LocaleStrings {
     | "oneHead"
     | "needParts"
     | "needHead"
+    | "needLinks"
+    | "needConnected"
     | "needHurtbox"
     | "remove"
     | "library"

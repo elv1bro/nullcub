@@ -94,7 +94,7 @@ describe("link types behave differently under force", () => {
       return maxSwing;
     }
 
-    expect(swing("spring")).toBeGreaterThan(swing("rigid") + 3);
+    expect(swing("spring")).toBeGreaterThan(swing("rigid") + 1.5);
   });
 
   it("rope allows more slack than rigid before tight pull", () => {

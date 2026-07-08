@@ -179,6 +179,9 @@ export function WorkshopParamsPanel({
             </button>
           ))}
         </div>
+        <p className="ws-link-pills__hint text-xs text-gray-500 mt-2 leading-snug">
+          {t.linkHint}
+        </p>
       </div>
     </div>
   );
