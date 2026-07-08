@@ -1,0 +1,12 @@
+{
+  "extends": [
+    "config:base",
+    "schedule:monthly",
+    ":maintainLockFilesMonthly",
+    ":automergeAll",
+    ":timezone(Europe/Paris)"
+  ],
+  "dependencyDashboardAutoclose": true,
+  "labels": ["dependencies"],
+  "recreateWhen": "never"
+}

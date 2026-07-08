@@ -1,0 +1,19 @@
+{
+  "extends": ["@tsconfig/vite-react/tsconfig", "@tsconfig/strictest/tsconfig"],
+  "compilerOptions": {
+    "allowJs": false,
+    "checkJs": false,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    // Строгий режим оставляем; эти два флага из strictest дают сотни
+    // ложноположительных ошибок на существующем коде — отключены осознанно.
+    "exactOptionalPropertyTypes": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@1.*": ["./@1/*"]
+    }
+    // "moduleResolution": "bundler"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@1.*": ["./@1/*"],
+      "matter-js": ["./src/matter.ts"]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules/
+
+# https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Vite build dir
+dist/
+
+# Browser verify screenshots (local artifacts)
+test-artifacts/
+
+# macOS
+.DS_Store
