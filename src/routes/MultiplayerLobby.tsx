@@ -2,13 +2,24 @@ import { GameContext } from "@/GameContext";
 import { SubMenuScreen } from "@/components/menu/SubMenuScreen";
 import { useNetSession } from "@/net/NetSessionContext";
 import { setBattleNetwork } from "@/lib/battleConfig";
+import { ENABLE_P2P } from "@/lib/featureFlags";
 import { useTranslation } from "@/settings/SettingsContext";
 import { usePlayerProfile } from "@/player/PlayerProfileContext";
 import { useContext, useEffect, useState } from "react";
+import { BattleUnavailable } from "./BattleUnavailable";
 
 export default MultiplayerLobby;
 
 export function MultiplayerLobby() {
+  if (!ENABLE_P2P) {
+    return (
+      <BattleUnavailable reason="P2P-лобби отключено. Онлайн-дуэль — через WS в Quick Battle. Флаг: VITE_ENABLE_P2P=1." />
+    );
+  }
+  return <MultiplayerLobbyActive />;
+}
+
+function MultiplayerLobbyActive() {
   const { sendN } = useContext(GameContext);
   const t = useTranslation();
   const { profile } = usePlayerProfile();

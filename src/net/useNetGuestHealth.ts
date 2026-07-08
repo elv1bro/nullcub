@@ -2,7 +2,8 @@ import { createPopup, type HitPopup } from "@/lib/hitPopups";
 import { OPPONENT_COLORS } from "@/lib/fighterColors";
 import { MAX_HP } from "@/lib/combat";
 import { useNetSession } from "./NetSessionContext";
-import type { NetBattleStatePayload, NetHitPayload } from "./protocol";
+import type { NetHitPayload } from "./protocol";
+import { sanitizeHostBattleState } from "./sanitizeBattleState";
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import Matter from "matter-js";
 
@@ -45,7 +46,9 @@ export function useNetGuestHealth(
     const [, onBattleState] = net.actions.battleState;
     const [, onHit] = net.actions.hit;
 
-    onBattleState((payload: NetBattleStatePayload) => {
+    onBattleState((raw) => {
+      const payload = sanitizeHostBattleState(raw);
+      // Perspective: guest local = host's opponent.
       setPlayerHp(payload.opponentHp);
       setOpponentHp(payload.playerHp);
       setBattleOver(payload.battleOver);
@@ -65,14 +68,19 @@ export function useNetGuestHealth(
     });
 
     onHit((payload: NetHitPayload) => {
+      const damage =
+        typeof payload.damage === "number" && Number.isFinite(payload.damage)
+          ? Math.max(0, Math.min(MAX_HP, payload.damage))
+          : 0;
+      if (damage <= 0) return;
       const side: "player" | "opponent" =
         payload.victimId === "opponent" ? "player" : "opponent";
       setLastHit(side);
       const now = performance.now();
       popupsRef.current.push(
         createPopup(
-          payload.damage,
-          formatDamage(payload.damage),
+          damage,
+          formatDamage(damage),
           payload.x,
           payload.y,
           now,

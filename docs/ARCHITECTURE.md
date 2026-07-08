@@ -15,11 +15,20 @@
 | Симуляция | `src/core/` — `BattleSession`, `combatPipeline`, abilities, grab (выкл. `GRAB_ENABLED`) |
 | Legacy FX/HP UI | `src/lib/useHealth.ts` рядом с core (в LeveL1 `skipCollisions: true`) |
 | Рендер | matter4react / Matter canvas |
-| Сеть | `src/server/` WS dedicated (bind `127.0.0.1`), `src/net/` P2P Trystero |
+| Сеть | **Primary:** `src/server/` WS dedicated (room secret). **Legacy P2P:** Trystero, выкл. без `VITE_ENABLE_P2P=1` |
 | Предметы | `src/items/` defs, без полного `EffectDef.attach` |
 | События | `BattleEventBus` (hit / knockout / battleEnd / …), не полный `GameEvents` из §2 |
-| Ввод | клавиатура → `usePlayerAbilities` / `useCoreInputBridge`; геймпад — не подключён |
+| Ввод | клавиатура + геймпад → `usePlayerAbilities` / `useCoreInputBridge` |
 | Verify | `yarn verify:ai` / `yarn verify:game` |
+
+### Боевые пути (не путать)
+
+| Путь | Где | Урон | Статус |
+|------|-----|------|--------|
+| **BattleSession** | LeveL1 1v1 / local2p / campaign / WS dedicated | `combatPipeline` | **активный** |
+| **useHealth FX** | LeveL1 при `coreSim=true` | нет (`skipCollisions`) | только HUD/popups/banter |
+| **useRosterHealth** | `BattleLocal4FFA` | legacy collisions | **выкл.** без `VITE_ENABLE_LOCAL_FFA=1` |
+| **P2P host sim** | `BattleNetwork` | хост симулирует, гость применяет snapshot | **выкл.** без `VITE_ENABLE_P2P=1`; guest HP sanitize |
 
 ---
 

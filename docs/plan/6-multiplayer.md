@@ -8,10 +8,11 @@
 
 | Стек | Состояние | Решение |
 |---|---|---|
-| WebSocket-дуэли (`WsSessionContext`, `gameRoom.ts`, `BattleDedicated`) | Рабочий прототип: комнаты, ready-up, авто-старт | **Основной** |
-| WebRTC P2P (`NetSessionContext`, `MultiplayerLobby`, `BattleNetwork`) | Легаси, отключён от меню | Заморозить/удалить; вернуться после релиза для голоса/видео |
+| WebSocket-дуэли (`WsSessionContext`, `gameRoom.ts`, `BattleDedicated`) | Рабочий прототип: комнаты, ready-up, авто-старт, room secret | **Основной** |
+| WebRTC P2P (`NetSessionContext`, `MultiplayerLobby`, `BattleNetwork`) | Легаси; гейт `VITE_ENABLE_P2P` (default off); guest HP sanitize | Заморозить; удалить после релиза или оставить для голоса/видео |
 
-- [ ] Задокументировать решение, выпилить мёртвые пути из меню и роутера.
+- [x] Задокументировать решение; гейт P2P/FFA в `BattleRouter` + `MultiplayerLobby` (`featureFlags.ts`).
+- [ ] Выпилить мёртвый P2P-код целиком (после релиза WS).
 
 ## 6.2 Надёжность WS-дуэлей
 

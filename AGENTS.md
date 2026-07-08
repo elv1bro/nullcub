@@ -66,6 +66,8 @@ expect(session.isBattleOver()).toBe(true);
 - Dedicated snapshots: **ordered** codec, не body.id.
 - WS: join требует явный roomId + 16-hex `secret` из duel code; bind по умолчанию `127.0.0.1`.
 - `GRAB_ENABLED=false` пока core grab parity не покрыта тестами.
+- P2P / 4FFA выключены по умолчанию (`VITE_ENABLE_P2P` / `VITE_ENABLE_LOCAL_FFA`); онлайн = WS.
+- В LeveL1 `coreSim=true` → `useHealth` только FX (`skipCollisions`), урон только в `core/`.
 
 ## Добавляя фичу
 

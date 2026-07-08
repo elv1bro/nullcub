@@ -158,6 +158,11 @@ export function Menu() {
 
   useEffect(() => {
     if (guestStartSignal === 0) return;
+    // P2P guest auto-start — только при явном VITE_ENABLE_P2P.
+    if (import.meta.env.VITE_ENABLE_P2P !== "1" && import.meta.env.VITE_ENABLE_P2P !== "true") {
+      clearGuestStartSignal();
+      return;
+    }
     const roomId = netRoomId ?? getRoomIdFromHash();
     if (!roomId) return;
     applyTeamBattleConfig({
