@@ -141,15 +141,41 @@ async function launchBrowser(puppeteerMod) {
   const executablePath = resolveChromeExecutable(puppeteerMod);
   if (!executablePath) {
     throw new Error(
-      "Chrome not found. Run: npx puppeteer browsers install chrome",
+      "Chrome not found. Install Google Chrome or: npx puppeteer browsers install chrome",
     );
   }
-  const browser = await puppeteerMod.default.launch({
+
+  // На Apple Silicon + x64 Node bundled Chromium через Rosetta часто
+  // зависает на "Waiting for WS endpoint". Системный universal Chrome + pipe
+  // обходит websocket-handshake timeout.
+  const launchOpts = {
     headless: true,
     executablePath,
-    args: ["--no-sandbox", "--disable-gpu", "--use-fake-ui-for-media-stream"],
-  });
-  return browser;
+    pipe: true,
+    timeout: 90_000,
+    protocolTimeout: 120_000,
+    args: [
+      "--no-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--use-fake-ui-for-media-stream",
+      "--use-fake-device-for-media-stream",
+    ],
+  };
+
+  try {
+    return await puppeteerMod.default.launch(launchOpts);
+  } catch (firstErr) {
+    // Fallback без pipe (старые окружения).
+    console.warn(
+      "  ! chrome launch with pipe failed, retry without pipe:",
+      firstErr?.message ?? firstErr,
+    );
+    return await puppeteerMod.default.launch({
+      ...launchOpts,
+      pipe: false,
+    });
+  }
 }
 
 async function runScenario(browser, base, name, path) {
