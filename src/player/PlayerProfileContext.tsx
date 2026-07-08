@@ -14,6 +14,7 @@ import {
   type PropsWithChildren,
 } from "react";
 import type { FighterColors } from "@/lib/fighterColors";
+import { loadVersioned, saveVersioned } from "@/lib/storageSchema";
 
 export interface PlayerProfile {
   name: string;
@@ -27,6 +28,7 @@ export interface PlayerProfile {
 }
 
 const STORAGE_KEY = "ragdoll-faces-profile";
+const SCHEMA_VERSION = 1;
 
 export const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
   name: "YOU",
@@ -42,52 +44,57 @@ export const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
 export { COLOR_PRESETS } from "./colorPresets";
 export type { FaceOverlayEffectId } from "@/face/faceEffects";
 
-function loadProfile(): PlayerProfile {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_PLAYER_PROFILE;
-    const parsed = JSON.parse(raw) as Partial<PlayerProfile>;
-    const faceEffect = parsed.faceEffect ?? DEFAULT_PLAYER_PROFILE.faceEffect;
-    return {
-      name: parsed.name?.trim() || DEFAULT_PLAYER_PROFILE.name,
-      colors: {
-        main: parsed.colors?.main || DEFAULT_PLAYER_PROFILE.colors.main,
-        secondary:
-          parsed.colors?.secondary || DEFAULT_PLAYER_PROFILE.colors.secondary,
-      },
-      useCamera: parsed.useCamera ?? DEFAULT_PLAYER_PROFILE.useCamera,
-      useMicrophone:
-        parsed.useMicrophone ?? DEFAULT_PLAYER_PROFILE.useMicrophone,
-      faceEffect:
-        faceEffect === "fire_eyes" ||
-        faceEffect === "laser_eyes" ||
-        faceEffect === "glitch" ||
-        faceEffect === "halo" ||
-        faceEffect === "demon" ||
-        faceEffect === "none"
-          ? faceEffect
-          : DEFAULT_PLAYER_PROFILE.faceEffect,
-      avatarFaceId: isValidAvatarFaceId(parsed.avatarFaceId ?? "")
-        ? (parsed.avatarFaceId as string)
-        : DEFAULT_AVATAR_FACE_ID,
-      lastBattleAvatarFaceId: isValidAvatarFaceId(
-        parsed.lastBattleAvatarFaceId ?? "",
-      )
-        ? (parsed.lastBattleAvatarFaceId as string)
-        : null,
-      lastBattleMedalId:
-        parsed.lastBattleMedalId &&
-        parsed.lastBattleMedalId in MEDAL_BY_ID
-          ? (parsed.lastBattleMedalId as MedalId)
-          : null,
-    };
-  } catch {
-    return DEFAULT_PLAYER_PROFILE;
+function coerceProfile(data: unknown): PlayerProfile | null {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    return null;
   }
+  const parsed = data as Partial<PlayerProfile>;
+  const faceEffect = parsed.faceEffect ?? DEFAULT_PLAYER_PROFILE.faceEffect;
+  return {
+    name: parsed.name?.trim() || DEFAULT_PLAYER_PROFILE.name,
+    colors: {
+      main: parsed.colors?.main || DEFAULT_PLAYER_PROFILE.colors.main,
+      secondary:
+        parsed.colors?.secondary || DEFAULT_PLAYER_PROFILE.colors.secondary,
+    },
+    useCamera: parsed.useCamera ?? DEFAULT_PLAYER_PROFILE.useCamera,
+    useMicrophone:
+      parsed.useMicrophone ?? DEFAULT_PLAYER_PROFILE.useMicrophone,
+    faceEffect:
+      faceEffect === "fire_eyes" ||
+      faceEffect === "laser_eyes" ||
+      faceEffect === "glitch" ||
+      faceEffect === "halo" ||
+      faceEffect === "demon" ||
+      faceEffect === "none"
+        ? faceEffect
+        : DEFAULT_PLAYER_PROFILE.faceEffect,
+    avatarFaceId: isValidAvatarFaceId(parsed.avatarFaceId ?? "")
+      ? (parsed.avatarFaceId as string)
+      : DEFAULT_AVATAR_FACE_ID,
+    lastBattleAvatarFaceId: isValidAvatarFaceId(
+      parsed.lastBattleAvatarFaceId ?? "",
+    )
+      ? (parsed.lastBattleAvatarFaceId as string)
+      : null,
+    lastBattleMedalId:
+      parsed.lastBattleMedalId && parsed.lastBattleMedalId in MEDAL_BY_ID
+        ? (parsed.lastBattleMedalId as MedalId)
+        : null,
+  };
+}
+
+function loadProfile(): PlayerProfile {
+  return loadVersioned<PlayerProfile>({
+    key: STORAGE_KEY,
+    version: SCHEMA_VERSION,
+    migrate: (data) => coerceProfile(data),
+    fallback: () => DEFAULT_PLAYER_PROFILE,
+  });
 }
 
 function saveProfile(profile: PlayerProfile): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  saveVersioned(STORAGE_KEY, SCHEMA_VERSION, profile);
 }
 
 interface PlayerProfileContextValue {

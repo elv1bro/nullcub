@@ -1,10 +1,29 @@
 # Ragdoll Faces — архитектура и система расширяемости
 
+> **Статус документа (июль 2026):** ниже — *целевая* архитектура (Pixi, `src/content/`, полный ContentRegistry).  
+> **Факт в репозитории сейчас:** Matter.js через matter4react, бой в `src/core/BattleSession`, предметы в `src/items/`, сеть = WS dedicated + Trystero P2P, рендер = Matter canvas (не Pixi).  
+> Проверка агентом: см. корневой [`AGENTS.md`](../AGENTS.md). Целевые разделы ниже — roadmap, не описание текущего кода.
+
 Главное требование: **игра должна свободно расширяться**. Новый тип урона, новая шапка, новый артефакт, новый мутатор, новая кампания — всё добавляется как *контент*, без переписывания ядра. Этот документ описывает, как это устроено.
 
 ---
 
-## 1. Общая схема
+## 0. As-built (что есть сейчас)
+
+| Слой | Факт |
+|------|------|
+| Симуляция | `src/core/` — `BattleSession`, `combatPipeline`, abilities, grab (выкл. `GRAB_ENABLED`) |
+| Legacy FX/HP UI | `src/lib/useHealth.ts` рядом с core (в LeveL1 `skipCollisions: true`) |
+| Рендер | matter4react / Matter canvas |
+| Сеть | `src/server/` WS dedicated (bind `127.0.0.1`), `src/net/` P2P Trystero |
+| Предметы | `src/items/` defs, без полного `EffectDef.attach` |
+| События | `BattleEventBus` (hit / knockout / battleEnd / …), не полный `GameEvents` из §2 |
+| Ввод | клавиатура → `usePlayerAbilities` / `useCoreInputBridge`; геймпад — не подключён |
+| Verify | `yarn verify:ai` / `yarn verify:game` |
+
+---
+
+## 1. Общая схема (целевая)
 
 ```mermaid
 flowchart TB

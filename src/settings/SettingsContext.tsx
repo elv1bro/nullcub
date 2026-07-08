@@ -11,6 +11,7 @@ import { getLocale, type Language, type LocaleStrings } from "@/i18n";
 
 export type { Language };
 import { migrateBinding } from "@/input/keyBindings";
+import { loadVersioned, saveVersioned } from "@/lib/storageSchema";
 import {
   DEFAULT_MUSIC_VOLUME,
   DEFAULT_SFX_VOLUME,
@@ -61,6 +62,7 @@ export interface GameSettings {
 }
 
 const STORAGE_KEY = "ragdoll-riot-settings";
+const SCHEMA_VERSION = 1;
 
 export const DEFAULT_CONTROLS: ControlBindings = {
   up: "KeyW",
@@ -132,38 +134,44 @@ function migrateAbilities(raw?: Partial<AbilityBindings>): AbilityBindings {
   };
 }
 
-function loadSettings(): GameSettings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(raw) as Partial<GameSettings>;
-    return {
-      language: parsed.language === "en" ? "en" : "ru",
-      controls: migrateControls(parsed.controls),
-      controlsP2: migrateControls(parsed.controlsP2 ?? DEFAULT_CONTROLS_P2),
-      abilities: migrateAbilities(parsed.abilities),
-      abilitiesP2: migrateAbilities(parsed.abilitiesP2 ?? DEFAULT_ABILITIES_P2),
-      showBanter: parsed.showBanter ?? DEFAULT_SETTINGS.showBanter,
-      matureBanter: parsed.matureBanter ?? DEFAULT_SETTINGS.matureBanter,
-      screenEffects: parsed.screenEffects ?? DEFAULT_SETTINGS.screenEffects,
-      soundEffects: parsed.soundEffects ?? DEFAULT_SETTINGS.soundEffects,
-      sfxVolume:
-        typeof parsed.sfxVolume === "number"
-          ? Math.max(0, Math.min(1, parsed.sfxVolume))
-          : DEFAULT_SETTINGS.sfxVolume,
-      musicEnabled: parsed.musicEnabled ?? DEFAULT_SETTINGS.musicEnabled,
-      musicVolume:
-        typeof parsed.musicVolume === "number"
-          ? Math.max(0, Math.min(1, parsed.musicVolume))
-          : DEFAULT_SETTINGS.musicVolume,
-    };
-  } catch {
-    return DEFAULT_SETTINGS;
+function coerceSettings(data: unknown): GameSettings | null {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    return null;
   }
+  const parsed = data as Partial<GameSettings>;
+  return {
+    language: parsed.language === "en" ? "en" : "ru",
+    controls: migrateControls(parsed.controls),
+    controlsP2: migrateControls(parsed.controlsP2 ?? DEFAULT_CONTROLS_P2),
+    abilities: migrateAbilities(parsed.abilities),
+    abilitiesP2: migrateAbilities(parsed.abilitiesP2 ?? DEFAULT_ABILITIES_P2),
+    showBanter: parsed.showBanter ?? DEFAULT_SETTINGS.showBanter,
+    matureBanter: parsed.matureBanter ?? DEFAULT_SETTINGS.matureBanter,
+    screenEffects: parsed.screenEffects ?? DEFAULT_SETTINGS.screenEffects,
+    soundEffects: parsed.soundEffects ?? DEFAULT_SETTINGS.soundEffects,
+    sfxVolume:
+      typeof parsed.sfxVolume === "number"
+        ? Math.max(0, Math.min(1, parsed.sfxVolume))
+        : DEFAULT_SETTINGS.sfxVolume,
+    musicEnabled: parsed.musicEnabled ?? DEFAULT_SETTINGS.musicEnabled,
+    musicVolume:
+      typeof parsed.musicVolume === "number"
+        ? Math.max(0, Math.min(1, parsed.musicVolume))
+        : DEFAULT_SETTINGS.musicVolume,
+  };
+}
+
+function loadSettings(): GameSettings {
+  return loadVersioned<GameSettings>({
+    key: STORAGE_KEY,
+    version: SCHEMA_VERSION,
+    migrate: (data) => coerceSettings(data),
+    fallback: () => DEFAULT_SETTINGS,
+  });
 }
 
 function saveSettings(settings: GameSettings): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  saveVersioned(STORAGE_KEY, SCHEMA_VERSION, settings);
 }
 
 type ControlDirection = keyof ControlBindings;

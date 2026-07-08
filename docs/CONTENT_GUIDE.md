@@ -1,6 +1,10 @@
 # Ragdoll Faces — гайд по добавлению контента
 
-Пошаговые рецепты «как добавить X». Все опираются на реестры и хуки из [ARCHITECTURE.md](ARCHITECTURE.md). Общий принцип: **один элемент контента = один файл в `src/content/...` + одна строка импорта в `src/content/index.ts`**. Ядро не трогаем.
+> **Статус:** рецепты ниже описывают *целевой* ContentRegistry (`src/content/…`).  
+> Сейчас контент живёт в `src/items/`, `src/face/`, `src/campaign/`, `src/monster/` без единого реестра.  
+> См. as-built в [ARCHITECTURE.md](ARCHITECTURE.md) §0 и проверку в [`AGENTS.md`](../AGENTS.md).
+
+Пошаговые рецепты «как добавить X». Все опираются на реестры и хуки из [ARCHITECTURE.md](ARCHITECTURE.md). Общий принцип (целевой): **один элемент контента = один файл в `src/content/...` + одна строка импорта в `src/content/index.ts`**. Ядро не трогаем.
 
 ---
 

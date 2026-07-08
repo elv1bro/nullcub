@@ -93,8 +93,10 @@ export function useBattleSession(opts: UseBattleSessionOpts): BattleSessionView 
 
     const offHit = session.events.on("hit", (p) => {
       onHitRef.current?.(p);
-      setPlayerHp(session.getHp("player"));
-      setOpponentHp(session.getHp("opponent"));
+      const nextPlayer = session.getHp("player");
+      const nextOpponent = session.getHp("opponent");
+      setPlayerHp((prev) => (prev === nextPlayer ? prev : nextPlayer));
+      setOpponentHp((prev) => (prev === nextOpponent ? prev : nextOpponent));
     });
     const offKo = session.events.on("knockout", (p) =>
       onKnockoutRef.current?.(p),

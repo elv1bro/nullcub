@@ -470,8 +470,8 @@ export function useHealth(
     (nextPlayer: number, nextOpponent: number, lastHitSide?: FighterSide | null) => {
       playerHpRef.current = nextPlayer;
       opponentHpRef.current = nextOpponent;
-      setPlayerHp(nextPlayer);
-      setOpponentHp(nextOpponent);
+      setPlayerHp((prev) => (prev === nextPlayer ? prev : nextPlayer));
+      setOpponentHp((prev) => (prev === nextOpponent ? prev : nextOpponent));
       if (lastHitSide) setLastHit(lastHitSide);
     },
     [],

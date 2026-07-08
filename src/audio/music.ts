@@ -154,6 +154,28 @@ function ensureChannels(): [Channel, Channel] {
   return channels;
 }
 
+/** Снимает page-lifecycle listeners и останавливает микшер (для unmount / HMR). */
+export function disposeMusic(): void {
+  stopMusic(0);
+  if (mixerTimer !== null && typeof window !== "undefined") {
+    window.clearInterval(mixerTimer);
+    mixerTimer = null;
+  }
+  if (typeof document !== "undefined") {
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.removeEventListener("pagehide", onPageHide);
+    window.removeEventListener("beforeunload", onPageHide);
+  }
+  if (channels) {
+    for (const ch of channels) {
+      ch.el.pause();
+      ch.el.removeAttribute("src");
+      ch.el.load();
+    }
+    channels = null;
+  }
+}
+
 function hasAudible(): boolean {
   return !!channels && !channels[activeIdx]!.el.paused;
 }

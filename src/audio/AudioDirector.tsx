@@ -1,7 +1,7 @@
 import { GameContext } from "@/GameContext";
 import { useActor } from "@xstate/react";
 import { useContext, useEffect } from "react";
-import { playBattleMusic, playMenuMusic, stopMusic } from "./music";
+import { playBattleMusic, playMenuMusic, stopMusic, disposeMusic } from "./music";
 import { playGongSound, preloadCombatAudio, setHeartbeatLevel } from "./sfx";
 import { NowPlaying } from "./NowPlaying";
 
@@ -37,6 +37,8 @@ export function AudioDirector() {
       stopMusic(300);
     };
   }, [inBattle]);
+
+  useEffect(() => () => disposeMusic(), []);
 
   return inBattle ? <NowPlaying /> : null;
 }

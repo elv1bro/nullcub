@@ -33,13 +33,13 @@
 - [x] **`npx tsc --noEmit` должен проходить чисто** (сейчас ~50 ошибок в `src/`,
   Vite их игнорирует). Включить type-check в CI/пре-коммит. Ошибки уровня
   «неиспользуемые импорты» и `exactOptionalPropertyTypes` — вычистить.
-- [x] **Версионирование localStorage.** Ввести единый `SCHEMA_VERSION` и миграции для:
-  `ragdoll-bouncer-progress` (сломается при изменении глав), `ragdoll-faces-stats`,
-  `ragdoll-blueprints`. Образец уже есть: `SEED_VERSION` в monsterStore.
+- [x] **Версионирование localStorage.** `loadVersioned`/`saveVersioned` для:
+  campaign progress, achievements, blueprints, settings (`ragdoll-riot-settings`),
+  profile (`ragdoll-faces-profile`). Легаси JSON без обёртки мигрирует как `fromVersion=0`.
 - [x] **Утечка `victimHitTrackers`.** `src/lib/grab/useGrabSystem.ts` ~55 — map живёт
   на уровне модуля; чистить при старте боя.
 - [x] Удалить мёртвый код: `WorkshopStatControls.tsx`, `PlayScopeMenu.tsx`,
-  `CampaignStub.tsx`, `GameTypeMenu.tsx` (либо подключить `TeamLobbyPanel` — см. этап 4).
+  `CampaignStub.tsx`, `GameTypeMenu.tsx`, `TeamLobbyPanel.tsx`, `MenuPreviewArena.tsx`.
 
 ## 1.3 Мелкие баги мастерской
 
