@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://scrapkitsd01"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Support_Diagonal.glb" id="1_nxiap"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_q13pv"]
+friction = 0.7
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_b67g5"]
+size = Vector3(0.44, 3, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_88v7l"]
+size = Vector3(2.717425, 0.2, 0.6)
+
+[node name="KitSupportDiagonal" type="StaticBody3D" unique_id=560049212]
+physics_material_override = SubResource("PhysicsMaterial_q13pv")
+
+[node name="Post" type="CollisionShape3D" parent="." unique_id=822253858]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_b67g5")
+
+[node name="Brace" type="CollisionShape3D" parent="." unique_id=161317854]
+transform = Transform3D(0.62559223, -0.78015023, 0, 0.78015023, 0.62559223, 0, 0, 0, 1, -1.05, 1.22, 0)
+shape = SubResource("BoxShape3D_88v7l")
+
+[node name="Snap_Top" type="Marker3D" parent="." unique_id=1064249326]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=377722296 instance=ExtResource("1_nxiap")]

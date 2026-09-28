@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://scd2aeee21db"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Pipe_Piece.glb" id="1_qmpe7"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ptjls"]
+points = PackedVector3Array(0.2226, 0.05, 0, -0.2226, -0.075, 0, -0.2006, 0.075, 0, 0.1803, -0.05, 0, -0.2226, 0.0232, 0.0713, -0.2226, 0.0232, -0.0713, 0.1695, 0.0155, 0.0476, 0.1942, 0.0155, -0.0476, -0.2006, -0.0232, -0.0713, -0.2006, -0.0232, 0.0713, 0.2195, -0.034, 0.0247, -0.2006, 0.0607, 0.0441, -0.2226, -0.0607, -0.0441, -0.2226, -0.0607, 0.0441, -0.2006, 0.0607, -0.0441, 0.2147, -0.034, -0.0247, 0.1687, -0.0155, -0.0476, 0.2017, 0.0405, 0.0294, -0.2226, 0.013, -0.0399, -0.2226, 0.013, 0.0399, 0.2014, 0.0405, -0.0294, 0.1679, -0.0155, 0.0476, 0.207, -0.013, 0.0399, 0.1924, -0.013, -0.0399)
+
+[node name="Pipe_Piece" type="RigidBody3D" unique_id=1311678819]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.5
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1413595561]
+shape = SubResource("ConvexPolygonShape3D_ptjls")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=552266609 instance=ExtResource("1_qmpe7")]

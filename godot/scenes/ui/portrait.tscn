@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3 uid="uid://uiportrait01"]
+
+[ext_resource type="Script" path="res://scenes/ui/portrait.gd" id="1_portrait"]
+
+[node name="Portrait" type="Control"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
+script = ExtResource("1_portrait")
+
+[node name="Initials" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(0.95, 0.9, 0.8, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 34
+text = "P1"
+horizontal_alignment = 1
+vertical_alignment = 1

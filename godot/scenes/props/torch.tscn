@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://proptorch001"]
+
+[ext_resource type="Script" path="res://scenes/props/torch.gd" id="1_hcmvn"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Torch.glb" id="2_oappy"]
+
+[node name="Torch" type="Node3D" unique_id=1226746978]
+script = ExtResource("1_hcmvn")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=471097749 instance=ExtResource("2_oappy")]
+
+[node name="Light" type="OmniLight3D" parent="." unique_id=2075845044]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0.2)
+light_color = Color(1, 0.7, 0.38, 1)
+light_energy = 2.0
+omni_range = 6.0
+omni_attenuation = 1.5

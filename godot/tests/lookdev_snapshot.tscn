@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://lookdevsnp01"]
+
+[ext_resource type="Script" path="res://tests/lookdev_snapshot.gd" id="1_lsnap"]
+
+[node name="LookdevSnapshot" type="Node3D"]
+script = ExtResource("1_lsnap")

@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://sc02reinforc"]
+
+[ext_resource type="Script" path="res://scenes/props/breakable.gd" id="1_l521o"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Reinforced_Crate.glb" id="2_erg5g"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pw7ku"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_462st"]
+
+[node name="Reinforced_Crate" type="RigidBody3D" unique_id=1899358243]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 20.0
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("1_l521o")
+kind = "crate"
+hp = 50.0
+min_impact_speed = 8.0
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1246449096]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_462st")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=2067931330 instance=ExtResource("2_erg5g")]

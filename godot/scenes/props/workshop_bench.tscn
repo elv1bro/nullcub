@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://wsbench00001"]
+
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Workbench.glb" id="1_n46qy"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l7c2w"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_x64b5"]
+size = Vector3(2.4, 0.85, 0.9)
+
+[node name="WorkshopBench" type="StaticBody3D" unique_id=1988758896]
+physics_material_override = SubResource("PhysicsMaterial_l7c2w")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=477126133]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.425, 0)
+shape = SubResource("BoxShape3D_x64b5")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=378741556 instance=ExtResource("1_n46qy")]

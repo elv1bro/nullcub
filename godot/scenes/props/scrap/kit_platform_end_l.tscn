@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://scrapkitpel1"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Platform_End_L.glb" id="1_ldq8o"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_diwqe"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yffx7"]
+size = Vector3(2, 0.4, 2)
+
+[node name="KitPlatformEndL" type="StaticBody3D" unique_id=1235140012]
+physics_material_override = SubResource("PhysicsMaterial_diwqe")
+
+[node name="Deck" type="CollisionShape3D" parent="." unique_id=1516243845]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+shape = SubResource("BoxShape3D_yffx7")
+
+[node name="Snap_L" type="Marker3D" parent="." unique_id=680071426]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+
+[node name="Snap_R" type="Marker3D" parent="." unique_id=292823038]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=514465983 instance=ExtResource("1_ldq8o")]

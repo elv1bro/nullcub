@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://scdcb6ac8b7b"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bodies/Cloth_Scrap_Heap.glb" id="1_4g3r8"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bbt74"]
+friction = 0.95
+bounce = 0.02
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_rjrlt"]
+points = PackedVector3Array(-1.0487, -0.05, -0.6, -1.0487, -0.05, 0.6, -1.0487, 0.02, -0.6, -1.0487, 0.02, 0.6, -0.8989, -0.05, -0.6, -0.8989, -0.05, 0.6, -0.8989, 0.0493, -0.6, -0.8989, 0.0493, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_xm8ud"]
+points = PackedVector3Array(-0.8989, -0.05, -0.6, -0.8989, -0.05, 0.6, -0.8989, 0.0493, -0.6, -0.8989, 0.0493, 0.6, -0.7491, -0.05, -0.6, -0.7491, -0.05, 0.6, -0.7491, 0.1299, -0.6, -0.7491, 0.1299, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_u0hl8"]
+points = PackedVector3Array(-0.7491, -0.05, -0.6, -0.7491, -0.05, 0.6, -0.7491, 0.1299, -0.6, -0.7491, 0.1299, 0.6, -0.5993, -0.05, -0.6, -0.5993, -0.05, 0.6, -0.5993, 0.2399, -0.6, -0.5993, 0.2399, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_i8tif"]
+points = PackedVector3Array(-0.5993, -0.05, -0.6, -0.5993, -0.05, 0.6, -0.5993, 0.2399, -0.6, -0.5993, 0.2399, 0.6, -0.4495, -0.05, -0.6, -0.4495, -0.05, 0.6, -0.4495, 0.3564, -0.6, -0.4495, 0.3564, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ic576"]
+points = PackedVector3Array(-0.4495, -0.05, -0.6, -0.4495, -0.05, 0.6, -0.4495, 0.3564, -0.6, -0.4495, 0.3564, 0.6, -0.2996, -0.05, -0.6, -0.2996, -0.05, 0.6, -0.2996, 0.4578, -0.6, -0.2996, 0.4578, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_agn4d"]
+points = PackedVector3Array(-0.2996, -0.05, -0.6, -0.2996, -0.05, 0.6, -0.2996, 0.4578, -0.6, -0.2996, 0.4578, 0.6, -0.1498, -0.05, -0.6, -0.1498, -0.05, 0.6, -0.1498, 0.5218, -0.6, -0.1498, 0.5218, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_mimli"]
+points = PackedVector3Array(-0.1498, -0.05, -0.6, -0.1498, -0.05, 0.6, -0.1498, 0.5218, -0.6, -0.1498, 0.5218, 0.6, 0, -0.05, -0.6, 0, -0.05, 0.6, 0, 0.5281, -0.6, 0, 0.5281, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_o5ayw"]
+points = PackedVector3Array(0, -0.05, -0.6, 0, -0.05, 0.6, 0, 0.5281, -0.6, 0, 0.5281, 0.6, 0.1498, -0.05, -0.6, 0.1498, -0.05, 0.6, 0.1498, 0.4862, -0.6, 0.1498, 0.4862, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_gdp5j"]
+points = PackedVector3Array(0.1498, -0.05, -0.6, 0.1498, -0.05, 0.6, 0.1498, 0.4862, -0.6, 0.1498, 0.4862, 0.6, 0.2996, -0.05, -0.6, 0.2996, -0.05, 0.6, 0.2996, 0.4301, -0.6, 0.2996, 0.4301, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_0dyxf"]
+points = PackedVector3Array(0.2996, -0.05, -0.6, 0.2996, -0.05, 0.6, 0.2996, 0.4301, -0.6, 0.2996, 0.4301, 0.6, 0.4495, -0.05, -0.6, 0.4495, -0.05, 0.6, 0.4495, 0.3927, -0.6, 0.4495, 0.3927, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_5imte"]
+points = PackedVector3Array(0.4495, -0.05, -0.6, 0.4495, -0.05, 0.6, 0.4495, 0.3927, -0.6, 0.4495, 0.3927, 0.6, 0.5993, -0.05, -0.6, 0.5993, -0.05, 0.6, 0.5993, 0.3418, -0.6, 0.5993, 0.3418, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_x6m65"]
+points = PackedVector3Array(0.5993, -0.05, -0.6, 0.5993, -0.05, 0.6, 0.5993, 0.3418, -0.6, 0.5993, 0.3418, 0.6, 0.7491, -0.05, -0.6, 0.7491, -0.05, 0.6, 0.7491, 0.2223, -0.6, 0.7491, 0.2223, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_bdcs2"]
+points = PackedVector3Array(0.7491, -0.05, -0.6, 0.7491, -0.05, 0.6, 0.7491, 0.2223, -0.6, 0.7491, 0.2223, 0.6, 0.8989, -0.05, -0.6, 0.8989, -0.05, 0.6, 0.8989, 0.0852, -0.6, 0.8989, 0.0852, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_jfsch"]
+points = PackedVector3Array(0.8989, -0.05, -0.6, 0.8989, -0.05, 0.6, 0.8989, 0.0852, -0.6, 0.8989, 0.0852, 0.6, 1.0487, -0.05, -0.6, 1.0487, -0.05, 0.6, 1.0487, 0.02, -0.6, 1.0487, 0.02, 0.6)
+
+[node name="Cloth_Scrap_Heap" type="StaticBody3D" unique_id=325746868]
+physics_material_override = SubResource("PhysicsMaterial_bbt74")
+
+[node name="Shape_0" type="CollisionShape3D" parent="." unique_id=524504530]
+shape = SubResource("ConvexPolygonShape3D_rjrlt")
+
+[node name="Shape_1" type="CollisionShape3D" parent="." unique_id=1174047717]
+shape = SubResource("ConvexPolygonShape3D_xm8ud")
+
+[node name="Shape_2" type="CollisionShape3D" parent="." unique_id=2133702288]
+shape = SubResource("ConvexPolygonShape3D_u0hl8")
+
+[node name="Shape_3" type="CollisionShape3D" parent="." unique_id=1375117999]
+shape = SubResource("ConvexPolygonShape3D_i8tif")
+
+[node name="Shape_4" type="CollisionShape3D" parent="." unique_id=99745443]
+shape = SubResource("ConvexPolygonShape3D_ic576")
+
+[node name="Shape_5" type="CollisionShape3D" parent="." unique_id=2033475231]
+shape = SubResource("ConvexPolygonShape3D_agn4d")
+
+[node name="Shape_6" type="CollisionShape3D" parent="." unique_id=1605728645]
+shape = SubResource("ConvexPolygonShape3D_mimli")
+
+[node name="Shape_7" type="CollisionShape3D" parent="." unique_id=375955860]
+shape = SubResource("ConvexPolygonShape3D_o5ayw")
+
+[node name="Shape_8" type="CollisionShape3D" parent="." unique_id=1558081836]
+shape = SubResource("ConvexPolygonShape3D_gdp5j")
+
+[node name="Shape_9" type="CollisionShape3D" parent="." unique_id=151231591]
+shape = SubResource("ConvexPolygonShape3D_0dyxf")
+
+[node name="Shape_10" type="CollisionShape3D" parent="." unique_id=440857383]
+shape = SubResource("ConvexPolygonShape3D_5imte")
+
+[node name="Shape_11" type="CollisionShape3D" parent="." unique_id=844931180]
+shape = SubResource("ConvexPolygonShape3D_x6m65")
+
+[node name="Shape_12" type="CollisionShape3D" parent="." unique_id=147332332]
+shape = SubResource("ConvexPolygonShape3D_bdcs2")
+
+[node name="Shape_13" type="CollisionShape3D" parent="." unique_id=1037113774]
+shape = SubResource("ConvexPolygonShape3D_jfsch")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1172751597 instance=ExtResource("1_4g3r8")]

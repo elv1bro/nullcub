@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://wstoolbrd001"]
+
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Tool_Board.glb" id="1_rurig"]
+
+[node name="WorkshopToolBoard" type="Node3D" unique_id=82744238]
+
+[node name="Mesh" type="Node3D" parent="." unique_id=714886627 instance=ExtResource("1_rurig")]

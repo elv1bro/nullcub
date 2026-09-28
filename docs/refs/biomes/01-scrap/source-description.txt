@@ -1,0 +1,123 @@
+1-lvl свалка
+ THE SCRAP - Свалка
+ 🟢
+
+Для THE SCRAP я бы сделал ровно 100 ассетов, но не как 100 вариантов мусора. Нужны архитектура, интерактивные механизмы, физические объекты, детали кукол, ресурсы и storytelling. Потом это удобно разбить на 5 генераций по 20 ассетов.
+
+THE SCRAP - полный Asset List 001-100
+
+№	Asset	Что это
+001	Scrap Heap Small	Маленькая куча дерева, металла и деталей
+002	Scrap Heap Medium	Средняя куча для заполнения уровня
+003	Scrap Heap Massive	Огромная гора мусора, часть геометрии арены
+004	Puppet Limb Pile	Куча рук и ног старых кукол
+005	Puppet Head Pile	Гора деревянных голов
+006	Broken Puppet	Практически целая выброшенная кукла
+007	Crushed Puppet	Раздавленная прессом кукла
+008	Half Puppet	Торс с одной оставшейся конечностью
+009	Empty Torso	Пустой корпус без Core
+010	Dead Core Shell	Разбитая оболочка старого Core
+011	Wooden Limb Bundle	Связка деревянных конечностей
+012	Metal Parts Heap	Груда металлических деталей
+013	Gear Heap	Куча шестерёнок
+014	Chain Heap	Спутанная куча цепей
+015	Nail Bucket	Ведро старых гвоздей
+016	Bolt & Nut Box	Ящик болтов и гаек
+017	Broken Weapons Pile	Остатки старого оружия
+018	Broken Armor Heap	Куча брони
+019	Cloth Scrap Heap	Старые флаги и ткань
+020	Mystery Scrap Heap	Странная куча с потенциальным loot
+021	Wooden Crate	Обычный разбиваемый ящик
+022	Reinforced Crate	Усиленный металлическими уголками ящик
+023	Broken Crate	Уже разрушенный вариант
+024	Large Shipping Crate	Огромный транспортный ящик
+025	Wooden Barrel	Деревянная бочка
+026	Metal Barrel	Тяжёлая железная бочка
+027	Broken Barrel	Обломки бочки
+028	Scrap Basket	Корзина с деталями
+029	Junk Cart	Тележка с мусором
+030	Overturned Junk Cart	Перевёрнутая тележка
+031	Rail Scrap Wagon	Большая вагонетка
+032	Broken Wheelbarrow	Старая тачка
+033	Wooden Pallet	Деревянный поддон
+034	Metal Plate	Большая металлическая пластина
+035	Corrugated Sheet	Погнутый металлический лист
+036	Wooden Beam	Большая балка
+037	Broken Beam	Расколотая балка
+038	Pipe Bundle	Связка труб
+039	Rope Coil	Бухта старой верёвки
+040	Cable Coil	Тяжёлый металлический кабель
+041	Scrap Floor Module	Пол из случайно соединённых пластин
+042	Scrap Platform Small	Маленькая игровая платформа
+043	Scrap Platform Large	Большая платформа
+044	Hanging Platform	Платформа на цепях
+045	Tilting Platform	Физически наклоняющаяся платформа
+046	Broken Bridge	Разрушенный деревянно-металлический мост
+047	Improvised Bridge	Мост из дверей, досок и металлолома
+048	Hanging Rope Bridge	Подвесной мост
+049	Scrap Staircase	Лестница из разных деталей
+050	Broken Staircase	Обрушенная лестница
+051	Improvised Ladder	Самодельная лестница
+052	Chain Ladder	Лестница на цепях
+053	Scrap Wall	Стена из металлолома
+054	Junk Barricade	Баррикада из мусора
+055	Collapsible Wall	Разрушаемая стена
+056	Scrap Arch	Арка из старых механизмов
+057	Support Tower	Высокая опора из хлама
+058	Hanging Cage	Подвешенная клетка
+059	Broken Cage	Разломанная клетка
+060	Scrap Shelter	Маленькое убежище из мусора
+061	Garbage Chute	Огромная труба, откуда падает мусор
+062	Disposal Hatch	Люк системы утилизации
+063	Giant Dump Gate	Огромные ворота сброса
+064	Scrap Conveyor	Работающий конвейер
+065	Broken Conveyor	Повреждённый конвейер
+066	Sorting Machine	Автоматическая сортировка мусора
+067	Crushing Press	Огромный работающий пресс
+068	Compacting Machine	Машина, сжимающая мусор в кубы
+069	Scrap Shredder	Вращающийся измельчитель
+070	Magnetic Crane	Огромный магнитный кран
+071	Claw Crane	Кран с механической клешнёй
+072	Chain Hoist	Подъёмник на цепи
+073	Winch	Старая механическая лебёдка
+074	Rotating Gear Mechanism	Огромная открытая система шестерёнок
+075	Junk Elevator	Ненадёжный грузовой лифт
+076	Scrap Furnace	Печь для уничтожения мусора
+077	Ventilation Fan	Огромный вентилятор
+078	Steam Vent	Труба с периодическим выбросом пара
+079	Swinging Magnet	Магнит, раскачивающийся над ареной
+080	Falling Scrap Trap	Механизм, сбрасывающий мусор сверху
+081	Old Warning Sign	Табличка DISPOSAL
+082	Crown Warning Sign	Старый знак Короны
+083	Direction Sign	Указатели старых этажей
+084	Broken Arena Banner	Остаток древнего флага
+085	Hanging Lantern	Старый подвесной фонарь
+086	Broken Lamp	Мигающая лампа
+087	Disposal Control Panel	Старая панель управления
+088	Dead Terminal	Неработающий терминал
+089	Ancient Speaker	Динамик системы Башни
+090	Scrap Worker Station	Заброшенное рабочее место
+091	Repair Table	Импровизированный стол для первого крафта
+092	Primitive Forge	Маленькая печь из металлолома
+093	Salvage Rack	Стойка с найденными деталями
+094	Body Parts Rack	Стойка конечностей для Body Builder
+095	Weapon Parts Rack	Стойка частей оружия
+096	Energy Cell	Редкий работающий источник энергии
+097	Active Core Fragment	Светящийся фрагмент древнего Core
+098	Crown-Sealed Container	Редкий контейнер с символом Создателя
+099	First Awakening Crater	Куча мусора, из которой начинается забег
+100	Ancient Workshop Door	Огромная закрытая дверь наверх с символом Короны
+
+🎨 Как разбить на 5 генераций
+
+Sheet 01 - Scrap & Bodies, 001-020: всё, из чего визуально состоит дно мира. Особенно важны головы, конечности, уничтоженные куклы и Core. Этот лист задаёт идентичность The Scrap.
+
+Sheet 02 - Physical Props, 021-040: ящики, бочки, вагонетки, балки, металлические листы, трубы, цепи. Большая часть должна иметь intact + damaged состояния, потому что всё это можно пинать, ломать и использовать в бою.
+
+Sheet 03 - Level Building Kit, 041-060: платформы, мосты, лестницы, стены, клетки и опоры. Из этих ассетов procedural generator уже сможет собирать десятки разных арен.
+
+Sheet 04 - Machines & Hazards, 061-080: самая игровая часть The Scrap. Конвейеры, пресс, shredder, краны, магниты, печи, пар. Почти всё здесь должно реально работать и взаимодействовать с ragdoll.
+
+Sheet 05 - Lore, Loot & Interaction, 081-100: таблички, старые системы Башни, первый крафт, стойки деталей, Energy Cell, Core Fragment, контейнер Создателя, место пробуждения и дверь наверх.
+
+И особенно мне нравятся №99 + №61 + №63 вместе: начало нового забега можно генерировать так, что сверху открывается Giant Dump Gate, вся стартовая куча физически падает через Garbage Chute, камера следует за ней вниз, происходит гигантский CRASH, а затем среди обломков загорается Core игрока. То есть даже стартовая сцена является частью ассет-системы, а не отдельным роликом.

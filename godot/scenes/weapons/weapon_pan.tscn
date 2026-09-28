@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/weapons/weapon.gd" id="1_o1jau"]
+[ext_resource type="PackedScene" path="res://assets/models/weapons/pan.glb" id="2_gmg4t"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wn0ou"]
+friction = 0.6
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hbj11"]
+size = Vector3(0.452, 0.064, 0.03)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_7s3r0"]
+height = 0.066
+radius = 0.18
+
+[node name="WeaponPan" type="RigidBody3D" unique_id=313233228]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.0
+physics_material_override = SubResource("PhysicsMaterial_wn0ou")
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+script = ExtResource("1_o1jau")
+weapon_id = "pan"
+
+[node name="Col_Handle" type="CollisionShape3D" parent="." unique_id=1999047898]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.134, 0, 0)
+shape = SubResource("BoxShape3D_hbj11")
+
+[node name="Col_Head" type="CollisionShape3D" parent="." unique_id=1972411307]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.53, 0, -0.003)
+shape = SubResource("CylinderShape3D_7s3r0")
+
+[node name="Model" type="Node3D" parent="." unique_id=1153831514 instance=ExtResource("2_gmg4t")]

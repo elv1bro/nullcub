@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://sc25corrugat"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Corrugated_Sheet.glb" id="1_y820g"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_j1me5"]
+friction = 0.45
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0tyw7"]
+size = Vector3(2, 0.08, 1)
+
+[node name="Corrugated_Sheet" type="RigidBody3D" unique_id=395280760]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 12.0
+physics_material_override = SubResource("PhysicsMaterial_j1me5")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=364688777]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.028, 0)
+shape = SubResource("BoxShape3D_0tyw7")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1350385788 instance=ExtResource("1_y820g")]

@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://scrapkitch01"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Chain_Hook.glb" id="1_wpqpt"]
+
+[node name="KitChainHook" type="Node3D" unique_id=1638792238]
+
+[node name="Anchor" type="Marker3D" parent="." unique_id=33762795]
+
+[node name="Mesh" type="Node3D" parent="." unique_id=2095255799 instance=ExtResource("1_wpqpt")]

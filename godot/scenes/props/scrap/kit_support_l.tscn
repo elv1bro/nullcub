@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://scrapkitsl01"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Support_L.glb" id="1_dcxwo"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_q13pv"]
+friction = 0.7
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_g1kfv"]
+size = Vector3(1.6, 6, 2)
+
+[node name="KitSupportL" type="StaticBody3D" unique_id=872906535]
+physics_material_override = SubResource("PhysicsMaterial_q13pv")
+
+[node name="Column" type="CollisionShape3D" parent="." unique_id=1394049226]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+shape = SubResource("BoxShape3D_g1kfv")
+
+[node name="Snap_Top" type="Marker3D" parent="." unique_id=1615458385]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1026298398 instance=ExtResource("1_dcxwo")]

@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://wssawhorse01"]
+
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Sawhorse.glb" id="1_isojp"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l7c2w"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_244yt"]
+size = Vector3(0.9, 0.6, 0.5)
+
+[node name="Sawhorse" type="RigidBody3D" unique_id=1298093135]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 8.0
+physics_material_override = SubResource("PhysicsMaterial_l7c2w")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1699915033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("BoxShape3D_244yt")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1942188340 instance=ExtResource("1_isojp")]

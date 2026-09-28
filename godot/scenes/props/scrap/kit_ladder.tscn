@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://scrapkitld01"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Ladder.glb" id="1_iugt5"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_diwqe"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1ldut"]
+size = Vector3(0.11, 3, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ydmaa"]
+size = Vector3(0.11, 3, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fco8c"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w7v71"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0icqp"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xl6nc"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qvuhw"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_awlc6"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_t5xnl"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_eo20w"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f1kbg"]
+size = Vector3(0.52, 0.065, 0.6)
+
+[node name="KitLadder" type="StaticBody3D" unique_id=1838754280]
+physics_material_override = SubResource("PhysicsMaterial_diwqe")
+
+[node name="RailL" type="CollisionShape3D" parent="." unique_id=1303053217]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 1.5, 0)
+shape = SubResource("BoxShape3D_1ldut")
+
+[node name="RailR" type="CollisionShape3D" parent="." unique_id=75527508]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 1.5, 0)
+shape = SubResource("BoxShape3D_ydmaa")
+
+[node name="Rung_0" type="CollisionShape3D" parent="." unique_id=1806319392]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("BoxShape3D_fco8c")
+
+[node name="Rung_1" type="CollisionShape3D" parent="." unique_id=2061051715]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("BoxShape3D_w7v71")
+
+[node name="Rung_2" type="CollisionShape3D" parent="." unique_id=892818613]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("BoxShape3D_0icqp")
+
+[node name="Rung_3" type="CollisionShape3D" parent="." unique_id=1905516372]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("BoxShape3D_xl6nc")
+
+[node name="Rung_4" type="CollisionShape3D" parent="." unique_id=1659198022]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_qvuhw")
+
+[node name="Rung_5" type="CollisionShape3D" parent="." unique_id=702224453]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+shape = SubResource("BoxShape3D_awlc6")
+
+[node name="Rung_6" type="CollisionShape3D" parent="." unique_id=1735028736]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+shape = SubResource("BoxShape3D_t5xnl")
+
+[node name="Rung_7" type="CollisionShape3D" parent="." unique_id=191128995]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+shape = SubResource("BoxShape3D_eo20w")
+
+[node name="Rung_8" type="CollisionShape3D" parent="." unique_id=865545817]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, 0)
+shape = SubResource("BoxShape3D_f1kbg")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1252057331 instance=ExtResource("1_iugt5")]

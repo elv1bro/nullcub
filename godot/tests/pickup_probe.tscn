@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://pickupprobe1"]
+
+[ext_resource type="Script" path="res://tests/pickup_probe.gd" id="1_pp"]
+
+[node name="PickupProbe" type="Node3D"]
+script = ExtResource("1_pp")

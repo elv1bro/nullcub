@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://sc06brokencr"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Broken_Crate_Debris.glb" id="1_33t2d"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pw7ku"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5faju"]
+size = Vector3(1.1, 0.14, 0.9)
+
+[node name="Broken_Crate_Debris" type="StaticBody3D" unique_id=586987365]
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=81949388]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+shape = SubResource("BoxShape3D_5faju")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1720170999 instance=ExtResource("1_33t2d")]

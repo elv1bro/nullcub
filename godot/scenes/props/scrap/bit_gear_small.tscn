@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://scga34a2ga01"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Gear_Small.glb" id="1_jnoko"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_wn2n2"]
+points = PackedVector3Array(-0.0741, -0.0944, -0.025, 0.0741, 0.0944, 0.025, -0.1044, 0.0591, 0.025, 0.1044, -0.0591, -0.025, 0.0045, 0.1199, -0.025, -0.0045, -0.1199, 0.025, 0.1192, 0.0135, 0.025, -0.1192, -0.0135, -0.025, -0.0497, 0.1092, 0.025, 0.0497, -0.1092, -0.025, -0.0668, 0.0997, -0.025, 0.0668, -0.0997, 0.025, 0.024, 0.1176, 0.025, -0.024, -0.1176, -0.025, 0.1126, -0.0414, 0.025, -0.1126, 0.0414, -0.025, 0.0885, 0.081, -0.025, -0.0885, -0.081, 0.025, 0.1154, 0.0328, -0.025, -0.1154, -0.0328, 0.025, -0.0668, 0.0997, 0.025, 0.0668, -0.0997, -0.025, -0.0497, 0.1092, -0.025, 0.0497, -0.1092, 0.025)
+
+[node name="Gear_Small" type="RigidBody3D" unique_id=1067617121]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=872253723]
+shape = SubResource("ConvexPolygonShape3D_wn2n2")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1394285586 instance=ExtResource("1_jnoko")]

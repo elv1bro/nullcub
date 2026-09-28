@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://sc255gaff7f0"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bodies/Bolt_Nut_Box.glb" id="1_yo5ia"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_r2ywc"]
+points = PackedVector3Array(0.4, 0, -0.2567, -0.406, 0.365, 0.2433, 0.395, 0.376, 0.2433, -0.4, 0, -0.2567, 0.0612, 0.4512, -0.2089, -0.4, 0.376, -0.2327, 0.4, 0, 0.2433, -0.4, 0, 0.2433, 0.406, 0.365, -0.2567, 0.0702, 0.4445, 0.139, -0.3188, 0.4694, 0.0254, -0.1265, 0.4027, 0.2559, -0.1858, 0.4558, -0.1183, 0.2429, 0.4342, 0.1024, -0.2531, 0.4359, 0.1832, 0.0471, 0.4926, -0.1043, -0.3483, 0.0547, 0.2533, 0.3556, 0.06, 0.2533, -0.0657, 0.4007, 0.2555, -0.3545, 0.3433, 0.2533, 0.3556, 0.34, 0.2533, 0.0967, 0.4933, -0.1221, -0.406, 0.035, 0.2433, 0.4, 0.035, 0.2493, 0.406, 0.035, -0.2567, -0.4, 0.035, -0.2627, -0.3369, 0.456, 0.0482, -0.4, 0.365, -0.2627, -0.1105, 0.4276, 0.2488, -0.1121, 0.3769, 0.2627, 0.0899, 0.4595, -0.2031, 0.0668, 0.4961, -0.1272)
+
+[node name="Bolt_Nut_Box" type="RigidBody3D" unique_id=610127922]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 24.0
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1415904729]
+shape = SubResource("ConvexPolygonShape3D_r2ywc")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1573321301 instance=ExtResource("1_yo5ia")]

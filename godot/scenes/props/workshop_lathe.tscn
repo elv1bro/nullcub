@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://wslathe00001"]
+
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Lathe.glb" id="1_4gcpt"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l7c2w"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_u6h66"]
+size = Vector3(2.2, 0.95, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f0fat"]
+size = Vector3(0.32, 0.42, 0.38)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_geow5"]
+size = Vector3(0.24, 0.36, 0.32)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_6or4b"]
+height = 0.06
+radius = 0.475
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_21rfw"]
+radius = 0.075
+height = 0.98
+
+[node name="WorkshopLathe" type="StaticBody3D" unique_id=2047436064]
+physics_material_override = SubResource("PhysicsMaterial_l7c2w")
+
+[node name="Bed" type="CollisionShape3D" parent="." unique_id=9751064]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.475, 0)
+shape = SubResource("BoxShape3D_u6h66")
+
+[node name="Headstock" type="CollisionShape3D" parent="." unique_id=1901426327]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.16, 0)
+shape = SubResource("BoxShape3D_f0fat")
+
+[node name="Tailstock" type="CollisionShape3D" parent="." unique_id=637915528]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 1.13, 0)
+shape = SubResource("BoxShape3D_geow5")
+
+[node name="Wheel" type="CollisionShape3D" parent="." unique_id=1584342710]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -1.05, 1.2, 0)
+shape = SubResource("CylinderShape3D_6or4b")
+
+[node name="Workpiece" type="CollisionShape3D" parent="." unique_id=397938169]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -0.06, 1.2, 0)
+shape = SubResource("CapsuleShape3D_21rfw")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1114290416 instance=ExtResource("1_4gcpt")]

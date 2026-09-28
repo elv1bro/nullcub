@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://propblock001"]
+
+[ext_resource type="Script" path="res://scenes/props/stone_static.gd" id="1_ovcju"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Stone_Block.glb" id="2_iljwd"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5i7ua"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_joiqf"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[node name="Stone_Block" type="StaticBody3D" unique_id=788690231]
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("1_ovcju")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1013941095]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("BoxShape3D_joiqf")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=2014167658 instance=ExtResource("2_iljwd")]

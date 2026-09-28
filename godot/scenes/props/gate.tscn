@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://propgate0001"]
+
+[ext_resource type="Script" path="res://scenes/props/gate.gd" id="1_3q5bc"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Gate_Arch.glb" id="2_p6fe8"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Gate_Door_L.glb" id="3_matuo"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Gate_Door_R.glb" id="4_4s2m7"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ikkq8"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rv7nx"]
+size = Vector3(1, 3.2, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4play"]
+size = Vector3(1, 3.2, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xdqf0"]
+size = Vector3(1.5, 2.9, 0.08)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_oxugs"]
+size = Vector3(1.5, 2.9, 0.08)
+
+[node name="Gate" type="Node3D" unique_id=1584025032]
+script = ExtResource("1_3q5bc")
+
+[node name="Arch" type="StaticBody3D" parent="." unique_id=41518416]
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+
+[node name="Shape_L" type="CollisionShape3D" parent="Arch" unique_id=226075294]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.6, 0)
+shape = SubResource("BoxShape3D_rv7nx")
+
+[node name="Shape_R" type="CollisionShape3D" parent="Arch" unique_id=1618737427]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.6, 0)
+shape = SubResource("BoxShape3D_4play")
+
+[node name="Mesh" type="Node3D" parent="Arch" unique_id=1493197198 instance=ExtResource("2_p6fe8")]
+
+[node name="Door_L" type="StaticBody3D" parent="." unique_id=510665138]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+
+[node name="Shape" type="CollisionShape3D" parent="Door_L" unique_id=702163617]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.45, 0)
+shape = SubResource("BoxShape3D_xdqf0")
+
+[node name="Mesh" type="Node3D" parent="Door_L" unique_id=702416311 instance=ExtResource("3_matuo")]
+
+[node name="Door_R" type="StaticBody3D" parent="." unique_id=1069642969]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+
+[node name="Shape" type="CollisionShape3D" parent="Door_R" unique_id=1626635035]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.45, 0)
+shape = SubResource("BoxShape3D_oxugs")
+
+[node name="Mesh" type="Node3D" parent="Door_R" unique_id=1218791667 instance=ExtResource("4_4s2m7")]

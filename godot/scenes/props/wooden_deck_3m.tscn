@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://propdeck3m01"]
+
+[ext_resource type="Script" path="res://scenes/props/stone_static.gd" id="1_yynyr"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Deck_3m.glb" id="2_81egb"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ikkq8"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nuorw"]
+size = Vector3(3, 0.25, 1.8)
+
+[node name="WoodenDeck" type="StaticBody3D" unique_id=711123072]
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+script = ExtResource("1_yynyr")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1565939855]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
+shape = SubResource("BoxShape3D_nuorw")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=795526747 instance=ExtResource("2_81egb")]

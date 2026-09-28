@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://sc3awoodenbe"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Wooden_Beam_Stack.glb" id="1_4pyl8"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pw7ku"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cw2n6"]
+size = Vector3(3, 0.312, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tu7wu"]
+size = Vector3(2.85, 0.31, 0.66)
+
+[node name="Wooden_Beam_Stack" type="StaticBody3D" unique_id=1510392848]
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+
+[node name="Shape_0" type="CollisionShape3D" parent="." unique_id=760627796]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.156, 0)
+shape = SubResource("BoxShape3D_cw2n6")
+
+[node name="Shape_1" type="CollisionShape3D" parent="." unique_id=1462863869]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.47, -0.015)
+shape = SubResource("BoxShape3D_tu7wu")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=100692429 instance=ExtResource("1_4pyl8")]

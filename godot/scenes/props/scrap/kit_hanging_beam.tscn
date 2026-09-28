@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://scrapkithb01"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Hanging_Beam.glb" id="1_ayhax"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_q13pv"]
+friction = 0.7
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tk48v"]
+size = Vector3(4, 0.34, 0.6)
+
+[node name="KitHangingBeam" type="StaticBody3D" unique_id=337293923]
+physics_material_override = SubResource("PhysicsMaterial_q13pv")
+
+[node name="Beam" type="CollisionShape3D" parent="." unique_id=365420381]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.17, 0)
+shape = SubResource("BoxShape3D_tk48v")
+
+[node name="Anchor_L" type="Marker3D" parent="." unique_id=1927489147]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, 2, 0)
+
+[node name="Anchor_R" type="Marker3D" parent="." unique_id=372942513]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 2, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1671212080 instance=ExtResource("1_ayhax")]

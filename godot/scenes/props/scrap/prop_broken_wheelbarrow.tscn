@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://sc20brokenwh"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Broken_Wheelbarrow.glb" id="1_ehqvp"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_tw2f5"]
+friction = 0.55
+bounce = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fq0mn"]
+size = Vector3(0.86, 0.34, 0.64)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_kjpd7"]
+height = 0.07
+radius = 0.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_g6nnx"]
+size = Vector3(0.12, 0.3, 0.58)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nnfht"]
+size = Vector3(0.36, 0.06, 0.62)
+
+[node name="Broken_Wheelbarrow" type="RigidBody3D" unique_id=1834212460]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 12.0
+physics_material_override = SubResource("PhysicsMaterial_tw2f5")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape_0" type="CollisionShape3D" parent="." unique_id=564919366]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.47, 0)
+shape = SubResource("BoxShape3D_fq0mn")
+
+[node name="Shape_1" type="CollisionShape3D" parent="." unique_id=1143327580]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.55, 0.204, 0)
+shape = SubResource("CylinderShape3D_kjpd7")
+
+[node name="Shape_2" type="CollisionShape3D" parent="." unique_id=1757272430]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0.15, 0)
+shape = SubResource("BoxShape3D_g6nnx")
+
+[node name="Shape_3" type="CollisionShape3D" parent="." unique_id=242857882]
+transform = Transform3D(0.8878154, -0.46019977, 0, 0.46019977, 0.8878154, 0, 0, 0, 1, 0.58, 0.44, 0)
+shape = SubResource("BoxShape3D_nnfht")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1263795898 instance=ExtResource("1_ehqvp")]

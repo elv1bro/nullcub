@@ -1,0 +1,158 @@
+[gd_scene load_steps=6 format=3 uid="uid://uiresults0001"]
+
+[ext_resource type="Script" path="res://scenes/ui/results_panel.gd" id="1_results"]
+[ext_resource type="Texture2D" path="res://assets/ui/crown.png" id="2_crown"]
+[ext_resource type="Texture2D" path="res://assets/ui/plank.png" id="3_plank"]
+
+[sub_resource type="StyleBoxTexture" id="plank_red"]
+content_margin_left = 22.0
+content_margin_top = 8.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
+texture = ExtResource("3_plank")
+texture_margin_left = 24.0
+texture_margin_top = 20.0
+texture_margin_right = 24.0
+texture_margin_bottom = 20.0
+modulate_color = Color(1.05, 0.42, 0.32, 1)
+
+[sub_resource type="StyleBoxTexture" id="plank_red_hover"]
+content_margin_left = 22.0
+content_margin_top = 8.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
+texture = ExtResource("3_plank")
+texture_margin_left = 24.0
+texture_margin_top = 20.0
+texture_margin_right = 24.0
+texture_margin_bottom = 20.0
+modulate_color = Color(1.25, 0.58, 0.45, 1)
+
+[node name="ResultsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_results")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.45)
+
+[node name="Left" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.03
+anchor_top = 0.1
+anchor_right = 0.43
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Crown" type="TextureRect" parent="Left"]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("2_crown")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WinnerRow" type="HBoxContainer" parent="Left"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 18
+
+[node name="WinnerName" type="Label" parent="Left/WinnerRow"]
+layout_mode = 2
+theme_type_variation = &"BrushLabel"
+theme_override_colors/font_color = Color(0.55, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 110
+text = "P1"
+
+[node name="WinsText" type="Label" parent="Left/WinnerRow"]
+layout_mode = 2
+theme_type_variation = &"BrushLabel"
+theme_override_font_sizes/font_size = 110
+text = "WINS!"
+
+[node name="Spacer" type="Control" parent="Left"]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Rematch" type="Button" parent="Left"]
+custom_minimum_size = Vector2(400, 68)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/focus = SubResource("plank_red_hover")
+theme_override_styles/hover = SubResource("plank_red_hover")
+theme_override_styles/normal = SubResource("plank_red")
+text = "REMATCH"
+
+[node name="MainMenu" type="Button" parent="Left"]
+custom_minimum_size = Vector2(400, 68)
+layout_mode = 2
+size_flags_horizontal = 4
+disabled = true
+text = "MAIN MENU"
+
+[node name="Frame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.46
+anchor_top = 0.09
+anchor_right = 0.965
+anchor_bottom = 0.09
+grow_horizontal = 2
+grow_vertical = 1
+theme_type_variation = &"WoodFrame"
+
+[node name="Body" type="VBoxContainer" parent="Frame"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Frame/Body"]
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(0.95, 0.85, 0.65, 1)
+theme_override_font_sizes/font_size = 32
+text = "MATCH RESULTS"
+horizontal_alignment = 1
+
+[node name="Places" type="HBoxContainer" parent="Frame/Body"]
+layout_mode = 2
+theme_override_constants/separation = 36
+alignment = 1
+
+[node name="Sep1" type="HSeparator" parent="Frame/Body"]
+layout_mode = 2
+
+[node name="Stats" type="GridContainer" parent="Frame/Body"]
+layout_mode = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 2
+columns = 3
+
+[node name="Sep2" type="HSeparator" parent="Frame/Body"]
+layout_mode = 2
+
+[node name="MedalsTitle" type="Label" parent="Frame/Body"]
+layout_mode = 2
+theme_type_variation = &"SmallCaps"
+text = "MEDALS"
+
+[node name="Medals" type="HFlowContainer" parent="Frame/Body"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 8

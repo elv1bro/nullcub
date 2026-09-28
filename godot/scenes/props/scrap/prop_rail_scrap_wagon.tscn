@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://sc18railscra"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Rail_Scrap_Wagon.glb" id="1_1nn0b"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_tw2f5"]
+friction = 0.55
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_xeldg"]
+points = PackedVector3Array(-0.92, 0.42, -0.47, -1.14, 1.155, -0.59, -0.92, 0.42, 0.47, -1.14, 1.155, 0.59, 0.92, 0.42, -0.47, 1.14, 1.155, -0.59, 0.92, 0.42, 0.47, 1.14, 1.155, 0.59)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0lr04"]
+size = Vector3(1.9, 0.42, 0.95)
+
+[node name="Rail_Scrap_Wagon" type="RigidBody3D" unique_id=866948850]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 90.0
+physics_material_override = SubResource("PhysicsMaterial_tw2f5")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape_0" type="CollisionShape3D" parent="." unique_id=924178174]
+shape = SubResource("ConvexPolygonShape3D_xeldg")
+
+[node name="Shape_1" type="CollisionShape3D" parent="." unique_id=1882148910]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0)
+shape = SubResource("BoxShape3D_0lr04")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1294163662 instance=ExtResource("1_1nn0b")]

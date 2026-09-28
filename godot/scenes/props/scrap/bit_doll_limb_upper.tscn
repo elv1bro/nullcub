@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://sc2523bca424"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Limb_Upper.glb" id="1_mptov"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_31h2a"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_wmlc6"]
+points = PackedVector3Array(0, 0.2451, 0, 0.0406, -0.2451, 0, -0.0281, -0.1851, -0.0486, -0.0281, -0.1851, 0.0486, 0.0471, 0.1869, -0.0342, -0.0471, 0.1869, -0.0342, -0.018, 0.1869, 0.0554, -0.0406, -0.2451, 0, 0.0471, 0.1869, 0.0342, 0.0281, -0.2151, -0.0486, 0.0281, -0.2151, 0.0486, 0.0156, 0.216, -0.048, 0.0504, 0.216, 0, -0.0504, 0.216, 0, 0.0156, 0.216, 0.048, -0.026, -0.2295, -0.045, -0.026, -0.2295, 0.045, -0.018, 0.1869, -0.0554, -0.0471, 0.1869, 0.0342, 0.0203, -0.2451, -0.0351, 0.0203, -0.2451, 0.0351, 0.0562, -0.2151, 0, -0.0562, -0.2151, 0, 0.045, -0.2295, -0.026)
+
+[node name="Doll_Limb_Upper" type="RigidBody3D" unique_id=961080949]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.5
+physics_material_override = SubResource("PhysicsMaterial_31h2a")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=2068508575]
+shape = SubResource("ConvexPolygonShape3D_wmlc6")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1989102064 instance=ExtResource("1_mptov")]

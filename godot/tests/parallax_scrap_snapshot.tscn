@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://parallaxscrapsnap1"]
+
+[ext_resource type="Script" path="res://tests/parallax_scrap_snapshot.gd" id="1_pssnap"]
+
+[node name="ParallaxScrapSnapshot" type="Node3D"]
+script = ExtResource("1_pssnap")

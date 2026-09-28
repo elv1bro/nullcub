@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://sc2ca2275d8d"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Bolt.glb" id="1_cpnqv"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_bf7le"]
+points = PackedVector3Array(0.0078, -0.0866, -0.0081, -0.0104, 0.0866, 0.0188, 0.0078, 0.0694, -0.025, 0.0205, 0.0694, 0.0155, -0.0205, 0.0734, -0.0155, -0.0086, -0.0766, 0.0089, 0.0209, 0.0866, 0, 0.0104, 0.0866, 0.0188, -0.0205, 0.0694, 0.0155, -0.0209, 0.0866, 0, 0.0104, 0.0866, -0.0188, -0.0086, -0.0766, -0.0089, 0.0086, -0.0766, 0.0089, -0.0104, 0.0866, -0.0188, 0.0205, 0.0734, -0.0155, -0.0078, 0.0694, 0.025, -0.0078, 0.0694, -0.025, 0.0078, 0.0694, 0.025, -0.0253, 0.0694, 0, 0.0253, 0.0694, 0)
+
+[node name="Bolt" type="RigidBody3D" unique_id=368011687]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.3
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1663032004]
+shape = SubResource("ConvexPolygonShape3D_bf7le")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1668455543 instance=ExtResource("1_cpnqv")]

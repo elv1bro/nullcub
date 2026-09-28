@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://sc617e0aa3b0"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Torso_Shell.glb" id="1_iskj0"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_31h2a"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_j0ccv"]
+points = PackedVector3Array(-0.1256, -0.25, -0.0229, 0.2268, 0.2168, -0.0013, -0.2268, 0.2168, -0.0013, 0.1736, -0.167, -0.0013, -0.0518, 0.03, -0.125, 0.0019, 0.144, 0.135, 0.0311, 0.25, -0.0755, 0.0019, -0.156, 0.1137, 0.1414, 0.03, -0.0918, -0.1414, 0.03, 0.0892, 0.1414, 0.03, 0.0892, 0, -0.167, -0.1138, -0.0849, 0.25, 0.053, -0.1034, 0.167, -0.1171, 0.0849, 0.25, 0.053, 0.0531, 0.13, -0.1281, 0.0919, -0.25, 0.0575, 0.0919, -0.25, -0.0602, -0.1503, -0.167, 0.0549, -0.1034, 0.133, 0.1144, -0.0336, -0.25, 0.079, 0.1034, 0.167, 0.1144, -0.0849, 0.25, -0.0556, 0.1273, 0.21, -0.0828)
+
+[node name="Doll_Torso_Shell" type="RigidBody3D" unique_id=1002440420]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 8.0
+physics_material_override = SubResource("PhysicsMaterial_31h2a")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1463387032]
+shape = SubResource("ConvexPolygonShape3D_j0ccv")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=532259362 instance=ExtResource("1_iskj0")]

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://scrapmatch01"]
+
+[ext_resource type="Script" path="res://tests/scrap_match_probe.gd" id="1_smp"]
+
+[node name="ScrapMatchProbe" type="Node3D"]
+script = ExtResource("1_smp")

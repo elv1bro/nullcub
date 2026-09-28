@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/weapons/weapon.gd" id="1_ruf80"]
+[ext_resource type="PackedScene" path="res://assets/models/weapons/sword.glb" id="2_vk8bs"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_rp6nc"]
+friction = 0.6
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1ev64"]
+size = Vector3(0.178, 0.056, 0.056)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1p0qe"]
+size = Vector3(0.03, 0.235, 0.03)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5ct5q"]
+size = Vector3(0.718, 0.076, 0.03)
+
+[node name="WeaponSword" type="RigidBody3D" unique_id=1502158767]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.5
+physics_material_override = SubResource("PhysicsMaterial_rp6nc")
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+script = ExtResource("1_ruf80")
+weapon_id = "sword"
+
+[node name="Col_Handle" type="CollisionShape3D" parent="." unique_id=348647774]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.027, 0, 0)
+shape = SubResource("BoxShape3D_1ev64")
+
+[node name="Col_Guard" type="CollisionShape3D" parent="." unique_id=1428882319]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.077, 0, 0)
+shape = SubResource("BoxShape3D_1p0qe")
+
+[node name="Col_Head" type="CollisionShape3D" parent="." unique_id=829459632]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.451, 0, 0)
+shape = SubResource("BoxShape3D_5ct5q")
+
+[node name="Model" type="Node3D" parent="." unique_id=177219740 instance=ExtResource("2_vk8bs")]

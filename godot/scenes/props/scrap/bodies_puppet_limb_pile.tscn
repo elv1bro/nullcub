@@ -1,0 +1,109 @@
+[gd_scene format=3 uid="uid://sce8c0ga6a57"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bodies/Puppet_Limb_Pile.glb" id="1_ps5xx"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_limb_upper.tscn" id="2_4otv7"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_limb_lower.tscn" id="3_srhvs"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_hand.tscn" id="4_y0qlj"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bbt74"]
+friction = 0.95
+bounce = 0.02
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_prf6b"]
+points = PackedVector3Array(-0.969, -0.05, -0.6, -0.969, -0.05, 0.6, -0.969, 0.02, -0.6, -0.969, 0.02, 0.6, -0.8199, -0.05, -0.6, -0.8199, -0.05, 0.6, -0.8199, 0.1011, -0.6, -0.8199, 0.1011, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_qveq1"]
+points = PackedVector3Array(-0.8199, -0.05, -0.6, -0.8199, -0.05, 0.6, -0.8199, 0.1011, -0.6, -0.8199, 0.1011, 0.6, -0.6709, -0.05, -0.6, -0.6709, -0.05, 0.6, -0.6709, 0.1888, -0.6, -0.6709, 0.1888, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_s83ww"]
+points = PackedVector3Array(-0.6709, -0.05, -0.6, -0.6709, -0.05, 0.6, -0.6709, 0.1888, -0.6, -0.6709, 0.1888, 0.6, -0.5218, -0.05, -0.6, -0.5218, -0.05, 0.6, -0.5218, 0.2589, -0.6, -0.5218, 0.2589, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_hu4nr"]
+points = PackedVector3Array(-0.5218, -0.05, -0.6, -0.5218, -0.05, 0.6, -0.5218, 0.2589, -0.6, -0.5218, 0.2589, 0.6, -0.3727, -0.05, -0.6, -0.3727, -0.05, 0.6, -0.3727, 0.3408, -0.6, -0.3727, 0.3408, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_cus54"]
+points = PackedVector3Array(-0.3727, -0.05, -0.6, -0.3727, -0.05, 0.6, -0.3727, 0.3408, -0.6, -0.3727, 0.3408, 0.6, -0.2236, -0.05, -0.6, -0.2236, -0.05, 0.6, -0.2236, 0.4164, -0.6, -0.2236, 0.4164, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_r5yqu"]
+points = PackedVector3Array(-0.2236, -0.05, -0.6, -0.2236, -0.05, 0.6, -0.2236, 0.4164, -0.6, -0.2236, 0.4164, 0.6, -0.0745, -0.05, -0.6, -0.0745, -0.05, 0.6, -0.0745, 0.4796, -0.6, -0.0745, 0.4796, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_77wb4"]
+points = PackedVector3Array(-0.0745, -0.05, -0.6, -0.0745, -0.05, 0.6, -0.0745, 0.4796, -0.6, -0.0745, 0.4796, 0.6, 0.0745, -0.05, -0.6, 0.0745, -0.05, 0.6, 0.0745, 0.5083, -0.6, 0.0745, 0.5083, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_bic3r"]
+points = PackedVector3Array(0.0745, -0.05, -0.6, 0.0745, -0.05, 0.6, 0.0745, 0.5083, -0.6, 0.0745, 0.5083, 0.6, 0.2236, -0.05, -0.6, 0.2236, -0.05, 0.6, 0.2236, 0.4445, -0.6, 0.2236, 0.4445, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_r6iy0"]
+points = PackedVector3Array(0.2236, -0.05, -0.6, 0.2236, -0.05, 0.6, 0.2236, 0.4445, -0.6, 0.2236, 0.4445, 0.6, 0.3727, -0.05, -0.6, 0.3727, -0.05, 0.6, 0.3727, 0.3459, -0.6, 0.3727, 0.3459, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_pmnnc"]
+points = PackedVector3Array(0.3727, -0.05, -0.6, 0.3727, -0.05, 0.6, 0.3727, 0.3459, -0.6, 0.3727, 0.3459, 0.6, 0.5218, -0.05, -0.6, 0.5218, -0.05, 0.6, 0.5218, 0.2763, -0.6, 0.5218, 0.2763, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_xti70"]
+points = PackedVector3Array(0.5218, -0.05, -0.6, 0.5218, -0.05, 0.6, 0.5218, 0.2763, -0.6, 0.5218, 0.2763, 0.6, 0.6709, -0.05, -0.6, 0.6709, -0.05, 0.6, 0.6709, 0.1926, -0.6, 0.6709, 0.1926, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_j7bjc"]
+points = PackedVector3Array(0.6709, -0.05, -0.6, 0.6709, -0.05, 0.6, 0.6709, 0.1926, -0.6, 0.6709, 0.1926, 0.6, 0.8199, -0.05, -0.6, 0.8199, -0.05, 0.6, 0.8199, 0.0773, -0.6, 0.8199, 0.0773, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_2u7ql"]
+points = PackedVector3Array(0.8199, -0.05, -0.6, 0.8199, -0.05, 0.6, 0.8199, 0.0773, -0.6, 0.8199, 0.0773, 0.6, 0.969, -0.05, -0.6, 0.969, -0.05, 0.6, 0.969, 0.02, -0.6, 0.969, 0.02, 0.6)
+
+[node name="Puppet_Limb_Pile" type="Node3D" unique_id=1257106828]
+
+[node name="Heap" type="StaticBody3D" parent="." unique_id=1518778855]
+physics_material_override = SubResource("PhysicsMaterial_bbt74")
+
+[node name="Shape_0" type="CollisionShape3D" parent="Heap" unique_id=488392226]
+shape = SubResource("ConvexPolygonShape3D_prf6b")
+
+[node name="Shape_1" type="CollisionShape3D" parent="Heap" unique_id=607780808]
+shape = SubResource("ConvexPolygonShape3D_qveq1")
+
+[node name="Shape_2" type="CollisionShape3D" parent="Heap" unique_id=1085080671]
+shape = SubResource("ConvexPolygonShape3D_s83ww")
+
+[node name="Shape_3" type="CollisionShape3D" parent="Heap" unique_id=1819517958]
+shape = SubResource("ConvexPolygonShape3D_hu4nr")
+
+[node name="Shape_4" type="CollisionShape3D" parent="Heap" unique_id=7778556]
+shape = SubResource("ConvexPolygonShape3D_cus54")
+
+[node name="Shape_5" type="CollisionShape3D" parent="Heap" unique_id=2067194535]
+shape = SubResource("ConvexPolygonShape3D_r5yqu")
+
+[node name="Shape_6" type="CollisionShape3D" parent="Heap" unique_id=682515152]
+shape = SubResource("ConvexPolygonShape3D_77wb4")
+
+[node name="Shape_7" type="CollisionShape3D" parent="Heap" unique_id=1104594458]
+shape = SubResource("ConvexPolygonShape3D_bic3r")
+
+[node name="Shape_8" type="CollisionShape3D" parent="Heap" unique_id=2091156900]
+shape = SubResource("ConvexPolygonShape3D_r6iy0")
+
+[node name="Shape_9" type="CollisionShape3D" parent="Heap" unique_id=325053076]
+shape = SubResource("ConvexPolygonShape3D_pmnnc")
+
+[node name="Shape_10" type="CollisionShape3D" parent="Heap" unique_id=1849065631]
+shape = SubResource("ConvexPolygonShape3D_xti70")
+
+[node name="Shape_11" type="CollisionShape3D" parent="Heap" unique_id=1473261029]
+shape = SubResource("ConvexPolygonShape3D_j7bjc")
+
+[node name="Shape_12" type="CollisionShape3D" parent="Heap" unique_id=89742665]
+shape = SubResource("ConvexPolygonShape3D_2u7ql")
+
+[node name="Mesh" type="Node3D" parent="Heap" unique_id=1594772666 instance=ExtResource("1_ps5xx")]
+
+[node name="Loose" type="Node3D" parent="." unique_id=322952168]
+
+[node name="Doll_Limb_Upper_0" parent="Loose" unique_id=961080949 instance=ExtResource("2_4otv7")]
+transform = Transform3D(0.034897447, -0.9993909, 0, 0.9993909, 0.034897447, 0, 0, 0, 1, -0.3, 0.4886, 0)
+sleeping = true
+
+[node name="Doll_Limb_Lower_1" parent="Loose" unique_id=841381294 instance=ExtResource("3_srhvs")]
+transform = Transform3D(-0.08715963, -0.99619436, 0, 0.99619436, -0.08715963, 0, 0, 0, 1, 0.25, 0.5355, 0)
+sleeping = true
+
+[node name="Doll_Hand_2" parent="Loose" unique_id=1808470838 instance=ExtResource("4_y0qlj")]
+transform = Transform3D(0.86602557, -0.49999976, 0, 0.49999976, 0.86602557, 0, 0, 0, 1, 0.05, 0.635, 0)
+sleeping = true

@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://scd015a04b55"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Helmet.glb" id="1_0dl2k"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_mfti2"]
+points = PackedVector3Array(0, -0.1248, -0.16, 0, 0.0352, 0.124, 0.16, -0.1248, 0, -0.16, -0.1248, 0, 0, 0.0852, -0.088, 0, -0.1248, 0.16, 0.124, 0.0352, 0, -0.124, 0.0352, 0, -0.0127, 0.1185, 0.022, -0.0812, -0.0715, 0.1238, 0.0788, -0.0695, 0.1253, -0.08, -0.1248, -0.1386, -0.1386, -0.1248, 0.08, 0.1386, -0.1248, -0.08, 0.1386, -0.1248, 0.08, 0.08, -0.1248, -0.1386, -0.1386, -0.1248, -0.08, -0.062, 0.0352, -0.1074, 0.062, 0.0352, -0.1074, 0.044, 0.0852, 0.0762, 0.0762, 0.0852, -0.044, -0.0762, 0.0852, -0.044, -0.0762, 0.0852, 0.044, 0.1074, 0.0352, 0.062)
+
+[node name="Helmet" type="RigidBody3D" unique_id=2015594639]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.5
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=492274353]
+shape = SubResource("ConvexPolygonShape3D_mfti2")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1870040789 instance=ExtResource("1_0dl2k")]

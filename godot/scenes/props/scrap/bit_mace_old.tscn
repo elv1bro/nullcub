@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://sc2a45237afa"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Mace_Old.glb" id="1_wscrs"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_fqyfu"]
+points = PackedVector3Array(0.3775, 0, 0, -0.3775, -0.018, 0, 0.2625, -0.115, 0, 0.2625, 0.115, 0, 0.2625, 0, -0.115, 0.2625, 0, 0.115, 0.3326, -0.0584, 0.0701, 0.3326, -0.0584, -0.0701, 0.3326, 0.0584, -0.0701, 0.3326, 0.0584, 0.0701, -0.3525, 0.0148, -0.0148, -0.3775, 0.0127, 0.0127, -0.3525, -0.0148, -0.0148, -0.3525, -0.0148, 0.0148, -0.3775, 0, -0.018, -0.3525, 0.0148, 0.0148)
+
+[node name="Mace_Old" type="RigidBody3D" unique_id=1655535476]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 3.5
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=189570483]
+shape = SubResource("ConvexPolygonShape3D_fqyfu")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1919095517 instance=ExtResource("1_wscrs")]

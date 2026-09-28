@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://matchprobe01"]
+
+[ext_resource type="Script" path="res://tests/match_probe.gd" id="1_mp"]
+
+[node name="MatchProbe" type="Node3D"]
+script = ExtResource("1_mp")

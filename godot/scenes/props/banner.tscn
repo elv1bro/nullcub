@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://propbanner01"]
+
+[ext_resource type="Script" path="res://scenes/props/banner.gd" id="1_lbfw1"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Banner.glb" id="2_kix77"]
+
+[node name="Banner" type="Node3D" unique_id=588404420]
+script = ExtResource("1_lbfw1")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1595361685 instance=ExtResource("2_kix77")]

@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://sc1abrokenba"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Broken_Barrel_Debris.glb" id="1_3g36j"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pw7ku"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lgvvi"]
+size = Vector3(1.2, 0.07, 0.7)
+
+[node name="Broken_Barrel_Debris" type="StaticBody3D" unique_id=2092463875]
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=528754320]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.035, 0)
+shape = SubResource("BoxShape3D_lgvvi")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=433532542 instance=ExtResource("1_3g36j")]

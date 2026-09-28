@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://scrapkitbf01"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Banner_Frame.glb" id="1_6rdl2"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_q13pv"]
+friction = 0.7
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bh53o"]
+size = Vector3(0.4, 4, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_p5wjm"]
+size = Vector3(0.4, 4, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hi5au"]
+size = Vector3(2, 0.36, 0.6)
+
+[node name="KitBannerFrame" type="StaticBody3D" unique_id=1302817247]
+physics_material_override = SubResource("PhysicsMaterial_q13pv")
+
+[node name="PostL" type="CollisionShape3D" parent="." unique_id=20420252]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 2, 0)
+shape = SubResource("BoxShape3D_bh53o")
+
+[node name="PostR" type="CollisionShape3D" parent="." unique_id=1143104729]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 2, 0)
+shape = SubResource("BoxShape3D_p5wjm")
+
+[node name="Beam" type="CollisionShape3D" parent="." unique_id=2021306454]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.82, 0)
+shape = SubResource("BoxShape3D_hi5au")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=962862955 instance=ExtResource("1_6rdl2")]

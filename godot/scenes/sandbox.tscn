@@ -1,0 +1,53 @@
+[gd_scene load_steps=6 format=3 uid="uid://sandbox0001"]
+
+[sub_resource type="BoxShape3D" id="floor_shape"]
+size = Vector3(30, 1, 6)
+
+[sub_resource type="BoxMesh" id="floor_mesh"]
+size = Vector3(30, 1, 6)
+
+[sub_resource type="SphereShape3D" id="ball_shape"]
+radius = 0.3
+
+[sub_resource type="SphereMesh" id="ball_mesh"]
+radius = 0.3
+height = 0.6
+
+[sub_resource type="Environment" id="env"]
+background_mode = 1
+background_color = Color(0.56, 0.76, 0.9, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.9, 0.85, 0.8, 1)
+ambient_light_energy = 0.6
+
+[node name="Sandbox" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.353, 0.353, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 8, 0)
+light_color = Color(1, 0.94, 0.85, 1)
+shadow_enabled = true
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 12)
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("floor_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("floor_mesh")
+
+[node name="Ball" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+mass = 2.0
+
+[node name="Shape" type="CollisionShape3D" parent="Ball"]
+shape = SubResource("ball_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Ball"]
+mesh = SubResource("ball_mesh")

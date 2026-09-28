@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://sceneswitch01"]
+
+[ext_resource type="Script" path="res://tests/scene_switch_probe.gd" id="1_ssp"]
+
+[node name="SceneSwitchProbe" type="Node"]
+script = ExtResource("1_ssp")

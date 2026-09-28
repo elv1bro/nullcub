@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://of12o0v4noqq"]
+
+[ext_resource type="Script" path="res://tests/mannequin_turntable.gd" id="1_mt"]
+
+[node name="MannequinTurntable" type="Node3D"]
+script = ExtResource("1_mt")

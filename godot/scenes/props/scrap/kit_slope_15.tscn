@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://scrapkits151"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Slope_15.glb" id="1_7psxu"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_diwqe"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_h1n8m"]
+size = Vector3(4.1231055, 0.3, 2)
+
+[node name="KitSlope15" type="StaticBody3D" unique_id=2124179033]
+physics_material_override = SubResource("PhysicsMaterial_diwqe")
+
+[node name="Ramp" type="CollisionShape3D" parent="." unique_id=1465838406]
+transform = Transform3D(0.9701425, -0.24253562, 0, 0.24253562, 0.9701425, 0, 0, 0, 1, 0.036380343, 0.35447863, 0)
+shape = SubResource("BoxShape3D_h1n8m")
+
+[node name="Snap_L" type="Marker3D" parent="." unique_id=1987563781]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0)
+
+[node name="Snap_R" type="Marker3D" parent="." unique_id=1447492281]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=558224736 instance=ExtResource("1_7psxu")]

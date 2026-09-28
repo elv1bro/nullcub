@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://sc46afe56abe"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Nut.glb" id="1_rqf0a"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_apagl"]
+points = PackedVector3Array(-0.011, -0.009, 0.025, 0.011, 0.009, -0.025, -0.022, 0.009, 0, 0.022, -0.009, 0, 0.011, 0.009, 0.025, -0.011, -0.009, -0.025, -0.022, -0.009, 0, 0.011, -0.009, 0.025, 0.022, 0.009, 0, -0.011, 0.009, 0.025, -0.011, 0.009, -0.025, 0.011, -0.009, -0.025)
+
+[node name="Nut" type="RigidBody3D" unique_id=1178364776]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.15
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=675960359]
+shape = SubResource("ConvexPolygonShape3D_apagl")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=903394401 instance=ExtResource("1_rqf0a")]

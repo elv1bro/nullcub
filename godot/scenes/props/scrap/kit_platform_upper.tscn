@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://scrapkitpup1"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Platform_Upper.glb" id="1_whymu"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_diwqe"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kb61k"]
+size = Vector3(2, 0.4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_alttk"]
+size = Vector3(0.3, 1.6, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mixt6"]
+size = Vector3(0.3, 1.6, 2)
+
+[node name="KitPlatformUpper" type="StaticBody3D" unique_id=314608326]
+physics_material_override = SubResource("PhysicsMaterial_diwqe")
+
+[node name="Deck" type="CollisionShape3D" parent="." unique_id=1308850680]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+shape = SubResource("BoxShape3D_kb61k")
+
+[node name="LegL" type="CollisionShape3D" parent="." unique_id=972028205]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, -1.2, 0)
+shape = SubResource("BoxShape3D_alttk")
+
+[node name="LegR" type="CollisionShape3D" parent="." unique_id=2012740915]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.78, -1.2, 0)
+shape = SubResource("BoxShape3D_mixt6")
+
+[node name="Snap_L" type="Marker3D" parent="." unique_id=437728675]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+
+[node name="Snap_R" type="Marker3D" parent="." unique_id=733310991]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1639662337 instance=ExtResource("1_whymu")]

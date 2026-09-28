@@ -1,0 +1,62 @@
+[gd_scene load_steps=9 format=3 uid="uid://fxdustpuff01"]
+
+[ext_resource type="Texture2D" path="res://assets/textures/fx/puff.png" id="1_puff"]
+
+[sub_resource type="Gradient" id="AlphaGrad"]
+offsets = PackedFloat32Array(0, 0.12, 1)
+colors = PackedColorArray(1, 0.95, 0.86, 0, 1, 0.95, 0.86, 0.55, 0.9, 0.85, 0.78, 0)
+
+[sub_resource type="GradientTexture1D" id="AlphaRamp"]
+gradient = SubResource("AlphaGrad")
+
+[sub_resource type="Curve" id="GrowCurve"]
+_data = [Vector2(0, 0.35), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="GrowTex"]
+curve = SubResource("GrowCurve")
+
+[sub_resource type="ParticleProcessMaterial" id="PM"]
+lifetime_randomness = 0.25
+emission_shape = 1
+emission_sphere_radius = 0.08
+angle_min = -180.0
+angle_max = 180.0
+direction = Vector3(0, 0, 1)
+spread = 75.0
+initial_velocity_min = 0.5
+initial_velocity_max = 1.5
+angular_velocity_min = -40.0
+angular_velocity_max = 40.0
+gravity = Vector3(0, 0.5, 0)
+damping_min = 2.0
+damping_max = 3.0
+scale_min = 0.5
+scale_max = 1.0
+scale_curve = SubResource("GrowTex")
+color_ramp = SubResource("AlphaRamp")
+
+[sub_resource type="StandardMaterial3D" id="Mat"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.82, 0.72, 0.56, 1)
+albedo_texture = ExtResource("1_puff")
+billboard_mode = 3
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="Quad"]
+material = SubResource("Mat")
+size = Vector2(0.4, 0.4)
+
+[node name="DustPuff" type="GPUParticles3D"]
+emitting = false
+amount = 14
+lifetime = 1.0
+one_shot = true
+explosiveness = 0.9
+randomness = 0.2
+fixed_fps = 60
+visibility_aabb = AABB(-2, -2, -2, 4, 4, 4)
+process_material = SubResource("PM")
+draw_pass_1 = SubResource("Quad")

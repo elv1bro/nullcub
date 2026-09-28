@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://sc03woodenba"]
+
+[ext_resource type="Script" path="res://scenes/props/breakable.gd" id="1_jmru1"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Wooden_Barrel.glb" id="2_0pjw2"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pw7ku"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_55jet"]
+height = 1.0
+radius = 0.33
+
+[node name="Wooden_Barrel" type="RigidBody3D" unique_id=87853472]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 15.0
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("1_jmru1")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=194299102]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("CylinderShape3D_55jet")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=2017392010 instance=ExtResource("2_0pjw2")]

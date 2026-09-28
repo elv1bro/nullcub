@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://propgallows1"]
+
+[ext_resource type="PackedScene" path="res://assets/models/props/Post_2m.glb" id="1_nkqej"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Beam_3m.glb" id="2_xbbkp"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ikkq8"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f5q7q"]
+size = Vector3(3, 0.2, 0.2)
+
+[node name="Gallows" type="StaticBody3D" unique_id=760758862]
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+
+[node name="Post" type="Node3D" parent="." unique_id=1706915648 instance=ExtResource("1_nkqej")]
+
+[node name="Beam" type="Node3D" parent="." unique_id=1738339082]
+transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 0, 2.06, 0)
+
+[node name="Mesh" type="Node3D" parent="Beam" unique_id=348665200 instance=ExtResource("2_xbbkp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0, 0)
+
+[node name="Hook" type="Marker3D" parent="Beam" unique_id=964187294]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1003604460]
+transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 0.34641016, 2.1599998, 0.2)
+shape = SubResource("BoxShape3D_f5q7q")

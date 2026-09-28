@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://clipcapture01"]
+
+[ext_resource type="Script" path="res://tests/clip_capture.gd" id="1_clip"]
+
+[node name="ClipCapture" type="Node3D"]
+script = ExtResource("1_clip")

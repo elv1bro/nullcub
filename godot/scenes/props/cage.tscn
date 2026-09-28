@@ -1,0 +1,106 @@
+[gd_scene format=3 uid="uid://propcage0001"]
+
+[ext_resource type="PackedScene" path="res://assets/models/props/Chain_Link.glb" id="1_q2yxt"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Cage.glb" id="2_0dysg"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ikkq8"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_kgavu"]
+radius = 0.04
+height = 0.5
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_jr0n0"]
+radius = 0.04
+height = 0.5
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_ah0ee"]
+height = 1.4
+radius = 0.4
+
+[node name="Cage" type="Node3D" unique_id=1885532350]
+
+[node name="Anchor" type="Marker3D" parent="." unique_id=1954445613]
+
+[node name="Link_0" type="RigidBody3D" parent="." unique_id=1217598915]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="Link_0" unique_id=874548044]
+shape = SubResource("CapsuleShape3D_kgavu")
+
+[node name="Link0" type="Node3D" parent="Link_0" unique_id=27197208 instance=ExtResource("1_q2yxt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.26, 0)
+
+[node name="Link1" type="Node3D" parent="Link_0" unique_id=760500764 instance=ExtResource("1_q2yxt")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, -0.09, 0)
+
+[node name="Link2" type="Node3D" parent="Link_0" unique_id=300561324 instance=ExtResource("1_q2yxt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+
+[node name="Joint_0" type="Generic6DOFJoint3D" parent="." unique_id=1248078663]
+node_b = NodePath("../Link_0")
+angular_limit_z/upper_angle = 1.3089969
+angular_limit_z/lower_angle = -1.3089969
+
+[node name="Link_1" type="RigidBody3D" parent="." unique_id=1728451870]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.75, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="Link_1" unique_id=1685129787]
+shape = SubResource("CapsuleShape3D_jr0n0")
+
+[node name="Link0" type="Node3D" parent="Link_1" unique_id=555007641 instance=ExtResource("1_q2yxt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.26, 0)
+
+[node name="Link1" type="Node3D" parent="Link_1" unique_id=1460994639 instance=ExtResource("1_q2yxt")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, -0.09, 0)
+
+[node name="Link2" type="Node3D" parent="Link_1" unique_id=2013355769 instance=ExtResource("1_q2yxt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+
+[node name="Joint_1" type="Generic6DOFJoint3D" parent="." unique_id=1723335322]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+node_a = NodePath("../Link_0")
+node_b = NodePath("../Link_1")
+angular_limit_z/upper_angle = 1.3089969
+angular_limit_z/lower_angle = -1.3089969
+
+[node name="Body" type="RigidBody3D" parent="." unique_id=1045581417]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.86, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 30.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="Body" unique_id=1608544841]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("CylinderShape3D_ah0ee")
+
+[node name="Mesh" type="Node3D" parent="Body" unique_id=1433971571 instance=ExtResource("2_0dysg")]
+
+[node name="Joint_2" type="Generic6DOFJoint3D" parent="." unique_id=873649015]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+node_a = NodePath("../Link_1")
+node_b = NodePath("../Body")
+angular_limit_z/upper_angle = 1.3089969
+angular_limit_z/lower_angle = -1.3089969

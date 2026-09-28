@@ -1,0 +1,85 @@
+## Карточка KO (R20 KO CARD): лёгкое затемнение экрана радиальным градиентом (центр 0.1 → край 0.6, чтобы разлёт частей оставался виден), чернильные брызги (assets/ui/splatter.png),
+## огромное красное «KO!» под наклоном, снизу «BETTER LUCK NEXT TIME!». show_card(victim, colour): брызги влетают
+## scale 2.4 → 1 с отскоком за 0.12 с и трясутся SHAKE_S, подпись проявляется через 0.25 с, вся карточка живёт
+## SHOW_S = 1.2 с (последние FADE_S — затухание). Реальное время (Time.get_ticks_msec, Tween.set_ignore_time_scale):
+## KO-замедление Engine.time_scale (этап 09) карточку не растягивает. Дерево узлов — scenes/ui/ko_card.tscn.
+class_name KoCard
+extends Control
+
+const SHOW_S := 1.2
+const FADE_S := 0.2
+const SHAKE_S := 0.35
+const SHAKE_PX := 16.0
+
+@onready var dim: TextureRect = $Dim
+@onready var burst: Control = $Burst
+@onready var splatter: TextureRect = $Burst/Splatter
+@onready var ko_label: Label = $Burst/Ko
+@onready var victim_label: Label = $Burst/Victim
+@onready var sub: Label = $Sub
+
+var _shake_left := 0.0
+var _burst_base := Vector2.ZERO
+var _last_ms := 0
+var _hide_at_ms := 0
+var _tw: Tween
+
+
+func _ready() -> void:
+	visible = false
+	_last_ms = Time.get_ticks_msec()
+
+
+## Непрозрачность брызг (0 — без брызг: Void, HUD.ko_splatter_alpha).
+func set_splatter_alpha(a: float) -> void:
+	splatter.modulate.a = clampf(a, 0.0, 1.0)
+	splatter.visible = a > 0.0
+
+
+## Осталось секунд показа (0, если карточка скрыта) — HUD откладывает панель итогов до конца карточки.
+func remaining_s() -> float:
+	if not visible:
+		return 0.0
+	return maxf(float(_hide_at_ms - Time.get_ticks_msec()) / 1000.0, 0.0)
+
+
+func show_card(victim_name: String = "", colour: Color = Color.WHITE) -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	visible = true
+	modulate = Color.WHITE
+	victim_label.visible = victim_name != ""
+	victim_label.text = victim_name
+	victim_label.add_theme_color_override("font_color", colour.lightened(0.3))
+	dim.modulate = Color(1, 1, 1, 0)
+	sub.modulate = Color(1, 1, 1, 0)
+	if visible and _shake_left > 0.0:
+		burst.position = _burst_base
+	_burst_base = burst.position
+	burst.scale = Vector2(2.4, 2.4)
+	burst.rotation = deg_to_rad(-16.0)
+	_shake_left = SHAKE_S
+	_hide_at_ms = Time.get_ticks_msec() + int(SHOW_S * 1000.0)
+	_tw = create_tween().set_ignore_time_scale(true)
+	_tw.set_parallel(true)
+	_tw.tween_property(dim, "modulate:a", 1.0, 0.08)
+	_tw.tween_property(burst, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(burst, "rotation", 0.0, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(sub, "modulate:a", 1.0, 0.15).set_delay(0.25)
+	_tw.tween_property(self, "modulate:a", 0.0, FADE_S).set_delay(SHOW_S - FADE_S)
+	_tw.set_parallel(false)
+	_tw.tween_callback(hide)
+
+
+func _process(_delta: float) -> void:
+	var now := Time.get_ticks_msec()
+	var dt := clampf(float(now - _last_ms) / 1000.0, 0.0, 0.1)
+	_last_ms = now
+	if not visible:
+		return
+	if _shake_left > 0.0:
+		_shake_left -= dt
+		var k := maxf(_shake_left, 0.0) / SHAKE_S
+		burst.position = _burst_base + Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * SHAKE_PX * k
+	else:
+		burst.position = _burst_base

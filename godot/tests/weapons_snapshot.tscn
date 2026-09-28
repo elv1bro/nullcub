@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://weaponsnap01"]
+
+[ext_resource type="Script" path="res://tests/weapons_snapshot.gd" id="1_ws"]
+
+[node name="WeaponsSnapshot" type="Node3D"]
+script = ExtResource("1_ws")

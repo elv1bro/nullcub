@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://scbdba670a8d"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Scrap_Board.glb" id="1_l68ox"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_31h2a"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_s8xgp"]
+points = PackedVector3Array(-0.4454, -0.0376, 0.075, 0.4454, -0.0076, 0.075, 0.4294, -0.0376, -0.075, -0.4454, -0.0076, -0.075, 0.4049, 0.0364, -0.0084, -0.4454, -0.0076, 0.075, 0.4454, -0.0376, 0.075, -0.4454, -0.0376, -0.075, 0.4294, -0.0076, -0.075, 0.407, 0.0376, -0.0266)
+
+[node name="Scrap_Board" type="RigidBody3D" unique_id=1716222626]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 3.0
+physics_material_override = SubResource("PhysicsMaterial_31h2a")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=693443654]
+shape = SubResource("ConvexPolygonShape3D_s8xgp")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=278165979 instance=ExtResource("1_l68ox")]

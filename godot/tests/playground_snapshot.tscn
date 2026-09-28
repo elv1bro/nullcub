@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://pgsnapshot01"]
+
+[ext_resource type="Script" path="res://tests/playground_snapshot.gd" id="1_pgs"]
+
+[node name="PlaygroundSnapshot" type="Node3D"]
+script = ExtResource("1_pgs")

@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://sc21woodenpa"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Wooden_Pallet.glb" id="1_m27xb"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pw7ku"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1ed1t"]
+size = Vector3(1.2, 0.148, 1)
+
+[node name="Wooden_Pallet" type="RigidBody3D" unique_id=666517334]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 12.0
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1908332869]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.074, 0)
+shape = SubResource("BoxShape3D_1ed1t")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=771194952 instance=ExtResource("1_m27xb")]

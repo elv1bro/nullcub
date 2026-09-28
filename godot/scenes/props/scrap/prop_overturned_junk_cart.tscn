@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://sc17overturn"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Overturned_Junk_Cart.glb" id="1_ny3a1"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pw7ku"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xttiv"]
+size = Vector3(1.64, 0.59, 1.02)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_i6y4c"]
+height = 1.26
+radius = 0.312
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_cyich"]
+height = 1.26
+radius = 0.312
+
+[node name="Overturned_Junk_Cart" type="StaticBody3D" unique_id=1602611970]
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+
+[node name="Shape_0" type="CollisionShape3D" parent="." unique_id=1684678485]
+transform = Transform3D(0.99026805, -0.1391731, 0, 0.1391731, 0.99026805, 0, 0, 0, 1, -0.041, 0.387, 0)
+shape = SubResource("BoxShape3D_xttiv")
+
+[node name="Shape_1" type="CollisionShape3D" parent="." unique_id=2023545063]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.41, 0.766, 0)
+shape = SubResource("CylinderShape3D_i6y4c")
+
+[node name="Shape_2" type="CollisionShape3D" parent="." unique_id=768882865]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.58, 0.627, 0)
+shape = SubResource("CylinderShape3D_cyich")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=640384504 instance=ExtResource("1_ny3a1")]

@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/weapons/weapon.gd" id="1_oy38i"]
+[ext_resource type="PackedScene" path="res://assets/models/weapons/hammer.glb" id="2_hd1ur"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_jeo1b"]
+friction = 0.6
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w4va6"]
+size = Vector3(0.745, 0.068, 0.068)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_o5fq1"]
+height = 0.4
+radius = 0.16
+
+[node name="WeaponHammer" type="RigidBody3D" unique_id=1590674350]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 6.0
+physics_material_override = SubResource("PhysicsMaterial_jeo1b")
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+script = ExtResource("1_oy38i")
+
+[node name="Col_Handle" type="CollisionShape3D" parent="." unique_id=741581939]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2875, 0, 0)
+shape = SubResource("BoxShape3D_w4va6")
+
+[node name="Col_Head" type="CollisionShape3D" parent="." unique_id=965557541]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 0)
+shape = SubResource("CylinderShape3D_o5fq1")
+
+[node name="Model" type="Node3D" parent="." unique_id=1540552542 instance=ExtResource("2_hd1ur")]

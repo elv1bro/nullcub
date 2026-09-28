@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://wsfloor00001"]
+
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Floor_Tile.glb" id="1_pq5o7"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l7c2w"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kg1uc"]
+size = Vector3(12, 0.5, 2)
+
+[node name="WorkshopFloor" type="StaticBody3D" unique_id=454017477]
+physics_material_override = SubResource("PhysicsMaterial_l7c2w")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1792393461]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+shape = SubResource("BoxShape3D_kg1uc")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1589223164 instance=ExtResource("1_pq5o7")]

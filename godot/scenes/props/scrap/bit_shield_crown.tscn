@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://scb2fae36aa1"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Shield_Crown.glb" id="1_h5kkq"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_3u3o3"]
+points = PackedVector3Array(-0.2943, 0.371, -0.071, 0.006, -0.3709, 0.06, 0.2966, 0.3605, -0.0364, -0.2589, -0.1187, -0.0478, 0.2589, -0.1187, -0.0478, -0.0042, 0.3678, 0.07, 0.16, 0.23, 0.071, -0.16, 0.23, 0.071, 0.175, -0.2668, 0.0353, -0.1766, -0.2671, 0.0249, -0.2943, 0.0445, -0.071, 0.2943, 0.0445, -0.071, -0.16, -0.09, 0.071, 0.16, -0.09, 0.071, 0.1471, 0.371, 0.0363, -0.1471, 0.371, 0.0363, -0.293, 0.0433, -0.0264, 0.293, 0.0433, -0.0264, -0.2589, -0.1154, -0.0046, 0.1766, -0.2671, -0.0051, 0.2943, 0.371, -0.071, 0.2589, -0.1187, -0.0178, -0.2943, 0.371, -0.041, -0.1766, -0.2671, -0.0051)
+
+[node name="Shield_Crown" type="RigidBody3D" unique_id=2018055828]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 5.0
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=147225484]
+shape = SubResource("ConvexPolygonShape3D_3u3o3")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1405583201 instance=ExtResource("1_h5kkq")]

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://propssnap001"]
+
+[ext_resource type="Script" path="res://tests/props_snapshot.gd" id="1_ps"]
+
+[node name="PropsSnapshot" type="Node3D"]
+script = ExtResource("1_ps")

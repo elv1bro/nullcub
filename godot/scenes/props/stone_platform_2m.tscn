@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://propplat2m01"]
+
+[ext_resource type="Script" path="res://scenes/props/stone_static.gd" id="1_2mrst"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Stone_Platform_2m.glb" id="2_l5vu6"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_0xbe5"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qvlgf"]
+size = Vector3(2, 0.4, 2)
+
+[node name="Stone_Platform_2m" type="StaticBody3D" unique_id=513859383]
+physics_material_override = SubResource("PhysicsMaterial_0xbe5")
+script = ExtResource("1_2mrst")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=631128666]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+shape = SubResource("BoxShape3D_qvlgf")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=519680844 instance=ExtResource("2_l5vu6")]

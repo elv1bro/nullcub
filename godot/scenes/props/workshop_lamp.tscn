@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://wslamp000001"]
+
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Lamp.glb" id="1_7j8mn"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_s3cxp"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_bup3u"]
+radius = 0.3
+
+[node name="WorkshopLamp" type="Node3D" unique_id=1432650257]
+
+[node name="Anchor" type="Marker3D" parent="." unique_id=703186948]
+
+[node name="Body" type="RigidBody3D" parent="." unique_id=1841025962]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 3.0
+physics_material_override = SubResource("PhysicsMaterial_s3cxp")
+linear_damp = 0.12
+angular_damp = 0.35
+
+[node name="Shape" type="CollisionShape3D" parent="Body" unique_id=135681304]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.81, 0)
+shape = SubResource("SphereShape3D_bup3u")
+
+[node name="Mesh" type="Node3D" parent="Body" unique_id=1318684149 instance=ExtResource("1_7j8mn")]
+
+[node name="Light" type="SpotLight3D" parent="Body" unique_id=339049298]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, -3.85, 0)
+light_color = Color(1, 0.8, 0.54, 1)
+light_energy = 7.0
+light_indirect_energy = 0.6
+light_volumetric_fog_energy = 1.5
+light_specular = 0.3
+spot_range = 9.0
+spot_attenuation = 1.1
+spot_angle = 55.0
+spot_angle_attenuation = 0.9
+
+[node name="Joint" type="Generic6DOFJoint3D" parent="." unique_id=457326459]
+node_b = NodePath("../Body")
+angular_limit_z/upper_angle = 1.3962634
+angular_limit_z/lower_angle = -1.3962634

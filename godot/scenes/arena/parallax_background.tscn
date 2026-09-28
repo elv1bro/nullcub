@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://parallaxbg01"]
+
+[ext_resource type="Script" path="res://scenes/arena/parallax_background.gd" id="1_pbg"]
+[ext_resource type="Texture2D" path="res://assets/textures/parallax/layer4_sky.png" id="2_l4"]
+[ext_resource type="Texture2D" path="res://assets/textures/parallax/layer3_far.png" id="3_l3"]
+[ext_resource type="Texture2D" path="res://assets/textures/parallax/layer2_mid.png" id="4_l2"]
+[ext_resource type="Texture2D" path="res://assets/textures/parallax/layer1_fore.png" id="5_l1"]
+
+[sub_resource type="StandardMaterial3D" id="mat_layer4"]
+shading_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("2_l4")
+texture_repeat = false
+disable_receive_shadows = true
+disable_fog = true
+
+[sub_resource type="StandardMaterial3D" id="mat_layer3"]
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("3_l3")
+texture_repeat = false
+disable_receive_shadows = true
+disable_fog = true
+
+[sub_resource type="StandardMaterial3D" id="mat_layer2"]
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("4_l2")
+texture_repeat = false
+disable_receive_shadows = true
+disable_fog = true
+
+[sub_resource type="StandardMaterial3D" id="mat_layer1"]
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("5_l1")
+texture_repeat = false
+disable_receive_shadows = true
+disable_fog = true
+
+[sub_resource type="QuadMesh" id="quad_layer4"]
+size = Vector2(220.08, 109.2)
+
+[sub_resource type="QuadMesh" id="quad_layer3"]
+size = Vector2(128.63, 40.37)
+
+[sub_resource type="QuadMesh" id="quad_layer2"]
+size = Vector2(113.19, 13.23)
+
+[sub_resource type="QuadMesh" id="quad_layer1"]
+size = Vector2(62.7, 8.8)
+
+[node name="ParallaxBackground" type="Node3D"]
+script = ExtResource("1_pbg")
+
+[node name="Layer4Sky" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.59, -90)
+material_override = SubResource("mat_layer4")
+cast_shadow = 0
+mesh = SubResource("quad_layer4")
+metadata/horizon_y = 1.5
+
+[node name="Layer3Far" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -7.868, -45)
+material_override = SubResource("mat_layer3")
+cast_shadow = 0
+mesh = SubResource("quad_layer3")
+metadata/lake_y = 2.5
+
+[node name="Layer2Mid" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.185, -18)
+material_override = SubResource("mat_layer2")
+cast_shadow = 0
+mesh = SubResource("quad_layer2")
+metadata/ground_y = -3.91
+
+[node name="Layer1Fore" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.6, 2.5)
+material_override = SubResource("mat_layer1")
+cast_shadow = 0
+mesh = SubResource("quad_layer1")
+metadata/opaque_top_y = 0.7

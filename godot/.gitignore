@@ -1,0 +1,6 @@
+.godot/
+export/
+*.import.tmp
+tests/*_report.json
+tests/*.png
+tests/clip/

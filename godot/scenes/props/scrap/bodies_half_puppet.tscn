@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://sc1a1aba02e4"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bodies/Half_Puppet.glb" id="1_0p3mk"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bbt74"]
+friction = 0.95
+bounce = 0.02
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_s1jn5"]
+points = PackedVector3Array(-0.4176, -0.05, -0.6, -0.4176, -0.05, 0.6, -0.4176, 0.02, -0.6, -0.4176, 0.02, 0.6, -0.2784, -0.05, -0.6, -0.2784, -0.05, 0.6, -0.2784, 0.0411, -0.6, -0.2784, 0.0411, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_f78ha"]
+points = PackedVector3Array(-0.2784, -0.05, -0.6, -0.2784, -0.05, 0.6, -0.2784, 0.0411, -0.6, -0.2784, 0.0411, 0.6, -0.1392, -0.05, -0.6, -0.1392, -0.05, 0.6, -0.1392, 0.1708, -0.6, -0.1392, 0.1708, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_a05p4"]
+points = PackedVector3Array(-0.1392, -0.05, -0.6, -0.1392, -0.05, 0.6, -0.1392, 0.1708, -0.6, -0.1392, 0.1708, 0.6, 0, -0.05, -0.6, 0, -0.05, 0.6, 0, 0.3866, -0.6, 0, 0.3866, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_43vpc"]
+points = PackedVector3Array(0, -0.05, -0.6, 0, -0.05, 0.6, 0, 0.3866, -0.6, 0, 0.3866, 0.6, 0.1392, -0.05, -0.6, 0.1392, -0.05, 0.6, 0.1392, 0.5176, -0.6, 0.1392, 0.5176, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_0nljc"]
+points = PackedVector3Array(0.1392, -0.05, -0.6, 0.1392, -0.05, 0.6, 0.1392, 0.5176, -0.6, 0.1392, 0.5176, 0.6, 0.2784, -0.05, -0.6, 0.2784, -0.05, 0.6, 0.2784, 0.439, -0.6, 0.2784, 0.439, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_feeej"]
+points = PackedVector3Array(0.2784, -0.05, -0.6, 0.2784, -0.05, 0.6, 0.2784, 0.439, -0.6, 0.2784, 0.439, 0.6, 0.4176, -0.05, -0.6, 0.4176, -0.05, 0.6, 0.4176, 0.2365, -0.6, 0.4176, 0.2365, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_sl60e"]
+points = PackedVector3Array(0.4176, -0.05, -0.6, 0.4176, -0.05, 0.6, 0.4176, 0.2365, -0.6, 0.4176, 0.2365, 0.6, 0.5568, -0.05, -0.6, 0.5568, -0.05, 0.6, 0.5568, 0.0893, -0.6, 0.5568, 0.0893, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_0wr2y"]
+points = PackedVector3Array(0.5568, -0.05, -0.6, 0.5568, -0.05, 0.6, 0.5568, 0.0893, -0.6, 0.5568, 0.0893, 0.6, 0.696, -0.05, -0.6, 0.696, -0.05, 0.6, 0.696, 0.02, -0.6, 0.696, 0.02, 0.6)
+
+[node name="Half_Puppet" type="StaticBody3D" unique_id=995484393]
+physics_material_override = SubResource("PhysicsMaterial_bbt74")
+
+[node name="Shape_0" type="CollisionShape3D" parent="." unique_id=959146409]
+shape = SubResource("ConvexPolygonShape3D_s1jn5")
+
+[node name="Shape_1" type="CollisionShape3D" parent="." unique_id=1698028827]
+shape = SubResource("ConvexPolygonShape3D_f78ha")
+
+[node name="Shape_2" type="CollisionShape3D" parent="." unique_id=578491037]
+shape = SubResource("ConvexPolygonShape3D_a05p4")
+
+[node name="Shape_3" type="CollisionShape3D" parent="." unique_id=2069440804]
+shape = SubResource("ConvexPolygonShape3D_43vpc")
+
+[node name="Shape_4" type="CollisionShape3D" parent="." unique_id=143462744]
+shape = SubResource("ConvexPolygonShape3D_0nljc")
+
+[node name="Shape_5" type="CollisionShape3D" parent="." unique_id=1087285300]
+shape = SubResource("ConvexPolygonShape3D_feeej")
+
+[node name="Shape_6" type="CollisionShape3D" parent="." unique_id=1037795554]
+shape = SubResource("ConvexPolygonShape3D_sl60e")
+
+[node name="Shape_7" type="CollisionShape3D" parent="." unique_id=19977747]
+shape = SubResource("ConvexPolygonShape3D_0wr2y")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1259903838 instance=ExtResource("1_0p3mk")]

@@ -1,0 +1,345 @@
+[gd_scene load_steps=29 format=3 uid="uid://wslookdev001"]
+
+[ext_resource type="Script" path="res://scenes/lookdev/workshop_lookdev.gd" id="1_look"]
+[ext_resource type="Environment" uid="uid://wsenv0000001" path="res://assets/environments/workshop_env.tres" id="2_env"]
+[ext_resource type="CameraAttributesPractical" uid="uid://wscam0000001" path="res://assets/environments/workshop_camera.tres" id="3_cam"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Floor_Planks.glb" id="4_floor"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Edge_Beam.glb" id="5_beam"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Wall_Plank.glb" id="6_wall"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Wall_Window.glb" id="7_wallwin"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Window.glb" id="8_window"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Ceiling_Beams.glb" id="9_ceil"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Workbench.glb" id="10_bench"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Lathe.glb" id="11_lathe"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Turned_Post.glb" id="12_post"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Tool_Board.glb" id="13_tools"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Shavings.glb" id="14_shav"]
+[ext_resource type="Texture2D" path="res://assets/textures/fx/mote.png" id="15_mote"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Foliage.glb" id="16_leaf"]
+
+[sub_resource type="BoxShape3D" id="FloorShape"]
+size = Vector3(12, 0.5, 6)
+
+[sub_resource type="BoxShape3D" id="BenchShape"]
+size = Vector3(2.4, 0.85, 0.9)
+
+[sub_resource type="BoxShape3D" id="LatheShape"]
+size = Vector3(2.4, 1.3, 0.8)
+
+[sub_resource type="PhysicsMaterial" id="WoodPhys"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="Gradient" id="MoteGrad"]
+offsets = PackedFloat32Array(0, 0.2, 0.8, 1)
+colors = PackedColorArray(1, 0.9, 0.7, 0, 1, 0.9, 0.7, 0.6, 1, 0.9, 0.7, 0.6, 1, 0.9, 0.7, 0)
+
+[sub_resource type="GradientTexture1D" id="MoteRamp"]
+gradient = SubResource("MoteGrad")
+
+[sub_resource type="ParticleProcessMaterial" id="MotePM"]
+lifetime_randomness = 0.4
+emission_shape = 3
+emission_box_extents = Vector3(5.5, 2.4, 3)
+direction = Vector3(0, 0, 0)
+spread = 180.0
+initial_velocity_min = 0.02
+initial_velocity_max = 0.08
+gravity = Vector3(0, -0.01, 0)
+damping_min = 0.1
+damping_max = 0.3
+scale_min = 0.4
+scale_max = 1.0
+color_ramp = SubResource("MoteRamp")
+turbulence_enabled = true
+turbulence_noise_strength = 0.6
+turbulence_noise_scale = 4.0
+turbulence_influence_min = 0.02
+turbulence_influence_max = 0.06
+
+[sub_resource type="ParticleProcessMaterial" id="ShaftPM"]
+lifetime_randomness = 0.4
+emission_shape = 3
+emission_box_extents = Vector3(2.2, 1.3, 4.5)
+direction = Vector3(0, 0, 0)
+spread = 180.0
+initial_velocity_min = 0.02
+initial_velocity_max = 0.08
+gravity = Vector3(0, -0.01, 0)
+damping_min = 0.1
+damping_max = 0.3
+scale_min = 0.5
+scale_max = 1.2
+color_ramp = SubResource("MoteRamp")
+turbulence_enabled = true
+turbulence_noise_strength = 0.6
+turbulence_noise_scale = 4.0
+turbulence_influence_min = 0.02
+turbulence_influence_max = 0.06
+
+[sub_resource type="StandardMaterial3D" id="MoteMat"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 0.88, 0.66, 0.35)
+albedo_texture = ExtResource("15_mote")
+billboard_mode = 3
+billboard_keep_scale = true
+
+[sub_resource type="StandardMaterial3D" id="ShaftMoteMat"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 0.9, 0.7, 0.8)
+albedo_texture = ExtResource("15_mote")
+billboard_mode = 3
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="MoteQuad"]
+material = SubResource("MoteMat")
+size = Vector2(0.025, 0.025)
+
+[sub_resource type="QuadMesh" id="ShaftMoteQuad"]
+material = SubResource("ShaftMoteMat")
+size = Vector2(0.03, 0.03)
+
+[node name="WorkshopLookdev" type="Node3D"]
+script = ExtResource("1_look")
+
+[node name="Env" type="WorldEnvironment" parent="."]
+environment = ExtResource("2_env")
+camera_attributes = ExtResource("3_cam")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.743145, 0.27216, -0.611282, 0, 0.913545, 0.406737, 0.669131, 0.302265, -0.678897, 0, 8, 0)
+light_color = Color(1, 0.86, 0.66, 1)
+light_energy = 3.0
+light_indirect_energy = 2.0
+light_volumetric_fog_energy = 8.0
+light_angular_distance = 0.8
+shadow_enabled = true
+shadow_bias = 0.03
+shadow_normal_bias = 1.5
+shadow_blur = 1.2
+directional_shadow_mode = 2
+directional_shadow_split_1 = 0.12
+directional_shadow_split_2 = 0.3
+directional_shadow_split_3 = 0.55
+directional_shadow_max_distance = 30.0
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.286788, 0.409576, 0, 0.819152, 0.573576, -0.5, -0.496732, 0.709406, 0, 6, 8)
+light_color = Color(0.6, 0.8, 1, 1)
+light_energy = 0.4
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+light_specular = 0.4
+shadow_enabled = false
+
+[node name="FloorBounce" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.7, 1.4)
+light_color = Color(1, 0.78, 0.55, 1)
+light_energy = 1.0
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+light_specular = 0.2
+omni_range = 8.0
+omni_attenuation = 1.2
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.99913, 0.04168, 0, -0.04168, 0.99913, 0.4, 1.6, 7.2)
+fov = 40.0
+near = 0.1
+far = 200.0
+
+[node name="Set" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Set"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.6)
+physics_material_override = SubResource("WoodPhys")
+
+[node name="Shape" type="CollisionShape3D" parent="Set/Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+shape = SubResource("FloorShape")
+
+[node name="Mesh" parent="Set/Floor" instance=ExtResource("4_floor")]
+
+[node name="EdgeBeam" parent="Set" instance=ExtResource("5_beam")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.625)
+
+[node name="StageFront_L" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -5.45, 2.85)
+
+[node name="StageFront_C" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5.45, 2.85)
+
+[node name="StageFront_R" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -5.45, 2.85)
+
+[node name="BackWall_A" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.4, 0, -3.6)
+
+[node name="BackWall_Win1" parent="Set" instance=ExtResource("7_wallwin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 0, -3.6)
+
+[node name="BackWall_Win2" parent="Set" instance=ExtResource("7_wallwin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -3.6)
+
+[node name="BackWall_Win3" parent="Set" instance=ExtResource("7_wallwin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 0, -3.6)
+
+[node name="BackWall_B" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, -3.6)
+
+[node name="BackWall_C" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 0, -3.6)
+
+[node name="BackWall_D" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.4, 0, -3.6)
+
+[node name="Window1" parent="Set" instance=ExtResource("8_window")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 1.3, -3.6)
+
+[node name="Window2" parent="Set" instance=ExtResource("8_window")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.3, -3.6)
+
+[node name="Window3" parent="Set" instance=ExtResource("8_window")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 1.3, -3.6)
+
+[node name="Foliage1" parent="Set" instance=ExtResource("16_leaf")]
+transform = Transform3D(0.939693, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.939693, -4.9, 1.0, -4.5)
+
+[node name="Foliage2" parent="Set" instance=ExtResource("16_leaf")]
+transform = Transform3D(0.766044, 0, -0.642788, 0, 1, 0, 0.642788, 0, 0.766044, -2.6, 1.6, -4.7)
+
+[node name="Foliage3" parent="Set" instance=ExtResource("16_leaf")]
+transform = Transform3D(0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.5, -1.0, 0.8, -4.4)
+
+[node name="LeftWall_A" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -6.6, 0, -1.6)
+
+[node name="LeftWall_B" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -6.6, 0, 2.4)
+
+[node name="RightWall_A" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 7.2, 0, -1.6)
+
+[node name="RightWall_B" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 7.2, 0, 2.4)
+
+[node name="Ceiling1" parent="Set" instance=ExtResource("9_ceil")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4.4, -0.9)
+
+[node name="Ceiling2" parent="Set" instance=ExtResource("9_ceil")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, -0.9)
+
+[node name="Ceiling3" parent="Set" instance=ExtResource("9_ceil")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.4, -0.9)
+
+[node name="Ceiling4" parent="Set" instance=ExtResource("9_ceil")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4.4, 5.1)
+
+[node name="Ceiling5" parent="Set" instance=ExtResource("9_ceil")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 5.1)
+
+[node name="Ceiling6" parent="Set" instance=ExtResource("9_ceil")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.4, 5.1)
+
+[node name="FrontWall_0" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -8, 0, 9)
+
+[node name="FrontWall_1" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -4, 0, 9)
+
+[node name="FrontWall_2" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 9)
+
+[node name="FrontWall_3" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4, 0, 9)
+
+[node name="FrontWall_4" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 8, 0, 9)
+
+[node name="LeftWall_C" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -6.6, 0, 6.4)
+
+[node name="RightWall_C" parent="Set" instance=ExtResource("6_wall")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 7.2, 0, 6.4)
+
+[node name="LowerFloor" parent="Set" instance=ExtResource("4_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 5.6)
+
+[node name="Bench_L" type="StaticBody3D" parent="Set"]
+transform = Transform3D(0.990268, 0, 0.139173, 0, 1, 0, -0.139173, 0, 0.990268, -3.9, 0, -1.3)
+physics_material_override = SubResource("WoodPhys")
+
+[node name="Shape" type="CollisionShape3D" parent="Set/Bench_L"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.425, 0)
+shape = SubResource("BenchShape")
+
+[node name="Mesh" parent="Set/Bench_L" instance=ExtResource("10_bench")]
+
+[node name="Bench_R" type="StaticBody3D" parent="Set"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 5.1, 0, -0.9)
+physics_material_override = SubResource("WoodPhys")
+
+[node name="Shape" type="CollisionShape3D" parent="Set/Bench_R"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.425, 0)
+shape = SubResource("BenchShape")
+
+[node name="Mesh" parent="Set/Bench_R" instance=ExtResource("10_bench")]
+
+[node name="Lathe" type="StaticBody3D" parent="Set"]
+transform = Transform3D(0.965926, 0, -0.258819, 0, 1, 0, 0.258819, 0, 0.965926, 3.4, 0, -2.3)
+physics_material_override = SubResource("WoodPhys")
+
+[node name="Shape" type="CollisionShape3D" parent="Set/Lathe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+shape = SubResource("LatheShape")
+
+[node name="Mesh" parent="Set/Lathe" instance=ExtResource("11_lathe")]
+
+[node name="Post" parent="Set" instance=ExtResource("12_post")]
+transform = Transform3D(0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, 0.92388, 5.9, 0, -3.0)
+
+[node name="ToolBoard" parent="Set" instance=ExtResource("13_tools")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 1.2, -3.58)
+
+[node name="Shavings1" parent="Set" instance=ExtResource("14_shav")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 0, 0.9)
+
+[node name="Shavings2" parent="Set" instance=ExtResource("14_shav")]
+transform = Transform3D(0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.5, 1.3, 0, 1.5)
+
+[node name="Shavings3" parent="Set" instance=ExtResource("14_shav")]
+transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, 3.7, 0, 0.3)
+
+[node name="Shavings4" parent="Set" instance=ExtResource("14_shav")]
+transform = Transform3D(0.258819, 0, -0.965926, 0, 1, 0, 0.965926, 0, 0.258819, -3.6, 0, 0.2)
+
+[node name="Shavings5" parent="Set" instance=ExtResource("14_shav")]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.3, 0, 0.7)
+
+[node name="Dust" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -0.6)
+amount = 500
+lifetime = 12.0
+preprocess = 12.0
+randomness = 0.3
+visibility_aabb = AABB(-7, -3, -4, 14, 6, 8)
+process_material = SubResource("MotePM")
+draw_pass_1 = SubResource("MoteQuad")
+
+[node name="DustShaft" type="GPUParticles3D" parent="."]
+transform = Transform3D(-0.743145, 0.27216, -0.611282, 0, 0.913545, 0.406737, 0.669131, 0.302265, -0.678897, -1.2, 1.5, -1.3)
+amount = 350
+lifetime = 12.0
+preprocess = 12.0
+randomness = 0.3
+visibility_aabb = AABB(-6, -6, -6, 12, 12, 12)
+process_material = SubResource("ShaftPM")
+draw_pass_1 = SubResource("ShaftMoteQuad")
+
+[node name="Dolls" type="Node3D" parent="."]

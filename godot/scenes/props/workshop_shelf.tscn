@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://wsshelf00001"]
+
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Shelf.glb" id="1_swvrx"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l7c2w"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8brty"]
+size = Vector3(2, 0.06, 1.6)
+
+[node name="WorkshopShelf" type="StaticBody3D" unique_id=1981248251]
+physics_material_override = SubResource("PhysicsMaterial_l7c2w")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=506030301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0.8)
+shape = SubResource("BoxShape3D_8brty")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1416938564 instance=ExtResource("1_swvrx")]

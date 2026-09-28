@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://propwallseg1"]
+
+[ext_resource type="Script" path="res://scenes/props/stone_static.gd" id="1_t35qv"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Wall_Segment.glb" id="2_cwyar"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_en74r"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4sjgm"]
+size = Vector3(2, 3, 0.8)
+
+[node name="Wall_Segment" type="StaticBody3D" unique_id=1919858829]
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("1_t35qv")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1419049514]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_4sjgm")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=827427522 instance=ExtResource("2_cwyar")]

@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://sceb711cb550"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bodies/Puppet_Head_Pile.glb" id="1_5y1og"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_head_sad.tscn" id="2_npynk"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_head_scared.tscn" id="3_d84bt"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_head_cracked.tscn" id="4_733a7"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bbt74"]
+friction = 0.95
+bounce = 0.02
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ur68l"]
+points = PackedVector3Array(-0.8868, -0.05, -0.6, -0.8868, -0.05, 0.6, -0.8868, 0.02, -0.6, -0.8868, 0.02, 0.6, -0.739, -0.05, -0.6, -0.739, -0.05, 0.6, -0.739, 0.2734, -0.6, -0.739, 0.2734, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_grfhu"]
+points = PackedVector3Array(-0.739, -0.05, -0.6, -0.739, -0.05, 0.6, -0.739, 0.2734, -0.6, -0.739, 0.2734, 0.6, -0.5912, -0.05, -0.6, -0.5912, -0.05, 0.6, -0.5912, 0.3805, -0.6, -0.5912, 0.3805, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_w3mhp"]
+points = PackedVector3Array(-0.5912, -0.05, -0.6, -0.5912, -0.05, 0.6, -0.5912, 0.3805, -0.6, -0.5912, 0.3805, 0.6, -0.4434, -0.05, -0.6, -0.4434, -0.05, 0.6, -0.4434, 0.4907, -0.6, -0.4434, 0.4907, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_n0eb0"]
+points = PackedVector3Array(-0.4434, -0.05, -0.6, -0.4434, -0.05, 0.6, -0.4434, 0.4907, -0.6, -0.4434, 0.4907, 0.6, -0.2956, -0.05, -0.6, -0.2956, -0.05, 0.6, -0.2956, 0.6137, -0.6, -0.2956, 0.6137, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_3gie1"]
+points = PackedVector3Array(-0.2956, -0.05, -0.6, -0.2956, -0.05, 0.6, -0.2956, 0.6137, -0.6, -0.2956, 0.6137, 0.6, -0.1478, -0.05, -0.6, -0.1478, -0.05, 0.6, -0.1478, 0.6434, -0.6, -0.1478, 0.6434, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_eyrm4"]
+points = PackedVector3Array(-0.1478, -0.05, -0.6, -0.1478, -0.05, 0.6, -0.1478, 0.6434, -0.6, -0.1478, 0.6434, 0.6, 0, -0.05, -0.6, 0, -0.05, 0.6, 0, 0.6502, -0.6, 0, 0.6502, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_7attk"]
+points = PackedVector3Array(0, -0.05, -0.6, 0, -0.05, 0.6, 0, 0.6502, -0.6, 0, 0.6502, 0.6, 0.1478, -0.05, -0.6, 0.1478, -0.05, 0.6, 0.1478, 0.6655, -0.6, 0.1478, 0.6655, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_isycw"]
+points = PackedVector3Array(0.1478, -0.05, -0.6, 0.1478, -0.05, 0.6, 0.1478, 0.6655, -0.6, 0.1478, 0.6655, 0.6, 0.2956, -0.05, -0.6, 0.2956, -0.05, 0.6, 0.2956, 0.6499, -0.6, 0.2956, 0.6499, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_5fdk5"]
+points = PackedVector3Array(0.2956, -0.05, -0.6, 0.2956, -0.05, 0.6, 0.2956, 0.6499, -0.6, 0.2956, 0.6499, 0.6, 0.4434, -0.05, -0.6, 0.4434, -0.05, 0.6, 0.4434, 0.6106, -0.6, 0.4434, 0.6106, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_sm2dm"]
+points = PackedVector3Array(0.4434, -0.05, -0.6, 0.4434, -0.05, 0.6, 0.4434, 0.6106, -0.6, 0.4434, 0.6106, 0.6, 0.5912, -0.05, -0.6, 0.5912, -0.05, 0.6, 0.5912, 0.5193, -0.6, 0.5912, 0.5193, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_mpqqe"]
+points = PackedVector3Array(0.5912, -0.05, -0.6, 0.5912, -0.05, 0.6, 0.5912, 0.5193, -0.6, 0.5912, 0.5193, 0.6, 0.739, -0.05, -0.6, 0.739, -0.05, 0.6, 0.739, 0.3001, -0.6, 0.739, 0.3001, 0.6)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_14t6c"]
+points = PackedVector3Array(0.739, -0.05, -0.6, 0.739, -0.05, 0.6, 0.739, 0.3001, -0.6, 0.739, 0.3001, 0.6, 0.8868, -0.05, -0.6, 0.8868, -0.05, 0.6, 0.8868, 0.02, -0.6, 0.8868, 0.02, 0.6)
+
+[node name="Puppet_Head_Pile" type="Node3D" unique_id=1782056704]
+
+[node name="Heap" type="StaticBody3D" parent="." unique_id=507136784]
+physics_material_override = SubResource("PhysicsMaterial_bbt74")
+
+[node name="Shape_0" type="CollisionShape3D" parent="Heap" unique_id=979169030]
+shape = SubResource("ConvexPolygonShape3D_ur68l")
+
+[node name="Shape_1" type="CollisionShape3D" parent="Heap" unique_id=1107319318]
+shape = SubResource("ConvexPolygonShape3D_grfhu")
+
+[node name="Shape_2" type="CollisionShape3D" parent="Heap" unique_id=1406575761]
+shape = SubResource("ConvexPolygonShape3D_w3mhp")
+
+[node name="Shape_3" type="CollisionShape3D" parent="Heap" unique_id=1162458092]
+shape = SubResource("ConvexPolygonShape3D_n0eb0")
+
+[node name="Shape_4" type="CollisionShape3D" parent="Heap" unique_id=844410411]
+shape = SubResource("ConvexPolygonShape3D_3gie1")
+
+[node name="Shape_5" type="CollisionShape3D" parent="Heap" unique_id=399007033]
+shape = SubResource("ConvexPolygonShape3D_eyrm4")
+
+[node name="Shape_6" type="CollisionShape3D" parent="Heap" unique_id=1800496993]
+shape = SubResource("ConvexPolygonShape3D_7attk")
+
+[node name="Shape_7" type="CollisionShape3D" parent="Heap" unique_id=414987185]
+shape = SubResource("ConvexPolygonShape3D_isycw")
+
+[node name="Shape_8" type="CollisionShape3D" parent="Heap" unique_id=1277986259]
+shape = SubResource("ConvexPolygonShape3D_5fdk5")
+
+[node name="Shape_9" type="CollisionShape3D" parent="Heap" unique_id=1206555619]
+shape = SubResource("ConvexPolygonShape3D_sm2dm")
+
+[node name="Shape_10" type="CollisionShape3D" parent="Heap" unique_id=1456173781]
+shape = SubResource("ConvexPolygonShape3D_mpqqe")
+
+[node name="Shape_11" type="CollisionShape3D" parent="Heap" unique_id=1549743348]
+shape = SubResource("ConvexPolygonShape3D_14t6c")
+
+[node name="Mesh" type="Node3D" parent="Heap" unique_id=27010912 instance=ExtResource("1_5y1og")]
+
+[node name="Loose" type="Node3D" parent="." unique_id=1162080719]
+
+[node name="Doll_Head_Sad_0" parent="Loose" unique_id=165901408 instance=ExtResource("2_npynk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1904, 0.8073, 0)
+sleeping = true
+
+[node name="Doll_Head_Scared_1" parent="Loose" unique_id=565103310 instance=ExtResource("3_d84bt")]
+transform = Transform3D(0.96592355, -0.2588276, 0, 0.2588276, 0.96592355, 0, 0, 0, 1, 0.3096, 0.8468, 0)
+sleeping = true
+
+[node name="Doll_Head_Cracked_2" parent="Loose" unique_id=1764335993 instance=ExtResource("4_733a7")]
+transform = Transform3D(0.9848061, 0.17365733, 0, -0.17365733, 0.9848061, 0, 0, 0, 1, 0.0596, 0.8411, 0)
+sleeping = true

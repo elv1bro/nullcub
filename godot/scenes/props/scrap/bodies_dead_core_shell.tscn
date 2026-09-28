@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://sc088ed72b31"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bodies/Dead_Core_Shell.glb" id="1_k7awp"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_gktdx"]
+points = PackedVector3Array(0.2414, 0.2139, 0.1166, -0.2414, 0.2261, -0.1116, 0.1088, 0.2, -0.2358, -0.1088, 0.2, 0.2409, 0.0371, 0.4783, -0.015, -0.0712, 0, -0.0831, 0.1709, 0.0227, -0.015, -0.14, 0.39, 0.1095, 0.0175, 0.0227, 0.1734, -0.0731, 0.345, -0.2013, 0.188, 0.345, -0.1049, 0.1255, 0.3691, 0.1534, -0.2196, 0.0789, 0.02, 0.085, 0.2, 0.2479, -0.2514, 0.24, 0.0763, -0.0175, 0.0789, -0.217, 0.2514, 0.2, -0.0713, -0.1388, 0.4115, -0.0784, -0.1088, 0.2, -0.2358, 0.075, 0.345, -0.2006, 0.1709, 0.4173, 0.02, -0.0102, 0.4173, 0.1734, 0.1384, 0.095, 0.169, -0.187, 0.095, -0.1066, 0.1399, 0.095, -0.1627, -0.1399, 0.095, 0.1678, -0.072, 0, 0.0875, 0.2504, 0.2935, 0.02, -0.2196, 0.3611, 0.02, 0.072, 0, -0.0824, -0.11, 0.32, 0.1956, -0.1084, 0.4574, 0.02)
+
+[node name="Dead_Core_Shell" type="RigidBody3D" unique_id=366068134]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 14.0
+physics_material_override = SubResource("PhysicsMaterial_equ4y")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=285604754]
+shape = SubResource("ConvexPolygonShape3D_gktdx")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1546734616 instance=ExtResource("1_k7awp")]

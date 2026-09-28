@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://sc5e4ac68833"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bodies/Nail_Bucket.glb" id="1_y2r2g"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_31h2a"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ix118"]
+points = PackedVector3Array(0.0997, 0, 0.1732, -0.0819, 0.5515, -0.1922, 0.1222, 0.46, 0.2122, -0.1078, 0.0525, -0.1861, -0.2127, 0.3625, 0.1226, 0.212, 0.3625, -0.1226, -0.1864, 0.0525, 0.1074, 0.1857, 0.0525, -0.1074, -0.2127, 0.3625, -0.1226, -0.0003, 0.3625, -0.2452, -0.0927, 0.5263, 0.1504, 0.2363, 0.46, 0.0634, -0.0638, 0.3625, 0.2368, 0.1534, 0.5301, -0.1587, 0.0514, 0, -0.1932, -0.1935, 0, -0.0518, -0.0559, 0.0525, 0.2075, 0.2072, 0.0525, 0.0556, -0.2413, 0.46, 0, 0.0926, 0.5313, 0.0835, 0.1223, 0.3975, -0.2123, -0.1229, 0.3975, -0.2123, -0.2136, 0.4879, -0.1202, 0.0631, 0.3625, 0.2368, 0.212, 0.3625, 0.1226, -0.0003, 0.46, 0.241, 0.2496, 0.4452, -0.0597, 0.2527, 0.36, 0.025, -0.1707, 0.46, 0.1704, -0.2533, 0.36, 0.025, -0.0003, 0.46, -0.241, 0.0304, 0.5058, 0.1625)
+
+[node name="Nail_Bucket" type="RigidBody3D" unique_id=1982980133]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 16.0
+physics_material_override = SubResource("PhysicsMaterial_31h2a")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=24957569]
+shape = SubResource("ConvexPolygonShape3D_ix118")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=35115096 instance=ExtResource("1_y2r2g")]

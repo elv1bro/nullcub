@@ -1,0 +1,777 @@
+[gd_scene format=3 uid="uid://propbridge6m"]
+
+[ext_resource type="Script" path="res://scenes/props/rope_bridge.gd" id="1_hwqh4"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Post.glb" id="2_ycsvu"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Plank.glb" id="3_hm6bn"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Rope_Segment.glb" id="4_j17i3"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ikkq8"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_b2xqt"]
+height = 1.6
+radius = 0.15
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_a01jb"]
+height = 1.6
+radius = 0.15
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_vg26g"]
+height = 1.6
+radius = 0.15
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1p6ns"]
+height = 1.6
+radius = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1kdrr"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_v612m"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dkt03"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_y44ro"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_e65lr"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wohq7"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7r7es"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5eh3a"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nptde"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_oe4ew"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cqtn5"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ny2il"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_26or8"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tds1h"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_th8y5"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wkfvm"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_72wvx"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mt537"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4pmxr"]
+size = Vector3(0.25, 0.05, 0.9)
+
+[node name="RopeBridge" type="Node3D" unique_id=1338008120]
+script = ExtResource("1_hwqh4")
+anchor_y_a = 0.06
+anchor_y_b = 1.4100000000000001
+
+[node name="Post_A" type="StaticBody3D" parent="." unique_id=785281164]
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+
+[node name="Shape_L" type="CollisionShape3D" parent="Post_A" unique_id=1250025832]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, -0.6)
+shape = SubResource("CylinderShape3D_b2xqt")
+
+[node name="Post_L" type="Node3D" parent="Post_A" unique_id=499023445 instance=ExtResource("2_ycsvu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.6)
+
+[node name="Shape_R" type="CollisionShape3D" parent="Post_A" unique_id=1078930937]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0.6)
+shape = SubResource("CylinderShape3D_a01jb")
+
+[node name="Post_R" type="Node3D" parent="Post_A" unique_id=1959968910 instance=ExtResource("2_ycsvu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
+
+[node name="Post_B" type="StaticBody3D" parent="." unique_id=410413349]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.35, 0)
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+
+[node name="Shape_L" type="CollisionShape3D" parent="Post_B" unique_id=463257364]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, -0.6)
+shape = SubResource("CylinderShape3D_vg26g")
+
+[node name="Post_L" type="Node3D" parent="Post_B" unique_id=1849127646 instance=ExtResource("2_ycsvu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.6)
+
+[node name="Shape_R" type="CollisionShape3D" parent="Post_B" unique_id=843764547]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0.6)
+shape = SubResource("CylinderShape3D_1p6ns")
+
+[node name="Post_R" type="Node3D" parent="Post_B" unique_id=761242001 instance=ExtResource("2_ycsvu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
+
+[node name="Planks" type="Node3D" parent="." unique_id=552847952]
+
+[node name="Plank_0" type="RigidBody3D" parent="Planks" unique_id=850616649]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 0.25263157, 0.116842106, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_0" unique_id=1897131591]
+shape = SubResource("BoxShape3D_1kdrr")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_0" unique_id=737762154 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_1" type="RigidBody3D" parent="Planks" unique_id=714484639]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 0.55789477, 0.18552631, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_1" unique_id=87795278]
+shape = SubResource("BoxShape3D_v612m")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_1" unique_id=1628620166 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_2" type="RigidBody3D" parent="Planks" unique_id=287298487]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 0.86315787, 0.25421053, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_2" unique_id=607334768]
+shape = SubResource("BoxShape3D_dkt03")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_2" unique_id=1827434379 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_3" type="RigidBody3D" parent="Planks" unique_id=1458003339]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 1.168421, 0.32289472, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_3" unique_id=777074494]
+shape = SubResource("BoxShape3D_y44ro")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_3" unique_id=1911824904 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_4" type="RigidBody3D" parent="Planks" unique_id=1101460300]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 1.4736842, 0.39157894, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_4" unique_id=1619477924]
+shape = SubResource("BoxShape3D_e65lr")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_4" unique_id=720071456 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_5" type="RigidBody3D" parent="Planks" unique_id=364628912]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 1.7789474, 0.46026316, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_5" unique_id=1755303549]
+shape = SubResource("BoxShape3D_wohq7")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_5" unique_id=915287814 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_6" type="RigidBody3D" parent="Planks" unique_id=419760084]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 2.0842106, 0.52894735, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_6" unique_id=65273959]
+shape = SubResource("BoxShape3D_7r7es")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_6" unique_id=1188400452 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_7" type="RigidBody3D" parent="Planks" unique_id=1495310509]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 2.3894737, 0.5976316, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_7" unique_id=297626001]
+shape = SubResource("BoxShape3D_5eh3a")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_7" unique_id=1979573886 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_8" type="RigidBody3D" parent="Planks" unique_id=68325054]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 2.694737, 0.6663158, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_8" unique_id=1299078360]
+shape = SubResource("BoxShape3D_nptde")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_8" unique_id=497326354 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_9" type="RigidBody3D" parent="Planks" unique_id=1734854451]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 3, 0.735, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_9" unique_id=794110234]
+shape = SubResource("BoxShape3D_oe4ew")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_9" unique_id=224760638 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_10" type="RigidBody3D" parent="Planks" unique_id=488701364]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 3.305263, 0.80368423, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_10" unique_id=701185597]
+shape = SubResource("BoxShape3D_cqtn5")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_10" unique_id=1355597107 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_11" type="RigidBody3D" parent="Planks" unique_id=1575768652]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 3.6105263, 0.8723684, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_11" unique_id=315623337]
+shape = SubResource("BoxShape3D_ny2il")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_11" unique_id=1361323772 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_12" type="RigidBody3D" parent="Planks" unique_id=1176094009]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 3.9157894, 0.9410526, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_12" unique_id=1579517532]
+shape = SubResource("BoxShape3D_26or8")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_12" unique_id=1990932007 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_13" type="RigidBody3D" parent="Planks" unique_id=1782450878]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 4.2210526, 1.0097369, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_13" unique_id=1827139296]
+shape = SubResource("BoxShape3D_tds1h")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_13" unique_id=1244247840 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_14" type="RigidBody3D" parent="Planks" unique_id=588705993]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 4.5263157, 1.078421, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_14" unique_id=167388206]
+shape = SubResource("BoxShape3D_th8y5")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_14" unique_id=5298568 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_15" type="RigidBody3D" parent="Planks" unique_id=986709940]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 4.8315787, 1.1471052, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_15" unique_id=1707572022]
+shape = SubResource("BoxShape3D_wkfvm")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_15" unique_id=1886010095 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_16" type="RigidBody3D" parent="Planks" unique_id=427837357]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 5.1368423, 1.2157894, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_16" unique_id=27774157]
+shape = SubResource("BoxShape3D_72wvx")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_16" unique_id=483322861 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_17" type="RigidBody3D" parent="Planks" unique_id=392903839]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 5.4421053, 1.2844737, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_17" unique_id=1023334194]
+shape = SubResource("BoxShape3D_mt537")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_17" unique_id=638172426 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Plank_18" type="RigidBody3D" parent="Planks" unique_id=1115520527]
+transform = Transform3D(0.9756098, -0.2195122, 0, 0.2195122, 0.9756098, 0, 0, 0, 1, 5.7473683, 1.3531579, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.5
+angular_damp = 1.0
+
+[node name="Shape" type="CollisionShape3D" parent="Planks/Plank_18" unique_id=788787148]
+shape = SubResource("BoxShape3D_4pmxr")
+
+[node name="Mesh" type="Node3D" parent="Planks/Plank_18" unique_id=293330174 instance=ExtResource("3_hm6bn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+
+[node name="Joints" type="Node3D" parent="." unique_id=1963184622]
+
+[node name="Joint_0" type="Generic6DOFJoint3D" parent="Joints" unique_id=1838182800]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.0825, 0)
+node_a = NodePath("../../Post_A")
+node_b = NodePath("../../Planks/Plank_0")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_1" type="Generic6DOFJoint3D" parent="Joints" unique_id=337769657]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40526316, 0.15118422, 0)
+node_a = NodePath("../../Planks/Plank_0")
+node_b = NodePath("../../Planks/Plank_1")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_2" type="Generic6DOFJoint3D" parent="Joints" unique_id=1187959620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7105263, 0.21986842, 0)
+node_a = NodePath("../../Planks/Plank_1")
+node_b = NodePath("../../Planks/Plank_2")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_3" type="Generic6DOFJoint3D" parent="Joints" unique_id=1458035730]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0157895, 0.28855264, 0)
+node_a = NodePath("../../Planks/Plank_2")
+node_b = NodePath("../../Planks/Plank_3")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_4" type="Generic6DOFJoint3D" parent="Joints" unique_id=1153497836]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3210527, 0.35723683, 0)
+node_a = NodePath("../../Planks/Plank_3")
+node_b = NodePath("../../Planks/Plank_4")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_5" type="Generic6DOFJoint3D" parent="Joints" unique_id=1074410098]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6263158, 0.42592105, 0)
+node_a = NodePath("../../Planks/Plank_4")
+node_b = NodePath("../../Planks/Plank_5")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_6" type="Generic6DOFJoint3D" parent="Joints" unique_id=1279350101]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.931579, 0.49460527, 0)
+node_a = NodePath("../../Planks/Plank_5")
+node_b = NodePath("../../Planks/Plank_6")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_7" type="Generic6DOFJoint3D" parent="Joints" unique_id=322772412]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2368422, 0.56328946, 0)
+node_a = NodePath("../../Planks/Plank_6")
+node_b = NodePath("../../Planks/Plank_7")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_8" type="Generic6DOFJoint3D" parent="Joints" unique_id=1506549620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5421052, 0.6319737, 0)
+node_a = NodePath("../../Planks/Plank_7")
+node_b = NodePath("../../Planks/Plank_8")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_9" type="Generic6DOFJoint3D" parent="Joints" unique_id=915325223]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8473685, 0.7006579, 0)
+node_a = NodePath("../../Planks/Plank_8")
+node_b = NodePath("../../Planks/Plank_9")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_10" type="Generic6DOFJoint3D" parent="Joints" unique_id=2075543220]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1526315, 0.7693421, 0)
+node_a = NodePath("../../Planks/Plank_9")
+node_b = NodePath("../../Planks/Plank_10")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_11" type="Generic6DOFJoint3D" parent="Joints" unique_id=137518753]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4578948, 0.83802634, 0)
+node_a = NodePath("../../Planks/Plank_10")
+node_b = NodePath("../../Planks/Plank_11")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_12" type="Generic6DOFJoint3D" parent="Joints" unique_id=314750143]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7631578, 0.9067105, 0)
+node_a = NodePath("../../Planks/Plank_11")
+node_b = NodePath("../../Planks/Plank_12")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_13" type="Generic6DOFJoint3D" parent="Joints" unique_id=1689748088]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.068421, 0.9753947, 0)
+node_a = NodePath("../../Planks/Plank_12")
+node_b = NodePath("../../Planks/Plank_13")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_14" type="Generic6DOFJoint3D" parent="Joints" unique_id=573067813]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3736844, 1.044079, 0)
+node_a = NodePath("../../Planks/Plank_13")
+node_b = NodePath("../../Planks/Plank_14")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_15" type="Generic6DOFJoint3D" parent="Joints" unique_id=1977267340]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6789474, 1.1127632, 0)
+node_a = NodePath("../../Planks/Plank_14")
+node_b = NodePath("../../Planks/Plank_15")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_16" type="Generic6DOFJoint3D" parent="Joints" unique_id=315476408]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.9842105, 1.1814474, 0)
+node_a = NodePath("../../Planks/Plank_15")
+node_b = NodePath("../../Planks/Plank_16")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_17" type="Generic6DOFJoint3D" parent="Joints" unique_id=1248031242]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2894735, 1.2501316, 0)
+node_a = NodePath("../../Planks/Plank_16")
+node_b = NodePath("../../Planks/Plank_17")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_18" type="Generic6DOFJoint3D" parent="Joints" unique_id=810698197]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.594737, 1.3188158, 0)
+node_a = NodePath("../../Planks/Plank_17")
+node_b = NodePath("../../Planks/Plank_18")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Joint_19" type="Generic6DOFJoint3D" parent="Joints" unique_id=362012826]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.9, 1.3875, 0)
+node_a = NodePath("../../Planks/Plank_18")
+node_b = NodePath("../../Post_B")
+angular_limit_z/upper_angle = 0.43633232
+angular_limit_z/lower_angle = -0.43633232
+
+[node name="Ropes" type="Node3D" parent="." unique_id=1923747640]
+
+[node name="Rope_L_0" type="Node3D" parent="Ropes" unique_id=629161261 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_1" type="Node3D" parent="Ropes" unique_id=1081394700 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_2" type="Node3D" parent="Ropes" unique_id=1839908892 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_3" type="Node3D" parent="Ropes" unique_id=87939233 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_4" type="Node3D" parent="Ropes" unique_id=1329965455 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_5" type="Node3D" parent="Ropes" unique_id=1521890679 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_6" type="Node3D" parent="Ropes" unique_id=1926590313 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_7" type="Node3D" parent="Ropes" unique_id=1436426355 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_8" type="Node3D" parent="Ropes" unique_id=450748219 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_9" type="Node3D" parent="Ropes" unique_id=761009749 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_10" type="Node3D" parent="Ropes" unique_id=330575585 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_11" type="Node3D" parent="Ropes" unique_id=1430580738 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_12" type="Node3D" parent="Ropes" unique_id=627626947 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_13" type="Node3D" parent="Ropes" unique_id=262815560 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_14" type="Node3D" parent="Ropes" unique_id=848434866 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_15" type="Node3D" parent="Ropes" unique_id=1338329201 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_16" type="Node3D" parent="Ropes" unique_id=2031882579 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_17" type="Node3D" parent="Ropes" unique_id=561761082 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_18" type="Node3D" parent="Ropes" unique_id=191610391 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_L_19" type="Node3D" parent="Ropes" unique_id=1473880301 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_0" type="Node3D" parent="Ropes" unique_id=238373176 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_1" type="Node3D" parent="Ropes" unique_id=684755595 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_2" type="Node3D" parent="Ropes" unique_id=1678719838 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_3" type="Node3D" parent="Ropes" unique_id=1384977293 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_4" type="Node3D" parent="Ropes" unique_id=1329861594 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_5" type="Node3D" parent="Ropes" unique_id=368033092 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_6" type="Node3D" parent="Ropes" unique_id=137146040 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_7" type="Node3D" parent="Ropes" unique_id=815221917 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_8" type="Node3D" parent="Ropes" unique_id=818165379 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_9" type="Node3D" parent="Ropes" unique_id=580501864 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_10" type="Node3D" parent="Ropes" unique_id=1870442679 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_11" type="Node3D" parent="Ropes" unique_id=1832234898 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_12" type="Node3D" parent="Ropes" unique_id=2095053692 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_13" type="Node3D" parent="Ropes" unique_id=1440764763 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_14" type="Node3D" parent="Ropes" unique_id=1904873089 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_15" type="Node3D" parent="Ropes" unique_id=1114987599 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_16" type="Node3D" parent="Ropes" unique_id=683693273 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_17" type="Node3D" parent="Ropes" unique_id=794206433 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_18" type="Node3D" parent="Ropes" unique_id=480648326 instance=ExtResource("4_j17i3")]
+
+[node name="Rope_R_19" type="Node3D" parent="Ropes" unique_id=1889512896 instance=ExtResource("4_j17i3")]
+
+[node name="Handrails" type="Node3D" parent="." unique_id=416852154]
+
+[node name="Rail_L_1" type="Node3D" parent="Handrails" unique_id=1676136071 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285716, -0.043234058, 0, 0.061820745, 0.999065, 0, 0, 0, 1, 0, 1.28, -0.5)
+
+[node name="Rail_L_2" type="Node3D" parent="Handrails" unique_id=1396764448 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285713, -0.05231542, 0, 0.074838795, 0.99863064, 0, 0, 0, 1, 0.42857143, 1.2985462, -0.5)
+
+[node name="Rail_L_3" type="Node3D" parent="Handrails" unique_id=888972240 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285713, -0.06998314, 0, 0.100221634, 0.99754816, 0, 0, 0, 1, 0.85714287, 1.3209978, -0.5)
+
+[node name="Rail_L_4" type="Node3D" parent="Handrails" unique_id=281205453 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285715, -0.09525247, 0, 0.1366965, 0.9954532, 0, 0, 0, 1, 1.2857143, 1.3510643, -0.5)
+
+[node name="Rail_L_5" type="Node3D" parent="Handrails" unique_id=155201221 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285711, -0.12667584, 0, 0.18243513, 0.9919442, 0, 0, 0, 1, 1.7142857, 1.3920733, -0.5)
+
+[node name="Rail_L_6" type="Node3D" parent="Handrails" unique_id=1404962334 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285716, -0.16241443, 0, 0.23514271, 0.98672265, 0, 0, 0, 1, 2.142857, 1.4468038, -0.5)
+
+[node name="Rail_L_7" type="Node3D" parent="Handrails" unique_id=256113819 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285716, -0.20037661, 0, 0.292178, 0.979719, 0, 0, 0, 1, 2.5714285, 1.5173466, -0.5)
+
+[node name="Rail_L_8" type="Node3D" parent="Handrails" unique_id=1316031670 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285716, -0.23839775, 0, 0.35067916, 0.9711676, 0, 0, 0, 1, 3, 1.605, -0.5)
+
+[node name="Rail_L_9" type="Node3D" parent="Handrails" unique_id=1037601905 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285715, -0.27444154, 0, 0.40771404, 0.96160376, 0, 0, 0, 1, 3.4285715, 1.7102038, -0.5)
+
+[node name="Rail_L_10" type="Node3D" parent="Handrails" unique_id=1939744514 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285707, -0.30675724, 0, 0.4604224, 0.95178777, 0, 0, 0, 1, 3.857143, 1.832518, -0.5)
+
+[node name="Rail_L_11" type="Node3D" parent="Handrails" unique_id=1733212532 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285723, -0.33396882, 0, 0.50616026, 0.9425841, 0, 0, 0, 1, 4.285714, 1.9706447, -0.5)
+
+[node name="Rail_L_12" type="Node3D" parent="Handrails" unique_id=1391190475 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285709, -0.35509142, 0, 0.542636, 0.9348316, 0, 0, 0, 1, 4.714286, 2.1224928, -0.5)
+
+[node name="Rail_L_13" type="Node3D" parent="Handrails" unique_id=447727687 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285724, -0.36947763, 0, 0.56801873, 0.92923963, 0, 0, 0, 1, 5.142857, 2.2852836, -0.5)
+
+[node name="Rail_L_14" type="Node3D" parent="Handrails" unique_id=1438228721 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285709, -0.3767552, 0, 0.5810364, 0.92631286, 0, 0, 0, 1, 5.571429, 2.4556892, -0.5)
+
+[node name="Rail_R_1" type="Node3D" parent="Handrails" unique_id=1935134726 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285716, -0.043234058, 0, 0.061820745, 0.999065, 0, 0, 0, 1, 0, 1.28, 0.5)
+
+[node name="Rail_R_2" type="Node3D" parent="Handrails" unique_id=1126070829 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285713, -0.05231542, 0, 0.074838795, 0.99863064, 0, 0, 0, 1, 0.42857143, 1.2985462, 0.5)
+
+[node name="Rail_R_3" type="Node3D" parent="Handrails" unique_id=898213806 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285713, -0.06998314, 0, 0.100221634, 0.99754816, 0, 0, 0, 1, 0.85714287, 1.3209978, 0.5)
+
+[node name="Rail_R_4" type="Node3D" parent="Handrails" unique_id=680166065 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285715, -0.09525247, 0, 0.1366965, 0.9954532, 0, 0, 0, 1, 1.2857143, 1.3510643, 0.5)
+
+[node name="Rail_R_5" type="Node3D" parent="Handrails" unique_id=534975412 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285711, -0.12667584, 0, 0.18243513, 0.9919442, 0, 0, 0, 1, 1.7142857, 1.3920733, 0.5)
+
+[node name="Rail_R_6" type="Node3D" parent="Handrails" unique_id=1544498327 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285716, -0.16241443, 0, 0.23514271, 0.98672265, 0, 0, 0, 1, 2.142857, 1.4468038, 0.5)
+
+[node name="Rail_R_7" type="Node3D" parent="Handrails" unique_id=1233503647 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285716, -0.20037661, 0, 0.292178, 0.979719, 0, 0, 0, 1, 2.5714285, 1.5173466, 0.5)
+
+[node name="Rail_R_8" type="Node3D" parent="Handrails" unique_id=762875092 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285716, -0.23839775, 0, 0.35067916, 0.9711676, 0, 0, 0, 1, 3, 1.605, 0.5)
+
+[node name="Rail_R_9" type="Node3D" parent="Handrails" unique_id=589861959 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285715, -0.27444154, 0, 0.40771404, 0.96160376, 0, 0, 0, 1, 3.4285715, 1.7102038, 0.5)
+
+[node name="Rail_R_10" type="Node3D" parent="Handrails" unique_id=241100793 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285707, -0.30675724, 0, 0.4604224, 0.95178777, 0, 0, 0, 1, 3.857143, 1.832518, 0.5)
+
+[node name="Rail_R_11" type="Node3D" parent="Handrails" unique_id=1817127817 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285723, -0.33396882, 0, 0.50616026, 0.9425841, 0, 0, 0, 1, 4.285714, 1.9706447, 0.5)
+
+[node name="Rail_R_12" type="Node3D" parent="Handrails" unique_id=300874079 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285709, -0.35509142, 0, 0.542636, 0.9348316, 0, 0, 0, 1, 4.714286, 2.1224928, 0.5)
+
+[node name="Rail_R_13" type="Node3D" parent="Handrails" unique_id=1565560254 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285724, -0.36947763, 0, 0.56801873, 0.92923963, 0, 0, 0, 1, 5.142857, 2.2852836, 0.5)
+
+[node name="Rail_R_14" type="Node3D" parent="Handrails" unique_id=1424679734 instance=ExtResource("4_j17i3")]
+transform = Transform3D(1.4285709, -0.3767552, 0, 0.5810364, 0.92631286, 0, 0, 0, 1, 5.571429, 2.4556892, 0.5)

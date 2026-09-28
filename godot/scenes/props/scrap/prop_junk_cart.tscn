@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://sc15junkcart"]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Junk_Cart.glb" id="1_qcon7"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pw7ku"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lka84"]
+size = Vector3(1.65, 0.59, 1.02)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_8cbaa"]
+height = 1.26
+radius = 0.312
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_m7ehq"]
+height = 1.26
+radius = 0.312
+
+[node name="Junk_Cart" type="RigidBody3D" unique_id=1715699892]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 30.0
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+
+[node name="Shape_0" type="CollisionShape3D" parent="." unique_id=702764678]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
+shape = SubResource("BoxShape3D_lka84")
+
+[node name="Shape_1" type="CollisionShape3D" parent="." unique_id=1518849242]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.5, 0.312, 0)
+shape = SubResource("CylinderShape3D_8cbaa")
+
+[node name="Shape_2" type="CollisionShape3D" parent="." unique_id=833038066]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.5, 0.312, 0)
+shape = SubResource("CylinderShape3D_m7ehq")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=92036742 instance=ExtResource("1_qcon7")]

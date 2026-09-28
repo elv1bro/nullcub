@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://wswinwall001"]
+
+[ext_resource type="Script" path="res://scenes/props/workshop_window_wall.gd" id="1_urju1"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Wall_Window_4m.glb" id="2_7dfxq"]
+[ext_resource type="PackedScene" path="res://assets/models/workshop/Foliage_Soft.glb" id="3_mnudf"]
+[ext_resource type="Texture2D" path="res://assets/textures/workshop/exterior_backdrop.png" id="4_rrrtt"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aue3v"]
+cull_mode = 2
+shading_mode = 0
+disable_fog = true
+albedo_texture = ExtResource("4_rrrtt")
+texture_repeat = false
+disable_receive_shadows = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_g6qu3"]
+material = SubResource("StandardMaterial3D_aue3v")
+size = Vector2(5.4, 12.4)
+
+[node name="WorkshopWindowWall" type="Node3D" unique_id=579296006]
+script = ExtResource("1_urju1")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=393960332 instance=ExtResource("2_7dfxq")]
+
+[node name="Foliage" type="Node3D" parent="." unique_id=582313367]
+
+[node name="Leaf0" type="Node3D" parent="Foliage" unique_id=1385462306 instance=ExtResource("3_mnudf")]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, -1.5, 0.3, -1.6)
+
+[node name="Leaf1" type="Node3D" parent="Foliage" unique_id=1799455520 instance=ExtResource("3_mnudf")]
+transform = Transform3D(0.9396926, 0, -0.34202012, 0, 1, 0, 0.34202012, 0, 0.9396926, 1.6, 1.5, -1.75)
+
+[node name="Exterior" type="MeshInstance3D" parent="." unique_id=150231530]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -2.7)
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("QuadMesh_g6qu3")
