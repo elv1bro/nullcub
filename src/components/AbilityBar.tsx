@@ -9,86 +9,20 @@ import {
   RESET_COOLDOWN_MS,
   GRAB_ENABLED,
 } from "@/lib/battleTuning";
+import { getBattleConfig } from "@/lib/battleConfig";
 import { useSettings } from "@/settings/SettingsContext";
+import {
+  BraceIcon,
+  DashIcon,
+  FlipIcon,
+  ResetIcon,
+} from "@/components/abilityIcons";
+import type { AbilityId, PassiveItemId } from "@/loadout/types";
 
 type Props = AbilityCooldownView & {
   disabled?: boolean;
   bindings?: AbilityBindings;
 };
-
-function DashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-7 h-7" aria-hidden>
-      <path
-        d="M4 12h12M14 7l5 5-5 5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function FlipIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-7 h-7" aria-hidden>
-      <path
-        d="M12 4a8 8 0 1 1-7.8 6.2M12 4V1M12 4l2.5 2.5M12 20a8 8 0 1 1 7.8-6.2M12 20v3M12 20l-2.5-2.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function BraceIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-7 h-7" aria-hidden>
-      <path
-        d="M12 2l7 3v6c0 5-3 9-7 11-4-2-7-6-7-11V5l7-3z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ResetIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-7 h-7" aria-hidden>
-      <path
-        d="M12 3v3M12 3a6 6 0 1 1-4.2 10.2M8 7l-2-2M8 7l2-2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 12h8M10 9v6M14 9v6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function EmptySlotIcon() {
-  return (
-    <span className="text-xl font-black text-gray-600/80" aria-hidden>
-      ·
-    </span>
-  );
-}
 
 function AbilitySlot({
   label,
@@ -139,14 +73,15 @@ function AbilitySlot({
   return (
     <div
       className={[
-        "relative flex flex-col items-center gap-1 select-none",
+        "ability-slot relative flex flex-col items-center gap-1 select-none",
         enabled && (ready || active) ? "opacity-100" : "opacity-55",
+        slotDisabled ? "ability-slot--empty" : "",
       ].join(" ")}
       title={label}
     >
       <div
         className={[
-          "relative w-14 h-14 rounded-xl border-2 flex items-center justify-center overflow-hidden transition-colors duration-150",
+          "ability-slot__icon relative w-14 h-14 rounded-xl border-2 flex items-center justify-center overflow-hidden transition-colors duration-150",
           slotDisabled
             ? "border-dashed border-gray-700/80 bg-black/35 text-gray-600"
             : ready || active
@@ -164,7 +99,7 @@ function AbilitySlot({
                 clipPath: `polygon(0 ${(1 - progress) * 100}%, 100% ${(1 - progress) * 100}%, 100% 100%, 0 100%)`,
               }}
             />
-            <span className="absolute inset-0 flex items-center justify-center text-sm font-black tabular-nums text-white drop-shadow">
+            <span className="absolute inset-0 flex items-center justify-center text-sm font-black tabular-nums text-white drop-shadow ability-slot__cd">
               {seconds}
             </span>
           </>
@@ -175,10 +110,10 @@ function AbilitySlot({
           />
         )}
       </div>
-      <span className="text-[10px] font-ui uppercase tracking-wider text-gray-400">
+      <span className="ability-slot__key text-[10px] font-ui uppercase tracking-wider text-gray-400">
         {keyLabel}
       </span>
-      <span className="text-[10px] font-ui text-gray-500 max-w-16 text-center leading-tight">
+      <span className="ability-slot__label text-[10px] font-ui text-gray-500 max-w-16 text-center leading-tight">
         {label}
       </span>
     </div>
@@ -205,6 +140,30 @@ export function AbilityBar({
 }: Props) {
   const { t, settings } = useSettings();
   const abilities = bindings ?? settings.abilities;
+  const battle = getBattleConfig();
+  const loadout =
+    battle.kind === "lab" || battle.kind === "testArena"
+      ? battle.loadout
+      : battle.kind === "roguelike"
+        ? battle.loadouts.you ??
+          battle.loadouts.player ??
+          Object.values(battle.loadouts)[0]
+        : undefined;
+  const castList =
+    battle.kind === "testArena" ? battle.castAbilities : undefined;
+  const slotAbility = (castList?.[0] ??
+    loadout?.abilities[0] ??
+    null) as AbilityId | null;
+  const slotItem = (loadout?.items[0] ??
+    (battle.kind === "testArena" ? battle.extraItems[0] : null) ??
+    null) as PassiveItemId | null;
+  const castCount = castList?.length ?? (slotAbility ? 1 : 0);
+  const itemCount =
+    battle.kind === "testArena" && loadout
+      ? loadout.items.filter(Boolean).length + battle.extraItems.length
+      : slotItem
+        ? 1
+        : 0;
 
   if (disabled) return null;
 
@@ -212,7 +171,7 @@ export function AbilityBar({
   const freezeActive = freezeActiveRemainingMs > 0;
 
   return (
-    <div className="flex items-end justify-center gap-3 pointer-events-none">
+    <div className="ability-bar flex items-end justify-center gap-3 pointer-events-none">
       <AbilitySlot
         label={t.battle.abilityDash}
         keyLabel={formatBindingLabel(abilities.dash)}
@@ -223,7 +182,7 @@ export function AbilityBar({
         flashAt={lastDashFlash}
         activeColor="cyan"
       >
-        <DashIcon />
+        <DashIcon className="ability-icon ability-icon--bar" />
       </AbilitySlot>
       <AbilitySlot
         label={t.battle.abilityFlip}
@@ -234,7 +193,7 @@ export function AbilityBar({
         flashAt={lastFlipFlash}
         activeColor="violet"
       >
-        <FlipIcon />
+        <FlipIcon className="ability-icon ability-icon--bar" />
       </AbilitySlot>
       <AbilitySlot
         label={t.battle.abilityFreeze}
@@ -246,7 +205,7 @@ export function AbilityBar({
         flashAt={lastFreezeFlash}
         activeColor="sky"
       >
-        <BraceIcon />
+        <BraceIcon className="ability-icon ability-icon--bar" />
       </AbilitySlot>
       {GRAB_ENABLED && (
         <>
@@ -277,18 +236,62 @@ export function AbilityBar({
         </>
       )}
       <AbilitySlot
-        label={t.battle.abilitySlotEmpty}
-        keyLabel={formatBindingLabel(abilities.slot4)}
-        ready={false}
-        disabled
+        label={t.battle.abilityDropWeapon}
+        keyLabel={formatBindingLabel(abilities.dropWeapon)}
+        ready={true}
+        active={false}
         remainingMs={0}
         totalMs={0}
         flashAt={0}
+        activeColor="amber"
       >
-        <EmptySlotIcon />
+        <span className="text-sm font-black">DROP</span>
       </AbilitySlot>
 
-      <div className="w-px h-12 bg-gray-700/80 mx-0.5 self-center" aria-hidden />
+      {slotAbility && (
+        <AbilitySlot
+          label={
+            castCount > 1
+              ? `${t.loadout.ability[slotAbility]} (+${castCount - 1})`
+              : t.loadout.ability[slotAbility]
+          }
+          keyLabel={formatBindingLabel(abilities.slot4)}
+          ready={true}
+          active={false}
+          remainingMs={0}
+          totalMs={0}
+          flashAt={0}
+          activeColor="violet"
+        >
+          <span className="text-[10px] font-black leading-tight text-center px-0.5">
+            CAST
+          </span>
+        </AbilitySlot>
+      )}
+
+      {slotItem && (
+        <AbilitySlot
+          label={
+            itemCount > 1
+              ? `${t.loadout.item[slotItem]} (+${itemCount - 1})`
+              : t.loadout.item[slotItem]
+          }
+          keyLabel="PASS"
+          ready={true}
+          active={false}
+          remainingMs={0}
+          totalMs={0}
+          flashAt={0}
+          activeColor="sky"
+          disabled={false}
+        >
+          <span className="text-[10px] font-black leading-tight text-center px-0.5">
+            ITEM
+          </span>
+        </AbilitySlot>
+      )}
+
+      <div className="ability-bar__sep w-px h-12 bg-gray-700/80 mx-0.5 self-center" aria-hidden />
 
       <AbilitySlot
         label={t.battle.abilityReset}
@@ -299,7 +302,7 @@ export function AbilityBar({
         flashAt={lastResetFlash}
         activeColor="cyan"
       >
-        <ResetIcon />
+        <ResetIcon className="ability-icon ability-icon--bar" />
       </AbilitySlot>
     </div>
   );

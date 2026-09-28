@@ -10,6 +10,8 @@ import {
   type ControlBindings,
 } from "@/settings/SettingsContext";
 import { openStrikeLab } from "@/lib/strikeLabMode";
+import { GRAB_ENABLED } from "@/lib/battleTuning";
+import { isDebugMode } from "@/lib/debugMode";
 import { useContext, useEffect, useState } from "react";
 
 type MoveDir = keyof ControlBindings;
@@ -24,6 +26,14 @@ type ListeningTarget =
 
 const MOVE_DIRS: MoveDir[] = ["up", "down", "left", "right"];
 
+const MOVE_DESC: Record<MoveDir, "descUp" | "descDown" | "descLeft" | "descRight"> =
+  {
+    up: "descUp",
+    down: "descDown",
+    left: "descLeft",
+    right: "descRight",
+  };
+
 const ABILITY_SLOTS: {
   id: AbilitySlot;
   labelKey:
@@ -32,17 +42,39 @@ const ABILITY_SLOTS: {
     | "abilityFreeze"
     | "abilityGrabL"
     | "abilityGrabR"
-    | "abilitySlotEmpty"
+    | "abilityDropWeapon"
+    | "abilityLoadoutSlot"
     | "abilityReset";
-  disabled?: boolean;
+  descKey:
+    | "descDash"
+    | "descFlip"
+    | "descFreeze"
+    | "descGrabL"
+    | "descGrabR"
+    | "descDropWeapon"
+    | "descAbilitySlot"
+    | "descReset";
 }[] = [
-  { id: "dash", labelKey: "abilityDash" },
-  { id: "flip", labelKey: "abilityFlip" },
-  { id: "freeze", labelKey: "abilityFreeze" },
-  { id: "grabL", labelKey: "abilityGrabL" },
-  { id: "grabR", labelKey: "abilityGrabR" },
-  { id: "slot4", labelKey: "abilitySlotEmpty", disabled: true },
-  { id: "reset", labelKey: "abilityReset" },
+  { id: "dash", labelKey: "abilityDash", descKey: "descDash" },
+  { id: "flip", labelKey: "abilityFlip", descKey: "descFlip" },
+  { id: "freeze", labelKey: "abilityFreeze", descKey: "descFreeze" },
+  ...(GRAB_ENABLED
+    ? ([
+        { id: "grabL", labelKey: "abilityGrabL", descKey: "descGrabL" },
+        { id: "grabR", labelKey: "abilityGrabR", descKey: "descGrabR" },
+      ] as const)
+    : []),
+  {
+    id: "dropWeapon",
+    labelKey: "abilityDropWeapon",
+    descKey: "descDropWeapon",
+  },
+  {
+    id: "slot4",
+    labelKey: "abilityLoadoutSlot",
+    descKey: "descAbilitySlot",
+  },
+  { id: "reset", labelKey: "abilityReset", descKey: "descReset" },
 ];
 
 interface Props {
@@ -50,37 +82,27 @@ interface Props {
   onClose?: () => void;
 }
 
-function KeyBindButton({
-  label,
+function BindCell({
   binding,
   listening,
   onListen,
-  disabled,
 }: {
-  label: string;
   binding: string;
   listening: boolean;
   onListen: () => void;
-  disabled?: boolean;
 }) {
   const { t } = useSettings();
-
   return (
-    <li className="flex items-center justify-between gap-2">
-      <span className="menu-label mb-0!">{label}</span>
-      <button
-        type="button"
-        onClick={onListen}
-        disabled={disabled}
-        className={[
-          "menu-key-btn",
-          listening ? "menu-key-btn--active" : "",
-          disabled ? "opacity-45 cursor-not-allowed" : "",
-        ].join(" ")}
-      >
-        {listening ? t.controls.pressKey : formatBindingLabel(binding)}
-      </button>
-    </li>
+    <button
+      type="button"
+      onClick={onListen}
+      className={[
+        "menu-key-btn controls-bind-btn",
+        listening ? "menu-key-btn--active" : "",
+      ].join(" ")}
+    >
+      {listening ? t.controls.pressKey : formatBindingLabel(binding)}
+    </button>
   );
 }
 
@@ -123,75 +145,109 @@ export function ControlsPanel({ embedded, onClose }: Props) {
     return () => window.removeEventListener("keydown", onKey, { capture: true });
   }, [listening, setControl, setControlP2, setAbility, setAbilityP2]);
 
-  const renderMoveSection = (
-    title: string,
-    hint: string,
-    bindings: ControlBindings,
-    kind: "move" | "moveP2",
-  ) => (
-    <>
-      <p className="menu-hint">{title}</p>
-      <p className="menu-hint text-xs! -mt-1">{hint}</p>
-      <ul className="space-y-2">
-        {MOVE_DIRS.map((dir) => (
-          <KeyBindButton
-            key={`${kind}-${dir}`}
-            label={t.controls[dir]}
-            binding={bindings[dir]}
-            listening={listening?.kind === kind && listening.id === dir}
-            onListen={() => setListening({ kind, id: dir })}
-          />
-        ))}
-      </ul>
-    </>
-  );
-
-  const renderAbilitySection = (
-    title: string,
-    bindings: AbilityBindings,
-    kind: "ability" | "abilityP2",
-  ) => (
-    <>
-      <p className="menu-hint pt-2">{title}</p>
-      <ul className="space-y-2">
-        {ABILITY_SLOTS.map(({ id, labelKey, disabled }) => (
-          <KeyBindButton
-            key={`${kind}-${id}`}
-            label={t.battle[labelKey]}
-            binding={bindings[id]}
-            listening={listening?.kind === kind && listening.id === id}
-            onListen={() => setListening({ kind, id })}
-            disabled={disabled}
-          />
-        ))}
-      </ul>
-    </>
-  );
+  const rows: Array<{
+    key: string;
+    label: string;
+    desc: string;
+    p1: { binding: string; kind: "move" | "ability"; id: MoveDir | AbilitySlot };
+    p2: {
+      binding: string;
+      kind: "moveP2" | "abilityP2";
+      id: MoveDir | AbilitySlot;
+    };
+  }> = [
+    ...MOVE_DIRS.map((dir) => ({
+      key: `move-${dir}`,
+      label: t.controls[dir],
+      desc: t.controls[MOVE_DESC[dir]],
+      p1: {
+        binding: settings.controls[dir],
+        kind: "move" as const,
+        id: dir,
+      },
+      p2: {
+        binding: settings.controlsP2[dir],
+        kind: "moveP2" as const,
+        id: dir,
+      },
+    })),
+    ...ABILITY_SLOTS.map(({ id, labelKey, descKey }) => ({
+      key: `ability-${id}`,
+      label: t.battle[labelKey],
+      desc: t.controls[descKey],
+      p1: {
+        binding: settings.abilities[id],
+        kind: "ability" as const,
+        id,
+      },
+      p2: {
+        binding: settings.abilitiesP2[id],
+        kind: "abilityP2" as const,
+        id,
+      },
+    })),
+  ];
 
   const inner = (
-    <>
-      {renderMoveSection(t.controls.move, t.controls.arrowsHint, settings.controls, "move")}
-      {renderAbilitySection(t.controls.abilities, settings.abilities, "ability")}
+    <div className="controls-panel">
+      <p className="menu-hint controls-panel__hint">{t.controls.hint}</p>
 
-      {renderMoveSection(
-        t.controls.moveP2,
-        t.controls.moveP2Hint,
-        settings.controlsP2,
-        "moveP2",
+      <div className="controls-grid" role="table" aria-label={t.controls.title}>
+        <div className="controls-grid__head" role="row">
+          <span className="controls-grid__action">{t.controls.move}</span>
+          <span className="controls-grid__player">{t.controls.player1}</span>
+          <span className="controls-grid__player">{t.controls.player2}</span>
+        </div>
+
+        {rows.map((row) => (
+          <div key={row.key} className="controls-grid__row" role="row">
+            <div className="controls-grid__action">
+              <span className="controls-grid__label">{row.label}</span>
+              <span className="controls-grid__desc">{row.desc}</span>
+            </div>
+            <BindCell
+              binding={row.p1.binding}
+              listening={
+                listening?.kind === row.p1.kind && listening.id === row.p1.id
+              }
+              onListen={() =>
+                setListening({
+                  kind: row.p1.kind,
+                  id: row.p1.id as never,
+                })
+              }
+            />
+            <BindCell
+              binding={row.p2.binding}
+              listening={
+                listening?.kind === row.p2.kind && listening.id === row.p2.id
+              }
+              onListen={() =>
+                setListening({
+                  kind: row.p2.kind,
+                  id: row.p2.id as never,
+                })
+              }
+            />
+          </div>
+        ))}
+      </div>
+
+      <p className="menu-hint">
+        {t.controls.backKey}: Escape
+      </p>
+
+      {isDebugMode() && (
+        <button
+          type="button"
+          className="menu-link-btn"
+          onClick={() => openStrikeLab(sendN("STRIKE_LAB"))}
+        >
+          Strike lab — тест ударов и отталкивания
+        </button>
       )}
-      {renderAbilitySection(t.controls.abilitiesP2, settings.abilitiesP2, "abilityP2")}
 
-      <p className="menu-hint">{t.controls.backKey}: Escape</p>
-
-      <button
-        type="button"
-        className="menu-link-btn"
-        onClick={() => openStrikeLab(sendN("STRIKE_LAB"))}
-      >
-        Strike lab — тест ударов и отталкивания
-      </button>
-
-      <div className="flex gap-2 pt-2">
+      <div className="flex gap-2 pt-1">
         <button type="button" className="menu-nav-btn text-sm!" onClick={resetControls}>
           {t.controls.reset}
         </button>
@@ -201,13 +257,13 @@ export function ControlsPanel({ embedded, onClose }: Props) {
           </Button>
         )}
       </div>
-    </>
+    </div>
   );
 
-  if (embedded) return <div className="menu-stack">{inner}</div>;
+  if (embedded) return inner;
 
   return (
-    <div className="menu-panel-surface menu-panel-pad menu-stack w-full max-w-xs">
+    <div className="menu-panel-surface menu-panel-pad menu-stack w-full max-w-lg">
       <h3 className="menu-panel-title">{t.controls.title}</h3>
       {inner}
     </div>

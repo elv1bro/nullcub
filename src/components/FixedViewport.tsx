@@ -1,6 +1,7 @@
 import { useRender, useRenderEvent } from "@1.framework/matter4react";
 import Matter, { type Body } from "matter-js";
 import { useLayoutEffect } from "react";
+import { applyRenderSize } from "@/render/setRenderPixelRatio";
 
 interface Props {
   width: number;
@@ -19,10 +20,7 @@ export function FixedViewport({
   const render = useRender();
 
   useLayoutEffect(() => {
-    render.options.width = width;
-    render.options.height = height;
-    render.canvas.width = width;
-    render.canvas.height = height;
+    applyRenderSize(render, width, height);
   }, [render, width, height]);
 
   useRenderEvent(

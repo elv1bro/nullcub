@@ -5,10 +5,13 @@ import {
   DEFAULT_AVATAR_FACE_ID,
   isValidAvatarFaceId,
 } from "@/face/avatarPresets";
+import { CLOUD_SYNC_EVENT } from "@/cloud/cloudEvents";
+import { scheduleCloudPush } from "@/cloud/schedulePush";
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type PropsWithChildren,
@@ -28,12 +31,14 @@ export interface PlayerProfile {
 }
 
 const STORAGE_KEY = "ragdoll-faces-profile";
-const SCHEMA_VERSION = 1;
+/** v2: камера больше не включена по умолчанию, старые профили гасим один раз. */
+const SCHEMA_VERSION = 2;
+const CAMERA_OPT_IN_VERSION = 2;
 
 export const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
   name: "YOU",
   colors: { main: "#38bdf8", secondary: "#0284c7" },
-  useCamera: true,
+  useCamera: false,
   useMicrophone: false,
   faceEffect: "none",
   avatarFaceId: DEFAULT_AVATAR_FACE_ID,
@@ -44,11 +49,15 @@ export const DEFAULT_PLAYER_PROFILE: PlayerProfile = {
 export { COLOR_PRESETS } from "./colorPresets";
 export type { FaceOverlayEffectId } from "@/face/faceEffects";
 
-function coerceProfile(data: unknown): PlayerProfile | null {
+function coerceProfile(data: unknown, fromVersion: number): PlayerProfile | null {
   if (typeof data !== "object" || data === null || Array.isArray(data)) {
     return null;
   }
   const parsed = data as Partial<PlayerProfile>;
+  const useCamera =
+    fromVersion < CAMERA_OPT_IN_VERSION
+      ? false
+      : (parsed.useCamera ?? DEFAULT_PLAYER_PROFILE.useCamera);
   const faceEffect = parsed.faceEffect ?? DEFAULT_PLAYER_PROFILE.faceEffect;
   return {
     name: parsed.name?.trim() || DEFAULT_PLAYER_PROFILE.name,
@@ -57,7 +66,7 @@ function coerceProfile(data: unknown): PlayerProfile | null {
       secondary:
         parsed.colors?.secondary || DEFAULT_PLAYER_PROFILE.colors.secondary,
     },
-    useCamera: parsed.useCamera ?? DEFAULT_PLAYER_PROFILE.useCamera,
+    useCamera,
     useMicrophone:
       parsed.useMicrophone ?? DEFAULT_PLAYER_PROFILE.useMicrophone,
     faceEffect:
@@ -84,21 +93,26 @@ function coerceProfile(data: unknown): PlayerProfile | null {
   };
 }
 
-function loadProfile(): PlayerProfile {
+export function loadPlayerProfile(): PlayerProfile {
   return loadVersioned<PlayerProfile>({
     key: STORAGE_KEY,
     version: SCHEMA_VERSION,
-    migrate: (data) => coerceProfile(data),
+    migrate: (data, fromVersion) => coerceProfile(data, fromVersion),
     fallback: () => DEFAULT_PLAYER_PROFILE,
   });
 }
 
-function saveProfile(profile: PlayerProfile): void {
+export function replacePlayerProfile(profile: PlayerProfile): void {
   saveVersioned(STORAGE_KEY, SCHEMA_VERSION, profile);
+}
+
+function saveProfile(profile: PlayerProfile): void {
+  replacePlayerProfile(profile);
 }
 
 interface PlayerProfileContextValue {
   profile: PlayerProfile;
+  reloadProfile: () => void;
   setName: (name: string) => void;
   setColors: (colors: FighterColors) => void;
   setMainColor: (main: string) => void;
@@ -118,12 +132,23 @@ const PlayerProfileContext = createContext<PlayerProfileContextValue | null>(
 );
 
 export function PlayerProfileProvider({ children }: PropsWithChildren) {
-  const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
+  const [profile, setProfile] = useState<PlayerProfile>(loadPlayerProfile);
+
+  const reloadProfile = useCallback(() => {
+    setProfile(loadPlayerProfile());
+  }, []);
+
+  useEffect(() => {
+    const onSync = () => reloadProfile();
+    window.addEventListener(CLOUD_SYNC_EVENT, onSync);
+    return () => window.removeEventListener(CLOUD_SYNC_EVENT, onSync);
+  }, [reloadProfile]);
 
   const update = useCallback((patch: (prev: PlayerProfile) => PlayerProfile) => {
     setProfile((prev) => {
       const next = patch(prev);
       saveProfile(next);
+      scheduleCloudPush();
       return next;
     });
   }, []);
@@ -131,6 +156,7 @@ export function PlayerProfileProvider({ children }: PropsWithChildren) {
   const value = useMemo<PlayerProfileContextValue>(
     () => ({
       profile,
+      reloadProfile,
       setName: (name) =>
         update((prev) => ({
           ...prev,
@@ -168,7 +194,7 @@ export function PlayerProfileProvider({ children }: PropsWithChildren) {
             : {}),
         })),
     }),
-    [profile, update],
+    [profile, reloadProfile, update],
   );
 
   return (

@@ -11,6 +11,7 @@ import {
   sampleShake,
   type HitEffectStore,
 } from "@/lib/hitEffects";
+import { applyRenderSize } from "@/render/setRenderPixelRatio";
 
 //
 
@@ -18,24 +19,20 @@ const log = debug("@1.framework:matter4react:Viewport");
 
 //
 
-const padding = Vector.create(90, 90);
+const paddingNormal = Vector.create(90, 90);
+const paddingSudden = Vector.create(48, 48);
 export function Viewport({
   extents: _extents,
   protagonists,
   hitEffectsStore,
+  suddenDeath = false,
 }: Props) {
   log("!");
   const render = useRender();
 
   const resize = () => {
-    const [width, height] = [window.innerWidth, window.innerHeight];
-    // TODO(douglasduteil): remove this when Render.setSize is released
-    // https://github.com/liabru/matter-js/commit/fc0583975d07f74a7c45e7a84bd3a94b3a2068be
-    render.options.width = width;
-    render.options.height = height;
-
-    render.canvas.width = width;
-    render.canvas.height = height;
+    // CSS size + DPR: иначе на телефоне canvas 1× растягивается → «мыло».
+    applyRenderSize(render, window.innerWidth, window.innerHeight);
   };
   useEvent("resize", resize);
   useLayoutEffect(resize, [render]);
@@ -47,20 +44,16 @@ export function Viewport({
       const now = performance.now();
       const finisherActive =
         store?.finisher && now < store.finisher.until;
+      const pad = suddenDeath ? paddingSudden : paddingNormal;
 
-      if (!finisherActive) {
-        Matter.Render.lookAt(render, protagonists, padding, true);
-      } else if (store) {
-        Matter.Render.lookAt(render, protagonists, padding, true);
-        applyFinisherCam(render, store, now);
-      }
-
+      Matter.Render.lookAt(render, protagonists, pad, true);
       if (store) {
+        if (finisherActive) applyFinisherCam(render, store, now);
         const shake = sampleShake(store, now);
         applyCameraShake(render, shake.dx, shake.dy);
       }
     },
-    [render, protagonists, hitEffectsStore],
+    [render, protagonists, hitEffectsStore, suddenDeath],
   );
   return null;
 }
@@ -71,4 +64,6 @@ type Props = {
   extents?: { min: Vector; max: Vector };
   protagonists: Body[];
   hitEffectsStore?: RefObject<HitEffectStore | null>;
+  /** Sudden death — камера ближе, «арена сужается». */
+  suddenDeath?: boolean;
 };

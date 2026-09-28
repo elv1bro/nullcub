@@ -11,8 +11,11 @@ export {
   sampleShake,
   applyCameraShake,
   applyFinisherCam,
+  applyImpactCam,
   drawGroundShockwaves,
   drawScreenFlash,
+  drawImpactFrames,
+  drawComboSparks,
   drawFinisherVignette,
   drawComboAndAnnouncer,
 } from "./drawScreenFx";

@@ -35,7 +35,9 @@ export interface AbilityBindings {
   freeze: string;
   grabL: string;
   grabR: string;
-  /** Зарезервировано под 4-ю способность */
+  /** Сброс арена-оружия (G). */
+  dropWeapon: string;
+  /** Слот способности лодаута (Digit9). */
   slot4: string;
   reset: string;
 }
@@ -77,6 +79,7 @@ export const DEFAULT_ABILITIES: AbilityBindings = {
   freeze: "Digit8",
   grabL: "KeyQ",
   grabR: "KeyE",
+  dropWeapon: "KeyG",
   slot4: "Digit9",
   reset: "Digit0",
 };
@@ -94,6 +97,7 @@ export const DEFAULT_ABILITIES_P2: AbilityBindings = {
   freeze: "Numpad8",
   grabL: "KeyU",
   grabR: "KeyI",
+  dropWeapon: "KeyO",
   slot4: "Numpad9",
   reset: "Numpad0",
 };
@@ -123,13 +127,22 @@ function migrateControls(raw?: Partial<ControlBindings>): ControlBindings {
 }
 
 function migrateAbilities(raw?: Partial<AbilityBindings>): AbilityBindings {
+  const drop = migrateBinding(
+    raw?.dropWeapon ?? DEFAULT_ABILITIES.dropWeapon,
+  );
+  let slot4 = migrateBinding(raw?.slot4 ?? DEFAULT_ABILITIES.slot4);
+  // Старый алиас slot4===dropWeapon — разводим: слот способности на Digit9.
+  if (slot4 === drop) {
+    slot4 = DEFAULT_ABILITIES.slot4;
+  }
   return {
     dash: migrateBinding(raw?.dash ?? DEFAULT_ABILITIES.dash),
     flip: migrateBinding(raw?.flip ?? DEFAULT_ABILITIES.flip),
     freeze: migrateBinding(raw?.freeze ?? DEFAULT_ABILITIES.freeze),
     grabL: migrateBinding(raw?.grabL ?? DEFAULT_ABILITIES.grabL),
     grabR: migrateBinding(raw?.grabR ?? DEFAULT_ABILITIES.grabR),
-    slot4: migrateBinding(raw?.slot4 ?? DEFAULT_ABILITIES.slot4),
+    dropWeapon: drop,
+    slot4,
     reset: migrateBinding(raw?.reset ?? DEFAULT_ABILITIES.reset),
   };
 }

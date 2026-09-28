@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Yobbo Yobbo">
+  <!--
+    Иконка-персонаж: рэгдолл после удара.
+    Толстые скруглённые конечности — как стикмены в самой игре.
+  -->
+  <defs>
+    <linearGradient id="body" x1="180" y1="80" x2="340" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="#0a0a12"/>
+
+  <!-- Вспышка удара слева — откуда прилетел хук -->
+  <g fill="#f87171">
+    <polygon points="96,200 132,224 96,248 72,224"/>
+    <polygon points="118,168 138,206 96,200 108,176"/>
+    <polygon points="118,280 138,242 96,248 108,272"/>
+    <polygon points="148,224 178,214 178,234"/>
+  </g>
+  <circle cx="118" cy="224" r="16" fill="#fda4af"/>
+  <circle cx="118" cy="224" r="7" fill="#fff"/>
+
+  <!-- Рэгдолл: летит вправо-вверх, конечности разбросало -->
+  <g
+    stroke="url(#body)"
+    stroke-width="36"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  >
+    <!-- торс -->
+    <path d="M250 210 L290 310"/>
+    <!-- рука назад (от удара) -->
+    <path d="M258 230 L190 250"/>
+    <path d="M190 250 L168 292"/>
+    <!-- рука вперёд -->
+    <path d="M262 236 L330 200"/>
+    <path d="M330 200 L368 176"/>
+    <!-- нога согнута -->
+    <path d="M290 310 L250 380"/>
+    <path d="M250 380 L268 430"/>
+    <!-- нога вылетела -->
+    <path d="M290 310 L350 360"/>
+    <path d="M350 360 L400 348"/>
+  </g>
+
+  <!-- голова -->
+  <circle cx="236" cy="168" r="48" fill="url(#body)"/>
+  <!-- лёгкий «глаз» — чтобы читалось как боец, не просто круг -->
+  <circle cx="252" cy="160" r="8" fill="#0a0a12"/>
+</svg>

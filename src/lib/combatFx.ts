@@ -33,6 +33,13 @@ export function resolveHitParties(
   config: CombatFxConfig,
 ): HitParty[] {
   const parties: HitParty[] = [];
+  const weaponTint =
+    result.damageColor != null
+      ? ({
+          main: result.damageColor,
+          secondary: result.damageColor,
+        } satisfies FighterColors)
+      : null;
 
   const push = (
     victimId: number,
@@ -41,7 +48,10 @@ export function resolveHitParties(
   ): void => {
     if (damage <= 0.5) return;
     const victimColors = colorsForCompositeId(config, victimId);
-    const aggressorColors = colorsForCompositeId(config, aggressorId);
+    // Оружие — отдельный composite без цветов бойца: берём владельца
+    // (уже подменённый id) или tint типа урона.
+    const aggressorColors =
+      colorsForCompositeId(config, aggressorId) ?? weaponTint;
     if (!victimColors || !aggressorColors) return;
     parties.push({
       victimCompositeId: victimId,

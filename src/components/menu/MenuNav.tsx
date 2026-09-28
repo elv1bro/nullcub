@@ -1,12 +1,17 @@
+import { useAuth } from "@/cloud/AuthContext";
 import { playMenuSound } from "@/audio";
+import { useViewportFlags } from "@/hooks/useViewportFlags";
 import { useTranslation } from "@/settings/SettingsContext";
 
 interface Props {
   onPlay: () => void;
   onCustomize: () => void;
   onAchievements: () => void;
+  onAccount: () => void;
   onOptions: () => void;
   onControls: () => void;
+  onCredits: () => void;
+  onLab?: () => void;
   onWorkshop?: () => void;
   locked?: boolean;
 }
@@ -15,16 +20,23 @@ export function MenuNav({
   onPlay,
   onCustomize,
   onAchievements,
+  onAccount,
   onOptions,
   onControls,
+  onCredits,
+  onLab,
   onWorkshop,
   locked = false,
 }: Props) {
   const t = useTranslation();
+  const { coarse } = useViewportFlags();
+  const { user, configured } = useAuth();
+  // На телефоне только виртуальный стик — переназначение клавиш бессмысленно.
+  const accountLabel =
+    configured && !user ? t.menu.signIn : t.menu.account;
 
   const secondary = (
     label: string,
-    icon: string,
     action: () => void,
     sound: "click" | "panel" = "panel",
   ) => (
@@ -38,9 +50,6 @@ export function MenuNav({
       }}
       onMouseEnter={() => playMenuSound("hover")}
     >
-      <span className="menu-nav-btn__icon" aria-hidden>
-        {icon}
-      </span>
       {label}
     </button>
   );
@@ -62,13 +71,24 @@ export function MenuNav({
         </button>
       </div>
       <ul className="menu-nav-secondary list-none p-0 m-0">
-        <li className="menu-btn-pop">{secondary(t.menu.customize, "◎", onCustomize)}</li>
-        <li className="menu-btn-pop">{secondary(t.menu.achievements, "🏅", onAchievements)}</li>
-        <li className="menu-btn-pop">{secondary(t.menu.options, "⚙", onOptions)}</li>
-        <li className="menu-btn-pop">{secondary(t.menu.controls, "⌨", onControls)}</li>
+        {configured && (
+          <li className="menu-btn-pop">{secondary(accountLabel, onAccount)}</li>
+        )}
+        <li className="menu-btn-pop">{secondary(t.menu.customize, onCustomize)}</li>
+        <li className="menu-btn-pop">
+          {secondary(t.menu.achievements, onAchievements)}
+        </li>
         {onWorkshop && (
+          <li className="menu-btn-pop">{secondary(t.menu.workshop, onWorkshop)}</li>
+        )}
+        <li className="menu-btn-pop">{secondary(t.menu.options, onOptions)}</li>
+        {!coarse && (
+          <li className="menu-btn-pop">{secondary(t.menu.controls, onControls)}</li>
+        )}
+        <li className="menu-btn-pop">{secondary(t.menu.credits, onCredits)}</li>
+        {onLab && (
           <li className="menu-btn-pop">
-            {secondary(t.menu.workshop, "⚗", onWorkshop)}
+            {secondary(t.menu.lab, onLab, "click")}
           </li>
         )}
       </ul>

@@ -642,6 +642,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource-variable/caveat@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/caveat@npm:5.3.0"
+  checksum: 10c0/f62ac6dfa4276f06e67c31eeaadd5d97cf488557c0fecbc3065a368cf717604850dca5e530ac0c6095325cad18a9aeb05c7321201e7b10f1cf3143fb524d96f4
+  languageName: node
+  linkType: hard
+
+"@fontsource-variable/rubik@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/rubik@npm:5.3.0"
+  checksum: 10c0/b9577a08be21c4b256d4681c7b4d048c0d2e78a40e1b3d0e02fad3a8175b54b3a4f1148982153e32683ee6f4afd7be542117e0d1b206e90946f7f0a843d7c49e
+  languageName: node
+  linkType: hard
+
+"@fontsource-variable/unbounded@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/unbounded@npm:5.3.0"
+  checksum: 10c0/81571c2a37fc48ab587e66bbc0aaca35d815a80b6e6c55e91fc0a5202af91cd44b8c7b0d2c4181a0836fa7b876b04eabffc757af7e50ff1fbb076bab32848984
+  languageName: node
+  linkType: hard
+
 "@iconify/types@npm:^2.0.0":
   version: 2.0.0
   resolution: "@iconify/types@npm:2.0.0"
@@ -953,6 +974,73 @@ __metadata:
   version: 4.21.0
   resolution: "@rollup/rollup-win32-x64-msvc@npm:4.21.0"
   conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@supabase/auth-js@npm:2.111.0":
+  version: 2.111.0
+  resolution: "@supabase/auth-js@npm:2.111.0"
+  dependencies:
+    tslib: "npm:2.8.1"
+  checksum: 10c0/665f05b4a78f021e39d16fffce1b7759a77413388d9849a68ffe4da79e76db709fe12e2f8bd464bda97d82e92257f25916e694365dfa7cb81f29d84be6d09af9
+  languageName: node
+  linkType: hard
+
+"@supabase/functions-js@npm:2.111.0":
+  version: 2.111.0
+  resolution: "@supabase/functions-js@npm:2.111.0"
+  dependencies:
+    tslib: "npm:2.8.1"
+  checksum: 10c0/00211a3e96eb1de2dcb501fe3d1565fa95441141477df3b56f3284c6247f0fe62e413ab0edf35c0505e5f5701a4c1d1d4cbf7c5301366b211d75b02cdef2b1a8
+  languageName: node
+  linkType: hard
+
+"@supabase/phoenix@npm:0.4.5":
+  version: 0.4.5
+  resolution: "@supabase/phoenix@npm:0.4.5"
+  checksum: 10c0/33be3994c870eb3a5f89d3bf6d57783a14f49f710b15e852f85c9750b45f3db5a637b30f7046474fa88f40cce50620e3bce18a27d9819ae16be792776bbfeb9c
+  languageName: node
+  linkType: hard
+
+"@supabase/postgrest-js@npm:2.111.0":
+  version: 2.111.0
+  resolution: "@supabase/postgrest-js@npm:2.111.0"
+  dependencies:
+    tslib: "npm:2.8.1"
+  checksum: 10c0/205e804a285183321102a5eb33160f86818c0592a1ef2df326ad3701a71d23a4f2c44059942458d1f3373d2a92d9f4b4731e292c69f7af0fca8d4ade0bf81e7c
+  languageName: node
+  linkType: hard
+
+"@supabase/realtime-js@npm:2.111.0":
+  version: 2.111.0
+  resolution: "@supabase/realtime-js@npm:2.111.0"
+  dependencies:
+    "@supabase/phoenix": "npm:0.4.5"
+    tslib: "npm:2.8.1"
+  checksum: 10c0/c1ed1e1dd3f995ef9b19292b6c324c83354873d80f6ad85c97ef84f773943594722a5a4d6dc54a882047d91e2b789b374310396b76c21fc824ad85dc93904684
+  languageName: node
+  linkType: hard
+
+"@supabase/storage-js@npm:2.111.0":
+  version: 2.111.0
+  resolution: "@supabase/storage-js@npm:2.111.0"
+  dependencies:
+    iceberg-js: "npm:^0.8.1"
+    tslib: "npm:2.8.1"
+  checksum: 10c0/8b14ab6e287993563eec374f653b340afc73d88e941426826bfc849cdcfd1f9b6bde9346013370c6bf130d520a605d5e85ff64d056de6d9505ac0425800056ed
+  languageName: node
+  linkType: hard
+
+"@supabase/supabase-js@npm:^2.111.0":
+  version: 2.111.0
+  resolution: "@supabase/supabase-js@npm:2.111.0"
+  dependencies:
+    "@supabase/auth-js": "npm:2.111.0"
+    "@supabase/functions-js": "npm:2.111.0"
+    "@supabase/postgrest-js": "npm:2.111.0"
+    "@supabase/realtime-js": "npm:2.111.0"
+    "@supabase/storage-js": "npm:2.111.0"
+  checksum: 10c0/a000947ef4b9001be34fe313ffc7eb79249fae765e695992f1e550a525fedd0fac17bb544acb31ee750ba8d303afa610d33ec2cd0d7251363810649503f17239
   languageName: node
   linkType: hard
 
@@ -2490,6 +2578,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"iceberg-js@npm:^0.8.1":
+  version: 0.8.1
+  resolution: "iceberg-js@npm:0.8.1"
+  checksum: 10c0/e504da64cc26e8ad7c5344353a7203c671a740c14eb6086f20505f5e9739cab774493e616032530c962df97f2a855115cc2e89a47dd81581df5917b21a69ec48
+  languageName: node
+  linkType: hard
+
 "iconv-lite@npm:^0.6.2":
   version: 0.6.3
   resolution: "iconv-lite@npm:0.6.3"
@@ -3253,7 +3348,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "ragdoll-faces@workspace:."
   dependencies:
+    "@fontsource-variable/caveat": "npm:^5.3.0"
+    "@fontsource-variable/rubik": "npm:^5.3.0"
+    "@fontsource-variable/unbounded": "npm:^5.3.0"
     "@mediapipe/tasks-vision": "npm:^0.10.21"
+    "@supabase/supabase-js": "npm:^2.111.0"
     "@tsconfig/strictest": "npm:^2.0.0"
     "@tsconfig/vite-react": "npm:^3.0.0"
     "@types/color-string": "npm:^1"
@@ -3890,6 +3989,13 @@ __metadata:
   version: 9.6.0
   resolution: "ts-toolbelt@npm:9.6.0"
   checksum: 10c0/838f9a2f0fe881d5065257a23b402c41315b33ff987b73db3e2b39fcb70640c4c7220e1ef118ed5676763543724fdbf4eda7b0e2c17acb667ed1401336af9f8c
+  languageName: node
+  linkType: hard
+
+"tslib@npm:2.8.1":
+  version: 2.8.1
+  resolution: "tslib@npm:2.8.1"
+  checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
   languageName: node
   linkType: hard
 

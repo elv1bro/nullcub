@@ -107,7 +107,7 @@ function StrikeLabScene() {
 
       <div className="strike-lab-panel menu-panel-surface menu-panel-pad menu-stack font-ui">
         <h2 className="menu-panel-title">Strike lab</h2>
-        <p className="menu-hint">?lab=1 — тест ударов, урона и отталкивания</p>
+        <p className="menu-hint">?lab=1 — старый тест ударов/урона (не каталог Тесты)</p>
 
         <label className="menu-field">
           <span className="menu-label">Attacker limb</span>

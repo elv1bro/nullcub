@@ -4,7 +4,7 @@ import {
   popupAtTime,
   type HitPopup,
 } from "@/lib/hitPopups";
-import { worldToCanvas } from "./worldToCanvas";
+import { renderCssSize, worldToCanvas } from "./worldToCanvas";
 
 /** Минус-сердца — склеиваются, пульсируют, не уходят за экран. */
 export function drawHitPopup(
@@ -25,15 +25,10 @@ export function drawHitPopup(
   const pos = popupAtTime(popup, age, render.bounds);
   const { x, y, scale } = worldToCanvas(render, pos);
 
+  const { width, height } = renderCssSize(render);
   const margin = 28;
-  const cx = Math.min(
-    render.canvas.width - margin,
-    Math.max(margin, x),
-  );
-  const cy = Math.min(
-    render.canvas.height - margin,
-    Math.max(margin, y),
-  );
+  const cx = Math.min(width - margin, Math.max(margin, x));
+  const cy = Math.min(height - margin, Math.max(margin, y));
 
   const fontSize = Math.max(14, 22 * scale) * popIn * stackScale;
 

@@ -47,20 +47,41 @@ export function bodyBelongsToFighter(body: Body, fighterId: string): boolean {
   return (body.plugin as { fighterId?: string })?.fighterId === fighterId;
 }
 
+/**
+ * Оружие в руках не должно бить владельца.
+ * ownerFighterId на теле оружия → id бойца-жертвы.
+ */
 export function isFriendlyWeaponHit(
-  weapon: WeaponHitInfo,
-  victimCompositeId: number,
-  _aggressorCompositeId: number,
+  weapon: WeaponHitInfo | null | undefined,
+  victimFighterId: string | undefined | null,
+): boolean {
+  if (!weapon?.ownerFighterId || !victimFighterId) return false;
+  return weapon.ownerFighterId === victimFighterId;
+}
+
+/** Обнуляет урон владельцу от его же оружия (и recoil в оружие). */
+export function filterFriendlyWeaponDamage(
   bodyA: Body,
   bodyB: Body,
-  compositeAId: number,
-): boolean {
-  if (!weapon.ownerFighterId) return false;
-  const victimIsA = compositeAId === victimCompositeId;
-  const aggressorBody = victimIsA ? bodyB : bodyA;
-  const ownerOnAggressor = bodyBelongsToFighter(
-    aggressorBody,
-    weapon.ownerFighterId,
-  );
-  return ownerOnAggressor;
+  fighterAId: string | undefined,
+  fighterBId: string | undefined,
+  damageA: number,
+  damageB: number,
+): { damageA: number; damageB: number } {
+  const weaponA = resolveWeaponFromBody(bodyA);
+  const weaponB = resolveWeaponFromBody(bodyB);
+  let nextA = damageA;
+  let nextB = damageB;
+
+  // A — оружие, бьёт владельца B
+  if (isFriendlyWeaponHit(weaponA, fighterBId)) {
+    nextB = 0;
+    nextA = 0;
+  }
+  // B — оружие, бьёт владельца A
+  if (isFriendlyWeaponHit(weaponB, fighterAId)) {
+    nextA = 0;
+    nextB = 0;
+  }
+  return { damageA: nextA, damageB: nextB };
 }

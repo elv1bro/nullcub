@@ -1,6 +1,6 @@
 /**
  * Музыка: луп меню, боевой плейлист в духе FlatOut 2 (перемешка, кроссфейд,
- * трек-анонсы), дакинг под тяжёлые удары, пауза при скрытой вкладке.
+ * трек-анонсы), дакинг под тяжёлые удары, пауза при скрытой вкладке (без сброса).
  *
  * Треки — CC0 с OpenGameArt (источники в public/sounds/music/README.txt).
  * Джинглы победы/поражения — в src/audio/sfx.ts (public/sounds/sfx/).
@@ -18,8 +18,8 @@ const MUSIC = "/sounds/music";
 
 export const MENU_TRACK: MusicTrack = {
   url: `${MUSIC}/menu-theme.ogg`,
-  title: "Cozy Puzzle Title",
-  artist: "MintoDog",
+  title: "Yobbo Yobbo",
+  artist: "Suno",
 };
 
 export const BATTLE_PLAYLIST: readonly MusicTrack[] = [
@@ -61,6 +61,8 @@ let mixerTimer: number | null = null;
 let lastTick = 0;
 let crossfadeArmed = false;
 let unlockArmed = false;
+/** Вкладка свернута — пауза без сброса позиции и mode. */
+let pausedByVisibility = false;
 
 type NowPlayingListener = (track: MusicTrack | null) => void;
 const listeners = new Set<NowPlayingListener>();
@@ -109,11 +111,35 @@ function armUnlock(): void {
   window.addEventListener("keydown", resume);
 }
 
+function pauseForVisibility(): void {
+  if (mode === "off" || !channels || pausedByVisibility) return;
+  pausedByVisibility = true;
+  for (const ch of channels) {
+    ch.el.pause();
+  }
+}
+
+function resumeFromVisibility(): void {
+  if (!pausedByVisibility || mode === "off" || !enabled || !channels) {
+    pausedByVisibility = false;
+    return;
+  }
+  pausedByVisibility = false;
+  const ch = channels[activeIdx]!;
+  if (!ch.el.src) return;
+  ch.fadeTarget = 1;
+  applyChannelVolume(ch);
+  void ch.el.play().catch(() => armUnlock());
+  startMixer();
+}
+
 function onVisibilityChange(): void {
-  if (document.hidden) stopMusic(200);
+  if (document.hidden) pauseForVisibility();
+  else resumeFromVisibility();
 }
 
 function onPageHide(): void {
+  pausedByVisibility = false;
   stopMusic(0);
 }
 
@@ -156,6 +182,7 @@ function ensureChannels(): [Channel, Channel] {
 
 /** Снимает page-lifecycle listeners и останавливает микшер (для unmount / HMR). */
 export function disposeMusic(): void {
+  pausedByVisibility = false;
   stopMusic(0);
   if (mixerTimer !== null && typeof window !== "undefined") {
     window.clearInterval(mixerTimer);
@@ -278,9 +305,24 @@ function prevInQueue(fadeMs: number): void {
   startTrack(queue[queueIdx]!, false, fadeMs);
 }
 
-/** Зацикленная тема меню. Повторный вызов ничего не перезапускает. */
+function resumeCurrentTrack(): boolean {
+  if (mode === "off" || !channels || !enabled) return false;
+  const ch = channels[activeIdx]!;
+  if (!ch.el.src) return false;
+  if (!ch.el.paused) return true;
+  ch.fadeTarget = 1;
+  applyChannelVolume(ch);
+  void ch.el.play().catch(() => armUnlock());
+  startMixer();
+  return true;
+}
+
+/** Зацикленная тема меню. Не перезапускает, если уже играет или на паузе. */
 export function playMenuMusic(): void {
-  if (mode === "menu") return;
+  pausedByVisibility = false;
+  if (mode === "menu") {
+    if (current === MENU_TRACK && resumeCurrentTrack()) return;
+  }
   mode = "menu";
   queue = [];
   startTrack(MENU_TRACK, true, hasAudible() ? TRACK_CROSSFADE_MS : 1200);
@@ -288,7 +330,10 @@ export function playMenuMusic(): void {
 
 /** Боевой плейлист: перемешивается, треки сменяются кроссфейдом. */
 export function playBattleMusic(): void {
-  if (mode === "battle") return;
+  pausedByVisibility = false;
+  if (mode === "battle") {
+    if (current && queue.includes(current) && resumeCurrentTrack()) return;
+  }
   mode = "battle";
   queue = shuffled(BATTLE_PLAYLIST);
   queueIdx = 0;
@@ -306,6 +351,7 @@ export function prevBattleTrack(): void {
 }
 
 export function stopMusic(fadeMs = 0): void {
+  pausedByVisibility = false;
   mode = "off";
   current = null;
   duck = 1;

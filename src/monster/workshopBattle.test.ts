@@ -5,7 +5,6 @@ import { getAiProfile } from "@/battle/aiProfiles";
 import { MAX_HP } from "@/lib/combat";
 import { createStickman } from "@/utils/createStickman";
 import { buildMonster, settleComposite } from "./buildMonster";
-import { updateMonsterRopeConstraints } from "./linkTypes";
 import { normalizeMonsterDef } from "./monsterTypes";
 
 describe("workshop monster in battle", () => {
@@ -57,7 +56,6 @@ describe("workshop monster in battle", () => {
     session.beginBattle();
 
     for (let i = 0; i < 360; i++) {
-      updateMonsterRopeConstraints(built.composite);
       session.tick(1000 / 60);
     }
 
@@ -120,7 +118,6 @@ describe("workshop monster in battle", () => {
     });
     session.beginBattle();
     for (let i = 0; i < 240; i++) {
-      updateMonsterRopeConstraints(built.composite);
       session.tick(1000 / 60);
     }
     const endDist = Matter.Vector.magnitude(

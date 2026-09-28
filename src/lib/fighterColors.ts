@@ -13,6 +13,18 @@ export const OPPONENT_COLORS: FighterColors = {
   secondary: "#b91c1c",
 };
 
+/** Палитра слотов 0..3 для лобби / dedicated N. */
+export const SLOT_COLORS: FighterColors[] = [
+  PLAYER_COLORS,
+  OPPONENT_COLORS,
+  { main: "#a78bfa", secondary: "#6d28d9" },
+  { main: "#34d399", secondary: "#047857" },
+];
+
+export function colorsForSlot(index: number): FighterColors {
+  return SLOT_COLORS[index % SLOT_COLORS.length] ?? PLAYER_COLORS;
+}
+
 export function colorsForSide(side: "player" | "opponent"): FighterColors {
   return side === "player" ? PLAYER_COLORS : OPPONENT_COLORS;
 }

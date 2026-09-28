@@ -10,8 +10,10 @@ export default defineConfig({
   },
   presets: [
     presetUno(),
+    // provider: "none" — только font-family, без @import с fonts.googleapis.com.
+    // Сами файлы лежат в public/fonts (см. scripts/sync-fonts.mjs).
     presetWebFonts({
-      provider: "google",
+      provider: "none",
       fonts: {
         sans: "Rubik:400,500,600",
         display: "Unbounded:600,700,800",

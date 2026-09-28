@@ -57,9 +57,10 @@ import { notifyGrabVictimHit } from "./grab/useGrabSystem";
 import type { BattleEventMap } from "@/core/events";
 import { getDamageType } from "@/items/damageTypes";
 import { computeDisarmChance, rollDisarm } from "@/items/disarm";
+import { filterFriendlyWeaponDamage } from "@/items/resolveWeaponHit";
 import { items } from "@/items/registry";
 import { tagItemOwner, findItemComposite } from "@/items/buildItem";
-import type { Bounds } from "matter-js";
+import type { Body, Bounds } from "matter-js";
 import {
   useCallback,
   useEffect,
@@ -133,6 +134,7 @@ function addDamagePopup(
   slot: number,
   bounds: Bounds,
   formatDamage: (amount: number) => string,
+  damageTypeId = "blunt",
 ): void {
   if (damage <= 0.5) return;
 
@@ -142,6 +144,12 @@ function addDamagePopup(
     return;
   }
 
+  const dtype = getDamageType(damageTypeId);
+  const popupColors = {
+    main: dtype.color,
+    secondary: colors.secondary,
+  };
+
   popups.push(
     createPopup(
       damage,
@@ -150,7 +158,7 @@ function addDamagePopup(
       y,
       now,
       victimKey,
-      colors,
+      popupColors,
       slot,
       bounds,
     ),
@@ -180,6 +188,16 @@ export function useHealth(
   syncHpFromCore: (player: number, opponent: number, lastHitSide?: FighterSide | null) => void;
   reportCoreHit: (payload: BattleEventMap["hit"]) => void;
   reportCoreKnockout: (payload: BattleEventMap["knockout"], contactX: number, contactY: number) => void;
+  /** Только визуал/звук/фразы — для повтора боя, без трекера ачивок. */
+  replayVisualHit: (opts: {
+    victimSide: FighterSide;
+    damage: number;
+    x: number;
+    y: number;
+    damageTypeId?: string;
+    knockout?: boolean;
+  }) => void;
+  clearReplayFx: () => void;
 } {
   const [playerHp, setPlayerHp] = useState(MAX_HP);
   const [opponentHp, setOpponentHp] = useState(opponentMaxHp);
@@ -340,7 +358,7 @@ export function useHealth(
       victimDamage: number,
       contactX: number,
       contactY: number,
-      _damageTypeId = "blunt",
+      damageTypeId = "blunt",
     ) => {
       if (victimDamage <= 0) return;
       const now = performance.now();
@@ -378,6 +396,7 @@ export function useHealth(
         popupSlotRef.current++,
         bounds,
         fx.formatDamage,
+        damageTypeId,
       );
 
       if (victimDamage > 0.5) {
@@ -551,11 +570,37 @@ export function useHealth(
           playerGrab,
           opponentGrab: fx.opponentGrabRef?.current ?? null,
         });
+        const ownerOf = (body: Body): "player" | "opponent" | undefined => {
+          const id = (body.plugin as { ownerFighterId?: string } | undefined)
+            ?.ownerFighterId;
+          if (id === "player" || id === "opponent") return id;
+          return undefined;
+        };
+        const fighterAId =
+          compositeA === playerCompositeId
+            ? "player"
+            : compositeA === opponentCompositeId
+              ? "opponent"
+              : ownerOf(bodyA);
+        const fighterBId =
+          compositeB === playerCompositeId
+            ? "player"
+            : compositeB === opponentCompositeId
+              ? "opponent"
+              : ownerOf(bodyB);
+        const filteredFriendly = filterFriendlyWeaponDamage(
+          bodyA,
+          bodyB,
+          fighterAId,
+          fighterBId,
+          filteredGrab.damageA,
+          filteredGrab.damageB,
+        );
         const result = filterDamageFromDeadAggressors(
           compositeA,
           compositeB,
-          filteredGrab.damageA,
-          filteredGrab.damageB,
+          filteredFriendly.damageA,
+          filteredFriendly.damageB,
           tradeOpts,
         );
         if (result.damageA <= 0 && result.damageB <= 0) return;
@@ -621,10 +666,20 @@ export function useHealth(
         banterRef.current = pruneBanter(banterRef.current, now);
         decayPopupPulse(popupsRef.current);
 
+        const fxComposite = (body: Body, compositeId: number): number => {
+          const owner = ownerOf(body);
+          if (owner === "player" && playerCompositeId != null) {
+            return playerCompositeId;
+          }
+          if (owner === "opponent" && opponentCompositeId != null) {
+            return opponentCompositeId;
+          }
+          return compositeId;
+        };
         const parties = resolveHitParties(
           { ...rawHit, damageA: result.damageA, damageB: result.damageB },
-          compositeA,
-          compositeB,
+          fxComposite(bodyA, compositeA),
+          fxComposite(bodyB, compositeB),
           fxConfig,
         );
         const moments = fx.battleMomentsStore?.current;
@@ -668,6 +723,7 @@ export function useHealth(
             popupSlotRef.current++,
             bounds,
             fx.formatDamage,
+            filteredGrab.damageTypeId,
           );
 
           if (party.victimDamage > 0.5) {
@@ -769,6 +825,149 @@ export function useHealth(
     deps,
   );
 
+  const replayVisualHit = useCallback(
+    (opts: {
+      victimSide: FighterSide;
+      damage: number;
+      x: number;
+      y: number;
+      damageTypeId?: string;
+      knockout?: boolean;
+    }) => {
+      const victimCompositeId =
+        opts.victimSide === "player"
+          ? playerCompositeId
+          : opponentCompositeId;
+      if (victimCompositeId == null) return;
+      const now = performance.now();
+      // Обходим трекер/моменты: временно глушим store refs через локальный emit.
+      popupsRef.current = prunePopups(popupsRef.current, now);
+      burstsRef.current = pruneBursts(burstsRef.current, now);
+      banterRef.current = pruneBanter(banterRef.current, now);
+      decayPopupPulse(popupsRef.current);
+
+      const side = opts.victimSide;
+      const aggressorSide: FighterSide = side === "player" ? "opponent" : "player";
+      const colors = side === "player" ? playerColors : colorsForSide(side);
+      const aggressorColors =
+        aggressorSide === "player" ? playerColors : fxConfig.opponentColors;
+
+      addDamagePopup(
+        popupsRef.current,
+        opts.damage,
+        opts.x,
+        opts.y,
+        now,
+        side,
+        colors,
+        popupSlotRef.current++,
+        bounds,
+        fx.formatDamage,
+        opts.damageTypeId ?? "blunt",
+      );
+
+      if (opts.damage > 0.5) {
+        playHitSound(
+          opts.damage,
+          stereoPanForX(opts.x, bounds.min.x, bounds.max.x),
+        );
+      }
+
+      if (fx.showBanter && opts.damage >= 8) {
+        const line = pickBanterLine(fx.language ?? "ru", fx.matureBanter, side);
+        const head = fx.getSpeakerHead?.(side);
+        banterRef.current.push(
+          pickBanter(
+            line,
+            side,
+            head?.x ?? opts.x,
+            head?.y ?? opts.y,
+            banterSlotRef.current++,
+            now,
+            colors,
+            {
+              bounds,
+              bodies: fx.banterObstacleBodies?.() ?? [],
+              existing: banterRef.current,
+            },
+          ),
+        );
+      }
+
+      if (fx.screenEffects) {
+        burstsRef.current.push({
+          x: opts.x,
+          y: opts.y,
+          born: now,
+          color: aggressorColors.main,
+          secondary: aggressorColors.secondary,
+          power: Math.min(1, opts.damage / 80),
+        });
+        const store = fx.hitEffectsStore?.current;
+        if (store) {
+          dispatchHitEffects(store, {
+            damage: opts.damage,
+            contactX: opts.x,
+            contactY: opts.y,
+            aggressorSide,
+            aggressorColor: aggressorColors.main,
+            aggressorColors,
+            arenaHeight: fx.arenaHeight ?? bounds.max.y,
+            language: fx.language ?? "ru",
+            slot: effectSlotRef.current++,
+            now,
+          });
+          // Повтор кинематический — не трогаем timeScale физики.
+          store.timeSegments.length = 0;
+          if (opts.knockout) {
+            dispatchKnockoutEffects(
+              store,
+              aggressorSide,
+              opts.x,
+              opts.y,
+              fx.language ?? "ru",
+              effectSlotRef.current++,
+              now,
+              aggressorColors,
+            );
+            store.timeSegments.length = 0;
+          }
+        }
+      }
+
+      if (opts.knockout) {
+        playKnockoutSound();
+      }
+    },
+    [
+      bounds,
+      fx,
+      fxConfig.opponentColors,
+      opponentCompositeId,
+      playerColors,
+      playerCompositeId,
+    ],
+  );
+
+  const clearReplayFx = useCallback(() => {
+    popupsRef.current = [];
+    burstsRef.current = [];
+    banterRef.current = [];
+    const store = fx.hitEffectsStore?.current;
+    if (store) {
+      store.shockwaves.length = 0;
+      store.timeSegments.length = 0;
+      store.callouts.length = 0;
+      store.comboSparks.length = 0;
+      store.combo = null;
+      store.shake = { intensity: 0, until: 0 };
+      store.flash = null;
+      store.finisher = null;
+      store.impactCam = null;
+      store.impactInvertUntil = 0;
+    }
+  }, [fx.hitEffectsStore]);
+
   return {
     playerHp,
     opponentHp,
@@ -782,6 +981,8 @@ export function useHealth(
     syncHpFromCore,
     reportCoreHit,
     reportCoreKnockout,
+    replayVisualHit,
+    clearReplayFx,
   };
 }
 

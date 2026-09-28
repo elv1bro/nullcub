@@ -10,9 +10,16 @@ export function dampGrabBodies(hand: MatterBody, target: MatterBody | null): voi
   Body.setVelocity(hand, Vector.mult(hand.velocity, 0.4));
   Body.setAngularVelocity(hand, hand.angularVelocity * 0.4);
   if (target && !target.isStatic) {
-    Body.setVelocity(target, Vector.mult(target.velocity, 0.55));
-    Body.setAngularVelocity(target, target.angularVelocity * 0.55);
+    const body = target.parent && target.parent !== target ? target.parent : target;
+    Body.setVelocity(body, Vector.mult(body.velocity, 0.55));
+    Body.setAngularVelocity(body, body.angularVelocity * 0.55);
   }
+}
+
+/** Matter: constraint только к parent compound, не к part. */
+function pinTargetBody(target: MatterBody): MatterBody {
+  if (target.parent && target.parent !== target) return target.parent;
+  return target;
 }
 
 export function createGrabPin(
@@ -21,12 +28,14 @@ export function createGrabPin(
   target: MatterBody,
   targetKind: GrabTargetRef["kind"],
   contactPoint?: Matter.Vector,
+  opts?: { stiffness?: number },
 ): Constraint[] {
+  const bodyB = pinTargetBody(target);
   const worldPoint =
     contactPoint ??
     Matter.Vector.add(
       hand.position,
-      Matter.Vector.div(Matter.Vector.sub(target.position, hand.position), 2),
+      Matter.Vector.div(Matter.Vector.sub(bodyB.position, hand.position), 2),
     );
 
   const pointA = Matter.Vector.rotate(
@@ -35,8 +44,9 @@ export function createGrabPin(
   );
 
   let constraint: Constraint;
+  const stiffness = opts?.stiffness ?? DYNAMIC_STIFFNESS;
 
-  if (target.isStatic || targetKind === "wall") {
+  if (bodyB.isStatic || targetKind === "wall") {
     // Якорь в мировых координатах — стабильнее, чем pin к огромному static-телу стены.
     constraint = Matter.Constraint.create({
       bodyA: hand,
@@ -49,15 +59,15 @@ export function createGrabPin(
     });
   } else {
     const pointB = Matter.Vector.rotate(
-      Matter.Vector.sub(worldPoint, target.position),
-      -target.angle,
+      Matter.Vector.sub(worldPoint, bodyB.position),
+      -bodyB.angle,
     );
     constraint = Matter.Constraint.create({
       bodyA: hand,
       pointA,
-      bodyB: target,
+      bodyB,
       pointB,
-      stiffness: DYNAMIC_STIFFNESS,
+      stiffness,
       damping: CONSTRAINT_DAMPING,
       length: 0,
       render: { visible: false },
@@ -66,6 +76,61 @@ export function createGrabPin(
 
   Matter.World.add(engine.world, constraint);
   return [constraint];
+}
+
+const WEAPON_GUIDE_STIFFNESS = 0.15;
+const WEAPON_GUIDE_DAMPING = 0.22;
+
+/**
+ * Мягкая направляющая: proximal-точка на предплечье ↔ точка на рукояти.
+ * Вместе с жёстким grip-pin держит оружие вдоль руки.
+ */
+export function createWeaponGuidePin(
+  engine: Engine,
+  hand: MatterBody,
+  weapon: MatterBody,
+  guideWorld: Matter.Vector,
+  proximalWorld: Matter.Vector,
+): Constraint {
+  const bodyB = pinTargetBody(weapon);
+  const pointA = Matter.Vector.rotate(
+    Matter.Vector.sub(proximalWorld, hand.position),
+    -hand.angle,
+  );
+  const pointB = Matter.Vector.rotate(
+    Matter.Vector.sub(guideWorld, bodyB.position),
+    -bodyB.angle,
+  );
+  const constraint = Matter.Constraint.create({
+    bodyA: hand,
+    pointA,
+    bodyB,
+    pointB,
+    stiffness: WEAPON_GUIDE_STIFFNESS,
+    damping: WEAPON_GUIDE_DAMPING,
+    length: 0,
+    render: { visible: false },
+  });
+  Matter.World.add(engine.world, constraint);
+  return constraint;
+}
+
+/** Proximal-якорь на кисти: чуть к груди бойца. */
+export function forearmProximalWorld(
+  hand: MatterBody,
+  fighterComposite: Composite,
+): Matter.Vector {
+  const chest =
+    fighterComposite.bodies.find((b) => b.label === "Chest") ??
+    fighterComposite.bodies.find((b) => /chest/i.test(b.label ?? ""));
+  if (!chest) {
+    return {
+      x: hand.position.x,
+      y: hand.position.y - 10,
+    };
+  }
+  const dir = Vector.normalise(Vector.sub(chest.position, hand.position));
+  return Vector.add(hand.position, Vector.mult(dir, 12));
 }
 
 export function removeGrabConstraints(
@@ -142,6 +207,11 @@ export function buildCompositeBodyMap(
   for (const composite of composites) {
     for (const body of composite.bodies) {
       map.set(body.id, composite.id);
+      if (body.parts && body.parts.length > 1) {
+        for (const part of body.parts) {
+          if (part !== body) map.set(part.id, composite.id);
+        }
+      }
     }
   }
   return map;

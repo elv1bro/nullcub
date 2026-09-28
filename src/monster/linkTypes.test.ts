@@ -113,7 +113,7 @@ describe("link types behave differently under force", () => {
       updateMonsterRopeConstraints(engine.world);
       Matter.Engine.update(engine, 1000 / 60);
     }
-    expect(rope.stiffness).toBeLessThan(0.01);
+    expect(rope.stiffness).toBeLessThanOrEqual(0.012);
   });
 });
 

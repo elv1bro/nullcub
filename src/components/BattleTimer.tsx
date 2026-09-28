@@ -13,7 +13,7 @@ interface Props {
   showRecap: boolean;
 }
 
-/** Таймер боя вверху экрана; после лимита — плашка sudden death. */
+/** Таймер в центре верхней рамки боя. */
 export function BattleTimer({ startRef, battleOver, showRecap }: Props) {
   const { t } = useSettings();
   const [now, setNow] = useState(() => performance.now());
@@ -39,9 +39,10 @@ export function BattleTimer({ startRef, battleOver, showRecap }: Props) {
   if (leftMs <= 0) {
     const mult = suddenDeathMultiplier(elapsed);
     return (
-      <div className="pointer-events-none fixed top-3 left-1/2 -translate-x-1/2 z-10">
-        <div className="font-ui uppercase tracking-widest text-rose-400 text-sm animate-pulse bg-black/50 px-3 py-1 rounded">
-          {t.battle.suddenDeath} ×{mult.toFixed(2)}
+      <div className="battle-clock pointer-events-none">
+        <div className="battle-clock__badge battle-clock__badge--death font-ui">
+          {t.battle.suddenDeath}
+          <span className="battle-clock__mult">×{mult.toFixed(2)}</span>
         </div>
       </div>
     );
@@ -53,10 +54,10 @@ export function BattleTimer({ startRef, battleOver, showRecap }: Props) {
   const urgent = totalSec <= 10;
 
   return (
-    <div className="pointer-events-none fixed top-3 left-1/2 -translate-x-1/2 z-10">
+    <div className="battle-clock pointer-events-none">
       <div
-        className={`font-ui tracking-widest tabular-nums bg-black/40 px-3 py-1 rounded text-lg ${
-          urgent ? "text-rose-300 animate-pulse" : "text-white/85"
+        className={`battle-clock__badge font-display tabular-nums ${
+          urgent ? "battle-clock__badge--urgent" : ""
         }`}
       >
         {mm}:{ss}

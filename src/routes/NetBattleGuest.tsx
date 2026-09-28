@@ -1,3 +1,4 @@
+import { BattleSpaceBg } from "@/components/BattleSpaceBg";
 import { HpOverlay } from "@/components/HpOverlay";
 import { Viewport } from "@/components/Viewport";
 import { botEmotion } from "@/face/emotions";
@@ -30,7 +31,7 @@ import { capturePoseSnapshot } from "@/lib/ragdollPoseReset";
 import { Composite, SurroundingWalls } from "@1.framework/matter4react";
 import Matter, { Body } from "matter-js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { OPPONENT_MAX_HP } from "@/lib/combat";
+import { MAX_HP, OPPONENT_MAX_HP } from "@/lib/combat";
 import type { AbilityCooldownView } from "@/lib/usePlayerAbilities";
 import { SIZE } from "./LeveL1";
 
@@ -63,6 +64,8 @@ export function NetBattleGuest() {
     flip: false,
     freeze: false,
     reset: false,
+    dropWeapon: false,
+    abilitySlot: false,
   });
 
   const health = useNetGuestHealth(true, t.hit.damage);
@@ -164,6 +167,7 @@ export function NetBattleGuest() {
     () => ({
       name: health.playerName || profile.name,
       hearts: health.playerHp,
+      maxHearts: MAX_HP,
       colors: profile.colors,
       side: "right" as const,
     }),
@@ -174,6 +178,7 @@ export function NetBattleGuest() {
     () => ({
       name: health.opponentName || remoteHost.peerName || "Host",
       hearts: health.opponentHp,
+      maxHearts: OPPONENT_MAX_HP,
       colors: OPPONENT_COLORS,
       side: "left" as const,
     }),
@@ -243,12 +248,27 @@ export function NetBattleGuest() {
         faceReady={face.ready}
         faceError={face.error}
         abilities={guestAbilities}
+        playerStatus={{
+          name: health.playerName || profile.name,
+          hp: health.playerHp,
+          maxHp: MAX_HP,
+          color: profile.colors.main,
+          secondaryColor: profile.colors.secondary,
+        }}
+        opponentStatus={{
+          name: health.opponentName || remoteHost.peerName || "Host",
+          hp: health.opponentHp,
+          maxHp: OPPONENT_MAX_HP,
+          color: OPPONENT_COLORS.main,
+          secondaryColor: OPPONENT_COLORS.secondary,
+        }}
       />
+      <BattleSpaceBg />
       <Viewport protagonists={protagonists} hitEffectsStore={hitEffectsStoreRef} />
       <SurroundingWalls
         thick={SIZE}
         bounds={ARENA_BOUNDS}
-        options={{ render: { fillStyle: "#333" } }}
+        options={{ render: { fillStyle: "#1c2430" } }}
       />
       {hostComposite && <Composite.add object={hostComposite} />}
       {guestComposite && <Composite.add object={guestComposite} />}

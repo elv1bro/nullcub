@@ -7,8 +7,8 @@ import { filterGrabDamage } from "@/lib/grab/rules";
 import { filterDamageFromDeadAggressors } from "@/lib/combatActive";
 import { isSaveBody } from "@/lib/isSaveBody";
 import { isBattleSpawnGrace } from "@/lib/combatGrace";
-import type { FighterRuntime } from "./types";
-import { areEnemies } from "./types";
+import type { BattleMode, FighterRuntime } from "./types";
+import { areEnemies, resolveBattleWinner } from "./types";
 import type { Composite } from "matter-js";
 import { useCallback, useRef, useState, type RefObject } from "react";
 
@@ -17,6 +17,7 @@ export function useRosterHealth(
   composites: Composite[],
   battleStartRef: RefObject<number>,
   battleOverRef: RefObject<boolean>,
+  mode: BattleMode = "ffa",
 ): {
   fighters: FighterRuntime[];
   setHp: (id: string, hp: number) => void;
@@ -97,9 +98,12 @@ export function useRosterHealth(
     hp: hpMap[f.id] ?? f.maxHp,
   }));
 
-  const alive = merged.filter((f) => f.hp > 0);
-  const battleOver = alive.length <= 1 && merged.some((f) => f.hp <= 0);
-  const winnerId = battleOver ? (alive[0]?.id ?? null) : null;
+  const winnerId = resolveBattleWinner(mode, merged);
+  const battleOver =
+    mode === "ffa"
+      ? merged.filter((f) => f.hp > 0).length <= 1 &&
+        merged.some((f) => f.hp <= 0)
+      : winnerId != null;
 
   return {
     fighters: merged,

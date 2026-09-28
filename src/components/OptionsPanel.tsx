@@ -1,3 +1,4 @@
+import { AccountPanel } from "@/components/AccountPanel";
 import { Button } from "@/components/Button";
 import { useSettings, type Language } from "@/settings/SettingsContext";
 
@@ -18,7 +19,6 @@ export function OptionsPanel({ embedded, onClose }: Props) {
     setSfxVolume,
     setMusicEnabled,
     setMusicVolume,
-    resetControls,
   } = useSettings();
 
   const musicPct = Math.round(settings.musicVolume * 100);
@@ -26,6 +26,8 @@ export function OptionsPanel({ embedded, onClose }: Props) {
 
   const inner = (
     <>
+      <AccountPanel />
+
       <label className="menu-field">
         <span className="menu-label">{t.options.language}</span>
         <select
@@ -128,10 +130,6 @@ export function OptionsPanel({ embedded, onClose }: Props) {
           />
         </label>
       )}
-
-      <button type="button" className="menu-nav-btn text-sm!" onClick={resetControls}>
-        {t.options.resetControls}
-      </button>
 
       {!embedded && onClose && (
         <Button type="button" className="text-sm py-1 w-full" onClick={onClose}>

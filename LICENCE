@@ -1,13 +1,42 @@
-           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-                   Version 2, July 2014
+Copyright (C) 2026 E1viBro
 
-Copyright (C) 2023 One Does <onedoes.inc@gmail.com>
+All rights reserved.
 
-Everyone is permitted to copy and distribute verbatim or modified
-copies of this license document, and changing it is allowed as long
-as the name is changed.
+Исходный код, графика, тексты и прочие материалы этого проекта, за
+исключением перечисленных ниже сторонних компонентов, являются
+собственностью правообладателя.
 
-           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-  TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+Без предварительного письменного разрешения правообладателя запрещается:
 
- 0. You just DO WHAT THE FUCK YOU WANT TO.
+  * копировать, распространять и публиковать исходный код или сборки;
+  * создавать производные произведения;
+  * использовать материалы проекта в коммерческих целях.
+
+Просмотр исходного кода и локальная сборка для личного ознакомления
+разрешены.
+
+--------------------------------------------------------------------
+Происхождение кода
+
+Часть кода рэгдолла ведёт происхождение от проекта
+https://github.com/onedoes/ragdollmasters (автор One Does), выпущенного
+под WTFPL. WTFPL разрешает любое использование, включая выпуск
+производных работ под другой лицензией, поэтому настоящие условия
+применимы к этому проекту целиком. Исходный проект остаётся доступным
+под WTFPL по ссылке выше.
+
+Проект не связан с коммерческой игрой Ragdoll Masters (Rag Doll
+Software, 2005) и не использует её код, ассеты, логотипы и название.
+
+--------------------------------------------------------------------
+Сторонние материалы
+
+Шрифты Rubik, Unbounded и Caveat распространяются под SIL Open Font
+License 1.1 и включены в public/fonts.
+
+Звук и музыка — CC0. Список источников с атрибуцией:
+  public/sounds/music/README.txt
+  public/sounds/combat/README.txt
+  public/sounds/sfx/README.txt
+
+Библиотеки из package.json остаются под своими лицензиями.

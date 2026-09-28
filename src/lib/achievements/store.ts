@@ -6,6 +6,7 @@ import {
 } from "./battleTracker";
 import { evaluateBattleMedals } from "./evaluate";
 import type { MedalId } from "./medals";
+import { scheduleCloudPush } from "@/cloud/schedulePush";
 import { loadVersioned, saveVersioned } from "@/lib/storageSchema";
 
 export interface PlayerStats {
@@ -46,8 +47,12 @@ export function loadPlayerStats(): PlayerStats {
   });
 }
 
-function savePlayerStats(stats: PlayerStats): void {
+export function replacePlayerStats(stats: PlayerStats): void {
   saveVersioned(STORAGE_KEY, SCHEMA_VERSION, stats);
+}
+
+function savePlayerStats(stats: PlayerStats): void {
+  replacePlayerStats(stats);
 }
 
 export interface BattleEndResult {
@@ -92,6 +97,7 @@ export function recordBattleEnd(input: {
   }
 
   savePlayerStats(stats);
+  scheduleCloudPush();
   return { medals, stats, lossStreakBeforeBattle };
 }
 

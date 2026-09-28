@@ -10,10 +10,12 @@ type Props = {
   call: (event: IEventTimestamped<Engine>, vector: Vector) => void;
 };
 
-/** Движение: клавиши из настроек + стрелки. */
+/** Движение только по клавишам из настроек (без alias стрелок). */
 export function PlayerMovementInput({ map, event, call }: Props) {
   const { settings } = useSettings();
-  const readMovement = useMovementVectorRef(settings.controls);
+  const readMovement = useMovementVectorRef(settings.controls, {
+    includeArrows: false,
+  });
 
   useEventBeforeUpdate(
     (engineEvent) => {

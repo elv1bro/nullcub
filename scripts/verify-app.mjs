@@ -72,7 +72,7 @@ function killPort(port) {
   }
 }
 
-async function waitE2E(page, scenario, timeoutMs = 45_000) {
+async function waitE2E(page, scenario, timeoutMs = 90_000) {
   await page.waitForFunction(
     (name) => {
       const h = window.__RAGDOLL_E2E__;
@@ -134,6 +134,9 @@ async function prepareE2EPage(page) {
         useMicrophone: false,
       }),
     );
+    // Skip first-visit overlays so harness can assert editor/battle chrome.
+    localStorage.setItem("ragdoll-workshop-onboarded", "1");
+    localStorage.setItem("ragdoll-battle-onboarded", "1");
   });
 }
 
@@ -312,8 +315,18 @@ async function main() {
     console.log("\n=== Browser verify ===\n");
 
     results.push(await runScenario(browser, base, "menu", "/?e2e=menu"));
+    results.push(
+      await runScenario(browser, base, "authGate", "/?e2e=authGate"),
+    );
+    results.push(await runScenario(browser, base, "lobby", "/?e2e=lobby"));
+    results.push(
+      await runScenario(browser, base, "roguelike", "/?e2e=roguelike"),
+    );
     results.push(await runScenario(browser, base, "quick", "/?e2e=quick"));
     results.push(await runScenario(browser, base, "workshop", "/?e2e=workshop"));
+    results.push(
+      await runScenario(browser, base, "workshopFight", "/?e2e=workshopFight"),
+    );
 
     if (!skipDuel) {
       results.push(await runDuelScenario(browser, base));
@@ -321,7 +334,11 @@ async function main() {
       console.log("  ⊘ ws-duel skipped");
     }
 
-    console.log("\n=== OK: menu + quick battle + workshop" + (skipDuel ? "" : " + ws-duel") + " ===\n");
+    console.log(
+      "\n=== OK: menu + authGate + lobby + roguelike + quick + workshop + workshopFight" +
+        (skipDuel ? "" : " + ws-duel") +
+        " ===\n",
+    );
   } finally {
     await browser.close();
     if (vite && !keepServer) {

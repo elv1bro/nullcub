@@ -7,12 +7,24 @@ import { playMenuSound } from "@/audio";
 import { BlockPalette } from "@/components/workshop/BlockPalette";
 import { WorkshopParamsPanel } from "@/components/workshop/WorkshopParamsPanel";
 import { WorkshopSelectedPart } from "@/components/workshop/WorkshopSelectedPart";
+import { WorkshopValidationPanel } from "@/components/workshop/WorkshopValidationPanel";
+import { WorkshopToolBar } from "@/components/workshop/WorkshopToolBar";
+import { WorkshopActionBar } from "@/components/workshop/WorkshopActionBar";
 import {
+  WorkshopOnboarding,
+  hasSeenWorkshopOnboarding,
+  markWorkshopOnboardingSeen,
+} from "@/components/workshop/WorkshopOnboarding";
+import {
+  blueprintToMonsterDef,
   defaultBlueprintName,
   emptyBlueprint,
+  monsterDefToBlueprint,
   snapshotBlueprintFromComposite,
   validateBlueprint,
 } from "@/workshop/blueprintAdapters";
+import { decodeMonsterShare, encodeMonsterShare } from "@/monster/monsterShare";
+import { stressTestMonsterDef } from "@/monster/workshopIntegrity";
 import {
   deleteBlueprint,
   listBlueprints,
@@ -24,8 +36,16 @@ import { buildBlueprintPhysics } from "@/workshop/buildBlueprint";
 import { paletteForKind, type BlockTemplate } from "@/workshop/blockCatalog";
 import { createBlockMeta, type BlockMeta } from "@/workshop/blockMeta";
 import { usePaletteDrag } from "@/workshop/usePaletteDrag";
+import {
+  useWorkshopValidation,
+  type WorkshopTool,
+} from "@/workshop/useWorkshopValidation";
+import { useWorkshopCanvasInput } from "@/workshop/useWorkshopCanvasInput";
+import { drawWorkshopOrphans } from "@/workshop/drawWorkshopOrphans";
 import { ensureStarterMonsters } from "@/monster/monsterStore";
 import {
+  LINK_COLORS,
+  LINK_TYPE_ORDER,
   type MonsterLinkType,
   defaultLinkType,
   rebuildCompositeLinks,
@@ -40,11 +60,6 @@ import {
   unfreezeWorkshopBody,
 } from "@/workshop/workshopPartRender";
 import { drawWorkshopLink, drawWorkshopLinks } from "@/workshop/drawWorkshopLinks";
-import {
-  bodyIndexAt,
-  canvasToWorld,
-  linkIndexAt,
-} from "@/workshop/workshopHitTest";
 import { useSettings } from "@/settings/SettingsContext";
 import {
   Composite,
@@ -91,6 +106,7 @@ function WorkshopScene() {
   const [physicsPreview, setPhysicsPreview] = useState(false);
   const [workshopKind, setWorkshopKind] = useState<WorkshopKind>("monster");
   const [linkType, setLinkType] = useState<MonsterLinkType>("rigid");
+  const [tool, setTool] = useState<WorkshopTool>("move");
   const [name, setName] = useState(() => defaultBlueprintName("monster"));
   const [blueprintMeta, setBlueprintMeta] = useState<BlueprintMeta>(
     () => ({ ...DEFAULT_BLUEPRINT_META.monster }),
@@ -102,6 +118,12 @@ function WorkshopScene() {
   const [leftTab, setLeftTab] = useState<LeftTab>("params");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedPartIndex, setSelectedPartIndex] = useState<number | null>(null);
+  const [selectedLinkIndex, setSelectedLinkIndex] = useState<number | null>(null);
+  const [revision, setRevision] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !hasSeenWorkshopOnboarding(),
+  );
+  const [stressOk, setStressOk] = useState(true);
   const [status, setStatus] = useState("");
   const [linkPreview, setLinkPreview] = useState<{
     from: number;
@@ -126,6 +148,10 @@ function WorkshopScene() {
   );
 
   selectedPartRef.current = selectedPartIndex;
+
+  const bumpRevision = useCallback(() => {
+    setRevision((n) => n + 1);
+  }, []);
 
   const syncProtagonists = useCallback((bodies: Body[]) => {
     setProtagonists([scaleAnchorRef.current, ...bodies]);
@@ -189,22 +215,26 @@ function WorkshopScene() {
       syncProtagonists([...built.composite.bodies]);
       setLinkPreview(null);
       setSelectedPartIndex(null);
+      setSelectedLinkIndex(null);
+      bumpRevision();
     },
-    [showConstraints, syncProtagonists, workshopKind],
+    [bumpRevision, showConstraints, syncProtagonists, workshopKind],
   );
 
   const clearCanvas = useCallback(() => {
+    if (!window.confirm(t.workshop.clearConfirm)) return;
     const def = emptyBlueprint(workshopKind);
     blueprintIdRef.current = def.id;
     setName(def.name);
     setBlueprintMeta(def.meta ?? { ...DEFAULT_BLUEPRINT_META[workshopKind] });
     rebuildFromDef(def);
     setStatus(t.workshop.cleared);
-  }, [rebuildFromDef, t.workshop.cleared, workshopKind]);
+  }, [rebuildFromDef, t.workshop.clearConfirm, t.workshop.cleared, workshopKind]);
 
   const switchKind = useCallback(
     (kind: WorkshopKind) => {
       if (kind === workshopKind) return;
+      if (!window.confirm(t.workshop.kindSwitchConfirm)) return;
       setWorkshopKind(kind);
       const def = emptyBlueprint(kind);
       blueprintIdRef.current = def.id;
@@ -213,7 +243,7 @@ function WorkshopScene() {
       rebuildFromDef(def);
       setStatus(t.workshop.kindSwitched);
     },
-    [rebuildFromDef, t.workshop.kindSwitched, workshopKind],
+    [rebuildFromDef, t.workshop.kindSwitchConfirm, t.workshop.kindSwitched, workshopKind],
   );
 
   useEffect(() => {
@@ -242,21 +272,26 @@ function WorkshopScene() {
         e2eFail("workshop root missing");
         return;
       }
+      const parts = composite.bodies.length;
+      if (parts < 2) {
+        e2eFail(`workshop expected >=2 parts, got ${parts}`);
+        return;
+      }
+      const toolbar = document.querySelector(".ws-toolbar");
+      const validation = document.querySelector(".ws-validation");
+      const fight = document.querySelector(".ws-action-btn--cta");
+      if (!toolbar || !validation || !fight) {
+        e2eFail("workshop UX chrome missing (toolbar/validation/fight)");
+        return;
+      }
       e2eOk({
-        parts: composite.bodies.length,
+        parts,
         kind: workshopKind,
+        ready: validation.classList.contains("ws-validation--ready"),
       });
     }, 1200);
     return () => clearTimeout(t);
   }, [composite, workshopKind]);
-
-  const pointFromEvent = useCallback(
-    (clientX: number, clientY: number): Vector | null => {
-      if (!render?.canvas) return null;
-      return canvasToWorld(render.canvas, render.bounds, clientX, clientY);
-    },
-    [render],
-  );
 
   const addPartAt = useCallback(
     (point: Vector, template: BlockTemplate) => {
@@ -293,9 +328,17 @@ function WorkshopScene() {
           maxHp: Math.max(40, composite.bodies.length * 40),
         }));
       }
+      bumpRevision();
       setStatus(t.workshop.partAdded);
     },
-    [composite, physicsPreview, t.workshop.oneHead, t.workshop.partAdded, workshopKind],
+    [
+      bumpRevision,
+      composite,
+      physicsPreview,
+      t.workshop.oneHead,
+      t.workshop.partAdded,
+      workshopKind,
+    ],
   );
 
   const { ghost, startDrag } = usePaletteDrag({
@@ -320,9 +363,10 @@ function WorkshopScene() {
       linksRef.current.push({ a, b, type });
       rebuildCompositeLinks(composite, linksRef.current);
       setComposite({ ...composite });
+      bumpRevision();
       setStatus(t.workshop.linked);
     },
-    [composite, physicsPreview, t.workshop.linked],
+    [bumpRevision, composite, physicsPreview, t.workshop.linked],
   );
 
   const deleteLinkAt = useCallback(
@@ -331,9 +375,11 @@ function WorkshopScene() {
       linksRef.current.splice(index, 1);
       rebuildCompositeLinks(composite, linksRef.current);
       setComposite({ ...composite });
+      setSelectedLinkIndex(null);
+      bumpRevision();
       setStatus(t.workshop.linkRemoved);
     },
-    [composite, physicsPreview, t.workshop.linkRemoved],
+    [bumpRevision, composite, physicsPreview, t.workshop.linkRemoved],
   );
 
   const deletePartAt = useCallback(
@@ -356,6 +402,7 @@ function WorkshopScene() {
       setComposite({ ...composite });
       syncProtagonists([...composite.bodies]);
       setLinkPreview(null);
+      setSelectedLinkIndex(null);
       setSelectedPartIndex((prev) => {
         if (prev === null) return null;
         if (prev === index) return null;
@@ -368,9 +415,10 @@ function WorkshopScene() {
           maxHp: Math.max(40, composite.bodies.length * 40),
         }));
       }
+      bumpRevision();
       setStatus(t.workshop.deleted);
     },
-    [composite, physicsPreview, workshopKind, t.workshop.deleted],
+    [bumpRevision, composite, physicsPreview, workshopKind, t.workshop.deleted],
   );
 
   const togglePhysicsPreview = useCallback(() => {
@@ -414,10 +462,14 @@ function WorkshopScene() {
     t.workshop.physicsOn,
   ]);
 
-  const selectPartAt = useCallback((index: number) => {
-    setSelectedPartIndex(index);
-    setStatus(t.workshop.partSelected);
-  }, [t.workshop.partSelected]);
+  const selectPartAt = useCallback(
+    (index: number) => {
+      setSelectedPartIndex(index);
+      setSelectedLinkIndex(null);
+      setStatus(t.workshop.partSelected);
+    },
+    [t.workshop.partSelected],
+  );
 
   const setPartRole = useCallback(
     (index: number, role: "hurtbox" | "armor") => {
@@ -428,136 +480,55 @@ function WorkshopScene() {
       const body = composite?.bodies[index];
       if (body) applyBlueprintPartRender(body, meta);
       setComposite((c) => (c ? { ...c } : c));
+      bumpRevision();
       setStatus(
         role === "armor" ? t.workshop.partRoleArmor : t.workshop.partRoleHurtbox,
       );
     },
-    [composite, t.workshop.partRoleArmor, t.workshop.partRoleHurtbox],
+    [bumpRevision, composite, t.workshop.partRoleArmor, t.workshop.partRoleHurtbox],
   );
 
-  useEffect(() => {
-    const canvas = render?.canvas;
-    if (!canvas || !composite) return;
+  const setSelectedLinkType = useCallback(
+    (type: MonsterLinkType) => {
+      if (selectedLinkIndex === null || !composite || physicsPreview) return;
+      const link = linksRef.current[selectedLinkIndex];
+      if (!link) return;
+      link.type = type;
+      rebuildCompositeLinks(composite, linksRef.current);
+      setComposite({ ...composite });
+      bumpRevision();
+    },
+    [bumpRevision, composite, physicsPreview, selectedLinkIndex],
+  );
 
-    const onContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-      if (physicsPreview) return;
-      const point = pointFromEvent(e.clientX, e.clientY);
-      if (!point) return;
-      const index = bodyIndexAt(composite, point);
-      if (index !== null) selectPartAt(index);
-      else setSelectedPartIndex(null);
-    };
-
-    const onDown = (e: MouseEvent) => {
-      if (e.button !== 0 || physicsPreview) return;
-      const point = pointFromEvent(e.clientX, e.clientY);
-      if (!point) return;
-
-      const hitIndex = bodyIndexAt(composite, point);
-      if (hitIndex !== null) {
-        // Shift+LMB = режим связи; обычный ЛКМ = перемещение (раньше связь
-        // создавалась всегда, а move работал только после ПКМ-select).
-        const linkMode = e.shiftKey;
-        dragRef.current = {
-          x: e.clientX,
-          y: e.clientY,
-          fromBody: hitIndex,
-          linkMode,
-        };
-        if (linkMode) {
-          setLinkPreview({ from: hitIndex, x: point.x, y: point.y });
-        } else {
-          setSelectedPartIndex(hitIndex);
-          setLinkPreview(null);
-        }
-      } else {
-        dragRef.current = {
-          x: e.clientX,
-          y: e.clientY,
-          fromBody: null,
-          linkMode: false,
-        };
-      }
-    };
-
-    const onMove = (e: MouseEvent) => {
-      const drag = dragRef.current;
-      if (!drag || drag.fromBody === null) return;
-      const point = pointFromEvent(e.clientX, e.clientY);
-      if (!point) return;
-
-      if (drag.linkMode) {
-        const targetIndex = bodyIndexAt(composite, point);
-        const targetBody =
-          targetIndex !== null && targetIndex !== drag.fromBody
-            ? composite.bodies[targetIndex]
-            : null;
-        const end = targetBody?.position ?? point;
-        setLinkPreview({ from: drag.fromBody, x: end.x, y: end.y });
-        return;
-      }
-
-      const body = composite.bodies[drag.fromBody];
-      if (body) {
-        Body.setPosition(body, snapToGrid(point));
-        Body.setVelocity(body, { x: 0, y: 0 });
-        rebuildCompositeLinks(composite, linksRef.current);
-      }
-    };
-
-    const onUp = (e: MouseEvent) => {
-      if (e.button !== 0 || physicsPreview) return;
-      const drag = dragRef.current;
-      dragRef.current = null;
-      setLinkPreview(null);
-      if (!drag) return;
-
-      const point = pointFromEvent(e.clientX, e.clientY);
-      if (!point) return;
-
-      const dx = e.clientX - drag.x;
-      const dy = e.clientY - drag.y;
-      const moved = dx * dx + dy * dy > 36;
-      const endBody = bodyIndexAt(composite, point);
-
-      if (
-        drag.linkMode &&
-        drag.fromBody !== null &&
-        endBody !== null &&
-        drag.fromBody !== endBody
-      ) {
-        linkParts(drag.fromBody, endBody, linkType);
-        return;
-      }
-
-      if (!moved && !drag.linkMode && endBody === null) {
-        const linkIdx = linkIndexAt(composite, linksRef.current, point);
-        if (linkIdx !== null) deleteLinkAt(linkIdx);
-      }
-    };
-
-    canvas.addEventListener("contextmenu", onContextMenu);
-    canvas.addEventListener("mousedown", onDown);
-    canvas.addEventListener("mousemove", onMove);
-    canvas.addEventListener("mouseup", onUp);
-    return () => {
-      canvas.removeEventListener("contextmenu", onContextMenu);
-      canvas.removeEventListener("mousedown", onDown);
-      canvas.removeEventListener("mousemove", onMove);
-      canvas.removeEventListener("mouseup", onUp);
-    };
-  }, [
-    render?.canvas,
+  useWorkshopCanvasInput({
+    canvas: render?.canvas,
+    render,
     composite,
-    pointFromEvent,
-    deletePartAt,
-    selectPartAt,
     physicsPreview,
-    linkParts,
-    deleteLinkAt,
+    tool,
     linkType,
-  ]);
+    linksRef,
+    dragRef,
+    setSelectedLinkIndex,
+    setSelectedPartIndex,
+    setLinkPreview,
+    linkParts,
+    selectPartAt,
+    bumpRevision,
+  });
+
+  const validation = useWorkshopValidation({
+    kind: workshopKind,
+    name,
+    id: blueprintIdRef.current,
+    meta: blueprintMeta,
+    bodyCount: composite?.bodies.length ?? 0,
+    revision: String(revision),
+    getBodies: () => composite?.bodies ?? [],
+    getPartsMeta: () => partsMetaRef.current,
+    getLinks: () => linksRef.current,
+  });
 
   useRenderEvent(
     "afterRender",
@@ -599,6 +570,36 @@ function WorkshopScene() {
 
       if (composite) {
         drawWorkshopLinks(ctx, render, composite, linksRef.current);
+        if (selectedLinkIndex !== null) {
+          const link = linksRef.current[selectedLinkIndex];
+          const bodyA = link ? composite.bodies[link.a] : null;
+          const bodyB = link ? composite.bodies[link.b] : null;
+          if (link && bodyA && bodyB) {
+            drawWorkshopLink(
+              ctx,
+              render,
+              bodyA.position.x,
+              bodyA.position.y,
+              bodyB.position.x,
+              bodyB.position.y,
+              link.type,
+              5.5,
+            );
+            ctx.save();
+            ctx.strokeStyle = "#fcd34d";
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = "round";
+            ctx.setLineDash([]);
+            const a = worldToCanvas(render, bodyA.position);
+            const b = worldToCanvas(render, bodyB.position);
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+        drawWorkshopOrphans(ctx, render, composite, validation.orphans);
       }
 
       if (linkPreview && composite) {
@@ -641,7 +642,15 @@ function WorkshopScene() {
       drawBlueprint(ctx, render, CENTER);
       ctx.restore();
     },
-    [render, composite, linkPreview, linkType, selectedPartIndex],
+    [
+      render,
+      composite,
+      linkPreview,
+      linkType,
+      selectedPartIndex,
+      selectedLinkIndex,
+      validation.orphans,
+    ],
   );
 
   const handleSave = useCallback((): boolean => {
@@ -693,6 +702,83 @@ function WorkshopScene() {
     [selectedId, t.workshop.confirmDelete, t.workshop.removed],
   );
 
+  const currentMonsterDraft = useCallback(() => {
+    if (!composite) return null;
+    const draft = snapshotBlueprintFromComposite(
+      composite,
+      partsMetaRef.current,
+      linksRef.current.map(({ a, b, type }) => ({ a, b, type })),
+      workshopKind,
+      name.trim() || defaultBlueprintName(workshopKind),
+      blueprintIdRef.current,
+      blueprintMeta,
+    );
+    return draft.kind === "monster" ? blueprintToMonsterDef(draft) : null;
+  }, [blueprintMeta, composite, name, workshopKind]);
+
+  const runStressCheck = useCallback(() => {
+    const monster = currentMonsterDraft();
+    if (!monster) {
+      setStressOk(false);
+      setStatus(t.workshop.needParts);
+      return false;
+    }
+    const result = stressTestMonsterDef(monster);
+    setStressOk(result.ok);
+    setStatus(
+      result.ok
+        ? t.workshop.stressOk
+        : t.workshop.stressFail(result.broken.length),
+    );
+    return result.ok;
+  }, [currentMonsterDraft, t.workshop]);
+
+  useEffect(() => {
+    if (workshopKind !== "monster" || !validation.ready) {
+      setStressOk(true);
+      return;
+    }
+    const timer = setTimeout(() => {
+      const monster = currentMonsterDraft();
+      if (!monster) return;
+      const result = stressTestMonsterDef(monster, 60);
+      setStressOk(result.ok);
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [currentMonsterDraft, validation.ready, revision, workshopKind]);
+
+  const handleShare = useCallback(async () => {
+    const monster = currentMonsterDraft();
+    if (!monster || !validation.ready || !stressOk) {
+      setStatus(t.workshop.notReadyToFight);
+      return;
+    }
+    const code = encodeMonsterShare(monster);
+    try {
+      await navigator.clipboard.writeText(code);
+      setStatus(t.workshop.shareCopied);
+      playMenuSound("panel");
+    } catch {
+      window.prompt(t.workshop.sharePrompt, code);
+      setStatus(t.workshop.shareCopied);
+    }
+  }, [currentMonsterDraft, stressOk, t.workshop, validation.ready]);
+
+  const handleImportShare = useCallback(() => {
+    const raw = window.prompt(t.workshop.importPrompt);
+    if (!raw) return;
+    const def = decodeMonsterShare(raw);
+    if (!def) {
+      setStatus(t.workshop.importFail);
+      return;
+    }
+    rebuildFromDef(monsterDefToBlueprint(def));
+    blueprintIdRef.current = def.id;
+    setSelectedId(def.id);
+    setStatus(t.workshop.importOk);
+    playMenuSound("panel");
+  }, [rebuildFromDef, t.workshop]);
+
   const startFight = useCallback(() => {
     if (workshopKind !== "monster") {
       setStatus(t.workshop.fightMonsterOnly);
@@ -702,15 +788,38 @@ function WorkshopScene() {
       setStatus(t.workshop.needParts);
       return;
     }
+    if (!runStressCheck()) return;
     if (!handleSave()) return;
+    setStatus(t.workshop.savedStarting);
     setBattleConfig({ kind: "monster", monsterId: blueprintIdRef.current });
     playMenuSound("play");
     sendN("START_BATTLE")();
-  }, [composite, handleSave, sendN, t.workshop, workshopKind]);
+  }, [composite, handleSave, runStressCheck, sendN, t.workshop, workshopKind]);
+
+  useEffect(() => {
+    if (!e2eMatches("workshopFight")) return;
+    if (!composite?.bodies.length) return;
+    e2eSetPhase("running");
+    const t = setTimeout(() => {
+      if (workshopKind !== "monster") {
+        e2eFail("workshopFight expects monster kind");
+        return;
+      }
+      // E2E: save + fight without stress gate (stress covered by unit tests).
+      if (!handleSave()) {
+        e2eFail("workshopFight save failed");
+        return;
+      }
+      setBattleConfig({ kind: "monster", monsterId: blueprintIdRef.current });
+      sendN("START_BATTLE")();
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [composite, handleSave, sendN, workshopKind]);
 
   useKeyPressEvent("Escape", () => {
-    if (selectedPartIndex !== null) {
+    if (selectedPartIndex !== null || selectedLinkIndex !== null) {
       setSelectedPartIndex(null);
+      setSelectedLinkIndex(null);
       playMenuSound("click");
       return;
     }
@@ -719,12 +828,22 @@ function WorkshopScene() {
   });
 
   useKeyPressEvent("Delete", () => {
+    if (selectedLinkIndex !== null) {
+      deleteLinkAt(selectedLinkIndex);
+      playMenuSound("click");
+      return;
+    }
     if (selectedPartIndex === null) return;
     deletePartAt(selectedPartIndex);
     playMenuSound("click");
   });
 
   useKeyPressEvent("Backspace", () => {
+    if (selectedLinkIndex !== null) {
+      deleteLinkAt(selectedLinkIndex);
+      playMenuSound("click");
+      return;
+    }
     if (selectedPartIndex === null) return;
     deletePartAt(selectedPartIndex);
     playMenuSound("click");
@@ -736,7 +855,28 @@ function WorkshopScene() {
     return t.workshop.kindArena;
   };
 
+  const linkLabel = (type: MonsterLinkType) => {
+    if (type === "rigid") return t.workshop.linkRigid;
+    if (type === "spring") return t.workshop.linkSpring;
+    return t.workshop.linkRope;
+  };
+
   const partCount = composite?.bodies.length ?? 0;
+  const selectedLink =
+    selectedLinkIndex !== null ? linksRef.current[selectedLinkIndex] : null;
+
+  const statusMessage = status
+    ? status
+    : validation.ready
+      ? t.workshop.readyToFight
+      : validation.orphans.length > 0
+        ? t.workshop.orphanParts(validation.orphans.length)
+        : t.workshop.notReadyToFight;
+
+  const fightBlockedReason =
+    !validation.check.ok && validation.check.reason in t.workshop
+      ? (t.workshop[validation.check.reason as keyof typeof t.workshop] as string)
+      : t.workshop.notReadyToFight;
 
   return (
     <>
@@ -747,7 +887,7 @@ function WorkshopScene() {
           onClick={sendN("BACK")}
           aria-label={t.menu.back}
         >
-          ←
+          ← {t.menu.back}
         </button>
         <div className="workshop-topbar__title">
           <span className="workshop-topbar__eyebrow">
@@ -775,11 +915,63 @@ function WorkshopScene() {
           onMetaChange={(patch) =>
             setBlueprintMeta((m) => ({ ...m, ...patch }))
           }
-          linkType={linkType}
-          onLinkTypeChange={setLinkType}
           physicsPreview={physicsPreview}
           disabled={physicsPreview}
         />
+
+        <WorkshopToolBar
+          t={t.workshop}
+          tool={tool}
+          onToolChange={setTool}
+          linkType={linkType}
+          onLinkTypeChange={setLinkType}
+          disabled={physicsPreview}
+        />
+
+        <WorkshopValidationPanel
+          t={t.workshop}
+          validation={validation}
+          kind={workshopKind}
+          stressOk={stressOk}
+        />
+
+        {selectedLinkIndex !== null && selectedLink && (
+          <div className="ws-selected-link">
+            <div className="ws-selected-link__title">{t.workshop.changeLinkType}</div>
+            <div className="ws-link-pills__row">
+              {LINK_TYPE_ORDER.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  className={[
+                    "ws-link-pill",
+                    selectedLink.type === type ? "ws-link-pill--active" : "",
+                  ].join(" ")}
+                  style={
+                    selectedLink.type === type
+                      ? {
+                          borderColor: LINK_COLORS[type],
+                          color: LINK_COLORS[type],
+                        }
+                      : undefined
+                  }
+                  onClick={() => setSelectedLinkType(type)}
+                  disabled={physicsPreview}
+                >
+                  {linkLabel(type)}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="ws-selected-link__delete"
+              onClick={() => deleteLinkAt(selectedLinkIndex)}
+              disabled={physicsPreview}
+            >
+              {t.workshop.deleteLink}
+            </button>
+          </div>
+        )}
 
         {selectedPartIndex !== null &&
           partsMetaRef.current[selectedPartIndex] && (
@@ -837,30 +1029,30 @@ function WorkshopScene() {
           </div>
         )}
 
-        <div className="ws-action-bar">
-          <button type="button" className="ws-action-btn" onClick={() => setLeftTab(leftTab === "library" ? "params" : "library")} title={t.workshop.library}>
-            📂
-          </button>
-          <button
-            type="button"
-            className={["ws-action-btn", physicsPreview ? "ws-action-btn--active" : ""].join(" ")}
-            onClick={togglePhysicsPreview}
-            title={physicsPreview ? t.workshop.physicsStop : t.workshop.testMode}
-          >
-            {physicsPreview ? "■" : "▶"}
-          </button>
-          {workshopKind === "monster" && (
-            <button type="button" className="ws-action-btn ws-action-btn--fight" onClick={startFight} disabled={physicsPreview} title={t.workshop.fight}>
-              ⚔
-            </button>
-          )}
-          <button type="button" className="ws-action-btn" onClick={handleSave} disabled={physicsPreview} title={t.workshop.save}>
-            💾
-          </button>
-          <button type="button" className="ws-action-btn ws-action-btn--ghost" onClick={clearCanvas} disabled={physicsPreview} title={t.workshop.clear}>
-            🗑
-          </button>
-        </div>
+        <WorkshopActionBar
+          t={t.workshop}
+          workshopKind={workshopKind}
+          physicsPreview={physicsPreview}
+          fightReady={validation.ready && stressOk}
+          fightBlockedReason={
+            !stressOk
+              ? t.workshop.stressBlocked
+              : typeof fightBlockedReason === "string"
+                ? fightBlockedReason
+                : t.workshop.notReadyToFight
+          }
+          libraryOpen={leftTab === "library"}
+          onToggleLibrary={() =>
+            setLeftTab(leftTab === "library" ? "params" : "library")
+          }
+          onTogglePhysics={togglePhysicsPreview}
+          onFight={startFight}
+          onSave={handleSave}
+          onClear={clearCanvas}
+          onShare={handleShare}
+          onImportShare={handleImportShare}
+          onStress={runStressCheck}
+        />
       </aside>
 
       <aside className="workshop-rail workshop-rail--right pointer-events-auto">
@@ -872,6 +1064,12 @@ function WorkshopScene() {
           onDragStart={startDrag}
         />
       </aside>
+
+      {physicsPreview && (
+        <div className="ws-physics-banner pointer-events-none" aria-live="polite">
+          {t.workshop.physicsBanner}
+        </div>
+      )}
 
       {ghost && (
         <>
@@ -894,13 +1092,30 @@ function WorkshopScene() {
         </>
       )}
 
+      {showOnboarding && (
+        <WorkshopOnboarding
+          t={t.workshop}
+          starters={saved
+            .filter((s) => s.kind === "monster")
+            .map((s) => ({
+              id: s.id,
+              name: s.name,
+              parts: s.parts.length,
+            }))}
+          onDismiss={() => {
+            markWorkshopOnboardingSeen();
+            setShowOnboarding(false);
+          }}
+          onLoadStarter={(id) => handleLoad(id)}
+          onSkip={() => markWorkshopOnboardingSeen()}
+        />
+      )}
+
       <footer className="workshop-statusbar pointer-events-none">
         <span className="workshop-statusbar__meta">
           {BLUEPRINT_GRID}px · {t.workshop.partsCount(partCount)}
         </span>
-        {status && (
-          <span className="workshop-statusbar__msg">{status}</span>
-        )}
+        <span className="workshop-statusbar__msg">{statusMessage}</span>
       </footer>
 
       <Viewport protagonists={protagonists} />
@@ -948,7 +1163,7 @@ export default function Workshop() {
       <Renderer
         engine={{
           gravity: { x: 0, y: 0, scale: 0 },
-          constraintIterations: 20,
+          constraintIterations: 8,
         }}
         render={{ options: { background: "transparent", wireframes: false } }}
       >

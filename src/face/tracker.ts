@@ -12,10 +12,10 @@ import {
 } from "./faceCrop";
 import { detectEmotion, type FaceState } from "./emotions";
 
-const WASM =
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm";
-const MODEL =
-  "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+// Раздаём со своего домена: браузер игрока не должен ходить на чужие CDN.
+// Файлы кладёт scripts/sync-mediapipe.mjs.
+const WASM = "/mediapipe";
+const MODEL = "/models/face_landmarker.task";
 
 function resultToBlendshapes(result: FaceLandmarkerResult): Record<string, number> {
   const categories = result.faceBlendshapes?.[0]?.categories;

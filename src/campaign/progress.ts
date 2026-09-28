@@ -1,3 +1,4 @@
+import { scheduleCloudPush } from "@/cloud/schedulePush";
 import { loadVersioned, saveVersioned } from "@/lib/storageSchema";
 import {
   BOUNCER_CAMPAIGN_ID,
@@ -32,6 +33,10 @@ function saveStore(store: ProgressStore): void {
   saveVersioned(STORAGE_KEY, SCHEMA_VERSION, store);
 }
 
+export function replaceCampaignProgress(store: ProgressStore): void {
+  saveStore(store);
+}
+
 /** Максимальный order открытой главы (0 = только первая). */
 export function getMaxUnlockedOrder(campaignId = BOUNCER_CAMPAIGN_ID): number {
   const store = loadStore();
@@ -62,10 +67,12 @@ export function unlockAfterWin(
   );
   store[campaignId] = next;
   saveStore(store);
+  scheduleCloudPush();
 }
 
 export function resetCampaignProgress(campaignId = BOUNCER_CAMPAIGN_ID): void {
   const store = loadStore();
   delete store[campaignId];
   saveStore(store);
+  scheduleCloudPush();
 }

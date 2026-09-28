@@ -2,14 +2,27 @@ import { useBindingPressRef } from "@/input/keyBindings";
 import { readGamepadMove } from "@/input/gamepad";
 import type { ControlBindings } from "@/settings/SettingsContext";
 import { Vector } from "matter-js";
+import type { RefObject } from "react";
 
-/** Движение: клавиши из настроек; стрелки опционально; геймпад (index) опционально. */
+export type ExternalMoveRef = RefObject<{ x: number; y: number } | null | undefined>;
+
+/**
+ * Движение: только клавиши из `controls` (+ опционально геймпад / тач-стик).
+ * Стрелки НЕ дублируют WASD по умолчанию — иначе в локальном 2P
+ * стрелки двигают сразу обоих (P2 ими ходит, P1 получает их как alias).
+ */
 export function useMovementVectorRef(
   controls: ControlBindings,
-  opts?: { includeArrows?: boolean; gamepadIndex?: number | null },
+  opts?: {
+    includeArrows?: boolean;
+    gamepadIndex?: number | null;
+    /** Виртуальный стик / внешний вектор (left=+x, up=+y). */
+    externalMoveRef?: ExternalMoveRef;
+  },
 ) {
-  const includeArrows = opts?.includeArrows !== false;
+  const includeArrows = opts?.includeArrows === true;
   const gamepadIndex = opts?.gamepadIndex ?? null;
+  const externalMoveRef = opts?.externalMoveRef;
   const up = useBindingPressRef(controls.up);
   const down = useBindingPressRef(controls.down);
   const left = useBindingPressRef(controls.left);
@@ -40,6 +53,11 @@ export function useMovementVectorRef(
         // Геймпад перекрывает клавиши, если стик/D-pad активен.
         vector = Vector.create(pad.x, pad.y);
       }
+    }
+    const touch = externalMoveRef?.current;
+    if (touch && (touch.x !== 0 || touch.y !== 0)) {
+      // Тач-стик перекрывает клавиши/геймпад, пока палец на паде.
+      vector = Vector.create(touch.x, touch.y);
     }
     return vector;
   };

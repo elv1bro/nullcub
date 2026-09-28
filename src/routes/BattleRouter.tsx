@@ -6,8 +6,10 @@ import { BattleUnavailable } from "./BattleUnavailable";
 const Battle1Player = lazy(() => import("./Battle1Player"));
 const BattleLocal2P = lazy(() => import("./BattleLocal2P"));
 const BattleLocal4FFA = lazy(() => import("./BattleLocal4FFA"));
+const BattleTeamBots = lazy(() => import("./BattleTeamBots"));
 const BattleNetwork = lazy(() => import("./BattleNetwork"));
 const BattleDedicated = lazy(() => import("./BattleDedicated"));
+const BattleWeaponSandbox = lazy(() => import("./BattleWeaponSandbox"));
 
 export default function BattleRouter() {
   const config = useMemo(() => getBattleConfig(), []);
@@ -15,10 +17,12 @@ export default function BattleRouter() {
   switch (config.kind) {
     case "local2p":
       return <BattleLocal2P />;
+    case "teamBots":
+      return <BattleTeamBots />;
     case "local4ffa":
       if (!ENABLE_LOCAL_FFA) {
         return (
-          <BattleUnavailable reason="4FFA на legacy useRosterHealth отключён. Включите VITE_ENABLE_LOCAL_FFA=1 или играйте 1v1 / WS-дуэль." />
+          <BattleUnavailable reason="4FFA на legacy useRosterHealth отключён. Включите VITE_ENABLE_LOCAL_FFA=1 или играйте пати vs боты / 1v1 / WS-дуэль." />
         );
       }
       return <BattleLocal4FFA />;
@@ -31,6 +35,8 @@ export default function BattleRouter() {
       return <BattleNetwork />;
     case "dedicated":
       return <BattleDedicated />;
+    case "weaponSandbox":
+      return <BattleWeaponSandbox />;
     default:
       return <Battle1Player />;
   }

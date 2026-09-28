@@ -7,6 +7,11 @@ export const BATTLE_GRAVITY = {
 } as const;
 
 export const PLAYER_MOVE_SPEED = 40;
+/** AI базовые скорости — от той же шкалы, что и игрок. */
+export const AI_APPROACH_SPEED = PLAYER_MOVE_SPEED;
+export const AI_LUNGE_SPEED = 52;
+export const AI_STRAFE_SPEED = PLAYER_MOVE_SPEED;
+export const AI_CIRCLE_SPEED = 34;
 export const KNOCKBACK_SPEED = -56;
 export const MAX_BODY_SPEED = 52;
 
@@ -19,11 +24,24 @@ export const BATTLE_OPENING_BRAWL_MS = 2500;
 /** Расстояние между бойцами при спавне (центр ± spread). */
 export const BATTLE_SPAWN_SPREAD = 140;
 
-/** Пауза после KO перед recap — HUD и таймер остаются видимыми. */
-export const BATTLE_RECAP_DELAY_MS = 500;
+/**
+ * Пауза после KO перед повтором/recap.
+ * Должна покрывать finisher-камеру, иначе повтор перекрывает зум.
+ */
+export const BATTLE_RECAP_DELAY_MS = 2200;
 
 /** Временно выключить хват (Q/E и AI grab) — пока драка без захватов. */
 export const GRAB_ENABLED = false;
+
+/**
+ * Автоподбор и сброс арена-оружия (не fighter-grab).
+ * Работает независимо от GRAB_ENABLED.
+ */
+export const WEAPON_HOLD_ENABLED = true;
+/** Радиус автоподбора до рукояти оружия (px). */
+export const AUTO_PICKUP_RANGE = 96;
+/** Пауза между автоподборами одной рукой. */
+export const AUTO_PICKUP_COOLDOWN_MS = 350;
 
 export function battleSpawnPositions(arenaSize: number): {
   playerX: number;

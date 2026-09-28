@@ -15,18 +15,34 @@ export const LINK_COLORS: Record<MonsterLinkType, string> = {
   rope: "#fbbf24",
 };
 
-const ROPE_SLACK_MULT = 1.14;
-const ROPE_SLACK_STIFFNESS = 0.004;
-const ROPE_TIGHT_STIFFNESS = 0.94;
+const ROPE_SLACK_MULT = 1.08;
+const ROPE_SLACK_STIFFNESS = 0.01;
+const ROPE_TIGHT_STIFFNESS = 0.96;
+/** Пружина: достаточно жёсткая, чтобы не расползаться под AI dash/flip. */
+export const SPRING_STIFFNESS = 0.62;
+export const SPRING_DAMPING = 0.12;
 
 type LinkPlugin = { monsterLinkType?: MonsterLinkType };
 
-/** Якоря на поверхности кругов + длина «край–край» в текущей позе. */
+/** Полуразмер тела вдоль направления (круг или AABB-прямоугольник). */
+export function bodyExtentAlong(body: Body, dir: Matter.Vector): number {
+  if (body.circleRadius != null && body.circleRadius > 0) {
+    return body.circleRadius;
+  }
+  const hw = Math.max(1, (body.bounds.max.x - body.bounds.min.x) / 2);
+  const hh = Math.max(1, (body.bounds.max.y - body.bounds.min.y) / 2);
+  // Локальные оси с учётом угла тела.
+  const local = Matter.Vector.rotate(dir, -body.angle);
+  const nx = Math.abs(local.x);
+  const ny = Math.abs(local.y);
+  const len = Math.hypot(nx, ny) || 1;
+  return (nx / len) * hw + (ny / len) * hh;
+}
+
+/** Якоря на поверхности тел + длина «край–край» в текущей позе. */
 export function linkAnchors(bodyA: Body, bodyB: Body) {
   const delta = Matter.Vector.sub(bodyB.position, bodyA.position);
   const dist = Matter.Vector.magnitude(delta);
-  const rA = bodyA.circleRadius ?? 10;
-  const rB = bodyB.circleRadius ?? 10;
 
   if (dist < 1e-4) {
     return {
@@ -37,6 +53,8 @@ export function linkAnchors(bodyA: Body, bodyB: Body) {
   }
 
   const dir = Matter.Vector.div(delta, dist);
+  const rA = bodyExtentAlong(bodyA, dir);
+  const rB = bodyExtentAlong(bodyB, Matter.Vector.neg(dir));
   return {
     pointA: Matter.Vector.create(dir.x * rA, dir.y * rA),
     pointB: Matter.Vector.create(-dir.x * rB, -dir.y * rB),
@@ -83,9 +101,8 @@ export function linkConstraintOptions(
     case "spring":
       return {
         ...base,
-        // Было 0.14 — в бою с AI flip/dash монстр расползался как желе.
-        stiffness: 0.45,
-        damping: 0.08,
+        stiffness: SPRING_STIFFNESS,
+        damping: SPRING_DAMPING,
         length: restLength,
       };
     case "rope":

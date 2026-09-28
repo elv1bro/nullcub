@@ -131,6 +131,7 @@ export function startGameServer(
             id: clientId,
             name: msg.name || "Fighter",
             fighterId: msg.role ?? "player",
+            ownedFighterIds: [],
             send: (payload) => send(ws, payload),
             limiter: new InputRateLimiter(),
           });
@@ -138,12 +139,31 @@ export function startGameServer(
             send(ws, { type: "error", message: "room full" });
             return;
           }
+          const client = joinedRoom.clients.get(clientId);
           send(ws, {
             type: "welcome",
             roomId,
             fighterId,
             role: fighterId,
+            ownedFighterIds: client?.ownedFighterIds ?? [fighterId],
           });
+          return;
+        }
+
+        if (msg.type === "battleMode") {
+          if (!joinedRoom) {
+            send(ws, { type: "error", message: "join first" });
+            return;
+          }
+          const mode = msg.mode === "partyBots" ? "partyBots" : "ffa";
+          const diff =
+            msg.difficulty === "easy" ||
+            msg.difficulty === "normal" ||
+            msg.difficulty === "hard" ||
+            msg.difficulty === "boss"
+              ? msg.difficulty
+              : undefined;
+          joinedRoom.setBattleMode(mode, diff);
           return;
         }
 
@@ -156,12 +176,46 @@ export function startGameServer(
           return;
         }
 
+        if (msg.type === "claimLocal") {
+          if (!joinedRoom) {
+            send(ws, { type: "error", message: "join first" });
+            return;
+          }
+          const localId = joinedRoom.claimLocal(
+            clientId,
+            typeof msg.name === "string" ? msg.name : "P2",
+          );
+          if (!localId) {
+            send(ws, { type: "error", message: "cannot claim local slot" });
+            return;
+          }
+          const client = joinedRoom.clients.get(clientId);
+          send(ws, {
+            type: "welcome",
+            roomId: joinedRoom.roomId,
+            fighterId: client?.fighterId ?? "player",
+            role: client?.fighterId ?? "player",
+            ownedFighterIds: client?.ownedFighterIds ?? [],
+          });
+          return;
+        }
+
+        if (msg.type === "releaseLocal") {
+          if (!joinedRoom) return;
+          joinedRoom.releaseLocal(clientId, String(msg.fighterId ?? ""));
+          return;
+        }
+
         if (msg.type === "input") {
           if (!joinedRoom) {
             send(ws, { type: "error", message: "join first" });
             return;
           }
-          joinedRoom.handleInput(clientId, msg.payload);
+          joinedRoom.handleInput(
+            clientId,
+            msg.payload,
+            typeof msg.fighterId === "string" ? msg.fighterId : undefined,
+          );
         }
       } catch (err) {
         console.error("[server] message handler error", err);

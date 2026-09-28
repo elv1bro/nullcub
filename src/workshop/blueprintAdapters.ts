@@ -102,12 +102,7 @@ function blockFill(kind: BlueprintDef["parts"][number]["blockKind"]): string {
   }
 }
 
-/** Все части достижимы от головы по undirected links. */
-export function partsConnectedToHead(def: BlueprintDef): boolean {
-  if (def.parts.length <= 1) return true;
-  const headIdx = def.parts.findIndex((p) => p.blockKind === "head");
-  if (headIdx < 0) return false;
-
+function buildAdj(def: BlueprintDef): Map<number, number[]> {
   const adj = new Map<number, number[]>();
   for (let i = 0; i < def.parts.length; i++) adj.set(i, []);
   for (const link of def.links) {
@@ -123,7 +118,13 @@ export function partsConnectedToHead(def: BlueprintDef): boolean {
     adj.get(link.a)!.push(link.b);
     adj.get(link.b)!.push(link.a);
   }
+  return adj;
+}
 
+function reachableFromHead(def: BlueprintDef): Set<number> {
+  const headIdx = def.parts.findIndex((p) => p.blockKind === "head");
+  if (headIdx < 0) return new Set();
+  const adj = buildAdj(def);
   const seen = new Set<number>([headIdx]);
   const queue = [headIdx];
   while (queue.length > 0) {
@@ -134,7 +135,29 @@ export function partsConnectedToHead(def: BlueprintDef): boolean {
       queue.push(next);
     }
   }
-  return seen.size === def.parts.length;
+  return seen;
+}
+
+/** Все части достижимы от головы по undirected links. */
+export function partsConnectedToHead(def: BlueprintDef): boolean {
+  if (def.parts.length <= 1) return true;
+  if (!def.parts.some((p) => p.blockKind === "head")) return false;
+  return reachableFromHead(def).size === def.parts.length;
+}
+
+/** Индексы частей, не достижимых от головы (сироты). */
+export function orphanPartIndices(def: BlueprintDef): number[] {
+  if (def.parts.length === 0) return [];
+  const headIdx = def.parts.findIndex((p) => p.blockKind === "head");
+  if (headIdx < 0) {
+    return def.parts.map((_, i) => i);
+  }
+  const seen = reachableFromHead(def);
+  const orphans: number[] = [];
+  for (let i = 0; i < def.parts.length; i++) {
+    if (!seen.has(i)) orphans.push(i);
+  }
+  return orphans;
 }
 
 export function validateBlueprint(

@@ -12,6 +12,10 @@ export interface NetInputPayload {
   flip: boolean;
   freeze: boolean;
   reset: boolean;
+  /** One-shot: сбросить удерживаемое арена-оружие. */
+  dropWeapon?: boolean;
+  /** One-shot: слот способности лодаута (abilities[0]). */
+  abilitySlot?: boolean;
 }
 
 export interface NetSnapshotPayload {
@@ -74,9 +78,13 @@ export interface NetBattleStatePayload {
   playerHp: number;
   opponentHp: number;
   battleOver: boolean;
-  winner: "player" | "opponent" | null;
+  winner: "player" | "opponent" | string | null;
   playerName: string;
   opponentName: string;
+  /** N бойцов: id → HP. Для 1v1 дублирует playerHp/opponentHp. */
+  hps?: Record<string, number>;
+  /** Победившая команда (если бой командный). */
+  winnerTeam?: number | null;
 }
 
 export const SNAPSHOT_HZ = 25;

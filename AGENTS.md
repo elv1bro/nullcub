@@ -6,8 +6,11 @@
 
 ```bash
 yarn test                 # unit + headless duel/server (~секунды)
+yarn eval:behavior        # JSON-метрики управления/idle/монстров/pace → test-artifacts/behavior-report.json
+yarn test:feel            # те же feel-кейсы через vitest
 yarn smoke:duel           # живой WS 12s: guest не умирает на спавне
-yarn verify:browser:fast  # Puppeteer: меню + quick battle без полного duel
+yarn verify:browser:fast  # Puppeteer: меню + quick + workshop + workshopFight
+yarn verify:feel          # eval:behavior + verify:browser:fast
 ```
 
 Полный контур перед merge:
@@ -18,6 +21,24 @@ yarn verify:game          # test + smoke:duel + verify:browser
 
 Exit code ≠ 0 → **не ок**. Не спрашивай пользователя «вроде работает?» — чини или откатывай.
 
+### Поведение / управление (после патча move/stickman/workshop links)
+
+```bash
+yarn eval:behavior
+```
+
+Читай `test-artifacts/behavior-report.json`: `ok` + список `checks[]` с `value` / `limit`.  
+Не спрашивай «норм ли управление?» — смотри отчёт.
+
+| Симптом | check id |
+|---------|----------|
+| Уползает вбок без ввода | `idle_symmetry_com` |
+| Не падает в idle | `idle_falls` |
+| Влево/вправо разное | `move_lr_balance`, `move_left`, `move_right` |
+| Вверх/вниз не едет | `move_up`, `move_down` |
+| Монстр разваливается | `workshop_integrity` |
+| Бой слишком короткий/длинный | `combat_pace_median_*` |
+
 ## Что уже даёт сигнал «ок / не ок»
 
 | Сигнал | Где | Что ловит |
@@ -25,17 +46,20 @@ Exit code ≠ 0 → **не ок**. Не спрашивай пользовате�
 | Vitest core | `src/core/*.test.ts` | HP, timeout, destroy shared engine, abilities |
 | Vitest combat | `src/lib/combat*.test.ts` | формула урона, knockback, grab rules |
 | Vitest server | `src/server/*.test.ts` | ready→start, input clamp, e2e WS duel |
+| Behavior eval | `yarn eval:behavior` | idle-симметрия, WASD, starters, pace → JSON |
+| Feel QC | `yarn test:feel` | те же кейсы через vitest |
 | Headless AI | `yarn benchmark:ai` | баланс ботов (регрессии winrate) |
 | Duel smoke | `scripts/duel-smoke.mjs` | spawn grace, HP guest, server build id |
-| Browser verify | `scripts/verify-app.mjs` | загрузка, меню, quick battle, e2e harness |
+| Browser verify | `scripts/verify-app.mjs` | меню, quick, workshop, workshopFight |
 | Screenshots | `yarn verify:screenshots` | визуальный diff артефактов в `test-artifacts/` |
 
 ## E2E harness в браузере
 
-`src/dev/e2eHarness.ts` + query `?e2e=menu|quick|workshop`:
+`src/dev/e2eHarness.ts` + query `?e2e=menu|quick|workshop|workshopFight`:
 
 - страница пишет `window.__RAGDOLL_E2E__` с `phase` / `ok` / `fail`
 - `verify-app.mjs` читает это через Puppeteer
+- `workshopFight`: мастерская → Fight → бой стартовал с живым HP
 
 Новый UI-сценарий = новый `e2eMatches(...)` + assert в `verify-app.mjs`.
 

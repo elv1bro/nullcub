@@ -159,11 +159,12 @@ export function BattleRecapOverlay({
   // winner === null при battleOver — двойной нокаут (ничья); экран всё равно нужен.
   const isDraw = battleOver && winner === null;
 
+  // Не глушим бой на KO — во время replay ещё играют музыка и удары.
   useEffect(() => {
-    if (!battleOver) return;
+    if (!battleOver || !showRecap) return;
     stopMusic(700);
     playResultSting(winner === "player" ? "victory" : "defeat");
-  }, [battleOver, winner]);
+  }, [battleOver, showRecap, winner]);
 
   if (!battleOver || !showRecap) return null;
 

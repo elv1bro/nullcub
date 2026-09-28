@@ -12,17 +12,21 @@ function activeTimeScale(store: HitEffectStore, now: number): number {
 }
 
 /** Применяет hit-stop и slow-mo через engine.timing.timeScale (#3, #10). */
-export function useHitEffectClock(storeRef: RefObject<HitEffectStore>): void {
+export function useHitEffectClock(
+  storeRef: RefObject<HitEffectStore>,
+  enabled = true,
+): void {
   const engine = useEngine();
 
   useEngineEvent(
     "beforeUpdate",
     () => {
+      if (!enabled) return;
       const store = storeRef.current;
       if (!store) return;
       engine.timing.timeScale = activeTimeScale(store, performance.now());
     },
-    [engine, storeRef],
+    [engine, storeRef, enabled],
   );
 
   useEffect(() => {

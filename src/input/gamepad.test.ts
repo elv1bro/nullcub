@@ -8,7 +8,7 @@ function mockPad(partial: {
   return {
     axes: partial.axes ?? [0, 0],
     buttons: partial.buttons ?? [],
-  } as Gamepad;
+  } as unknown as Gamepad;
 }
 
 afterEach(() => {

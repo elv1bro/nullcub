@@ -1,6 +1,8 @@
+import { BattleSpaceBg } from "@/components/BattleSpaceBg";
 import { Renderer } from "@/components/Renderer";
 import { Viewport } from "@/components/Viewport";
 import { FighterAIController } from "@/battle/FighterAIController";
+import { RosterBattleOverlay } from "@/battle/RosterBattleOverlay";
 import { spawnRoster, rosterBodies, rosterComposites } from "@/battle/spawnRoster";
 import { useRosterHealth } from "@/battle/useRosterHealth";
 import { useFighterMovement } from "@/battle/useFighterMovement";
@@ -161,14 +163,20 @@ export default function BattleLocal4FFA() {
             Winner: {live.find((f) => f.id === winnerId)?.name}
           </div>
         )}
+        <BattleSpaceBg />
         <Viewport protagonists={protagonists} />
-        <SurroundingWalls thick={SIZE} bounds={BOUNDS} options={{ render: { fillStyle: "#333" } }} />
+        <SurroundingWalls
+          thick={SIZE}
+          bounds={BOUNDS}
+          options={{ render: { fillStyle: "#1c2430" } }}
+        />
         {live.map((f) => (
           <Composite.add key={f.composite.id} object={f.composite} />
         ))}
         {itemCompositesRef.current.map((item) => (
           <Composite.add key={item.id} object={item} />
         ))}
+        {live.length > 0 && <RosterBattleOverlay fighters={live} />}
         {live.map((f) => (
           <FighterController
             key={f.id}

@@ -1,5 +1,6 @@
 import type { Language } from "@/i18n/types";
 import type { FighterColors } from "@/lib/fighterColors";
+import { OPPONENT_MAX_HP } from "@/lib/combat";
 
 export type BouncerChapterId =
   | "bard"
@@ -46,9 +47,9 @@ export const BOUNCER_CHAPTERS: BouncerChapter[] = [
     enemy: {
       name: { ru: "Бард", en: "Bard" },
       scale: 1,
-      hp: 60,
+      hp: OPPONENT_MAX_HP,
       colors: { main: "#78716c", secondary: "#57534e" },
-      aiSpeedMult: 0.75,
+      aiSpeedMult: 0.9,
     },
   },
   {
@@ -65,8 +66,8 @@ export const BOUNCER_CHAPTERS: BouncerChapter[] = [
     },
     enemy: {
       name: { ru: "Рыцарь", en: "Knight" },
-      scale: 1.15,
-      hp: 140,
+      scale: 1.05,
+      hp: 1100,
       colors: { main: "#64748b", secondary: "#475569" },
       aiSpeedMult: 1,
     },
@@ -85,10 +86,10 @@ export const BOUNCER_CHAPTERS: BouncerChapter[] = [
     },
     enemy: {
       name: { ru: "Халявщик", en: "Freeloader" },
-      scale: 0.85,
-      hp: 90,
+      scale: 0.95,
+      hp: 1200,
       colors: { main: "#a3e635", secondary: "#65a30d" },
-      aiSpeedMult: 1.35,
+      aiSpeedMult: 1.05,
     },
   },
   {
@@ -106,9 +107,9 @@ export const BOUNCER_CHAPTERS: BouncerChapter[] = [
     enemy: {
       name: { ru: "Торговец", en: "Merchant" },
       scale: 1,
-      hp: 120,
+      hp: 1300,
       colors: { main: "#eab308", secondary: "#ca8a04" },
-      aiSpeedMult: 1.1,
+      aiSpeedMult: 1,
     },
   },
   {
@@ -125,8 +126,8 @@ export const BOUNCER_CHAPTERS: BouncerChapter[] = [
     },
     enemy: {
       name: { ru: "Капитан", en: "Captain" },
-      scale: 1.2,
-      hp: 180,
+      scale: 1.08,
+      hp: 1450,
       colors: { main: "#0ea5e9", secondary: "#0369a1" },
       aiSpeedMult: 1.05,
     },
@@ -145,10 +146,10 @@ export const BOUNCER_CHAPTERS: BouncerChapter[] = [
     },
     enemy: {
       name: { ru: "Трактирщик", en: "Innkeeper" },
-      scale: 1.3,
-      hp: 250,
+      scale: 1.12,
+      hp: 1600,
       colors: { main: "#92400e", secondary: "#78350f" },
-      aiSpeedMult: 1.15,
+      aiSpeedMult: 1.08,
     },
   },
 ];

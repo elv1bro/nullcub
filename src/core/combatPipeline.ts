@@ -19,6 +19,7 @@ import {
 } from "@/lib/grab/rules";
 import { getDamageType } from "@/items/damageTypes";
 import { computeDisarmChance, rollDisarm } from "@/items/disarm";
+import { filterFriendlyWeaponDamage } from "@/items/resolveWeaponHit";
 import { items } from "@/items/registry";
 import { isKnockoutFromLethalHit } from "@/lib/knockoutDetect";
 import { moveBody } from "@/lib/moveBody";
@@ -165,19 +166,76 @@ export function handleFighterCollision(
 
   const rawHit = computeDamage(bodyA, bodyB);
   const filteredGrab = filterGrabDamage(compositeA, compositeB, rawHit, grabCtx);
+  const fighterA = fighters.find((f) => f.composite.id === compositeA);
+  const fighterB = fighters.find((f) => f.composite.id === compositeB);
+  /** Владелец оружия (если тело — предмет в руках) или боец composite. */
+  const fighterOfBody = (
+    body: Body,
+    byComposite: typeof fighterA,
+  ): typeof fighterA => {
+    const ownerId = (body.plugin as { ownerFighterId?: string } | undefined)
+      ?.ownerFighterId;
+    if (ownerId) {
+      const owned = fighters.find((f) => f.id === ownerId);
+      if (owned) return owned;
+    }
+    return byComposite;
+  };
+  const atkFromA = fighterOfBody(bodyA, fighterA);
+  const atkFromB = fighterOfBody(bodyB, fighterB);
+  const filteredFriendly = filterFriendlyWeaponDamage(
+    bodyA,
+    bodyB,
+    atkFromA?.id ?? fighterA?.id,
+    atkFromB?.id ?? fighterB?.id,
+    filteredGrab.damageA,
+    filteredGrab.damageB,
+  );
+
+  // Пассивы лодаута: atk / crit исходящего урона; headDef входящего в голову.
+  const scaleOutgoing = (
+    dmg: number,
+    aggressor: typeof fighterA,
+    victimBody: Body,
+    victim: typeof fighterA,
+  ) => {
+    if (dmg <= 0 || !aggressor) return dmg;
+    let next = dmg * (aggressor.loadoutMods?.atkMult ?? 1);
+    const crit = aggressor.loadoutMods?.critChance ?? 0;
+    if (crit > 0 && rng() < crit) next *= 2;
+    if (
+      victimBody.label === "Head" &&
+      victim?.loadoutMods?.headDefBonus
+    ) {
+      next *= 1 - Math.min(0.6, victim.loadoutMods.headDefBonus);
+    }
+    return next;
+  };
+  const scaledFriendly = {
+    damageA: scaleOutgoing(
+      filteredFriendly.damageA,
+      atkFromB,
+      bodyA,
+      fighterA,
+    ),
+    damageB: scaleOutgoing(
+      filteredFriendly.damageB,
+      atkFromA,
+      bodyB,
+      fighterB,
+    ),
+  };
+
   const result = filterDamageFromDeadAggressors(
     compositeA,
     compositeB,
-    filteredGrab.damageA,
-    filteredGrab.damageB,
+    scaledFriendly.damageA,
+    scaledFriendly.damageB,
     tradeOpts,
   );
   if (result.damageA <= 0 && result.damageB <= 0) return;
 
   pipeline.pairCooldown.set(fighterKey, now + FIGHTER_HIT_COOLDOWN_MS);
-
-  const fighterA = fighters.find((f) => f.composite.id === compositeA);
-  const fighterB = fighters.find((f) => f.composite.id === compositeB);
 
   const dmgA = applyDamageToComposite(
     compositeA,
@@ -202,12 +260,18 @@ export function handleFighterCollision(
     if (!fighter) return;
 
     // Предмет в руках помечен ownerFighterId (tagItemOwner при захвате).
-    const held = allComposites.find((c) =>
-      c.bodies.some(
-        (b) =>
-          (b.plugin as { ownerFighterId?: string } | undefined)
-            ?.ownerFighterId === fighter.id,
-      ),
+    const ownedBy = (b: { plugin?: unknown }) =>
+      (b.plugin as { ownerFighterId?: string } | undefined)?.ownerFighterId ===
+      fighter.id;
+    const held = allComposites.find(
+      (c) =>
+        c.bodies.some(ownedBy) ||
+        c.bodies.some(
+          (b) =>
+            b.parts &&
+            b.parts.length > 1 &&
+            b.parts.some((p) => p !== b && ownedBy(p)),
+        ),
     );
     if (!held) return;
 
@@ -234,10 +298,13 @@ export function handleFighterCollision(
   tryDisarm(compositeA, dmgA);
   tryDisarm(compositeB, dmgB);
 
+  // Для FX: composite оружия → composite владельца (цвета / сторона).
+  const fxComposite = (body: Body, compositeId: number): number =>
+    fighterOfBody(body, undefined)?.composite.id ?? compositeId;
   const parties = resolveHitParties(
     { ...rawHit, damageA: dmgA, damageB: dmgB },
-    compositeA,
-    compositeB,
+    fxComposite(bodyA, compositeA),
+    fxComposite(bodyB, compositeB),
     fxConfig,
   );
 
@@ -303,8 +370,18 @@ export function handleFighterCollision(
     });
   };
 
-  pushImpact(bodyA, compositeA, knockback.impulseA);
-  pushImpact(bodyB, compositeB, knockback.impulseB);
+  const kbOutA = fighterA?.loadoutMods?.knockbackOutMult ?? 1;
+  const kbOutB = fighterB?.loadoutMods?.knockbackOutMult ?? 1;
+  pushImpact(
+    bodyA,
+    compositeA,
+    Vector.mult(knockback.impulseA, kbOutB),
+  );
+  pushImpact(
+    bodyB,
+    compositeB,
+    Vector.mult(knockback.impulseB, kbOutA),
+  );
 }
 
 export function tickKnockbackImpacts(

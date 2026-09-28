@@ -68,7 +68,7 @@ export function resolveBattleOpponent(
   if (config.kind === "campaign") {
     const chapter = getBouncerChapter(config.chapterId);
     if (!chapter) {
-      return defaultQuickOpponent(spawnX, spawnY, language);
+      return defaultQuickOpponent(spawnX, spawnY, language, undefined);
     }
 
     const { avatarFaceId, colors } = botAppearanceFromSeed(
@@ -86,7 +86,8 @@ export function resolveBattleOpponent(
       composite,
       headLabel: "Head",
       name: pickL10n(chapter.enemy.name, language),
-      maxHp: chapter.enemy.hp,
+      // База как у игрока; дальше по главам chapter.enemy.hp чуть растёт.
+      maxHp: Math.max(OPPONENT_MAX_HP, chapter.enemy.hp),
       colors,
       avatarFaceId,
       aiSpeedMult: profile.speedMult,
@@ -131,13 +132,13 @@ export function resolveBattleOpponent(
   if (config.kind === "monster") {
     const raw = getMonster(config.monsterId);
     if (!raw) {
-      return defaultQuickOpponent(spawnX, spawnY, language);
+      return defaultQuickOpponent(spawnX, spawnY, language, undefined);
     }
 
     const def = normalizeMonsterDef(raw);
     const built = buildMonster(def, spawnX, spawnY);
     if (!built) {
-      return defaultQuickOpponent(spawnX, spawnY, language);
+      return defaultQuickOpponent(spawnX, spawnY, language, undefined);
     }
 
     settleComposite(built.composite);
@@ -158,13 +159,43 @@ export function resolveBattleOpponent(
     };
   }
 
-  return defaultQuickOpponent(spawnX, spawnY, language);
+  if (config.kind === "roguelike") {
+    const profile = getAiProfile(config.difficulty);
+    const { avatarFaceId, colors } = botAppearanceFromSeed(
+      `rl-f${config.floor}-b${config.bots}`,
+    );
+    const composite = createStickman(spawnX, spawnY, {
+      scale: config.difficulty === "boss" ? 1.15 : 1,
+      render: { fillStyle: colors.main },
+    });
+    const hpScale =
+      1 + (config.floor - 1) * 0.12 + Math.max(0, config.bots - 2) * 0.08;
+    return {
+      composite,
+      headLabel: "Head",
+      name:
+        language === "ru"
+          ? `Рогалик · этаж ${config.floor}`
+          : `Roguelike · floor ${config.floor}`,
+      maxHp: Math.round(OPPONENT_MAX_HP * hpScale),
+      colors,
+      avatarFaceId,
+      aiSpeedMult: profile.speedMult,
+      aiProfile: profile,
+      isMonster: false,
+    };
+  }
+
+  const quickHp =
+    config.kind === "quick" ? config.opponentHp : undefined;
+  return defaultQuickOpponent(spawnX, spawnY, language, quickHp);
 }
 
 function defaultQuickOpponent(
   spawnX: number,
   spawnY: number,
   language: Language,
+  opponentHp: number | undefined,
 ): OpponentSpec {
   const profile = getAiProfile("normal");
   const { avatarFaceId, colors } = botAppearanceFromSeed("quick-opponent");
@@ -177,7 +208,7 @@ function defaultQuickOpponent(
     composite,
     headLabel: "Head",
     name: language === "ru" ? "БОТ-РЭГДОЛЛ" : "RAGDOLL BOT",
-    maxHp: OPPONENT_MAX_HP,
+    maxHp: Math.max(1, Math.round(opponentHp ?? OPPONENT_MAX_HP)),
     colors,
     avatarFaceId,
     aiSpeedMult: profile.speedMult,

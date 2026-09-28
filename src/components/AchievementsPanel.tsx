@@ -1,4 +1,4 @@
-import { MEDALS, MEDAL_BY_ID } from "@/lib/achievements";
+import { MEDALS, MEDAL_BY_ID, computePlayerLevel } from "@/lib/achievements";
 import { medalProgressRatio } from "@/lib/achievements/medalProgress";
 import { useAchievements } from "@/achievements/AchievementsContext";
 import { useTranslation } from "@/settings/SettingsContext";
@@ -24,9 +24,36 @@ export function AchievementsPanel({ embedded }: Props) {
   const overallProgress = MEDALS.length
     ? (unlockedKinds / MEDALS.length) * 100
     : 0;
+  const level = computePlayerLevel(stats);
 
   const inner = (
     <>
+      <div className="menu-level-banner">
+        <div className="menu-level-banner__main">
+          <span className="menu-level-banner__level font-display">
+            {t.achievements.level} {level.level}
+          </span>
+          <span className="menu-level-banner__rank font-ui">
+            {t.ranks[level.titleId]}
+          </span>
+        </div>
+        <p className="menu-level-banner__xp font-ui">
+          {t.achievements.xpToNext(level.xpIntoLevel, level.xpForNext)}
+        </p>
+        <div
+          className="menu-level-banner__bar"
+          role="progressbar"
+          aria-valuenow={Math.round(level.progress * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="menu-level-banner__fill"
+            style={{ width: `${Math.round(level.progress * 100)}%` }}
+          />
+        </div>
+      </div>
+
       <div className="menu-stats-bar">
         <div className="menu-stats-bar__item">
           <span className="menu-stats-bar__value font-display text-cyan-300">

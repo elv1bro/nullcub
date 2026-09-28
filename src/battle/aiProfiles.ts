@@ -127,11 +127,11 @@ export function getAiProfile(id: AiDifficultyId): AiProfile {
   return AI_PROFILES[id];
 }
 
-/** Главы кампании → пресет сложности. */
+/** Главы кампании → пресет сложности (плавный рост, не hard со 2-й главы). */
 export function campaignAiProfile(chapterOrder: number): AiProfile {
   if (chapterOrder <= 0) return AI_PROFILES.easy;
-  if (chapterOrder === 1) return AI_PROFILES.normal;
-  if (chapterOrder <= 3) return AI_PROFILES.hard;
+  if (chapterOrder <= 2) return AI_PROFILES.normal;
+  if (chapterOrder <= 4) return AI_PROFILES.hard;
   return AI_PROFILES.boss;
 }
 

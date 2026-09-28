@@ -1,7 +1,7 @@
 import type Matter from "matter-js";
 import { chainAnchors, chainSegments, type MenuChainSet } from "@/lib/menuChains";
 import type { EscapeQuip } from "@/lib/menuEscapeQuips";
-import { worldToCanvas } from "./worldToCanvas";
+import { renderCssSize, worldToCanvas } from "./worldToCanvas";
 
 interface TitleOpts {
   line1: string;
@@ -16,13 +16,14 @@ export function drawMenuArenaTitle(
   opts: TitleOpts,
   now: number,
 ): void {
-  const { canvas, bounds } = render;
+  const { bounds } = render;
+  const { width } = renderCssSize(render);
   const cx = (bounds.min.x + bounds.max.x) / 2;
   const topY = bounds.min.y + (bounds.max.y - bounds.min.y) * 0.06;
   const bob = Math.sin(now / 900) * 4;
   const { x, y, scale } = worldToCanvas(render, { x: cx, y: topY + bob });
 
-  const line1Size = Math.max(22, Math.min(36, canvas.width * 0.032 * scale));
+  const line1Size = Math.max(22, Math.min(36, width * 0.032 * scale));
   const line2Size = line1Size * 1.15;
   const gap = line1Size * 0.55;
 

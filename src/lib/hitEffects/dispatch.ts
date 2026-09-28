@@ -5,7 +5,9 @@ import type { FighterSide } from "@/lib/useHealth";
 import { comboLabel, updateCombo } from "./comboAnnouncer";
 import {
   COMBO_WINDOW_MS,
+  FINISHER_MS,
   HEAVY_DAMAGE,
+  IMPACT_FRAME_MS,
   MEDIUM_DAMAGE,
   type GroundShockwave,
   type HitEffectStore,
@@ -103,8 +105,12 @@ export function dispatchHitEffects(
     damage >= HEAVY_DAMAGE ? 0.42 : damage >= MEDIUM_DAMAGE ? 0.22 : 0.12;
   addFlash(store, ctx.aggressorColor, flashAlpha, damage >= HEAVY_DAMAGE ? 90 : 55, now);
 
-  // #3 Hit stop + #10 Slow-mo на тяжёлых
+  // Impact frames (ч/б-негатив) на тяжёлых — без punch-zoom камеры (дёргает lookAt).
   if (damage >= HEAVY_DAMAGE) {
+    store.impactInvertUntil = Math.max(
+      store.impactInvertUntil,
+      now + IMPACT_FRAME_MS,
+    );
     scheduleTimeFx(store, 0, now, HIT_STOP_MS);
     scheduleTimeFx(store, SLOW_MO_SCALE, now + HIT_STOP_MS, SLOW_MO_MS);
   } else if (damage >= MEDIUM_DAMAGE * 1.4) {
@@ -120,25 +126,59 @@ export function dispatchHitEffects(
     playComboSound();
   }
 
+  // Crowd meter lite: на ×5 сыплем искры
+  if (combo > 0 && combo % 5 === 0) {
+    store.comboSparks.push({
+      x: ctx.contactX,
+      y: ctx.contactY,
+      born: now,
+      color: ctx.aggressorColors.main,
+      secondary: ctx.aggressorColors.secondary,
+      power: Math.min(1, 0.55 + combo * 0.06),
+    });
+    if (store.comboSparks.length > 8) {
+      store.comboSparks.splice(0, store.comboSparks.length - 8);
+    }
+    addFlash(store, "#fff7ed", 0.2, 70, now);
+    addShake(store, 5, 160, now);
+  }
+
   if (store.combo && now - store.combo.lastHitAt > COMBO_WINDOW_MS) {
     store.combo = null;
   }
 }
 
-/** Finisher-камера при нокауте (#12). */
+/** Finisher-камера + вспышка при нокауте (#12). */
 export function dispatchKnockoutEffects(
   store: HitEffectStore,
   _winner: FighterSide,
-  _focusX: number,
-  _focusY: number,
+  focusX: number,
+  focusY: number,
   _language: Language,
   _slot: number,
   now: number,
   _winnerColors: FighterColors,
 ): void {
-  store.finisher = null;
-  addShake(store, 8, 400, now);
-  addFlash(store, "#ffffff", 0.35, 80, now);
+  store.finisher = {
+    active: true,
+    until: now + FINISHER_MS,
+    focusX,
+    focusY,
+    zoom: 0.48,
+  };
+  store.impactInvertUntil = Math.max(store.impactInvertUntil, now + 110);
+  scheduleTimeFx(store, 0, now, 140);
+  scheduleTimeFx(store, 0.28, now + 140, 520);
+  addShake(store, 14, 700, now);
+  addFlash(store, "#ffffff", 0.55, 120, now);
+  store.comboSparks.push({
+    x: focusX,
+    y: focusY,
+    born: now,
+    color: _winnerColors.main,
+    secondary: _winnerColors.secondary,
+    power: 1,
+  });
 }
 
 /** Лёгкий juice при разлёте частей на KO. */

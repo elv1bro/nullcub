@@ -15,7 +15,8 @@ export function clampMove(input: unknown): NetInputPayload {
   const raw = input as Partial<NetInputPayload> & {
     move?: { x?: unknown; y?: unknown };
   };
-  const move = raw.move && typeof raw.move === "object" ? raw.move : {};
+  const move: { x?: unknown; y?: unknown } =
+    raw.move && typeof raw.move === "object" ? raw.move : {};
   return {
     seq: typeof raw.seq === "number" && Number.isFinite(raw.seq) ? raw.seq : 0,
     t: typeof raw.t === "number" && Number.isFinite(raw.t) ? raw.t : 0,
@@ -26,6 +27,8 @@ export function clampMove(input: unknown): NetInputPayload {
     reset: Boolean(raw.reset),
     grabL: Boolean(raw.grabL),
     grabR: Boolean(raw.grabR),
+    dropWeapon: Boolean(raw.dropWeapon),
+    abilitySlot: Boolean(raw.abilitySlot),
   };
 }
 

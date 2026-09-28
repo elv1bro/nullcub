@@ -75,6 +75,8 @@ export function usePlayerAbilities(
       flip: boolean;
       freeze: boolean;
       reset: boolean;
+      dropWeapon: boolean;
+      abilitySlot: boolean;
     }>;
     /** Индекс геймпада (0 = первый). null/undefined = только клавиатура. */
     gamepadIndex?: number | null;
@@ -91,6 +93,8 @@ export function usePlayerAbilities(
   });
   const gamepadBtnPrevRef = useRef<boolean[]>([]);
 
+  const dropWeaponQueuedRef = useRef(false);
+  const abilitySlotQueuedRef = useRef(false);
   const lastDashRef = useRef(0);
   const dashActiveUntilRef = useRef(0);
   const lastFlipRef = useRef(0);
@@ -157,6 +161,14 @@ export function usePlayerAbilities(
       if (keyEventMatches(abilities.reset, e)) {
         e.preventDefault();
         resetQueuedRef.current = true;
+      }
+      if (keyEventMatches(abilities.dropWeapon, e)) {
+        e.preventDefault();
+        dropWeaponQueuedRef.current = true;
+      }
+      if (keyEventMatches(abilities.slot4, e)) {
+        e.preventDefault();
+        abilitySlotQueuedRef.current = true;
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -227,6 +239,8 @@ export function usePlayerAbilities(
 
       let dash = false;
       let flip = false;
+      let dropWeapon = false;
+      let abilitySlot = false;
       let freeze = false;
       let reset = false;
 
@@ -282,11 +296,22 @@ export function usePlayerAbilities(
         }
       }
 
+      if (dropWeaponQueuedRef.current) {
+        dropWeaponQueuedRef.current = false;
+        dropWeapon = true;
+      }
+      if (abilitySlotQueuedRef.current) {
+        abilitySlotQueuedRef.current = false;
+        abilitySlot = true;
+      }
+
       // Sticky until useCoreInputBridge / DedicatedBattleView consume (one-shot).
       options.abilityFlagsOut!.current.dash ||= dash;
       options.abilityFlagsOut!.current.flip ||= flip;
       options.abilityFlagsOut!.current.freeze ||= freeze;
       options.abilityFlagsOut!.current.reset ||= reset;
+      options.abilityFlagsOut!.current.dropWeapon ||= dropWeapon;
+      options.abilityFlagsOut!.current.abilitySlot ||= abilitySlot;
     };
     // Сразу + каждый кадр: без 30Hz задержки dash/flip после keydown.
     flush();

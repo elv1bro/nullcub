@@ -20,11 +20,9 @@ export class WsNetTransport implements NetTransport {
   private hitHandlers = new Set<Handler<NetHitPayload>>();
   private battleStateHandlers = new Set<Handler<NetBattleStatePayload>>();
   private lobbyHandlers = new Set<Handler<WsLobbyPlayer[]>>();
-  private startHandlers = new Set<Handler<void>>();
+  private startHandlers = new Set<Handler<string[] | undefined>>();
   private closeHandlers = new Set<(code: number, reason: string) => void>();
-  private opponentLeftHandlers = new Set<
-    Handler<{ role: "player" | "opponent" }>
-  >();
+  private opponentLeftHandlers = new Set<Handler<{ role: string }>>();
 
   constructor(
     url: string,
@@ -47,7 +45,7 @@ export class WsNetTransport implements NetTransport {
           for (const h of this.lobbyHandlers) h(msg.players);
           break;
         case "start":
-          for (const h of this.startHandlers) h(undefined);
+          for (const h of this.startHandlers) h(msg.fighterIds);
           break;
         case "snapshot":
           for (const h of this.snapshotHandlers) h(msg.payload);
@@ -98,13 +96,32 @@ export class WsNetTransport implements NetTransport {
     return () => this.lobbyHandlers.delete(handler);
   }
 
-  onStart(handler: () => void): () => void {
+  onStart(handler: (fighterIds?: string[]) => void): () => void {
     this.startHandlers.add(handler);
     return () => this.startHandlers.delete(handler);
   }
 
-  sendInput(payload: NetInputPayload): void {
-    this.send({ type: "input", payload });
+  sendInput(payload: NetInputPayload, fighterId?: string): void {
+    this.send(
+      fighterId
+        ? { type: "input", payload, fighterId }
+        : { type: "input", payload },
+    );
+  }
+
+  claimLocal(name: string): void {
+    this.send({ type: "claimLocal", name });
+  }
+
+  releaseLocal(fighterId: string): void {
+    this.send({ type: "releaseLocal", fighterId });
+  }
+
+  setBattleMode(
+    mode: "ffa" | "partyBots",
+    difficulty?: "easy" | "normal" | "hard" | "boss",
+  ): void {
+    this.send({ type: "battleMode", mode, difficulty });
   }
 
   sendSnapshot(payload: NetSnapshotPayload): void {
@@ -144,9 +161,7 @@ export class WsNetTransport implements NetTransport {
     return () => this.closeHandlers.delete(handler);
   }
 
-  onOpponentLeft(
-    handler: Handler<{ role: "player" | "opponent" }>,
-  ): () => void {
+  onOpponentLeft(handler: Handler<{ role: string }>): () => void {
     this.opponentLeftHandlers.add(handler);
     return () => this.opponentLeftHandlers.delete(handler);
   }

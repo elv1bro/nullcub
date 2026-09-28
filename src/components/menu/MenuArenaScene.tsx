@@ -72,6 +72,8 @@ export function MenuArenaScene({ playPhase, playRunId, chainsBroken }: Props) {
   const prevBrokenRef = useRef(0);
   const chainsBrokenRef = useRef(chainsBroken);
   chainsBrokenRef.current = chainsBroken;
+  const playPhaseRef = useRef(playPhase);
+  playPhaseRef.current = playPhase;
   const menuPoseSnapRef = useRef<PoseSnapshot | null>(null);
 
   const spawnX = MENU_ARENA_W * 0.28;
@@ -93,11 +95,8 @@ export function MenuArenaScene({ playPhase, playRunId, chainsBroken }: Props) {
     chainSetRef.current = createMenuChains(p, spawnX, spawnY);
     syncMenuChains(chainSetRef.current, p, chainsBrokenRef.current);
     prevBrokenRef.current = chainsBrokenRef.current;
-    if (chainsBrokenRef.current >= 2) {
-      menuPoseSnapRef.current = capturePoseSnapshot(p);
-    } else {
-      menuPoseSnapRef.current = null;
-    }
+    // Сразу фиксируем позу — иначе на home ragdoll крутится без смысла.
+    menuPoseSnapRef.current = capturePoseSnapshot(p);
     setPlayer(p);
 
     return () => {
@@ -105,12 +104,37 @@ export function MenuArenaScene({ playPhase, playRunId, chainsBroken }: Props) {
       setPlayer(undefined);
       playerHeadRef.current = undefined;
       chainSetRef.current = null;
+      menuPoseSnapRef.current = null;
     };
   }, [engine, spawnX, spawnY]);
 
   useEffect(() => {
     prevBrokenRef.current = 0;
   }, [playRunId]);
+
+  // Idle / возврат домой: короткая усадка → свежий снимок стойки.
+      // Partial: отпускаем позу, чтобы рывок с цепью был живым.
+  useEffect(() => {
+    if (!player) return;
+    if (playPhase === "partial") {
+      menuPoseSnapRef.current = null;
+      return;
+    }
+    zeroMenuRagdollVelocities(player);
+    let frames = 0;
+    let raf = 0;
+    const settle = () => {
+      frames += 1;
+      zeroMenuRagdollVelocities(player);
+      if (frames < 18) {
+        raf = requestAnimationFrame(settle);
+        return;
+      }
+      menuPoseSnapRef.current = capturePoseSnapshot(player);
+    };
+    raf = requestAnimationFrame(settle);
+    return () => cancelAnimationFrame(raf);
+  }, [player, playPhase, playRunId]);
 
   useEffect(() => {
     if (!player) return;
@@ -166,21 +190,35 @@ export function MenuArenaScene({ playPhase, playRunId, chainsBroken }: Props) {
     if (chainsBroken >= 2 && player) {
       zeroMenuRagdollVelocities(player);
       menuPoseSnapRef.current = capturePoseSnapshot(player);
-    } else if (chainsBroken < 2) {
-      menuPoseSnapRef.current = null;
     }
+    // chainsBroken < 2 на home (idle) — позу держит отдельный idle-settle effect.
+    // В partial snap уже сброшен через playPhase.
 
     prevBrokenRef.current = chainsBroken;
   }, [chainsBroken, player, settings.language]);
 
   useEventBeforeUpdate(
     () => {
-      if (chainsBrokenRef.current < 2 || !player) return;
+      if (!player) return;
+      // В partial — живая физика (одна цепь). Иначе держим витрину бойца.
+      if (playPhaseRef.current === "partial") return;
       const snap = menuPoseSnapRef.current;
       if (!snap) return;
       holdPoseSnapshot(player, snap);
+
+      if (playPhaseRef.current !== "idle") return;
+      const head = playerHeadRef.current;
+      if (!head) return;
+      // Лёгкое покачивание — «живой», но не кувырок.
+      const sway = Math.sin(performance.now() / 1400) * 5;
+      const targetX = spawnX + sway;
+      Body.translate(head, {
+        x: (targetX - head.position.x) * 0.04,
+        y: 0,
+      });
+      Body.setAngularVelocity(head, head.angularVelocity * 0.85);
     },
-    [player],
+    [player, spawnX],
   );
 
   useEffect(() => {

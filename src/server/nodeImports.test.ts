@@ -13,6 +13,8 @@ describe("server node imports", () => {
     expect(walls.bodies).toHaveLength(4);
   });
 
+  // Поднимает отдельный процесс с холодным стартом tsx — под параллельной
+  // нагрузкой остальных тестов это заметно дольше дефолтных 5с.
   it("tsx server entry loads without matter-js named export errors", () =>
     new Promise<void>((resolve, reject) => {
       const proc = spawn(
@@ -46,5 +48,5 @@ describe("server node imports", () => {
         }
         resolve();
       });
-    }));
+    }), 30_000);
 });

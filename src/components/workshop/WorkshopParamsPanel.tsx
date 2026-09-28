@@ -1,8 +1,3 @@
-import {
-  LINK_COLORS,
-  LINK_TYPE_ORDER,
-  type MonsterLinkType,
-} from "@/monster/linkTypes";
 import type { BlueprintMeta, WorkshopKind } from "@/workshop/blueprintTypes";
 import type { LocaleStrings } from "@/i18n/types";
 
@@ -15,8 +10,6 @@ type Props = {
   namePlaceholder: string;
   meta: BlueprintMeta;
   onMetaChange: (patch: Partial<BlueprintMeta>) => void;
-  linkType: MonsterLinkType;
-  onLinkTypeChange: (type: MonsterLinkType) => void;
   physicsPreview: boolean;
   disabled?: boolean;
 };
@@ -37,8 +30,6 @@ export function WorkshopParamsPanel({
   namePlaceholder,
   meta,
   onMetaChange,
-  linkType,
-  onLinkTypeChange,
   physicsPreview,
   disabled,
 }: Props) {
@@ -46,12 +37,6 @@ export function WorkshopParamsPanel({
     if (kind === "monster") return t.kindMonster;
     if (kind === "item") return t.kindItem;
     return t.kindArena;
-  };
-
-  const linkLabel = (type: MonsterLinkType) => {
-    if (type === "rigid") return t.linkRigid;
-    if (type === "spring") return t.linkSpring;
-    return t.linkRope;
   };
 
   return (
@@ -86,24 +71,32 @@ export function WorkshopParamsPanel({
       {workshopKind === "monster" && (
         <div className="ws-stats-compact">
           <label className="ws-stat-row">
-            <span className="ws-stat-row__icon" style={{ color: "#f87171" }}>♥</span>
+            <span className="ws-stat-row__icon" style={{ color: "#f87171" }}>
+              ♥
+            </span>
             <span className="ws-stat-row__label">{t.statHp}</span>
             <input
               type="range"
               className="ws-stat-row__slider"
-              min={40} max={10000} step={20}
+              min={40}
+              max={10000}
+              step={20}
               value={meta.maxHp ?? 200}
               onChange={(e) => onMetaChange({ maxHp: Number(e.target.value) })}
             />
             <span className="ws-stat-row__val">{meta.maxHp ?? 200}</span>
           </label>
           <label className="ws-stat-row">
-            <span className="ws-stat-row__icon" style={{ color: "#60a5fa" }}>🛡</span>
+            <span className="ws-stat-row__icon" style={{ color: "#60a5fa" }}>
+              🛡
+            </span>
             <span className="ws-stat-row__label">{t.statDefense}</span>
             <input
               type="range"
               className="ws-stat-row__slider"
-              min={0} max={80} step={1}
+              min={0}
+              max={80}
+              step={1}
               value={meta.defense ?? 0}
               onChange={(e) => onMetaChange({ defense: Number(e.target.value) })}
             />
@@ -119,7 +112,11 @@ export function WorkshopParamsPanel({
             <select
               className="ws-stat-row__select"
               value={meta.damageType ?? "blunt"}
-              onChange={(e) => onMetaChange({ damageType: e.target.value })}
+              onChange={(e) =>
+                onMetaChange({
+                  damageType: e.target.value as BlueprintMeta["damageType"],
+                })
+              }
               disabled={physicsPreview}
             >
               <option value="blunt">{t.damageBlunt}</option>
@@ -129,15 +126,19 @@ export function WorkshopParamsPanel({
             </select>
           </label>
           <label className="ws-stat-row">
-            <span className="ws-stat-row__label">ATK ×</span>
+            <span className="ws-stat-row__label">{t.itemAtk}</span>
             <input
-              className="ws-stat-row__num"
-              type="number"
-              min={0.5} max={3} step={0.05}
+              type="range"
+              className="ws-stat-row__slider"
+              min={0.5}
+              max={3}
+              step={0.1}
               value={meta.atkMult ?? 1}
               onChange={(e) => onMetaChange({ atkMult: Number(e.target.value) })}
-              disabled={physicsPreview}
             />
+            <span className="ws-stat-row__val">
+              {(meta.atkMult ?? 1).toFixed(1)}×
+            </span>
           </label>
         </div>
       )}
@@ -155,34 +156,6 @@ export function WorkshopParamsPanel({
           </label>
         </div>
       )}
-
-      <div className="ws-link-pills">
-        <span className="ws-link-pills__label">{t.linkType}</span>
-        <div className="ws-link-pills__row">
-          {LINK_TYPE_ORDER.map((type) => (
-            <button
-              key={type}
-              type="button"
-              className={[
-                "ws-link-pill",
-                linkType === type ? "ws-link-pill--active" : "",
-              ].join(" ")}
-              style={
-                linkType === type
-                  ? { borderColor: LINK_COLORS[type], color: LINK_COLORS[type] }
-                  : undefined
-              }
-              onClick={() => onLinkTypeChange(type)}
-              disabled={physicsPreview}
-            >
-              {linkLabel(type)}
-            </button>
-          ))}
-        </div>
-        <p className="ws-link-pills__hint text-xs text-gray-500 mt-2 leading-snug">
-          {t.linkHint}
-        </p>
-      </div>
     </div>
   );
 }

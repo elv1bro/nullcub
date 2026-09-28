@@ -1,10 +1,9 @@
 import "./damageTypes";
 import { items } from "./registry";
 import {
-  chainFlailDef,
-  fryingPanDef,
-  spearDef,
-  torchDef,
+  DEFAULT_ARENA_WEAPON_IDS,
+  WEAPON_CATALOG,
+  WEAPON_CATALOG_IDS,
 } from "./defs";
 import { buildItem } from "./buildItem";
 import { blueprintToItemDef } from "@/workshop/blueprintAdapters";
@@ -16,11 +15,18 @@ export * from "./damageTypes";
 export * from "./buildItem";
 export * from "./disarm";
 export * from "./resolveWeaponHit";
+export * from "./weaponHold";
+export * from "./weaponL10n";
+export {
+  WEAPON_CATALOG,
+  WEAPON_CATALOG_IDS,
+  DEFAULT_ARENA_WEAPON_IDS,
+  LEGACY_WEAPON_IDS,
+} from "./defs";
 
-items.register(fryingPanDef);
-items.register(spearDef);
-items.register(chainFlailDef);
-items.register(torchDef);
+for (const def of WEAPON_CATALOG) {
+  items.register(def);
+}
 
 /** Пользовательские оружия из Blueprint Studio (lazy — без localStorage при импорте в core). */
 export function registerCustomItems(): void {
@@ -35,12 +41,8 @@ export function registerDefaultItems(): void {
   registerCustomItems();
 }
 
-export const DEFAULT_ARENA_ITEMS = [
-  "frying-pan",
-  "spear",
-  "chain-flail",
-  "torch",
-] as const;
+/** @deprecated имя — теперь DEFAULT_ARENA_WEAPON_IDS */
+export const DEFAULT_ARENA_ITEMS = DEFAULT_ARENA_WEAPON_IDS;
 
 /** Углы арены — подальше от спавна бойцов (~333 и ~666 по X). */
 export const ARENA_ITEM_SPAWN_POSITIONS = [
@@ -51,11 +53,26 @@ export const ARENA_ITEM_SPAWN_POSITIONS = [
 ] as const;
 
 export function spawnArenaItems(
-  itemIds: readonly string[],
-  positions: { x: number; y: number }[],
+  itemIds: readonly string[] = DEFAULT_ARENA_WEAPON_IDS,
+  positions: { x: number; y: number }[] = [...ARENA_ITEM_SPAWN_POSITIONS],
 ): Composite[] {
   return itemIds.map((id, i) => {
     const pos = positions[i % positions.length]!;
     return buildItem(items.get(id), pos.x, pos.y);
   });
+}
+
+/** Случайная выборка из каталога (без повторов), для арены. */
+export function pickArenaWeapons(
+  count: number,
+  rng: () => number = Math.random,
+): string[] {
+  const pool = [...WEAPON_CATALOG_IDS];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const tmp = pool[i]!;
+    pool[i] = pool[j]!;
+    pool[j] = tmp;
+  }
+  return pool.slice(0, Math.max(0, Math.min(count, pool.length)));
 }

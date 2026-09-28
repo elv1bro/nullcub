@@ -19,6 +19,14 @@ import {
 } from "@/lib/braceStance";
 import { stepPoseReset } from "@/lib/ragdollPoseReset";
 import { moveBody } from "@/lib/moveBody";
+import { loadoutAllowsAbility } from "@/loadout/loadoutGate";
+import {
+  applyLoadoutCastEffect,
+  loadoutSlotAbilityCooldownMs,
+  resolveLoadoutCast,
+} from "@/loadout/castAbility";
+import { ABILITY_META } from "@/loadout/catalogMeta";
+import type { AbilityId } from "@/loadout/types";
 import type { NetInputPayload } from "@/net/protocol";
 import type { CoreFighterRuntime } from "./types";
 
@@ -33,6 +41,9 @@ export interface AbilityRuntimeState {
   resetUntil: number;
   resetStart: number;
   poseSnap: PoseSnapshot | null;
+  lastSlot0: number;
+  slot0Until: number;
+  lastSlot0Id: AbilityId | null;
 }
 
 export function createAbilityState(poseSnap: PoseSnapshot | null = null): AbilityRuntimeState {
@@ -47,6 +58,9 @@ export function createAbilityState(poseSnap: PoseSnapshot | null = null): Abilit
     resetUntil: 0,
     resetStart: 0,
     poseSnap,
+    lastSlot0: 0,
+    slot0Until: 0,
+    lastSlot0Id: null,
   };
 }
 
@@ -73,6 +87,79 @@ export function cooldownRemaining(
   return Math.max(0, cooldownMs - (now - lastUse));
 }
 
+function tryCastSlot0(
+  fighter: CoreFighterRuntime,
+  ability: AbilityRuntimeState,
+  move: Vector,
+  now: number,
+  rng: () => number,
+  resetActive: boolean,
+): void {
+  if (resetActive || !fighter.input.abilitySlot) return;
+  const queue: AbilityId[] =
+    fighter.castAbilities && fighter.castAbilities.length > 0
+      ? fighter.castAbilities
+      : fighter.loadout?.abilities[0]
+        ? [fighter.loadout.abilities[0]]
+        : [];
+  if (!queue.length) return;
+
+  // Каст первой готовой из очереди (тест-арена: несколько способностей).
+  for (const slotId of queue) {
+    const resolved = resolveLoadoutCast(slotId);
+    if (!resolved.ok) continue;
+
+    if (resolved.kind === "base") {
+      if (
+        resolved.base === "dash" &&
+        cooldownReady(ability.lastDash, now, DASH_COOLDOWN_MS)
+      ) {
+        ability.lastDash = now;
+        ability.dashUntil = now + DASH_DURATION_MS;
+        return;
+      }
+      if (
+        resolved.base === "flip" &&
+        cooldownReady(ability.lastFlip, now, FLIP_COOLDOWN_MS)
+      ) {
+        ability.lastFlip = now;
+        applyFlip(fighter.composite, move, rng);
+        return;
+      }
+      if (
+        resolved.base === "brace" &&
+        cooldownReady(ability.lastBrace, now, BRACE_COOLDOWN_MS) &&
+        ability.braceUntil <= now
+      ) {
+        ability.lastBrace = now;
+        ability.braceUntil = now + BRACE_DURATION_MS;
+        ability.braceStiffness = activateBraceBurst(fighter.composite);
+        return;
+      }
+      continue;
+    }
+
+    const cd = loadoutSlotAbilityCooldownMs(slotId);
+    const sameAsLast = ability.lastSlot0Id === slotId;
+    if (sameAsLast && !cooldownReady(ability.lastSlot0, now, cd)) continue;
+    if (!sameAsLast && ability.lastSlot0Id && !cooldownReady(ability.lastSlot0, now, Math.min(cd, 800))) {
+      // короткий глобальный анти-спам между разными кастами
+      continue;
+    }
+    ability.lastSlot0 = now;
+    ability.slot0Until = now + resolved.durationMs;
+    ability.lastSlot0Id = slotId;
+    applyLoadoutCastEffect(fighter.head, slotId, move);
+    if (ABILITY_META[slotId]?.cat === "mobility") {
+      ability.dashUntil = Math.max(
+        ability.dashUntil,
+        now + Math.min(500, resolved.durationMs),
+      );
+    }
+    return;
+  }
+}
+
 export function tickFighterAbilities(
   fighter: CoreFighterRuntime,
   ability: AbilityRuntimeState,
@@ -87,10 +174,11 @@ export function tickFighterAbilities(
 
   const braceActive = ability.braceUntil > now;
   let resetActive = ability.resetUntil > now;
+  const moveItemMult = fighter.loadoutMods?.moveMult ?? 1;
 
   fighter.braceActive = braceActive;
   fighter.moveSpeedMult =
-    ability.dashUntil > now ? DASH_SPEED_MULT : 1;
+    (ability.dashUntil > now ? DASH_SPEED_MULT : 1) * moveItemMult;
 
   if (braceActive) {
     stepBraceStance(composite);
@@ -99,18 +187,35 @@ export function tickFighterAbilities(
     ability.braceStiffness = null;
   }
 
-  if (input.dash && !resetActive && cooldownReady(ability.lastDash, now, DASH_COOLDOWN_MS)) {
+  // Гейтинг по лодауту: без loadout — классика; labUnlockBases — полный базовый набор.
+  const unlock = Boolean(fighter.labUnlockBases) || !fighter.loadout;
+  const canDash = unlock || loadoutAllowsAbility(fighter.loadout, "dash");
+  const canFlip = unlock || loadoutAllowsAbility(fighter.loadout, "flip");
+  const canBrace = unlock || loadoutAllowsAbility(fighter.loadout, "brace");
+
+  if (
+    input.dash &&
+    canDash &&
+    !resetActive &&
+    cooldownReady(ability.lastDash, now, DASH_COOLDOWN_MS)
+  ) {
     ability.lastDash = now;
     ability.dashUntil = now + DASH_DURATION_MS;
   }
 
-  if (input.flip && !resetActive && cooldownReady(ability.lastFlip, now, FLIP_COOLDOWN_MS)) {
+  if (
+    input.flip &&
+    canFlip &&
+    !resetActive &&
+    cooldownReady(ability.lastFlip, now, FLIP_COOLDOWN_MS)
+  ) {
     ability.lastFlip = now;
     applyFlip(composite, move, rng);
   }
 
   if (
     input.freeze &&
+    canBrace &&
     !resetActive &&
     cooldownReady(ability.lastBrace, now, BRACE_COOLDOWN_MS) &&
     ability.braceUntil <= now
@@ -119,6 +224,8 @@ export function tickFighterAbilities(
     ability.braceUntil = now + BRACE_DURATION_MS;
     ability.braceStiffness = activateBraceBurst(composite);
   }
+
+  tryCastSlot0(fighter, ability, move, now, rng, resetActive);
 
   if (
     input.reset &&
@@ -147,7 +254,6 @@ export function tickFighterAbilities(
 
   if (!resetActive && !fighter.aiProfile) {
     const speed = PLAYER_MOVE_SPEED * fighter.moveSpeedMult;
-    // В brace чуть слабее тяга — не «залипание», а ощущение стойки.
     const braceMult = braceActive ? 0.72 : 1;
     if (move.x !== 0 || move.y !== 0) {
       moveBody(head)(event, move, speed * braceMult);
@@ -159,7 +265,14 @@ export function netInputFromFlags(
   move: Vector,
   grabL: boolean,
   grabR: boolean,
-  flags: { dash?: boolean; flip?: boolean; freeze?: boolean; reset?: boolean },
+  flags: {
+    dash?: boolean;
+    flip?: boolean;
+    freeze?: boolean;
+    reset?: boolean;
+    dropWeapon?: boolean;
+    abilitySlot?: boolean;
+  },
   seq: number,
   t: number,
 ): NetInputPayload {
@@ -173,6 +286,8 @@ export function netInputFromFlags(
     flip: flags.flip ?? false,
     freeze: flags.freeze ?? false,
     reset: flags.reset ?? false,
+    dropWeapon: flags.dropWeapon ?? false,
+    abilitySlot: flags.abilitySlot ?? false,
   };
 }
 
@@ -186,4 +301,6 @@ export const emptyInput = (): NetInputPayload => ({
   flip: false,
   freeze: false,
   reset: false,
+  dropWeapon: false,
+  abilitySlot: false,
 });

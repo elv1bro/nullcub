@@ -1,17 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { buildItem } from "./buildItem";
+import { buildItem, weaponMassOf } from "./buildItem";
 import { computeDisarmChance, rollDisarm } from "./disarm";
 import { items } from "./registry";
+import { findGripBody } from "./weaponHold";
 import "./index";
 
 describe("items", () => {
-  it("builds item with grip bodies", () => {
+  it("builds solid frying-pan with grip and mass", () => {
     const def = items.get("frying-pan");
     const composite = buildItem(def, 100, 200);
-    expect(composite.bodies.length).toBe(2);
+    expect(composite.bodies.length).toBe(1);
+    expect(findGripBody(composite)).toBeDefined();
+    expect(weaponMassOf(composite)).toBeGreaterThan(1);
+    expect(def.solid).toBeTruthy();
+  });
+
+  it("builds rope flail with constraints", () => {
+    const def = items.get("chain-flail");
+    const composite = buildItem(def, 100, 200);
+    expect(composite.bodies.length).toBeGreaterThanOrEqual(2);
     expect(composite.constraints.length).toBeGreaterThan(0);
-    const grip = composite.bodies.find((b) => b.label === "Grip");
-    expect(grip).toBeDefined();
+    expect(findGripBody(composite)).toBeDefined();
   });
 
   it("disarm chance scales with item and toughness", () => {

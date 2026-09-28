@@ -10,11 +10,20 @@ node_modules/
 !.yarn/sdks
 !.yarn/versions
 
+# Vite / local secrets
+.env
+.env.*
+!.env.example
+
 # Vite build dir
 dist/
 
 # Browser verify screenshots (local artifacts)
 test-artifacts/
+
+# MediaPipe wasm — копируется из node_modules скриптом sync-mediapipe.mjs.
+# Модель в public/models коммитим: её из пакета не достать.
+public/mediapipe/
 
 # macOS
 .DS_Store

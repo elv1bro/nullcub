@@ -25,8 +25,10 @@ import { decayPopupPulse, prunePopups, type HitPopup } from "@/lib/hitPopups";
 import { pruneBanter, type BanterQuip } from "@/lib/banterQuips";
 import {
   drawComboAndAnnouncer,
+  drawComboSparks,
   drawFinisherVignette,
   drawGroundShockwaves,
+  drawImpactFrames,
   drawScreenFlash,
   pruneHitEffectStore,
   type HitEffectStore,
@@ -85,6 +87,15 @@ interface OverlayOptions {
   battleMomentsStore?: RefObject<BattleMomentsStore | null>;
   onMomentCaptured?: () => void;
   grabLinesRef?: RefObject<GrabVisualLine[]>;
+  /** Доп. бойцы (p2/p3): голова + HUD поверх 1v1 пары. */
+  extraFighters?: Array<{
+    head: RefObject<Matter.Body | undefined>;
+    hud?: FighterHudInfo | null;
+    face?: FaceState | null;
+    pain?: boolean;
+    colors?: FighterColors;
+    composite?: Matter.Composite;
+  }>;
 }
 
 export function useBattleOverlay(
@@ -110,7 +121,9 @@ export function useBattleOverlay(
       if (fxStore) {
         pruneHitEffectStore(fxStore, now);
         drawGroundShockwaves(ctx, render, fxStore, now);
+        drawComboSparks(ctx, render, fxStore, now);
         drawScreenFlash(ctx, render, fxStore, now);
+        drawImpactFrames(ctx, render, fxStore, now);
         drawFinisherVignette(ctx, render, fxStore, now);
         drawComboAndAnnouncer(
           ctx,
@@ -307,6 +320,32 @@ export function useBattleOverlay(
         }
         if (opts.opponentHud) {
           drawFighterHud(ctx, render, opts.opponentHead.current, opts.opponentHud);
+        }
+      }
+
+      if (opts.extraFighters?.length) {
+        for (const extra of opts.extraFighters) {
+          const head = extra.head.current;
+          if (!head) continue;
+          if (extra.composite) {
+            drawLimbTipInlays(
+              ctx,
+              render,
+              extra.composite,
+              extra.colors?.secondary ?? extra.hud?.colors.secondary ?? "#666666",
+            );
+          }
+          const frame = extra.hud?.colors.main ?? extra.colors?.main ?? "#333333";
+          if (extra.face) {
+            drawFaceOnHead(ctx, render, head, extra.face, frame);
+            drawHeadFrameOnHead(ctx, render, head, frame);
+          } else {
+            drawPlaceholderHead(ctx, render, head, frame, { now });
+            drawHeadFrameOnHead(ctx, render, head, frame);
+          }
+          if (extra.hud) {
+            drawFighterHud(ctx, render, head, extra.hud);
+          }
         }
       }
 

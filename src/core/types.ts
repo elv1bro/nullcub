@@ -1,5 +1,11 @@
 import type { AiProfile } from "@/battle/aiProfiles";
 import type { BotBrainState } from "@/battle/aiLogic";
+import type { LoadoutCombatMods } from "@/loadout/applyPassives";
+import type {
+  AbilityId,
+  FighterLoadout,
+  PassiveItemId,
+} from "@/loadout/types";
 import type { NetInputPayload } from "@/net/protocol";
 import type { Composite, Body, Engine } from "matter-js";
 
@@ -10,6 +16,11 @@ export interface CoreFighterSpec {
   composite: Composite;
   head: Body;
   maxHp: number;
+  /**
+   * Команда для 2v2 / кооп vs боты. Если не задана — каждый сам за себя (FFA):
+   * победа, когда остался ≤1 живой.
+   */
+  team?: number;
   /** Бот — AI управляет вместо input. */
   aiProfile?: AiProfile | null;
   /**
@@ -18,6 +29,16 @@ export interface CoreFighterSpec {
    */
   isBotDamageTarget?: boolean;
   defensePct?: number;
+  /** Лодаут способностей/предметов; без него — полный классический набор. */
+  loadout?: FighterLoadout;
+  /**
+   * Лаб/тест: dash/flip/brace всегда доступны, даже если слоты заняты stub-способностью.
+   */
+  labUnlockBases?: boolean;
+  /** Доп. предметы сверх 2 слотов лодаута (тест-арена). */
+  extraItems?: PassiveItemId[];
+  /** Очередь каста по клавише 9 (тест-арена / лаб). */
+  castAbilities?: AbilityId[];
 }
 
 export interface CoreFighterRuntime extends CoreFighterSpec {
@@ -27,6 +48,8 @@ export interface CoreFighterRuntime extends CoreFighterSpec {
   moveSpeedMult: number;
   inputBlocked: boolean;
   braceActive: boolean;
+  /** Сведённые пассивы предметов (atk/move/…). */
+  loadoutMods?: LoadoutCombatMods;
 }
 
 export interface BattleSessionConfig {

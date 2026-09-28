@@ -1,5 +1,9 @@
 import { Body, type Bounds, Vector, type Composite } from "matter-js";
 import {
+  AI_APPROACH_SPEED,
+  AI_CIRCLE_SPEED,
+  AI_LUNGE_SPEED,
+  AI_STRAFE_SPEED,
   DASH_SPEED_MULT,
   FLIP_ANGULAR_VEL,
   BRACE_DURATION_MS,
@@ -13,10 +17,10 @@ import {
 } from "@/lib/braceStance";
 import type { AiProfile } from "./aiProfiles";
 
-const BASE_APPROACH = 36;
-const BASE_LUNGE = 56;
-const BASE_STRAFE = 40;
-const BASE_CIRCLE = 32;
+const BASE_APPROACH = AI_APPROACH_SPEED;
+const BASE_LUNGE = AI_LUNGE_SPEED;
+const BASE_STRAFE = AI_STRAFE_SPEED;
+const BASE_CIRCLE = AI_CIRCLE_SPEED;
 const STRAFE_RANGE = 200;
 const CIRCLE_RANGE = 340;
 const STRAFE_FLIP_MS = 700;

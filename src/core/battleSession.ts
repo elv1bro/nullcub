@@ -16,13 +16,26 @@ import {
   BATTLE_HARD_TIMEOUT_MS,
   BATTLE_OPENING_BRAWL_MS,
   BATTLE_SPAWN_GRACE_MS,
+  WEAPON_HOLD_ENABLED,
   suddenDeathMultiplier,
 } from "@/lib/battleTuning";
 import { clampCompositeSpeed } from "@/lib/bodySpeed";
 import { colorsForSide } from "@/lib/fighterColors";
 import type { CombatFxConfig } from "@/lib/combatFx";
+import { tagStickmanHands } from "@/lib/grab/hands";
 import { moveBody, toMoveInput } from "@/lib/moveBody";
 import { capturePoseSnapshot } from "@/lib/ragdollPoseReset";
+import { updateMonsterRopeConstraints } from "@/monster/linkTypes";
+import {
+  dampStickmanLateralDrift,
+  pullStickmanComToX,
+  stickmanCom,
+} from "@/lib/stickmanIdleDamp";
+import { computeLoadoutCombatMods } from "@/loadout/applyPassives";
+import {
+  heldWeaponMoveMult,
+  isHeldWeaponVsOwner,
+} from "@/items/weaponHold";
 import { encodeSnapshot } from "@/net/snapshot";
 import type { NetInputPayload } from "@/net/protocol";
 import {
@@ -55,6 +68,12 @@ const STEP_MS = 1000 / 60;
 function registerBodies(composite: Composite, map: Map<number, number>): void {
   for (const body of composite.bodies) {
     map.set(body.id, composite.id);
+    // Compound parts приходят в collision events — без них нет урона от оружия.
+    if (body.parts && body.parts.length > 1) {
+      for (const part of body.parts) {
+        if (part !== body) map.set(part.id, composite.id);
+      }
+    }
   }
 }
 
@@ -63,12 +82,31 @@ function initFighter(spec: CoreFighterSpec): CoreFighterRuntime {
     Body.setVelocity(body, { x: 0, y: 0 });
     Body.setAngularVelocity(body, 0);
   }
+  // Weapon hold / grab нуждаются в plugin.part на руках.
+  tagStickmanHands(spec.composite, spec.id);
+  const loadoutMods = spec.loadout
+    ? computeLoadoutCombatMods(spec.loadout, spec.extraItems)
+    : {
+        atkMult: 1,
+        defPct: 0,
+        moveMult: 1,
+        knockbackOutMult: 1,
+        critChance: 0,
+        headDefBonus: 0,
+      };
+  // Если defensePct не задан явно — подтягиваем из пассивов лодаута.
+  let defensePct = spec.defensePct;
+  if (defensePct == null && loadoutMods.defPct > 0) {
+    defensePct = loadoutMods.defPct;
+  }
   return {
     ...spec,
+    defensePct,
+    loadoutMods,
     hp: spec.maxHp,
     brain: spec.aiProfile ? createBotBrainState() : undefined,
     input: emptyInput(),
-    moveSpeedMult: 1,
+    moveSpeedMult: loadoutMods.moveMult,
     inputBlocked: false,
     braceActive: false,
   };
@@ -99,9 +137,15 @@ export class BattleSession {
   private timedOut = false;
   private clock: BattleClock;
   private onDisarm?: (fighterCompositeId: number, item: Composite) => void;
+  /** Якорь COM.x для idle-симметрии (обновляется при движении). */
+  private readonly idleAnchorX = new Map<FighterRole, number>();
   /** true только если session сам создал Engine — иначе нельзя Engine.clear. */
   private readonly ownsEngine: boolean;
   private readonly collisionHandler: (
+    event: Matter.IEventCollision<Engine>,
+  ) => void;
+  /** Отключает физику held weapon ↔ владелец (pin иначе взрывается). */
+  private readonly heldWeaponPairFilter: (
     event: Matter.IEventCollision<Engine>,
   ) => void;
 
@@ -124,6 +168,7 @@ export class BattleSession {
     this.walls = config.walls ?? createArenaWalls(this.bounds, config.arenaSize);
     this.fighters = config.fighters.map(initFighter);
     this.itemComposites = config.itemComposites ?? [];
+    this.grab.setItemComposites(this.itemComposites);
     this.allComposites = [
       ...this.fighters.map((f) => f.composite),
       ...this.itemComposites,
@@ -165,8 +210,17 @@ export class BattleSession {
       return fighter ? this.grab.getPlayerGrab(fighter.id) : null;
     };
 
+    this.heldWeaponPairFilter = (event) => {
+      for (const pair of event.pairs) {
+        if (isHeldWeaponVsOwner(pair.bodyA, pair.bodyB)) {
+          pair.isActive = false;
+        }
+      }
+    };
+
     this.collisionHandler = (event) => {
       const now = this.clock.now();
+      this.heldWeaponPairFilter(event);
       this.grab.handleCollision(
         event,
         this.fighters,
@@ -179,6 +233,7 @@ export class BattleSession {
         const { bodyA, bodyB, collision } = pair;
         if (bodyA.isStatic && bodyB.isStatic) continue;
         if (this.damageLocked) continue;
+        if (isHeldWeaponVsOwner(bodyA, bodyB)) continue;
         const compositeA = this.bodyComposite.get(bodyA.id);
         const compositeB = this.bodyComposite.get(bodyB.id);
         if (!(compositeA && compositeB) || compositeA === compositeB) continue;
@@ -217,6 +272,7 @@ export class BattleSession {
       }
     };
     Events.on(this.engine, "collisionStart", this.collisionHandler);
+    Events.on(this.engine, "collisionActive", this.heldWeaponPairFilter);
   }
 
   setDisarmHandler(
@@ -249,6 +305,7 @@ export class BattleSession {
     this.timedOut = false;
     this.battleStartMs = this.clock.now();
     for (const fighter of this.fighters) {
+      this.idleAnchorX.set(fighter.id, stickmanCom(fighter.composite).x);
       if (!fighter.brain) continue;
       fighter.brain.battleStartMs = this.battleStartMs;
       fighter.brain.grabCooldownUntil =
@@ -273,14 +330,26 @@ export class BattleSession {
   isBattleOver(): boolean {
     if (this.timedOut) return true;
     const alive = this.fighters.filter((f) => f.hp > 0);
+    if (alive.length === 0) return true;
+    // Командный режим: осталась одна команда среди живых.
+    if (this.hasTeams()) {
+      const teams = new Set(alive.map((f) => f.team));
+      return teams.size <= 1;
+    }
     if (alive.length <= 1 && this.fighters.length > 1) return true;
-    return this.fighters.every((f) => f.hp <= 0);
+    return false;
   }
 
+  /** Победитель — id бойца (FFA) или любого живого из победившей команды. */
   resolveWinner(): FighterRole | null {
     const alive = this.fighters.filter((f) => f.hp > 0);
-    if (alive.length === 1) return alive[0]!.id;
     if (alive.length === 0) return null;
+    if (this.hasTeams()) {
+      const teams = new Set(alive.map((f) => f.team));
+      if (teams.size === 1) return alive[0]!.id;
+    } else if (alive.length === 1) {
+      return alive[0]!.id;
+    }
     // Тайм-аут (или снапшот незаконченного боя): побеждает больший HP,
     // равенство лидеров — ничья.
     let best = alive[0]!;
@@ -290,6 +359,34 @@ export class BattleSession {
     const leaders = alive.filter((f) => f.hp === best.hp);
     if (leaders.length > 1) return null;
     return best.id;
+  }
+
+  private hasTeams(): boolean {
+    return this.fighters.some((f) => f.team !== undefined);
+  }
+
+  /** Ближайший живой враг (другая команда или любой другой в FFA). */
+  private findEnemy(fighter: CoreFighterRuntime): CoreFighterRuntime | undefined {
+    let best: CoreFighterRuntime | undefined;
+    let bestDist = Infinity;
+    for (const other of this.fighters) {
+      if (other.id === fighter.id || other.hp <= 0) continue;
+      if (
+        fighter.team !== undefined &&
+        other.team !== undefined &&
+        other.team === fighter.team
+      ) {
+        continue;
+      }
+      const dx = other.head.position.x - fighter.head.position.x;
+      const dy = other.head.position.y - fighter.head.position.y;
+      const d = dx * dx + dy * dy;
+      if (d < bestDist) {
+        bestDist = d;
+        best = other;
+      }
+    }
+    return best;
   }
 
   tick(dtMs = STEP_MS, advanceEngine = true): void {
@@ -315,11 +412,21 @@ export class BattleSession {
       if (fighter.hp <= 0) continue;
 
       this.grab.syncInput(fighter, now);
+      if (WEAPON_HOLD_ENABLED && this.itemComposites.length) {
+        this.grab.tryAutoPickup(fighter, this.itemComposites, now);
+      }
+
+      // Тяжёлое оружие в руках режет скорость (abilityTick тоже пишет moveSpeedMult).
+      const grabState = this.grab.getPlayerGrab(fighter.id);
+      const weaponSlow =
+        WEAPON_HOLD_ENABLED && grabState
+          ? heldWeaponMoveMult(grabState, this.itemComposites)
+          : 1;
 
       const ability = this.abilities.get(fighter.id)!;
 
       if (fighter.aiProfile && fighter.brain) {
-        const enemy = this.fighters.find((f) => f.id !== fighter.id && f.hp > 0);
+        const enemy = this.findEnemy(fighter);
         if (enemy) {
           const intent = computeBotMoveIntent(
             fighter.aiProfile,
@@ -342,10 +449,12 @@ export class BattleSession {
             grabL: intent.grabL,
             grabR: intent.grabR,
           };
+          fighter.moveSpeedMult =
+            (fighter.loadoutMods?.moveMult ?? 1) * weaponSlow;
           moveBody(fighter.head)(
             fakeEvent,
             toMoveInput(intent.worldMove),
-            intent.speed,
+            intent.speed * weaponSlow,
           );
           clampCompositeSpeed(fighter.composite);
         }
@@ -353,12 +462,43 @@ export class BattleSession {
         tickFighterAbilities(fighter, ability, fakeEvent, now, () =>
           this.clock.random(),
         );
+        fighter.moveSpeedMult *= weaponSlow;
         // Защита от разгона в стену — как у AI-бойцов.
         clampCompositeSpeed(fighter.composite);
+      }
+
+      // one-shot: grab (drop) + abilityTick (abilitySlot) уже прочитали
+      if (fighter.input.dropWeapon || fighter.input.abilitySlot) {
+        fighter.input = {
+          ...fighter.input,
+          dropWeapon: false,
+          abilitySlot: false,
+        };
+      }
+
+      const moving =
+        Math.abs(fighter.input.move.x) > 0.01 ||
+        Math.abs(fighter.input.move.y) > 0.01;
+      if (moving) {
+        this.idleAnchorX.set(fighter.id, stickmanCom(fighter.composite).x);
+      } else if (!fighter.aiProfile) {
+        // Idle: падает, но не уползает вбок (симметрия).
+        dampStickmanLateralDrift(fighter.composite, 0.22);
+        const anchor = this.idleAnchorX.get(fighter.id);
+        if (anchor !== undefined) {
+          pullStickmanComToX(fighter.composite, anchor, 0.0007);
+        }
       }
     }
 
     tickKnockbackImpacts(this.pipeline, fakeEvent, this.isBattleOver());
+    // Верёвки: slack→tight каждый кадр (иначе в headless/dedicated rope «плывёт»).
+    for (const fighter of this.fighters) {
+      updateMonsterRopeConstraints(fighter.composite);
+    }
+    for (const item of this.itemComposites) {
+      updateMonsterRopeConstraints(item);
+    }
     if (advanceEngine) {
       Engine.update(this.engine, dtMs);
     }
@@ -399,6 +539,7 @@ export class BattleSession {
     // Снимаем только СВОЙ обработчик: движок общий, Events.off без callback
     // снёс бы обработчики других систем (захваты, импакты) после рематча.
     Events.off(this.engine, "collisionStart", this.collisionHandler);
+    Events.off(this.engine, "collisionActive", this.heldWeaponPairFilter);
     // Нельзя Engine.clear на shared matter4react engine — сотрёт стены/бойцов,
     // которые React Composite всё ещё считает живыми (rematch / unmount).
     if (this.ownsEngine) {

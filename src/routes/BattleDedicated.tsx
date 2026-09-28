@@ -15,9 +15,9 @@ export default function BattleDedicated() {
   const fighterRole =
     config.kind === "dedicated"
       ? config.role === "host"
-        ? ("player" as const)
-        : ("opponent" as const)
-      : ws.role ?? "opponent";
+        ? "player"
+        : ws.role ?? "opponent"
+      : ws.role ?? "player";
 
   const onBack = useCallback(() => {
     ws.disconnect();
@@ -40,6 +40,9 @@ export default function BattleDedicated() {
         <DedicatedBattleView
           transport={ws.transport}
           fighterRole={fighterRole}
+          ownedFighterIds={ws.ownedFighterIds}
+          battleFighterIds={ws.battleFighterIds}
+          lobby={ws.lobby}
           onBack={onBack}
         />
       </Renderer>

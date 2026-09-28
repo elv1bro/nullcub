@@ -27,7 +27,11 @@ export interface WsSessionValue {
   phase: WsPhase;
   wsUrl: string | null;
   roomId: string | null;
-  role: "player" | "opponent" | null;
+  role: "player" | "opponent" | string | null;
+  /** Все fighterId на этом сокете (основной + локальный). */
+  ownedFighterIds: string[];
+  /** Порядок бойцов в текущем бою (из start). */
+  battleFighterIds: string[];
   duelCode: string | null;
   shareUrl: string | null;
   lobby: WsLobbyPlayer[];
@@ -46,13 +50,21 @@ export interface WsSessionValue {
   ) => void;
   joinByCode: (code: string, name: string) => void;
   sendReady: (ready: boolean) => void;
+  claimLocalSlot: (name: string) => void;
+  releaseLocalSlot: (fighterId: string) => void;
+  setBattleMode: (
+    mode: "ffa" | "partyBots",
+    difficulty?: "easy" | "normal" | "hard" | "boss",
+  ) => void;
   disconnect: () => void;
   clearBattleStartSignal: () => void;
 }
 
 const WsSessionContext = createContext<WsSessionValue | null>(null);
 
-function mapRoleToDedicated(role: "player" | "opponent"): "host" | "guest" {
+function mapRoleToDedicated(
+  role: "player" | "opponent" | string,
+): "host" | "guest" {
   return role === "player" ? "host" : "guest";
 }
 
@@ -62,7 +74,9 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
   const [phase, setPhase] = useState<WsPhase>("idle");
   const [wsUrl, setWsUrl] = useState<string | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [role, setRole] = useState<"player" | "opponent" | null>(null);
+  const [role, setRole] = useState<"player" | "opponent" | string | null>(null);
+  const [ownedFighterIds, setOwnedFighterIds] = useState<string[]>([]);
+  const [battleFighterIds, setBattleFighterIds] = useState<string[]>([]);
   const [duelCode, setDuelCodeState] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [lobby, setLobby] = useState<WsLobbyPlayer[]>([]);
@@ -73,12 +87,14 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
   const [battleStartSignal, setBattleStartSignal] = useState(0);
 
   const transportRef = useRef<WsNetTransport | null>(null);
-  const roleRef = useRef<"player" | "opponent" | null>(null);
+  const roleRef = useRef<"player" | "opponent" | string | null>(null);
   const phaseRef = useRef<WsPhase>("idle");
+  const lobbyRef = useRef<WsLobbyPlayer[]>([]);
   const nameRef = useRef("Player");
 
   roleRef.current = role;
   phaseRef.current = phase;
+  lobbyRef.current = lobby;
 
   const teardown = useCallback(() => {
     transportRef.current?.close();
@@ -88,6 +104,8 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
     setWsUrl(null);
     setRoomId(null);
     setRole(null);
+    setOwnedFighterIds([]);
+    setBattleFighterIds([]);
     setDuelCodeState(null);
     setShareUrl(null);
     setLobby([]);
@@ -115,6 +133,11 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
         (welcome) => {
           roleRef.current = welcome.role;
           setRole(welcome.role);
+          setOwnedFighterIds(
+            welcome.ownedFighterIds?.length
+              ? welcome.ownedFighterIds
+              : [welcome.fighterId],
+          );
           setWsUrl(url);
           setRoomId(room);
           setPhase("lobby");
@@ -156,7 +179,11 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
         }
       });
 
-      t.onStart(() => {
+      t.onStart((fighterIds) => {
+        const fromLobby = lobbyRef.current.map((p) => p.fighterId);
+        setBattleFighterIds(
+          fighterIds?.length ? fighterIds : fromLobby.length ? fromLobby : ["player", "opponent"],
+        );
         setPhase("battle");
         setBattleStartSignal((n) => n + 1);
       });
@@ -241,6 +268,24 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
     transportRef.current?.sendReady(ready);
   }, []);
 
+  const claimLocalSlot = useCallback((name: string) => {
+    transportRef.current?.claimLocal(name);
+  }, []);
+
+  const releaseLocalSlot = useCallback((fighterId: string) => {
+    transportRef.current?.releaseLocal(fighterId);
+  }, []);
+
+  const setBattleMode = useCallback(
+    (
+      mode: "ffa" | "partyBots",
+      difficulty?: "easy" | "normal" | "hard" | "boss",
+    ) => {
+      transportRef.current?.setBattleMode(mode, difficulty);
+    },
+    [],
+  );
+
   const disconnect = useCallback(() => {
     teardown();
   }, [teardown]);
@@ -257,6 +302,8 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
       wsUrl,
       roomId,
       role,
+      ownedFighterIds,
+      battleFighterIds,
       duelCode,
       shareUrl,
       lobby,
@@ -269,6 +316,9 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
       connectToRoom,
       joinByCode,
       sendReady,
+      claimLocalSlot,
+      releaseLocalSlot,
+      setBattleMode,
       disconnect,
       clearBattleStartSignal,
     }),
@@ -277,6 +327,8 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
       wsUrl,
       roomId,
       role,
+      ownedFighterIds,
+      battleFighterIds,
       duelCode,
       shareUrl,
       lobby,
@@ -289,6 +341,9 @@ export function WsSessionProvider({ children }: PropsWithChildren) {
       connectToRoom,
       joinByCode,
       sendReady,
+      claimLocalSlot,
+      releaseLocalSlot,
+      setBattleMode,
       disconnect,
       clearBattleStartSignal,
     ],

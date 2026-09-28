@@ -1,4 +1,5 @@
 import { HpOverlay } from "@/components/HpOverlay";
+import { BattleSpaceBg } from "@/components/BattleSpaceBg";
 import { Viewport } from "@/components/Viewport";
 import { botEmotion } from "@/face/emotions";
 import {
@@ -8,9 +9,10 @@ import {
 } from "@/items";
 import { useBindingPressRef } from "@/input/keyBindings";
 import { useMovementVectorRef } from "@/input/movementKeys";
+import { formatKeyLabel } from "@/input/PlayerMovementInput";
 import { netInputFromFlags } from "@/core/abilityTick";
 import { pickBanterLine, shouldSpawnBanter } from "@/i18n/banter";
-import { OPPONENT_COLORS } from "@/lib/fighterColors";
+import { colorsForSlot, OPPONENT_COLORS } from "@/lib/fighterColors";
 import { applyPlayerColors } from "@/lib/paintStickman";
 import { useBattleOverlay } from "@/lib/useBattleOverlay";
 import { useBattleRecapGate } from "@/lib/useBattleRecapGate";
@@ -41,6 +43,7 @@ import {
   type NetBattleStatePayload,
   type NetHitPayload,
 } from "@/net/protocol";
+import type { WsLobbyPlayer } from "@/net/transport";
 import type { WsNetTransport } from "@/net/wsClient";
 import { usePlayerProfile } from "@/player/PlayerProfileContext";
 import { useSettings } from "@/settings/SettingsContext";
@@ -57,40 +60,69 @@ const ARENA_BOUNDS = Matter.Bounds.create([
 
 export interface DedicatedBattleViewProps {
   transport: WsNetTransport;
-  fighterRole: "player" | "opponent";
+  /** Основной fighterId этого клиента. */
+  fighterRole: string;
+  /** Все fighterId на сокете (хост + локальный). */
+  ownedFighterIds?: string[];
+  /** Порядок тел в снапшоте (= start.fighterIds). */
+  battleFighterIds?: string[];
+  lobby?: WsLobbyPlayer[];
   onBack?: () => void;
+}
+
+type DisplayFighter = {
+  id: string;
+  composite: Matter.Composite;
+  head: Body | undefined;
+  colors: ReturnType<typeof colorsForSlot>;
+  owned: boolean;
+};
+
+function resolveFighterIds(
+  battleFighterIds: string[] | undefined,
+  lobby: WsLobbyPlayer[] | undefined,
+): string[] {
+  if (battleFighterIds?.length) return battleFighterIds;
+  if (lobby?.length) return lobby.map((p) => p.fighterId);
+  return ["player", "opponent"];
 }
 
 export function DedicatedBattleView({
   transport,
   fighterRole,
+  ownedFighterIds: ownedProp,
+  battleFighterIds: battleIdsProp,
+  lobby,
   onBack,
 }: DedicatedBattleViewProps) {
   const { profile } = usePlayerProfile();
   const { settings, t } = useSettings();
 
+  const ownedFighterIds = ownedProp?.length ? ownedProp : [fighterRole];
+  const fighterIds = resolveFighterIds(battleIdsProp, lobby);
+
   const fighterRoleRef = useRef(fighterRole);
   fighterRoleRef.current = fighterRole;
+  const ownedRef = useRef(ownedFighterIds);
+  ownedRef.current = ownedFighterIds;
   const battleActiveRef = useRef(true);
 
   const [protagonists, setProtagonists] = useState<Body[]>([]);
-  const [hostComposite, setHostComposite] = useState<Matter.Composite>();
-  const [guestComposite, setGuestComposite] = useState<Matter.Composite>();
+  const [displayFighters, setDisplayFighters] = useState<DisplayFighter[]>([]);
   const [itemComposites, setItemComposites] = useState<Matter.Composite[]>([]);
-  const hostHeadRef = useRef<Body>();
-  const guestHeadRef = useRef<Body>();
+  const headsByIdRef = useRef<Record<string, Body | undefined>>({});
+  const compositesByIdRef = useRef<Record<string, Matter.Composite>>({});
   const orderedBodiesRef = useRef<Body[]>([]);
   const snapshotInterpRef = useRef(new SnapshotInterpolator());
   const hitEffectsStoreRef = useRef(createHitEffectStore());
 
-  const [playerHp, setPlayerHp] = useState(MAX_HP);
-  const [opponentHp, setOpponentHp] = useState(OPPONENT_MAX_HP);
+  const [hps, setHps] = useState<Record<string, number>>({});
   const [battleOver, setBattleOver] = useState(false);
-  const [winner, setWinner] = useState<"player" | "opponent" | null>(null);
-  const [playerName, setPlayerName] = useState(profile.name);
-  const [opponentName, setOpponentName] = useState("Opponent");
-  const [lastHit, setLastHit] = useState<"player" | "opponent" | null>(null);
-  const [painSide, setPainSide] = useState<"player" | "opponent" | null>(null);
+  const [winnerId, setWinnerId] = useState<string | null>(null);
+  const [winnerTeam, setWinnerTeam] = useState<number | null>(null);
+  const [names, setNames] = useState<Record<string, string>>({});
+  const [lastHitId, setLastHitId] = useState<string | null>(null);
+  const [painId, setPainId] = useState<string | null>(null);
   const popupsRef = useRef<import("@/lib/hitPopups").HitPopup[]>([]);
   const banterRef = useRef<BanterQuip[]>([]);
   const popupSlotRef = useRef(0);
@@ -111,14 +143,32 @@ export function DedicatedBattleView({
     flip: false,
     freeze: false,
     reset: false,
+    dropWeapon: false,
+    abilitySlot: false,
+  });
+  const abilityFlagsP2Ref = useRef({
+    dash: false,
+    flip: false,
+    freeze: false,
+    reset: false,
+    dropWeapon: false,
+    abilitySlot: false,
   });
 
   const readMove = useMovementVectorRef(settings.controls, { gamepadIndex: 0 });
+  const readMoveP2 = useMovementVectorRef(settings.controlsP2, {
+    gamepadIndex: 1,
+  });
   const grabLRef = useBindingPressRef(settings.abilities.grabL);
   const grabRRef = useBindingPressRef(settings.abilities.grabR);
+  const grabL2Ref = useBindingPressRef(settings.abilitiesP2.grabL);
+  const grabR2Ref = useBindingPressRef(settings.abilitiesP2.grabR);
   const seqRef = useRef(0);
+  const seqP2Ref = useRef(0);
   const readMoveRef = useRef(readMove);
   readMoveRef.current = readMove;
+  const readMoveP2Ref = useRef(readMoveP2);
+  readMoveP2Ref.current = readMoveP2;
   const formatDamageRef = useRef(t.hit.damage);
   formatDamageRef.current = t.hit.damage;
   const profileColorsRef = useRef(profile.colors);
@@ -130,82 +180,90 @@ export function DedicatedBattleView({
   const matureBanterRef = useRef(settings.matureBanter);
   matureBanterRef.current = settings.matureBanter;
 
-  const handleHit = useCallback((hit: NetHitPayload) => {
-    if (!battleActiveRef.current) return;
-    const role = fighterRoleRef.current;
-    const localVictim: "player" | "opponent" =
-      hit.victimId === role ? "player" : "opponent";
-    const localAggressor: "player" | "opponent" =
-      localVictim === "player" ? "opponent" : "player";
-    setLastHit(localVictim);
-    setPainSide(localVictim);
-    setTimeout(() => setPainSide(null), 450);
+  const primaryId = fighterRole;
+  const secondaryOwned =
+    ownedFighterIds.find((id) => id !== primaryId) ?? null;
 
-    const now = performance.now();
-    const victimColors =
-      localVictim === "player" ? profileColorsRef.current : OPPONENT_COLORS;
-    popupsRef.current.push(
-      createPopup(
-        hit.damage,
-        formatDamageRef.current(hit.damage),
-        hit.x,
-        hit.y,
-        now,
-        localVictim,
-        victimColors,
-        popupSlotRef.current++,
-        ARENA_BOUNDS,
-      ),
-    );
+  const handleHit = useCallback(
+    (hit: NetHitPayload) => {
+      if (!battleActiveRef.current) return;
+      const owned = ownedRef.current;
+      const localVictim = owned.includes(hit.victimId);
+      setLastHitId(hit.victimId);
+      setPainId(hit.victimId);
+      setTimeout(() => setPainId(null), 450);
 
-    if (showBanterRef.current && shouldSpawnBanter(hit.damage, now, lastBanterAtRef.current)) {
-      lastBanterAtRef.current = now;
-      const line = pickBanterLine(
-        languageRef.current,
-        matureBanterRef.current,
-        localAggressor,
-      );
-      const head =
-        localAggressor === "player"
-          ? (fighterRoleRef.current === "player" ? hostHeadRef : guestHeadRef).current
-          : (fighterRoleRef.current === "player" ? guestHeadRef : hostHeadRef).current;
-      const anchorX = head?.position.x ?? hit.x;
-      const anchorY = (head?.position.y ?? hit.y) - 22;
-      const colors =
-        localAggressor === "player" ? profileColorsRef.current : OPPONENT_COLORS;
-      banterRef.current.push(
-        pickBanter(
-          line,
-          localAggressor,
-          anchorX,
-          anchorY,
-          banterSlotRef.current++,
+      const now = performance.now();
+      const idx = fighterIds.indexOf(hit.victimId);
+      const victimColors =
+        hit.victimId === fighterRoleRef.current
+          ? profileColorsRef.current
+          : colorsForSlot(idx >= 0 ? idx : 1);
+      popupsRef.current.push(
+        createPopup(
+          hit.damage,
+          formatDamageRef.current(hit.damage),
+          hit.x,
+          hit.y,
           now,
-          colors,
-          { bounds: ARENA_BOUNDS, bodies: orderedBodiesRef.current, existing: banterRef.current },
+          localVictim ? "player" : "opponent",
+          victimColors,
+          popupSlotRef.current++,
+          ARENA_BOUNDS,
         ),
       );
-    }
 
-    const store = hitEffectsStoreRef.current;
-    if (store && settings.screenEffects) {
-      const aggressorColors =
-        localAggressor === "player" ? profileColorsRef.current : OPPONENT_COLORS;
-      dispatchHitEffects(store, {
-        damage: hit.damage,
-        contactX: hit.x,
-        contactY: hit.y,
-        aggressorSide: localAggressor,
-        aggressorColor: aggressorColors.main,
-        aggressorColors,
-        arenaHeight: SIZE,
-        language: languageRef.current,
-        slot: effectSlotRef.current++,
-        now,
-      });
-    }
-    playHitSound(hit.damage, stereoPanForX(hit.x, 0, SIZE));
-  }, [settings.screenEffects]);
+      if (
+        showBanterRef.current &&
+        shouldSpawnBanter(hit.damage, now, lastBanterAtRef.current)
+      ) {
+        lastBanterAtRef.current = now;
+        const aggressorSide = localVictim ? "opponent" : "player";
+        const line = pickBanterLine(
+          languageRef.current,
+          matureBanterRef.current,
+          aggressorSide,
+        );
+        const head = headsByIdRef.current[hit.victimId];
+        const anchorX = head?.position.x ?? hit.x;
+        const anchorY = (head?.position.y ?? hit.y) - 22;
+        banterRef.current.push(
+          pickBanter(
+            line,
+            aggressorSide,
+            anchorX,
+            anchorY,
+            banterSlotRef.current++,
+            now,
+            victimColors,
+            {
+              bounds: ARENA_BOUNDS,
+              bodies: orderedBodiesRef.current,
+              existing: banterRef.current,
+            },
+          ),
+        );
+      }
+
+      const store = hitEffectsStoreRef.current;
+      if (store && settings.screenEffects) {
+        dispatchHitEffects(store, {
+          damage: hit.damage,
+          contactX: hit.x,
+          contactY: hit.y,
+          aggressorSide: localVictim ? "opponent" : "player",
+          aggressorColor: victimColors.main,
+          aggressorColors: victimColors,
+          arenaHeight: SIZE,
+          language: languageRef.current,
+          slot: effectSlotRef.current++,
+          now,
+        });
+      }
+      playHitSound(hit.damage, stereoPanForX(hit.x, 0, SIZE));
+    },
+    [fighterIds, settings.screenEffects],
+  );
 
   useEffect(() => {
     battleActiveRef.current = true;
@@ -222,45 +280,74 @@ export function DedicatedBattleView({
 
     const offState = transport.onBattleState((state: NetBattleStatePayload) => {
       if (!battleActiveRef.current) return;
-      const role = fighterRoleRef.current;
-      setPlayerHp(role === "player" ? state.playerHp : state.opponentHp);
-      setOpponentHp(role === "player" ? state.opponentHp : state.playerHp);
+      if (state.hps && Object.keys(state.hps).length) {
+        setHps(state.hps);
+      } else {
+        setHps({
+          player: state.playerHp,
+          opponent: state.opponentHp,
+        });
+      }
       setBattleOver(state.battleOver);
-      setWinner(
-        state.winner
-          ? role === "player"
-            ? state.winner
-            : state.winner === "player"
-              ? "opponent"
-              : "player"
-          : null,
-      );
-      setPlayerName(role === "player" ? state.playerName : state.opponentName);
-      setOpponentName(role === "player" ? state.opponentName : state.playerName);
+      setWinnerTeam(state.winnerTeam ?? null);
+      setWinnerId(state.winner ? String(state.winner) : null);
+      setNames((prev) => ({
+        ...prev,
+        player: state.playerName || prev.player || "Player",
+        opponent: state.opponentName || prev.opponent || "Opponent",
+      }));
     });
 
     const offHit = transport.onHit(handleHit);
 
     const inputTimer = setInterval(() => {
       if (!battleActiveRef.current || battleOverRef.current) return;
-      const move = readMoveRef.current();
+      const owned = ownedRef.current;
+      const primary = fighterRoleRef.current;
       const flags = abilityFlagsRef.current;
       transport.sendInput(
         netInputFromFlags(
-          move,
+          readMoveRef.current(),
           grabLRef.current,
           grabRRef.current,
           flags,
           seqRef.current++,
           performance.now(),
         ),
+        primary,
       );
       abilityFlagsRef.current = {
         dash: false,
         flip: false,
         freeze: false,
         reset: false,
+    dropWeapon: false,
+    abilitySlot: false,
       };
+
+      const second = owned.find((id) => id !== primary);
+      if (second) {
+        const flags2 = abilityFlagsP2Ref.current;
+        transport.sendInput(
+          netInputFromFlags(
+            readMoveP2Ref.current(),
+            grabL2Ref.current,
+            grabR2Ref.current,
+            flags2,
+            seqP2Ref.current++,
+            performance.now(),
+          ),
+          second,
+        );
+        abilityFlagsP2Ref.current = {
+          dash: false,
+          flip: false,
+          freeze: false,
+          reset: false,
+    dropWeapon: false,
+    abilitySlot: false,
+        };
+      }
     }, 1000 / INPUT_HZ);
 
     return () => {
@@ -295,73 +382,118 @@ export function DedicatedBattleView({
   }, []);
 
   useEffect(() => {
-    const left = createStickman((1 / 3) * SIZE, (1 / 2) * SIZE, {
-      render: { fillStyle: OPPONENT_COLORS.main },
+    const ids = fighterIds;
+    const n = ids.length;
+    const created: DisplayFighter[] = ids.map((id, i) => {
+      const x = ((i + 1) / (n + 1)) * SIZE;
+      const colors =
+        id === fighterRole ? profile.colors : colorsForSlot(i);
+      const composite = createStickman(x, (1 / 2) * SIZE, {
+        render: { fillStyle: colors.main },
+      });
+      applyPlayerColors(composite, colors.main, colors.secondary);
+      const head = composite.bodies.find((b) => b.label === "Head");
+      if (head) head.render.visible = false;
+      for (const body of composite.bodies) {
+        Body.setVelocity(body, { x: 0, y: 0 });
+        Body.setAngularVelocity(body, 0);
+      }
+      return {
+        id,
+        composite,
+        head,
+        colors,
+        owned: ownedFighterIds.includes(id),
+      };
     });
-    const right = createStickman((2 / 3) * SIZE, (1 / 2) * SIZE, {
-      render: { fillStyle: profile.colors.main },
-    });
 
-    const meIsPlayer = fighterRole === "player";
-    const myComposite = meIsPlayer ? left : right;
-    applyPlayerColors(myComposite, profile.colors.main, profile.colors.secondary);
-    applyPlayerColors(left, OPPONENT_COLORS.main, OPPONENT_COLORS.secondary);
-    applyPlayerColors(right, profile.colors.main, profile.colors.secondary);
+    const items = spawnArenaItems(DEFAULT_ARENA_ITEMS, [
+      ...ARENA_ITEM_SPAWN_POSITIONS,
+    ]);
+    makeDisplayOnlyComposites([
+      ...created.map((f) => f.composite),
+      ...items,
+    ]);
 
-    const leftHead = left.bodies.find((b) => b.label === "Head");
-    const rightHead = right.bodies.find((b) => b.label === "Head");
-    if (leftHead) leftHead.render.visible = false;
-    if (rightHead) rightHead.render.visible = false;
-
-    for (const body of [...left.bodies, ...right.bodies]) {
-      Body.setVelocity(body, { x: 0, y: 0 });
-      Body.setAngularVelocity(body, 0);
+    const heads: Record<string, Body | undefined> = {};
+    const comps: Record<string, Matter.Composite> = {};
+    for (const f of created) {
+      heads[f.id] = f.head;
+      comps[f.id] = f.composite;
     }
+    headsByIdRef.current = heads;
+    compositesByIdRef.current = comps;
 
-    const items = spawnArenaItems(DEFAULT_ARENA_ITEMS, [...ARENA_ITEM_SPAWN_POSITIONS]);
-    makeDisplayOnlyComposites([left, right, ...items]);
+    const primary = created.find((f) => f.id === fighterRole) ?? created[0];
+    const secondary =
+      created.find((f) => f.id !== fighterRole && f.owned) ??
+      created.find((f) => f.id !== fighterRole);
 
-    setHostComposite(left);
-    setGuestComposite(right);
-    setItemComposites(items);
-    hostHeadRef.current = leftHead;
-    guestHeadRef.current = rightHead;
-    localCompositeRef.current = myComposite;
-    playerCompositeRef.current = left;
-    opponentCompositeRef.current = right;
-    poseSnapRef.current = capturePoseSnapshot(myComposite);
+    localCompositeRef.current = primary?.composite;
+    playerCompositeRef.current = primary?.composite;
+    opponentCompositeRef.current = secondary?.composite;
+    poseSnapRef.current = primary
+      ? capturePoseSnapshot(primary.composite)
+      : null;
+
     orderedBodiesRef.current = [
-      ...left.bodies,
-      ...right.bodies,
+      ...created.flatMap((f) => f.composite.bodies),
       ...items.flatMap((c) => c.bodies),
     ];
-    setProtagonists([...left.bodies, ...right.bodies]);
-  }, [profile.colors.main, profile.colors.secondary, fighterRole]);
-
-  const meIsPlayer = fighterRole === "player";
-  const localHeadRef = meIsPlayer ? hostHeadRef : guestHeadRef;
-  const remoteHeadRef = meIsPlayer ? guestHeadRef : hostHeadRef;
-  const localComposite = meIsPlayer ? hostComposite : guestComposite;
-  const remoteComposite = meIsPlayer ? guestComposite : hostComposite;
+    setDisplayFighters(created);
+    setItemComposites(items);
+    setProtagonists(created.flatMap((f) => f.composite.bodies));
+    setHps((prev) => {
+      const next = { ...prev };
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i]!;
+        if (next[id] == null) next[id] = i === 0 ? MAX_HP : OPPONENT_MAX_HP;
+      }
+      return next;
+    });
+    setNames((prev) => {
+      const next = { ...prev };
+      for (const p of lobby ?? []) next[p.fighterId] = p.name;
+      if (!next[fighterRole]) next[fighterRole] = profile.name;
+      return next;
+    });
+  }, [
+    fighterIds.join("|"),
+    ownedFighterIds.join("|"),
+    fighterRole,
+    profile.colors.main,
+    profile.colors.secondary,
+    profile.name,
+    lobby,
+  ]);
 
   battleOverRef.current = battleOver;
-  const showRecap = useBattleRecapGate(battleOver);
+  const showRecap = useBattleRecapGate(battleOver && fighterIds.length <= 2);
+
+  const primaryHp = hps[primaryId] ?? MAX_HP;
+  const iWon =
+    battleOver &&
+    (winnerId != null && ownedFighterIds.includes(winnerId)
+      ? true
+      : winnerTeam != null
+        ? (lobby?.find((p) => p.fighterId === primaryId)?.team ?? 0) ===
+          winnerTeam
+        : winnerId === "player" && primaryId === "player");
 
   useEffect(() => {
     if (!battleOver) return;
     stopMusic(700);
-    playResultSting(winner === "player" ? "victory" : "defeat");
-  }, [battleOver, winner]);
+    playResultSting(iWon ? "victory" : "defeat");
+  }, [battleOver, iWon]);
 
-  // Сердцебиение при HP < 30%
   useEffect(() => {
     if (battleOver) {
       setHeartbeatLevel(0);
       return;
     }
-    const ratio = playerHp / MAX_HP;
+    const ratio = primaryHp / MAX_HP;
     setHeartbeatLevel(ratio < 0.3 ? (0.3 - ratio) / 0.3 : 0);
-  }, [playerHp, battleOver]);
+  }, [primaryHp, battleOver]);
 
   useEffect(() => () => setHeartbeatLevel(0), []);
 
@@ -373,52 +505,152 @@ export function DedicatedBattleView({
       return;
     }
     const t = setTimeout(() => {
-      if (playerHp > 0 && opponentHp > 0 && !battleOver) {
-        e2eOk({ playerHp, opponentHp, mode: "duel" });
+      const alive = Object.values(hps).every((hp) => hp > 0);
+      if (alive && !battleOver) {
+        e2eOk({
+          playerHp: primaryHp,
+          opponentHp: hps.opponent ?? hps[fighterIds[1] ?? ""] ?? 0,
+          mode: "duel",
+          fighters: fighterIds.length,
+        });
       } else {
-        e2eFail(`duel hp: ${playerHp}/${opponentHp}`);
+        e2eFail(`duel hp fail`);
       }
     }, 10_000);
     return () => clearTimeout(t);
-  }, [playerHp, opponentHp, battleOver]);
+  }, [hps, battleOver, primaryHp, fighterIds]);
+
+  const primaryHeadRef = useRef<Body | undefined>();
+  primaryHeadRef.current = headsByIdRef.current[primaryId];
+  const remoteHeadRef = useRef<Body | undefined>();
+  const localP2HeadRef = useRef<Body | undefined>();
+  const remoteId =
+    fighterIds.find((id) => !ownedFighterIds.includes(id)) ??
+    fighterIds.find((id) => id !== primaryId) ??
+    "opponent";
+  remoteHeadRef.current = headsByIdRef.current[remoteId];
+  localP2HeadRef.current = secondaryOwned
+    ? headsByIdRef.current[secondaryOwned]
+    : undefined;
 
   const abilities = usePlayerAbilities(
-    localHeadRef,
+    primaryHeadRef,
     localCompositeRef,
     poseSnapRef,
     battleOverRef,
     { skipPhysics: true, abilityFlagsOut: abilityFlagsRef, gamepadIndex: 0 },
   );
 
-  const localHud = useMemo(
+  const secondaryCompositeRef = useRef<Matter.Composite>();
+  secondaryCompositeRef.current = secondaryOwned
+    ? compositesByIdRef.current[secondaryOwned]
+    : undefined;
+  const poseSnapP2Ref = useRef<import("@/lib/ragdollPoseReset").PoseSnapshot | null>(
+    null,
+  );
+  useEffect(() => {
+    if (secondaryOwned && compositesByIdRef.current[secondaryOwned]) {
+      poseSnapP2Ref.current = capturePoseSnapshot(
+        compositesByIdRef.current[secondaryOwned]!,
+      );
+    }
+  }, [secondaryOwned, displayFighters]);
+
+  const abilitiesP2 = usePlayerAbilities(
+    localP2HeadRef,
+    secondaryCompositeRef,
+    poseSnapP2Ref,
+    battleOverRef,
+    {
+      skipPhysics: true,
+      abilityFlagsOut: abilityFlagsP2Ref,
+      gamepadIndex: 1,
+      enabled: Boolean(secondaryOwned),
+    },
+  );
+
+  const primaryHud = useMemo(
     () => ({
-      name: playerName,
-      hearts: playerHp,
+      name: names[primaryId] ?? profile.name,
+      hearts: primaryHp,
+      maxHearts: MAX_HP,
       colors: profile.colors,
-      side: meIsPlayer ? ("left" as const) : ("right" as const),
+      side: "left" as const,
     }),
-    [playerHp, playerName, profile.colors, meIsPlayer],
+    [names, primaryId, primaryHp, profile.name, profile.colors],
   );
 
   const remoteHud = useMemo(
     () => ({
-      name: opponentName,
-      hearts: opponentHp,
-      colors: OPPONENT_COLORS,
-      side: meIsPlayer ? ("right" as const) : ("left" as const),
+      name: names[remoteId] ?? "Opponent",
+      hearts: hps[remoteId] ?? OPPONENT_MAX_HP,
+      maxHearts: OPPONENT_MAX_HP,
+      colors: colorsForSlot(Math.max(0, fighterIds.indexOf(remoteId))),
+      side: "right" as const,
     }),
-    [opponentHp, opponentName, meIsPlayer],
+    [names, remoteId, hps, fighterIds],
   );
 
+  const playerStatus = useMemo(
+    () => ({
+      name: names[primaryId] ?? profile.name,
+      hp: primaryHp,
+      maxHp: MAX_HP,
+      color: profile.colors.main,
+      secondaryColor: profile.colors.secondary,
+    }),
+    [names, primaryId, primaryHp, profile.name, profile.colors],
+  );
+
+  const opponentStatus = useMemo(() => {
+    const colors = colorsForSlot(Math.max(0, fighterIds.indexOf(remoteId)));
+    return {
+      name: names[remoteId] ?? "Opponent",
+      hp: hps[remoteId] ?? OPPONENT_MAX_HP,
+      maxHp: OPPONENT_MAX_HP,
+      color: colors.main,
+      secondaryColor: colors.secondary,
+    };
+  }, [names, remoteId, hps, fighterIds]);
+
+  const extraFighters = useMemo(() => {
+    return fighterIds
+      .filter((id) => id !== primaryId && id !== remoteId)
+      .map((id) => {
+        const idx = fighterIds.indexOf(id);
+        const headRef = { current: headsByIdRef.current[id] };
+        const hp = hps[id] ?? OPPONENT_MAX_HP;
+        return {
+          head: headRef,
+          hud: {
+            name: names[id] ?? id,
+            hearts: hp,
+            maxHearts: OPPONENT_MAX_HP,
+            colors: colorsForSlot(idx),
+            side: "right" as const,
+          },
+          face: botEmotion(hp, OPPONENT_MAX_HP, painId === id),
+          pain: painId === id,
+          colors: colorsForSlot(idx),
+          composite: compositesByIdRef.current[id],
+        };
+      });
+  }, [fighterIds, primaryId, remoteId, hps, names, painId, displayFighters]);
+
   const remoteFace = useMemo(
-    () => botEmotion(opponentHp, OPPONENT_MAX_HP, painSide === "opponent"),
-    [opponentHp, painSide],
+    () =>
+      botEmotion(
+        hps[remoteId] ?? OPPONENT_MAX_HP,
+        OPPONENT_MAX_HP,
+        painId === remoteId,
+      ),
+    [hps, remoteId, painId],
   );
 
   useHitEffectClock(hitEffectsStoreRef);
   useVictoryDefeatFx({
     battleOver,
-    winner,
+    winner: iWon ? "player" : battleOver ? "opponent" : null,
     screenEffects: settings.screenEffects,
     playerCompositeRef,
     opponentCompositeRef,
@@ -427,24 +659,28 @@ export function DedicatedBattleView({
     opponentColors: OPPONENT_COLORS,
   });
 
+  const primaryComposite = compositesByIdRef.current[primaryId];
+  const remoteComposite = compositesByIdRef.current[remoteId];
+
   useBattleOverlay(
     {
-      playerHead: localHeadRef,
+      playerHead: primaryHeadRef,
       opponentHead: remoteHeadRef,
-      ...(localComposite ? { playerComposite: localComposite } : {}),
+      ...(primaryComposite ? { playerComposite: primaryComposite } : {}),
       ...(remoteComposite ? { opponentComposite: remoteComposite } : {}),
       playerVideo: videoRef,
       playerCrop: cropRef,
       opponentFace: remoteFace,
-      playerPain: painSide === "player",
+      playerPain: painId === primaryId,
       webcamActive: false,
       ...(profile.faceEffect ? { faceEffect: profile.faceEffect } : {}),
       ...(profile.avatarFaceId ? { avatarFaceId: profile.avatarFaceId } : {}),
-      playerHp,
+      playerHp: primaryHp,
       playerMaxHp: MAX_HP,
-      playerLastHit: lastHit,
-      playerHud: localHud,
+      playerLastHit: lastHitId === primaryId ? "player" : lastHitId ? "opponent" : null,
+      playerHud: primaryHud,
       opponentHud: remoteHud,
+      extraFighters,
       popupsRef,
       banterRef,
       hitEffectsStore: hitEffectsStoreRef,
@@ -452,20 +688,58 @@ export function DedicatedBattleView({
     },
     [
       remoteFace,
-      painSide,
-      localHud,
+      painId,
+      primaryHud,
       remoteHud,
-      localComposite,
+      primaryComposite,
       remoteComposite,
       profile.faceEffect,
       profile.avatarFaceId,
       settings.language,
-      playerHp,
-      lastHit,
+      primaryHp,
+      lastHitId,
+      extraFighters,
     ],
   );
 
-  const playerWon = battleOver && winner === "player";
+  const fighterBars = useMemo(() => {
+    if (!secondaryOwned) return undefined;
+    return [
+      {
+        id: primaryId,
+        label: names[primaryId] ?? t.battle.player1,
+        abilities,
+        moveHint: `${formatKeyLabel(settings.controls.up)}${formatKeyLabel(settings.controls.left)}${formatKeyLabel(settings.controls.down)}${formatKeyLabel(settings.controls.right)}`,
+        hp: primaryHp,
+        maxHp: MAX_HP,
+        color: profile.colors.main,
+      },
+      {
+        id: secondaryOwned,
+        label: names[secondaryOwned] ?? t.battle.player2,
+        abilities: abilitiesP2,
+        bindings: settings.abilitiesP2,
+        moveHint: `${formatKeyLabel(settings.controlsP2.up)}${formatKeyLabel(settings.controlsP2.left)}${formatKeyLabel(settings.controlsP2.down)}${formatKeyLabel(settings.controlsP2.right)}`,
+        hp: hps[secondaryOwned] ?? MAX_HP,
+        maxHp: MAX_HP,
+        color: colorsForSlot(1).main,
+      },
+    ];
+  }, [
+    secondaryOwned,
+    primaryId,
+    names,
+    t.battle.player1,
+    t.battle.player2,
+    abilities,
+    abilitiesP2,
+    settings.controls,
+    settings.controlsP2,
+    settings.abilitiesP2,
+    primaryHp,
+    hps,
+    profile.colors.main,
+  ]);
 
   return (
     <>
@@ -473,7 +747,7 @@ export function DedicatedBattleView({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 pointer-events-auto">
           <div className="flex flex-col items-center gap-4 p-8 rounded-xl border border-gray-600 bg-dark-800 text-white">
             <h2 className="text-2xl font-bold">
-              {playerWon ? t.battle.victory : t.battle.defeat}
+              {iWon ? t.battle.victory : t.battle.defeat}
             </h2>
             <p className="text-sm text-gray-400">{t.battle.backToMenu} · Esc</p>
             {onBack && (
@@ -492,19 +766,24 @@ export function DedicatedBattleView({
       <HpOverlay
         battleOver={battleOver}
         showRecap={showRecap}
-        winner={winner}
+        winner={iWon ? "player" : battleOver ? "opponent" : null}
         faceReady
         faceError={null}
         abilities={abilities}
+        fighterBars={fighterBars}
+        playerStatus={playerStatus}
+        opponentStatus={opponentStatus}
       />
+      <BattleSpaceBg />
       <Viewport protagonists={protagonists} hitEffectsStore={hitEffectsStoreRef} />
       <SurroundingWalls
         thick={SIZE}
         bounds={ARENA_BOUNDS}
-        options={{ render: { fillStyle: "#333" } }}
+        options={{ render: { fillStyle: "#1c2430" } }}
       />
-      {hostComposite && <Composite.add object={hostComposite} />}
-      {guestComposite && <Composite.add object={guestComposite} />}
+      {displayFighters.map((f) => (
+        <Composite.add key={f.id} object={f.composite} />
+      ))}
       {itemComposites.map((item) => (
         <Composite.add key={item.id} object={item} />
       ))}

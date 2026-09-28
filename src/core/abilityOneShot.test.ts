@@ -75,6 +75,14 @@ describe("ability one-shot flags", () => {
       moveSpeedMult: 1,
       inputBlocked: false,
       braceActive: false,
+      loadoutMods: {
+        atkMult: 1,
+        defPct: 0,
+        moveMult: 1,
+        knockbackOutMult: 1,
+        critChance: 0,
+        headDefBonus: 0,
+      },
     };
     const event = { delta: 16 } as Matter.IEventTimestamped<Matter.Engine>;
     const t0 = 1000;

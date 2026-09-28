@@ -1,10 +1,10 @@
 //
 
 import defaults from "defaults";
-import Matter from "matter-js";
+import Matter, { Body, Vector, type Constraint } from "matter-js";
 
-// Порт onedoes/ragdollmasters — тело и constraints без изменений.
-// Единственное отличие: скрываем render у constraints (визуал рисуем в overlay).
+// Порт onedoes/ragdollmasters + зеркальная симметрия L/R.
+// Без симметрии idle за ~10с валится вправо (разные rest-length связей).
 
 interface BodyPartOptions {
   x: number;
@@ -89,16 +89,43 @@ function createBody(_options: BodyPartOptions) {
         length: 0,
         stiffness: 0.5,
       }),
-      // Matter.Constraint.create({
-      //   ...common,
-      //   pointA: { x: 0, y: radius },
-      //   pointB: { x: 0, y: -radius },
-      // }),
-      // Matter.Constraint.create({
-      //   ...common,
-      //   pointA: { x: 0, y: -radius },
-      //   pointB: { x: 0, y: radius },
-      // }),
+    ]);
+  return { bodies, constraints };
+}
+
+/** Вертикальная цепочка сегментов (ноги вниз, без T-pose + fold). */
+function createVerticalStick(_options: BodyPartOptions) {
+  const { x, y, radius, length = 3, constraint, options } = _options;
+  const { bodies } = Matter.Composites.stack(
+    x,
+    y,
+    1,
+    length,
+    0,
+    0,
+    (sx: number, sy: number) => Matter.Bodies.circle(sx, sy, radius, options),
+  );
+  const constraints = Array.from(bodies.entries())
+    .filter(([bodyId]) => bodyId > 0)
+    .map(([bodyId, bodyB]) => ({
+      ...constraint,
+      bodyA: bodies[bodyId - 1]!,
+      bodyB,
+      damping: 0,
+      stiffness: 1,
+    }))
+    .flatMap((common) => [
+      Matter.Constraint.create({
+        ...common,
+      }),
+      Matter.Constraint.create({
+        ...common,
+        pointA: { x: 0, y: radius },
+        pointB: { x: 0, y: -radius },
+        damping: 0,
+        length: 0,
+        stiffness: 0.5,
+      }),
     ]);
   return { bodies, constraints };
 }
@@ -132,6 +159,8 @@ export function createStickman(
     },
     render,
     restitution: 0,
+    friction: 0.1,
+    frictionAir: 0.01,
   });
 
   //#region Chest
@@ -140,6 +169,8 @@ export function createStickman(
   // CHEST
   //
 
+  // Matter.Composites.stack потом делает translate(+radius, +radius) —
+  // поэтому старт x-radius → центр груди ровно на x.
   const chest = createBody({
     x: x - radius,
     y: y - radius,
@@ -150,6 +181,9 @@ export function createStickman(
         group: Matter.Body.nextGroup(true),
       },
       render,
+      friction: 0.1,
+      frictionAir: 0.01,
+      restitution: 0,
     },
     constraint: { stiffness: 1, damping: 0 },
   });
@@ -193,6 +227,7 @@ export function createStickman(
       },
       render,
       restitution: 0,
+      friction: 0.1,
     },
   });
 
@@ -227,6 +262,8 @@ export function createStickman(
       collisionFilter: {
         group: arm_group,
       },
+      restitution: 0,
+      friction: 0.1,
     },
   });
 
@@ -262,6 +299,8 @@ export function createStickman(
   // RIGHT ARM
   //
 
+  // Зеркало left upper: stack сдвигает на +r, поэтому старт x+r → центры x+2r, x+4r
+  // (left при старте x-5r → x-4r, x-2r).
   const upperRightArm = createStick({
     x: x + radius,
     y: y - radius,
@@ -272,7 +311,7 @@ export function createStickman(
         group: arm_group,
       },
       render,
-      friction: 1,
+      friction: 0.1,
       restitution: 0,
     },
   });
@@ -297,6 +336,7 @@ export function createStickman(
 
   //
 
+  // Зеркало left lower (старт x-11r → центры x-10r…x-6r): старт x+5r → x+6r…x+10r.
   const lowerRightArm = createStick({
     x: x + radius * 5,
     y: y - radius,
@@ -307,8 +347,9 @@ export function createStickman(
       collisionFilter: {
         group: arm_group,
       },
-
       render,
+      friction: 0.1,
+      restitution: 0,
     },
   });
 
@@ -355,133 +396,128 @@ export function createStickman(
     }),
   ];
 
+  // Одна negative-группа на все сегменты ног — иначе голени сталкиваются и «спутываются».
   const leg_group = Matter.Body.nextGroup(true);
+  const hip = chest.bodies.at(-1)!;
+  // Ширина стойки: левая нога левее центра, правая правее (не перекрёст).
+  const hipStance = radius * 2;
+  const legTopY = hip.position.y + radius * 0.5;
 
-  //#region Left Leg
+  //#region Left Leg (вертикально вниз)
 
-  //
-  //
-  //
-
-  const upperLeftLeg = createStick({
-    x: x - radius * 5,
-    y: y + radius * 7,
+  // stack +translate(+r,+r): старт (x ± hipStance - r) → центр ноги на x ± hipStance.
+  const upperLeftLeg = createVerticalStick({
+    x: x - hipStance - radius,
+    y: legTopY,
     length: 3,
-    radius: radius,
+    radius,
     options: {
       label: "Upper Left Leg",
-      collisionFilter: {
-        group: leg_group,
-      },
+      collisionFilter: { group: leg_group },
       render,
       restitution: 0,
+      friction: 0.1,
     },
   });
 
   const upperLeftLeg_x_body = [
     Matter.Constraint.create({
-      bodyA: upperLeftLeg.bodies.at(-1),
-      pointA: { x: radius, y: -radius },
-      bodyB: chest.bodies.at(-1),
-      pointB: { x: 0, y: radius },
+      bodyA: upperLeftLeg.bodies.at(0),
+      pointA: { x: 0, y: -radius },
+      bodyB: hip,
+      pointB: { x: -radius, y: radius },
       stiffness: 1,
       damping: 0,
       length: 0,
     }),
-
     Matter.Constraint.create({
-      bodyA: chest.bodies.at(-1),
-      bodyB: upperLeftLeg.bodies.at(-1),
+      bodyA: hip,
+      bodyB: upperLeftLeg.bodies.at(0),
       stiffness: 0.5,
+      damping: 0,
+      length: radius * 2,
     }),
   ];
 
-  //
-
-  const lowerLeftLeg = createStick({
-    x: x - radius * 11,
-    y: y + radius * 7,
+  const lowerLeftLeg = createVerticalStick({
+    x: x - hipStance - radius,
+    y: legTopY + radius * 6,
     length: 3,
-    radius: radius,
+    radius,
     options: {
       label: "Lower Left Leg",
-      collisionFilter: {
-        group: Matter.Body.nextGroup(true),
-      },
+      collisionFilter: { group: leg_group },
       render,
+      restitution: 0,
+      friction: 0.1,
     },
   });
 
   const upperLeftLeg_x_lowerLeftLeg = [
     Matter.Constraint.create({
-      bodyA: upperLeftLeg.bodies.at(0),
-      bodyB: lowerLeftLeg.bodies.at(-1),
-    }),
-    Matter.Constraint.create({
-      bodyA: upperLeftLeg.bodies.at(0),
-      bodyB: lowerLeftLeg.bodies.at(-1),
-      stiffness: 1 / 1_000,
+      bodyA: upperLeftLeg.bodies.at(-1),
+      bodyB: lowerLeftLeg.bodies.at(0),
+      stiffness: 1,
       damping: 0,
     }),
     Matter.Constraint.create({
-      bodyA: upperLeftLeg.bodies.at(0),
-      pointA: { x: -radius, y: 0 },
-      bodyB: lowerLeftLeg.bodies.at(-1),
-      pointB: { x: radius, y: 0 },
-      stiffness: 1 / 100,
+      bodyA: upperLeftLeg.bodies.at(-1),
+      pointA: { x: 0, y: radius },
+      bodyB: lowerLeftLeg.bodies.at(0),
+      pointB: { x: 0, y: -radius },
+      stiffness: 1,
       damping: 0,
       length: 0,
     }),
   ];
   //#endregion
 
-  //#region Right Leg
+  //#region Right Leg (вертикально вниз)
 
-  const upperRightLeg = createStick({
-    x: x - radius,
-    y: y + radius * 7,
+  const upperRightLeg = createVerticalStick({
+    x: x + hipStance - radius,
+    y: legTopY,
     length: 3,
-    radius: radius,
+    radius,
     options: {
       label: "Upper Right Leg",
-      collisionFilter: {
-        group: leg_group,
-      },
+      collisionFilter: { group: leg_group },
       render,
       restitution: 0,
+      friction: 0.1,
     },
   });
 
   const upperRightLeg_x_body = [
     Matter.Constraint.create({
       bodyA: upperRightLeg.bodies.at(0),
-      pointA: { x: -radius, y: -radius },
-      bodyB: chest.bodies.at(-1),
-      pointB: { x: 0, y: radius },
+      pointA: { x: 0, y: -radius },
+      bodyB: hip,
+      pointB: { x: radius, y: radius },
       stiffness: 1,
       damping: 0,
       length: 0,
     }),
     Matter.Constraint.create({
-      bodyA: chest.bodies.at(-1),
+      bodyA: hip,
       bodyB: upperRightLeg.bodies.at(0),
       stiffness: 0.5,
+      damping: 0,
+      length: radius * 2,
     }),
   ];
 
-  // //
-
-  const lowerRightLeg = createStick({
-    x: x + radius * 5,
-    y: y + radius * 7,
+  const lowerRightLeg = createVerticalStick({
+    x: x + hipStance - radius,
+    y: legTopY + radius * 6,
     length: 3,
-    radius: radius,
+    radius,
     options: {
       label: "Lower Right Leg",
-      collisionFilter: {
-        group: Matter.Body.nextGroup(true),
-      },
+      collisionFilter: { group: leg_group },
       render,
+      restitution: 0,
+      friction: 0.1,
     },
   });
 
@@ -489,19 +525,15 @@ export function createStickman(
     Matter.Constraint.create({
       bodyA: upperRightLeg.bodies.at(-1),
       bodyB: lowerRightLeg.bodies.at(0),
-    }),
-    Matter.Constraint.create({
-      bodyA: upperRightLeg.bodies.at(-1),
-      bodyB: lowerRightLeg.bodies.at(0),
-      stiffness: 1 / 1_000,
+      stiffness: 1,
       damping: 0,
     }),
     Matter.Constraint.create({
       bodyA: upperRightLeg.bodies.at(-1),
-      pointA: { x: radius, y: 0 },
+      pointA: { x: 0, y: radius },
       bodyB: lowerRightLeg.bodies.at(0),
-      pointB: { x: -radius, y: 0 },
-      stiffness: 1 / 100,
+      pointB: { x: 0, y: -radius },
+      stiffness: 1,
       damping: 0,
       length: 0,
     }),
@@ -509,22 +541,22 @@ export function createStickman(
 
   //#endregion
 
-  //
-
+  // Распорка бёдер: держит ширину стойки (НЕ length:0 — иначе ноги стягивает в одну точку).
+  const hipWidth = hipStance * 2;
   const upperLeftLeg_x_upperRightLeg = [
     Matter.Constraint.create({
       bodyA: upperRightLeg.bodies.at(0),
-      bodyB: upperLeftLeg.bodies.at(-1),
-      stiffness: 1,
-      damping: 0,
-      length: 0,
+      bodyB: upperLeftLeg.bodies.at(0),
+      stiffness: 0.8,
+      damping: 0.05,
+      length: hipWidth,
     }),
     Matter.Constraint.create({
       bodyA: upperRightLeg.bodies.at(1),
-      bodyB: upperLeftLeg.bodies.at(-2),
-      stiffness: 1 / 10_000,
+      bodyB: upperLeftLeg.bodies.at(1),
+      stiffness: 1 / 5_000,
       damping: 1 / 1_000,
-      length: radius,
+      length: hipWidth,
     }),
   ];
 
@@ -580,5 +612,84 @@ export function createStickman(
     constraint.render.visible = false;
   }
 
+  // Дожимаем зеркальность и rest-length (stack Matter даёт float-погрешности).
+  symmetrizeStickman(composite, x);
+
   return composite;
+}
+
+function bodiesByLabel(composite: Matter.Composite, label: string): Body[] {
+  return composite.bodies.filter((b) => b.label === label);
+}
+
+/** Зеркалит left ← right относительно centerX и пересчитывает длины связей. */
+export function symmetrizeStickman(
+  composite: Matter.Composite,
+  centerX: number,
+): void {
+  const head = bodiesByLabel(composite, "Head")[0];
+  if (head) {
+    Body.setPosition(head, { x: centerX, y: head.position.y });
+    Body.setAngle(head, 0);
+  }
+  for (const chest of bodiesByLabel(composite, "Chest")) {
+    Body.setPosition(chest, { x: centerX, y: chest.position.y });
+    Body.setAngle(chest, 0);
+  }
+
+  // Arms: горизонтальные цепочки → зеркало outer↔outer (reverse index).
+  // Legs: вертикальные top→bottom → тот же индекс.
+  const limbPairs: Array<[string, string, "flip" | "same"]> = [
+    ["Upper Left Arm", "Upper Right Arm", "flip"],
+    ["Lower Left Arm", "Lower Right Arm", "flip"],
+    ["Upper Left Leg", "Upper Right Leg", "same"],
+    ["Lower Left Leg", "Lower Right Leg", "same"],
+  ];
+
+  for (const [leftLabel, rightLabel, mode] of limbPairs) {
+    const left = bodiesByLabel(composite, leftLabel);
+    const right = bodiesByLabel(composite, rightLabel);
+    if (left.length === 0 || left.length !== right.length) continue;
+    for (let i = 0; i < left.length; i++) {
+      const src =
+        mode === "flip" ? right[right.length - 1 - i]! : right[i]!;
+      const dst = left[i]!;
+      Body.setPosition(dst, {
+        x: 2 * centerX - src.position.x,
+        y: src.position.y,
+      });
+      Body.setAngle(dst, -src.angle);
+      Body.setVelocity(dst, { x: 0, y: 0 });
+      Body.setAngularVelocity(dst, 0);
+    }
+    for (const body of right) {
+      Body.setVelocity(body, { x: 0, y: 0 });
+      Body.setAngularVelocity(body, 0);
+    }
+  }
+
+  for (const body of composite.bodies) {
+    Body.setVelocity(body, { x: 0, y: 0 });
+    Body.setAngularVelocity(body, 0);
+    if (body.frictionAir === undefined || body.frictionAir === 0.01) {
+      body.frictionAir = 0.01;
+    }
+  }
+
+  refreshConstraintLengths(composite);
+}
+
+function worldPoint(body: Body, point: Matter.Vector): Matter.Vector {
+  return Vector.add(body.position, Vector.rotate(point, body.angle));
+}
+
+function refreshConstraintLengths(composite: Matter.Composite): void {
+  for (const c of composite.constraints as Constraint[]) {
+    if (!(c.bodyA && c.bodyB)) continue;
+    // Явные zero-length шарниры не трогаем.
+    if (c.length === 0) continue;
+    const a = worldPoint(c.bodyA, c.pointA);
+    const b = worldPoint(c.bodyB, c.pointB);
+    c.length = Vector.magnitude(Vector.sub(a, b));
+  }
 }

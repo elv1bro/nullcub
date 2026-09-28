@@ -1,7 +1,9 @@
+import { CLOUD_SYNC_EVENT } from "@/cloud/cloudEvents";
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type PropsWithChildren,
@@ -26,6 +28,12 @@ export function AchievementsProvider({ children }: PropsWithChildren) {
   const refreshStats = useCallback(() => {
     setStats(loadPlayerStats());
   }, []);
+
+  useEffect(() => {
+    const onSync = () => refreshStats();
+    window.addEventListener(CLOUD_SYNC_EVENT, onSync);
+    return () => window.removeEventListener(CLOUD_SYNC_EVENT, onSync);
+  }, [refreshStats]);
 
   const value = useMemo(
     () => ({ stats, refreshStats }),

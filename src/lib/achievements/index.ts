@@ -14,3 +14,9 @@ export {
   type PlayerStats,
   type BattleEndResult,
 } from "./store";
+export {
+  computePlayerLevel,
+  computePlayerXp,
+  type PlayerLevelInfo,
+  type PlayerRankId,
+} from "./playerLevel";

@@ -50,3 +50,17 @@ registerDamageType({
   color: "#fb923c",
   dotPerTick: 3,
 });
+
+registerDamageType({
+  id: "slash",
+  name: "Slash",
+  color: "#f472b6",
+  pierceIgnoreDefPct: 0.25,
+});
+
+registerDamageType({
+  id: "shock",
+  name: "Shock",
+  color: "#facc15",
+  knockbackMult: 1.25,
+});

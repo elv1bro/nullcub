@@ -19,7 +19,7 @@ export function JoinBattle() {
   const [statusError, setStatusError] = useState<string | null>(null);
   const [lobby, setLobby] = useState<WsLobbyPlayer[]>([]);
   const [myReady, setMyReady] = useState(false);
-  const [fighterRole, setFighterRole] = useState<"player" | "opponent">(
+  const [fighterRole, setFighterRole] = useState<string>(
     joinParams.role ?? "opponent",
   );
   const [transport, setTransport] = useState<WsNetTransport | null>(null);
@@ -100,7 +100,10 @@ export function JoinBattle() {
         <div className="fixed top-2 right-2 z-30 text-xs text-gray-400 font-ui pointer-events-none">
           JOIN · battle
         </div>
-        <DedicatedBattleView transport={transport} fighterRole={fighterRole} />
+        <DedicatedBattleView
+          transport={transport}
+          fighterRole={fighterRole === "player" ? "player" : "opponent"}
+        />
       </>
     );
   }
