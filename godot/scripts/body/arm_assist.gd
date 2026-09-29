@@ -905,13 +905,20 @@ func _weapon_pickup() -> Node:
 	return null
 
 
-## Авто-подбор WeaponPickup выключен, пока держим пропс, и REPICK_BLOCK_S после броска оружия клавишей; потом — прежнее значение
-## (после KO не возвращаем: break_apart сам выключает подбор).
+## Авто-подбор WeaponPickup выключен, пока держим пропс, и REPICK_BLOCK_S после броска оружия клавишей. Если WeaponPickup умеет
+## блокировать одну кисть (set_hand_blocked), блокируем только управляемую — вторая рука продолжает подбирать оружие; иначе, как
+## раньше, выключаем общий auto_pickup и потом возвращаем прежнее значение (после KO не возвращаем: break_apart сам выключает подбор).
 func _update_weapon_pickup_block() -> void:
 	var wp := _weapon_pickup()
-	if wp == null or wp.get("auto_pickup") == null:
+	if wp == null:
 		return
 	var want := held != null or _time < _wp_block_until
+	if wp.has_method("set_hand_blocked"):
+		if part_name != "" and bool(wp.call("is_hand_blocked", part_name)) != want:
+			wp.call("set_hand_blocked", part_name, want)
+		return
+	if wp.get("auto_pickup") == null:
+		return
 	if want and _wp_saved == null:
 		_wp_saved = wp.get("auto_pickup")
 		wp.set("auto_pickup", false)
@@ -922,9 +929,13 @@ func _update_weapon_pickup_block() -> void:
 
 
 func _restore_weapon_pickup() -> void:
-	if _wp_saved == null or doll == null or not is_instance_valid(doll):
+	if doll == null or not is_instance_valid(doll):
 		return
 	var wp := _weapon_pickup()
+	if wp != null and wp.has_method("set_hand_blocked") and part_name != "":
+		wp.call("set_hand_blocked", part_name, false)
+	if _wp_saved == null:
+		return
 	if wp != null and doll.alive and not doll.is_broken():
 		wp.set("auto_pickup", _wp_saved)
 	_wp_saved = null

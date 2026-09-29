@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://scrlootnai01"]
+
+[ext_resource type="Script" path="res://scenes/props/scrap/loot_item.gd" id="1_454v5"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/machines/Loot_Nails.glb" id="2_xnfgk"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_s4lca"]
+friction = 0.65
+bounce = 0.12
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_epolh"]
+size = Vector3(0.546, 0.247, 0.3)
+
+[node name="LootNails" type="RigidBody3D" unique_id=1464545300]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.4
+physics_material_override = SubResource("PhysicsMaterial_s4lca")
+continuous_cd = true
+linear_damp = 0.3
+angular_damp = 0.8
+script = ExtResource("1_454v5")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=781258610]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.012999999, -0.019499999, 0)
+shape = SubResource("BoxShape3D_epolh")
+
+[node name="Model" type="Node3D" parent="." unique_id=1235070291 instance=ExtResource("2_xnfgk")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, 0, 0)

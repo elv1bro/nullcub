@@ -39,13 +39,13 @@ script = ExtResource("4_pickup")
 [node name="Weapons" type="Node3D" parent="."]
 
 [node name="Hammer" parent="Weapons" instance=ExtResource("5_hammer")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.3, 4.2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.1, 5.2, 0)
 
 [node name="Mace" parent="Weapons" instance=ExtResource("6_mace")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.6, 5.2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.2, 4.2, 0)
 
 [node name="Axe" parent="Weapons" instance=ExtResource("7_axe")]
-transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -4.4, 4.2, 0)
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 1.5, 5.4, 0)
 
 [node name="Sword" parent="Weapons" instance=ExtResource("10_sword")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9, 0.2, 0)
@@ -81,4 +81,4 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.75)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
 theme_override_constants/outline_size = 7
 theme_override_font_sizes/font_size = 22
-text = "P1: WASD + Shift (рывок) + Space (переворот)    P2: стрелки + правый Ctrl + Enter    R: заново    1 / 2 / 3: Руины / Мастерская / Void    Esc: выход"
+text = "P1: WASD + Shift (рывок) + Space (переворот)    P2: стрелки + правый Ctrl + Enter    R: заново    1–6: Руины / Мастерская / Void / Свалка / Тело / Сборка    Esc: выход"

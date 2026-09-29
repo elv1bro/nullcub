@@ -27,7 +27,7 @@ extends "res://tests/match_probe.gd"
 const SCRAP_SCENE := "res://scenes/playground_scrap.tscn"
 const SCRAP_REPORT := "res://tests/scrap_match_probe_report.json"
 const HALF_W := 18.0
-const CEIL_Y := 12.0
+const CEIL_Y := 14.0            # потолок арены v3 (Bounds/Ceiling = верх arena_bounds)
 const SPAWN_PIT_MIN_M := 3.0
 const STAND_CHECK_S := 1.5
 const FALL_THROUGH_Y := -0.6

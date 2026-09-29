@@ -1,60 +1,67 @@
 [gd_scene format=3 uid="uid://scraparena01"]
 
-[ext_resource type="Script" path="res://scenes/arena/scrap.gd" id="1_3n8ko"]
-[ext_resource type="Environment" path="res://assets/environments/scrap_env.tres" id="2_worw6"]
-[ext_resource type="PackedScene" path="res://scenes/arena/parallax_scrap.tscn" id="3_w5wd8"]
-[ext_resource type="Script" path="res://scenes/arena/parallax_background.gd" id="4_okkq1"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_platform_lower.tscn" id="5_h5fix"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_scrap_heap_medium.tscn" id="6_vsig3"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_mystery_scrap_heap.tscn" id="7_0ambq"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_slope_30.tscn" id="8_egjga"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_puppet_limb_pile.tscn" id="9_hfx1y"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_broken_puppet.tscn" id="10_h6y86"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_half_puppet.tscn" id="11_i1t5g"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_scrap_heap_massive.tscn" id="12_g3wmt"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_support_s.tscn" id="13_skmxq"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_platform_gap.tscn" id="14_s3o1x"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_platform_m.tscn" id="15_f3bq7"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_hanging_beam.tscn" id="16_77avv"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_chain_hook.tscn" id="17_6fj6v"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_puppet_head_pile.tscn" id="18_7d8io"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_railing.tscn" id="19_7xx0i"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_wall_frame.tscn" id="20_3suvp"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_banner_frame.tscn" id="21_21ska"]
-[ext_resource type="Texture2D" path="res://assets/textures/fx/mote.png" id="22_wih1a"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_platform_end_l.tscn" id="23_plxdd"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_platform_end_r.tscn" id="24_kyl1x"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_support_m.tscn" id="25_7srmx"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_support_l.tscn" id="26_17tj6"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_ladder.tscn" id="27_8frrs"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_chain_heap.tscn" id="28_snicw"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_cloth_scrap_heap.tscn" id="29_tm4uu"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_broken_weapons_pile.tscn" id="30_0wji4"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_gear_heap.tscn" id="31_aelwf"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_scrap_heap_small.tscn" id="32_20q6w"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_broken_armor_heap.tscn" id="33_g3v18"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_metal_parts_heap.tscn" id="34_hy05m"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_wooden_crate.tscn" id="35_ypbn3"]
-[ext_resource type="Script" path="res://scenes/props/breakable.gd" id="36_8ya26"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_reinforced_crate.tscn" id="37_gxsmt"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_wooden_pallet.tscn" id="38_4od7o"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_wooden_barrel.tscn" id="39_cu3md"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_metal_barrel.tscn" id="40_x07lf"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_wooden_beam.tscn" id="41_onugc"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_junk_cart.tscn" id="42_rbvqg"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_large_shipping_crate.tscn" id="43_yno3w"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_head_cracked.tscn" id="44_axtod"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_gear_medium.tscn" id="45_vryov"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_scrap_board.tscn" id="46_ck383"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_helmet.tscn" id="47_w2roj"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_head_sad.tscn" id="48_d85wb"]
-[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_shield_crown.tscn" id="49_u0147"]
+[ext_resource type="Script" path="res://scenes/arena/scrap.gd" id="1_egjga"]
+[ext_resource type="Environment" path="res://assets/environments/scrap_env.tres" id="2_hfx1y"]
+[ext_resource type="PackedScene" path="res://scenes/arena/parallax_scrap_scatter.tscn" id="3_h6y86"]
+[ext_resource type="Script" path="res://scenes/arena/parallax_background.gd" id="4_i1t5g"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_platform_lower.tscn" id="5_g3wmt"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_scrap_heap_medium.tscn" id="6_skmxq"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_mystery_scrap_heap.tscn" id="7_s3o1x"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_slope_30.tscn" id="8_f3bq7"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_puppet_limb_pile.tscn" id="9_77avv"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_broken_puppet.tscn" id="10_6fj6v"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_half_puppet.tscn" id="11_7d8io"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_support_m.tscn" id="12_7xx0i"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_platform_end_l.tscn" id="13_3suvp"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_platform_end_r.tscn" id="14_21ska"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_railing.tscn" id="15_wih1a"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_chain_hook.tscn" id="16_plxdd"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_puppet_head_pile.tscn" id="17_kyl1x"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_scrap_heap_massive.tscn" id="18_7srmx"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_hanging_beam.tscn" id="19_17tj6"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/deco_chain_long.tscn" id="20_8frrs"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_support_s.tscn" id="21_snicw"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_support_l.tscn" id="22_tm4uu"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_ladder.tscn" id="23_0wji4"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/kit_banner_frame.tscn" id="24_aelwf"]
+[ext_resource type="Texture2D" path="res://assets/textures/fx/mote.png" id="25_20q6w"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_chain_heap.tscn" id="26_g3v18"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_cloth_scrap_heap.tscn" id="27_hy05m"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_broken_weapons_pile.tscn" id="28_ypbn3"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_gear_heap.tscn" id="29_8ya26"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_scrap_heap_small.tscn" id="30_gxsmt"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_metal_parts_heap.tscn" id="31_4od7o"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bodies_broken_armor_heap.tscn" id="32_cu3md"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/machine_magnet.tscn" id="33_x07lf"]
+[ext_resource type="Script" path="res://scenes/props/scrap/machines/magnet_machine.gd" id="34_onugc"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/machine_steam_vent.tscn" id="35_rbvqg"]
+[ext_resource type="Script" path="res://scenes/props/scrap/machines/steam_vent_machine.gd" id="36_yno3w"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/machine_press.tscn" id="37_axtod"]
+[ext_resource type="Script" path="res://scenes/props/scrap/machines/press_machine.gd" id="38_vryov"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/machine_chute.tscn" id="39_ck383"]
+[ext_resource type="Script" path="res://scenes/props/scrap/machines/chute_machine.gd" id="40_w2roj"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_wooden_crate.tscn" id="41_d85wb"]
+[ext_resource type="Script" path="res://scenes/props/breakable.gd" id="42_u0147"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_reinforced_crate.tscn" id="43_fu6t0"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_wooden_barrel.tscn" id="44_v1ick"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_junk_cart.tscn" id="45_0h8ia"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_metal_barrel.tscn" id="46_tfbxy"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_large_shipping_crate.tscn" id="47_teisd"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_metal_barrel_dented.tscn" id="48_k6l26"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_head_cracked.tscn" id="49_kd42u"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_gear_medium.tscn" id="50_5abbf"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_scrap_board.tscn" id="51_r8o62"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_helmet.tscn" id="52_lbhuy"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_bolt.tscn" id="53_nl5gv"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_doll_head_sad.tscn" id="54_w7nj5"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/bit_shield_crown.tscn" id="55_ffg8j"]
+[ext_resource type="Script" path="res://scenes/ui/run_inventory_counter.gd" id="56_g48oj"]
 
-[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_fu6t0"]
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_k3np4"]
 dof_blur_far_enabled = true
-dof_blur_far_distance = 24.0
-dof_blur_far_transition = 40.0
-dof_blur_amount = 0.05
+dof_blur_far_distance = 45.0
+dof_blur_far_transition = 70.0
+dof_blur_amount = 0.03
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_diwqe"]
 friction = 0.9
@@ -64,23 +71,19 @@ bounce = 0.05
 friction = 0.95
 bounce = 0.02
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_v1ick"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_mepsv"]
 friction = 0.95
 bounce = 0.02
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_0h8ia"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wxwli"]
 friction = 0.9
 bounce = 0.05
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_tfbxy"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ggig3"]
 friction = 0.95
 bounce = 0.02
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_teisd"]
-friction = 0.95
-bounce = 0.02
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_k6l26"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_fs2t1"]
 friction = 0.95
 bounce = 0.02
 
@@ -88,116 +91,25 @@ bounce = 0.02
 friction = 0.7
 bounce = 0.1
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_kd42u"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_e62nv"]
 friction = 0.9
 bounce = 0.05
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5abbf"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n3tx2"]
 friction = 0.9
 bounce = 0.05
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_r8o62"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_h00x4"]
 friction = 0.7
 bounce = 0.1
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_lbhuy"]
-friction = 0.7
-bounce = 0.1
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_nl5gv"]
-friction = 0.7
-bounce = 0.1
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_w7nj5"]
-friction = 0.7
-bounce = 0.1
-
-[sub_resource type="Gradient" id="Gradient_ffg8j"]
-offsets = PackedFloat32Array(0, 0.12, 0.6, 1)
-colors = PackedColorArray(3, 1.4, 0.45, 0, 3, 1.4, 0.45, 1, 2.2, 0.6, 0.15, 0.8, 1, 0.22, 0.05, 0)
-
-[sub_resource type="GradientTexture1D" id="GradientTexture1D_g48oj"]
-gradient = SubResource("Gradient_ffg8j")
-
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_k3np4"]
-lifetime_randomness = 0.4
-emission_shape = 3
-emission_box_extents = Vector3(1.3, 0.2, 0.7)
-direction = Vector3(0, 1, 0)
-spread = 16.0
-initial_velocity_min = 0.7
-initial_velocity_max = 1.7
-gravity = Vector3(0, 0.1, 0)
-damping_min = 0.15
-damping_max = 0.35
-scale_min = 0.6
-scale_max = 1.4
-color_ramp = SubResource("GradientTexture1D_g48oj")
-turbulence_enabled = true
-turbulence_noise_strength = 0.8
-turbulence_noise_scale = 2.5
-turbulence_influence_min = 0.05
-turbulence_influence_max = 0.15
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mepsv"]
-transparency = 1
-blend_mode = 1
-shading_mode = 0
-vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("22_wih1a")
-billboard_mode = 3
-billboard_keep_scale = true
-particles_anim_h_frames = 1
-particles_anim_v_frames = 1
-particles_anim_loop = false
-
-[sub_resource type="QuadMesh" id="QuadMesh_wxwli"]
-material = SubResource("StandardMaterial3D_mepsv")
-size = Vector2(0.07, 0.07)
-
-[sub_resource type="Gradient" id="Gradient_ggig3"]
-offsets = PackedFloat32Array(0, 0.3, 1)
-colors = PackedColorArray(1, 0.42, 0.12, 0, 1, 0.42, 0.12, 0.16, 0.9, 0.3, 0.1, 0)
-
-[sub_resource type="GradientTexture1D" id="GradientTexture1D_fs2t1"]
-gradient = SubResource("Gradient_ggig3")
-
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_e62nv"]
-lifetime_randomness = 0.3
-emission_shape = 3
-emission_box_extents = Vector3(1.1, 0.2, 0.5)
-direction = Vector3(0, 1, 0)
-spread = 10.0
-initial_velocity_min = 0.2
-initial_velocity_max = 0.45
-gravity = Vector3(0, 0, 0)
-scale_min = 0.8
-scale_max = 1.5
-color_ramp = SubResource("GradientTexture1D_fs2t1")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n3tx2"]
-transparency = 1
-blend_mode = 1
-shading_mode = 0
-vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("22_wih1a")
-billboard_mode = 3
-billboard_keep_scale = true
-particles_anim_h_frames = 1
-particles_anim_v_frames = 1
-particles_anim_loop = false
-
-[sub_resource type="QuadMesh" id="QuadMesh_h00x4"]
-material = SubResource("StandardMaterial3D_n3tx2")
-size = Vector2(1.8, 1.8)
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_caqxe"]
-friction = 0.9
-bounce = 0.05
+friction = 0.95
+bounce = 0.02
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_8oku5"]
-friction = 0.9
-bounce = 0.05
+friction = 0.7
+bounce = 0.1
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_hvr75"]
 friction = 0.7
@@ -211,27 +123,110 @@ bounce = 0.1
 friction = 0.9
 bounce = 0.05
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_p78i2"]
+friction = 0.7
+bounce = 0.1
+
+[sub_resource type="Gradient" id="Gradient_upupy"]
+offsets = PackedFloat32Array(0, 0.12, 0.6, 1)
+colors = PackedColorArray(3, 1.4, 0.45, 0, 3, 1.4, 0.45, 1, 2.2, 0.6, 0.15, 0.8, 1, 0.22, 0.05, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_fwqed"]
+gradient = SubResource("Gradient_upupy")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_k72e8"]
+lifetime_randomness = 0.4
+emission_shape = 3
+emission_box_extents = Vector3(1.3, 0.2, 0.7)
+direction = Vector3(0, 1, 0)
+spread = 16.0
+initial_velocity_min = 0.7
+initial_velocity_max = 1.7
+gravity = Vector3(0, 0.1, 0)
+damping_min = 0.15
+damping_max = 0.35
+scale_min = 0.6
+scale_max = 1.4
+color_ramp = SubResource("GradientTexture1D_fwqed")
+turbulence_enabled = true
+turbulence_noise_strength = 0.8
+turbulence_noise_scale = 2.5
+turbulence_influence_min = 0.05
+turbulence_influence_max = 0.15
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_blek8"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("25_20q6w")
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_3wtcr"]
+material = SubResource("StandardMaterial3D_blek8")
+size = Vector2(0.07, 0.07)
+
+[sub_resource type="Gradient" id="Gradient_dd8ix"]
+offsets = PackedFloat32Array(0, 0.3, 1)
+colors = PackedColorArray(1, 0.42, 0.12, 0, 1, 0.42, 0.12, 0.16, 0.9, 0.3, 0.1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_nsm7w"]
+gradient = SubResource("Gradient_dd8ix")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_qsjfs"]
+lifetime_randomness = 0.3
+emission_shape = 3
+emission_box_extents = Vector3(1.1, 0.2, 0.5)
+direction = Vector3(0, 1, 0)
+spread = 10.0
+initial_velocity_min = 0.2
+initial_velocity_max = 0.45
+gravity = Vector3(0, 0, 0)
+scale_min = 0.8
+scale_max = 1.5
+color_ramp = SubResource("GradientTexture1D_nsm7w")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fwp3p"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("25_20q6w")
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_b8kpv"]
+material = SubResource("StandardMaterial3D_fwp3p")
+size = Vector2(1.8, 1.8)
+
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_equ4y"]
 friction = 0.6
 bounce = 0.15
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_p78i2"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_dlxy4"]
 friction = 0.95
 bounce = 0.02
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_upupy"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_e2ryx"]
 friction = 0.6
 bounce = 0.15
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_fwqed"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_kpgsm"]
 friction = 0.95
 bounce = 0.02
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_k72e8"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6mwbg"]
 friction = 0.6
 bounce = 0.15
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_blek8"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wnsdv"]
 friction = 0.6
 bounce = 0.15
 
@@ -239,15 +234,15 @@ bounce = 0.15
 friction = 0.8
 bounce = 0.1
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_3wtcr"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5lmd0"]
 friction = 0.8
 bounce = 0.1
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_dd8ix"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_7qyoc"]
 friction = 0.8
 bounce = 0.1
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_nsm7w"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_8odru"]
 friction = 0.8
 bounce = 0.1
 
@@ -255,50 +250,50 @@ bounce = 0.1
 friction = 0.55
 bounce = 0.15
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_qsjfs"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_84g7g"]
 friction = 0.8
 bounce = 0.1
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_fwp3p"]
-friction = 0.8
-bounce = 0.1
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b8kpv"]
-friction = 0.8
-bounce = 0.1
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_td1ty"]
+friction = 0.55
+bounce = 0.15
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_31h2a"]
 friction = 0.9
 bounce = 0.05
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_dlxy4"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wvba3"]
 friction = 0.6
 bounce = 0.15
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_e2ryx"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_0c0pt"]
 friction = 0.9
 bounce = 0.05
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_kpgsm"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_t4fye"]
 friction = 0.6
 bounce = 0.15
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6mwbg"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_sapc7"]
+friction = 0.6
+bounce = 0.15
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ite6u"]
 friction = 0.9
 bounce = 0.05
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wnsdv"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_0euy5"]
 friction = 0.6
 bounce = 0.15
 
-[sub_resource type="Gradient" id="Gradient_5lmd0"]
+[sub_resource type="Gradient" id="Gradient_fc016"]
 offsets = PackedFloat32Array(0, 0.2, 0.8, 1)
 colors = PackedColorArray(1, 0.8, 0.6, 0, 1, 0.8, 0.6, 0.5, 1, 0.8, 0.6, 0.5, 1, 0.8, 0.6, 0)
 
-[sub_resource type="GradientTexture1D" id="GradientTexture1D_7qyoc"]
-gradient = SubResource("Gradient_5lmd0")
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_f7sa0"]
+gradient = SubResource("Gradient_fc016")
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_8odru"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_i6u0n"]
 lifetime_randomness = 0.4
 emission_shape = 3
 emission_box_extents = Vector3(18, 4.8, 2.4)
@@ -311,59 +306,59 @@ damping_min = 0.05
 damping_max = 0.2
 scale_min = 0.5
 scale_max = 1.2
-color_ramp = SubResource("GradientTexture1D_7qyoc")
+color_ramp = SubResource("GradientTexture1D_f7sa0")
 turbulence_enabled = true
 turbulence_noise_strength = 0.6
 turbulence_noise_scale = 4.0
 turbulence_influence_min = 0.02
 turbulence_influence_max = 0.06
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_84g7g"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u7gtu"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
 albedo_color = Color(1, 0.84, 0.66, 0.35)
-albedo_texture = ExtResource("22_wih1a")
+albedo_texture = ExtResource("25_20q6w")
 billboard_mode = 3
 billboard_keep_scale = true
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="QuadMesh" id="QuadMesh_td1ty"]
-material = SubResource("StandardMaterial3D_84g7g")
+[sub_resource type="QuadMesh" id="QuadMesh_mraqd"]
+material = SubResource("StandardMaterial3D_u7gtu")
 size = Vector2(0.05, 0.05)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_wvba3"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_wr0v1"]
 size = Vector3(1, 40, 8)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_0c0pt"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_8mgkj"]
 size = Vector3(1, 40, 8)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_t4fye"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_06rg1"]
 size = Vector3(38, 1, 8)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_sapc7"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_633sl"]
 size = Vector3(6, 0.5, 6)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_ite6u"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_iaj5q"]
 size = Vector3(44, 0.4, 10.7)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_0euy5"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_so3pp"]
 size = Vector3(2.8, 5, 6)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_fc016"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_mf6uh"]
 size = Vector3(40, 1, 8)
 
-[node name="Scrap" type="Node3D" unique_id=677399246]
-script = ExtResource("1_3n8ko")
+[node name="Scrap" type="Node3D" unique_id=703000553]
+script = ExtResource("1_egjga")
 
-[node name="Environment" type="WorldEnvironment" parent="." unique_id=351530802]
-environment = ExtResource("2_worw6")
-camera_attributes = SubResource("CameraAttributesPractical_fu6t0")
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=96725702]
+environment = ExtResource("2_hfx1y")
+camera_attributes = SubResource("CameraAttributesPractical_k3np4")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=589513477]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=201088998]
 transform = Transform3D(-0.73994005, -0.30299073, 0.60057086, 0, 0.8928127, 0.4504281, -0.6726728, 0.3332898, -0.6606279, 0, 10, 0)
 light_color = Color(1, 0.72, 0.48, 1)
 light_energy = 2.2
@@ -376,21 +371,21 @@ directional_shadow_mode = 1
 directional_shadow_split_1 = 0.3
 directional_shadow_max_distance = 50.0
 
-[node name="Fill" type="DirectionalLight3D" parent="." unique_id=1576635140]
+[node name="Fill" type="DirectionalLight3D" parent="." unique_id=703328413]
 transform = Transform3D(0.86337197, 0.2272944, -0.45047325, 0, 0.89278996, 0.45047325, 0.50456804, -0.38892597, 0.77080977, 0, 8, 10)
 light_color = Color(0.62, 0.64, 1, 1)
 light_energy = 0.85
 light_indirect_energy = 0.0
 light_specular = 0.4
 
-[node name="Rim" type="DirectionalLight3D" parent="." unique_id=292999369]
+[node name="Rim" type="DirectionalLight3D" parent="." unique_id=1569943382]
 transform = Transform3D(-0.8240419, 0.14127944, -0.5486302, 0, 0.96840644, 0.24937733, 0.56652886, 0.20549737, -0.7980075, 0, 8, -10)
 light_color = Color(0.72, 0.76, 1, 1)
 light_energy = 0.6
 light_indirect_energy = 0.0
 light_specular = 0.6
 
-[node name="CameraKey" type="SpotLight3D" parent="." unique_id=1094877108]
+[node name="CameraKey" type="SpotLight3D" parent="." unique_id=681310113]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 14)
 light_color = Color(1, 0.93, 0.86, 1)
 light_energy = 14.0
@@ -402,177 +397,283 @@ spot_attenuation = 1.6
 spot_angle = 40.0
 spot_angle_attenuation = 0.6
 
-[node name="Parallax" type="Node3D" parent="." unique_id=275979896 instance=ExtResource("3_w5wd8")]
-script = ExtResource("4_okkq1")
+[node name="Parallax" type="Node3D" parent="." unique_id=574081464 instance=ExtResource("3_h6y86")]
+script = ExtResource("4_i1t5g")
 layer2_y_offset = -0.2
 layer1_y_offset = -1.0
-metadata/source = "docs/refs/biomes/01-scrap/parallax.png → tools/parallax_cut_scrap.py; LAYER 3 NEAR SCRAP не используется (ближний план под 3D-кучи, см. docstring скрипта)"
+metadata/source = "scenes/arena/parallax_scrap_scatter.tscn: небо и дальний фон — картинки v2, средний и передний планы — запечённые 3D-конструкции (tools/parallax_bake_scrap.py) — docs/plan-demo/PARALLAX.md"
 
-[node name="Ground" type="Node3D" parent="." unique_id=288112456]
+[node name="Ground" type="Node3D" parent="." unique_id=525260031]
 
-[node name="Floor" type="StaticBody3D" parent="Ground" unique_id=1680138124 instance=ExtResource("5_h5fix")]
+[node name="Floor" type="StaticBody3D" parent="Ground" unique_id=1680138124 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_1" type="StaticBody3D" parent="Ground" unique_id=1908075510 instance=ExtResource("5_h5fix")]
+[node name="Floor_1" type="StaticBody3D" parent="Ground" unique_id=248478557 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_2" type="StaticBody3D" parent="Ground" unique_id=183492292 instance=ExtResource("5_h5fix")]
+[node name="Floor_2" type="StaticBody3D" parent="Ground" unique_id=1898302919 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_3" type="StaticBody3D" parent="Ground" unique_id=1033950416 instance=ExtResource("5_h5fix")]
+[node name="Floor_3" type="StaticBody3D" parent="Ground" unique_id=141484817 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_4" type="StaticBody3D" parent="Ground" unique_id=932463851 instance=ExtResource("5_h5fix")]
+[node name="Floor_4" type="StaticBody3D" parent="Ground" unique_id=1794655960 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_5" type="StaticBody3D" parent="Ground" unique_id=1641239602 instance=ExtResource("5_h5fix")]
+[node name="Floor_5" type="StaticBody3D" parent="Ground" unique_id=780401365 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_6" type="StaticBody3D" parent="Ground" unique_id=675750425 instance=ExtResource("5_h5fix")]
+[node name="Floor_6" type="StaticBody3D" parent="Ground" unique_id=1742798111 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_7" type="StaticBody3D" parent="Ground" unique_id=1697741279 instance=ExtResource("5_h5fix")]
+[node name="Floor_7" type="StaticBody3D" parent="Ground" unique_id=1985243298 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_8" type="StaticBody3D" parent="Ground" unique_id=2009910025 instance=ExtResource("5_h5fix")]
+[node name="Floor_8" type="StaticBody3D" parent="Ground" unique_id=1659332056 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_9" type="StaticBody3D" parent="Ground" unique_id=1677399385 instance=ExtResource("5_h5fix")]
+[node name="Floor_9" type="StaticBody3D" parent="Ground" unique_id=554881283 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_10" type="StaticBody3D" parent="Ground" unique_id=154597575 instance=ExtResource("5_h5fix")]
+[node name="Floor_10" type="StaticBody3D" parent="Ground" unique_id=512630709 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_11" type="StaticBody3D" parent="Ground" unique_id=363971399 instance=ExtResource("5_h5fix")]
+[node name="Floor_11" type="StaticBody3D" parent="Ground" unique_id=1256357217 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_12" type="StaticBody3D" parent="Ground" unique_id=1038698333 instance=ExtResource("5_h5fix")]
+[node name="Floor_12" type="StaticBody3D" parent="Ground" unique_id=1706298404 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_13" type="StaticBody3D" parent="Ground" unique_id=1625818606 instance=ExtResource("5_h5fix")]
+[node name="Floor_13" type="StaticBody3D" parent="Ground" unique_id=106173639 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_14" type="StaticBody3D" parent="Ground" unique_id=444888308 instance=ExtResource("5_h5fix")]
+[node name="Floor_14" type="StaticBody3D" parent="Ground" unique_id=403576605 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_15" type="StaticBody3D" parent="Ground" unique_id=1498280673 instance=ExtResource("5_h5fix")]
+[node name="Floor_15" type="StaticBody3D" parent="Ground" unique_id=1416503275 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_16" type="StaticBody3D" parent="Ground" unique_id=1140385663 instance=ExtResource("5_h5fix")]
+[node name="Floor_16" type="StaticBody3D" parent="Ground" unique_id=955950883 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_17" type="StaticBody3D" parent="Ground" unique_id=1051965273 instance=ExtResource("5_h5fix")]
+[node name="Floor_17" type="StaticBody3D" parent="Ground" unique_id=1764379205 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_18" type="StaticBody3D" parent="Ground" unique_id=1623727 instance=ExtResource("5_h5fix")]
+[node name="Floor_18" type="StaticBody3D" parent="Ground" unique_id=1449109703 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_19" type="StaticBody3D" parent="Ground" unique_id=1789703588 instance=ExtResource("5_h5fix")]
+[node name="Floor_19" type="StaticBody3D" parent="Ground" unique_id=440921609 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Start" type="Node3D" parent="." unique_id=1627172383]
+[node name="Start" type="Node3D" parent="." unique_id=1620242562]
 
-[node name="Heap_Awakening" type="StaticBody3D" parent="Start" unique_id=1501877088 instance=ExtResource("6_vsig3")]
+[node name="Heap_Awakening" type="StaticBody3D" parent="Start" unique_id=1501877088 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, -17, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Mystery" type="StaticBody3D" parent="Start" unique_id=1903192656 instance=ExtResource("7_0ambq")]
+[node name="Heap_Mystery" type="StaticBody3D" parent="Start" unique_id=1903192656 instance=ExtResource("7_s3o1x")]
 transform = Transform3D(0.9975641, 0, -0.06975647, 0, 1, 0, 0.06975647, 0, 0.9975641, -14.9, 0, 0)
-physics_material_override = SubResource("PhysicsMaterial_v1ick")
+physics_material_override = SubResource("PhysicsMaterial_mepsv")
 
-[node name="Slope" type="StaticBody3D" parent="Start" unique_id=469176876 instance=ExtResource("8_egjga")]
+[node name="Slope" type="StaticBody3D" parent="Start" unique_id=469176876 instance=ExtResource("8_f3bq7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 0)
-physics_material_override = SubResource("PhysicsMaterial_0h8ia")
+physics_material_override = SubResource("PhysicsMaterial_wxwli")
 
-[node name="Heap_Limbs" type="Node3D" parent="Start" unique_id=1257106828 instance=ExtResource("9_hfx1y")]
+[node name="Heap_Limbs" type="Node3D" parent="Start" unique_id=1257106828 instance=ExtResource("9_77avv")]
 transform = Transform3D(0.9975641, 0, 0.06975647, 0, 1, 0, -0.06975647, 0, 0.9975641, -11.2, 0, 0)
 
-[node name="BrokenPuppet" type="StaticBody3D" parent="Start" unique_id=547214298 instance=ExtResource("10_h6y86")]
-transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, -12.6, 0, -1.6)
-physics_material_override = SubResource("PhysicsMaterial_tfbxy")
+[node name="BrokenPuppet" type="StaticBody3D" parent="Start" unique_id=547214298 instance=ExtResource("10_6fj6v")]
+transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, -12.6, 0, -1.7)
+physics_material_override = SubResource("PhysicsMaterial_ggig3")
 
-[node name="HalfPuppet" type="StaticBody3D" parent="Start" unique_id=995484393 instance=ExtResource("11_i1t5g")]
-transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, -16.2, 0, -1.5)
-physics_material_override = SubResource("PhysicsMaterial_teisd")
+[node name="HalfPuppet" type="StaticBody3D" parent="Start" unique_id=995484393 instance=ExtResource("11_7d8io")]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, -16.2, 0, -1.7)
+physics_material_override = SubResource("PhysicsMaterial_fs2t1")
 
-[node name="Heap_Mountain" type="StaticBody3D" parent="Start" unique_id=244937628 instance=ExtResource("12_g3wmt")]
-transform = Transform3D(1.4917829, 0, 0.1567927, 0, 1.5, 0, -0.1567927, 0, 1.4917829, -12.5, -1.2, -9)
-physics_material_override = SubResource("PhysicsMaterial_k6l26")
-
-[node name="Platforms" type="Node3D" parent="." unique_id=1525306479]
-
-[node name="Support" type="StaticBody3D" parent="Platforms" unique_id=317212471 instance=ExtResource("13_skmxq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -1.4)
+[node name="Ledge_Support" type="StaticBody3D" parent="Start" unique_id=1536214688 instance=ExtResource("12_7xx0i")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -1.7)
 physics_material_override = SubResource("PhysicsMaterial_q13pv")
 
-[node name="Support_1" type="StaticBody3D" parent="Platforms" unique_id=815065518 instance=ExtResource("13_skmxq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -1.4)
-physics_material_override = SubResource("PhysicsMaterial_q13pv")
+[node name="Ledge_DeckL" type="StaticBody3D" parent="Start" unique_id=1235140012 instance=ExtResource("13_3suvp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 5, 0)
+physics_material_override = SubResource("PhysicsMaterial_e62nv")
 
-[node name="Support_2" type="StaticBody3D" parent="Platforms" unique_id=1388629683 instance=ExtResource("13_skmxq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -1.4)
-physics_material_override = SubResource("PhysicsMaterial_q13pv")
+[node name="Ledge_DeckR" type="StaticBody3D" parent="Start" unique_id=881367 instance=ExtResource("14_21ska")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 5, 0)
+physics_material_override = SubResource("PhysicsMaterial_n3tx2")
 
-[node name="DeckGap" type="StaticBody3D" parent="Platforms" unique_id=927596083 instance=ExtResource("14_s3o1x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 4, 0)
-physics_material_override = SubResource("PhysicsMaterial_kd42u")
+[node name="Railing" type="StaticBody3D" parent="Start" unique_id=2141988799 instance=ExtResource("15_wih1a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.9, 5, -1.05)
+physics_material_override = SubResource("PhysicsMaterial_h00x4")
 
-[node name="DeckM" type="StaticBody3D" parent="Platforms" unique_id=841264906 instance=ExtResource("15_f3bq7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 4, 0)
-physics_material_override = SubResource("PhysicsMaterial_5abbf")
+[node name="ChainHook" type="Node3D" parent="Start" unique_id=1638792238 instance=ExtResource("16_plxdd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.6, 4.62, -0.95)
 
-[node name="HangingBeam" type="StaticBody3D" parent="Platforms" unique_id=337293923 instance=ExtResource("16_77avv")]
+[node name="Heap_Heads" type="Node3D" parent="Start" unique_id=1782056704 instance=ExtResource("17_kyl1x")]
+transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, -16.5, 5, 0.05)
+
+[node name="Heap_Mountain" type="StaticBody3D" parent="Start" unique_id=244937628 instance=ExtResource("18_7srmx")]
+transform = Transform3D(1.4917829, 0, 0.1567927, 0, 1.5, 0, -0.1567927, 0, 1.4917829, -14, -2, -12.5)
+physics_material_override = SubResource("PhysicsMaterial_caqxe")
+
+[node name="Platforms" type="Node3D" parent="." unique_id=20751328]
+
+[node name="PitBeam" type="StaticBody3D" parent="Platforms" unique_id=337293923 instance=ExtResource("19_17tj6")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, 0)
-physics_material_override = SubResource("PhysicsMaterial_r8o62")
+physics_material_override = SubResource("PhysicsMaterial_8oku5")
 
-[node name="ChainHook" type="Node3D" parent="Platforms" unique_id=1638792238 instance=ExtResource("17_6fj6v")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 3.62, -0.85)
+[node name="PitChain" type="Node3D" parent="Platforms" unique_id=735511563 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 6, 0)
 
-[node name="ChainHook_1" type="Node3D" parent="Platforms" unique_id=1639767531 instance=ExtResource("17_6fj6v")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3.62, -0.85)
+[node name="PitChain_1" type="Node3D" parent="Platforms" unique_id=1656906837 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 8, 0)
 
-[node name="Heap_Heads" type="Node3D" parent="Platforms" unique_id=1782056704 instance=ExtResource("18_7d8io")]
-transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, -5.4, 0, 0.05)
+[node name="PitChain_2" type="Node3D" parent="Platforms" unique_id=1447532984 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 10, 0)
 
-[node name="Railing" type="StaticBody3D" parent="Platforms" unique_id=2141988799 instance=ExtResource("19_7xx0i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 4, -0.9)
-physics_material_override = SubResource("PhysicsMaterial_lbhuy")
+[node name="PitChain_3" type="Node3D" parent="Platforms" unique_id=905926978 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 12, 0)
 
-[node name="WallFrame" type="StaticBody3D" parent="Platforms" unique_id=656357382 instance=ExtResource("20_3suvp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -3.9)
-physics_material_override = SubResource("PhysicsMaterial_nl5gv")
+[node name="PitChain_4" type="Node3D" parent="Platforms" unique_id=480898286 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 14, 0)
 
-[node name="BannerFrame" type="StaticBody3D" parent="Platforms" unique_id=1302817247 instance=ExtResource("21_21ska")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, -3.5)
-physics_material_override = SubResource("PhysicsMaterial_w7nj5")
+[node name="PitChain_5" type="Node3D" parent="Platforms" unique_id=1611277703 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 16, 0)
 
-[node name="Pit" type="Node3D" parent="." unique_id=438261741]
+[node name="PitChain_6" type="Node3D" parent="Platforms" unique_id=1195036637 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 18, 0)
 
-[node name="Heap_PitWall" type="StaticBody3D" parent="Pit" unique_id=970237215 instance=ExtResource("6_vsig3")]
+[node name="PitChain_7" type="Node3D" parent="Platforms" unique_id=324274510 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 6, 0)
+
+[node name="PitChain_8" type="Node3D" parent="Platforms" unique_id=1229825477 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 8, 0)
+
+[node name="PitChain_9" type="Node3D" parent="Platforms" unique_id=81677039 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 10, 0)
+
+[node name="PitChain_10" type="Node3D" parent="Platforms" unique_id=555602468 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 12, 0)
+
+[node name="PitChain_11" type="Node3D" parent="Platforms" unique_id=1014539951 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 14, 0)
+
+[node name="PitChain_12" type="Node3D" parent="Platforms" unique_id=535317034 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 16, 0)
+
+[node name="PitChain_13" type="Node3D" parent="Platforms" unique_id=1690654308 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 18, 0)
+
+[node name="Island" type="StaticBody3D" parent="Platforms" unique_id=1172296348 instance=ExtResource("19_17tj6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 5.2, 0)
+physics_material_override = SubResource("PhysicsMaterial_8oku5")
+
+[node name="IslandChain" type="Node3D" parent="Platforms" unique_id=1278950333 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 9.2, 0)
+
+[node name="IslandChain_1" type="Node3D" parent="Platforms" unique_id=1295240138 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 11.2, 0)
+
+[node name="IslandChain_2" type="Node3D" parent="Platforms" unique_id=1590413186 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 13.2, 0)
+
+[node name="IslandChain_3" type="Node3D" parent="Platforms" unique_id=1097649071 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 15.2, 0)
+
+[node name="IslandChain_4" type="Node3D" parent="Platforms" unique_id=2052646151 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 17.2, 0)
+
+[node name="IslandChain_5" type="Node3D" parent="Platforms" unique_id=2145386426 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 19.2, 0)
+
+[node name="IslandChain_6" type="Node3D" parent="Platforms" unique_id=1834369007 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 9.2, 0)
+
+[node name="IslandChain_7" type="Node3D" parent="Platforms" unique_id=1547973210 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 11.2, 0)
+
+[node name="IslandChain_8" type="Node3D" parent="Platforms" unique_id=629323713 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 13.2, 0)
+
+[node name="IslandChain_9" type="Node3D" parent="Platforms" unique_id=1208020564 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 15.2, 0)
+
+[node name="IslandChain_10" type="Node3D" parent="Platforms" unique_id=1028117970 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 17.2, 0)
+
+[node name="IslandChain_11" type="Node3D" parent="Platforms" unique_id=1405864416 instance=ExtResource("20_8frrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 19.2, 0)
+
+[node name="R1_Support" type="StaticBody3D" parent="Platforms" unique_id=317212471 instance=ExtResource("21_snicw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -1.7)
+physics_material_override = SubResource("PhysicsMaterial_hvr75")
+
+[node name="R1_DeckL" type="StaticBody3D" parent="Platforms" unique_id=759534736 instance=ExtResource("13_3suvp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 4, 0)
+physics_material_override = SubResource("PhysicsMaterial_e62nv")
+
+[node name="R1_DeckR" type="StaticBody3D" parent="Platforms" unique_id=912423550 instance=ExtResource("14_21ska")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 4, 0)
+physics_material_override = SubResource("PhysicsMaterial_n3tx2")
+
+[node name="R2_Support" type="StaticBody3D" parent="Platforms" unique_id=872906535 instance=ExtResource("22_tm4uu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.8, 0, -1.7)
+physics_material_override = SubResource("PhysicsMaterial_pvl3p")
+
+[node name="R2_DeckL" type="StaticBody3D" parent="Platforms" unique_id=1694482157 instance=ExtResource("13_3suvp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.8, 7, 0)
+physics_material_override = SubResource("PhysicsMaterial_e62nv")
+
+[node name="R2_DeckR" type="StaticBody3D" parent="Platforms" unique_id=640104893 instance=ExtResource("14_21ska")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.8, 7, 0)
+physics_material_override = SubResource("PhysicsMaterial_n3tx2")
+
+[node name="Railing_1" type="StaticBody3D" parent="Platforms" unique_id=166091294 instance=ExtResource("15_wih1a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.9, 4, -1.05)
+physics_material_override = SubResource("PhysicsMaterial_h00x4")
+
+[node name="Railing_2" type="StaticBody3D" parent="Platforms" unique_id=1708090400 instance=ExtResource("15_wih1a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.7, 7, -1.05)
+physics_material_override = SubResource("PhysicsMaterial_h00x4")
+
+[node name="LadderUp" type="StaticBody3D" parent="Platforms" unique_id=1838754280 instance=ExtResource("23_0wji4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.2, 4, -1.05)
+physics_material_override = SubResource("PhysicsMaterial_n45lm")
+
+[node name="ChainHook_1" type="Node3D" parent="Platforms" unique_id=798718974 instance=ExtResource("16_plxdd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.4, 3.62, -0.95)
+
+[node name="ExitBanner" type="StaticBody3D" parent="Platforms" unique_id=1302817247 instance=ExtResource("24_aelwf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.4, 7, -1.3)
+physics_material_override = SubResource("PhysicsMaterial_p78i2")
+
+[node name="Pit" type="Node3D" parent="." unique_id=128117580]
+
+[node name="Heap_PitWall" type="StaticBody3D" parent="Pit" unique_id=2039914009 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -8, -2, -2)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Glow" type="OmniLight3D" parent="Pit" unique_id=763942350]
+[node name="Glow" type="OmniLight3D" parent="Pit" unique_id=2116184104]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.9, -0.3)
 light_color = Color(1, 0.46, 0.16, 1)
 light_energy = 6.0
@@ -581,271 +682,201 @@ light_specular = 0.3
 omni_range = 4.8
 omni_attenuation = 1.3
 
-[node name="Embers" type="GPUParticles3D" parent="Pit" unique_id=2021948383]
+[node name="Embers" type="GPUParticles3D" parent="Pit" unique_id=1808971473]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.6, 0.1)
 amount = 110
 lifetime = 3.2
 preprocess = 3.2
 randomness = 0.4
 visibility_aabb = AABB(-3, -1, -2, 6, 7, 4)
-process_material = SubResource("ParticleProcessMaterial_k3np4")
-draw_pass_1 = SubResource("QuadMesh_wxwli")
+process_material = SubResource("ParticleProcessMaterial_k72e8")
+draw_pass_1 = SubResource("QuadMesh_3wtcr")
 
-[node name="Haze" type="GPUParticles3D" parent="Pit" unique_id=964531124]
+[node name="Haze" type="GPUParticles3D" parent="Pit" unique_id=805805935]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.4, -0.2)
 amount = 14
 lifetime = 4.5
 preprocess = 4.5
 randomness = 0.5
 visibility_aabb = AABB(-4, -2, -3, 8, 7, 6)
-process_material = SubResource("ParticleProcessMaterial_e62nv")
-draw_pass_1 = SubResource("QuadMesh_h00x4")
+process_material = SubResource("ParticleProcessMaterial_qsjfs")
+draw_pass_1 = SubResource("QuadMesh_b8kpv")
 
-[node name="Vertical" type="Node3D" parent="." unique_id=412086460]
+[node name="Back" type="Node3D" parent="." unique_id=341274175]
 
-[node name="Tier1_Support" type="StaticBody3D" parent="Vertical" unique_id=2070074617 instance=ExtResource("13_skmxq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -1.4)
-physics_material_override = SubResource("PhysicsMaterial_q13pv")
-
-[node name="Tier1_DeckL" type="StaticBody3D" parent="Vertical" unique_id=1235140012 instance=ExtResource("23_plxdd")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 4, 0)
-physics_material_override = SubResource("PhysicsMaterial_caqxe")
-
-[node name="Tier1_DeckR" type="StaticBody3D" parent="Vertical" unique_id=881367 instance=ExtResource("24_kyl1x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 4, 0)
-physics_material_override = SubResource("PhysicsMaterial_8oku5")
-
-[node name="Tier2_Support" type="StaticBody3D" parent="Vertical" unique_id=1536214688 instance=ExtResource("25_7srmx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -1.4)
-physics_material_override = SubResource("PhysicsMaterial_hvr75")
-
-[node name="Tier2_DeckL" type="StaticBody3D" parent="Vertical" unique_id=2106900715 instance=ExtResource("23_plxdd")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 5, 0)
-physics_material_override = SubResource("PhysicsMaterial_caqxe")
-
-[node name="Tier2_DeckR" type="StaticBody3D" parent="Vertical" unique_id=857596783 instance=ExtResource("24_kyl1x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 5, 0)
-physics_material_override = SubResource("PhysicsMaterial_8oku5")
-
-[node name="Tier3_Support" type="StaticBody3D" parent="Vertical" unique_id=872906535 instance=ExtResource("26_17tj6")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, -1.4)
-physics_material_override = SubResource("PhysicsMaterial_pvl3p")
-
-[node name="Tier3_DeckL" type="StaticBody3D" parent="Vertical" unique_id=1492389270 instance=ExtResource("23_plxdd")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 7, 0)
-physics_material_override = SubResource("PhysicsMaterial_caqxe")
-
-[node name="Tier3_DeckR" type="StaticBody3D" parent="Vertical" unique_id=1502211969 instance=ExtResource("24_kyl1x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 7, 0)
-physics_material_override = SubResource("PhysicsMaterial_8oku5")
-
-[node name="Railing_1" type="StaticBody3D" parent="Vertical" unique_id=1312350354 instance=ExtResource("19_7xx0i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.1, 4, -0.9)
-physics_material_override = SubResource("PhysicsMaterial_lbhuy")
-
-[node name="Railing_2" type="StaticBody3D" parent="Vertical" unique_id=1635941446 instance=ExtResource("19_7xx0i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.9, 5, -0.9)
-physics_material_override = SubResource("PhysicsMaterial_lbhuy")
-
-[node name="Ladder" type="StaticBody3D" parent="Vertical" unique_id=1838754280 instance=ExtResource("27_8frrs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 5, -0.75)
-physics_material_override = SubResource("PhysicsMaterial_n45lm")
-
-[node name="LadderUp" type="StaticBody3D" parent="Vertical" unique_id=1988206584 instance=ExtResource("27_8frrs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.8, 7, -0.75)
-physics_material_override = SubResource("PhysicsMaterial_n45lm")
-
-[node name="ChainHook_2" type="Node3D" parent="Vertical" unique_id=1234880053 instance=ExtResource("17_6fj6v")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.4, 4.62, -0.85)
-
-[node name="ChainHook_3" type="Node3D" parent="Vertical" unique_id=1510289691 instance=ExtResource("17_6fj6v")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.4, 6.62, -0.85)
-
-[node name="ExitBanner" type="StaticBody3D" parent="Vertical" unique_id=1091824950 instance=ExtResource("21_21ska")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.6, 7, -0.65)
-physics_material_override = SubResource("PhysicsMaterial_w7nj5")
-
-[node name="Back" type="Node3D" parent="." unique_id=90621654]
-
-[node name="Heap_Berm" type="StaticBody3D" parent="Back" unique_id=211075058 instance=ExtResource("28_snicw")]
-transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -19.4, -0.45, -2.4)
+[node name="Heap_Berm" type="StaticBody3D" parent="Back" unique_id=211075058 instance=ExtResource("26_g3v18")]
+transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -19.4, -0.45, -3.4)
 physics_material_override = SubResource("PhysicsMaterial_equ4y")
 
-[node name="Heap_Berm_1" type="StaticBody3D" parent="Back" unique_id=63493517 instance=ExtResource("6_vsig3")]
-transform = Transform3D(0.9781476, 0, -0.2079117, 0, 1, 0, 0.2079117, 0, 0.9781476, -16.6, -0.45, -2.9)
+[node name="Heap_Berm_1" type="StaticBody3D" parent="Back" unique_id=1280708420 instance=ExtResource("6_skmxq")]
+transform = Transform3D(0.9781476, 0, -0.2079117, 0, 1, 0, 0.2079117, 0, 0.9781476, -16.6, -0.45, -3.8)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Berm_2" type="StaticBody3D" parent="Back" unique_id=325746868 instance=ExtResource("29_tm4uu")]
-transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, -13.6, -0.45, -2.7)
-physics_material_override = SubResource("PhysicsMaterial_p78i2")
+[node name="Heap_Berm_2" type="StaticBody3D" parent="Back" unique_id=325746868 instance=ExtResource("27_hy05m")]
+transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, -13.6, -0.45, -3.6)
+physics_material_override = SubResource("PhysicsMaterial_dlxy4")
 
-[node name="Heap_Berm_3" type="StaticBody3D" parent="Back" unique_id=804772165 instance=ExtResource("30_0wji4")]
-transform = Transform3D(0.99026805, 0, -0.1391731, 0, 1, 0, 0.1391731, 0, 0.99026805, -10.9, -0.45, -2.5)
-physics_material_override = SubResource("PhysicsMaterial_upupy")
+[node name="Heap_Berm_3" type="StaticBody3D" parent="Back" unique_id=804772165 instance=ExtResource("28_ypbn3")]
+transform = Transform3D(0.99026805, 0, -0.1391731, 0, 1, 0, 0.1391731, 0, 0.99026805, -10.9, -0.45, -3.4)
+physics_material_override = SubResource("PhysicsMaterial_e2ryx")
 
-[node name="Heap_Berm_4" type="StaticBody3D" parent="Back" unique_id=2118894990 instance=ExtResource("6_vsig3")]
-transform = Transform3D(0.9975641, 0, 0.06975647, 0, 1, 0, -0.06975647, 0, 0.9975641, -8, -0.45, -2.8)
+[node name="Heap_Berm_4" type="StaticBody3D" parent="Back" unique_id=1370224983 instance=ExtResource("6_skmxq")]
+transform = Transform3D(0.9975641, 0, 0.06975647, 0, 1, 0, -0.06975647, 0, 0.9975641, -8, -0.45, -3.8)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Berm_5" type="Node3D" parent="Back" unique_id=193255953 instance=ExtResource("31_aelwf")]
-transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, -5, -0.45, -2.5)
+[node name="Heap_Berm_5" type="Node3D" parent="Back" unique_id=193255953 instance=ExtResource("29_8ya26")]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, -5, -0.45, -3.6)
 
-[node name="Heap_Berm_6" type="StaticBody3D" parent="Back" unique_id=1987684578 instance=ExtResource("32_20q6w")]
-transform = Transform3D(0.9702957, 0, 0.2419219, 0, 1, 0, -0.2419219, 0, 0.9702957, -2.3, -0.45, -2.3)
-physics_material_override = SubResource("PhysicsMaterial_fwqed")
+[node name="Heap_Berm_6" type="StaticBody3D" parent="Back" unique_id=1987684578 instance=ExtResource("30_gxsmt")]
+transform = Transform3D(0.9702957, 0, 0.2419219, 0, 1, 0, -0.2419219, 0, 0.9702957, -2.3, -0.9, -4.2)
+physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 
-[node name="Heap_Berm_7" type="StaticBody3D" parent="Back" unique_id=172452995 instance=ExtResource("33_g3v18")]
-transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, 0.6, -0.45, -2.6)
-physics_material_override = SubResource("PhysicsMaterial_k72e8")
+[node name="Heap_Berm_7" type="StaticBody3D" parent="Back" unique_id=1269934242 instance=ExtResource("31_4od7o")]
+transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, 0.9, -0.9, -4.2)
+physics_material_override = SubResource("PhysicsMaterial_6mwbg")
 
-[node name="Heap_Berm_8" type="StaticBody3D" parent="Back" unique_id=1269934242 instance=ExtResource("34_hy05m")]
-transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 3.5, -0.45, -2.4)
-physics_material_override = SubResource("PhysicsMaterial_blek8")
+[node name="Heap_Berm_8" type="StaticBody3D" parent="Back" unique_id=1111266869 instance=ExtResource("30_gxsmt")]
+transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 4, -0.9, -4.2)
+physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 
-[node name="Heap_Berm_9" type="StaticBody3D" parent="Back" unique_id=1473560625 instance=ExtResource("6_vsig3")]
-transform = Transform3D(0.9975641, 0, -0.06975647, 0, 1, 0, 0.06975647, 0, 0.9975641, 6.5, -0.45, -2.9)
-physics_material_override = SubResource("PhysicsMaterial_bbt74")
+[node name="Heap_Berm_9" type="StaticBody3D" parent="Back" unique_id=172452995 instance=ExtResource("32_cu3md")]
+transform = Transform3D(0.9975641, 0, -0.06975647, 0, 1, 0, 0.06975647, 0, 0.9975641, 7.2, -0.9, -4.2)
+physics_material_override = SubResource("PhysicsMaterial_wnsdv")
 
-[node name="Heap_Berm_10" type="StaticBody3D" parent="Back" unique_id=298433477 instance=ExtResource("28_snicw")]
-transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, 9.7, -0.45, -2.4)
+[node name="Heap_Berm_10" type="StaticBody3D" parent="Back" unique_id=1256558554 instance=ExtResource("26_g3v18")]
+transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, 10.2, -0.45, -3.6)
 physics_material_override = SubResource("PhysicsMaterial_equ4y")
 
-[node name="Heap_Berm_11" type="StaticBody3D" parent="Back" unique_id=1018939551 instance=ExtResource("29_tm4uu")]
-transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 12.3, -0.45, -2.7)
-physics_material_override = SubResource("PhysicsMaterial_p78i2")
+[node name="Heap_Berm_11" type="StaticBody3D" parent="Back" unique_id=2129240911 instance=ExtResource("27_hy05m")]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 12.8, -0.45, -3.6)
+physics_material_override = SubResource("PhysicsMaterial_dlxy4")
 
-[node name="Heap_Berm_12" type="StaticBody3D" parent="Back" unique_id=889793015 instance=ExtResource("6_vsig3")]
-transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, 15.2, -0.45, -2.9)
+[node name="Heap_Berm_12" type="StaticBody3D" parent="Back" unique_id=1429707821 instance=ExtResource("6_skmxq")]
+transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, 15.4, -0.45, -3.8)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Berm_13" type="StaticBody3D" parent="Back" unique_id=1767110567 instance=ExtResource("30_0wji4")]
-transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, 18.6, -0.45, -2.5)
-physics_material_override = SubResource("PhysicsMaterial_upupy")
+[node name="Heap_Berm_13" type="StaticBody3D" parent="Back" unique_id=545422651 instance=ExtResource("28_ypbn3")]
+transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, 18.6, -0.45, -3.4)
+physics_material_override = SubResource("PhysicsMaterial_e2ryx")
 
-[node name="BannerFrame_1" type="StaticBody3D" parent="Back" unique_id=1294662189 instance=ExtResource("21_21ska")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.6, 0, -4.4)
-physics_material_override = SubResource("PhysicsMaterial_w7nj5")
+[node name="Heap_MountainR" type="StaticBody3D" parent="Back" unique_id=518106506 instance=ExtResource("18_7srmx")]
+transform = Transform3D(1.1388083, 0, -0.16004907, 0, 1.15, 0, 0.16004907, 0, 1.1388083, 15, -2, -13)
+physics_material_override = SubResource("PhysicsMaterial_caqxe")
 
-[node name="SupportBack" type="StaticBody3D" parent="Back" unique_id=1477122281 instance=ExtResource("26_17tj6")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -5.2)
-physics_material_override = SubResource("PhysicsMaterial_pvl3p")
+[node name="Front" type="Node3D" parent="." unique_id=255334793]
 
-[node name="BannerFrame_2" type="StaticBody3D" parent="Back" unique_id=1423314157 instance=ExtResource("21_21ska")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 6, -5.2)
-physics_material_override = SubResource("PhysicsMaterial_w7nj5")
-
-[node name="SupportBack_1" type="StaticBody3D" parent="Back" unique_id=2133507175 instance=ExtResource("25_7srmx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -5.6)
-physics_material_override = SubResource("PhysicsMaterial_hvr75")
-
-[node name="SupportBack_2" type="StaticBody3D" parent="Back" unique_id=1357432162 instance=ExtResource("25_7srmx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -5.6)
-physics_material_override = SubResource("PhysicsMaterial_hvr75")
-
-[node name="BridgeBack" type="StaticBody3D" parent="Back" unique_id=1670441124 instance=ExtResource("15_f3bq7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 5, -5.6)
-physics_material_override = SubResource("PhysicsMaterial_5abbf")
-
-[node name="RailingBack" type="StaticBody3D" parent="Back" unique_id=1045121715 instance=ExtResource("19_7xx0i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 5, -6.5)
-physics_material_override = SubResource("PhysicsMaterial_lbhuy")
-
-[node name="ChainHookBack" type="Node3D" parent="Back" unique_id=796704398 instance=ExtResource("17_6fj6v")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 4.62, -5.6)
-
-[node name="BannerFrame_3" type="StaticBody3D" parent="Back" unique_id=345421308 instance=ExtResource("21_21ska")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2, 0, -4.3)
-physics_material_override = SubResource("PhysicsMaterial_w7nj5")
-
-[node name="WallFrameBack" type="StaticBody3D" parent="Back" unique_id=417138521 instance=ExtResource("20_3suvp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.2, 0, -4.8)
-physics_material_override = SubResource("PhysicsMaterial_nl5gv")
-
-[node name="Heap_MountainR" type="StaticBody3D" parent="Back" unique_id=853355635 instance=ExtResource("12_g3wmt")]
-transform = Transform3D(1.1388083, 0, -0.16004907, 0, 1.15, 0, 0.16004907, 0, 1.1388083, 8.5, -1.3, -9.5)
-physics_material_override = SubResource("PhysicsMaterial_k6l26")
-
-[node name="TowerFar" type="StaticBody3D" parent="Back" unique_id=1650382632 instance=ExtResource("26_17tj6")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, -0.6, -9.6)
-physics_material_override = SubResource("PhysicsMaterial_pvl3p")
-
-[node name="TowerFar_1" type="StaticBody3D" parent="Back" unique_id=1558101142 instance=ExtResource("26_17tj6")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 5.4, -9.6)
-physics_material_override = SubResource("PhysicsMaterial_pvl3p")
-
-[node name="TowerFarBanner" type="StaticBody3D" parent="Back" unique_id=370690010 instance=ExtResource("21_21ska")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 11.4, -9.6)
-physics_material_override = SubResource("PhysicsMaterial_w7nj5")
-
-[node name="Front" type="Node3D" parent="." unique_id=1842772631]
-
-[node name="Heap_Bank" type="StaticBody3D" parent="Front" unique_id=2000760577 instance=ExtResource("6_vsig3")]
+[node name="Heap_Bank" type="StaticBody3D" parent="Front" unique_id=164867098 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -20, -1.6, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_1" type="StaticBody3D" parent="Front" unique_id=296784609 instance=ExtResource("34_hy05m")]
+[node name="Heap_Bank_1" type="StaticBody3D" parent="Front" unique_id=185346473 instance=ExtResource("31_4od7o")]
 transform = Transform3D(0.99026805, 0, -0.1391731, 0, 1, 0, 0.1391731, 0, 0.99026805, -17.3, -0.8, 1.4)
-physics_material_override = SubResource("PhysicsMaterial_blek8")
+physics_material_override = SubResource("PhysicsMaterial_6mwbg")
 
-[node name="Heap_Bank_2" type="StaticBody3D" parent="Front" unique_id=1335551361 instance=ExtResource("6_vsig3")]
+[node name="Heap_Bank_2" type="StaticBody3D" parent="Front" unique_id=1204678532 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.9702957, -14.8, -1.62, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_3" type="StaticBody3D" parent="Front" unique_id=1383602634 instance=ExtResource("30_0wji4")]
+[node name="Heap_Bank_3" type="StaticBody3D" parent="Front" unique_id=389134320 instance=ExtResource("28_ypbn3")]
 transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, -12.2, -0.95, 1.4)
-physics_material_override = SubResource("PhysicsMaterial_upupy")
+physics_material_override = SubResource("PhysicsMaterial_e2ryx")
 
-[node name="Heap_Bank_4" type="StaticBody3D" parent="Front" unique_id=212468845 instance=ExtResource("32_20q6w")]
+[node name="Heap_Bank_4" type="StaticBody3D" parent="Front" unique_id=1141135374 instance=ExtResource("30_gxsmt")]
 transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, -10.5, -0.95, 1.5)
-physics_material_override = SubResource("PhysicsMaterial_fwqed")
+physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 
-[node name="Heap_Bank_5" type="StaticBody3D" parent="Front" unique_id=1755357415 instance=ExtResource("32_20q6w")]
+[node name="Heap_Bank_5" type="StaticBody3D" parent="Front" unique_id=405240415 instance=ExtResource("30_gxsmt")]
 transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, -5.5, -0.95, 1.5)
-physics_material_override = SubResource("PhysicsMaterial_fwqed")
+physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 
-[node name="Heap_Bank_6" type="StaticBody3D" parent="Front" unique_id=1133188074 instance=ExtResource("6_vsig3")]
+[node name="Heap_Bank_6" type="StaticBody3D" parent="Front" unique_id=556794329 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, -3.3, -1.6, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_7" type="StaticBody3D" parent="Front" unique_id=173832589 instance=ExtResource("28_snicw")]
+[node name="Heap_Bank_7" type="StaticBody3D" parent="Front" unique_id=144652106 instance=ExtResource("26_g3v18")]
 transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, -0.6, -0.66, 1.4)
 physics_material_override = SubResource("PhysicsMaterial_equ4y")
 
-[node name="Heap_Bank_8" type="StaticBody3D" parent="Front" unique_id=2078743325 instance=ExtResource("6_vsig3")]
+[node name="Heap_Bank_8" type="StaticBody3D" parent="Front" unique_id=973747770 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9781476, 0, -0.2079117, 0, 1, 0, 0.2079117, 0, 0.9781476, 2, -1.62, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_9" type="StaticBody3D" parent="Front" unique_id=1313360714 instance=ExtResource("34_hy05m")]
+[node name="Heap_Bank_9" type="StaticBody3D" parent="Front" unique_id=1240473652 instance=ExtResource("31_4od7o")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 4.7, -0.8, 1.4)
-physics_material_override = SubResource("PhysicsMaterial_blek8")
+physics_material_override = SubResource("PhysicsMaterial_6mwbg")
 
-[node name="Heap_Bank_10" type="StaticBody3D" parent="Front" unique_id=1802604865 instance=ExtResource("6_vsig3")]
+[node name="Heap_Bank_10" type="StaticBody3D" parent="Front" unique_id=1622842348 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9975641, 0, 0.06975647, 0, 1, 0, -0.06975647, 0, 0.9975641, 7.3, -1.6, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_11" type="StaticBody3D" parent="Front" unique_id=267159732 instance=ExtResource("33_g3v18")]
+[node name="Heap_Bank_11" type="StaticBody3D" parent="Front" unique_id=1436545649 instance=ExtResource("32_cu3md")]
 transform = Transform3D(0.99026805, 0, -0.1391731, 0, 1, 0, 0.1391731, 0, 0.99026805, 10, -1, 1.4)
-physics_material_override = SubResource("PhysicsMaterial_k72e8")
+physics_material_override = SubResource("PhysicsMaterial_wnsdv")
 
-[node name="Heap_Bank_12" type="StaticBody3D" parent="Front" unique_id=1594222736 instance=ExtResource("6_vsig3")]
+[node name="Heap_Bank_12" type="StaticBody3D" parent="Front" unique_id=528541237 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9702957, 0, 0.2419219, 0, 1, 0, -0.2419219, 0, 0.9702957, 12.6, -1.62, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_13" type="Node3D" parent="Front" unique_id=1488390574 instance=ExtResource("31_aelwf")]
+[node name="Heap_Bank_13" type="Node3D" parent="Front" unique_id=1524267488 instance=ExtResource("29_8ya26")]
 transform = Transform3D(0.9975641, 0, -0.06975647, 0, 1, 0, 0.06975647, 0, 0.9975641, 15.2, -0.98, 1.4)
 
-[node name="Heap_Bank_14" type="StaticBody3D" parent="Front" unique_id=286159995 instance=ExtResource("6_vsig3")]
+[node name="Heap_Bank_14" type="StaticBody3D" parent="Front" unique_id=1688826763 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, 17.8, -1.6, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_15" type="StaticBody3D" parent="Front" unique_id=1356838169 instance=ExtResource("34_hy05m")]
+[node name="Heap_Bank_15" type="StaticBody3D" parent="Front" unique_id=66022252 instance=ExtResource("31_4od7o")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, 20.6, -0.8, 1.4)
-physics_material_override = SubResource("PhysicsMaterial_blek8")
+physics_material_override = SubResource("PhysicsMaterial_6mwbg")
 
-[node name="Props" type="Node3D" parent="." unique_id=804410528]
+[node name="Machines" type="Node3D" parent="." unique_id=544887275]
 
-[node name="Crate" type="RigidBody3D" parent="Props" unique_id=1451019626 instance=ExtResource("35_ypbn3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.02, 0)
+[node name="Magnet" type="Node3D" parent="Machines" unique_id=1995646117 instance=ExtResource("33_x07lf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.4, 12.8, 0)
+script = ExtResource("34_onugc")
+swing_deg = 11.0
+active_s = 4.0
+phase_offset_s = 1.0
+lamp_warn_color = Color(1, 0.6, 0.15, 1)
+lamp_active_color = Color(1, 0.35, 0.12, 1)
+coil_color = Color(1, 0.52, 0.2, 1)
+lamp_light_path = NodePath("Pivot/Head/LampLight")
+sfx_path = NodePath("Pivot/Head/Sfx")
+
+[node name="SteamVent" type="Node3D" parent="Machines" unique_id=2137494682 instance=ExtResource("35_rbvqg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0, 0)
+script = ExtResource("36_yno3w")
+off_s = 5.0
+active_s = 1.6
+cooldown_s = 1.5
+lamp_warn_color = Color(1, 0.7, 0.2, 1)
+lamp_active_color = Color(1, 0.95, 0.85, 1)
+
+[node name="Press" type="Node3D" parent="Machines" unique_id=1380727413 instance=ExtResource("37_axtod")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.6, 0, 0)
+script = ExtResource("38_vryov")
+off_s = 3.5
+active_s = 0.6
+cooldown_s = 1.8
+phase_offset_s = 1.5
+lamp_warn_color = Color(1, 0.15, 0.05, 1)
+lamp_active_color = Color(1, 0.3, 0.08, 1)
+lamp_light_energy = 2.5
+
+[node name="Chute" type="Node3D" parent="Machines" unique_id=1199157358 instance=ExtResource("39_ck383")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 11, 0)
+script = ExtResource("40_w2roj")
+junk_path = NodePath("../../Junk")
+off_s = 11.0
+warning_s = 1.2
+active_s = 1.2
+phase_offset_s = 4.0
+lamp_warn_color = Color(1, 0.65, 0.12, 1)
+lamp_active_color = Color(1, 0.5, 0.1, 1)
+
+[node name="Props" type="Node3D" parent="." unique_id=1515742899]
+
+[node name="Crate" type="RigidBody3D" parent="Props" unique_id=1451019626 instance=ExtResource("41_d85wb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 0.02, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
@@ -856,70 +887,58 @@ contact_monitor = true
 max_contacts_reported = 16
 linear_damp = 0.2
 angular_damp = 0.5
-script = ExtResource("36_8ya26")
+script = ExtResource("42_u0147")
 kind = "crate"
 hp = 20.0
+metadata/material = "wood"
 
-[node name="ReinforcedCrate" type="RigidBody3D" parent="Props" unique_id=1899358243 instance=ExtResource("37_gxsmt")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 1.04, 0)
+[node name="ReinforcedCrate" type="RigidBody3D" parent="Props" unique_id=1899358243 instance=ExtResource("43_fu6t0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 1.04, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 mass = 20.0
-physics_material_override = SubResource("PhysicsMaterial_3wtcr")
+physics_material_override = SubResource("PhysicsMaterial_5lmd0")
 continuous_cd = true
 contact_monitor = true
 max_contacts_reported = 16
 linear_damp = 0.2
 angular_damp = 0.5
-script = ExtResource("36_8ya26")
+script = ExtResource("42_u0147")
 kind = "crate"
 hp = 50.0
 min_impact_speed = 8.0
+metadata/material = "wood"
 
-[node name="Crate_1" type="RigidBody3D" parent="Props" unique_id=1347154474 instance=ExtResource("35_ypbn3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 4.02, 0)
-axis_lock_linear_z = true
-axis_lock_angular_x = true
-axis_lock_angular_y = true
-mass = 10.0
-physics_material_override = SubResource("PhysicsMaterial_pw7ku")
-continuous_cd = true
-contact_monitor = true
-max_contacts_reported = 16
-linear_damp = 0.2
-angular_damp = 0.5
-script = ExtResource("36_8ya26")
-kind = "crate"
-hp = 20.0
-
-[node name="Pallet" type="RigidBody3D" parent="Props" unique_id=666517334 instance=ExtResource("38_4od7o")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.3, 0.02, 0)
-axis_lock_linear_z = true
-axis_lock_angular_x = true
-axis_lock_angular_y = true
-mass = 12.0
-physics_material_override = SubResource("PhysicsMaterial_dd8ix")
-continuous_cd = true
-linear_damp = 0.2
-angular_damp = 0.5
-
-[node name="Barrel" type="RigidBody3D" parent="Props" unique_id=87853472 instance=ExtResource("39_cu3md")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.9, 0.02, 0)
+[node name="Barrel" type="RigidBody3D" parent="Props" unique_id=87853472 instance=ExtResource("44_v1ick")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.35, 0.02, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 mass = 15.0
-physics_material_override = SubResource("PhysicsMaterial_nsm7w")
+physics_material_override = SubResource("PhysicsMaterial_7qyoc")
 continuous_cd = true
 contact_monitor = true
 max_contacts_reported = 16
 linear_damp = 0.2
 angular_damp = 0.5
-script = ExtResource("36_8ya26")
+script = ExtResource("42_u0147")
+metadata/material = "wood"
 
-[node name="MetalBarrel" type="RigidBody3D" parent="Props" unique_id=864538343 instance=ExtResource("40_x07lf")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.9, 0.02, 0)
+[node name="JunkCart" type="RigidBody3D" parent="Props" unique_id=1715699892 instance=ExtResource("45_0h8ia")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.7, 0.02, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 30.0
+physics_material_override = SubResource("PhysicsMaterial_8odru")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+metadata/material = "wood"
+
+[node name="MetalBarrel" type="RigidBody3D" parent="Props" unique_id=864538343 instance=ExtResource("46_tfbxy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 0.02, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
@@ -928,57 +947,84 @@ physics_material_override = SubResource("PhysicsMaterial_tw2f5")
 continuous_cd = true
 linear_damp = 0.2
 angular_damp = 0.5
+metadata/material = "iron"
 
-[node name="Beam" type="RigidBody3D" parent="Props" unique_id=1731979362 instance=ExtResource("41_onugc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 4.02, 0)
+[node name="CrateAnvil" type="RigidBody3D" parent="Props" unique_id=1185975749 instance=ExtResource("41_d85wb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.4, 0.14, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
-mass = 35.0
-physics_material_override = SubResource("PhysicsMaterial_qsjfs")
-continuous_cd = true
-linear_damp = 0.2
-angular_damp = 0.5
-
-[node name="JunkCart" type="RigidBody3D" parent="Props" unique_id=1715699892 instance=ExtResource("42_rbvqg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.9, 0.02, 0)
-axis_lock_linear_z = true
-axis_lock_angular_x = true
-axis_lock_angular_y = true
-mass = 30.0
-physics_material_override = SubResource("PhysicsMaterial_fwp3p")
-continuous_cd = true
-linear_damp = 0.2
-angular_damp = 0.5
-
-[node name="ShippingCrate" type="RigidBody3D" parent="Props" unique_id=1191521402 instance=ExtResource("43_yno3w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.6, 0.02, 0)
-axis_lock_linear_z = true
-axis_lock_angular_x = true
-axis_lock_angular_y = true
-mass = 80.0
-physics_material_override = SubResource("PhysicsMaterial_b8kpv")
-continuous_cd = true
-linear_damp = 0.2
-angular_damp = 0.5
-
-[node name="Barrel_1" type="RigidBody3D" parent="Props" unique_id=174285727 instance=ExtResource("39_cu3md")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.4, 5.02, 0)
-axis_lock_linear_z = true
-axis_lock_angular_x = true
-axis_lock_angular_y = true
-mass = 15.0
-physics_material_override = SubResource("PhysicsMaterial_nsm7w")
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
 continuous_cd = true
 contact_monitor = true
 max_contacts_reported = 16
 linear_damp = 0.2
 angular_damp = 0.5
-script = ExtResource("36_8ya26")
+script = ExtResource("42_u0147")
+kind = "crate"
+hp = 20.0
+metadata/material = "wood"
 
-[node name="Junk" type="Node3D" parent="." unique_id=1188821297]
+[node name="Crate_1" type="RigidBody3D" parent="Props" unique_id=126925124 instance=ExtResource("41_d85wb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.7, 0.02, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_pw7ku")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("42_u0147")
+kind = "crate"
+hp = 20.0
+metadata/material = "wood"
 
-[node name="Bit" type="RigidBody3D" parent="Junk" unique_id=1764335993 instance=ExtResource("44_axtod")]
+[node name="Barrel_1" type="RigidBody3D" parent="Props" unique_id=1227747992 instance=ExtResource("44_v1ick")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9, 5.22, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 15.0
+physics_material_override = SubResource("PhysicsMaterial_7qyoc")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("42_u0147")
+metadata/material = "wood"
+
+[node name="ShippingCrate" type="RigidBody3D" parent="Props" unique_id=1191521402 instance=ExtResource("47_teisd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.02, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 80.0
+physics_material_override = SubResource("PhysicsMaterial_84g7g")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+metadata/material = "wood"
+
+[node name="MetalBarrel_1" type="RigidBody3D" parent="Props" unique_id=684096283 instance=ExtResource("48_k6l26")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.3, 4.02, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 40.0
+physics_material_override = SubResource("PhysicsMaterial_td1ty")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+metadata/material = "iron"
+
+[node name="Junk" type="Node3D" parent="." unique_id=1317523612]
+
+[node name="Bit" type="RigidBody3D" parent="Junk" unique_id=1764335993 instance=ExtResource("49_kd42u")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 0.17, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -988,114 +1034,157 @@ physics_material_override = SubResource("PhysicsMaterial_31h2a")
 continuous_cd = true
 linear_damp = 0.2
 angular_damp = 0.5
+metadata/material = "wood"
 
-[node name="Bit_1" type="RigidBody3D" parent="Junk" unique_id=1094563485 instance=ExtResource("45_vryov")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4, 0.27, 0)
+[node name="Bit_1" type="RigidBody3D" parent="Junk" unique_id=1094563485 instance=ExtResource("50_5abbf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.55, 0.27, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 mass = 4.0
-physics_material_override = SubResource("PhysicsMaterial_dlxy4")
+physics_material_override = SubResource("PhysicsMaterial_wvba3")
 continuous_cd = true
 linear_damp = 0.2
 angular_damp = 0.5
+metadata/material = "iron"
 
-[node name="Bit_2" type="RigidBody3D" parent="Junk" unique_id=1716222626 instance=ExtResource("46_ck383")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9, 0.06, 0)
+[node name="Bit_2" type="RigidBody3D" parent="Junk" unique_id=1716222626 instance=ExtResource("51_r8o62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9, 0.06, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 mass = 3.0
-physics_material_override = SubResource("PhysicsMaterial_e2ryx")
+physics_material_override = SubResource("PhysicsMaterial_0c0pt")
 continuous_cd = true
 linear_damp = 0.2
 angular_damp = 0.5
+metadata/material = "wood"
 
-[node name="Bit_3" type="RigidBody3D" parent="Junk" unique_id=2015594639 instance=ExtResource("47_w2roj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.2, 0.15, 0)
+[node name="Bit_3" type="RigidBody3D" parent="Junk" unique_id=2015594639 instance=ExtResource("52_lbhuy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.9, 0.15, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 mass = 2.5
-physics_material_override = SubResource("PhysicsMaterial_kpgsm")
+physics_material_override = SubResource("PhysicsMaterial_t4fye")
 continuous_cd = true
 linear_damp = 0.2
 angular_damp = 0.5
+metadata/material = "iron"
 
-[node name="Bit_4" type="RigidBody3D" parent="Junk" unique_id=165901408 instance=ExtResource("48_d85wb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.2, 5.17, 0)
+[node name="Bit_4" type="RigidBody3D" parent="Junk" unique_id=368011687 instance=ExtResource("53_nl5gv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.2, 0.12, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.3
+physics_material_override = SubResource("PhysicsMaterial_sapc7")
+continuous_cd = true
+linear_damp = 0.2
+angular_damp = 0.5
+metadata/material = "iron"
+
+[node name="Bit_5" type="RigidBody3D" parent="Junk" unique_id=165901408 instance=ExtResource("54_w7nj5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.2, 4.17, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 mass = 3.0
-physics_material_override = SubResource("PhysicsMaterial_6mwbg")
+physics_material_override = SubResource("PhysicsMaterial_ite6u")
 continuous_cd = true
 linear_damp = 0.2
 angular_damp = 0.5
+metadata/material = "wood"
 
-[node name="Bit_5" type="RigidBody3D" parent="Junk" unique_id=2018055828 instance=ExtResource("49_u0147")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.3, 7.39, 0)
+[node name="Bit_6" type="RigidBody3D" parent="Junk" unique_id=2018055828 instance=ExtResource("55_ffg8j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 7.39, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 mass = 5.0
-physics_material_override = SubResource("PhysicsMaterial_wnsdv")
+physics_material_override = SubResource("PhysicsMaterial_0euy5")
 continuous_cd = true
 linear_damp = 0.2
 angular_damp = 0.5
+metadata/material = "iron"
 
-[node name="Dust" type="GPUParticles3D" parent="." unique_id=1614852152]
+[node name="Loot" type="Node3D" parent="." unique_id=1887942780]
+
+[node name="Dust" type="GPUParticles3D" parent="." unique_id=1924862632]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0.6)
 amount = 500
 lifetime = 14.0
 preprocess = 14.0
 randomness = 0.3
 visibility_aabb = AABB(-20, -6, -4, 40, 13, 8)
-process_material = SubResource("ParticleProcessMaterial_8odru")
-draw_pass_1 = SubResource("QuadMesh_td1ty")
+process_material = SubResource("ParticleProcessMaterial_i6u0n")
+draw_pass_1 = SubResource("QuadMesh_mraqd")
 
-[node name="Bounds" type="StaticBody3D" parent="." unique_id=301551089]
+[node name="Bounds" type="StaticBody3D" parent="." unique_id=766008700]
 
-[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=722357242]
+[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=1749775241]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 10, 0)
-shape = SubResource("BoxShape3D_wvba3")
+shape = SubResource("BoxShape3D_wr0v1")
 
-[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=597999850]
+[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=386567770]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 10, 0)
-shape = SubResource("BoxShape3D_0c0pt")
+shape = SubResource("BoxShape3D_8mgkj")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=944389936]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.5, 0)
-shape = SubResource("BoxShape3D_t4fye")
+[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=1061036454]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.5, 0)
+shape = SubResource("BoxShape3D_06rg1")
 
-[node name="PitBottom" type="CollisionShape3D" parent="Bounds" unique_id=242402810]
+[node name="PitBottom" type="CollisionShape3D" parent="Bounds" unique_id=1083199571]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -9.25, 0)
-shape = SubResource("BoxShape3D_sapc7")
+shape = SubResource("BoxShape3D_633sl")
 
-[node name="BackFloor" type="CollisionShape3D" parent="Bounds" unique_id=1045043808]
+[node name="BackFloor" type="CollisionShape3D" parent="Bounds" unique_id=1289993413]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.7, -6.65)
-shape = SubResource("BoxShape3D_ite6u")
+shape = SubResource("BoxShape3D_iaj5q")
 
-[node name="DeathZone" type="Area3D" parent="." unique_id=2145936775]
+[node name="DeathZone" type="Area3D" parent="." unique_id=1976847380]
 
-[node name="Pit" type="CollisionShape3D" parent="DeathZone" unique_id=1538878377]
+[node name="Pit" type="CollisionShape3D" parent="DeathZone" unique_id=188347481]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -5.5, 0)
-shape = SubResource("BoxShape3D_0euy5")
+shape = SubResource("BoxShape3D_so3pp")
 
-[node name="Floor_20" type="CollisionShape3D" parent="DeathZone" unique_id=638342826]
+[node name="Floor_20" type="CollisionShape3D" parent="DeathZone" unique_id=1491831011]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -14.5, 0)
-shape = SubResource("BoxShape3D_fc016")
+shape = SubResource("BoxShape3D_mf6uh")
 
-[node name="Spawns" type="Node3D" parent="." unique_id=1148447897]
+[node name="Spawns" type="Node3D" parent="." unique_id=1857938569]
 
-[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=1829573620]
+[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=1323743429]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=1882397218]
+[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=539503141]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0.05, 0)
 
-[node name="Spawn2" type="Marker3D" parent="Spawns" unique_id=1092508927]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4, 4.05, 0)
+[node name="Spawn2" type="Marker3D" parent="Spawns" unique_id=1432256930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 5.25, 0)
 
-[node name="Spawn3" type="Marker3D" parent="Spawns" unique_id=244389577]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.9, 4.05, 0)
+[node name="Spawn3" type="Marker3D" parent="Spawns" unique_id=909856712]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.4, 4.05, 0)
+
+[node name="LootCounter" type="CanvasLayer" parent="." unique_id=821570877]
+layer = 5
+script = ExtResource("56_g48oj")
+
+[node name="Text" type="Label" parent="LootCounter" unique_id=955718209]
+visible = false
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -760.0
+offset_top = -52.0
+offset_right = -24.0
+offset_bottom = -14.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.93, 0.8, 0.85)
+theme_override_colors/font_outline_color = Color(0.1, 0.05, 0.02, 0.9)
+theme_override_constants/outline_size = 8
+horizontal_alignment = 2

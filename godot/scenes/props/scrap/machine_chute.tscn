@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://scrmachcht01"]
+
+[ext_resource type="Script" path="res://scenes/props/scrap/machines/chute_machine.gd" id="1_c6rn7"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/machines/Garbage_Chute.glb" id="2_nc6s0"]
+[ext_resource type="Texture2D" path="res://assets/textures/fx/mote.png" id="3_kns66"]
+
+[sub_resource type="Gradient" id="Gradient_4i63b"]
+offsets = PackedFloat32Array(0, 0.15, 1)
+colors = PackedColorArray(0.5, 0.36, 0.26, 0, 0.5, 0.36, 0.26, 0.55, 0.4, 0.3, 0.24, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_heyxo"]
+gradient = SubResource("Gradient_4i63b")
+
+[sub_resource type="Curve" id="Curve_05w12"]
+_data = [Vector2(0, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_c82em"]
+curve = SubResource("Curve_05w12")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_g837b"]
+lifetime_randomness = 0.3
+emission_shape = 1
+emission_sphere_radius = 0.45
+direction = Vector3(0.55, -0.83, 0)
+spread = 25.0
+initial_velocity_min = 0.6
+initial_velocity_max = 1.5
+gravity = Vector3(0, -1, 0)
+damping_min = 0.3
+damping_max = 0.8
+scale_min = 0.7
+scale_max = 1.3
+scale_curve = SubResource("CurveTexture_c82em")
+color_ramp = SubResource("GradientTexture1D_heyxo")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1ximi"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("3_kns66")
+disable_receive_shadows = true
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_luspi"]
+material = SubResource("StandardMaterial3D_1ximi")
+size = Vector2(0.32, 0.32)
+
+[node name="Chute" type="Node3D" unique_id=1199157358]
+script = ExtResource("1_c6rn7")
+off_s = 11.0
+warning_s = 1.2
+active_s = 1.2
+lamp_warn_color = Color(1, 0.65, 0.12, 1)
+lamp_active_color = Color(1, 0.5, 0.1, 1)
+
+[node name="Model" type="Node3D" parent="." unique_id=2095620559 instance=ExtResource("2_nc6s0")]
+
+[node name="Mouth" type="Marker3D" parent="." unique_id=876741092]
+
+[node name="Dust" type="GPUParticles3D" parent="." unique_id=1324940829]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, -0.2, 0.2)
+cast_shadow = 0
+emitting = false
+amount = 30
+lifetime = 1.3
+randomness = 0.4
+visibility_aabb = AABB(-2, -4, -2, 5, 5, 4)
+process_material = SubResource("ParticleProcessMaterial_g837b")
+draw_pass_1 = SubResource("QuadMesh_luspi")
+
+[node name="LampLight" type="OmniLight3D" parent="." unique_id=1718011775]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 0.75, 0.9)
+visible = false
+light_color = Color(1, 0.55, 0.15, 1)
+light_energy = 0.0
+light_indirect_energy = 0.0
+light_specular = 0.3
+omni_range = 3.0
+omni_attenuation = 1.2
+
+[node name="Sfx" type="AudioStreamPlayer3D" parent="." unique_id=1513283603]
+unit_size = 8.0
+max_distance = 60.0

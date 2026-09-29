@@ -1,73 +1,86 @@
-## Builder арены «Свалка» v1 (биом 1 THE SCRAP — первый уровень: Core игрока просыпается в куче хлама на дне Башни;
-## docs/plan-demo/BIOMES.md §1, LORE.md, композиция — docs/refs/biomes/01-scrap/scenes.png, свет — parallax.png): собирает
-## res://scenes/arena/scrap.tscn ИЗ КОМПОНЕНТНЫХ СЦЕН scenes/props/scrap/*.tscn — модульный кит kit_* (tools/blender/scrap_kit.py
-## → tools/build_scrap_kit_scenes.gd), кучи и куски листа 01 bodies_* / bit_* (scrap_bodies.py → build_scrap_bodies_scenes.gd),
-## физпропсы листа 02 prop_* (scrap_props.py → build_scrap_props_scenes.gd). Своих мешей нет. Каждый компонент —
-## PackedScene.instantiate() с owner = корень арены; внутренности инстансов принадлежат своим сценам (в scrap.tscn сохраняются
-## только позиция/масштаб). Ничего не строится в _ready(); поведение — scenes/arena/scrap.gd.
+## Builder арены «Свалка» v3 (биом 1 THE SCRAP — первый уровень: Core игрока просыпается в куче хлама на дне Башни;
+## docs/plan-demo/BIOMES.md §1, LORE.md, композиция — docs/refs/biomes/01-scrap/scenes.png, свет — parallax.png, механизмы —
+## sheet-04.png и kit-02.png): собирает res://scenes/arena/scrap.tscn ИЗ КОМПОНЕНТНЫХ СЦЕН scenes/props/scrap/*.tscn — модульный
+## кит kit_* (tools/blender/scrap_kit.py → tools/build_scrap_kit_scenes.gd), кучи и куски листа 01 bodies_* / bit_* (scrap_bodies.py
+## → build_scrap_bodies_scenes.gd), физпропсы листа 02 prop_* (scrap_props.py → build_scrap_props_scenes.gd), механизмы листа 04
+## machine_* и цепи deco_chain_long, лут loot_* (scrap_machines.py → build_scrap_machines_scenes.gd). Своих мешей нет. Каждый
+## компонент — PackedScene.instantiate() с owner = корень арены; внутренности инстансов принадлежат своим сценам (в scrap.tscn
+## сохраняются только позиция/масштаб/свойства корня инстанса). Ничего не строится в _ready(); поведение — scenes/arena/scrap.gd
+## и скрипты механизмов.
 ## Запуск: godot --headless --path godot --import && godot --headless --path godot -s res://tools/build_arena_scrap.gd
 ## Повторный запуск перезаписывает сцену: правки, которые нужно сохранить, вносятся сюда.
 ##
+## v3 (просторнее, автор: «предметы должны быть, но с интересной механикой; разным предметам разный вес»): центр — открытый
+## воздух (пол и висящий островок), платформы — по краям, опоры и рамы — только за плоскостью боя, флагов и рам в кадре меньше,
+## задний план дальше, потолок выше (14 м — верх arena_bounds: диапазон камеры docs/plan-demo/PARALLAX.md не меняется: зум
+## z 10…24, y камеры 2.5…10, arena_bounds x ±18). Четыре механизма с циклом OFF → WARNING → ACTIVE → COOLDOWN, пропсы по весу,
+## лут из разбитых ящиков и бочек (scrap.gd).
+##
 ## Система координат: X вбок, Y вверх, +Z к камере; физика в плоскости XY (z=0 — плоскость кукол). Пол y=0. Ширина 36 м
 ## (невидимые стены x=±HALF_W), потолок CEIL_Y. Кит — сетка 2 м (snap: опора S/M/L высотой 3/4/6 м, платформа на ней
-## origin-ом на H + 1 → ярусы 4 / 5 / 7 м; «3 м» из задания по снапу кита не собирается — настил на опоре 3 м стоит на 4 м).
-## ОПОРЫ СТОЯТ ЗА ПЛОСКОСТЬЮ КУКОЛ на z=SUPPORT_Z (коллизия колонны z −2.4..−0.4 кукол не касается): колонна 1 × 3..6 м
-## на z=0 была бы стеной, а пролёт между двумя такими стенами под настилом — замкнутым карманом (как кладка «Руин» на z=−0.7).
-## Настилы, скат, балка, пол и кучи старта — на z=0 (по ним ходят). Задние ножки настилов стоят на крышках опор, передние
-## (z=+0.9) висят перед опорой — с камеры читается как крепление к опоре. Декор с коллизией (рамы, перила, лестницы) — на
-## z ≤ −0.65 (тонкие коллизии 0.6 м не доходят до z=−0.3: голова куклы r=0.24).
+## origin-ом на H + 1 → ярусы 4 / 5 / 7 м).
+## ОПОРЫ СТОЯТ ЗА ПЛОСКОСТЬЮ БОЯ на z=SUPPORT_Z: коллизия колонны (глубина 2.0) — z −2.7…−0.7, ящик глубиной 1 м (z ±0.5) её не
+## касается (tests/scrap_machines_probe: коллизии опор, рам, перил, лестниц и заднего плана не заходят в |z| < 0.6). Настилы,
+## скат, балки на цепях, пол и кучи старта — на z=0 (по ним ходят). Задние ножки настилов стоят на крышках опор (крышка 2.06 по
+## глубине: до z −0.67), передние (z=+0.9) висят перед опорой. Декор с коллизией (перила, лестницы, рама выхода) — z ≤ −1.05
+## (тонкие коллизии 0.6 м: −1.35…−0.75).
 ##
 ## Слева направо (x), пол из kit_platform_lower (верх y=0, модули 2 м, за стены выходят на 3.5 м — кадр их видит):
-##   СТАРТ     x −18…−10   куча пробуждения Scrap_Heap_Medium (по ней ходят) → куча-сюрприз Mystery_Scrap_Heap (тёплый свет,
-##                         сундучок; ходибельная) → скат Slope_30 (x −14…−10, 0 → 2 м) с кучей рук Puppet_Limb_Pile под ним;
-##                         сзади выброшенные куклы (Broken/Half_Puppet), на заднем плане гора Scrap_Heap_Massive
-##   ПЛАТФОРМЫ x −10…−2    опоры S на x −10 / −6 / −2; настилы на 4 м: Platform_Gap (−10…−6, разрыв над пропастью),
-##                         Platform_M (−6…−2); балка на цепях Hanging_Beam (верх y=2, x −10…−6) продолжает скат через пропасть;
-##                         куча голов Puppet_Head_Pile у правого края пропасти (порог перед краем, головы можно спихнуть);
-##                         цепи с крюками под настилом, перила сзади; рамы с флагами-коронами на заднем плане
-##   ПРОПАСТЬ  x −9.5…−6.5 («провал в недра», 3 м): дыра в полу под балкой, Area3D DeathZone/Pit с y=−3 (KO kind self — через
-##                         площадку), тёплый OmniLight3D снизу без теней, искры GPUParticles3D; дно Bounds/PitBottom на y=−9
-##   ЦЕНТР     x −2…+6     открытый пол; пропсы на z=0 (в меру): ящики (один на настиле), бочка, железная бочка, поддон,
-##                         брус поперёк разрыва Platform_Gap; свободные куски хлама bit_* (Junk)
-##   ВЕРТИКАЛЬ x +6…+16    ярусы-«этажерки» на одной опоре (Platform_End_L + End_R): S x=8 (настил 4 м), M x=12 (5 м),
-##                         L x=16 (7 м); лестницы-декор (5 → 8 и 7 → 10), перила, цепи; тележка и большой ящик на полу
-##   ВЫХОД     x +16…+18   на верхнем ярусе рама Banner_Frame с большим флагом-короной — «выход наверх» (дверь Мастерской —
-##                         следующая волна) и лестница вверх рядом
-##   ЗАДНИЙ ПЛАН z −2…−10  вал из куч листа 01 (z≈−2.5, разные: металл, шестерни, цепи, флаги, оружие, доспехи), рамы с флагами,
-##                         опоры с мостком (z −4…−5.5), две горы хлама и башня из опор (z −7…−9.5)
-##   ПЕРЕДНИЙ ПЛАН z +1.4…+3  вал куч под передней кромкой пола (разрыв у пропасти; вершины на плоскости боя ниже линии
-##                         ног — кукол не закрывают) и передний слой параллакса, опущенный на 1 м (LAYER1_Y)
+##   СТАРТ      x −18…−10   куча пробуждения Heap_Awakening (ходибельная) → куча-сюрприз Heap_Mystery (тёплый свет, сундучок)
+##                          → скат Slope_30 (x −14…−10, 0 → 2 м) с кучей рук под ним; сзади выброшенные куклы, гора хлама;
+##                          над стартом — уступ Ledge на 5 м (опора M x=−16, x −18…−14) с кучей голов (спихнуть вниз)
+##   ПРОПАСТЬ   x −9.5…−6.5 («провал в недра», 3 м): балка на цепях PitBeam (верх y=2, x −10…−6) продолжает скат, цепи — вверх
+##                          из кадра (deco_chain_long); Area3D DeathZone/Pit с y=−3 (KO kind self — через площадку), тёплый
+##                          свет снизу, искры, марево; дно Bounds/PitBottom на y=−9
+##   ЦЕНТР      x −6.5…+10  открытый пол: у края пропасти — большой ящик ShippingCrate 80 кг (препятствие, столкнуть в провал
+##                          тяжело); паровой клапан SteamVent x=−2.8; над ним высоко — раструб желоба Chute (x −6, y 11);
+##                          спавны P1 x 0.6 / P2 x 4.4 (как куклы в playground_scrap.tscn); висящий островок Island
+##                          (балка на цепях, верх y 5.2, x 0.5…4.5) — спавн 2 и бочка сверху; магнит на цепи Magnet (подвес x 7.4, y 12.8, полюс y ≈ 3.6, качка ±11°:
+##                          x 5.65…9.15) над железной бочкой 40 кг, рядом тележка 30 кг; лёгкие ящики/бочки у пола — метать
+##   ПРЕСС      x 10.35…12.85  пресс Press (ползун x 10.6…12.6, низ 3.3 м; станина за плоскостью) с ящиком на наковальне —
+##                          первый удар ломает его и роняет лут
+##   ПРАВЫЙ КРАЙ x 13…18    ярусы на опорах: R1 на 4 м (опора S x=15, x 13…17) — спавн 3; R2 на 7 м (опора L x=16.8,
+##                          x 14.8…18.8) с рамой выхода за плоскостью; лестница R1 → R2 и перила — за плоскостью
+##   ЗАДНИЙ ПЛАН z −3…−12   вал из куч листа 01 (z −3.4…−4.2, утоплен, в центре ниже), дальние горы; рамы, мостки и башни —
+##                          только в параллаксе
+##   ПЕРЕДНИЙ ПЛАН z +1.4…+3  вал куч под передней кромкой пола (разрыв у пропасти) и передний слой параллакса (LAYER1_Y)
+##
+## Пропсы по весу (tools/build_scrap_props_scenes.gd, классы захвата ArmAssist): лёгкие ≤ 15 кг (ящик 10, бочка 15 — летят) у пола
+## и на островке; средние (усиленный ящик 20, тележка 30, железная бочка 40 — тащатся); тяжёлый — большой ящик 80 (не поднять).
+## Железные пропсы и куски — meta material = "iron" (тянет магнит), деревянные — "wood".
 ##
 ## Дерево: Node3D "Scrap" (script scrap.gd)
-##   ├── WorldEnvironment "Environment" (assets/environments/scrap_env.tres + DOF дали), DirectionalLight3D "Sun" (тёплое низкое
-##   │   солнце сзади-справа, тени, 2 сплита), "Fill" (холодный лилово-синий спереди-слева, без теней), "Rim" (холодный
-##   │   контровой сзади-слева, без теней — кромка силуэтов кукол), SpotLight3D "CameraKey" (едет за камерой — scrap.gd; с
-##   │   затуханием по расстоянию плоскость кукол светлее заднего плана: контраст головы ореха с фоном +0.02…0.07 → +0.13…0.21)
-##   ├── "Parallax": инстанс scenes/arena/parallax_scrap.tscn (layer*_y_offset — подгонка линии земли / переднего хлама)
-##   ├── Node3D "Ground" (пол), "Start", "Platforms", "Vertical", "Back", "Front" — компоненты по зонам
+##   ├── WorldEnvironment "Environment" (assets/environments/scrap_env.tres + DOF дали), DirectionalLight3D "Sun", "Fill", "Rim",
+##   │   SpotLight3D "CameraKey" (едет за камерой — scrap.gd)
+##   ├── "Parallax": инстанс PARALLAX (layer*_y_offset — подгонка линии земли / переднего хлама)
+##   ├── Node3D "Ground" (пол), "Start", "Platforms" (пропасть, островок, края), "Back", "Front" — компоненты по зонам
 ##   ├── Node3D "Pit": куча у задней стенки провала Heap_PitWall, OmniLight3D "Glow", GPUParticles3D "Embers" и "Haze"
-##   ├── Node3D "Props": физпропсы листа 02 (Breakable и R) — обломки Breakable спавнятся сюда же (узел для обломков)
-##   ├── Node3D "Junk": свободные куски bit_* на полу
+##   ├── Node3D "Machines": Magnet, SteamVent, Press, Chute (machine_*.tscn; фазы циклов разнесены phase_offset_s)
+##   ├── Node3D "Props": физпропсы листа 02 (Breakable и R) — обломки Breakable спавнятся сюда же; первые два — Crate и
+##   │   ReinforcedCrate (их позиции переопределяет scenes/playground_arm.tscn)
+##   ├── Node3D "Junk": свободные куски bit_* (и куски, высыпанные желобом), "Loot": лут из разбитых пропсов
 ##   ├── GPUParticles3D "Dust": пыль по всему объёму
 ##   ├── StaticBody3D "Bounds": стены x=±HALF_W, потолок CEIL_Y, дно пропасти PitBottom, страховочный BackFloor под задником
 ##   ├── Area3D "DeathZone": Pit (x пропасти, y −8…−3) + страховочный Floor (y −15)
-##   └── Node3D "Spawns": Marker3D Spawn0..3 (пол центра ×2, настил Platform_M, нижний ярус вертикали)
+##   ├── Node3D "Spawns": Marker3D Spawn0..3 (пол центра ×2, островок, ярус R1)
+##   └── CanvasLayer "LootCounter" (scenes/ui/run_inventory_counter.gd): счётчик материалов RunInventory в правом нижнем углу
 extends SceneTree
 
 const OUT := "res://scenes/arena/scrap.tscn"
 const SCENE_UID := "uid://scraparena01"
 const KIT := "res://scenes/props/scrap/%s.tscn"
 const SCRIPT := "res://scenes/arena/scrap.gd"
-const PARALLAX := "res://scenes/arena/parallax_scrap.tscn"
+const PARALLAX := "res://scenes/arena/parallax_scrap_scatter.tscn"  # фон из запечённых 3D-конструкций; v2 (слои картинок) — parallax_scrap_v2.tscn, v1 (полосы листа) — parallax_scrap.tscn
 const ENV_RES := "res://assets/environments/scrap_env.tres"
 const MOTE_TEX := "res://assets/textures/fx/mote.png"
 
 const HALF_W := 18.0            # невидимые стены
-const CEIL_Y := 12.0            # невидимый потолок
-const SUPPORT_Z := -1.4         # опоры за плоскостью кукол: колонна (глубина 2.0) — z −2.4..−0.4, крышка до −0.37
-const RAIL_Z := -0.9            # перила по задней кромке настила (коллизия −1.2..−0.6)
-const LADDER_Z := -0.75         # лестницы (коллизия −1.05..−0.45)
-const CHAIN_Z := -0.85          # цепи с крюками под задней балкой настила
+const CEIL_Y := 14.0            # невидимый потолок = верх arena_bounds (y −6 + 20): камера его не меняет
+const SUPPORT_Z := -1.7         # опоры за плоскостью боя: колонна (глубина 2.0) — z −2.7..−0.7, крышка (2.06) до −0.67
+const RAIL_Z := -1.05           # перила по задней кромке настила (коллизия −1.35..−0.75)
+const LADDER_Z := -1.05         # лестницы (коллизия −1.35..−0.75)
+const FRAME_Z := -1.3           # рама выхода на R2 (коллизия −1.6..−1.0)
+const CHAIN_Z := -0.95          # цепи с крюками под задней балкой настила (без коллизии)
 const DECK_S := 4.0             # настил на Support_S (3 + 1)
 const DECK_M := 5.0             # на Support_M (4 + 1)
 const DECK_L := 7.0             # на Support_L (6 + 1)
@@ -75,7 +88,20 @@ const DECK_UNDER := 0.38        # низ балки настила под пов
 const PIT_X0 := -9.5            # пропасть: между модулями пола
 const PIT_X1 := -6.5
 const PIT_KO_Y := -3.0          # верх зоны KO
-const BEAM_Y := 2.0             # верх балки на цепях = верх ската
+const BEAM_Y := 2.0             # верх балки на цепях над пропастью = верх ската
+const ISLAND_X := 2.5           # висящий островок (балка на цепях) в центре: x 0.5…4.5
+const ISLAND_Y := 5.2
+const HANG_ANCHOR := 2.0        # анкеры цепей балки над её верхом (kit_hanging_beam Anchor_L/R: ±1.7, +2.0)
+const CHAIN_TOP := 17.4         # цепи подвесов уходят выше кадра: полный отъезд камеры видит до y ≈ 16.8
+const LEDGE_X := -16.0          # уступ над стартом (опора M): настил на 5 м, x −18…−14
+const R1_X := 15.0              # правый ярус R1: опора S, настил на 4 м, x 13…17
+const R2_X := 16.8              # правый ярус R2: опора L, настил на 7 м, x 14.8…18.8
+const MAGNET_PIVOT := Vector3(7.4, 12.8, 0.0)      # точка подвеса маятника (цепь 8 м: полюс y ≈ 3.6, диск до 4.8)
+## Качка ±11°: полюс x 5.65…9.15, диск (r 0.78) не заходит ни на островок (x ≤ 4.5), ни на пресс (x ≥ 10.3).
+const MAGNET_SWING := 11.0
+const VENT_X := -2.8
+const PRESS_X := 11.6
+const CHUTE_MOUTH := Vector3(-6.0, 11.0, 0.0)
 const FLOOR_X0 := -21.5         # пол заходит за стены: кадр у края видит его в перспективе
 const FLOOR_X1 := 21.5
 const LAYER1_Y := -1.0          # передний хлам параллакса ниже на 1 м: на любом зуме его кромка под линией пола (ноги кукол
@@ -95,6 +121,7 @@ const RIM_ENERGY := 0.6
 const KEY_COLOR := Color(1.0, 0.93, 0.86)
 const KEY_ENERGY := 14.0                           # спот на 10–25 м: энергия с запасом на затухание
 const BERM_Y := -0.45                               # вал куч за полом утоплен: за верхом кукол на полу — дымка, а не хлам
+const BERM_CENTER_Y := -0.9                         # в центре (за полом боя) — ещё ниже: за куклами дальний фон
 const PIT_COLOR := Color(1.0, 0.46, 0.16)
 const PIT_ENERGY := 6.0
 
@@ -114,14 +141,16 @@ func _init() -> void:
 	_start()
 	_platforms()
 	_pit()
-	_vertical()
 	_back()
 	_front()
+	_machines()
 	_props()
 	_junk()
+	_group("Loot")
 	_dust()
 	_bounds()
 	_spawns()
+	_loot_counter()
 	if _failed:
 		quit(1)
 		return
@@ -257,37 +286,51 @@ func _ground() -> void:
 
 ## Старт: Core просыпается в куче. Слева направо на z=0: куча пробуждения (ходибельная) → куча-сюрприз (сундучок и тёплый
 ## свет в «пещере», тоже ходибельная) → скат к балке над пропастью; под скатом — куча рук (свободные руки сверху — RigidBody,
-## спят до толчка); сзади — выброшенные куклы. Куча голов — у правого края пропасти (см. _platforms).
+## спят до толчка); сзади — выброшенные куклы; над стартом — уступ на 5 м (опора M за плоскостью) с кучей голов.
 func _start() -> void:
 	var s := _group("Start")
 	_inst(s, "bodies_scrap_heap_medium", "Heap_Awakening", Vector3(-17.0, 0.0, 0.0), 8.0)
 	_inst(s, "bodies_mystery_scrap_heap", "Heap_Mystery", Vector3(-14.9, 0.0, 0.0), -4.0)
 	_inst(s, "kit_slope_30", "Slope", Vector3(-12.0, 0.0, 0.0))
 	_inst(s, "bodies_puppet_limb_pile", "Heap_Limbs", Vector3(-11.2, 0.0, 0.0), 4.0)
-	_inst(s, "bodies_broken_puppet", "BrokenPuppet", Vector3(-12.6, 0.0, -1.6), 12.0)
-	_inst(s, "bodies_half_puppet", "HalfPuppet", Vector3(-16.2, 0.0, -1.5), -10.0)
+	_inst(s, "bodies_broken_puppet", "BrokenPuppet", Vector3(-12.6, 0.0, -1.7), 12.0)
+	_inst(s, "bodies_half_puppet", "HalfPuppet", Vector3(-16.2, 0.0, -1.7), -10.0)
+	_shelf(s, "Ledge", "kit_support_m", LEDGE_X, DECK_M)
+	_inst(s, "kit_railing", "Railing", Vector3(LEDGE_X - 0.9, DECK_M, RAIL_Z))
+	_inst(s, "kit_chain_hook", "ChainHook", Vector3(LEDGE_X + 1.4, DECK_M - DECK_UNDER, CHAIN_Z))
+	# куча голов на уступе: головы (свободные RigidBody) можно спихнуть вниз, на кучи старта
+	_inst(s, "bodies_puppet_head_pile", "Heap_Heads", Vector3(LEDGE_X - 0.5, DECK_M, 0.05), -6.0)
 	# за стартом — «огромная гора хлама»: две вершины, флаг-корона на шесте (часть модели)
-	_inst(s, "bodies_scrap_heap_massive", "Heap_Mountain", Vector3(-12.5, -1.2, -9.0), 6.0, 1.5)
+	_inst(s, "bodies_scrap_heap_massive", "Heap_Mountain", Vector3(-14.0, -2.0, -12.5), 6.0, 1.5)
 
 
-## Платформы: опоры S за плоскостью, настилы на 4 м; балка на цепях (верх 2 м) продолжает скат через пропасть, её анкеры
-## (±1.7, +2.0) — под половинами Platform_Gap.
+## Платформы — только по краям и на цепях: балка над пропастью (верх 2 м, продолжает скат), висящий островок в центре (балка
+## на цепях, верх ISLAND_Y) — цепи обоих уходят вверх из кадра (deco_chain_long от анкеров балки); порог у правого края
+## пропасти — большой ящик (Props/ShippingCrate); правый край — ярусы R1 (4 м) и R2 (7 м) на опорах за плоскостью, перила и
+## лестница — за плоскостью, рама выхода — на R2 за плоскостью.
 func _platforms() -> void:
 	var p := _group("Platforms")
-	for x in [-10.0, -6.0, -2.0]:
-		_inst(p, "kit_support_s", "Support", Vector3(x, 0.0, SUPPORT_Z))
-	_inst(p, "kit_platform_gap", "DeckGap", Vector3(-8.0, DECK_S, 0.0))
-	_inst(p, "kit_platform_m", "DeckM", Vector3(-4.0, DECK_S, 0.0))
-	_inst(p, "kit_hanging_beam", "HangingBeam", Vector3(-8.0, BEAM_Y, 0.0))
-	for x in [-3.6, -2.5]:
-		_inst(p, "kit_chain_hook", "ChainHook", Vector3(x, DECK_S - DECK_UNDER, CHAIN_Z))
-	# куча голов у правого края пропасти: головы (свободные RigidBody) можно спихнуть вниз; сама куча — порог перед краем,
-	# кукла, отлетевшая с пола центра влево, упирается в неё, а не сразу падает в пропасть
-	_inst(p, "bodies_puppet_head_pile", "Heap_Heads", Vector3(-5.4, 0.0, 0.05), -6.0)
-	_inst(p, "kit_railing", "Railing", Vector3(-3.0, DECK_S, RAIL_Z))
-	# флаги-короны на рамах сзади: рама-ворота за пропастью, высокая рама за Platform_M
-	_inst(p, "kit_wall_frame", "WallFrame", Vector3(-8.0, 0.0, -3.9))
-	_inst(p, "kit_banner_frame", "BannerFrame", Vector3(-3.6, 0.0, -3.5))
+	_inst(p, "kit_hanging_beam", "PitBeam", Vector3(-8.0, BEAM_Y, 0.0))
+	_chains_up(p, "PitChain", -8.0, BEAM_Y + HANG_ANCHOR)
+	_inst(p, "kit_hanging_beam", "Island", Vector3(ISLAND_X, ISLAND_Y, 0.0))
+	_chains_up(p, "IslandChain", ISLAND_X, ISLAND_Y + HANG_ANCHOR)
+	# правый край
+	_shelf(p, "R1", "kit_support_s", R1_X, DECK_S)
+	_shelf(p, "R2", "kit_support_l", R2_X, DECK_L)
+	_inst(p, "kit_railing", "Railing", Vector3(R1_X - 1.1, DECK_S, RAIL_Z))
+	_inst(p, "kit_railing", "Railing", Vector3(R2_X + 0.9, DECK_L, RAIL_Z))
+	_inst(p, "kit_ladder", "LadderUp", Vector3(R1_X + 1.2, DECK_S, LADDER_Z))
+	_inst(p, "kit_chain_hook", "ChainHook", Vector3(R1_X + 1.4, DECK_S - DECK_UNDER, CHAIN_Z))
+	_inst(p, "kit_banner_frame", "ExitBanner", Vector3(R2_X + 0.6, DECK_L, FRAME_Z))
+
+
+## Две цепи 2-метровыми модулями от анкеров балки на цепях (x ± 1.7, y_anchor) вверх до CHAIN_TOP.
+func _chains_up(parent: Node, name: String, x: float, y_anchor: float) -> void:
+	for sx in [-1.7, 1.7]:
+		var top := y_anchor + 2.0
+		while top - 2.0 < CHAIN_TOP:
+			_inst(parent, "deco_chain_long", name, Vector3(x + sx, top, 0.0))
+			top += 2.0
 
 
 ## Пропасть: дыра в полу (модулей там нет). Внутри у задней стенки — куча хлама (z −2, вершина ≈ −0.3): камера смотрит
@@ -369,60 +412,32 @@ func _pit() -> void:
 	pit.add_child(h)
 
 
-## Вертикаль: три «этажерки» лесенкой вправо-вверх (4 / 5 / 7 м), лестницы и перила по задней кромке, цепи; выход наверх —
-## рама с большим флагом-короной на верхнем ярусе и лестница из кадра вверх.
-func _vertical() -> void:
-	var v := _group("Vertical")
-	_shelf(v, "Tier1", "kit_support_s", 8.0, DECK_S)
-	_shelf(v, "Tier2", "kit_support_m", 12.0, DECK_M)
-	_shelf(v, "Tier3", "kit_support_l", 16.0, DECK_L)
-	_inst(v, "kit_railing", "Railing", Vector3(9.1, DECK_S, RAIL_Z))
-	_inst(v, "kit_railing", "Railing", Vector3(10.9, DECK_M, RAIL_Z))
-	_inst(v, "kit_ladder", "Ladder", Vector3(13.5, DECK_M, LADDER_Z))
-	_inst(v, "kit_ladder", "LadderUp", Vector3(14.8, DECK_L, LADDER_Z))
-	_inst(v, "kit_chain_hook", "ChainHook", Vector3(13.4, DECK_M - DECK_UNDER, CHAIN_Z))
-	_inst(v, "kit_chain_hook", "ChainHook", Vector3(17.4, DECK_L - DECK_UNDER, CHAIN_Z))
-	_inst(v, "kit_banner_frame", "ExitBanner", Vector3(16.6, DECK_L, -0.65))
-
-
-## Задний план: вал куч листа 01 вдоль задней кромки пола (z≈−2.5, чуть утоплены), рамы с флагами и опоры с мостком
-## (z −4…−5.5), дальние горы хлама и башня из опор (z −7…−9.5). Коллизии задника плоскости кукол не касаются.
+## Задний план — дальше и тише, чем в v1: вал куч листа 01 вдоль задней кромки пола отодвинут (z −3.2…−4.2) и утоплен; в центре
+## (за полом боя, x −4…10) — низкие кучи глубже (BERM_CENTER_Y), чтобы за куклами на полу был дальний фон, а не хлам; рам,
+## флагов, мостков и башен из опор в 3D нет — даль целиком даёт параллакс; горы хлама — по краям, z −12.5…−13. Коллизии задника плоскости
+## боя не касаются (|z| ≥ 2.6).
 func _back() -> void:
 	var b := _group("Back")
 	var berm := [
-		["bodies_chain_heap", -19.4, -2.4, 10.0],
-		["bodies_scrap_heap_medium", -16.6, -2.9, -12.0],
-		["bodies_cloth_scrap_heap", -13.6, -2.7, 6.0],
-		["bodies_broken_weapons_pile", -10.9, -2.5, -8.0],
-		["bodies_scrap_heap_medium", -8.0, -2.8, 4.0],
-		["bodies_gear_heap", -5.0, -2.5, -10.0],
-		["bodies_scrap_heap_small", -2.3, -2.3, 14.0],
-		["bodies_broken_armor_heap", 0.6, -2.6, -6.0],
-		["bodies_metal_parts_heap", 3.5, -2.4, 8.0],
-		["bodies_scrap_heap_medium", 6.5, -2.9, -4.0],
-		["bodies_chain_heap", 9.7, -2.4, 12.0],
-		["bodies_cloth_scrap_heap", 12.3, -2.7, -10.0],
-		["bodies_scrap_heap_medium", 15.2, -2.9, 6.0],
-		["bodies_broken_weapons_pile", 18.6, -2.5, -6.0],
+		["bodies_chain_heap", -19.4, -3.4, 10.0, BERM_Y],
+		["bodies_scrap_heap_medium", -16.6, -3.8, -12.0, BERM_Y],
+		["bodies_cloth_scrap_heap", -13.6, -3.6, 6.0, BERM_Y],
+		["bodies_broken_weapons_pile", -10.9, -3.4, -8.0, BERM_Y],
+		["bodies_scrap_heap_medium", -8.0, -3.8, 4.0, BERM_Y],
+		["bodies_gear_heap", -5.0, -3.6, -10.0, BERM_Y],
+		["bodies_scrap_heap_small", -2.3, -4.2, 14.0, BERM_CENTER_Y],
+		["bodies_metal_parts_heap", 0.9, -4.2, -6.0, BERM_CENTER_Y],
+		["bodies_scrap_heap_small", 4.0, -4.2, 8.0, BERM_CENTER_Y],
+		["bodies_broken_armor_heap", 7.2, -4.2, -4.0, BERM_CENTER_Y],
+		["bodies_chain_heap", 10.2, -3.6, 12.0, BERM_Y],
+		["bodies_cloth_scrap_heap", 12.8, -3.6, -10.0, BERM_Y],
+		["bodies_scrap_heap_medium", 15.4, -3.8, 6.0, BERM_Y],
+		["bodies_broken_weapons_pile", 18.6, -3.4, -6.0, BERM_Y],
 	]
 	for h in berm:
-		_inst(b, h[0], "Heap_Berm", Vector3(h[1], BERM_Y, h[2]), h[3])
-	# рамы с флагами и опоры с мостком
-	_inst(b, "kit_banner_frame", "BannerFrame", Vector3(-15.6, 0.0, -4.4))
-	_inst(b, "kit_support_l", "SupportBack", Vector3(-1.0, 0.0, -5.2))
-	_inst(b, "kit_banner_frame", "BannerFrame", Vector3(-1.0, 6.0, -5.2))
-	for x in [3.0, 7.0]:
-		_inst(b, "kit_support_m", "SupportBack", Vector3(x, 0.0, -5.6))
-	_inst(b, "kit_platform_m", "BridgeBack", Vector3(5.0, DECK_M, -5.6))
-	_inst(b, "kit_railing", "RailingBack", Vector3(5.0, DECK_M, -6.5))
-	_inst(b, "kit_chain_hook", "ChainHookBack", Vector3(5.6, DECK_M - DECK_UNDER, -5.6))
-	_inst(b, "kit_banner_frame", "BannerFrame", Vector3(10.2, 0.0, -4.3))
-	_inst(b, "kit_wall_frame", "WallFrameBack", Vector3(14.2, 0.0, -4.8))
-	# даль: гора справа и башня из опор с флагом над всем уровнем (читается и на полном отъезде камеры)
-	_inst(b, "bodies_scrap_heap_massive", "Heap_MountainR", Vector3(8.5, -1.3, -9.5), -8.0, 1.15)
-	_inst(b, "kit_support_l", "TowerFar", Vector3(-6.0, -0.6, -9.6))
-	_inst(b, "kit_support_l", "TowerFar", Vector3(-6.0, 5.4, -9.6))
-	_inst(b, "kit_banner_frame", "TowerFarBanner", Vector3(-6.0, 11.4, -9.6))
+		_inst(b, h[0], "Heap_Berm", Vector3(h[1], h[4], h[2]), h[3])
+	# даль: гора хлама справа, за ярусами (за полом боя в центре — только параллакс: куклы читаются на нём, а не на куче)
+	_inst(b, "bodies_scrap_heap_massive", "Heap_MountainR", Vector3(15.0, -2.0, -13.0), -8.0, 1.15)
 
 
 ## Передний план. Вал под передней кромкой пола (z≈1.5, вершины на y≈0 — на плоскости боя ниже линии ног): прячет пустоту
@@ -454,39 +469,88 @@ func _front() -> void:
 		_inst(f, h[0], "Heap_Bank", Vector3(h[1], h[2], h[3]), h[4])
 
 
-## Физпропсы листа 02 на z=0 (центр — «в меру»: есть что швырять, но пол открыт) + брус поперёк разрыва Platform_Gap
-## (столкнуть в пропасть). Breakable-обломки спавнятся в этот же узел.
+## Механизмы листа 04 (machine_*.tscn, поведение — scenes/props/scrap/machines/): циклы разнесены phase_offset_s — после отсчёта
+## (3 с) первым бьёт пресс (ящик на наковальне → лут), потом включается магнит, пар, желоб. Желоб сыплет куски в Junk.
+func _machines() -> void:
+	var m := _group("Machines")
+	var mag := _inst(m, "machine_magnet", "Magnet", MAGNET_PIVOT)
+	mag.set("phase_offset_s", 1.0)
+	mag.set("swing_deg", MAGNET_SWING)
+	var vent := _inst(m, "machine_steam_vent", "SteamVent", Vector3(VENT_X, 0.0, 0.0))
+	vent.set("phase_offset_s", 0.0)
+	var press := _inst(m, "machine_press", "Press", Vector3(PRESS_X, 0.0, 0.0))
+	press.set("phase_offset_s", 1.5)
+	var chute := _inst(m, "machine_chute", "Chute", CHUTE_MOUTH)
+	chute.set("phase_offset_s", 4.0)
+	chute.set("junk_path", NodePath("../../Junk"))
+
+
+## Физпропсы листа 02 на z=0 по весу (центр открыт): лёгкие ящики и бочки у пола и на островке — метать; средние (усиленный
+## ящик, тележка, железная бочка под магнитом) — тащатся; тяжёлый большой ящик у края пропасти — препятствие. Ящик на наковальне
+## пресса — первый удар ломает его. Breakable-обломки спавнятся в этот же узел. Первые два — Crate и ReinforcedCrate (пути
+## узлов переопределяет scenes/playground_arm.tscn). material — для магнита.
 func _props() -> void:
 	var p := _group("Props")
 	var items := [
-		["prop_wooden_crate", "Crate", -1.0, 0.0],
-		["prop_reinforced_crate", "ReinforcedCrate", -1.05, 1.02],
-		["prop_wooden_crate", "Crate", -5.0, DECK_S],
-		["prop_wooden_pallet", "Pallet", 2.3, 0.0],
-		["prop_wooden_barrel", "Barrel", 5.9, 0.0],
-		["prop_metal_barrel", "MetalBarrel", 6.9, 0.0],
-		["prop_wooden_beam", "Beam", -8.0, DECK_S],
-		["prop_junk_cart", "JunkCart", 10.9, 0.0],
-		["prop_large_shipping_crate", "ShippingCrate", 16.6, 0.0],
-		["prop_wooden_barrel", "Barrel", 11.4, DECK_M],
+		["prop_wooden_crate", "Crate", -0.9, 0.0, "wood"],
+		["prop_reinforced_crate", "ReinforcedCrate", -0.95, 1.02, "wood"],
+		["prop_wooden_barrel", "Barrel", 9.35, 0.0, "wood"],
+		["prop_junk_cart", "JunkCart", 5.7, 0.0, "wood"],
+		["prop_metal_barrel", "MetalBarrel", 7.6, 0.0, "iron"],
+		["prop_wooden_crate", "CrateAnvil", PRESS_X - 0.2, 0.12, "wood"],
+		["prop_wooden_crate", "Crate", 13.7, 0.0, "wood"],
+		["prop_wooden_barrel", "Barrel", ISLAND_X + 1.4, ISLAND_Y, "wood"],
+		["prop_large_shipping_crate", "ShippingCrate", -5.0, 0.0, "wood"],
+		["prop_metal_barrel_dented", "MetalBarrel", R1_X + 1.3, DECK_S, "iron"],
 	]
 	for it in items:
-		_inst(p, it[0], it[1], Vector3(it[2], it[3] + 0.02, 0.0))
+		var n := _inst(p, it[0], it[1], Vector3(it[2], it[3] + 0.02, 0.0))
+		n.set_meta("material", it[4])
 
 
-## Свободный хлам на плоскости боя: несколько кусков bit_* (головы, шестерня, доска, шлем) — толкаются, не мешают.
+## Свободный хлам на плоскости боя: несколько кусков bit_* — толкаются, не мешают; железные (meta material) тянет магнит.
 func _junk() -> void:
 	var j := _group("Junk")
 	var bits := [
-		["bit_doll_head_cracked", -1.9, 0.15],
-		["bit_gear_medium", 3.4, 0.25],
-		["bit_scrap_board", -2.9, 0.04],
-		["bit_helmet", 9.2, 0.13],
-		["bit_doll_head_sad", 13.2, DECK_M + 0.15],
-		["bit_shield_crown", 17.3, DECK_L + 0.37],
+		["bit_doll_head_cracked", -1.9, 0.15, "wood"],
+		["bit_gear_medium", 8.55, 0.25, "iron"],
+		["bit_scrap_board", -3.9, 0.04, "wood"],
+		["bit_helmet", 6.9, 0.13, "iron"],
+		["bit_bolt", 8.2, 0.1, "iron"],
+		["bit_doll_head_sad", R1_X - 0.8, DECK_S + 0.15, "wood"],
+		["bit_shield_crown", R2_X + 0.2, DECK_L + 0.37, "iron"],
 	]
 	for b in bits:
-		_inst(j, b[0], "Bit", Vector3(b[1], b[2] + 0.02, 0.0))
+		var n := _inst(j, b[0], "Bit", Vector3(b[1], b[2] + 0.02, 0.0))
+		n.set_meta("material", b[3])
+
+
+## Счётчик материалов забега (RunInventory) в правом нижнем углу — поверх HUD площадки, скрыт, пока пусто.
+func _loot_counter() -> void:
+	var cl := CanvasLayer.new()
+	cl.name = "LootCounter"
+	cl.layer = 5
+	cl.set_script(load("res://scenes/ui/run_inventory_counter.gd"))
+	arena_root.add_child(cl)
+	var l := Label.new()
+	l.name = "Text"
+	l.anchor_left = 1.0
+	l.anchor_top = 1.0
+	l.anchor_right = 1.0
+	l.anchor_bottom = 1.0
+	l.offset_left = -760.0
+	l.offset_top = -52.0
+	l.offset_right = -24.0
+	l.offset_bottom = -14.0
+	l.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	l.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	l.add_theme_color_override("font_color", Color(1.0, 0.93, 0.8, 0.85))
+	l.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.02, 0.9))
+	l.add_theme_constant_override("outline_size", 8)
+	l.add_theme_font_size_override("font_size", 24)
+	l.visible = false
+	cl.add_child(l)
 
 
 func _dust() -> void:
@@ -545,9 +609,10 @@ func _bounds() -> void:
 	_box_shape(dz, "Floor", -HALF_W - 2.0, HALF_W + 2.0, -15.0, -14.0, 0.0, 8.0)
 
 
+## Спавны: P1 / P2 — пол центра (между ними открыто, над ними островок), Spawn2 — островок, Spawn3 — ярус R1.
 func _spawns() -> void:
 	var holder := _group("Spawns")
-	var pts := [Vector3(0.6, 0.05, 0), Vector3(4.4, 0.05, 0), Vector3(-3.4, DECK_S + 0.05, 0), Vector3(8.9, DECK_S + 0.05, 0)]
+	var pts := [Vector3(0.6, 0.05, 0), Vector3(4.4, 0.05, 0), Vector3(ISLAND_X, ISLAND_Y + 0.05, 0), Vector3(R1_X - 0.6, DECK_S + 0.05, 0)]
 	for i in pts.size():
 		var m := Marker3D.new()
 		m.name = "Spawn%d" % i
@@ -577,12 +642,13 @@ func _environment() -> void:
 		_failed = true
 		return
 	env.environment = e
-	# DOF дали (как ruins_camera.tres): мягкий разм параллакса — полосы листа увеличены ×3–4
+	# DOF дали: фон v2 резкий (увеличение ≤ ×1.6), размытие только отделяет дальние планы от боя. В v1 было
+	# 24 / 40 / 0.05 — прятало полосы листа, растянутые ×3–4.
 	var ca := CameraAttributesPractical.new()
 	ca.dof_blur_far_enabled = true
-	ca.dof_blur_far_distance = 24.0
-	ca.dof_blur_far_transition = 40.0
-	ca.dof_blur_amount = 0.05
+	ca.dof_blur_far_distance = 45.0
+	ca.dof_blur_far_transition = 70.0
+	ca.dof_blur_amount = 0.03
 	env.camera_attributes = ca
 	arena_root.add_child(env)
 	var sun := DirectionalLight3D.new()

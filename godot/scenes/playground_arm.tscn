@@ -25,7 +25,7 @@ arena_id = "scrap"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
 
 [node name="ReinforcedCrate" parent="Scrap/Props" index="1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.95, 0.02, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0.02, 0)
 
 [node name="P1" parent="." groups=["dolls"] instance=ExtResource("3_doll")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.35, 0.05, 0)
@@ -52,13 +52,13 @@ script = ExtResource("14_arm")
 [node name="Weapons" type="Node3D" parent="."]
 
 [node name="Hammer" parent="Weapons" instance=ExtResource("5_hammer")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.3, 4.2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.1, 5.2, 0)
 
 [node name="Mace" parent="Weapons" instance=ExtResource("6_mace")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.6, 5.2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.2, 4.2, 0)
 
 [node name="Axe" parent="Weapons" instance=ExtResource("7_axe")]
-transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -4.4, 4.2, 0)
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 1.5, 5.4, 0)
 
 [node name="Sword" parent="Weapons" instance=ExtResource("10_sword")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9, 0.2, 0)

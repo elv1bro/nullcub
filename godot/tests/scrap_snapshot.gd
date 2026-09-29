@@ -4,15 +4,22 @@
 ## camera.snap()):
 ##   wide     — куклы на спавнах P1/P2, min_half_height = WIDE_H: полный отъезд, видна вся арена (36 × 20 м);
 ##   start    — P1 на куче пробуждения, P2 на скате у пропасти: зона старта крупно (HUD скрыт);
-##   vertical — P1 на ярусе 5 м, P2 на ярусе 7 м у рамы выхода (HUD скрыт);
+##   vertical — правый край (v3): P1 на ярусе R1 4 м, P2 на ярусе R2 7 м у рамы выхода (HUD скрыт);
 ##   fight    — P1 на Spawn0, P2 в 3.8 м правее делает рывок влево в P1 (как match_probe): кадр через 0.12 с реального
-##              времени после первого удара (Match.hit), HUD виден.
+##              времени после первого удара (Match.hit), HUD виден;
+##   magnet   — (арена v3) куклы по бокам от магнита, железная бочка под ним, магнит включён (ACTIVE) — кадр через MAGNET_SHOT_S:
+##              бочка поднята, рабочее кольцо и лампы светятся, искры (HUD скрыт);
+##   press    — (арена v3) P1 левее пресса, P2 на наковальне под ползуном: цикл с WARNING, кадр через PRESS_SHOT_S после удара
+##              (пыль, искры, лампы ACTIVE, P2 отброшен) (HUD скрыт).
 ## Числа по самим кадрам (не «картинка красивая»): контраст куклы с фоном — средняя яркость (Rec.709) пятна 7×7 пкс в центре
 ## торса и головы минус медиана кольца вокруг куклы (радиус 0.9–1.3 её экранной высоты), для каждой куклы в каждом кадре;
 ## проверка readability: |контраст торса или головы| ≥ MIN_CONTRAST у обеих кукол в кадре fight. Ещё: камера в границах
 ## арены, куклы в кадре, в кадре fight был удар. JSON в stdout и tests/scrap_snapshot_report.json, exit 0/1.
 ## Запуск (не headless — нужен рендер): godot --path . --resolution 1920x1080 --position 100,100 --always-on-top
 ##   res://tests/scrap_snapshot.tscn -- "shots=wide+start+vertical+fight,out=/abs/dir/"
+## Сравнение фонов: parallax=v2 подменяет инстанс Parallax арены на scenes/arena/parallax_scrap_v2.tscn (y-смещения слоёв
+## и множители сохраняются), dof=<distance>/<transition>/<amount> — DOF дали камеры арены; name=<шаблон> — имя файлов
+## (по умолчанию scrap-arena-v1-%s.png).
 extends Node3D
 
 const SCENE := "res://scenes/playground_scrap.tscn"
@@ -22,8 +29,15 @@ const HIT_SHOT_REAL_MS := 120
 const P2_OFFSET := Vector3(3.8, 0.0, 0.0)
 const DASH_FROM_M := 2.0
 const MIN_CONTRAST := 0.08
-const NAME := "scrap-arena-v1-%s.png"
+const PARALLAX_V2 := "res://scenes/arena/parallax_scrap_v2.tscn"
+const PARALLAX_SCENES := {"v2": PARALLAX_V2, "scatter": "res://scenes/arena/parallax_scrap_scatter.tscn"}
+var name_fmt := "scrap-arena-v1-%s.png"
+var parallax_tag := ""
+var dof_override := PackedFloat32Array()
 const FOOT_CLEARANCE := 0.12     # центр самой нижней части (стопа) над опорой
+const MACHINE_H := 5.2           # полувысота кадров magnet / press: механизм целиком и куклы
+const MAGNET_SHOT_S := 1.8
+const PRESS_SHOT_S := 0.12
 
 var out_dir := ""
 var shots: Array = ["wide", "start", "vertical", "fight"]
@@ -49,8 +63,25 @@ func _ready() -> void:
 			match p[0]:
 				"out": out_dir = p[1]
 				"shots": shots = Array(p[1].split("+"))
+				"parallax": parallax_tag = p[1]
+				"name": name_fmt = p[1]
+				"dof":
+					for v in p[1].split("/"):
+						dof_override.append(float(v))
 	pg = load(SCENE).instantiate()
+	if PARALLAX_SCENES.has(parallax_tag):
+		_swap_parallax(pg)
 	add_child(pg)
+	if dof_override.size() == 3:
+		var we := _find_world_env(pg)
+		if we and we.camera_attributes is CameraAttributesPractical:
+			var ca := (we.camera_attributes as CameraAttributesPractical).duplicate()
+			ca.dof_blur_far_distance = dof_override[0]
+			ca.dof_blur_far_transition = dof_override[1]
+			ca.dof_blur_amount = dof_override[2]
+			we.camera_attributes = ca
+	report["parallax"] = parallax_tag if parallax_tag != "" else "v1"
+	report["dof"] = Array(dof_override)
 	pg.set_process_unhandled_input(false)
 	get_viewport().gui_disable_input = true
 	p1 = pg.get_node("P1")
@@ -69,6 +100,32 @@ func _ready() -> void:
 			first_hit_ms = Time.get_ticks_msec())
 	report["resolution"] = var_to_str(get_viewport().get_visible_rect().size)
 	_run.call_deferred()
+
+
+## Подмена фона арены на v2 до входа в дерево: новый инстанс с теми же y-смещениями и множителями, на то же место.
+func _swap_parallax(root: Node) -> void:
+	var old := root.find_child("Parallax", true, false) as Node3D
+	if old == null:
+		push_warning("scrap_snapshot: нет узла Parallax")
+		return
+	var nb := (load(PARALLAX_SCENES[parallax_tag]) as PackedScene).instantiate() as Node3D
+	for prop in ["layer4_y_offset", "layer3_y_offset", "layer2_y_offset", "layer1_y_offset",
+			"layer4_scroll", "layer3_scroll", "layer2_scroll", "layer1_scroll"]:
+		nb.set(prop, old.get(prop))
+	nb.transform = old.transform
+	var parent := old.get_parent()
+	var idx := old.get_index()
+	parent.remove_child(old)
+	old.free()
+	nb.name = "Parallax"
+	parent.add_child(nb)
+	parent.move_child(nb, idx)
+
+
+func _find_world_env(root: Node) -> WorldEnvironment:
+	for n in root.find_children("*", "WorldEnvironment", true, false):
+		return n as WorldEnvironment
+	return null
 
 
 func _physics_process(_delta: float) -> void:
@@ -102,10 +159,14 @@ func _run() -> void:
 			"vertical":
 				hud.visible = false
 				cam.min_half_height = CLOSE_H
-				_place(p1, Vector3(12.8, 5.05, 0.0))
-				_place(p2, Vector3(15.3, 7.05, 0.0))
+				_place(p1, Vector3(14.2, 4.05, 0.0))
+				_place(p2, Vector3(16.2, 7.05, 0.0))
 				await _wait(1.6)
 				await _capture("vertical")
+			"magnet":
+				await _shot_magnet()
+			"press":
+				await _shot_press()
 			"fight":
 				hud.visible = true
 				cam.min_half_height = 4.0
@@ -123,6 +184,50 @@ func _run() -> void:
 				p2.input_vec = Vector2.ZERO
 				await _capture("fight")
 	_finish()
+
+
+## Магнит включён над железной бочкой, куклы по бокам (деревянные — магнит их не тянет).
+func _shot_magnet() -> void:
+	var mag: Node3D = pg.arena.call("magnet") if pg.arena.has_method("magnet") else null
+	if mag == null:
+		_check("magnet_present", 0.0, 1.0, "eq", "арена без магнита (нужна Свалка v3)")
+		return
+	hud.visible = false
+	cam.min_half_height = MACHINE_H
+	var pole: Vector3 = mag.call("pole_global")
+	_place(p1, Vector3(pole.x - 2.8, 0.05, 0.0))
+	_place(p2, Vector3(pole.x + 2.6, 0.05, 0.0))
+	var barrel := pg.arena.get_node_or_null("Props/MetalBarrel") as RigidBody3D
+	if barrel != null:
+		barrel.global_position = Vector3(pole.x - 0.3, 0.02, 0.0)
+		barrel.linear_velocity = Vector3.ZERO
+	await _wait(0.6)
+	mag.call("force_state", 2)   # ScrapMachine.State.ACTIVE
+	await _wait(MAGNET_SHOT_S)
+	await _capture("magnet")
+	mag.call("force_state", 3)
+
+
+## Пресс: WARNING → удар по P2 на наковальне, кадр сразу после удара.
+func _shot_press() -> void:
+	var press: Node3D = pg.arena.call("press") if pg.arena.has_method("press") else null
+	if press == null:
+		_check("press_present", 0.0, 1.0, "eq", "арена без пресса (нужна Свалка v3)")
+		return
+	hud.visible = false
+	cam.min_half_height = MACHINE_H
+	var px := press.global_position.x
+	press.call("force_state", 0)
+	_place(p1, Vector3(px - 2.6, 0.05, 0.0))
+	_place(p2, Vector3(px + 0.2, 0.17, 0.0))
+	await _wait(0.8)
+	press.call("trigger")
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 4000:
+		await get_tree().process_frame
+		if int(press.get("state")) == 2 and float(press.get("state_t")) >= float(press.get("slam_s")) + PRESS_SHOT_S:
+			break
+	await _capture("press")
 
 
 func _spawn(i: int) -> Vector3:
@@ -157,7 +262,7 @@ func _capture(id: String) -> void:
 	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
-	var path := out_dir.path_join(NAME % id)
+	var path := out_dir.path_join(name_fmt % id)
 	var err := img.save_png(path)
 	var info := {"path": path, "err": err, "size": var_to_str(img.get_size()), "half_height": snappedf(cam.half_height, 0.01),
 		"camera": var_to_str(cam.global_position.snapped(Vector3.ONE * 0.01))}

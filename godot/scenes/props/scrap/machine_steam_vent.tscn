@@ -1,0 +1,159 @@
+[gd_scene format=3 uid="uid://scrmachstm01"]
+
+[ext_resource type="Script" path="res://scenes/props/scrap/machines/steam_vent_machine.gd" id="1_6d2q0"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/machines/Steam_Vent.glb" id="2_5qxx8"]
+[ext_resource type="Texture2D" path="res://assets/textures/fx/mote.png" id="3_rn4kn"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_s4lca"]
+friction = 0.65
+bounce = 0.12
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_2sn6x"]
+height = 0.38
+radius = 0.42
+
+[sub_resource type="Gradient" id="Gradient_4xas3"]
+offsets = PackedFloat32Array(0, 0.12, 0.6, 1)
+colors = PackedColorArray(1, 1, 1, 0, 0.95, 0.95, 0.97, 0.55, 0.9, 0.9, 0.95, 0.3, 0.9, 0.9, 0.95, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_e40lb"]
+gradient = SubResource("Gradient_4xas3")
+
+[sub_resource type="Curve" id="Curve_f0v6c"]
+_data = [Vector2(0, 0.35), 0.0, 0.0, 0, 0, Vector2(0.5, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_1aqxf"]
+curve = SubResource("Curve_f0v6c")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ws1ec"]
+lifetime_randomness = 0.3
+emission_shape = 3
+emission_box_extents = Vector3(0.3, 0.05, 0.25)
+direction = Vector3(0, 1, 0)
+spread = 7.0
+initial_velocity_min = 4.0
+initial_velocity_max = 6.0
+gravity = Vector3(0, -0.6, 0)
+damping_min = 0.4
+damping_max = 0.9
+scale_min = 0.7
+scale_max = 1.3
+scale_curve = SubResource("CurveTexture_1aqxf")
+color_ramp = SubResource("GradientTexture1D_e40lb")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_70q1x"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("3_rn4kn")
+disable_receive_shadows = true
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_yesd2"]
+material = SubResource("StandardMaterial3D_70q1x")
+size = Vector2(0.55, 0.55)
+
+[sub_resource type="Gradient" id="Gradient_r1ywq"]
+offsets = PackedFloat32Array(0, 0.2, 1)
+colors = PackedColorArray(1, 1, 1, 0, 0.95, 0.95, 0.97, 0.4, 0.9, 0.9, 0.95, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_nuo6q"]
+gradient = SubResource("Gradient_r1ywq")
+
+[sub_resource type="Curve" id="Curve_5cd2a"]
+_data = [Vector2(0, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_v65oc"]
+curve = SubResource("Curve_5cd2a")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_v0klx"]
+lifetime_randomness = 0.3
+emission_shape = 3
+emission_box_extents = Vector3(0.25, 0.02, 0.2)
+direction = Vector3(0, 1, 0)
+spread = 20.0
+initial_velocity_min = 0.8
+initial_velocity_max = 1.6
+gravity = Vector3(0, 0, 0)
+damping_min = 0.5
+damping_max = 1.0
+scale_min = 0.7
+scale_max = 1.3
+scale_curve = SubResource("CurveTexture_v65oc")
+color_ramp = SubResource("GradientTexture1D_nuo6q")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e8eny"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("3_rn4kn")
+disable_receive_shadows = true
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_16okg"]
+material = SubResource("StandardMaterial3D_e8eny")
+size = Vector2(0.25, 0.25)
+
+[node name="SteamVent" type="Node3D" unique_id=2137494682]
+script = ExtResource("1_6d2q0")
+off_s = 5.0
+active_s = 1.6
+cooldown_s = 1.5
+lamp_warn_color = Color(1, 0.7, 0.2, 1)
+lamp_active_color = Color(1, 0.95, 0.85, 1)
+
+[node name="Body" type="StaticBody3D" parent="." unique_id=1449414644]
+physics_material_override = SubResource("PhysicsMaterial_s4lca")
+
+[node name="Shape" type="CollisionShape3D" parent="Body" unique_id=1495125864]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19, 0)
+shape = SubResource("CylinderShape3D_2sn6x")
+
+[node name="Model" type="Node3D" parent="." unique_id=1232657880 instance=ExtResource("2_5qxx8")]
+
+[node name="Steam" type="GPUParticles3D" parent="." unique_id=1892437271]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+cast_shadow = 0
+emitting = false
+amount = 90
+lifetime = 1.5
+randomness = 0.4
+visibility_aabb = AABB(-2.5, -0.5, -2, 5, 10, 4)
+process_material = SubResource("ParticleProcessMaterial_ws1ec")
+draw_pass_1 = SubResource("QuadMesh_yesd2")
+
+[node name="Leak" type="GPUParticles3D" parent="." unique_id=1373930618]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+cast_shadow = 0
+emitting = false
+amount = 18
+lifetime = 0.8
+randomness = 0.4
+visibility_aabb = AABB(-1, -0.5, -1, 2, 3, 2)
+process_material = SubResource("ParticleProcessMaterial_v0klx")
+draw_pass_1 = SubResource("QuadMesh_16okg")
+
+[node name="LampLight" type="OmniLight3D" parent="." unique_id=1006691650]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 2.1, -0.7)
+visible = false
+light_color = Color(1, 0.7, 0.3, 1)
+light_energy = 0.0
+light_indirect_energy = 0.0
+light_specular = 0.3
+omni_range = 2.5
+omni_attenuation = 1.2
+
+[node name="Sfx" type="AudioStreamPlayer3D" parent="." unique_id=1787796755]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+unit_size = 8.0
+max_distance = 60.0
