@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/parts/Metal_Forearm.glb" id="1_hb011"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5bmo5"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xhfwh"]
+radius = 0.058
+height = 0.36
+
+[node name="MetalForearm" type="RigidBody3D" unique_id=1058826095]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 3.0
+physics_material_override = SubResource("PhysicsMaterial_5bmo5")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+metadata/part_id = "metal_forearm"
+metadata/kind = "limb"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=735657118]
+
+[node name="Anchor_Wrist" type="Marker3D" parent="." unique_id=1536014888]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27, 0)
+metadata/accepts = PackedStringArray("hand", "chain", "handle", "weapon_head")
+metadata/joint_group = "Wrist"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+
+[node name="Anchor_Plate" type="Marker3D" parent="." unique_id=1593604616]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
+metadata/accepts = PackedStringArray("plate", "mod")
+metadata/joint_group = "Wrist"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+
+[node name="Shape_Arm" type="CollisionShape3D" parent="." unique_id=368939830]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.135, 0)
+shape = SubResource("CapsuleShape3D_xhfwh")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1134499961 instance=ExtResource("1_hb011")]
+metadata/rig_mesh = true

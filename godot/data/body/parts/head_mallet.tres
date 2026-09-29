@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/head_mallet.tscn" id="1_lel7b"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_rhxfa"]
+
+[resource]
+script = ExtResource("2_rhxfa")
+id = "head_mallet"
+title = "Киянка (дерево)"
+kind = "weapon_head"
+scene = ExtResource("1_lel7b")
+mass = 1.5
+energy = 0
+attach = "fixed"
+name_prefix = "Hammer"

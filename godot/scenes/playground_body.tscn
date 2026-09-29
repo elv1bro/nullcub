@@ -1,0 +1,85 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/body/playground_body.gd" id="1_pgb"]
+[ext_resource type="PackedScene" uid="uid://wsarena00001" path="res://scenes/arena/workshop.tscn" id="2_ws"]
+[ext_resource type="PackedScene" path="res://scenes/body/modular_doll.tscn" id="3_mdoll"]
+[ext_resource type="Script" path="res://scenes/weapons/weapon_pickup.gd" id="4_pickup"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/weapon_hammer.tscn" id="5_hammer"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/weapon_mace.tscn" id="6_mace"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/weapon_axe.tscn" id="7_axe"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="8_cam"]
+[ext_resource type="PackedScene" uid="uid://doll00000002" path="res://scenes/doll/doll_dark.tscn" id="9_dolldark"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/weapon_sword.tscn" id="10_sword"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/weapon_pan.tscn" id="11_pan"]
+[ext_resource type="Script" path="res://scripts/core/match.gd" id="12_match"]
+[ext_resource type="PackedScene" uid="uid://uihud00000001" path="res://scenes/ui/hud.tscn" id="13_hud"]
+
+[node name="PlaygroundBody" type="Node3D"]
+script = ExtResource("1_pgb")
+arena_id = "body"
+
+[node name="Workshop" parent="." groups=["arena"] instance=ExtResource("2_ws")]
+
+[node name="P1" parent="." groups=["dolls"] instance=ExtResource("3_mdoll")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 0.05, 0)
+player_index = 0
+input_prefix = "p1"
+
+[node name="WeaponPickup" type="Node" parent="P1"]
+script = ExtResource("4_pickup")
+
+[node name="P2" parent="." groups=["dolls"] instance=ExtResource("9_dolldark")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 0.05, 0)
+player_index = 1
+input_prefix = "p2"
+
+[node name="WeaponPickup" type="Node" parent="P2"]
+script = ExtResource("4_pickup")
+
+[node name="Weapons" type="Node3D" parent="."]
+
+[node name="Hammer" parent="Weapons" instance=ExtResource("5_hammer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.7, 1.05, 0)
+
+[node name="Mace" parent="Weapons" instance=ExtResource("6_mace")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 4.6, 0)
+
+[node name="Axe" parent="Weapons" instance=ExtResource("7_axe")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 5.2, 4.4, 0)
+
+[node name="Sword" parent="Weapons" instance=ExtResource("10_sword")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.9, 0.2, 0)
+
+[node name="Pan" parent="Weapons" instance=ExtResource("11_pan")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -4.7, 0.2, 0)
+
+[node name="Camera" type="Camera3D" parent="." groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 12)
+fov = 45.0
+script = ExtResource("8_cam")
+arena_path = NodePath("../Workshop")
+floor_inset = 0.0
+
+[node name="Match" type="Node" parent="."]
+script = ExtResource("12_match")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../Workshop")
+
+[node name="HUD" parent="." instance=ExtResource("13_hud")]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="UI"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -80.0
+offset_right = 1880.0
+offset_bottom = -12.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.8)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 7
+theme_override_font_sizes/font_size = 22
+text = "P1: ModularDoll"

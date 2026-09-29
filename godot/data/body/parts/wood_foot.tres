@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/wood_foot.tscn" id="1_6xdbp"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_h6tqh"]
+
+[resource]
+script = ExtResource("2_h6tqh")
+id = "wood_foot"
+title = "Стопа (клён)"
+kind = "foot"
+scene = ExtResource("1_6xdbp")
+energy = 3
+body_mult = 1.2
+name_prefix = "Foot"

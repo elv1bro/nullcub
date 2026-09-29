@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/iron_ball_fist.tscn" id="1_luwtt"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_qb1fw"]
+
+[resource]
+script = ExtResource("2_qb1fw")
+id = "iron_ball_fist"
+title = "Шар-кулак"
+kind = "hand"
+scene = ExtResource("1_luwtt")
+mass = 2.0
+energy = 8
+body_mult = 2.0
+material = "iron"
+name_prefix = "Hand"

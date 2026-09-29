@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/weapon_blueprint.gd" id="1_2aa53"]
+
+[resource]
+script = ExtResource("1_2aa53")
+id = "long_hammer"
+title = "Длинный молот"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"parent": "",
+"part": "handle_long",
+"uid": "0"
+}, {
+"anchor": "Anchor_Head",
+"parent": "0",
+"part": "head_hammer",
+"uid": "1"
+}])

@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/parts/Head_Hammer.glb" id="1_fsrwk"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ybhv5"]
+friction = 0.6
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_64qq3"]
+size = Vector3(0.3, 0.12, 0.12)
+
+[node name="HeadHammer" type="RigidBody3D" unique_id=807396282]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 3.5
+physics_material_override = SubResource("PhysicsMaterial_ybhv5")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+metadata/part_id = "head_hammer"
+metadata/kind = "weapon_head"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=869567711]
+
+[node name="Anchor_Face_L" type="Marker3D" parent="." unique_id=869367695]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0.15, 0, 0)
+metadata/accepts = PackedStringArray("mod")
+metadata/joint_group = "Ankle"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+
+[node name="Anchor_Face_R" type="Marker3D" parent="." unique_id=1977177419]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, -0.15, 0, 0)
+metadata/accepts = PackedStringArray("mod")
+metadata/joint_group = "Ankle"
+metadata/rest_deg = 0.0
+metadata/mirror = true
+
+[node name="Shape_Head" type="CollisionShape3D" parent="." unique_id=1461254511]
+shape = SubResource("BoxShape3D_64qq3")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1771459211 instance=ExtResource("1_fsrwk")]
+metadata/rig_mesh = true

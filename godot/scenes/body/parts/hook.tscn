@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/parts/Hook.glb" id="1_1fj1h"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_3pefc"]
+friction = 0.6
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_h70ki"]
+size = Vector3(0.07, 0.09, 0.07)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5168h"]
+size = Vector3(0.04, 0.2, 0.06)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dhgt2"]
+size = Vector3(0.19, 0.08, 0.06)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wnxn6"]
+size = Vector3(0.035, 0.08, 0.06)
+
+[node name="Hook" type="RigidBody3D" unique_id=1755842735]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.7
+physics_material_override = SubResource("PhysicsMaterial_3pefc")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+metadata/part_id = "hook"
+metadata/kind = "weapon_head"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=942863076]
+
+[node name="Shape_Collar" type="CollisionShape3D" parent="." unique_id=309097957]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0)
+shape = SubResource("BoxShape3D_h70ki")
+
+[node name="Shape_Shank" type="CollisionShape3D" parent="." unique_id=1709945305]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.17, 0)
+shape = SubResource("BoxShape3D_5168h")
+
+[node name="Shape_Bend" type="CollisionShape3D" parent="." unique_id=1389979182]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.075, -0.305, 0)
+shape = SubResource("BoxShape3D_dhgt2")
+
+[node name="Shape_Tip" type="CollisionShape3D" parent="." unique_id=1319123093]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.148, -0.225, 0)
+shape = SubResource("BoxShape3D_wnxn6")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=2068097928 instance=ExtResource("1_1fj1h")]
+metadata/rig_mesh = true

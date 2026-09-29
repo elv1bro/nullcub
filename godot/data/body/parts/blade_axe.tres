@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/blade_axe.tscn" id="1_icbyp"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_obeoh"]
+
+[resource]
+script = ExtResource("2_obeoh")
+id = "blade_axe"
+title = "Топор"
+kind = "weapon_head"
+scene = ExtResource("1_icbyp")
+mass = 2.2
+energy = 0
+attach = "fixed"
+material = "iron"
+name_prefix = "Blade"
+weapon_mult = 1.3

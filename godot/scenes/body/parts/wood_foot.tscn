@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Foot_L.glb" id="1_nvqh4"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Foot_R.glb" id="2_43rlh"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l0xvr"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2j83a"]
+size = Vector3(0.1, 0.08, 0.25)
+
+[node name="Foot" type="RigidBody3D" unique_id=519804275]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+physics_material_override = SubResource("PhysicsMaterial_l0xvr")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "foot"
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1765069205]
+shape = SubResource("BoxShape3D_2j83a")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=2098134324 instance=ExtResource("1_nvqh4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -0.055)
+metadata/rig_mesh = true
+
+[node name="Mesh_R" type="Node3D" parent="." unique_id=1088223088 instance=ExtResource("2_43rlh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -0.055)
+visible = false
+metadata/rig_mesh = true
+
+[node name="Socket" type="Marker3D" parent="." unique_id=684890601]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -0.055)

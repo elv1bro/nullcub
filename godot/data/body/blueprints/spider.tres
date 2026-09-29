@@ -1,0 +1,120 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_sd8wt"]
+
+[resource]
+script = ExtResource("1_sd8wt")
+id = "spider"
+title = "Паук: шесть ног"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"parent": "",
+"part": "wood_torso",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"parent": "T",
+"part": "wood_head",
+"uid": "H"
+}, {
+"anchor": "Anchor_Hip_L",
+"parent": "T",
+"part": "wood_upper_leg",
+"rest_deg": 22.0,
+"uid": "1"
+}, {
+"anchor": "Anchor_Knee",
+"parent": "1",
+"part": "wood_lower_leg",
+"rest_deg": 15.0,
+"uid": "2"
+}, {
+"anchor": "Anchor_Ankle",
+"parent": "2",
+"part": "wood_foot",
+"uid": "3"
+}, {
+"anchor": "Anchor_Hip_R",
+"parent": "T",
+"part": "wood_upper_leg",
+"rest_deg": 22.0,
+"uid": "4"
+}, {
+"anchor": "Anchor_Knee",
+"parent": "4",
+"part": "wood_lower_leg",
+"rest_deg": 15.0,
+"uid": "5"
+}, {
+"anchor": "Anchor_Ankle",
+"parent": "5",
+"part": "wood_foot",
+"uid": "6"
+}, {
+"anchor": "Anchor_Side_L",
+"parent": "T",
+"part": "wood_upper_leg",
+"uid": "7"
+}, {
+"anchor": "Anchor_Knee",
+"parent": "7",
+"part": "wood_lower_leg",
+"rest_deg": 20.0,
+"uid": "8"
+}, {
+"anchor": "Anchor_Ankle",
+"parent": "8",
+"part": "wood_foot",
+"uid": "9"
+}, {
+"anchor": "Anchor_Side_R",
+"parent": "T",
+"part": "wood_upper_leg",
+"uid": "A"
+}, {
+"anchor": "Anchor_Knee",
+"parent": "A",
+"part": "wood_lower_leg",
+"rest_deg": 20.0,
+"uid": "B"
+}, {
+"anchor": "Anchor_Ankle",
+"parent": "B",
+"part": "wood_foot",
+"uid": "C"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"parent": "T",
+"part": "wood_upper_leg",
+"rest_deg": 110.0,
+"uid": "D"
+}, {
+"anchor": "Anchor_Knee",
+"parent": "D",
+"part": "wood_lower_leg",
+"rest_deg": 10.0,
+"uid": "E"
+}, {
+"anchor": "Anchor_Ankle",
+"parent": "E",
+"part": "wood_foot",
+"uid": "F"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"parent": "T",
+"part": "wood_upper_leg",
+"rest_deg": 110.0,
+"uid": "G"
+}, {
+"anchor": "Anchor_Knee",
+"parent": "G",
+"part": "wood_lower_leg",
+"rest_deg": 10.0,
+"uid": "I"
+}, {
+"anchor": "Anchor_Ankle",
+"parent": "I",
+"part": "wood_foot",
+"uid": "J"
+}])
+control = PackedStringArray("J")

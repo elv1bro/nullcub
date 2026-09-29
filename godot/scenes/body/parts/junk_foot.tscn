@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Foot.glb" id="1_hyi8r"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l0xvr"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rydhl"]
+size = Vector3(0.09, 0.127, 0.24)
+
+[node name="Foot" type="RigidBody3D" unique_id=1824383183]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.7
+physics_material_override = SubResource("PhysicsMaterial_l0xvr")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "foot"
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1534377438]
+shape = SubResource("BoxShape3D_rydhl")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=15498314 instance=ExtResource("1_hyi8r")]
+metadata/rig_mesh = true
+
+[node name="Socket" type="Marker3D" parent="." unique_id=537655226]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.032, -0.072)

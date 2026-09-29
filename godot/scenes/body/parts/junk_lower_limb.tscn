@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Limb_Lower.glb" id="1_usixo"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l0xvr"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_2pnlv"]
+radius = 0.047
+height = 0.435
+
+[node name="LowerArm" type="RigidBody3D" unique_id=896001118]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.2
+physics_material_override = SubResource("PhysicsMaterial_l0xvr")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=661537449]
+shape = SubResource("CapsuleShape3D_2pnlv")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=177314380 instance=ExtResource("1_usixo")]
+metadata/rig_mesh = true
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1526948319]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.169, 0)
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1228493650]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.205, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = true

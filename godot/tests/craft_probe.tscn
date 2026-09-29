@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://craftprobe01"]
+
+[ext_resource type="Script" path="res://tests/craft_probe.gd" id="1_cp"]
+
+[node name="CraftProbe" type="Node3D"]
+script = ExtResource("1_cp")

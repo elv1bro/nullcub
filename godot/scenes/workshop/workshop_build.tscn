@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://wsbuild000001"]
+
+[ext_resource type="Script" path="res://scenes/workshop/workshop_build.gd" id="1_wb"]
+[ext_resource type="PackedScene" uid="uid://wsarena00001" path="res://scenes/arena/workshop.tscn" id="2_ws"]
+[ext_resource type="PackedScene" uid="uid://wsbuildui0001" path="res://scenes/workshop/ui/workshop_ui.tscn" id="3_ui"]
+
+[sub_resource type="StandardMaterial3D" id="stand_wood"]
+albedo_color = Color(0.42, 0.29, 0.18, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="stand_iron"]
+albedo_color = Color(0.22, 0.21, 0.2, 1)
+metallic = 0.6
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="base_mesh"]
+top_radius = 0.34
+bottom_radius = 0.38
+height = 0.07
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="pole_mesh"]
+top_radius = 0.035
+bottom_radius = 0.045
+height = 1.0
+radial_segments = 12
+
+[node name="WorkshopBuild" type="Node3D"]
+script = ExtResource("1_wb")
+
+[node name="Workshop" parent="." groups=["arena"] instance=ExtResource("2_ws")]
+
+[node name="Stand" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 0, 0)
+
+[node name="Base" type="MeshInstance3D" parent="Stand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.035, -0.22)
+mesh = SubResource("base_mesh")
+surface_material_override/0 = SubResource("stand_wood")
+
+[node name="Pole" type="MeshInstance3D" parent="Stand"]
+transform = Transform3D(1, 0, 0, 0, 1.15, 0, 0, 0, 1, 0, 0.575, -0.22)
+mesh = SubResource("pole_mesh")
+surface_material_override/0 = SubResource("stand_iron")
+
+[node name="BenchSpot" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.85, 1.06, 0.05)
+
+[node name="DummySpot" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9, 0.02, 0)
+
+[node name="CrateSpot" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.75, 0.02, 0)
+
+[node name="BarrelSpot" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.2, 0.87, 0)
+
+[node name="TestRoot" type="Node3D" parent="."]
+
+[node name="BuildCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 1.1, 6)
+current = true
+fov = 38.0
+
+[node name="UI" parent="." instance=ExtResource("3_ui")]

@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Head.glb" id="1_4t2qh"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l0xvr"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_oh7g1"]
+radius = 0.12
+height = 0.3
+
+[node name="Head" type="RigidBody3D" unique_id=1583603529]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_l0xvr")
+can_sleep = false
+continuous_cd = true
+linear_damp = 2.25
+angular_damp = 0.6
+metadata/kind = "head"
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=687271256]
+shape = SubResource("CapsuleShape3D_oh7g1")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=307690346 instance=ExtResource("1_4t2qh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.155, 0)
+metadata/rig_mesh = true
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1733755825]
+transform = Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, 0, -0.155, 0)

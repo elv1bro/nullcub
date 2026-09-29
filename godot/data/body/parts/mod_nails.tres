@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/mod_nails.tscn" id="1_ii56a"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_6amb0"]
+
+[resource]
+script = ExtResource("2_6amb0")
+id = "mod_nails"
+title = "6 гвоздей"
+kind = "mod"
+scene = ExtResource("1_ii56a")
+mass = 0.4
+energy = 0
+attach = "fixed"
+material = "iron"
+name_prefix = "Mod"
+weapon_mult = 1.25

@@ -1,0 +1,69 @@
+## Якоря поверх 3D (мастерская): берёт WorkshopBuild.overlay_items() каждый кадр и рисует кольца в экранных точках.
+##   target  — выбранный якорь: крупное яркое кольцо с заливкой (сюда встанет);
+##   ok      — принимает деталь: зелёное пульсирующее кольцо + чёрточка направления роста (−Y якоря);
+##   replace — занят, можно заменить: тонкое оранжевое колечко (не спорит с зелёными свободными);
+##   bad     — принимает вид, но не влезает (энергия / сборка): красный крестик, без подсветки;
+##   idle    — свободный якорь, пока ничего не тащишь: маленькая кремовая точка;
+##   control — управляемая деталь («рука мышью»): золотое кольцо и подпись.
+extends Control
+
+const R_TARGET := 22.0
+const R_OK := 14.0
+const R_IDLE := 5.0
+
+var ctl: Node = null
+var _t := 0.0
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+func _process(delta: float) -> void:
+	_t += delta
+	queue_redraw()
+
+
+func _draw() -> void:
+	if ctl == null or not is_instance_valid(ctl):
+		return
+	var font := get_theme_default_font()
+	var pulse := 0.5 + 0.5 * sin(_t * 6.0)
+	for it in ctl.call("overlay_items"):
+		var p: Vector2 = it["pos"]
+		var dir: Vector2 = it["dir"]
+		match String(it["state"]):
+			"target":
+				draw_circle(p, R_TARGET + 3.0, Color(0, 0, 0, 0.45))
+				draw_circle(p, R_TARGET, Color(0.5, 1.0, 0.45, 0.35 + 0.2 * pulse))
+				draw_arc(p, R_TARGET, 0.0, TAU, 40, Color(0.85, 1.0, 0.8), 4.0, true)
+				if dir != Vector2.ZERO:
+					draw_line(p, p + dir * (R_TARGET + 18.0), Color(0.85, 1.0, 0.8), 4.0, true)
+			"ok":
+				var r := R_OK + 3.0 * pulse
+				draw_arc(p, r + 1.5, 0.0, TAU, 32, Color(0, 0, 0, 0.55), 6.0, true)
+				draw_arc(p, r, 0.0, TAU, 32, Color(0.45, 0.95, 0.4), 3.5, true)
+				if dir != Vector2.ZERO:
+					draw_line(p + dir * r, p + dir * (r + 14.0), Color(0.45, 0.95, 0.4), 3.0, true)
+			"replace":
+				draw_arc(p, 9.5, 0.0, TAU, 24, Color(0, 0, 0, 0.35), 4.0, true)
+				draw_arc(p, 9.0, 0.0, TAU, 24, Color(1.0, 0.62, 0.2, 0.55), 2.0, true)
+			"bad":
+				var s := 8.0
+				draw_line(p + Vector2(-s, -s), p + Vector2(s, s), Color(0, 0, 0, 0.6), 6.0, true)
+				draw_line(p + Vector2(-s, s), p + Vector2(s, -s), Color(0, 0, 0, 0.6), 6.0, true)
+				draw_line(p + Vector2(-s, -s), p + Vector2(s, s), Color(1.0, 0.32, 0.25), 3.0, true)
+				draw_line(p + Vector2(-s, s), p + Vector2(s, -s), Color(1.0, 0.32, 0.25), 3.0, true)
+			"idle":
+				draw_circle(p, R_IDLE + 2.0, Color(0, 0, 0, 0.4))
+				draw_circle(p, R_IDLE, Color(1.0, 0.93, 0.78, 0.75))
+			"control":
+				var rc := 30.0 + 2.0 * pulse
+				draw_arc(p, rc + 1.5, 0.0, TAU, 40, Color(0, 0, 0, 0.5), 6.0, true)
+				draw_arc(p, rc, 0.0, TAU, 40, Color(1.0, 0.8, 0.25), 3.5, true)
+				var label := String(it.get("label", ""))
+				if label != "" and font != null:
+					var fs := 20
+					var tp := p + Vector2(rc + 8.0, 7.0)
+					draw_string_outline(font, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, Color(0, 0, 0, 0.9))
+					draw_string(font, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1.0, 0.85, 0.35))

@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/parts/Metal_Head.glb" id="1_xaccr"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pa25p"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_fw6my"]
+height = 0.32
+radius = 0.14
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_sas8w"]
+radius = 0.05
+
+[node name="MetalHead" type="RigidBody3D" unique_id=1811987186]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 5.0
+physics_material_override = SubResource("PhysicsMaterial_pa25p")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+metadata/part_id = "metal_head"
+metadata/kind = "head"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1039451130]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Anchor_Top" type="Marker3D" parent="." unique_id=544104435]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0.345, 0)
+metadata/accepts = PackedStringArray("mod", "weapon_head")
+metadata/joint_group = "Neck"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+
+[node name="Shape_Bucket" type="CollisionShape3D" parent="." unique_id=407795000]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+shape = SubResource("CylinderShape3D_fw6my")
+
+[node name="Shape_Neck" type="CollisionShape3D" parent="." unique_id=1534077912]
+shape = SubResource("SphereShape3D_sas8w")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=7569158 instance=ExtResource("1_xaccr")]
+metadata/rig_mesh = true

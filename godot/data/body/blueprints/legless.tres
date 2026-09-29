@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_bvo4d"]
+
+[resource]
+script = ExtResource("1_bvo4d")
+id = "legless"
+title = "Безногий: четыре руки"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "wood_torso",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"name": "Head",
+"parent": "T",
+"part": "wood_head",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "wood_upper_arm",
+"uid": "1"
+}, {
+"anchor": "Anchor_Elbow",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "wood_lower_arm",
+"uid": "2"
+}, {
+"anchor": "Anchor_Wrist",
+"name": "Hand_L",
+"parent": "2",
+"part": "wood_hand",
+"uid": "3"
+}, {
+"anchor": "Anchor_Hip_L",
+"parent": "T",
+"part": "wood_upper_arm",
+"rest_deg": 35.0,
+"uid": "4"
+}, {
+"anchor": "Anchor_Elbow",
+"parent": "4",
+"part": "wood_lower_arm",
+"uid": "5"
+}, {
+"anchor": "Anchor_Wrist",
+"parent": "5",
+"part": "wood_hand",
+"uid": "6"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "wood_upper_arm",
+"uid": "7"
+}, {
+"anchor": "Anchor_Elbow",
+"name": "LowerArm_R",
+"parent": "7",
+"part": "wood_lower_arm",
+"uid": "8"
+}, {
+"anchor": "Anchor_Wrist",
+"name": "Hand_R",
+"parent": "8",
+"part": "wood_hand",
+"uid": "9"
+}, {
+"anchor": "Anchor_Hip_R",
+"parent": "T",
+"part": "wood_upper_arm",
+"rest_deg": 35.0,
+"uid": "A"
+}, {
+"anchor": "Anchor_Elbow",
+"parent": "A",
+"part": "wood_lower_arm",
+"uid": "B"
+}, {
+"anchor": "Anchor_Wrist",
+"parent": "B",
+"part": "wood_hand",
+"uid": "C"
+}])
+control = PackedStringArray("9")

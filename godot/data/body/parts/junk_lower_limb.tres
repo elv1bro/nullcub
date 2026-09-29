@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/junk_lower_limb.tscn" id="1_5st08"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_nsasd"]
+
+[resource]
+script = ExtResource("2_nsasd")
+id = "junk_lower_limb"
+title = "Тонкий сегмент (хлам)"
+scene = ExtResource("1_5st08")
+mass = 1.2
+energy = 3
+name_prefix = "LowerArm"

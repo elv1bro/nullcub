@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/chain_segment.tscn" id="1_xl8in"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_aifwt"]
+
+[resource]
+script = ExtResource("2_aifwt")
+id = "chain_segment"
+title = "Цепь (3 звена, 0.35 м)"
+kind = "chain"
+scene = ExtResource("1_xl8in")
+mass = 0.8
+energy = 8
+material = "iron"
+name_prefix = "Chain"

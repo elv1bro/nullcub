@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://armassistprb"]
+
+[ext_resource type="Script" path="res://tests/arm_assist_probe.gd" id="1_aap"]
+
+[node name="ArmAssistProbe" type="Node3D"]
+script = ExtResource("1_aap")

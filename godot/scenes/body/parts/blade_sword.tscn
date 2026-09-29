@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/parts/Blade_Sword.glb" id="1_6ydo8"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wrs5l"]
+friction = 0.6
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xc5ad"]
+size = Vector3(0.29, 0.04, 0.06)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bxepk"]
+size = Vector3(0.07, 0.05, 0.07)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_q1yi3"]
+size = Vector3(0.11, 0.75, 0.06)
+
+[node name="BladeSword" type="RigidBody3D" unique_id=1783051146]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.3
+physics_material_override = SubResource("PhysicsMaterial_wrs5l")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+metadata/part_id = "blade_sword"
+metadata/kind = "weapon_head"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=301833997]
+
+[node name="Shape_Guard" type="CollisionShape3D" parent="." unique_id=2044089494]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.036, 0)
+shape = SubResource("BoxShape3D_xc5ad")
+
+[node name="Shape_Collar" type="CollisionShape3D" parent="." unique_id=161629502]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.005, 0)
+shape = SubResource("BoxShape3D_bxepk")
+
+[node name="Shape_Blade" type="CollisionShape3D" parent="." unique_id=1589211367]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.425, 0)
+shape = SubResource("BoxShape3D_q1yi3")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1876657815 instance=ExtResource("1_6ydo8")]
+metadata/rig_mesh = true

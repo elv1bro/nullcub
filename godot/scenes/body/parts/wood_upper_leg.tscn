@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/UpperLeg_L.glb" id="1_g1ae7"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/UpperLeg_R.glb" id="2_lx501"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l0xvr"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_iheui"]
+radius = 0.07
+height = 0.42
+
+[node name="UpperLeg" type="RigidBody3D" unique_id=781530420]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_l0xvr")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=947377273]
+shape = SubResource("CapsuleShape3D_iheui")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=380564139 instance=ExtResource("1_g1ae7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0)
+metadata/rig_mesh = true
+
+[node name="Mesh_R" type="Node3D" parent="." unique_id=667429288 instance=ExtResource("2_lx501")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0)
+visible = false
+metadata/rig_mesh = true
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1875459056]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0)
+
+[node name="Anchor_Knee" type="Marker3D" parent="." unique_id=670029203]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.21, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Knee"
+metadata/rest_deg = 5.0
+metadata/mirror = false
+metadata/rest_from_pose = true

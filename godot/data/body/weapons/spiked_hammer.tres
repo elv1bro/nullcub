@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="WeaponBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/weapon_blueprint.gd" id="1_ettv6"]
+
+[resource]
+script = ExtResource("1_ettv6")
+id = "spiked_hammer"
+title = "Молот с гвоздями"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"parent": "",
+"part": "handle_short",
+"uid": "0"
+}, {
+"anchor": "Anchor_Head",
+"parent": "0",
+"part": "head_hammer",
+"uid": "1"
+}, {
+"anchor": "Anchor_Face_R",
+"parent": "1",
+"part": "mod_nails",
+"uid": "2"
+}])

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/junk_upper_limb.tscn" id="1_ucm6a"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_84lba"]
+
+[resource]
+script = ExtResource("2_84lba")
+id = "junk_upper_limb"
+title = "Сегмент конечности (хлам)"
+scene = ExtResource("1_ucm6a")
+mass = 1.8
+energy = 3
+body_mult = 0.8
+name_prefix = "UpperArm"

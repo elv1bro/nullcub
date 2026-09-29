@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="WeaponBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/weapon_blueprint.gd" id="1_a7bef"]
+
+[resource]
+script = ExtResource("1_a7bef")
+id = "flail"
+title = "Кистень"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"parent": "",
+"part": "handle_short",
+"uid": "0"
+}, {
+"anchor": "Anchor_Head",
+"parent": "0",
+"part": "chain_segment",
+"uid": "1"
+}, {
+"anchor": "Anchor_End",
+"parent": "1",
+"part": "chain_segment",
+"uid": "2"
+}, {
+"anchor": "Anchor_End",
+"parent": "2",
+"part": "chain_segment",
+"uid": "3"
+}, {
+"anchor": "Anchor_End",
+"parent": "3",
+"part": "head_mace_ball",
+"uid": "4"
+}])

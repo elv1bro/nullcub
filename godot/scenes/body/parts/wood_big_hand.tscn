@@ -1,0 +1,38 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Hand_L.glb" id="1_q0wek"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Hand_R.glb" id="2_enn4c"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l0xvr"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_d2x3y"]
+size = Vector3(0.112, 0.243, 0.112)
+
+[node name="Hand" type="RigidBody3D" unique_id=1744027032]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.2
+physics_material_override = SubResource("PhysicsMaterial_l0xvr")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "hand"
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1824255295]
+shape = SubResource("BoxShape3D_d2x3y")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1377406718 instance=ExtResource("1_q0wek")]
+transform = Transform3D(1.6, 0, 0, 0, 1.35, 0, 0, 0, 1.6, 0, 0.1215, 0)
+metadata/rig_mesh = true
+
+[node name="Mesh_R" type="Node3D" parent="." unique_id=1376009696 instance=ExtResource("2_enn4c")]
+transform = Transform3D(1.6, 0, 0, 0, 1.35, 0, 0, 0, 1.6, 0, 0.1215, 0)
+visible = false
+metadata/rig_mesh = true
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1551425912]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1215, 0)

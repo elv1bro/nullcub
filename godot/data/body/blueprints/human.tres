@@ -1,0 +1,94 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_xpml6"]
+
+[resource]
+script = ExtResource("1_xpml6")
+id = "human"
+title = "Человек (кукла v3)"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "wood_torso",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"name": "Head",
+"parent": "T",
+"part": "wood_head",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "wood_upper_arm",
+"uid": "1"
+}, {
+"anchor": "Anchor_Elbow",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "wood_lower_arm",
+"uid": "2"
+}, {
+"anchor": "Anchor_Wrist",
+"name": "Hand_L",
+"parent": "2",
+"part": "wood_hand",
+"uid": "3"
+}, {
+"anchor": "Anchor_Hip_L",
+"name": "UpperLeg_L",
+"parent": "T",
+"part": "wood_upper_leg",
+"uid": "4"
+}, {
+"anchor": "Anchor_Knee",
+"name": "LowerLeg_L",
+"parent": "4",
+"part": "wood_lower_leg",
+"uid": "5"
+}, {
+"anchor": "Anchor_Ankle",
+"name": "Foot_L",
+"parent": "5",
+"part": "wood_foot",
+"uid": "6"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "wood_upper_arm",
+"uid": "7"
+}, {
+"anchor": "Anchor_Elbow",
+"name": "LowerArm_R",
+"parent": "7",
+"part": "wood_lower_arm",
+"uid": "8"
+}, {
+"anchor": "Anchor_Wrist",
+"name": "Hand_R",
+"parent": "8",
+"part": "wood_hand",
+"uid": "9"
+}, {
+"anchor": "Anchor_Hip_R",
+"name": "UpperLeg_R",
+"parent": "T",
+"part": "wood_upper_leg",
+"uid": "A"
+}, {
+"anchor": "Anchor_Knee",
+"name": "LowerLeg_R",
+"parent": "A",
+"part": "wood_lower_leg",
+"uid": "B"
+}, {
+"anchor": "Anchor_Ankle",
+"name": "Foot_R",
+"parent": "B",
+"part": "wood_foot",
+"uid": "C"
+}])
+control = PackedStringArray("9")

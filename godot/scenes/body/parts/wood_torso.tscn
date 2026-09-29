@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Torso.glb" id="1_t27b0"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l0xvr"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2u4ex"]
+size = Vector3(0.36, 0.52, 0.22)
+
+[node name="Torso" type="RigidBody3D" unique_id=1627229985]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 12.0
+physics_material_override = SubResource("PhysicsMaterial_l0xvr")
+can_sleep = false
+continuous_cd = true
+linear_damp = 2.25
+angular_damp = 0.6
+metadata/kind = "core"
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1952602357]
+shape = SubResource("BoxShape3D_2u4ex")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=423312831 instance=ExtResource("1_t27b0")]
+metadata/rig_mesh = true
+
+[node name="Anchor_Neck" type="Marker3D" parent="." unique_id=1748534706]
+transform = Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, 0, 0.3, 0)
+metadata/accepts = PackedStringArray("head")
+metadata/joint_group = "Neck"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = true
+
+[node name="Anchor_Shoulder_L" type="Marker3D" parent="." unique_id=552300543]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.26, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Shoulder"
+metadata/rest_deg = 85.0
+metadata/mirror = false
+metadata/rest_from_pose = true
+
+[node name="Anchor_Hip_L" type="Marker3D" parent="." unique_id=834541699]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, -0.26, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 12.0
+metadata/mirror = false
+metadata/rest_from_pose = true
+
+[node name="Anchor_Shoulder_R" type="Marker3D" parent="." unique_id=274740638]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 0.26, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Shoulder"
+metadata/rest_deg = 85.0
+metadata/mirror = true
+metadata/rest_from_pose = true
+
+[node name="Anchor_Hip_R" type="Marker3D" parent="." unique_id=1957548097]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, -0.26, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 12.0
+metadata/mirror = true
+metadata/rest_from_pose = true
+
+[node name="Anchor_Side_L" type="Marker3D" parent="." unique_id=1506238954]
+transform = Transform3D(0.49999997, -0.86602545, 0, 0.86602545, 0.49999997, 0, 0, 0, 1, 0.18, 0, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/limit_deg = Vector2(-60, 80)
+
+[node name="Anchor_Side_R" type="Marker3D" parent="." unique_id=13585891]
+transform = Transform3D(0.49999997, 0.86602545, 0, -0.86602545, 0.49999997, 0, 0, 0, 1, -0.18, 0, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = true
+metadata/rest_from_pose = false
+metadata/limit_deg = Vector2(-60, 80)

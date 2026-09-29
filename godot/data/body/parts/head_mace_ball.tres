@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/head_mace_ball.tscn" id="1_he83v"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_2jx7c"]
+
+[resource]
+script = ExtResource("2_2jx7c")
+id = "head_mace_ball"
+title = "Шар булавы"
+kind = "weapon_head"
+scene = ExtResource("1_he83v")
+mass = 3.5
+energy = 0
+attach = "fixed"
+material = "iron"
+name_prefix = "Mace"
+weapon_mult = 1.15

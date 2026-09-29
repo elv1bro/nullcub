@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/parts/Mod_Iron_Plate.glb" id="1_1j2ml"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_1v0lm"]
+friction = 0.6
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_teky5"]
+size = Vector3(0.17, 0.04, 0.17)
+
+[node name="ModIronPlate" type="RigidBody3D" unique_id=1269729906]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.5
+physics_material_override = SubResource("PhysicsMaterial_1v0lm")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+metadata/part_id = "mod_iron_plate"
+metadata/kind = "mod"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=334725799]
+
+[node name="Anchor_Out" type="Marker3D" parent="." unique_id=523800341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04, 0)
+metadata/accepts = PackedStringArray("mod")
+metadata/joint_group = "Ankle"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+
+[node name="Shape_Plate" type="CollisionShape3D" parent="." unique_id=1507210286]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
+shape = SubResource("BoxShape3D_teky5")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1463256981 instance=ExtResource("1_1j2ml")]
+metadata/rig_mesh = true

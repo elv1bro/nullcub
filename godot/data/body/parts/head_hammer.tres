@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/parts/head_hammer.tscn" id="1_65gk5"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_7fh1o"]
+
+[resource]
+script = ExtResource("2_7fh1o")
+id = "head_hammer"
+title = "Железная головка"
+kind = "weapon_head"
+scene = ExtResource("1_65gk5")
+mass = 3.5
+energy = 0
+attach = "fixed"
+material = "iron"
+name_prefix = "Hammer"

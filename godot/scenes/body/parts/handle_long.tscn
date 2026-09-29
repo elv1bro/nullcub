@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/parts/Handle_Long.glb" id="1_8nk5h"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_rm6uw"]
+friction = 0.6
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lpw54"]
+size = Vector3(0.07, 1.14, 0.066)
+
+[node name="HandleLong" type="RigidBody3D" unique_id=1956966904]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+physics_material_override = SubResource("PhysicsMaterial_rm6uw")
+can_sleep = false
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+metadata/part_id = "handle_long"
+metadata/kind = "handle"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1306108899]
+
+[node name="Anchor_Head" type="Marker3D" parent="." unique_id=434258696]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.965, 0)
+metadata/accepts = PackedStringArray("weapon_head", "chain", "mod")
+metadata/joint_group = "Ankle"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+
+[node name="Anchor_Butt" type="Marker3D" parent="." unique_id=640597333]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0.14, 0)
+metadata/accepts = PackedStringArray("mod", "weapon_head")
+metadata/joint_group = "Ankle"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+
+[node name="Shape_Shaft" type="CollisionShape3D" parent="." unique_id=214939337]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.43, 0)
+shape = SubResource("BoxShape3D_lpw54")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=426701226 instance=ExtResource("1_8nk5h")]
+metadata/rig_mesh = true

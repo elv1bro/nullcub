@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/body/crafted_weapon.gd" id="1_uv33w"]
+[ext_resource type="Resource" path="res://data/body/weapons/hammer.tres" id="2_oeolp"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_nrys2"]
+friction = 0.6
+bounce = 0.1
+
+[node name="CraftedWeapon" type="RigidBody3D" unique_id=729039775]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+physics_material_override = SubResource("PhysicsMaterial_nrys2")
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+script = ExtResource("1_uv33w")
+blueprint = ExtResource("2_oeolp")
+weapon_id = "craft_hammer"

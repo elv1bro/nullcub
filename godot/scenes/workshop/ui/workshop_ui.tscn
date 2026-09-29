@@ -1,0 +1,692 @@
+[gd_scene format=3 uid="uid://wsbuildui0001"]
+
+[ext_resource type="Script" path="res://scenes/workshop/ui/workshop_ui.gd" id="1_ui"]
+[ext_resource type="Theme" uid="uid://hudtheme0001" path="res://scenes/ui/hud_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scenes/workshop/ui/anchor_overlay.gd" id="3_overlay"]
+[ext_resource type="Script" path="res://scenes/workshop/ui/energy_bar.gd" id="4_energy"]
+[ext_resource type="Script" path="res://scenes/ui/hp_bar.gd" id="5_hp"]
+[ext_resource type="Texture2D" path="res://assets/ui/plank.png" id="6_plank"]
+
+[sub_resource type="StyleBoxFlat" id="side_panel"]
+content_margin_left = 16.0
+content_margin_top = 12.0
+content_margin_right = 16.0
+content_margin_bottom = 14.0
+bg_color = Color(0.075, 0.068, 0.062, 0.9)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.42, 0.28, 0.15, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 12
+shadow_offset = Vector2(0, 5)
+
+[sub_resource type="StyleBoxFlat" id="hint_panel"]
+content_margin_left = 22.0
+content_margin_top = 8.0
+content_margin_right = 22.0
+content_margin_bottom = 8.0
+bg_color = Color(0.06, 0.055, 0.05, 0.84)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.42, 0.3, 0.18, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="section"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.12, 0.1, 0.085, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.22, 0.14, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxTexture" id="plank_red"]
+content_margin_left = 22.0
+content_margin_top = 8.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
+texture = ExtResource("6_plank")
+texture_margin_left = 24.0
+texture_margin_top = 20.0
+texture_margin_right = 24.0
+texture_margin_bottom = 20.0
+modulate_color = Color(1.05, 0.42, 0.32, 1)
+
+[sub_resource type="StyleBoxTexture" id="plank_red_hover"]
+content_margin_left = 22.0
+content_margin_top = 8.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
+texture = ExtResource("6_plank")
+texture_margin_left = 24.0
+texture_margin_top = 20.0
+texture_margin_right = 24.0
+texture_margin_bottom = 20.0
+modulate_color = Color(1.25, 0.58, 0.45, 1)
+
+[sub_resource type="StyleBoxTexture" id="plank_red_pressed"]
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 8.0
+texture = ExtResource("6_plank")
+texture_margin_left = 24.0
+texture_margin_top = 20.0
+texture_margin_right = 24.0
+texture_margin_bottom = 20.0
+modulate_color = Color(0.8, 0.32, 0.25, 1)
+
+[sub_resource type="StyleBoxTexture" id="plank_gold"]
+content_margin_left = 18.0
+content_margin_top = 6.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+texture = ExtResource("6_plank")
+texture_margin_left = 24.0
+texture_margin_top = 20.0
+texture_margin_right = 24.0
+texture_margin_bottom = 20.0
+modulate_color = Color(1.3, 1.05, 0.45, 1)
+
+[node name="WorkshopUI" type="CanvasLayer"]
+script = ExtResource("1_ui")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="Overlay" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_overlay")
+
+[node name="Floaters" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Left" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = -1
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 14.0
+offset_right = 454.0
+offset_bottom = -14.0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("side_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Root/Left"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Root/Left/VBox"]
+layout_mode = 2
+theme_type_variation = &"BrushLabel"
+theme_override_colors/font_color = Color(0.98, 0.84, 0.58, 1)
+theme_override_font_sizes/font_size = 58
+text = "МАСТЕРСКАЯ"
+horizontal_alignment = 1
+
+[node name="ViewTabs" type="HBoxContainer" parent="Root/Left/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BodyTab" type="Button" parent="Root/Left/VBox/ViewTabs"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+toggle_mode = true
+button_pressed = true
+theme_override_font_sizes/font_size = 30
+theme_override_styles/pressed = SubResource("plank_gold")
+text = "ТЕЛО"
+
+[node name="WeaponTab" type="Button" parent="Root/Left/VBox/ViewTabs"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+toggle_mode = true
+theme_override_font_sizes/font_size = 30
+theme_override_styles/pressed = SubResource("plank_gold")
+text = "ОРУЖИЕ"
+
+[node name="PresetsTitle" type="Label" parent="Root/Left/VBox"]
+layout_mode = 2
+theme_type_variation = &"SmallCaps"
+text = "ШАБЛОН — С ЧЕГО НАЧАТЬ"
+
+[node name="Presets" type="GridContainer" parent="Root/Left/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 3
+
+[node name="ShelfTitle" type="Label" parent="Root/Left/VBox"]
+layout_mode = 2
+theme_type_variation = &"SmallCaps"
+text = "ПОЛКА — ТЯНИ ДЕТАЛЬ НА КУКЛУ"
+
+[node name="ShelfTabs" type="HFlowContainer" parent="Root/Left/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+
+[node name="ShelfScroll" type="ScrollContainer" parent="Root/Left/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Shelf" type="GridContainer" parent="Root/Left/VBox/ShelfScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 3
+
+[node name="Right" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -454.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("side_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Root/Right"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BodyBox" type="VBoxContainer" parent="Root/Right/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="Root/Right/VBox/BodyBox"]
+layout_mode = 2
+theme_type_variation = &"SmallCaps"
+text = "СБОРКА"
+
+[node name="BuildTitle" type="Label" parent="Root/Right/VBox/BodyBox"]
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(0.98, 0.9, 0.74, 1)
+theme_override_font_sizes/font_size = 32
+text = "Человек"
+autowrap_mode = 3
+
+[node name="EnergyHead" type="HBoxContainer" parent="Root/Right/VBox/BodyBox"]
+layout_mode = 2
+
+[node name="EnergyCaption" type="Label" parent="Root/Right/VBox/BodyBox/EnergyHead"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatLabel"
+text = "⚡ ENERGY ядра"
+
+[node name="EnergyValue" type="Label" parent="Root/Right/VBox/BodyBox/EnergyHead"]
+layout_mode = 2
+theme_type_variation = &"StatValue"
+theme_override_font_sizes/font_size = 30
+text = "58 / 100"
+
+[node name="Energy" type="Control" parent="Root/Right/VBox/BodyBox"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("4_energy")
+
+[node name="Stats" type="GridContainer" parent="Root/Right/VBox/BodyBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="MassL" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatLabel"
+text = "Масса"
+
+[node name="MassV" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "40.0 кг"
+horizontal_alignment = 2
+
+[node name="BodiesL" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatLabel"
+text = "Тел (деталей)"
+
+[node name="BodiesV" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "14"
+horizontal_alignment = 2
+
+[node name="AccelL" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatLabel"
+text = "Разгон"
+
+[node name="AccelV" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+layout_mode = 2
+theme_type_variation = &"StatValue"
+text = "×1.00"
+horizontal_alignment = 2
+
+[node name="ControlBox" type="PanelContainer" parent="Root/Right/VBox/BodyBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("section")
+
+[node name="V" type="VBoxContainer" parent="Root/Right/VBox/BodyBox/ControlBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ControlLabel" type="Label" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "Рука мышью: —"
+autowrap_mode = 3
+
+[node name="ControlButton" type="Button" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+focus_mode = 0
+toggle_mode = true
+theme_override_font_sizes/font_size = 24
+theme_override_styles/pressed = SubResource("plank_gold")
+text = "РУКА МЫШЬЮ   [Q]"
+
+[node name="WeaponLine" type="Label" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "Оружие: нет"
+autowrap_mode = 3
+
+[node name="Problems" type="Label" parent="Root/Right/VBox/BodyBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.35, 1)
+theme_override_font_sizes/font_size = 21
+autowrap_mode = 3
+
+[node name="Files" type="HBoxContainer" parent="Root/Right/VBox/BodyBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SaveButton" type="Button" parent="Root/Right/VBox/BodyBox/Files"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "СОХРАНИТЬ"
+
+[node name="LoadButton" type="Button" parent="Root/Right/VBox/BodyBox/Files"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "ЗАГРУЗИТЬ"
+
+[node name="UndoButton" type="Button" parent="Root/Right/VBox/BodyBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "ОТМЕНИТЬ   [Ctrl+Z]"
+
+[node name="WeaponBox" type="VBoxContainer" parent="Root/Right/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="Root/Right/VBox/WeaponBox"]
+layout_mode = 2
+theme_type_variation = &"SmallCaps"
+text = "ВЕРСТАК"
+
+[node name="WeaponName" type="Label" parent="Root/Right/VBox/WeaponBox"]
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(0.98, 0.9, 0.74, 1)
+theme_override_font_sizes/font_size = 32
+text = "Молот"
+autowrap_mode = 3
+
+[node name="WStats" type="VBoxContainer" parent="Root/Right/VBox/WeaponBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="WProblems" type="Label" parent="Root/Right/VBox/WeaponBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.35, 1)
+theme_override_font_sizes/font_size = 21
+autowrap_mode = 3
+
+[node name="EquipButton" type="Button" parent="Root/Right/VBox/WeaponBox"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "В РУКУ"
+
+[node name="EquipInfo" type="Label" parent="Root/Right/VBox/WeaponBox"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+theme_override_font_sizes/font_size = 20
+text = "Оружие не в руке"
+autowrap_mode = 3
+
+[node name="ClearButton" type="Button" parent="Root/Right/VBox/WeaponBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "РАЗОБРАТЬ ВСЁ"
+
+[node name="Legend" type="RichTextLabel" parent="Root/Right/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.86, 0.82, 0.76, 1)
+theme_override_font_sizes/normal_font_size = 19
+bbcode_enabled = true
+text = "[color=#fff0d0]●[/color]  свободный якорь
+[color=#74f25f]◯[/color]  тащишь деталь — сюда встанет
+[color=#ffa040]○[/color]  занято — встанет на замену
+[color=#ff5a45]✖[/color]  не влезает по энергии
+[color=#ffd050]◯[/color]  рука мышью (Q и клик по детали)
+ПКМ по детали — открутить вместе с тем, что на ней"
+fit_content = true
+scroll_active = false
+
+[node name="Spacer" type="Control" parent="Root/Right/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="TestButton" type="Button" parent="Root/Right/VBox"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 42
+theme_override_styles/normal = SubResource("plank_red")
+theme_override_styles/hover = SubResource("plank_red_hover")
+theme_override_styles/pressed = SubResource("plank_red_pressed")
+text = "ИСПЫТАТЬ   [T]"
+
+[node name="HintBar" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -490.0
+offset_top = -80.0
+offset_right = 490.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("hint_panel")
+
+[node name="Hint" type="Label" parent="Root/HintBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.93, 0.85, 1)
+theme_override_font_sizes/font_size = 21
+text = "Тащи деталь с полки на светящийся якорь"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Toast" type="Label" parent="Root"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -500.0
+offset_top = 18.0
+offset_right = 500.0
+offset_bottom = 110.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_font_sizes/font_size = 32
+text = "Прикручено"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TestBar" type="HBoxContainer" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -460.0
+offset_top = 10.0
+offset_right = 460.0
+offset_bottom = 104.0
+grow_horizontal = 2
+theme_override_constants/separation = 26
+alignment = 1
+
+[node name="TestTitle" type="Label" parent="Root/TestBar"]
+layout_mode = 2
+theme_type_variation = &"BrushLabel"
+theme_override_colors/font_color = Color(0.98, 0.84, 0.58, 1)
+theme_override_font_sizes/font_size = 64
+text = "ИСПЫТАНИЕ"
+
+[node name="BackButton" type="Button" parent="Root/TestBar"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "← К СБОРКЕ   [Esc]"
+
+[node name="TestStats" type="PanelContainer" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+offset_left = 14.0
+offset_top = 14.0
+offset_right = 454.0
+offset_bottom = 170.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("side_panel")
+
+[node name="Text" type="Label" parent="Root/TestStats"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+theme_override_font_sizes/font_size = 22
+text = "Урон по манекену: 0"
+autowrap_mode = 3
+
+[node name="DummyPanel" type="VBoxContainer" parent="Root"]
+visible = false
+layout_mode = 0
+offset_right = 250.0
+offset_bottom = 84.0
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Name" type="Label" parent="Root/DummyPanel"]
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_font_sizes/font_size = 22
+text = "МАНЕКЕН"
+horizontal_alignment = 1
+
+[node name="Hp" type="Control" parent="Root/DummyPanel"]
+custom_minimum_size = Vector2(250, 26)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("5_hp")
+colour = Color(0.85, 0.24, 0.18, 1)
+
+[node name="HpText" type="Label" parent="Root/DummyPanel"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+theme_override_font_sizes/font_size = 18
+text = "100 / 100"
+horizontal_alignment = 1
+
+[node name="DragIcon" type="TextureRect" parent="Root"]
+visible = false
+modulate = Color(1, 1, 1, 0.85)
+layout_mode = 0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SavePopup" type="PanelContainer" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -130.0
+offset_right = 300.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"WoodFrame"
+
+[node name="V" type="VBoxContainer" parent="Root/SavePopup"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Root/SavePopup/V"]
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+text = "СОХРАНИТЬ СБОРКУ"
+horizontal_alignment = 1
+
+[node name="NameEdit" type="LineEdit" parent="Root/SavePopup/V"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+placeholder_text = "Название сборки"
+max_length = 40
+
+[node name="Buttons" type="HBoxContainer" parent="Root/SavePopup/V"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="OkButton" type="Button" parent="Root/SavePopup/V/Buttons"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "СОХРАНИТЬ"
+
+[node name="CancelButton" type="Button" parent="Root/SavePopup/V/Buttons"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "ОТМЕНА"
+
+[node name="LoadPopup" type="PanelContainer" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -330.0
+offset_top = -340.0
+offset_right = 330.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"WoodFrame"
+
+[node name="V" type="VBoxContainer" parent="Root/LoadPopup"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Root/LoadPopup/V"]
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+text = "ЗАГРУЗИТЬ СБОРКУ"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Root/LoadPopup/V"]
+custom_minimum_size = Vector2(0, 460)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Root/LoadPopup/V/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Empty" type="Label" parent="Root/LoadPopup/V"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "Сохранённых сборок пока нет"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Root/LoadPopup/V"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "ЗАКРЫТЬ"
