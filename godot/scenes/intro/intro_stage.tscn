@@ -1,0 +1,934 @@
+[gd_scene format=3 uid="uid://w01ioyrb0aii"]
+
+[ext_resource type="Script" path="res://scenes/intro/intro_stage.gd" id="1_b8pt8"]
+[ext_resource type="PackedScene" path="res://scenes/arena/scrap.tscn" id="2_8r1vu"]
+[ext_resource type="Script" path="res://scenes/arena/scrap.gd" id="3_ttvkr"]
+[ext_resource type="PackedScene" path="res://scenes/intro/comic_puppet.tscn" id="4_x3hit"]
+[ext_resource type="Script" path="res://scenes/intro/comic_puppet.gd" id="5_j2td4"]
+[ext_resource type="PackedScene" path="res://scenes/intro/comic_puppet_dark.tscn" id="6_am11j"]
+[ext_resource type="Shader" path="res://scenes/intro/shaders/comic_ink.gdshader" id="7_ovh3h"]
+[ext_resource type="PackedScene" path="res://scenes/fx/dust_puff.tscn" id="8_25rab"]
+[ext_resource type="Texture2D" path="res://assets/textures/fx/puff.png" id="9_w8an5"]
+[ext_resource type="Script" path="res://scenes/intro/comic_shot.gd" id="10_2wg25"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Gear_Medium.glb" id="11_jcpka"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Scrap_Board.glb" id="12_4h58o"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Head_Sad.glb" id="13_b68ey"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Limb_Upper.glb" id="14_37vsh"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Gear_Small.glb" id="15_avbjv"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Chain_Segment.glb" id="16_5cwgx"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Hand.glb" id="17_6xsov"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Pipe_Piece.glb" id="18_lon0i"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Head_Scared.glb" id="19_qbthc"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Gear_Large.glb" id="20_hb0ac"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Limb_Lower.glb" id="21_3jo7i"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Rivet_Plate.glb" id="22_gwqii"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Foot.glb" id="23_y4ghi"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Doll_Head_Cracked.glb" id="24_ftth2"]
+[ext_resource type="Texture2D" path="res://assets/textures/parallax/scrap/layer4_sky.png" id="25_iefqq"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Wooden_Barrel.glb" id="26_r0yje"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bodies/Puppet_Limb_Pile.glb" id="27_ad73g"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/dark/LowerArm_R.glb" id="28_vnc3p"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/dark/Hand_R.glb" id="29_fcvae"]
+[ext_resource type="Texture2D" path="res://assets/textures/fx/mote.png" id="30_ri25f"]
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_5lccu"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bcv0p"]
+render_priority = 0
+shader = ExtResource("7_ovh3h")
+shader_parameter/strength = null
+shader_parameter/line_px = null
+shader_parameter/depth_rel = null
+shader_parameter/normal_min = null
+shader_parameter/normal_weight = null
+shader_parameter/near_full = null
+shader_parameter/far_zero = null
+shader_parameter/ink = null
+
+[sub_resource type="QuadMesh" id="QuadMesh_n5bvw"]
+size = Vector2(2, 2)
+
+[sub_resource type="Gradient" id="Gradient_b7apb"]
+colors = PackedColorArray(1, 0.9, 0.6, 1, 1, 0.35, 0.05, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_4cbeq"]
+gradient = SubResource("Gradient_b7apb")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ta6cn"]
+direction = Vector3(0, 1, 0.4)
+spread = 80.0
+initial_velocity_min = 1.8
+initial_velocity_max = 4.5
+gravity = Vector3(0, -6, 0)
+damping_min = 1.0
+damping_max = 2.0
+scale_min = 0.6
+scale_max = 1.2
+color_ramp = SubResource("GradientTexture1D_4cbeq")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p44b4"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(4, 2.6, 1.2, 1)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_v4kqm"]
+material = SubResource("StandardMaterial3D_p44b4")
+size = Vector2(0.012, 0.07)
+
+[sub_resource type="Gradient" id="AlphaGrad"]
+offsets = PackedFloat32Array(0, 0.12, 1)
+colors = PackedColorArray(1, 0.95, 0.86, 0, 1, 0.95, 0.86, 0.55, 0.9, 0.85, 0.78, 0)
+
+[sub_resource type="GradientTexture1D" id="AlphaRamp"]
+gradient = SubResource("AlphaGrad")
+
+[sub_resource type="Curve" id="GrowCurve"]
+_data = [Vector2(0, 0.35), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="GrowTex"]
+curve = SubResource("GrowCurve")
+
+[sub_resource type="ParticleProcessMaterial" id="PM"]
+lifetime_randomness = 0.25
+emission_shape = 1
+emission_sphere_radius = 0.08
+angle_min = -180.0
+angle_max = 180.0
+direction = Vector3(0, 0, 1)
+spread = 75.0
+initial_velocity_min = 0.5
+initial_velocity_max = 1.5
+angular_velocity_min = -40.0
+angular_velocity_max = 40.0
+gravity = Vector3(0, 0.5, 0)
+damping_min = 2.0
+damping_max = 3.0
+scale_min = 0.5
+scale_curve = SubResource("GrowTex")
+color_ramp = SubResource("AlphaRamp")
+
+[sub_resource type="StandardMaterial3D" id="Mat"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.82, 0.72, 0.56, 1)
+albedo_texture = ExtResource("9_w8an5")
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="Quad"]
+material = SubResource("Mat")
+size = Vector2(0.4, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pv61h"]
+shading_mode = 0
+disable_fog = true
+albedo_texture = ExtResource("25_iefqq")
+
+[sub_resource type="QuadMesh" id="QuadMesh_rbn36"]
+size = Vector2(250, 109.649124)
+
+[sub_resource type="Gradient" id="Gradient_ec34m"]
+offsets = PackedFloat32Array(0, 0.12, 0.2, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.35, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_0fjus"]
+gradient = SubResource("Gradient_ec34m")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2vh8d"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+albedo_color = Color(1.9, 1.3, 0.8, 1)
+albedo_texture = SubResource("GradientTexture2D_0fjus")
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_ao1mx"]
+size = Vector2(40, 40)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qnyi4"]
+shading_mode = 0
+disable_fog = true
+albedo_texture = ExtResource("25_iefqq")
+
+[sub_resource type="QuadMesh" id="QuadMesh_enmt8"]
+size = Vector2(190, 83.333336)
+
+[sub_resource type="Gradient" id="Gradient_24n2m"]
+offsets = PackedFloat32Array(0, 0.12, 0.2, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.35, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_lsknt"]
+gradient = SubResource("Gradient_24n2m")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jdhdk"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+albedo_color = Color(2.6, 1.8, 1, 1)
+albedo_texture = SubResource("GradientTexture2D_lsknt")
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_m6uto"]
+size = Vector2(12, 12)
+
+[sub_resource type="Gradient" id="Gradient_wlvjo"]
+offsets = PackedFloat32Array(0, 0.15, 1)
+colors = PackedColorArray(1, 0.75, 0.35, 0, 1, 0.6, 0.2, 1, 1, 0.3, 0.05, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_uij58"]
+gradient = SubResource("Gradient_wlvjo")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_pphmp"]
+emission_shape = 3
+emission_box_extents = Vector3(4, 0.2, 1.5)
+direction = Vector3(0.2, 1, 0)
+spread = 25.0
+initial_velocity_min = 0.3
+initial_velocity_max = 1.1
+gravity = Vector3(0, 0.15, 0)
+scale_min = 0.5
+scale_max = 1.3
+color_ramp = SubResource("GradientTexture1D_uij58")
+turbulence_enabled = true
+turbulence_noise_strength = 0.6
+turbulence_noise_scale = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gwr5f"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(3, 2, 1, 1)
+albedo_texture = ExtResource("30_ri25f")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_jaal0"]
+material = SubResource("StandardMaterial3D_gwr5f")
+size = Vector2(0.035, 0.035)
+
+[sub_resource type="Gradient" id="Gradient_ve4e1"]
+offsets = PackedFloat32Array(0, 0.15, 1)
+colors = PackedColorArray(1, 0.75, 0.35, 0, 1, 0.6, 0.2, 1, 1, 0.3, 0.05, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_rw318"]
+gradient = SubResource("Gradient_ve4e1")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_t4s3f"]
+emission_shape = 3
+emission_box_extents = Vector3(3, 0.2, 1.5)
+direction = Vector3(0.2, 1, 0)
+spread = 25.0
+initial_velocity_min = 0.3
+initial_velocity_max = 1.1
+gravity = Vector3(0, 0.15, 0)
+scale_min = 0.5
+scale_max = 1.3
+color_ramp = SubResource("GradientTexture1D_rw318")
+turbulence_enabled = true
+turbulence_noise_strength = 0.6
+turbulence_noise_scale = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1q476"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(3, 2, 1, 1)
+albedo_texture = ExtResource("30_ri25f")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_6j2tt"]
+material = SubResource("StandardMaterial3D_1q476")
+size = Vector2(0.035, 0.035)
+
+[sub_resource type="Gradient" id="Gradient_6oxxa"]
+offsets = PackedFloat32Array(0, 0.15, 1)
+colors = PackedColorArray(1, 0.75, 0.35, 0, 1, 0.6, 0.2, 1, 1, 0.3, 0.05, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_rhseq"]
+gradient = SubResource("Gradient_6oxxa")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_twixl"]
+emission_shape = 3
+emission_box_extents = Vector3(5, 0.2, 2)
+direction = Vector3(0.2, 1, 0)
+spread = 25.0
+initial_velocity_min = 0.3
+initial_velocity_max = 1.1
+gravity = Vector3(0, 0.15, 0)
+scale_min = 0.5
+scale_max = 1.3
+color_ramp = SubResource("GradientTexture1D_rhseq")
+turbulence_enabled = true
+turbulence_noise_strength = 0.6
+turbulence_noise_scale = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jxa37"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(3, 2, 1, 1)
+albedo_texture = ExtResource("30_ri25f")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_50i81"]
+material = SubResource("StandardMaterial3D_jxa37")
+size = Vector2(0.035, 0.035)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_euoso"]
+shading_mode = 0
+disable_fog = true
+albedo_texture = ExtResource("25_iefqq")
+
+[sub_resource type="QuadMesh" id="QuadMesh_63g8u"]
+size = Vector2(250, 109.649124)
+
+[node name="IntroStage" type="Node3D" unique_id=1439890956]
+script = ExtResource("1_b8pt8")
+
+[node name="Scrap" type="Node3D" parent="." unique_id=677399246 instance=ExtResource("2_8r1vu")]
+script = ExtResource("3_ttvkr")
+
+[node name="Hero" type="Node3D" parent="." unique_id=1685777958 instance=ExtResource("4_x3hit")]
+script = ExtResource("5_j2td4")
+
+[node name="Enemy" type="Node3D" parent="." unique_id=1921640967 instance=ExtResource("6_am11j")]
+script = ExtResource("5_j2td4")
+player_color = Color(0.72156864, 0.20392157, 0.16470589, 1)
+eye_color = Color(1, 0.22, 0.12, 1)
+core_energy = 1.2
+base_tone = "dark"
+
+[node name="Camera" type="Camera3D" parent="." unique_id=1075725995]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 8)
+attributes = SubResource("CameraAttributesPractical_5lccu")
+fov = 40.0
+near = 0.03
+far = 400.0
+
+[node name="Ink" type="MeshInstance3D" parent="Camera" unique_id=726767291]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1)
+material_override = SubResource("ShaderMaterial_bcv0p")
+cast_shadow = 0
+extra_cull_margin = 16384.0
+gi_mode = 0
+mesh = SubResource("QuadMesh_n5bvw")
+
+[node name="Fx" type="Node3D" parent="." unique_id=608779219]
+
+[node name="Sparks" type="GPUParticles3D" parent="Fx" unique_id=19270205]
+emitting = false
+amount = 48
+lifetime = 0.7
+one_shot = true
+explosiveness = 1.0
+transform_align = 3
+process_material = SubResource("ParticleProcessMaterial_ta6cn")
+draw_pass_1 = SubResource("QuadMesh_v4kqm")
+
+[node name="Dust" type="GPUParticles3D" parent="Fx" unique_id=423947005 instance=ExtResource("8_25rab")]
+emitting = false
+amount = 14
+one_shot = true
+explosiveness = 0.9
+randomness = 0.2
+fixed_fps = 60
+visibility_aabb = AABB(-2, -2, -2, 4, 4, 4)
+process_material = SubResource("PM")
+draw_pass_1 = SubResource("Quad")
+
+[node name="Shots" type="Node3D" parent="." unique_id=1576780385]
+
+[node name="Shot01" type="Node3D" parent="Shots" unique_id=1631724372]
+script = ExtResource("10_2wg25")
+duration = 3.6
+hero_visible = false
+hero_keys = PackedStringArray()
+hero_params = PackedStringArray()
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:rain:Rain:5.5")
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot01" unique_id=180624045]
+transform = Transform3D(0.99959207, 0.003640531, -0.028326793, 0, 0.9918423, 0.12747058, 0.028559774, -0.12741858, 0.99143773, -11, 9, 15)
+fov = 52.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot01" unique_id=60059632]
+transform = Transform3D(0.9989366, 0.0035323359, -0.04596925, 0, 0.9970607, 0.076615416, 0.046104766, -0.07653394, 0.9960004, -12.5, 5.5, 12.5)
+fov = 50.0
+
+[node name="Props" type="Node3D" parent="Shots/Shot01" unique_id=349898833]
+
+[node name="Rain" type="Node3D" parent="Shots/Shot01/Props" unique_id=1051405078]
+
+[node name="Gear_Medium2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=1888039417 instance=ExtResource("11_jcpka")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, -21, 14, -4)
+
+[node name="Scrap_Board2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=278165979 instance=ExtResource("12_4h58o")]
+transform = Transform3D(0.9914894, -0.6808534, 0.71651065, 0.96214676, 0.8972164, -0.47882816, -0.22632377, 0.83152956, 1.1033295, -17.3, 16.3, -2.1)
+
+[node name="Doll_Head_Sad2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=78080852 instance=ExtResource("13_b68ey")]
+transform = Transform3D(0.7803778, -0.6253911, 0.97974306, 1.0698497, -0.07481118, -0.8999026, 0.45434776, 1.2503158, 0.43620965, -13.6, 18.6, -0.2)
+
+[node name="Doll_Limb_Upper2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=1989102064 instance=ExtResource("14_37vsh")]
+transform = Transform3D(0.92381805, -0.79281247, 0.6913818, 0.4405243, -0.54400206, -1.2124356, 0.955248, 1.0176002, -0.1095041, -9.9, 14.9, -3.3)
+
+[node name="Gear_Small2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=1394285586 instance=ExtResource("15_avbjv")]
+transform = Transform3D(0.78506994, -1.1450002, 0.18066408, -0.03383403, -0.2407416, -1.3787308, 1.1586719, 0.7687768, -0.16267069, -6.2, 17.2, -1.4)
+
+[node name="Chain_Segment2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=2128355838 instance=ExtResource("16_5cwgx")]
+transform = Transform3D(0.48333728, -1.3124123, -0.06292086, 0.199142, 0.13944069, -1.3787308, 1.2987407, 0.46704414, 0.23482378, -18.5, 19.5, 0.5)
+
+[node name="Doll_Hand2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=887963849 instance=ExtResource("17_6xsov")]
+transform = Transform3D(0.08964609, -1.3802799, 0.2163119, 0.6847034, -0.14553805, -1.2124355, 1.2178442, 0.18342826, 0.66573966, -14.8, 15.8, -2.6)
+
+[node name="Pipe_Piece2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=552266609 instance=ExtResource("18_lon0i")]
+transform = Transform3D(-0.395011, -1.0532384, 0.8334597, 0.5523589, -0.91927946, -0.8999027, 1.2242817, 0.07492674, 0.6749223, -11.1, 18.1, -0.7)
+
+[node name="Doll_Head_Scared2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=1771344886 instance=ExtResource("19_qbthc")]
+transform = Transform3D(-0.2719307, -0.41742113, 1.3083628, -0.3626202, -1.2646067, -0.47882828, 1.3245982, -0.43189064, 0.13751431, -7.4, 14.4, -3.8)
+
+[node name="Gear_Large2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=1739374752 instance=ExtResource("20_hb0ac")]
+transform = Transform3D(0.28855017, -0.56631154, 1.2474093, -1.2474092, -0.6355865, 1.2239188e-07, 0.5663118, -1.11145, -0.6355863, -19.7, 16.7, -1.9)
+
+[node name="@Node3D@2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=1877534956 instance=ExtResource("12_4h58o")]
+transform = Transform3D(-0.1897019, -1.2212011, 0.65778506, -1.236231, 0.44995162, 0.47882822, -0.62908363, -0.5159569, -1.1393166, -16, 19, 0)
+
+[node name="Doll_Limb_Lower2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=177314380 instance=ExtResource("21_3jo7i")]
+transform = Transform3D(-1.3053432, -0.50292027, -0.056128208, -0.41904402, 0.98720694, 0.8999026, -0.28369218, 0.8558585, -1.0709926, -12.3, 15.3, -3.1)
+
+[node name="Rivet_Plate2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=1495566456 instance=ExtResource("22_gwqii")]
+transform = Transform3D(-0.74484223, 1.111719, -0.41144958, 0.28471532, 0.6394818, 1.2124356, 1.150716, 0.5613765, -0.56631184, -8.6, 17.6, -1.2)
+
+[node name="Doll_Foot2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=15498314 instance=ExtResource("23_y4ghi")]
+transform = Transform3D(1.0536875, 0.89343834, -0.2269603, 0.22986253, 0.0791481, 1.3787309, 0.8926961, -1.0749435, -0.08712189, -20.9, 19.9, 0.7)
+
+[node name="@Node3D@3" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=2072973338 instance=ExtResource("11_jcpka")]
+transform = Transform3D(1.0540931, -0.8901354, 0.2377949, -0.21465112, 0.11413197, 1.3787308, -0.89599806, -1.0745384, -0.050544895, -17.2, 16.2, -2.4)
+
+[node name="Doll_Head_Cracked2" type="Node3D" parent="Shots/Shot01/Props/Rain" unique_id=604672202 instance=ExtResource("24_ftth2")]
+transform = Transform3D(-0.7343262, -1.0843269, 0.49497482, -0.18117332, 0.67614794, 1.2124356, -1.1781092, 0.5718908, -0.49497452, -13.5, 18.5, -0.5)
+
+[node name="Lights" type="Node3D" parent="Shots/Shot01" unique_id=967178713]
+
+[node name="Shot02" type="Node3D" parent="Shots" unique_id=425812258]
+script = ExtResource("10_2wg25")
+hero_keys = PackedStringArray("0:lying", "2.2:lying", "2.55:lying_twitch")
+hero_params = PackedStringArray("0:core=0.15,flicker=1", "1.6:core=0.5,flicker=1", "2.4:core=1,flicker=0")
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_hide:LowerArm_R", "0:hero_hide:Hand_R")
+dof_far = 2.2
+dof_far_transition = 2.0
+dof_amount = 0.14
+hide_fore_layer = true
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot02" unique_id=1967757926]
+transform = Transform3D(0.9861374, 0.004568681, 0.16586806, -0.10866791, 0.7732123, 0.6247672, -0.12539685, -0.6341308, 0.76299006, -17.15, 2.35, 1.8)
+fov = 40.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot02" unique_id=1081002496]
+transform = Transform3D(0.986342, 0.0037115663, 0.1646681, -0.108077124, 0.76900864, 0.6300357, -0.124292776, -0.6392275, 0.7589067, -17.25, 2.1, 1.5)
+fov = 40.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot02" unique_id=807258199]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.9, 0.94, 0.3)
+
+[node name="Props" type="Node3D" parent="Shots/Shot02" unique_id=1240594785]
+
+[node name="HeadA" type="Node3D" parent="Shots/Shot02/Props" unique_id=674728378 instance=ExtResource("13_b68ey")]
+transform = Transform3D(0.8528685, -0.15038373, 0.5, 0.17364818, 0.9848077, 0, -0.49240386, 0.08682409, 0.8660254, -16.75, 1.05, 1.05)
+
+[node name="GearA" type="Node3D" parent="Shots/Shot02/Props" unique_id=1320214388 instance=ExtResource("11_jcpka")]
+transform = Transform3D(0.9396926, -0.34202012, 0, 0.11697777, 0.32139382, -0.9396926, 0.3213938, 0.8830222, 0.34202015, -18, 1.12, 0.90000004)
+
+[node name="LimbA" type="Node3D" parent="Shots/Shot02/Props" unique_id=469993153 instance=ExtResource("14_37vsh")]
+transform = Transform3D(0.76604444, 0.6330222, 0.11161892, 0, 0.17364822, -0.9848077, -0.6427876, 0.7544065, 0.13302225, -17.2, 1.1, 1.1500001)
+
+[node name="HeadB" type="Node3D" parent="Shots/Shot02/Props" unique_id=1512005462 instance=ExtResource("24_ftth2")]
+transform = Transform3D(0.76604444, 0.2198463, -0.60402274, 0, 0.9396926, 0.34202012, 0.6427876, -0.26200262, 0.7198463, -18.1, 1.1, 0.20000002)
+
+[node name="GearB" type="Node3D" parent="Shots/Shot02/Props" unique_id=1876863836 instance=ExtResource("15_avbjv")]
+transform = Transform3D(1, 0, 0, 0, 0.49999997, -0.86602545, 0, 0.86602545, 0.49999997, -17.35, 1.2, 1.05)
+
+[node name="Lights" type="Node3D" parent="Shots/Shot02" unique_id=854557819]
+
+[node name="Shot03" type="Node3D" parent="Shots" unique_id=1645021171]
+script = ExtResource("10_2wg25")
+duration = 2.4
+cam_ease = 0.4
+hero_keys = PackedStringArray("0:lying_twitch", "0.28:sit_up")
+hero_params = PackedStringArray("0:core=1,eye=0", "0.3:eye=0", "0.45:eye=1")
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_hide:LowerArm_R", "0:hero_hide:Hand_R", "0.3:shake:0.05:0.3", "0.3:dust:hero:Feet")
+dof_far = 3.5
+dof_far_transition = 3.0
+hide_fore_layer = true
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot03" unique_id=1869969758]
+transform = Transform3D(0.99916804, 0.0028206818, 0.040684856, 0, 0.9976053, -0.06916399, -0.04078252, 0.06910645, 0.9967753, -16.9, 1.45, 2.75)
+fov = 36.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot03" unique_id=1095437693]
+transform = Transform3D(0.99923944, 0.0035960015, 0.038828507, 0, 0.99573886, -0.09221777, -0.03899467, 0.09214763, 0.9949815, -16.92, 1.45, 2.35)
+fov = 36.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot03" unique_id=1367493359]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 1.05, 0.3)
+
+[node name="Props" type="Node3D" parent="Shots/Shot03" unique_id=959198921]
+
+[node name="HeadA" type="Node3D" parent="Shots/Shot03/Props" unique_id=1060642099 instance=ExtResource("13_b68ey")]
+transform = Transform3D(0.8528685, -0.15038373, 0.5, 0.17364818, 0.9848077, 0, -0.49240386, 0.08682409, 0.8660254, -16.4, 0.95, 0.6)
+
+[node name="GearA" type="Node3D" parent="Shots/Shot03/Props" unique_id=1853599322 instance=ExtResource("11_jcpka")]
+transform = Transform3D(0.9396926, -0.34202012, 0, 0.11697777, 0.32139382, -0.9396926, 0.3213938, 0.8830222, 0.34202015, -17.5, 0.98, 0.75)
+
+[node name="Lights" type="Node3D" parent="Shots/Shot03" unique_id=1141763257]
+
+[node name="Shot04" type="Node3D" parent="Shots" unique_id=1802225706]
+script = ExtResource("10_2wg25")
+duration = 3.2
+hero_keys = PackedStringArray("0:stand_look")
+hero_params = PackedStringArray("0:core=1,eye=1")
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_hide:LowerArm_R", "0:hero_hide:Hand_R")
+hide_nodes = PackedStringArray("Back/BannerFrame_1")
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot04" unique_id=1529574275]
+transform = Transform3D(0.73387265, -0.2507899, -0.6312966, 0, 0.9293516, -0.36919576, 0.6792871, 0.27094266, 0.68202573, -19.2, 1.05, 2.5)
+fov = 50.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot04" unique_id=1002617971]
+transform = Transform3D(0.7316789, -0.27986127, -0.6215494, 0, 0.91183144, -0.41056478, 0.6816495, 0.3004016, 0.66716784, -18.9, 1, 2.1)
+fov = 50.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot04" unique_id=1952911259]
+transform = Transform3D(-0.6691307, 0, 0.7431448, 0, 1, 0, -0.7431448, 0, -0.6691307, -17, 1, 0.3)
+
+[node name="Props" type="Node3D" parent="Shots/Shot04" unique_id=1981553393]
+
+[node name="SkyCard" type="MeshInstance3D" parent="Shots/Shot04/Props" unique_id=384960185]
+transform = Transform3D(0.7343302, -0.26592013, -0.62453634, 3.4248284e-08, 0.9200697, -0.3917547, 0.6787924, 0.28767726, 0.6756349, 40.330963, 38.216694, -61.88532)
+material_override = SubResource("StandardMaterial3D_pv61h")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_rbn36")
+
+[node name="SunGlow" type="MeshInstance3D" parent="Shots/Shot04/Props" unique_id=780651779]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.59716, 50.182106, -48.592793)
+material_override = SubResource("StandardMaterial3D_2vh8d")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_ao1mx")
+
+[node name="Lights" type="Node3D" parent="Shots/Shot04" unique_id=815978843]
+
+[node name="Rim" type="SpotLight3D" parent="Shots/Shot04/Lights" unique_id=1894079317]
+transform = Transform3D(-0.70710677, -0.36947325, 0.60290086, 0, 0.8526306, 0.5225141, -0.70710677, 0.36947325, -0.60290086, -14, 5, -2.7)
+light_color = Color(1, 0.72, 0.42, 1)
+light_energy = 6.0
+spot_range = 8.0
+spot_attenuation = 0.8
+spot_angle = 25.0
+
+[node name="Shot05" type="Node3D" parent="Shots" unique_id=1202715410]
+script = ExtResource("10_2wg25")
+duration = 2.2
+hero_keys = PackedStringArray("0:stand_look", "0.55:stand_look", "0.68:bonk")
+hero_params = PackedStringArray("0:core=1,eye=1")
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_hide:LowerArm_R", "0:hero_hide:Hand_R", "0.6:drop:Barrel:0.45:4.0", "0.6:shake:0.12:0.35", "0.6:dust:hero:Head")
+hide_fore_layer = true
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot05" unique_id=1371266929]
+transform = Transform3D(0.9938838, -0.004062276, 0.11035651, 0, 0.9993232, 0.03678556, -0.110431254, -0.036560573, 0.9932111, -16.7, 2.25, 3.2)
+fov = 40.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot05" unique_id=63406811]
+transform = Transform3D(0.9946184, -0.0042900126, 0.10351723, 0, 0.99914235, 0.041406956, -0.10360608, -0.04118412, 0.99376535, -16.75, 2.2, 2.8999999)
+fov = 40.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot05" unique_id=335227397]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 1, 0.3)
+
+[node name="Props" type="Node3D" parent="Shots/Shot05" unique_id=1640172762]
+
+[node name="Barrel" type="Node3D" parent="Shots/Shot05/Props" unique_id=2017392010 instance=ExtResource("26_r0yje")]
+transform = Transform3D(0.7090616, -0.12502669, 0, 0.12502669, 0.7090616, 0, 0, 0, 0.72, -17.03, 2.14, 0.47)
+
+[node name="Lights" type="Node3D" parent="Shots/Shot05" unique_id=535315399]
+
+[node name="Shot06" type="Node3D" parent="Shots" unique_id=244239789]
+script = ExtResource("10_2wg25")
+duration = 2.3
+hero_keys = PackedStringArray("0:reach", "1.3:reach", "2.0:pull")
+hero_params = PackedStringArray("0:core=1,eye=1")
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_hide:LowerArm_R", "0:hero_hide:Hand_R", "1.3:hold:LooseArm:Hand_L")
+dof_far = 2.6
+dof_far_transition = 2.5
+dof_amount = 0.14
+hide_fore_layer = true
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot06" unique_id=432007142]
+transform = Transform3D(0.8532814, -0.1426566, 0.5015576, 0, 0.9618503, 0.27357635, -0.52145076, -0.2334376, 0.82072896, -18.349998, 0.85, 1.75)
+fov = 40.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot06" unique_id=734974283]
+transform = Transform3D(0.90795946, -0.038856246, 0.41725272, 0, 0.99569196, 0.092722826, -0.41905805, -0.084188566, 0.9040479, -18.15, 1.3, 2.6499999)
+fov = 42.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot06" unique_id=1984210847]
+transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, -19.3, 0, 0.3)
+
+[node name="Props" type="Node3D" parent="Shots/Shot06" unique_id=2096861942]
+
+[node name="LimbPile" type="Node3D" parent="Shots/Shot06/Props" unique_id=1594772666 instance=ExtResource("27_ad73g")]
+transform = Transform3D(0.6577848, 0, -0.23941408, 0, 0.7, 0, 0.23941408, 0, 0.6577848, -18.75, 0, 0.85)
+
+[node name="HeadA" type="Node3D" parent="Shots/Shot06/Props" unique_id=1504897579 instance=ExtResource("19_qbthc")]
+transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, -18.3, 0.1, 1.2)
+
+[node name="GearA" type="Node3D" parent="Shots/Shot06/Props" unique_id=660652685 instance=ExtResource("20_hb0ac")]
+transform = Transform3D(0.9848077, -0.17364818, 0, 0.030153697, 0.1710101, -0.9848077, 0.17101006, 0.96984625, 0.17364822, -19.699999, 0.05, 1.2)
+
+[node name="FootA" type="Node3D" parent="Shots/Shot06/Props" unique_id=1176679240 instance=ExtResource("23_y4ghi")]
+transform = Transform3D(0.49999997, 0, 0.86602545, 0, 1, 0, -0.86602545, 0, 0.49999997, -18.4, 0.05, 0.5)
+
+[node name="LooseArm" type="Node3D" parent="Shots/Shot06/Props" unique_id=1887419541]
+transform = Transform3D(0.49999997, 0.85286856, 0.15038379, 0, 0.17364822, -0.9848077, -0.86602545, 0.49240384, 0.086824104, -19, 0.55, 1.05)
+metadata/grip = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -0.09, 0.14)
+
+[node name="LowerArm" type="Node3D" parent="Shots/Shot06/Props/LooseArm" unique_id=58126324 instance=ExtResource("28_vnc3p")]
+
+[node name="Hand" type="Node3D" parent="Shots/Shot06/Props/LooseArm" unique_id=946437175 instance=ExtResource("29_fcvae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27, 0)
+
+[node name="Lights" type="Node3D" parent="Shots/Shot06" unique_id=39409849]
+
+[node name="Shot07" type="Node3D" parent="Shots" unique_id=1502434881]
+script = ExtResource("10_2wg25")
+duration = 2.4
+hero_keys = PackedStringArray("0:pull", "0.35:hold_up")
+hero_params = PackedStringArray("0:core=1,eye=1")
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_hide:LowerArm_R", "0:hero_hide:Hand_R", "0:hold:LooseArm:Hand_L")
+hide_fore_layer = true
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot07" unique_id=1111737277]
+transform = Transform3D(0.978221, 0.0061089396, 0.20747603, 0.09265887, 0.88159025, -0.46283144, -0.18573627, 0.47197592, 0.86182404, -18.55, 0.3, 2.7)
+fov = 48.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot07" unique_id=2064545196]
+transform = Transform3D(0.978596, 0.029586188, 0.2036534, 0.087770864, 0.835084, -0.5430755, -0.18613523, 0.5493263, 0.81461304, -18.599998, 0.25, 2.3999999)
+fov = 48.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot07" unique_id=247893496]
+transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, -19.3, 0, 0.3)
+
+[node name="Props" type="Node3D" parent="Shots/Shot07" unique_id=589066095]
+
+[node name="LooseArm" type="Node3D" parent="Shots/Shot07/Props" unique_id=1419582206]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.3, 0, 0.3)
+metadata/grip = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -0.09, 0.14)
+
+[node name="LowerArm" type="Node3D" parent="Shots/Shot07/Props/LooseArm" unique_id=913107669 instance=ExtResource("28_vnc3p")]
+
+[node name="Hand" type="Node3D" parent="Shots/Shot07/Props/LooseArm" unique_id=1533442895 instance=ExtResource("29_fcvae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27, 0)
+
+[node name="SkyCard" type="MeshInstance3D" parent="Shots/Shot07/Props" unique_id=639815034]
+transform = Transform3D(0.9701425, 0.13171522, 0.20365347, 4.747716e-08, 0.8396839, -0.54307544, -0.24253584, 0.52686054, 0.81461304, -37.947075, 51.842163, -74.988235)
+material_override = SubResource("StandardMaterial3D_qnyi4")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_enmt8")
+
+[node name="SunGlow" type="MeshInstance3D" parent="Shots/Shot07/Props" unique_id=200514383]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.392014, 28.70245, -25.303698)
+material_override = SubResource("StandardMaterial3D_jdhdk")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_m6uto")
+
+[node name="Lights" type="Node3D" parent="Shots/Shot07" unique_id=1831637977]
+
+[node name="Rim" type="SpotLight3D" parent="Shots/Shot07/Lights" unique_id=455636644]
+transform = Transform3D(-0.901523, 0.2612431, -0.34497592, 0, 0.7972059, 0.6037075, 0.43273124, 0.5442562, -0.71869946, -20.5, 3.5, -2.2)
+light_color = Color(1, 0.72, 0.42, 1)
+light_energy = 7.0
+spot_range = 7.0
+spot_attenuation = 0.8
+spot_angle = 28.0
+
+[node name="Shot08" type="Node3D" parent="Shots" unique_id=1976413833]
+script = ExtResource("10_2wg25")
+duration = 2.3
+hero_keys = PackedStringArray("0:attach", "0.85:attach", "1.25:attach_done")
+hero_params = PackedStringArray("0:core=0.7,eye=1", "0.8:core=0.7", "0.95:core=1.0")
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_swap:LowerArm_R:dark", "0:hero_swap:Hand_R:dark", "0:hero_hide:LowerArm_R", "0:hero_hide:Hand_R", "0:hold:LooseArm:Hand_L", "0.85:hide:LooseArm", "0.85:hero_show:LowerArm_R", "0.85:hero_show:Hand_R", "0.85:sparks:hero:Elbow_R", "0.85:shake:0.05:0.25")
+dof_far = 2.2
+dof_far_transition = 2.0
+dof_amount = 0.14
+hide_fore_layer = true
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot08" unique_id=470059300]
+transform = Transform3D(0.9827782, 0.09411598, -0.15902613, -0.087042816, 0.99490404, 0.05088839, 0.16300514, -0.036169916, 0.98596203, -19.75, 1.5, 2.15)
+fov = 38.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot08" unique_id=1241378493]
+transform = Transform3D(0.98632544, 0.09153372, -0.13705385, -0.087092556, 0.99547255, 0.038070414, 0.13991806, -0.025613453, 0.9898318, -19.699999, 1.5, 1.9000001)
+fov = 38.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot08" unique_id=1633512519]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.3, 0, 0.3)
+
+[node name="Props" type="Node3D" parent="Shots/Shot08" unique_id=2083493696]
+
+[node name="LooseArm" type="Node3D" parent="Shots/Shot08/Props" unique_id=362200421]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.3, 0, 0.3)
+metadata/grip = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -0.09, 0.14)
+
+[node name="LowerArm" type="Node3D" parent="Shots/Shot08/Props/LooseArm" unique_id=1914496127 instance=ExtResource("28_vnc3p")]
+
+[node name="Hand" type="Node3D" parent="Shots/Shot08/Props/LooseArm" unique_id=1124185021 instance=ExtResource("29_fcvae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27, 0)
+
+[node name="Lights" type="Node3D" parent="Shots/Shot08" unique_id=408367120]
+
+[node name="Shot09" type="Node3D" parent="Shots" unique_id=1139658484]
+script = ExtResource("10_2wg25")
+duration = 2.8
+hero_ease = 1.0
+hero_keys = PackedStringArray("0:hover")
+hero_params = PackedStringArray("0:core=1,eye=1")
+enemy_keys = PackedStringArray()
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_swap:LowerArm_R:dark", "0:hero_swap:Hand_R:dark")
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot09" unique_id=1250304740]
+transform = Transform3D(0.9517086, 0.023493582, -0.30610254, 0, 0.99706763, 0.076525636, 0.30700278, -0.0728301, 0.94891787, -6.6, 6.1, 4.2)
+fov = 44.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot09" unique_id=1845295219]
+transform = Transform3D(0.9639926, 0.013243222, -0.265599, 0, 0.9987592, 0.049799845, 0.26592898, -0.04800668, 0.9627965, -5, 6, 3.8)
+fov = 44.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot09" unique_id=1319746884]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2, 5.1, 0.4)
+
+[node name="HeroB" type="Marker3D" parent="Shots/Shot09" unique_id=21959640]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4, 5.6, 0.4)
+
+[node name="Props" type="Node3D" parent="Shots/Shot09" unique_id=105697916]
+
+[node name="Lights" type="Node3D" parent="Shots/Shot09" unique_id=95189646]
+
+[node name="Shot10" type="Node3D" parent="Shots" unique_id=1004375789]
+script = ExtResource("10_2wg25")
+duration = 2.8
+enemy_move = Vector2(0.15, 0.55)
+enemy_ease = 2.2
+enemy_visible = true
+hero_keys = PackedStringArray("0:stance")
+hero_params = PackedStringArray("0:core=1,eye=1")
+enemy_keys = PackedStringArray("0:scrapling_swing", "0.55:scrapling_swing", "0.9:scrapling_idle")
+enemy_params = PackedStringArray("0:eye=1,core=0.6")
+events = PackedStringArray("0:hero_swap:LowerArm_R:dark", "0:hero_swap:Hand_R:dark", "0.55:shake:0.12:0.35", "0.55:dust:enemy:Feet")
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot10" unique_id=698745670]
+transform = Transform3D(1, 0, 0, 0, 0.9998564, 0.01694672, 0, -0.01694672, 0.9998564, 2.45, 1.15, 5.9)
+fov = 40.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot10" unique_id=1113473844]
+transform = Transform3D(0.99995714, 8.5722895e-05, -0.0092584565, 0, 0.99995714, 0.009258479, 0.009258853, -0.009258082, 0.9999143, 2.45, 1.1, 5.4)
+fov = 40.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot10" unique_id=2108131635]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0, 0)
+
+[node name="EnemyA" type="Marker3D" parent="Shots/Shot10" unique_id=1052023396]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 3.7, 3.5, 0)
+
+[node name="EnemyB" type="Marker3D" parent="Shots/Shot10" unique_id=908731317]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 3.7, 0, 0)
+
+[node name="Props" type="Node3D" parent="Shots/Shot10" unique_id=463226996]
+
+[node name="Embers" type="GPUParticles3D" parent="Shots/Shot10/Props" unique_id=1250975111]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.2, -0.5)
+amount = 60
+lifetime = 3.5
+preprocess = 3.5
+visibility_aabb = AABB(-8, -2, -4, 16, 10, 8)
+process_material = SubResource("ParticleProcessMaterial_pphmp")
+draw_pass_1 = SubResource("QuadMesh_jaal0")
+
+[node name="Lights" type="Node3D" parent="Shots/Shot10" unique_id=1355509831]
+
+[node name="Shot11" type="Node3D" parent="Shots" unique_id=818368604]
+script = ExtResource("10_2wg25")
+duration = 2.0
+enemy_visible = true
+hero_keys = PackedStringArray("0:stance")
+hero_params = PackedStringArray("0:core=1,eye=1,squint=0", "0.5:squint=0", "0.8:squint=1")
+enemy_keys = PackedStringArray("0:scrapling_idle")
+enemy_params = PackedStringArray("0:eye=1,core=0.6")
+events = PackedStringArray("0:hero_swap:LowerArm_R:dark", "0:hero_swap:Hand_R:dark")
+dof_far = 1.4
+dof_far_transition = 2.5
+dof_amount = 0.16
+hide_fore_layer = true
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot11" unique_id=1582714577]
+transform = Transform3D(0.8061051, 0.16782811, 0.5674755, -0.1034372, 0.9841392, -0.14412072, -0.5826624, 0.057478376, 0.81067926, 1.95, 1.36, 1.05)
+fov = 34.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot11" unique_id=808629049]
+transform = Transform3D(0.8024681, 0.1778838, 0.56956327, -0.10316146, 0.98151577, -0.16119716, -0.58770967, 0.070598595, 0.8059858, 1.85, 1.38, 0.9)
+fov = 32.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot11" unique_id=211756725]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0, 0)
+
+[node name="EnemyA" type="Marker3D" parent="Shots/Shot11" unique_id=1220607767]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 3.7, 0, 0)
+
+[node name="Props" type="Node3D" parent="Shots/Shot11" unique_id=1933753896]
+
+[node name="Lights" type="Node3D" parent="Shots/Shot11" unique_id=206000767]
+
+[node name="Shot12" type="Node3D" parent="Shots" unique_id=1655108937]
+script = ExtResource("10_2wg25")
+duration = 1.7
+hero_ease = 0.5
+hero_move = Vector2(0, 0.45)
+enemy_visible = true
+hero_keys = PackedStringArray("0:stance", "0.22:punch")
+hero_params = PackedStringArray("0:core=1,eye=1,squint=1")
+enemy_keys = PackedStringArray("0:scrapling_swing")
+enemy_params = PackedStringArray("0:eye=1,core=0.6")
+events = PackedStringArray("0:hero_swap:LowerArm_R:dark", "0:hero_swap:Hand_R:dark", "0.45:shatter:enemy:1,0.5:4.5:0.3", "0.45:shake:0.25:0.5", "0.45:sparks:enemy:Chest")
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot12" unique_id=1912810187]
+transform = Transform3D(0.9814974, -0.1678934, -0.09205746, 0.17338309, 0.9833043, 0.055234477, 0.081246994, -0.0701737, 0.99422055, 2.95, 1.5, 2.7)
+fov = 50.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot12" unique_id=944227375]
+transform = Transform3D(0.98200876, -0.16877913, -0.0846903, 0.17342384, 0.98353547, 0.050814178, 0.07471955, -0.06458729, 0.9951108, 3.1, 1.5, 2.35)
+fov = 50.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot12" unique_id=1438417612]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0, 0)
+
+[node name="HeroB" type="Marker3D" parent="Shots/Shot12" unique_id=334772518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, -0.12, 0)
+
+[node name="EnemyA" type="Marker3D" parent="Shots/Shot12" unique_id=1583518946]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 3.7, 0, 0)
+
+[node name="Props" type="Node3D" parent="Shots/Shot12" unique_id=655007017]
+
+[node name="Embers" type="GPUParticles3D" parent="Shots/Shot12/Props" unique_id=2068227204]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.2, -0.5)
+amount = 50
+lifetime = 3.5
+preprocess = 3.5
+visibility_aabb = AABB(-8, -2, -4, 16, 10, 8)
+process_material = SubResource("ParticleProcessMaterial_t4s3f")
+draw_pass_1 = SubResource("QuadMesh_6j2tt")
+
+[node name="Lights" type="Node3D" parent="Shots/Shot12" unique_id=846426989]
+
+[node name="Shot13" type="Node3D" parent="Shots" unique_id=84402380]
+script = ExtResource("10_2wg25")
+duration = 3.2
+enemy_visible = true
+hero_keys = PackedStringArray("0:victory")
+hero_params = PackedStringArray("0:core=1,eye=1,squint=0.4")
+enemy_keys = PackedStringArray("0:scrapling_swing")
+enemy_params = PackedStringArray()
+events = PackedStringArray("0:hero_swap:LowerArm_R:dark", "0:hero_swap:Hand_R:dark", "-3.0:shatter:enemy:0.3,1:1.6")
+hide_nodes = PackedStringArray()
+
+[node name="CamA" type="Camera3D" parent="Shots/Shot13" unique_id=1011443560]
+transform = Transform3D(0.9814018, -0.009481706, -0.19173074, -0.06462385, 0.9241642, -0.37648952, 0.18076046, 0.38187784, 0.90636355, 2, 0.32, 2.6)
+fov = 56.0
+
+[node name="CamB" type="Camera3D" parent="Shots/Shot13" unique_id=1251586142]
+transform = Transform3D(0.9837491, 0.0061240457, -0.17944457, -0.06587357, 0.942036, -0.32898176, 0.16702853, 0.33545616, 0.92713034, 1.95, 0.4, 3.1)
+fov = 56.0
+
+[node name="HeroA" type="Marker3D" parent="Shots/Shot13" unique_id=1295948329]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.35, 0)
+
+[node name="HeroB" type="Marker3D" parent="Shots/Shot13" unique_id=330118260]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.5, 0)
+
+[node name="EnemyA" type="Marker3D" parent="Shots/Shot13" unique_id=1577382065]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 3.7, 0, 0)
+
+[node name="Props" type="Node3D" parent="Shots/Shot13" unique_id=1355741360]
+
+[node name="Embers" type="GPUParticles3D" parent="Shots/Shot13/Props" unique_id=218490185]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.2, -0.5)
+amount = 90
+lifetime = 3.5
+preprocess = 3.5
+visibility_aabb = AABB(-8, -2, -4, 16, 10, 8)
+process_material = SubResource("ParticleProcessMaterial_twixl")
+draw_pass_1 = SubResource("QuadMesh_50i81")
+
+[node name="SkyCard" type="MeshInstance3D" parent="Shots/Shot13/Props" unique_id=1865637417]
+transform = Transform3D(0.9812488, -0.069328636, -0.1798451, 3.1445133e-08, 0.93307173, -0.3596904, 0.19274522, 0.35294577, 0.9155755, 19.08529, 34.520584, -84.17967)
+material_override = SubResource("StandardMaterial3D_euoso")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_63g8u")
+
+[node name="Lights" type="Node3D" parent="Shots/Shot13" unique_id=855795309]

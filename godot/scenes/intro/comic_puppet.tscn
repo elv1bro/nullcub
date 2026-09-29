@@ -1,0 +1,138 @@
+[gd_scene format=3 uid="uid://comicpuppet01"]
+
+[ext_resource type="Script" path="res://scenes/intro/comic_puppet.gd" id="1_xqto5"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Torso.glb" id="2_u8cuo"]
+[ext_resource type="Texture2D" path="res://assets/ui/crown.png" id="3_drb6a"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Head.glb" id="4_crnas"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/UpperArm_L.glb" id="5_0lbrq"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/LowerArm_L.glb" id="6_b1qtt"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Hand_L.glb" id="7_a063v"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/UpperLeg_L.glb" id="8_mp0hw"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/LowerLeg_L.glb" id="9_jlbmg"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Foot_L.glb" id="10_n7te4"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/UpperArm_R.glb" id="11_u11lw"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/LowerArm_R.glb" id="12_rey7l"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Hand_R.glb" id="13_obmn7"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/UpperLeg_R.glb" id="14_li5kh"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/LowerLeg_R.glb" id="15_l4wk5"]
+[ext_resource type="PackedScene" path="res://assets/models/heroes/mannequin_v3/light/Foot_R.glb" id="16_wnalc"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hxa0h"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(1, 0.78, 0.35, 0)
+albedo_texture = ExtResource("3_drb6a")
+
+[sub_resource type="QuadMesh" id="QuadMesh_wvnap"]
+size = Vector2(0.075, 0.075)
+
+[sub_resource type="SphereMesh" id="SphereMesh_5babl"]
+radius = 0.0125
+height = 0.025
+radial_segments = 12
+rings = 6
+
+[sub_resource type="SphereMesh" id="SphereMesh_6e2km"]
+radius = 0.0125
+height = 0.025
+radial_segments = 12
+rings = 6
+
+[node name="ComicPuppet" type="Node3D" unique_id=1685777958]
+script = ExtResource("1_xqto5")
+
+[node name="Root" type="Node3D" parent="." unique_id=1057721050]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.91, 0)
+
+[node name="TorsoMesh" type="Node3D" parent="Root" unique_id=423312831 instance=ExtResource("2_u8cuo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26, 0)
+
+[node name="CoreGlow" type="OmniLight3D" parent="Root/TorsoMesh" unique_id=362633747]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0.2)
+visible = false
+light_color = Color(1, 0.7, 0.3, 1)
+light_energy = 0.0
+omni_range = 0.45
+omni_attenuation = 2.0
+
+[node name="Crown" type="MeshInstance3D" parent="Root/TorsoMesh" unique_id=1749099989]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0.118)
+material_override = SubResource("StandardMaterial3D_hxa0h")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_wvnap")
+
+[node name="Neck" type="Node3D" parent="Root" unique_id=1379240663]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.56, 0)
+
+[node name="HeadMesh" type="Node3D" parent="Root/Neck" unique_id=307690346 instance=ExtResource("4_crnas")]
+
+[node name="Eye_L" type="MeshInstance3D" parent="Root/Neck/HeadMesh" unique_id=1195184224]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.036, 0.195, 0.109)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_5babl")
+
+[node name="Eye_R" type="MeshInstance3D" parent="Root/Neck/HeadMesh" unique_id=1692850877]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.036, 0.195, 0.109)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_6e2km")
+
+[node name="Shoulder_L" type="Node3D" parent="Root" unique_id=1597485550]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.52, 0)
+
+[node name="UpperArm_LMesh" type="Node3D" parent="Root/Shoulder_L" unique_id=222623092 instance=ExtResource("5_0lbrq")]
+
+[node name="Elbow_L" type="Node3D" parent="Root/Shoulder_L" unique_id=1447554411]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+
+[node name="LowerArm_LMesh" type="Node3D" parent="Root/Shoulder_L/Elbow_L" unique_id=1188146065 instance=ExtResource("6_b1qtt")]
+
+[node name="Wrist_L" type="Node3D" parent="Root/Shoulder_L/Elbow_L" unique_id=2011197675]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27, 0)
+
+[node name="Hand_LMesh" type="Node3D" parent="Root/Shoulder_L/Elbow_L/Wrist_L" unique_id=1377406718 instance=ExtResource("7_a063v")]
+
+[node name="Hip_L" type="Node3D" parent="Root" unique_id=2076862882]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0, 0)
+
+[node name="UpperLeg_LMesh" type="Node3D" parent="Root/Hip_L" unique_id=380564139 instance=ExtResource("8_mp0hw")]
+
+[node name="Knee_L" type="Node3D" parent="Root/Hip_L" unique_id=1509093197]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
+
+[node name="LowerLeg_LMesh" type="Node3D" parent="Root/Hip_L/Knee_L" unique_id=2134892117 instance=ExtResource("9_jlbmg")]
+
+[node name="Ankle_L" type="Node3D" parent="Root/Hip_L/Knee_L" unique_id=887897889]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+
+[node name="Foot_LMesh" type="Node3D" parent="Root/Hip_L/Knee_L/Ankle_L" unique_id=2098134324 instance=ExtResource("10_n7te4")]
+
+[node name="Shoulder_R" type="Node3D" parent="Root" unique_id=94917608]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 0.52, 0)
+
+[node name="UpperArm_RMesh" type="Node3D" parent="Root/Shoulder_R" unique_id=935761204 instance=ExtResource("11_u11lw")]
+
+[node name="Elbow_R" type="Node3D" parent="Root/Shoulder_R" unique_id=343123001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+
+[node name="LowerArm_RMesh" type="Node3D" parent="Root/Shoulder_R/Elbow_R" unique_id=1441750184 instance=ExtResource("12_rey7l")]
+
+[node name="Wrist_R" type="Node3D" parent="Root/Shoulder_R/Elbow_R" unique_id=1135142810]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27, 0)
+
+[node name="Hand_RMesh" type="Node3D" parent="Root/Shoulder_R/Elbow_R/Wrist_R" unique_id=1376009696 instance=ExtResource("13_obmn7")]
+
+[node name="Hip_R" type="Node3D" parent="Root" unique_id=1073252111]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 0, 0)
+
+[node name="UpperLeg_RMesh" type="Node3D" parent="Root/Hip_R" unique_id=667429288 instance=ExtResource("14_li5kh")]
+
+[node name="Knee_R" type="Node3D" parent="Root/Hip_R" unique_id=422218070]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
+
+[node name="LowerLeg_RMesh" type="Node3D" parent="Root/Hip_R/Knee_R" unique_id=1842433773 instance=ExtResource("15_l4wk5")]
+
+[node name="Ankle_R" type="Node3D" parent="Root/Hip_R/Knee_R" unique_id=1467874639]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+
+[node name="Foot_RMesh" type="Node3D" parent="Root/Hip_R/Knee_R/Ankle_R" unique_id=1088223088 instance=ExtResource("16_wnalc")]

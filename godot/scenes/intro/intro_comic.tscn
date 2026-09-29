@@ -1,0 +1,631 @@
+[gd_scene format=3 uid="uid://w01h7t4dxaii"]
+
+[ext_resource type="Script" path="res://scenes/intro/intro_comic.gd" id="1_bxv7m"]
+[ext_resource type="Script" path="res://scenes/intro/comic_panel.gd" id="2_js3ln"]
+[ext_resource type="Script" path="res://scenes/intro/comic_letter.gd" id="3_rm6bm"]
+[ext_resource type="Script" path="res://scenes/intro/comic_title.gd" id="4_rcisq"]
+
+[sub_resource type="SystemFont" id="SystemFont_8dhpt"]
+font_names = PackedStringArray("Menlo", "SF Mono", "Consolas", "Courier New")
+font_weight = 700
+
+[sub_resource type="SystemFont" id="SystemFont_ka2t2"]
+font_names = PackedStringArray("Menlo", "Consolas", "Courier New")
+font_weight = 700
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kdtxm"]
+bg_color = Color(1, 1, 1, 0.08)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wpg1o"]
+bg_color = Color(1, 0.72, 0.28, 1)
+
+[node name="IntroComic" type="Node2D" unique_id=192595792]
+script = ExtResource("1_bxv7m")
+
+[node name="Bg" type="Polygon2D" parent="." unique_id=1374323513]
+color = Color(0.045, 0.037, 0.033, 1)
+polygon = PackedVector2Array(-3000, -3000, 6840, -3000, 6840, 5160, -3000, 5160)
+
+[node name="Page" type="Node2D" parent="." unique_id=817222327]
+
+[node name="Panel01" type="Node2D" parent="Page" unique_id=2014841960]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(64, 64, 1144, 64, 1144, 744, 64, 744)
+hold = 0.6
+sounds = PackedStringArray("0.0:rain")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel01" unique_id=310070872]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(64, 64, 1144, 64, 1144, 744, 64, 744)
+
+[node name="Clip" type="Node2D" parent="Page/Panel01/Art" unique_id=27454147]
+
+[node name="Frame" type="Line2D" parent="Page/Panel01" unique_id=468941450]
+points = PackedVector2Array(64, 64, 1144, 64, 1144, 744, 64, 744)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel01" unique_id=1737770046]
+
+[node name="Caption1" type="Node2D" parent="Page/Panel01/Letters" unique_id=1231764506]
+position = Vector2(323.19998, 132)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "SECTOR 0 // THE SCRAP"
+at = 0.5
+frac = Vector2(0.24, 0.1)
+size = 34.0
+fill = Color(1, 0.7, 0.28, 1)
+
+[node name="Caption2" type="Node2D" parent="Page/Panel01/Letters" unique_id=978669079]
+position = Vector2(841.60004, 676)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "DISPOSAL CYCLE: COMPLETE"
+at = 1.9
+frac = Vector2(0.72, 0.9)
+size = 34.0
+fill = Color(1, 0.7, 0.28, 1)
+
+[node name="Panel02" type="Node2D" parent="Page" unique_id=1302740260]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(1170, 64, 1930, 64, 1930, 744, 1170, 744)
+shot = 2
+hold = 0.7
+sounds = PackedStringArray("0.7:tk")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel02" unique_id=1784219466]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(1170, 64, 1930, 64, 1930, 744, 1170, 744)
+
+[node name="Clip" type="Node2D" parent="Page/Panel02/Art" unique_id=1852026473]
+
+[node name="Frame" type="Line2D" parent="Page/Panel02" unique_id=1583052808]
+points = PackedVector2Array(1170, 64, 1930, 64, 1930, 744, 1170, 744)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel02" unique_id=1542521110]
+
+[node name="Small1" type="Node2D" parent="Page/Panel02/Letters" unique_id=1534377798]
+position = Vector2(1670, 334)
+script = ExtResource("3_rm6bm")
+kind = "small"
+text = "tk... tk..."
+at = 0.7
+anchor = "hero:Chest"
+offset = Vector2(120, -70)
+angle_deg = -10.0
+size = 58.0
+fill = Color(1, 0.85, 0.5, 1)
+
+[node name="Caption2" type="Node2D" parent="Page/Panel02/Letters" unique_id=434310616]
+position = Vector2(1550, 132)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "CORE SIGNAL DETECTED"
+at = 1.1
+frac = Vector2(0.5, 0.1)
+size = 32.0
+fill = Color(1, 0.7, 0.28, 1)
+
+[node name="Caption3" type="Node2D" parent="Page/Panel02/Letters" unique_id=2059874869]
+position = Vector2(1550, 676)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "UNKNOWN CORE."
+at = 2.2
+frac = Vector2(0.5, 0.9)
+size = 38.0
+fill = Color(1, 0.36, 0.2, 1)
+
+[node name="Panel03" type="Node2D" parent="Page" unique_id=1478814531]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(1956, 64, 2756, 64, 2756, 744, 1956, 744)
+shot = 3
+impact_at = 0.3
+impact_strength = 10.0
+sounds = PackedStringArray("0.3:stab")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel03" unique_id=1034626063]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(1956, 64, 2756, 64, 2756, 744, 1956, 744)
+
+[node name="Clip" type="Node2D" parent="Page/Panel03/Art" unique_id=545967879]
+
+[node name="Frame" type="Line2D" parent="Page/Panel03" unique_id=1901578659]
+points = PackedVector2Array(1956, 64, 2756, 64, 2756, 744, 1956, 744)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel03" unique_id=1456729428]
+
+[node name="Emanata1" type="Node2D" parent="Page/Panel03/Letters" unique_id=695221616]
+position = Vector2(2356, 404)
+script = ExtResource("3_rm6bm")
+kind = "emanata"
+at = 0.3
+anchor = "hero:Head"
+radius = 105.0
+count = 11
+
+[node name="Sfx2" type="Node2D" parent="Page/Panel03/Letters" unique_id=1735881999]
+position = Vector2(2531, 299)
+script = ExtResource("3_rm6bm")
+text = "!"
+at = 0.32
+anchor = "hero:Head"
+offset = Vector2(175, -105)
+angle_deg = 8.0
+size = 190.0
+
+[node name="Panel04" type="Node2D" parent="Page" unique_id=239091034]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(2782, 64, 3776, 64, 3776, 744, 2782, 744)
+shot = 4
+hold = 0.8
+sounds = PackedStringArray()
+
+[node name="Art" type="Polygon2D" parent="Page/Panel04" unique_id=1895210301]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(2782, 64, 3776, 64, 3776, 744, 2782, 744)
+
+[node name="Clip" type="Node2D" parent="Page/Panel04/Art" unique_id=1987018430]
+
+[node name="Frame" type="Line2D" parent="Page/Panel04" unique_id=766981195]
+points = PackedVector2Array(2782, 64, 3776, 64, 3776, 744, 2782, 744)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel04" unique_id=1546320297]
+
+[node name="Caption1" type="Node2D" parent="Page/Panel04/Letters" unique_id=1175858423]
+position = Vector2(3279, 138.8)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "RETURN TO THE WORKSHOP."
+at = 0.9
+frac = Vector2(0.5, 0.11)
+size = 36.0
+fill = Color(1, 0.7, 0.28, 1)
+
+[node name="Panel05" type="Node2D" parent="Page" unique_id=1750322821]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(64, 770, 914, 770, 854, 1390, 64, 1390)
+shot = 5
+row = 1
+impact_at = 0.6
+impact_strength = 22.0
+sounds = PackedStringArray("0.6:bonk")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel05" unique_id=1630144777]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(64, 770, 914, 770, 854, 1390, 64, 1390)
+
+[node name="Clip" type="Node2D" parent="Page/Panel05/Art" unique_id=1339402305]
+
+[node name="Frame" type="Line2D" parent="Page/Panel05" unique_id=440462018]
+points = PackedVector2Array(64, 770, 914, 770, 854, 1390, 64, 1390)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel05" unique_id=1481726429]
+
+[node name="Burst1" type="Node2D" parent="Page/Panel05/Letters" unique_id=1671058767]
+position = Vector2(289, 1030)
+script = ExtResource("3_rm6bm")
+kind = "burst"
+at = 0.6
+anchor = "prop:Barrel"
+offset = Vector2(-200, -50)
+fill = Color(1, 0.95, 0.75, 1)
+radius = 150.0
+count = 9
+
+[node name="Sfx2" type="Node2D" parent="Page/Panel05/Letters" unique_id=1459684944]
+position = Vector2(289, 1030)
+script = ExtResource("3_rm6bm")
+text = "BONK!"
+at = 0.6
+anchor = "prop:Barrel"
+offset = Vector2(-200, -50)
+angle_deg = -14.0
+size = 150.0
+
+[node name="Stars3" type="Node2D" parent="Page/Panel05/Letters" unique_id=2124720361]
+position = Vector2(489, 1040)
+script = ExtResource("3_rm6bm")
+kind = "stars"
+at = 0.8
+anchor = "prop:Barrel"
+offset = Vector2(0, -40)
+count = 4
+
+[node name="Panel06" type="Node2D" parent="Page" unique_id=887186240]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(940, 770, 1520, 770, 1580, 1390, 880, 1390)
+shot = 6
+row = 1
+sounds = PackedStringArray("1.3:scrape")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel06" unique_id=1593283886]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(940, 770, 1520, 770, 1580, 1390, 880, 1390)
+
+[node name="Clip" type="Node2D" parent="Page/Panel06/Art" unique_id=1171606851]
+
+[node name="Frame" type="Line2D" parent="Page/Panel06" unique_id=1622984210]
+points = PackedVector2Array(940, 770, 1520, 770, 1580, 1390, 880, 1390)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel06" unique_id=249200459]
+
+[node name="Small1" type="Node2D" parent="Page/Panel06/Letters" unique_id=1983158784]
+position = Vector2(1340, 990)
+script = ExtResource("3_rm6bm")
+kind = "small"
+text = "shhk!"
+at = 1.3
+anchor = "hero:Hand_L"
+offset = Vector2(110, -90)
+angle_deg = -8.0
+size = 64.0
+fill = Color(1, 0.9, 0.7, 1)
+
+[node name="Panel07" type="Node2D" parent="Page" unique_id=495159176]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(1546, 770, 2246, 770, 2186, 1390, 1606, 1390)
+shot = 7
+row = 1
+sounds = PackedStringArray()
+
+[node name="Art" type="Polygon2D" parent="Page/Panel07" unique_id=1251002262]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(1546, 770, 2246, 770, 2186, 1390, 1606, 1390)
+
+[node name="Clip" type="Node2D" parent="Page/Panel07/Art" unique_id=1607799599]
+
+[node name="Frame" type="Line2D" parent="Page/Panel07" unique_id=49888208]
+points = PackedVector2Array(1546, 770, 2246, 770, 2186, 1390, 1606, 1390)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel07" unique_id=103042733]
+
+[node name="Panel08" type="Node2D" parent="Page" unique_id=1868189707]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(2272, 770, 2912, 770, 2972, 1390, 2212, 1390)
+shot = 8
+hold = 0.6
+row = 1
+impact_at = 0.85
+impact_strength = 12.0
+sounds = PackedStringArray("0.85:click")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel08" unique_id=783186811]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(2272, 770, 2912, 770, 2972, 1390, 2212, 1390)
+
+[node name="Clip" type="Node2D" parent="Page/Panel08/Art" unique_id=256725833]
+
+[node name="Frame" type="Line2D" parent="Page/Panel08" unique_id=201564662]
+points = PackedVector2Array(2272, 770, 2912, 770, 2972, 1390, 2212, 1390)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel08" unique_id=309156505]
+
+[node name="Burst1" type="Node2D" parent="Page/Panel08/Letters" unique_id=1962813150]
+position = Vector2(2592, 1080)
+script = ExtResource("3_rm6bm")
+kind = "burst"
+at = 0.85
+anchor = "hero:Elbow_R"
+fill = Color(1, 0.9, 0.5, 1)
+radius = 85.0
+count = 8
+
+[node name="Sfx2" type="Node2D" parent="Page/Panel08/Letters" unique_id=781756420]
+position = Vector2(2532, 910)
+script = ExtResource("3_rm6bm")
+text = "CLICK!"
+at = 0.85
+anchor = "hero:Elbow_R"
+offset = Vector2(-60, -170)
+angle_deg = -10.0
+fill = Color(0.86, 0.97, 1, 1)
+outline2 = Color(0.15, 0.45, 0.85, 1)
+
+[node name="Caption3" type="Node2D" parent="Page/Panel08/Letters" unique_id=962990144]
+position = Vector2(2592, 1328)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "COMPONENT ACCEPTED."
+at = 1.45
+frac = Vector2(0.5, 0.9)
+size = 30.0
+fill = Color(1, 0.7, 0.28, 1)
+
+[node name="Panel09" type="Node2D" parent="Page" unique_id=1319304677]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(2938, 770, 3776, 770, 3776, 1390, 2998, 1390)
+shot = 9
+hold = 0.5
+row = 1
+sounds = PackedStringArray("0.05:whoosh")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel09" unique_id=1879186585]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(2938, 770, 3776, 770, 3776, 1390, 2998, 1390)
+
+[node name="Clip" type="Node2D" parent="Page/Panel09/Art" unique_id=554147549]
+
+[node name="Frame" type="Line2D" parent="Page/Panel09" unique_id=612517861]
+points = PackedVector2Array(2938, 770, 3776, 770, 3776, 1390, 2998, 1390)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel09" unique_id=1329439741]
+
+[node name="Caption1" type="Node2D" parent="Page/Panel09/Letters" unique_id=126631465]
+position = Vector2(3273.2, 832)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "NEW CONTESTANT DETECTED"
+at = 0.8
+frac = Vector2(0.4, 0.1)
+size = 32.0
+fill = Color(1, 0.7, 0.28, 1)
+
+[node name="Panel10" type="Node2D" parent="Page" unique_id=2122173589]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(64, 1416, 1004, 1416, 1004, 2096, 64, 2096)
+shot = 10
+hold = 0.6
+row = 2
+impact_at = 0.55
+impact_strength = 20.0
+sounds = PackedStringArray("0.55:clank")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel10" unique_id=1768436368]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(64, 1416, 1004, 1416, 1004, 2096, 64, 2096)
+
+[node name="Clip" type="Node2D" parent="Page/Panel10/Art" unique_id=2041182378]
+
+[node name="Frame" type="Line2D" parent="Page/Panel10" unique_id=554753865]
+points = PackedVector2Array(64, 1416, 1004, 1416, 1004, 2096, 64, 2096)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel10" unique_id=2038351132]
+
+[node name="Sfx1" type="Node2D" parent="Page/Panel10/Letters" unique_id=547021202]
+position = Vector2(614, 1726)
+script = ExtResource("3_rm6bm")
+text = "CLANK!"
+at = 0.55
+anchor = "enemy:Feet"
+offset = Vector2(80, -30)
+angle_deg = 10.0
+fill = Color(0.92, 0.9, 0.84, 1)
+outline2 = Color(0.5, 0.42, 0.34, 1)
+
+[node name="Caption2" type="Node2D" parent="Page/Panel10/Letters" unique_id=672595881]
+position = Vector2(534, 1484)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "BOUT 001 :: FIGHT!"
+at = 1.3
+frac = Vector2(0.5, 0.1)
+size = 34.0
+fill = Color(1, 0.7, 0.28, 1)
+
+[node name="Panel11" type="Node2D" parent="Page" unique_id=1954428610]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(1030, 1416, 1740, 1416, 1840, 2096, 1030, 2096)
+shot = 11
+row = 2
+sounds = PackedStringArray()
+
+[node name="Art" type="Polygon2D" parent="Page/Panel11" unique_id=71199949]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(1030, 1416, 1740, 1416, 1840, 2096, 1030, 2096)
+
+[node name="Clip" type="Node2D" parent="Page/Panel11/Art" unique_id=875212093]
+
+[node name="Focus1" type="Node2D" parent="Page/Panel11/Art/Clip" unique_id=1656297189]
+position = Vector2(1435, 1756)
+script = ExtResource("3_rm6bm")
+kind = "focus"
+anchor = "hero:Head"
+radius = 250.0
+count = 70
+
+[node name="Frame" type="Line2D" parent="Page/Panel11" unique_id=683413867]
+points = PackedVector2Array(1030, 1416, 1740, 1416, 1840, 2096, 1030, 2096)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel11" unique_id=1944750279]
+
+[node name="Panel12" type="Node2D" parent="Page" unique_id=258112348]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(1766, 1416, 2826, 1416, 2926, 2096, 1866, 2096)
+shot = 12
+row = 2
+flash_at = 0.45
+impact_at = 0.45
+impact_strength = 42.0
+sounds = PackedStringArray("0.45:bam:-8", "0.5:shatter:-6")
+
+[node name="Art" type="Polygon2D" parent="Page/Panel12" unique_id=23348064]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(1766, 1416, 2826, 1416, 2926, 2096, 1866, 2096)
+
+[node name="Clip" type="Node2D" parent="Page/Panel12/Art" unique_id=239143070]
+
+[node name="Speed1" type="Node2D" parent="Page/Panel12/Art/Clip" unique_id=2105545781]
+position = Vector2(2346, 1756)
+script = ExtResource("3_rm6bm")
+kind = "speed"
+until = 0.45
+fill = Color(1, 1, 1, 1)
+count = 42
+
+[node name="Focus2" type="Node2D" parent="Page/Panel12/Art/Clip" unique_id=1013014671]
+position = Vector2(2346, 1756)
+script = ExtResource("3_rm6bm")
+kind = "focus"
+at = 0.45
+anchor = "hero:Hand_R"
+radius = 190.0
+count = 80
+
+[node name="Frame" type="Line2D" parent="Page/Panel12" unique_id=392685008]
+points = PackedVector2Array(1766, 1416, 2826, 1416, 2926, 2096, 1866, 2096)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel12" unique_id=1455485249]
+
+[node name="Burst3" type="Node2D" parent="Page/Panel12/Letters" unique_id=1737412205]
+position = Vector2(2386, 1746)
+script = ExtResource("3_rm6bm")
+kind = "burst"
+at = 0.45
+anchor = "hero:Hand_R"
+offset = Vector2(40, -10)
+fill = Color(1, 0.95, 0.7, 1)
+count = 10
+
+[node name="Sfx4" type="Node2D" parent="Page/Panel12/Letters" unique_id=1804327495]
+position = Vector2(2508.4, 1552)
+script = ExtResource("3_rm6bm")
+text = "BAM!"
+at = 0.45
+frac = Vector2(0.64, 0.2)
+angle_deg = -8.0
+size = 210.0
+
+[node name="Panel13" type="Node2D" parent="Page" unique_id=276655901]
+script = ExtResource("2_js3ln")
+polygon = PackedVector2Array(2852, 1416, 3776, 1416, 3776, 2096, 2952, 2096)
+shot = 13
+hold = 0.9
+row = 2
+sounds = PackedStringArray()
+
+[node name="Art" type="Polygon2D" parent="Page/Panel13" unique_id=1202443214]
+color = Color(0.22, 0.19, 0.17, 1)
+polygon = PackedVector2Array(2852, 1416, 3776, 1416, 3776, 2096, 2952, 2096)
+
+[node name="Clip" type="Node2D" parent="Page/Panel13/Art" unique_id=1724884855]
+
+[node name="Frame" type="Line2D" parent="Page/Panel13" unique_id=83589592]
+points = PackedVector2Array(2852, 1416, 3776, 1416, 3776, 2096, 2952, 2096)
+closed = true
+width = 7.0
+default_color = Color(0.03, 0.025, 0.02, 1)
+
+[node name="Letters" type="Node2D" parent="Page/Panel13" unique_id=1848426967]
+
+[node name="Caption1" type="Node2D" parent="Page/Panel13/Letters" unique_id=1284902891]
+position = Vector2(3314, 1484)
+script = ExtResource("3_rm6bm")
+kind = "caption"
+text = "WINNER: UNKNOWN CORE"
+at = 0.9
+frac = Vector2(0.5, 0.1)
+size = 34.0
+fill = Color(1, 0.7, 0.28, 1)
+
+[node name="Title" type="Node2D" parent="." unique_id=1451804230]
+visible = false
+position = Vector2(1920, 1080)
+script = ExtResource("4_rcisq")
+
+[node name="Camera" type="Camera2D" parent="." unique_id=1022030248]
+position = Vector2(1920, 1080)
+zoom = Vector2(0.5, 0.5)
+
+[node name="StageViewport" type="SubViewport" parent="." unique_id=1974572702]
+own_world_3d = true
+msaa_3d = 1
+size = Vector2i(1280, 720)
+render_target_update_mode = 0
+
+[node name="Hud" type="CanvasLayer" parent="." unique_id=1277178560]
+layer = 10
+
+[node name="Flash" type="ColorRect" parent="Hud" unique_id=2123577806]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 0.97, 0.9, 0)
+
+[node name="Fade" type="ColorRect" parent="Hud" unique_id=1679707226]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="ColdOpen" type="Label" parent="Hud" unique_id=668281432]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 200.0
+offset_top = 330.0
+offset_right = -160.0
+theme_override_constants/line_spacing = 14
+theme_override_fonts/font = SubResource("SystemFont_8dhpt")
+theme_override_font_sizes/font_size = 38
+theme_override_colors/font_color = Color(1, 0.7, 0.28, 1)
+
+[node name="Skip" type="Control" parent="Hud" unique_id=2037257868]
+layout_mode = 3
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -640.0
+offset_top = -86.0
+offset_right = -36.0
+offset_bottom = -30.0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Hud/Skip" unique_id=2093075652]
+layout_mode = 0
+anchor_right = 1.0
+offset_bottom = 30.0
+theme_override_fonts/font = SubResource("SystemFont_ka2t2")
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(1, 0.8, 0.5, 0.75)
+text = "HOLD SPACE / CLICK TO SKIP   ·   TAP — NEXT"
+horizontal_alignment = 2
+
+[node name="Bar" type="ProgressBar" parent="Hud/Skip" unique_id=664131056]
+layout_mode = 0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -8.0
+theme_override_styles/background = SubResource("StyleBoxFlat_kdtxm")
+theme_override_styles/fill = SubResource("StyleBoxFlat_wpg1o")
+show_percentage = false
