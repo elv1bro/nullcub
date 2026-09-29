@@ -1,5 +1,5 @@
 ## Разборщик (Scrapling, LORE.md: «разбирал сломанных кукол → откручивает у тебя деталь и удирает с ней, от удара роняет»).
-## Мелкая лёгкая кукла из хлама (data/enemies/scrapling.tres: бочонок-ядро, испуганная голова, короткие ноги, 22 кг, max_hp 40),
+## Мелкая лёгкая кукла из хлама (data/enemies/scrapling.tres: бочонок-ядро, испуганная голова, короткие ноги, 22 кг, max_hp 25 — после «агрессии» 29.09 был 40),
 ## две руки-хваталки — по ArmAssist на каждую кисть (узлы ArmL / ArmR сцены: цель руки — set_target_override, хват — пружина
 ## ArmAssist.grab, та же, что у игрока). Программа атакует БИЛД игрока, а не HP:
 ##   choose    — что украсть у ближайшего игрока (victim): 1) деталь (Doll.detach_part, хук сессии куклы) — кисть, стопа, предплечье,
@@ -14,10 +14,11 @@
 ##   unscrew   — unscrew_s (1.0 с) висит на детали, дёргая её (трещотка: звук, вспышка и щепки в точке хвата раз в 0.25 с, надпись
 ##               UNSCREW!); удержался — detach_part(деталь, себя), деталь в руке → flee. Сорвался (игрок вырвался тягой: пружина
 ##               ArmAssist рвётся при растяжении > 0.45 м) — retreat;
-##   flee      — «ЦАП!»: отскок от жертвы yank_speed (Doll.apply_recoil), YANK_GHOST_S без столкновений с ней, ввод без сглаживания,
-##               рывок (request_dash) — и бегство вбок и вверх flee_s; с оружием потом бьёт им же (nibble), с деталью — keepaway
-##               (держится в keepaway_m от игроков, подлетели ближе 3.5 м — снова flee);
-##   nibble    — щипок, если красть нечего: подход на nibble_standoff, телеграф «!», бросок не быстрее dart_speed, отход;
+##   flee      — «ЦАП!»: отскок от жертвы yank_speed (Doll.apply_recoil), YANK_GHOST_S без столкновений с ней, ввод без сглаживания
+##               и короткое бегство вбок и вверх flee_s (1.2 с) — потом снова в драку: украденное оружие отбрасывает прочь от
+##               игрока (toss_weapon), деталь носит с собой (ударил вора — уронил);
+##   nibble    — щипок, если красть нечего или к цели кражи не подобрался за approach_timeout_s: подход на nibble_standoff, телеграф
+##               «!», бросок не быстрее dart_speed, короткий отход retreat_s (0.45 с) — и снова;
 ##   любой удар ≥ drop_min_damage (и стан, и KO) — роняет добычу (ArmAssist.release, WeaponPickup.drop_all) → stagger.
 ## Лимит разборки (чтобы не разобрать игрока за 5 с): одна деталь за захват; кулдаун detach_cooldown_s (12 с) на жертву — общий
 ## для всех Разборщиков («Башня откручивает одну деталь за раз»); не больше max_detach_per_victim (3) деталей с одной куклы; никогда —
@@ -47,16 +48,26 @@ const YANK_GHOST_S := 0.4                 # после кражи вор и же
 @export var unscrew_s := 1.0
 @export var detach_cooldown_s := 12.0
 @export var max_detach_per_victim := 3
-@export var flee_s := 5.0
-@export var keepaway_m := 6.0
-@export var nibble_standoff := 2.2
+## Бегство с добычей — коротко (отзыв автора 29.09: «пытаются убежать, будто не видят»): flee_s, без рывка, потом снова в драку
+## (оружие отброшено — toss_weapon, деталь носит с собой: ударил вора — уронил). Раньше: 5 с с рывком и keepaway в 6 м с
+## деталью — вор висел на краю арены до конца волны.
+@export var flee_s := 1.2
+@export var flee_dash := false
+## Украденное оружие после бегства вор отбрасывает прочь от игрока (toss_speed) и возвращается драться голыми руками: молот 6 кг
+## в руке Разборщика на щипке 5.5 м/с — 15–20 HP (бот-игрок с ним умирал на волне 1–2); деталь — носит с собой (урона почти нет).
+@export var toss_weapon := true
+@export var toss_speed := 4.0
+## Не вышло за approach_timeout_s подобраться к цели кражи (или она ушла) — щипок вместо вечной погони за деталью.
+@export var approach_timeout_s := 3.0
+@export var nibble_standoff := 1.5
 @export var nibble_dart_s := 0.55
 ## Щипок — не таран: скорость броска ограничена (м/с). Полной тягой торс-бочонок влетал на 7–8 м/с (≈ 10 HP за щипок, два
 ## Разборщика снимали боту-игроку 25–50 HP за волну 1 — вор становился бойцом); с 4.5 м/с щипок ≈ 3–6 HP.
-@export var dart_speed := 4.5
-@export var retreat_s := 0.8
+@export var dart_speed := 4.8
+@export var retreat_s := 0.6
 @export var drop_min_damage := 1.0
-@export var loose_weapon_radius := 6.0
+## Лежащее оружие крадёт, только если оно у самой жертвы (не бегает за ним по арене).
+@export var loose_weapon_radius := 2.5
 
 ## Что сейчас добывает: "part" | "weapon" | "nibble"; цель кражи (тело детали или оружие) и имя детали у жертвы.
 var mode := ""
@@ -334,7 +345,7 @@ func _on_damaged(amount: float, attacker: Node, _part: String, _pos: Vector3, _k
 
 func _think(_delta: float) -> void:
 	var me := my_pos()
-	if loot != null and not holding_loot() and state in ["flee", "keepaway", "nibble", "dart"] and loot_kind != "":
+	if loot != null and not holding_loot() and state in ["flee", "approach", "telegraph", "dart", "retreat"] and loot_kind != "":
 		loot = null   # добычу отобрали/сорвалась
 		loot_kind = ""
 		go("choose")
@@ -351,11 +362,8 @@ func _think(_delta: float) -> void:
 				want = steer(me, 0.3)
 				return
 			if holding_loot():
-				if loot_kind == "part":
-					go("keepaway")
-				else:
-					mode = "nibble"   # своим же оружием — по хозяину
-					go("approach")
+				mode = "nibble"   # с добычей в руке — снова в драку (оружием — по хозяину, деталь — носит, ударят — уронит)
+				go("approach")
 				return
 			_pick_goal()
 			go("approach")
@@ -367,8 +375,11 @@ func _think(_delta: float) -> void:
 			if mode == "nibble":
 				_nibble_approach(me)
 				return
-			if not _goal_valid() or state_t > 8.0:
+			if not _goal_valid():
 				go("choose")
+				return
+			if state_t > approach_timeout_s:
+				mode = "nibble"   # не подобрался к детали/оружию — бьёт, а не кружит
 				return
 			var gp := _goal_point()
 			var side := signf(me.x - gp.x) if absf(me.x - gp.x) > 0.1 else 1.0
@@ -388,6 +399,7 @@ func _think(_delta: float) -> void:
 			if state_t >= telegraph_s:
 				telegraph_durations.append(snappedf(_time - _telegraph_t0, 0.001))
 				_arms_up(false)
+				note_attack()
 				if mode == "nibble":
 					go("dart")
 				else:
@@ -454,27 +466,13 @@ func _think(_delta: float) -> void:
 			if me.y < 1.6:
 				# с пола — сперва вверх (по полу бегство упирается в тележки и ящики Свалки)
 				want = Vector2(signf(fg.x - me.x) * 0.55, 0.85)
-			if state_t < 1.2:
+			if flee_dash and state_t < 1.2:
 				dash()   # запрос держится, пока ввод не развернётся от жертвы (EnemyBrain._tick_dash) и рывок не перезарядится
 			if state_t >= flee_s:
-				if loot_kind == "part":
-					go("keepaway")
-				else:
-					mode = "nibble"
-					go("approach")
-		"keepaway":
-			set_alert(0.0)
-			var th := _threat_pos()
-			var away := me - th
-			var d := away.length()
-			if d < 3.5:
-				_start_flee()
-				return
-			var goal := me
-			if d < keepaway_m:
-				goal = me + away.normalized() * (keepaway_m - d + 0.5)
-			goal.y = clampf(maxf(goal.y, th.y + 1.5), 1.5, arena_bounds().end.y - 2.0)
-			want = steer(goal, 0.7)
+				if loot_kind == "weapon" and toss_weapon:
+					_toss_weapon(me)
+				mode = "nibble"
+				go("approach")
 		"dart":
 			set_alert(0.7)
 			var tp := predicted()
@@ -495,7 +493,7 @@ func _think(_delta: float) -> void:
 
 
 func _separation_weight() -> float:
-	return 0.3 if state in ["lunge", "unscrew", "dart"] else 1.0
+	return 0.3 if state in ["lunge", "unscrew", "dart"] or near_target(3.0) else 1.0
 
 
 func _nibble_approach(me: Vector2) -> void:
@@ -504,7 +502,7 @@ func _nibble_approach(me: Vector2) -> void:
 	var stand := tp + Vector2(side * nibble_standoff, 0.2)
 	stand.y = maxf(stand.y, STAND_MIN_Y)
 	want = steer(stand, approach_input)
-	if me.distance_to(stand) < 0.8 and state_t > 0.3:
+	if (me.distance_to(stand) < 0.9 or me.distance_to(tp) < nibble_standoff + 0.6) and state_t > 0.2:
 		_start_telegraph("!")
 
 
@@ -513,6 +511,22 @@ func _start_telegraph(text: String) -> void:
 	go("telegraph")
 	_arms_up(true)
 	telegraph(text, telegraph_s + 0.2, "warn_grab", Color(1.0, 0.42, 0.2) if text != "MINE!" else Color(1.0, 0.8, 0.25))
+
+
+## Отбросить украденное оружие в сторону от ближайшего игрока (вверх-вбок): лежит на арене — его можно забрать обратно.
+func _toss_weapon(me: Vector2) -> void:
+	var w := loot as Weapon
+	var wp := _wp()
+	if w == null or not is_instance_valid(w) or wp == null:
+		return
+	wp.drop_all()
+	var away := me - _threat_pos()
+	away = away.normalized() if away.length() > 0.01 else Vector2.RIGHT
+	w.linear_velocity = Vector3(away.x, 0.0, 0.0) * toss_speed + Vector3(0.0, toss_speed * 0.5, 0.0)
+	w.angular_velocity = Vector3(0.0, 0.0, 6.0 * signf(away.x))
+	loot = null
+	loot_kind = ""
+	counters["toss"] = int(counters.get("toss", 0)) + 1
 
 
 func _steal_weapon(w: Weapon, hand: String) -> bool:
@@ -572,7 +586,8 @@ func _start_flee() -> void:
 		doll.apply_recoil(Vector3(to.x, to.y, 0.0).normalized(), yank_speed, 0.0)
 	snap_input(0.25)
 	_ghost_from(victim if victim != null else _nearest_player(), YANK_GHOST_S)
-	dash()
+	if flee_dash:
+		dash()
 
 
 ## На миг кражи вор и жертва не сталкиваются (исключения коллизий на seconds): в момент «ЦАП!» кисть вора внутри кисти жертвы,

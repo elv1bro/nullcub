@@ -123,7 +123,11 @@ func _pull() -> void:
 			continue
 		var fall := 1.0 if r <= full_radius else smoothstep(pull_radius, full_radius, r)
 		var near := clampf(r / near_radius, NEAR_MIN, 1.0)
-		var f := d / r * minf(accel * m_iron, force_max) * fall * near * _power
+		# PropHeft (29.09): средние пропсы весят больше — gravity_scale 2.5; сила масштабируется так же, чтобы магнит тянул железо
+		# «того же веса» как задумано (связка труб / бочка 40 кг поднимается), а не упирался в свой потолок force_max.
+		# Куклы (gravity_scale 1) и якоря PropHeft (заморожены, в bodies_in не попадают) не меняются.
+		var g_scale := maxf(1.0, rb.gravity_scale)
+		var f := d / r * minf(accel * m_iron, force_max) * g_scale * fall * near * _power
 		var rel := rb.linear_velocity - head_v
 		rel.z = 0.0
 		f -= rel * damp * minf(rb.mass, m_iron * 2.0) * fall * _power

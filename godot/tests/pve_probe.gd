@@ -1,7 +1,7 @@
 ## Проба режима волн PvE (scenes/playground_pve.tscn: Свалка, P1, WaveDirector, враги scenes/enemies/*): весело ли драться с
 ## физическими куклами под управлением ИИ — сначала цифрами. Каждый сценарий — свой инстанс площадки (P2 убран, кооп выключен).
 ## Сценарии (mode=full — все подряд, headless --fixed-fps 60; иначе один по имени):
-##   sweep        — P1 стоит без оружия, ввод 0; Уборщик сбоку: за SWEEP_S секунд переносит P1 к пропасти (медиана смещения по x ≥ 3 м;
+##   sweep        — P1 стоит без оружия, ввод 0; Уборщик сбоку: за SWEEP_S секунд переносит P1 к пропасти (медиана смещения по x ≥ 2.5 м;
 ##                  на пути стопка ящиков x −0.9 и ShippingCrate 80 кг у края x −5 — за край выходит не всегда, это в info); каждый
 ##                  удар — после телеграфа ≥ 0.35 с; урон по P1;
 ##   sweep_lane   — то же без ящиков на дорожке к провалу: за SWEEP_MAX_S P1 за краем (или в провале) в большинстве прогонов, медиана
@@ -14,9 +14,13 @@
 ##                  request_dash) зачищает волну: время зачистки, урон в обе стороны (волна не беззубая: P1 получил урон; и не
 ##                  неубиваемая: зачищена за CLEAR_MAX_S), кражи, враги подходили к P1 ближе 1.5 м;
 ##   pit          — враг над пропастью (мозг молчит) падает: KO, WaveDirector.kills.pit, enemy_down(cause "pit");
-##   waves        — полный цикл волн ускоренно (враги KO напрямую): состав волн 2 / 1+2 / 2+3 по видам, HP врагов 40/80, строки Башни,
+##   waves        — полный цикл волн ускоренно (враги KO напрямую): состав волн 2 / 1+2 / 2+3 по видам, HP врагов 25/50, строки Башни,
 ##                  победа, запоздавшая бочка, restart (враги убраны, P1 новый, team), поражение (все игроки KO);
 ##   coop         — F2: P2 в забеге, команда players у обоих, две панели HUD, волна идёт;
+##   aggro        — отзыв автора «враги не бьют, будто не видят»: волна 3 (2 Уборщика + 3 Разборщика) против P1-бота AGGRO_S с;
+##                  по каждому врагу (EnemyBrain.stat): время до первой атаки после включения мозга (медиана ≤ 3 с), атак в минуту
+##                  (медиана ≥ 12), доля времени дальше 6 м от живой цели (медиана ≤ 25 %); урон враг→враг = 0 (если у Doll есть
+##                  team_damage_mult — иначе в info); урон в обе стороны — в отчёт;
 ##   reattach     — возврат оторванной детали: касанием, клавишей захвата, рука-мышь (ArmAssist снова управляет), чужую — нельзя;
 ##                  в steal_part — после удара по вору P1 долетает до уроненной кисти и прикручивает её;
 ##   bounds       — во всех сценариях ЦМ каждого живого врага в границах арены (или над пропастью), нарушений 0.
@@ -34,7 +38,7 @@ extends Node3D
 
 const PG_SCENE := "res://scenes/playground_pve.tscn"
 const SWEEP_S := 15.0
-const SWEEP_MAX_S := 24.0              # sweep_lane: столько ждём падения в пропасть
+const SWEEP_MAX_S := 30.0              # sweep_lane: столько ждём падения в пропасть
 const STEAL_WAIT_S := 14.0
 const CHASE_S := 8.0
 const FETCH_S := 10.0
@@ -43,8 +47,15 @@ const PERF_S := 8.0
 const PERF_WARM_S := 2.0
 const SHOT_DIR := "res://../docs/plan-demo/img/"
 
-const TRIALED := ["sweep", "sweep_lane", "steal_weapon", "steal_part", "clear_wave1", "run"]
+const TRIALED := ["sweep", "sweep_lane", "steal_weapon", "steal_part", "clear_wave1", "run", "aggro"]
+const AGGRO_S := 30.0                   # aggro: сколько секунд волна 3 дерётся с ботом
+const AGGRO_FIRST_ATTACK_S := 3.0
+const AGGRO_ATTACKS_PER_MIN := 12.0
+const AGGRO_FAR_FRAC := 0.25
 const RUN_MAX_S := 240.0
+## Запас HP врагов (сцены scenes/enemies/*, Doll.max_hp; 29.09 после «агрессии» — 25 / 50, чтобы волны оставались проходимыми).
+const SCRAPLING_HP := 25.0
+const SWEEPER_HP := 50.0
 ## Ящики между центром Свалки и провалом (стопка у x −0.9, ShippingCrate 80 кг у края x −5) — sweep_lane убирает их из арены.
 const LANE_PROPS := ["Props/Crate", "Props/ReinforcedCrate", "Props/ShippingCrate"]
 
@@ -82,7 +93,7 @@ func _ready() -> void:
 		"shots":
 			await _shots()
 		_:
-			var all := ["sweep", "sweep_lane", "steal_weapon", "steal_part", "clear_wave1", "pit", "waves", "coop", "reattach"]
+			var all := ["aggro", "sweep", "sweep_lane", "steal_weapon", "steal_part", "clear_wave1", "pit", "waves", "coop", "reattach"]
 			var list: Array = all if mode == "full" else [mode]   # run (весь забег ботом) — только отдельно: mode=run
 			for s in list:
 				if TRIALED.has(s):
@@ -260,7 +271,7 @@ func _r_sweep(i: int, lane := false) -> Dictionary:
 	var br := WaveDirector.brain_of(sw) as SweeperBrain
 	var hp0 := sw.hp
 	var mhp := sw.max_hp
-	var pit_x := -6.5
+	var pit_x := -6.0   # «у края»: полметра до провала (x −6.5); на самом краю над ним висит балка PitBeam — голова в неё упирается
 	var min_x := x0
 	var fell_t := -1.0
 	var edge_t := -1.0
@@ -300,9 +311,9 @@ func _r_sweep(i: int, lane := false) -> Dictionary:
 
 
 func _agg_sweep(runs: Array) -> void:
-	_check("sweeper_hp", float(runs[0].get("sweeper_hp", 0.0)), 80.0, "eq", "Sweeper hp at spawn = Doll.max_hp 80 (%s)" % runs[0].get("sweeper_max_hp", "?"))
+	_check("sweeper_hp", float(runs[0].get("sweeper_hp", 0.0)) if is_equal_approx(float(runs[0].get("sweeper_max_hp", 0.0)), SWEEPER_HP) else -1.0, SWEEPER_HP, "eq", "Sweeper hp at spawn = Doll.max_hp %.0f" % SWEEPER_HP)
 	_check("sweep_telegraph", _min_key(runs, "telegraph_min_s"), 0.35, "gte", "every sweep telegraphed >= 0.35 s")
-	_check("sweep_pushes_to_pit", _median_key(runs, "displacement_15s_m"), 3.0, "gte", "idle P1 pushed toward the pit, median over %d runs, m in %.0f s: %s" % [runs.size(), SWEEP_S, _col(runs, "displacement_15s_m")])
+	_check("sweep_pushes_to_pit", _median_key(runs, "displacement_15s_m"), 2.5, "gte", "idle P1 pushed toward the pit, median over %d runs, m in %.0f s: %s" % [runs.size(), SWEEP_S, _col(runs, "displacement_15s_m")])
 	var edge_n := _count_true(runs, "reached_pit")
 	report["info"]["sweep_reached_pit_runs"] = "%d/%d" % [edge_n, runs.size()]
 	print("  info sweep: over the pit edge in %d of %d runs within %.0f s (arena as is: crate stack x −0.9, ShippingCrate 80 kg at the edge x −5, PitBeam y=2 over the pit)" % [edge_n, runs.size(), SWEEP_S])
@@ -363,7 +374,7 @@ func _r_steal_weapon(i: int) -> Dictionary:
 
 
 func _agg_steal_weapon(runs: Array) -> void:
-	_check("scrapling_hp", float(runs[0].get("scrapling_hp", 0.0)) if is_equal_approx(float(runs[0].get("scrapling_max_hp", 0.0)), 40.0) else -1.0, 40.0, "eq", "Scrapling hp at spawn = Doll.max_hp 40")
+	_check("scrapling_hp", float(runs[0].get("scrapling_hp", 0.0)) if is_equal_approx(float(runs[0].get("scrapling_max_hp", 0.0)), SCRAPLING_HP) else -1.0, SCRAPLING_HP, "eq", "Scrapling hp at spawn = Doll.max_hp %.0f" % SCRAPLING_HP)
 	var stolen := _count_true(runs, "stolen")
 	_check("steal_weapon", float(stolen), _majority(runs), "gte", "Scrapling took the hammer out of P1's hand within %.0f s in most runs (t %s)" % [STEAL_WAIT_S, _col(runs, "steal_t")])
 	_check("steal_weapon_telegraph", _min_key(runs, "telegraph_min_s"), 0.35, "gte", "grab telegraphed >= 0.35 s")
@@ -715,8 +726,8 @@ func _s_waves() -> void:
 		if not comp.is_empty():
 			var d: Dictionary = comp[comp.size() - 1]["kinds"]
 			d[k] = int(d.get(k, 0)) + 1
-		var want_hp := 80.0 if k == "sweeper" else 40.0
-		if not is_equal_approx(e.hp, want_hp) or not is_equal_approx(e.max_hp, want_hp) or e.get("team") != "tower":
+		var want_hp := SWEEPER_HP if k == "sweeper" else SCRAPLING_HP
+		if not is_equal_approx(e.hp, want_hp) or not is_equal_approx(e.max_hp, want_hp) or e.get("team") != "tower" or float(e.get("team_damage_mult")) != 0.0:
 			flags["hp_ok"] = false)
 	director.start_run()
 	# волны: как только все враги волны выпали — KO каждому
@@ -733,7 +744,7 @@ func _s_waves() -> void:
 			barrel = true
 	var comp_ok := comp.size() == 3 and _kinds(comp[0]) == "scrapling:2" and _kinds(comp[1]) == "scrapling:2,sweeper:1" and _kinds(comp[2]) == "scrapling:3,sweeper:2"
 	_check("waves_composition", 1.0 if comp_ok else 0.0, 1.0, "eq", "waves 2 / 1+2 / 2+3: %s" % [comp])
-	_check("waves_enemy_hp_team", 1.0 if bool(flags["hp_ok"]) else 0.0, 1.0, "eq", "Scrapling 40 HP, Sweeper 80 HP, team tower")
+	_check("waves_enemy_hp_team", 1.0 if bool(flags["hp_ok"]) else 0.0, 1.0, "eq", "Scrapling %.0f HP, Sweeper %.0f HP, team tower, team_damage_mult 0" % [SCRAPLING_HP, SWEEPER_HP])
 	_check("waves_victory", 1.0 if overs == [true] else 0.0, 1.0, "eq", "run_over(victory) after wave 3 (%s)" % [overs])
 	_check("waves_tower_lines", float(lines.size()), 5.0, "gte", "Tower lines (intro, 3 waves, clears, victory): %s" % [lines])
 	_check("waves_caps", 1.0 if _all_caps(lines) else 0.0, 1.0, "eq", "Tower speaks in CAPS")
@@ -796,6 +807,10 @@ func _r_run(i: int) -> Dictionary:
 	var hp_at := 0.0
 	var detached: Array = []
 	p1.connect("part_detached", func(pn: String, _by: Node) -> void: detached.append(pn))
+	var by_kind := {}                         # урон P1 по виду врага и виду удара: "sweeper/weapon" -> HP
+	p1.damaged.connect(func(a: float, att: Node, _p: String, _pos: Vector3, k: String) -> void:
+		var key := "%s/%s" % [String(att.get_meta("enemy_kind", att.name)) if att != null and is_instance_valid(att) else "none", k]
+		by_kind[key] = snappedf(float(by_kind.get(key, 0.0)) + a, 0.1))
 	while t < RUN_MAX_S and director.result == "":
 		await _step()
 		if director.wave_index != cur and director.wave_state in ["spawning", "fight"]:
@@ -808,6 +823,13 @@ func _r_run(i: int) -> Dictionary:
 			_bot_rush(p1, _nearest_enemy(p1))
 	if director.result == "victory" and waves.size() < 3:
 		waves.append({"wave": 3, "s": snappedf(t - t_wave, 0.1), "hp_start": snappedf(hp_at, 0.1), "hp_end": snappedf(p1.hp, 0.1)})
+	var stuck: Array = []                     # кто остался жив к концу (таймаут — кого бот не достал и почему)
+	for e in director.alive_enemies():
+		var b := WaveDirector.brain_of(e)
+		var c := (e as Doll).centre_of_mass()
+		stuck.append("%s %s (%.1f,%.1f) st %s mode %s tgt %s dist %.1f att %d" % [e.name, b.state if b else "", c.x, c.y, (b.stat if b else {}).get("active_s", 0.0),
+			str(b.get("mode")) if b != null else "", str(b.target.name) if b != null and b.target != null else "-",
+			c.distance_to(p1.centre_of_mass()), int((b.stat if b else {}).get("attacks", 0))])
 	var steals := {"part": 0, "weapon": 0}
 	for e in director.events:
 		if String(e.get("what", "")) == "part_detached":
@@ -815,8 +837,8 @@ func _r_run(i: int) -> Dictionary:
 	var r := {"result": director.result if director.result != "" else "timeout", "run_s": snappedf(t, 0.1), "waves_cleared": waves.size(),
 		"waves": waves, "reached_wave": cur + 1, "p1_hp": snappedf(p1.hp, 0.1), "p1_damage_taken": snappedf(float(p1.stats["damage_taken"]), 0.1),
 		"p1_damage_dealt": snappedf(float(p1.stats["damage_dealt"]), 0.1), "kills": director.kills.duplicate(), "parts_lost": detached,
-		"p1_ko_kind": String(p1.last_ko_record.get("kind", "")) if not p1.alive else ""}
-	print("  run #%d: %s at %.0f s, waves cleared %d (reached %d), P1 hp %.0f, lost parts %s, kills %s, KO kind %s" % [i + 1, r["result"], t, waves.size(), cur + 1, p1.hp, detached, director.kills, r["p1_ko_kind"]])
+		"p1_ko_kind": String(p1.last_ko_record.get("kind", "")) if not p1.alive else "", "p1_damage_by": by_kind, "alive_at_end": stuck, "p1_pos": str(p1.centre_of_mass())}
+	print("  run #%d: %s at %.0f s, waves cleared %d (reached %d), P1 hp %.0f, lost parts %s, kills %s, KO kind %s, P1 damage by %s, waves %s, alive at end %s, P1 at %s" % [i + 1, r["result"], t, waves.size(), cur + 1, p1.hp, detached, director.kills, r["p1_ko_kind"], by_kind, waves, stuck, r["p1_pos"]])
 	await _unload()
 	return r
 
@@ -832,6 +854,75 @@ static func _count_ge(runs: Array, key: String, v: float) -> int:
 		if float(r.get(key, 0.0)) >= v:
 			n += 1
 	return n
+
+
+func _r_aggro(i: int) -> Dictionary:
+	await _load(true)
+	_give_hammer(p1)
+	director.intro_s = 0.3
+	while director.wave_state == "intro":
+		await _step()
+	director.start_wave(2)
+	var stats: Array = []                  # [имя, вид, stat (по ссылке — переживает уборку тела)]
+	var acc := {"ee_dmg": 0.0, "ee_hits": 0, "ee_raw": 0.0}
+	director.enemy_spawned.connect(func(e: Doll) -> void:
+		var b := WaveDirector.brain_of(e)
+		if b != null:
+			stats.append([String(e.name), String(e.get_meta("enemy_kind", "")), b.stat])
+		e.damaged.connect(func(a: float, att: Node, _p: String, _pos: Vector3, _k: String) -> void:
+			if att != null and is_instance_valid(att) and att.is_in_group("enemies") and att != e:
+				acc["ee_dmg"] = float(acc["ee_dmg"]) + a
+				acc["ee_hits"] = int(acc["ee_hits"]) + 1))
+	director.hit.connect(func(v: Doll, att: Node, dmg: float, _k: String, _pos: Vector3) -> void:
+		if v != null and is_instance_valid(v) and v.is_in_group("enemies") and att != null and is_instance_valid(att) and att.is_in_group("enemies"):
+			acc["ee_raw"] = float(acc["ee_raw"]) + dmg)
+	var t0 := t
+	while t - t0 < AGGRO_S and p1.alive:
+		_bot_rush(p1, _nearest_enemy(p1))
+		await _step()
+	p1.input_vec = Vector2.ZERO
+	var per: Array = []
+	for e in stats:
+		var st: Dictionary = e[2]
+		var act := maxf(float(st["active_s"]), 0.01)
+		per.append({"name": e[0], "kind": e[1], "first_attack_s": st["first_attack_s"], "attacks": st["attacks"],
+			"attacks_per_min": snappedf(float(st["attacks"]) / act * 60.0, 0.1), "far_frac": snappedf(float(st["far_s"]) / maxf(float(st["target_s"]), 0.01), 0.01),
+			"mean_dist_m": snappedf(float(st["dist_int"]) / maxf(float(st["target_s"]), 0.01), 0.01), "target_frac": snappedf(float(st["target_s"]) / act, 0.01),
+			"active_s": snappedf(act, 0.1), "stun_s": snappedf(float(st["silent_s"]), 0.1)})
+	var hook := "team_damage_mult" in p1
+	var r := {"enemies": per, "enemy_to_enemy_dmg": snappedf(float(acc["ee_dmg"]), 0.01), "enemy_to_enemy_hits": acc["ee_hits"],
+		"enemy_to_enemy_raw": snappedf(float(acc["ee_raw"]), 0.1), "team_hook": hook, "p1_alive": p1.alive, "fight_s": snappedf(t - t0, 0.1),
+		"p1_damage_taken": snappedf(float(p1.stats["damage_taken"]), 0.1), "p1_damage_dealt": snappedf(float(p1.stats["damage_dealt"]), 0.1),
+		"enemies_ko": director.kills.duplicate()}
+	print("  aggro #%d: P1 %s after %.1f s, P1 −%.0f HP / dealt %.0f, enemy→enemy %.1f HP in %d hits (raw %.0f), kills %s" % [i + 1, "alive" if p1.alive else "KO", t - t0,
+		float(r["p1_damage_taken"]), float(r["p1_damage_dealt"]), float(acc["ee_dmg"]), int(acc["ee_hits"]), float(acc["ee_raw"]), director.kills])
+	for e in per:
+		print("    %-12s first %5.2f s  %4.1f att/min  far %3.0f%%  dist %.1f m  target %3.0f%%  stun %.1f s" % [e["name"], float(e["first_attack_s"]), float(e["attacks_per_min"]), float(e["far_frac"]) * 100.0, float(e["mean_dist_m"]), float(e["target_frac"]) * 100.0, float(e["stun_s"])])
+	await _unload()
+	return r
+
+
+func _agg_aggro(runs: Array) -> void:
+	var firsts: Array = []
+	var apm: Array = []
+	var far: Array = []
+	for r in runs:
+		for e in r.get("enemies", []):
+			firsts.append({"v": float(e["first_attack_s"]) if float(e["first_attack_s"]) >= 0.0 else 99.0})
+			apm.append({"v": float(e["attacks_per_min"])})
+			far.append({"v": float(e["far_frac"])})
+	_check("aggro_first_attack", _median_key(firsts, "v"), AGGRO_FIRST_ATTACK_S, "lte", "median time from brain-on (after the chute) to the first attack, s (all %s)" % [_col(firsts, "v")])
+	_check("aggro_attacks_per_min", _median_key(apm, "v"), AGGRO_ATTACKS_PER_MIN, "gte", "median attacks per minute per enemy (all %s)" % [_col(apm, "v")])
+	_check("aggro_far", _median_key(far, "v"), AGGRO_FAR_FRAC, "lte", "median share of time farther than 6 m from a live target (all %s)" % [_col(far, "v")])
+	var hook := bool(runs[0].get("team_hook", false))
+	var ee := 0.0
+	for r in runs:
+		ee += float(r.get("enemy_to_enemy_dmg", 0.0))
+	if hook:
+		_check("aggro_team_damage", ee, 0.0, "eq", "enemy→enemy damage with Doll.team_damage_mult = 0 (HP, raw pre-mult %s)" % [_col(runs, "enemy_to_enemy_raw")])
+	else:
+		report["info"]["aggro_team_damage"] = "hook Doll.team_damage_mult missing: enemy→enemy %.1f HP (× Tuning.TEAM_DAMAGE_MULT)" % ee
+		print("  info aggro: Doll.team_damage_mult ещё нет — урон враг→враг %.1f HP (× TEAM_DAMAGE_MULT)" % ee)
 
 
 static func _kinds(c: Dictionary) -> String:

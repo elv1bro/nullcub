@@ -14,7 +14,8 @@ player_index = -1
 input_prefix = "enemy"
 external_input = true
 team = "tower"
-max_hp = 80.0
+team_damage_mult = 0.0
+max_hp = 50.0
 
 [node name="WeaponPickup" type="Node" parent="."]
 script = ExtResource("3_wp")
@@ -23,7 +24,7 @@ hold_angle_deg = 0.0
 
 [node name="Brain" type="Node" parent="."]
 script = ExtResource("4_brain")
-reaction_s = 0.35
+reaction_s = 0.45
 lead_s = 0.2
 aim_error_m = 0.3
 input_slew = 4.5

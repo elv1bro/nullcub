@@ -50,6 +50,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				hud.announcer.announce(FxPreset.label(), Color(0.9, 0.9, 0.95), "")
 			KEY_ESCAPE:
 				get_tree().quit()
+			_:
+				# 1–7 — площадки хаба (таблица ARENA_KEYS в scenes/playground.gd: одна строка там — клавиша работает везде)
+				var path: String = preload("res://scenes/playground.gd").scene_for_key(event.physical_keycode)
+				if path != "" and path != scene_file_path:
+					get_tree().change_scene_to_file(path)
 
 
 func _on_body_fell(body: Node3D) -> void:

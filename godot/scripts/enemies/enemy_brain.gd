@@ -31,11 +31,12 @@ const STUCK_SPEED := 0.35
 const STUCK_S := 0.8
 const UNSTICK_S := 0.6
 const DASH_REQ_S := 0.6
+const FAR_M := 6.0                      # метрика stat.far_s: дальше этого от цели — «не охотится»
 const DASH_ALIGN := 0.8                 # рывок — только когда ввод уже смотрит, куда надо (иначе рывок несёт по старому курсу)
 ## Разнос врагов (boids-separation): свои ближе SEP_R_M отталкивают с весом до SEP_GAIN — иначе двое, бегущие к одному игроку,
 ## сталкивались и дрались друг с другом (урон по своим × 0.25, но отброс, стан и отдача полные — волна 1 «зависала»).
 const SEP_R_M := 1.7
-const SEP_GAIN := 0.9
+const SEP_GAIN := 0.9                   # у цели (near_target 3 м) наследники берут 0.3–0.4 от этого
 @export var enemies_group := "enemies"
 
 ## Задержка восприятия (с): чем больше, тем «тупее» враг — бьёт туда, где цель была.
@@ -60,6 +61,11 @@ var want := Vector2.ZERO
 ## Журнал для проб: [{state, t}] смен состояний (последние 64) и счётчики.
 var trace: Array = []
 var counters: Dictionary = {}
+## Метрики агрессии (пробы, отзыв автора «как будто не видят»): с момента, когда мозг включился (после желоба), пока кукла жива:
+## active_s — время работы мозга, target_s — из него с живой целью, far_s — из него дальше FAR_M от цели, dist_int — ∫ дистанции,
+## attacks — начатых атак (note_attack: заметание, бросок, щипок), first_attack_s — от включения до первой атаки (−1 — не было),
+## silent_s — время в стане.
+var stat := {"active_s": 0.0, "target_s": 0.0, "far_s": 0.0, "dist_int": 0.0, "attacks": 0, "first_attack_s": -1.0, "silent_s": 0.0}
 var arena: Node = null
 var _active_at := 0.0
 var _time := 0.0
@@ -93,7 +99,7 @@ func _setup() -> void:
 	if _ready_done:
 		return
 	_ready_done = true
-	doll.external_input = true   # запас HP — Doll.max_hp (ставится в сцене врага до add_child: 40 / 80)
+	doll.external_input = true   # запас HP — Doll.max_hp (ставится в сцене врага до add_child: 25 / 50)
 	look = EnemyLook.new()
 	look.name = "EnemyLook"
 	doll.add_child(look)
@@ -159,6 +165,8 @@ func _physics_process(delta: float) -> void:
 		silent_why = "spawn"
 	elif doll.is_stunned():
 		silent_why = "stun"
+	if silent_why == "stun":
+		stat["silent_s"] = float(stat["silent_s"]) + delta
 	if silent_why != "":
 		if not _silent:
 			_silent = true
@@ -169,6 +177,7 @@ func _physics_process(delta: float) -> void:
 			look.alert_target = 0.0
 		return
 	_silent = false
+	_tick_stat(delta)
 	_noise_t -= delta
 	if _noise_t <= 0.0:
 		_noise_t = AIM_NOISE_S
@@ -199,6 +208,11 @@ func separation() -> Vector2:
 	return out.limit_length(1.0) * SEP_GAIN
 
 
+## Цель ближе m (по ЦМ сейчас): у цели разнос со своими слабее — не расталкиваются прочь от игрока.
+func near_target(m: float) -> bool:
+	return target != null and is_instance_valid(target) and target.alive and my_pos().distance_to(com2(target)) < m
+
+
 ## Вес разноса в текущем состоянии (наследник: в броске — меньше).
 func _separation_weight() -> float:
 	return 1.0
@@ -211,7 +225,7 @@ func snap_input(seconds: float) -> void:
 
 
 func _stuck_allowed() -> bool:
-	return state in ["approach", "flee", "retreat", "keepaway", "choose", "idle"]
+	return state in ["approach", "flee", "retreat", "choose", "idle"]
 
 
 func _tick_stuck(delta: float) -> void:
@@ -228,6 +242,24 @@ func _tick_stuck(delta: float) -> void:
 		var sx := -signf(want.x) if absf(want.x) > 0.2 else (1.0 if _rng.randf() < 0.5 else -1.0)
 		_unstick_dir = Vector2(sx * 0.6, 0.9)
 		counters["unstick"] = int(counters.get("unstick", 0)) + 1
+
+
+func _tick_stat(delta: float) -> void:
+	stat["active_s"] = float(stat["active_s"]) + delta
+	if target == null or not is_instance_valid(target) or not target.alive:
+		return
+	stat["target_s"] = float(stat["target_s"]) + delta
+	var d := my_pos().distance_to(com2(target))
+	stat["dist_int"] = float(stat["dist_int"]) + d * delta
+	if d > FAR_M:
+		stat["far_s"] = float(stat["far_s"]) + delta
+
+
+## Наследник зовёт в начале каждой атаки (метрики агрессии).
+func note_attack() -> void:
+	stat["attacks"] = int(stat["attacks"]) + 1
+	if float(stat["first_attack_s"]) < 0.0:
+		stat["first_attack_s"] = snappedf(_time - _active_at, 0.01)
 
 
 func go(s: String) -> void:

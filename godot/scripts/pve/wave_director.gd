@@ -12,7 +12,7 @@
 ##     открутил деталь игрока (PART RECOVERED…) и когда враг сам улетел в провал (CREW MEMBER DISPOSED…); «правило гашения»
 ##     (LORE.md): после FLOOR CLEAN сверху прилетает запоздавшая бочка;
 ##   • команды (хук Doll.team): игрокам player_team ("players": друг по другу × Tuning.TEAM_DAMAGE_MULT, толчки полные — CONCEPT_V2 §22
-##     «дружеский хаос»), врагам enemy_team ("tower"); запас HP — Doll.max_hp (враги 40 / 80 — в своих сценах). Match.respawn_doll
+##     «дружеский хаос»), врагам enemy_team ("tower", team_damage_mult 0 — свои не ранят); запас HP — Doll.max_hp (враги 25 / 50 — в своих сценах). Match.respawn_doll
 ##     переносит team и max_hp;
 ##   • KO врага: как у Match, но замедление и тряска слабее (enemy_ko_slowmo_s); тело лежит corpse_s и убирается (6 кукол по 14 тел);
 ##     метла Уборщика остаётся — её можно подобрать;
@@ -67,19 +67,25 @@ const BOUNDS_CHECK_S := 0.25
 @export var corpse_s := 8.0
 ## Передышка между волнами: живым игрокам +heal_between_waves HP (не больше Tuning.MAX_HP). Без неё (и с прежним щипком Разборщика
 ## на полной тяге) бот-игрок доходил только до волны 2 — три волны на 100 HP без починки проверяли бы выносливость, а не «весело ли».
-@export var heal_between_waves := 20.0
+@export var heal_between_waves := 30.0
 @export var enemy_ko_slowmo_s := 0.45
 ## Крит-кинематограф в PvE (эффекты v3: удар от CRIT_BYPASS_DAMAGE 25 HP — крит сквозь кулдауны, кино ≈ 1.3 с реального времени,
 ## атакующий стоит, жертва летит до 7.5 м/с) — только на ПОСЛЕДНЕМ враге волны (добивание как финал) и когда враг бьёт игрока
 ## последним оставшимся. Иначе: молот (20–30 HP) по Разборщику на 40 HP — крит почти каждым вторым ударом, волна из 5 врагов
 ## превращалась в череду замедленных роликов. Match.crit_enabled переключается каждый тик (_tick_crit_gate); false — никогда.
+## 29.09 (автор: «нет крутых ударов»): крит разрешён и в середине волны, но не чаще раза в pve_crit_gap_s реального времени
+## (кино ≈ 1.3 с — раз в 6 с оставляет бою ~80 %), а на последнем враге волны — всегда, как раньше.
 @export var pve_crits := true
+@export var pve_crit_gap_s := 6.0
+var _last_crit_ms := -1000000
 @export var enemies_path: NodePath
 @export var weapons_path: NodePath
 @export var players_group := "players"
 @export var enemies_group := "enemies"
 @export var player_team := "players"
 @export var enemy_team := "tower"
+## Урон и стан врага от своих (Doll.team_damage_mult): 0 — Уборщик, сметая Разборщика, толкает его, но не ранит.
+@export var enemy_team_damage := 0.0
 
 var wave_index := -1
 ## idle | intro | spawning | fight | pause | victory | defeat | manual
@@ -121,6 +127,8 @@ func _on_doll_replaced(_old: Doll, new_doll: Doll) -> void:
 
 
 func _late_ready() -> void:
+	if not hit_fx.is_connected(_on_pve_hit_fx):
+		hit_fx.connect(_on_pve_hit_fx)
 	_scan_dolls()
 	_remember_weapons()
 	for p in players():
@@ -372,10 +380,12 @@ func spawn_enemy(kind: String, pos: Vector3, vel := Vector3.ZERO, drop_s := -1.0
 	d.name = "%s_%d" % [kind.capitalize(), _spawn_n]
 	if enemy_team != "" and d.get("team") != null:
 		d.set("team", enemy_team)
+	if "team_damage_mult" in d:
+		d.set("team_damage_mult", enemy_team_damage)   # свои не ранят и не оглушают (толчки полные) — отзыв автора 29.09
 	d.add_to_group(dolls_group)
 	d.add_to_group(enemies_group)
 	d.add_to_group("pve_spawned")
-	d.set_meta("enemy_kind", kind)   # max_hp (40 / 80) — в сцене врага, hp = max_hp в Doll._ready
+	d.set_meta("enemy_kind", kind)   # max_hp (25 / 50) — в сцене врага, hp = max_hp в Doll._ready
 	_enemies_parent().add_child(d)
 	d.global_position = Vector3(pos.x, pos.y, 0.0)
 	var rng := RandomNumberGenerator.new()
@@ -506,7 +516,16 @@ func _check_bounds(delta: float) -> void:
 
 
 func _tick_crit_gate() -> void:
-	crit_enabled = pve_crits and wave_state == "fight" and spawn_queue.is_empty() and alive_enemies().size() <= 1
+	var last_enemy := spawn_queue.is_empty() and alive_enemies().size() <= 1
+	var gap_ok := Time.get_ticks_msec() - _last_crit_ms >= int(pve_crit_gap_s * 1000.0)
+	crit_enabled = pve_crits and wave_state == "fight" and (last_enemy or gap_ok)
+
+
+## Время последнего крита (crit / ko_crit) — для паузы pve_crit_gap_s между роликами.
+func _on_pve_hit_fx(ctx: Dictionary) -> void:
+	var tier := String(ctx.get("tier", ""))
+	if tier == HitTier.CRIT or tier == HitTier.KO_CRIT:
+		_last_crit_ms = Time.get_ticks_msec()
 
 
 func _tick_corpses() -> void:
