@@ -1,0 +1,593 @@
+{
+  "ok": true,
+  "checks": [
+    {
+      "id": "light_no_nodes",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "light_no_punch",
+      "ok": true,
+      "value": 0,
+      "limit": 0
+    },
+    {
+      "id": "light_no_hitstop",
+      "ok": true,
+      "value": 1.0,
+      "limit": 1.0
+    },
+    {
+      "id": "light_no_flash",
+      "ok": true,
+      "value": 0,
+      "limit": 0
+    },
+    {
+      "id": "heavy_flash_1",
+      "ok": true,
+      "value": 1,
+      "limit": 1
+    },
+    {
+      "id": "heavy_wave",
+      "ok": true,
+      "value": 2,
+      "limit": ">0"
+    },
+    {
+      "id": "heavy_afterimages_3",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "heavy_trail",
+      "ok": true,
+      "value": 1,
+      "limit": ">=1"
+    },
+    {
+      "id": "heavy_speed_lines",
+      "ok": true,
+      "value": true,
+      "limit": true
+    },
+    {
+      "id": "heavy_punch",
+      "ok": true,
+      "value": true,
+      "limit": true
+    },
+    {
+      "id": "heavy_cam_idle_600ms",
+      "ok": true,
+      "value": true,
+      "limit": true
+    },
+    {
+      "id": "heavy_spark",
+      "ok": true,
+      "value": 1,
+      "limit": ">0"
+    },
+    {
+      "id": "heavy_wave_big_thick",
+      "ok": true,
+      "value": [
+        1.8,
+        0.3
+      ],
+      "limit": [
+        ">=1.7 (1.8)",
+        ">=0.25"
+      ]
+    },
+    {
+      "id": "heavy_wave_attacker_colour",
+      "ok": true,
+      "value": true,
+      "limit": "(0.851, 0.2039, 0.1686, 1.0)"
+    },
+    {
+      "id": "heavy_star_gone_100ms",
+      "ok": true,
+      "value": 0.0,
+      "limit": "<=0.15 (сжата/погашена)"
+    },
+    {
+      "id": "heavy_star_collapsed",
+      "ok": true,
+      "value": 1,
+      "limit": ">0"
+    },
+    {
+      "id": "heavy_focus_lead",
+      "ok": true,
+      "value": [
+        1.36,
+        1.0
+      ],
+      "limit": [
+        "≥0.3 м",
+        "вдоль полёта"
+      ]
+    },
+    {
+      "id": "heavy_bursts",
+      "ok": true,
+      "value": 4,
+      "limit": ">=2"
+    },
+    {
+      "id": "heavy_core_tier",
+      "ok": true,
+      "value": "heavy",
+      "limit": "heavy"
+    },
+    {
+      "id": "heavy_hitstop_ms",
+      "ok": true,
+      "value": 83.3,
+      "limit": "83±17 (Match._emit_hit_fx, Tuning.HITFX_HEAVY_STOP_S)"
+    },
+    {
+      "id": "heavy_freed_3s",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "heavy_time_scale_1",
+      "ok": true,
+      "value": 1.0,
+      "limit": 1.0
+    },
+    {
+      "id": "ko_masked_frames",
+      "ok": true,
+      "value": 2,
+      "limit": 2
+    },
+    {
+      "id": "ko_mask_bits_restored",
+      "ok": true,
+      "value": [
+        0,
+        false,
+        0
+      ],
+      "limit": [
+        0,
+        false,
+        0
+      ]
+    },
+    {
+      "id": "ko_inversion_2_frames",
+      "ok": true,
+      "value": 2,
+      "limit": 2
+    },
+    {
+      "id": "ko_big_wave",
+      "ok": true,
+      "value": 2.2,
+      "limit": ">=1.8 (2.2)"
+    },
+    {
+      "id": "ko_trails_head_torso",
+      "ok": true,
+      "value": 2,
+      "limit": 2
+    },
+    {
+      "id": "ko_trail_gone_1300ms",
+      "ok": true,
+      "value": 0,
+      "limit": 0
+    },
+    {
+      "id": "ko_freed_3s",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "slam_played",
+      "ok": true,
+      "value": 1,
+      "limit": 1
+    },
+    {
+      "id": "slam_dust_splinters",
+      "ok": true,
+      "value": 2,
+      "limit": 2
+    },
+    {
+      "id": "slam_shake",
+      "ok": true,
+      "value": 0.048,
+      "limit": "> 0 (0.048 × intensity)"
+    },
+    {
+      "id": "slam_no_flash",
+      "ok": true,
+      "value": 2,
+      "limit": 2
+    },
+    {
+      "id": "slam_hp_unchanged",
+      "ok": true,
+      "value": 100.0,
+      "limit": 100.0
+    },
+    {
+      "id": "slam_crit_cooldown",
+      "ok": true,
+      "value": 1,
+      "limit": "cooldown 120 ms"
+    },
+    {
+      "id": "slam_crit_flight_wave",
+      "ok": true,
+      "value": 6,
+      "limit": ">5"
+    },
+    {
+      "id": "wall_env_slam_signal",
+      "ok": true,
+      "value": 2,
+      "limit": ">=1"
+    },
+    {
+      "id": "wall_env_slam_played",
+      "ok": true,
+      "value": 1,
+      "limit": ">=1"
+    },
+    {
+      "id": "wall_hp_unchanged",
+      "ok": true,
+      "value": 100.0,
+      "limit": 100.0
+    },
+    {
+      "id": "slam_freed_3s",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "crit_cinematic_cut",
+      "ok": true,
+      "value": true,
+      "limit": true
+    },
+    {
+      "id": "crit_time_scale_restored",
+      "ok": true,
+      "value": 1.0,
+      "limit": 1.0
+    },
+    {
+      "id": "crit_camera_restored",
+      "ok": true,
+      "value": "Camera:<Camera3D#157957491715>",
+      "limit": "Camera:<Camera3D#157957491715>"
+    },
+    {
+      "id": "crit_no_time_tags",
+      "ok": true,
+      "value": [],
+      "limit": []
+    },
+    {
+      "id": "crit_freed_3s",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "a11y_no_flash_at_0",
+      "ok": true,
+      "value": [
+        0,
+        0
+      ],
+      "limit": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "reduced_wave_smaller",
+      "ok": true,
+      "value": 1.31,
+      "limit": "≈1.31 (full 1.8)"
+    },
+    {
+      "id": "a11y_max_3_flashes_per_s",
+      "ok": true,
+      "value": 3,
+      "limit": "<=3"
+    },
+    {
+      "id": "limit_trails",
+      "ok": true,
+      "value": 3,
+      "limit": "<=4"
+    },
+    {
+      "id": "limit_afterimages",
+      "ok": true,
+      "value": 3,
+      "limit": "<=4"
+    },
+    {
+      "id": "spam_freed_3s",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "spam_cam_idle",
+      "ok": true,
+      "value": true,
+      "limit": true
+    },
+    {
+      "id": "victim_materials_unchanged",
+      "ok": true,
+      "value": 49,
+      "limit": 49
+    },
+    {
+      "id": "no_fx_nodes_on_parts",
+      "ok": true,
+      "value": 0,
+      "limit": 0
+    },
+    {
+      "id": "no_meshes_afterimages_from_collision",
+      "ok": true,
+      "value": [
+        true,
+        3
+      ],
+      "limit": [
+        true,
+        ">=1"
+      ]
+    },
+    {
+      "id": "restart_freed",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "restart_time_scale_1",
+      "ok": true,
+      "value": 1.0,
+      "limit": 1.0
+    },
+    {
+      "id": "restart_cam_idle",
+      "ok": true,
+      "value": true,
+      "limit": true
+    },
+    {
+      "id": "restart_screen_clear",
+      "ok": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "id": "restart_camera_owner_empty",
+      "ok": true,
+      "value": "",
+      "limit": ""
+    },
+    {
+      "id": "heavy_brake_tier_stand",
+      "ok": true,
+      "value": true,
+      "limit": "heavy"
+    },
+    {
+      "id": "heavy_brake_along_stand",
+      "ok": true,
+      "value": 0.0,
+      "limit": "<= 2.5 м/с вдоль отлёта (в ударе; окно 0.00 с)"
+    },
+    {
+      "id": "heavy_brake_tier_dash",
+      "ok": true,
+      "value": true,
+      "limit": "heavy"
+    },
+    {
+      "id": "heavy_brake_unit",
+      "ok": true,
+      "value": [
+        3.68,
+        2.42,
+        false,
+        0
+      ],
+      "limit": [
+        "cut > 2",
+        "<= 2.5 в окне",
+        false,
+        0
+      ]
+    },
+    {
+      "id": "heavy_brake_one_shot",
+      "ok": true,
+      "value": [
+        3.68,
+        true,
+        2.01
+      ],
+      "limit": [
+        "cut > 2",
+        "без узла",
+        "≈ 2.5"
+      ]
+    },
+    {
+      "id": "match_on_hit_reaches_director",
+      "ok": true,
+      "value": "heavy",
+      "limit": "light|heavy"
+    },
+    {
+      "id": "real_ko_tier",
+      "ok": true,
+      "value": "ko_crit",
+      "limit": "ko|ko_crit"
+    },
+    {
+      "id": "real_ko_time_scale_1",
+      "ok": true,
+      "value": 1.0,
+      "limit": 1.0
+    },
+    {
+      "id": "real_ko_freed",
+      "ok": true,
+      "value": 3,
+      "limit": 3
+    },
+    {
+      "id": "final_camera_game",
+      "ok": true,
+      "value": "Camera:<Camera3D#157957491715>",
+      "limit": "Camera:<Camera3D#157957491715>"
+    },
+    {
+      "id": "final_match_fx_children",
+      "ok": true,
+      "value": 2,
+      "limit": 2
+    }
+  ],
+  "info": {
+    "director_from_core": true,
+    "core_hit_fx": true,
+    "core_env_slam": true,
+    "cinematic": true,
+    "baseline_nodes": 3,
+    "victim_scene": "res://scenes/body/modular_doll.tscn",
+    "crit_mode": "cinematic",
+    "heavy_brake": {
+      "stand_1.2_off": {
+        "tier": "heavy",
+        "along_max": -1.94908833503723,
+        "gap_400": 1.48734986782074,
+        "gap_0": 1.2
+      },
+      "stand_1.2_on": {
+        "tier": "heavy",
+        "along_max": -1.95123553276062,
+        "gap_400": 1.43867373466492,
+        "gap_0": 1.2
+      },
+      "stand_1.6_off": {
+        "tier": "heavy",
+        "along_max": -1.97859215736389,
+        "gap_400": 1.73180103302002,
+        "gap_0": 1.6
+      },
+      "stand_1.6_on": {
+        "tier": "heavy",
+        "along_max": -1.97814965248108,
+        "gap_400": 1.73832488059998,
+        "gap_0": 1.6
+      },
+      "dash_1.0_off": {
+        "tier": "heavy",
+        "along_max": -1.4157874584198,
+        "gap_400": 1.1517139673233,
+        "gap_0": 1.0
+      },
+      "dash_1.0_on": {
+        "tier": "heavy",
+        "along_max": -1.4157874584198,
+        "gap_400": 1.14276611804962,
+        "gap_0": 1.0
+      },
+      "dash_1.1_off": {
+        "tier": "heavy",
+        "along_max": -1.4157874584198,
+        "gap_400": 1.29138112068176,
+        "gap_0": 1.1
+      },
+      "dash_1.1_on": {
+        "tier": "heavy",
+        "along_max": -1.4157874584198,
+        "gap_400": 1.18764281272888,
+        "gap_0": 1.1
+      },
+      "dash_1.2_off": {
+        "tier": "heavy",
+        "along_max": -1.4157874584198,
+        "gap_400": 1.40484011173248,
+        "gap_0": 1.2
+      },
+      "dash_1.2_on": {
+        "tier": "heavy",
+        "along_max": -1.4157874584198,
+        "gap_400": 1.4108898639679,
+        "gap_0": 1.2
+      },
+      "dash_1.3_off": {
+        "tier": "heavy",
+        "along_max": -1.4157874584198,
+        "gap_400": 1.49978578090668,
+        "gap_0": 1.3
+      },
+      "dash_1.3_on": {
+        "tier": "heavy",
+        "along_max": -1.4157874584198,
+        "gap_400": 1.51110506057739,
+        "gap_0": 1.3
+      }
+    },
+    "heavy_brake_gap_400_stand": [
+      1.61,
+      1.59
+    ],
+    "heavy_brake_dash_along_max": 0.0,
+    "heavy_brake_gap_400_dash": [
+      1.34,
+      1.31
+    ],
+    "real_ko_mode": "cinematic",
+    "played": 50,
+    "stats": {
+      "flashes": 21,
+      "impact_frames": 1,
+      "waves": 61,
+      "afterimages": 33,
+      "trails": 33,
+      "bursts": 129,
+      "puffs": 61,
+      "lines": 28,
+      "punches": 31,
+      "slams": 3,
+      "cinematic": 2,
+      "crit_fallback": 0,
+      "time_requests": 0,
+      "sparks": 29,
+      "flash_collapses": 6,
+      "safe_holds": 2
+    }
+  }
+}
