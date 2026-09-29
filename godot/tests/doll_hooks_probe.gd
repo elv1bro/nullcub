@@ -71,6 +71,12 @@ func _physics_process(delta: float) -> void:
 				hp0 = b.hp
 				b.take_damage(10.0, c, "Torso", b.torso().global_position, Vector3.UP, "body")
 				_check("team_other", is_equal_approx(hp0 - b.hp, 10.0), "урон от чужого %.2f" % (hp0 - b.hp))
+				b.team_damage_mult = 0.0
+				hp0 = b.hp
+				b.take_damage(10.0, a, "Torso", b.torso().global_position, Vector3.UP, "body")
+				_check("team_mult_zero", is_equal_approx(hp0 - b.hp, 0.0) and is_equal_approx(b.team_mult_for(a), 0.0), "team_damage_mult 0: урон своему %.2f" % (hp0 - b.hp))
+				_check("team_mult_other", is_equal_approx(b.team_mult_for(c), 1.0), "чужой при team_damage_mult 0 — полный")
+				b.team_damage_mult = -1.0
 				var chp := c.hp
 				c.take_damage(10.0, a, "Torso", c.torso().global_position, Vector3.UP, "body")
 				_check("team_empty", is_equal_approx(chp - c.hp, 10.0), "без команды полный урон %.2f" % (chp - c.hp))

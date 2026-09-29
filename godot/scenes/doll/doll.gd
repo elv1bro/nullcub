@@ -69,6 +69,9 @@ const SPAWN_POSE_GROUPS := ["Shoulder", "Elbow", "Hip", "Knee"]   # прокси
 @export var control_target := ""       # пусто = Tuning.CONTROL_TARGET
 ## Команда (PvE-волны): урон от куклы той же непустой команды × Tuning.TEAM_DAMAGE_MULT (take_damage); толчки полные.
 @export var team := ""
+## Множитель урона и стана от куклы своей команды для ЭТОЙ куклы (жертвы): −1 — Tuning.TEAM_DAMAGE_MULT; 0 — свои не ранят и не
+## оглушают (PvE-враги, решение автора 29.09); толчки и отброс полные в любом случае. Используют take_damage и DollCombat.
+@export var team_damage_mult := -1.0
 ## Запас HP этой куклы (PvE-враги 40 / 80); hp в _ready и reset_for_match = max_hp; Match.hp_changed и HUD берут его отсюда.
 @export var max_hp: float = Tuning.MAX_HP
 
@@ -540,8 +543,7 @@ func can_take_damage() -> bool:
 ## Урон: amount HP от attacker (Doll | null) в часть part (имя узла) в точке position с нормалью normal; kind ∈ head|body|weapon|environment|self.
 ## Игнорируется, если кукла мертва или в spawn grace. hp ≤ 0 → knock_out(attacker, record).
 func take_damage(amount: float, attacker: Node, part: String, position: Vector3, normal: Vector3, kind: String) -> void:
-	if team != "" and attacker is Doll and attacker != self and (attacker as Doll).team == team:
-		amount *= Tuning.TEAM_DAMAGE_MULT
+	amount *= team_mult_for(attacker)
 	if amount <= 0.0 or not can_take_damage():
 		hit_meta = {}
 		return
@@ -561,6 +563,14 @@ func take_damage(amount: float, attacker: Node, part: String, position: Vector3,
 	damaged.emit(amount, attacker, part, position, kind)
 	if hp <= 0.0:
 		knock_out(attacker, record)
+
+
+## Множитель урона/стана для удара от attacker: 1, если он не из нашей непустой команды; иначе team_damage_mult (≥ 0) или
+## Tuning.TEAM_DAMAGE_MULT.
+func team_mult_for(attacker: Node) -> float:
+	if team == "" or not (attacker is Doll) or attacker == self or (attacker as Doll).team != team:
+		return 1.0
+	return team_damage_mult if team_damage_mult >= 0.0 else Tuning.TEAM_DAMAGE_MULT
 
 
 ## Рывок на ближайшем тике управления — для ботов (external_input): Input они не читают. Те же правила, что у кнопки

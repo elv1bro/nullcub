@@ -479,28 +479,29 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 	var speed: float = c["speed"]
 	var stun_s := Damage.stun_seconds(dmg)
 	# своя команда (Doll.team, PvE-волны): стан и учтённый урон × TEAM_DAMAGE_MULT, как HP в Doll.take_damage; толчки полные
-	var team_mult := 1.0
-	if attacker != null and attacker != doll and doll.team != "" and attacker.team == doll.team:
-		team_mult = Tuning.TEAM_DAMAGE_MULT
-		stun_s *= team_mult
+	var team_mult := doll.team_mult_for(attacker)   # своя команда: как HP в Doll.take_damage (Doll.team_damage_mult)
+	stun_s *= team_mult
+	# урон, который жертва реально получает: статистика, щепки, Match.on_hit (надписи, уровень удара, крит) — по нему;
+	# take_damage режет сам (передаём dmg), отброс — полный (толчки своих остаются)
+	var dmg_eff := dmg * team_mult
 	# атакующий: статистика и комбо
 	if attacker != null and attacker != doll:
 		var s: Dictionary = attacker.stats
-		s["damage_dealt"] = float(s["damage_dealt"]) + dmg * team_mult
-		s["hardest_hit"] = maxf(float(s["hardest_hit"]), dmg)
-		s["combo_score"] = float(s["combo_score"]) + dmg * combo_mult
+		s["damage_dealt"] = float(s["damage_dealt"]) + dmg_eff
+		s["hardest_hit"] = maxf(float(s["hardest_hit"]), dmg_eff)
+		s["combo_score"] = float(s["combo_score"]) + dmg_eff * combo_mult
 		if kind == "weapon":
 			s["weapon_hits"] = int(s["weapon_hits"]) + 1
 		if ac != null:
 			ac.combo_n = combo_n_new
 			ac.combo_last_t = _time
 			ac.hits_dealt += 1
-			ac.last_damage_dealt = dmg
+			ac.last_damage_dealt = dmg_eff
 			s["combo_max"] = maxi(int(s["combo_max"]), combo_n_new)
 			ac._notify_combo()
 	# жертва
 	hits_taken += 1
-	last_damage_taken = dmg
+	last_damage_taken = dmg_eff
 	last_kind_taken = kind
 	if combo_n != 0:   # комбо жертвы сбрасывается
 		combo_n = 0
@@ -536,7 +537,7 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 		_flight_start = doll.centre_of_mass()
 		_flight_t0 = _time
 	# FX
-	if fx and dmg >= FX_MIN_DAMAGE:
+	if fx and dmg_eff >= FX_MIN_DAMAGE:
 		var parent: Node = match_ref if match_ref != null and is_instance_valid(match_ref) else doll.get_parent()
 		if parent != null:
 			# щепки летят от поверхности жертвы к бьющему (для стены — от стены)
@@ -544,9 +545,9 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 			var fx_nrm := nrm
 			if fx_nrm.dot(away) < 0.0:
 				fx_nrm = -fx_nrm
-			ImpactFx.spawn_impact(parent, pos, fx_nrm, FX_STRENGTH_BASE + dmg * FX_STRENGTH_PER_HP, kind)
+			ImpactFx.spawn_impact(parent, pos, fx_nrm, FX_STRENGTH_BASE + dmg_eff * FX_STRENGTH_PER_HP, kind)
 	if match_ref != null and is_instance_valid(match_ref) and match_ref.has_method("on_hit"):
-		match_ref.call("on_hit", doll, attacker, dmg, kind, pos, combo_n_new if ac != null else 0, double_blow, c["weapon_id"], speed)
+		match_ref.call("on_hit", doll, attacker, dmg_eff, kind, pos, combo_n_new if ac != null else 0, double_blow, c["weapon_id"], speed)
 
 
 func _notify_combo() -> void:

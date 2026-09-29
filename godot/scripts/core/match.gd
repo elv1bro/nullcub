@@ -215,6 +215,7 @@ func respawn_doll(old: Doll) -> Doll:
 	d.control_target = old.control_target
 	d.muscle_zeta = old.muscle_zeta
 	d.team = old.team
+	d.team_damage_mult = old.team_damage_mult
 	d.max_hp = old.max_hp
 	# ModularDoll (BODY_CRAFT.md): чертёж из мастерской переживает KO / R — ставится до add_child, сборка идёт в _ready.
 	# Только чертёж в памяти (CraftEdit.dup_body → BodyBlueprint.new(), resource_path ""): пресет .tres приходит со сценой, а
