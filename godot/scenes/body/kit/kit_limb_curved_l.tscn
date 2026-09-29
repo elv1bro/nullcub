@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_Curved_L.glb" id="1_hsekr"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_cdqf7"]
+friction = 0.7
+bounce = 0.08
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_geo8b"]
+radius = 0.0518
+height = 0.46144
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_4ay2m"]
+radius = 0.048174
+height = 0.151466
+
+[node name="KitLimbCurvedL" type="RigidBody3D" unique_id=1685674466]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.4
+physics_material_override = SubResource("PhysicsMaterial_cdqf7")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+metadata/part_id = "kit_limb_curved_l"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=225355466]
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1187771142]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.052
+
+[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=1699124271]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.035, 0)
+metadata/accepts = PackedStringArray("armor", "deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Limb" type="CollisionShape3D" parent="." unique_id=1282784488]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.21, 0)
+shape = SubResource("CapsuleShape3D_geo8b")
+
+[node name="Shape_Bow" type="CollisionShape3D" parent="." unique_id=1403946813]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.06276087, -0.21275, 0)
+shape = SubResource("CapsuleShape3D_4ay2m")
+
+[node name="Grip" type="Marker3D" parent="." unique_id=1337787101]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=668503602 instance=ExtResource("1_hsekr")]
+metadata/rig_mesh = true

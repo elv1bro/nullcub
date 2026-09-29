@@ -1,0 +1,103 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Core_Boiler.glb" id="1_0q0pe"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_0kclt"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_77rby"]
+height = 0.53
+radius = 0.175
+
+[node name="KitCoreBoiler" type="RigidBody3D" unique_id=1118432440]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 18.0
+physics_material_override = SubResource("PhysicsMaterial_0kclt")
+can_sleep = false
+continuous_cd = true
+linear_damp = 2.25
+angular_damp = 0.6
+metadata/kind = "core"
+metadata/part_id = "kit_core_boiler"
+
+[node name="Anchor_Neck" type="Marker3D" parent="." unique_id=988730885]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0.305, 0)
+metadata/accepts = PackedStringArray("head")
+metadata/joint_group = "Neck"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = true
+metadata/joint_r = 0.05
+
+[node name="Anchor_Shoulder_L" type="Marker3D" parent="." unique_id=1974192120]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.232, 0.236, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Shoulder"
+metadata/rest_deg = 85.0
+metadata/mirror = false
+metadata/rest_from_pose = true
+metadata/joint_r = 0.064
+
+[node name="Anchor_Shoulder_R" type="Marker3D" parent="." unique_id=1963604894]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.232, 0.236, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Shoulder"
+metadata/rest_deg = 85.0
+metadata/mirror = true
+metadata/rest_from_pose = true
+metadata/joint_r = 0.064
+
+[node name="Anchor_Hip_L" type="Marker3D" parent="." unique_id=2079055585]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, -0.285, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 12.0
+metadata/mirror = false
+metadata/rest_from_pose = true
+metadata/joint_r = 0.076
+
+[node name="Anchor_Hip_R" type="Marker3D" parent="." unique_id=734454740]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, -0.285, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 12.0
+metadata/mirror = true
+metadata/rest_from_pose = true
+metadata/joint_r = 0.076
+
+[node name="Anchor_Side_L" type="Marker3D" parent="." unique_id=2059594309]
+transform = Transform3D(0.5, -0.8660254, 0, 0.8660254, 0.5, 0, 0, 0, 1, 0.205, -0.02, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Anchor_Side_R" type="Marker3D" parent="." unique_id=654656867]
+transform = Transform3D(0.5, 0.8660254, 0, -0.8660254, 0.5, 0, 0, 0, 1, -0.205, -0.02, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = true
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Anchor_Back" type="Marker3D" parent="." unique_id=1309547508]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0.2, -0.162)
+metadata/accepts = PackedStringArray("deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Torso" type="CollisionShape3D" parent="." unique_id=1355245693]
+shape = SubResource("CylinderShape3D_77rby")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1824623465 instance=ExtResource("1_0q0pe")]
+metadata/rig_mesh = true

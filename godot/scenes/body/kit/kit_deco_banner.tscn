@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Deco_Banner.glb" id="1_cr3lw"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_o52rv"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0olwj"]
+size = Vector3(0.03, 0.58, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8ll1e"]
+size = Vector3(0.24, 0.21, 0.2)
+
+[node name="KitDecoBanner" type="RigidBody3D" unique_id=1809528410]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.5
+physics_material_override = SubResource("PhysicsMaterial_o52rv")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "deco"
+metadata/part_id = "kit_deco_banner"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1843545594]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Shape_Pole" type="CollisionShape3D" parent="." unique_id=1684620831]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0.07)
+shape = SubResource("BoxShape3D_0olwj")
+
+[node name="Shape_Flag" type="CollisionShape3D" parent="." unique_id=806294240]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0.395, 0.07)
+shape = SubResource("BoxShape3D_8ll1e")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1065968379 instance=ExtResource("1_cr3lw")]
+metadata/rig_mesh = true

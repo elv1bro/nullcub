@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "CoreGlow"
+albedo_color = Color(0.58383155, 0.3491902, 0.15170372, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(1, 0.5370987, 0.18974829, 1)
+emission_energy_multiplier = 0.9

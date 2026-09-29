@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Deco_Pauldron.glb" id="1_704lu"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_jebjp"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_a2jfy"]
+size = Vector3(0.19, 0.13, 0.165)
+
+[node name="KitDecoPauldron" type="RigidBody3D" unique_id=922557636]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.5
+physics_material_override = SubResource("PhysicsMaterial_jebjp")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "armor"
+metadata/part_id = "kit_deco_pauldron"
+
+[node name="Shape_Pauldron" type="CollisionShape3D" parent="." unique_id=1832295492]
+transform = Transform3D(0.5707713, 0.8211091, 0, -0.8211091, 0.5707713, 0, 0, 0, 1, 0.031162098, -0.055517185, 0)
+shape = SubResource("BoxShape3D_a2jfy")
+
+[node name="Socket" type="Marker3D" parent="." unique_id=668676744]
+
+[node name="Mesh" type="Node3D" parent="." unique_id=246660042 instance=ExtResource("1_704lu")]
+metadata/rig_mesh = true

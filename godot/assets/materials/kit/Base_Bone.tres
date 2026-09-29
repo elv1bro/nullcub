@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/paint_marks/albedo.webp" id="1_x38g4"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/paint_marks/roughness.webp" id="2_vnnct"]
+
+[resource]
+resource_name = "Base_Bone"
+albedo_color = Color(0.935741, 0.886004, 0.7735731, 1)
+albedo_texture = ExtResource("1_x38g4")
+roughness_texture = ExtResource("2_vnnct")

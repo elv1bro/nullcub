@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_robotic_s.tscn" id="1_w3w5b"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_o6pko"]
+
+[resource]
+script = ExtResource("2_o6pko")
+id = "kit_limb_robotic_s"
+title = "Робо-гидравлика (рука)"
+scene = ExtResource("1_w3w5b")
+mass = 3.0
+energy = 7
+body_mult = 0.8
+name_prefix = "UpperArm"
+base_mat = "paint_yellow"
+connector = true

@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Hand_Claw.glb" id="1_40nyu"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pncr2"]
+friction = 0.5
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_k6xwu"]
+size = Vector3(0.12, 0.16, 0.07)
+
+[node name="KitHandClaw" type="RigidBody3D" unique_id=1020856033]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.9
+physics_material_override = SubResource("PhysicsMaterial_pncr2")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "hand"
+metadata/part_id = "kit_hand_claw"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=712746328]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+
+[node name="Shape_Hand" type="CollisionShape3D" parent="." unique_id=520024999]
+shape = SubResource("BoxShape3D_k6xwu")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1420522648 instance=ExtResource("1_40nyu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+metadata/rig_mesh = true

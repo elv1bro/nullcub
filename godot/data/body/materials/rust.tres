@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_fijqi"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_Rust.tres" id="2_q3q5e"]
+
+[resource]
+script = ExtResource("1_fijqi")
+id = "rust"
+title = "Ржавчина"
+surface = ExtResource("2_q3q5e")
+swatch = Color(0.48452926, 0.36556464, 0.2716998, 1)
+density = 2.0
+friction = 0.7
+bounce = 0.08
+body_mult = 1.15
+iron = true

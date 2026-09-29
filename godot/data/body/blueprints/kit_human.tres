@@ -1,0 +1,94 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_fpc2p"]
+
+[resource]
+script = ExtResource("1_fpc2p")
+id = "kit_human"
+title = "Кит «Человек»"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "kit_human_torso",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"name": "Head",
+"parent": "T",
+"part": "kit_human_head",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "kit_human_upper_arm",
+"uid": "1"
+}, {
+"anchor": "Anchor_Elbow",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "kit_human_lower_arm",
+"uid": "2"
+}, {
+"anchor": "Anchor_Wrist",
+"name": "Hand_L",
+"parent": "2",
+"part": "kit_human_hand",
+"uid": "3"
+}, {
+"anchor": "Anchor_Hip_L",
+"name": "UpperLeg_L",
+"parent": "T",
+"part": "kit_human_upper_leg",
+"uid": "4"
+}, {
+"anchor": "Anchor_Knee",
+"name": "LowerLeg_L",
+"parent": "4",
+"part": "kit_human_lower_leg",
+"uid": "5"
+}, {
+"anchor": "Anchor_Ankle",
+"name": "Foot_L",
+"parent": "5",
+"part": "kit_human_foot",
+"uid": "6"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "kit_human_upper_arm",
+"uid": "7"
+}, {
+"anchor": "Anchor_Elbow",
+"name": "LowerArm_R",
+"parent": "7",
+"part": "kit_human_lower_arm",
+"uid": "8"
+}, {
+"anchor": "Anchor_Wrist",
+"name": "Hand_R",
+"parent": "8",
+"part": "kit_human_hand",
+"uid": "9"
+}, {
+"anchor": "Anchor_Hip_R",
+"name": "UpperLeg_R",
+"parent": "T",
+"part": "kit_human_upper_leg",
+"uid": "A"
+}, {
+"anchor": "Anchor_Knee",
+"name": "LowerLeg_R",
+"parent": "A",
+"part": "kit_human_lower_leg",
+"uid": "B"
+}, {
+"anchor": "Anchor_Ankle",
+"name": "Foot_R",
+"parent": "B",
+"part": "kit_human_foot",
+"uid": "C"
+}])
+control = PackedStringArray("9")

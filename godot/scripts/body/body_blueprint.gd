@@ -1,12 +1,15 @@
 ## Чертёж тела (docs/plan-demo/BODY_CRAFT.md §2). Пресеты: data/body/blueprints/<id>.tres.
-## nodes — массив словарей {uid, part, parent, anchor, rest_deg?, name?}:
+## nodes — массив словарей {uid, part, parent, anchor, rest_deg?, name?, mat?, joint?}:
 ##   uid      — ОДИН символ 0-9A-Z (Damage.body_mult_of режет только суффикс имени длиной ≤ 1: "UpperArm_3");
 ##   part     — id PartDef (data/body/parts/<id>.tres);
 ##   parent   — uid родителя ("" у ядра);
 ##   anchor   — имя Anchor_* у родителя;
 ##   rest_deg — переопределение угла покоя сустава (иначе meta rest_deg якоря);
-##   name     — явное имя тела (пресет human повторяет имена doll.tscn: UpperArm_L, Hand_R…).
+##   name     — явное имя тела (пресет human повторяет имена doll.tscn: UpperArm_L, Hand_R…);
+##   mat      — кит v2 (docs/plan-demo/BODY_KIT.md §4): id MaterialDef вместо PartDef.base_mat (только у деталей с base_mat);
+##   joint    — кит v2 (§5.2): тип шарнира связи с родителем, KitJoint.TYPES (нет ключа — "pin"; "weld" — узел сливается с родителем).
 ## Корень — ядро (kind core, имя Torso), ровно одна голова (kind head) на Anchor_Neck ядра.
+## Узел без своего тела (is_fixed): PartDef.attach "fixed", вид из PartDef.FIXED_KINDS (декор, броня) или joint "weld".
 class_name BodyBlueprint
 extends Resource
 
@@ -30,12 +33,14 @@ static func part_def(part_id: String) -> PartDef:
 	return load(path) as PartDef
 
 
+## Σ PartDef.energy + Σ энергия типов шарниров (KitJoint: пружина 2, мотор 8).
 func energy_used() -> int:
 	var total := 0
 	for n in nodes:
 		var d := part_def(String(n.get("part", "")))
 		if d != null:
 			total += d.energy
+		total += KitJoint.energy_of(String(n.get("joint", "")))
 	return total
 
 
@@ -62,6 +67,16 @@ func validate() -> PackedStringArray:
 				errors.append("корень должен быть ядром, а не «%s»" % d.id)
 		if d.kind == "head":
 			heads += 1
+		var mid := String(n.get("mat", ""))
+		if mid != "":
+			var me := _mat_error(n, d, mid)
+			if me != "":
+				errors.append(me)
+		var jt := String(n.get("joint", ""))
+		if jt != "":
+			var je := _joint_error(n, d, jt)
+			if je != "":
+				errors.append(je)
 	for n in nodes:
 		var p := String(n.get("parent", ""))
 		if p != "" and not uids.has(p):
@@ -75,6 +90,9 @@ func validate() -> PackedStringArray:
 	for c in control:
 		if not uids.has(c):
 			errors.append("управляемая деталь «%s» не найдена" % c)
+		elif _is_fixed_n(uids[c]):
+			# своего тела нет (навершие вместо кисти, декор, сварка): ArmAssist искал бы тело, которого нет, — рука мышью молча пропала бы
+			errors.append("рука мышью на «%s» — у детали нет своего тела (fixed), отметь тело-хозяина" % c)
 	if errors.is_empty():
 		errors.append_array(_validate_assembly())
 	return errors
@@ -146,51 +164,85 @@ static func anchor_info(m: Marker3D) -> Dictionary:
 	}
 	if m.has_meta("limit_deg"):
 		info["limit_deg"] = Vector2(m.get_meta("limit_deg"))
+	if m.has_meta("joint_r"):
+		info["joint_r"] = float(m.get_meta("joint_r"))   # кит v2: радиус шара коннектора (ModularDoll, иначе KitJoint.RADIUS)
 	return info
 
 
 ## Группа мышц сустава, которым деталь uid крепится к родителю ("" у ядра и fixed-деталей): joint_group якоря родителя,
 ## "auto" — AUTO_NEXT по группе сустава самого родителя.
 func joint_group_of(uid: String) -> String:
+	if is_fixed(uid):
+		return ""
+	return _anchor_group(uid, 0)
+
+
+## Группа сустава, которую якорь родителя дал бы узлу uid со своим суставом — и у сваренного узла (joint "weld": угол покоя сварки,
+## ModularDoll._build; запрет мотора на суставе без мышцы, _joint_error). "" — корень, нет узла, fixed-деталь по PartDef.
+func anchor_group_of(uid: String) -> String:
+	return _anchor_group(uid, 0)
+
+
+## depth — защита от циклов: validate() и CraftEdit.structural_errors зовут группу (через _joint_error) ДО проверки цепочки
+## родителей (_validate_assembly); у чертежа с циклом (A → B → A на auto-якорях) рекурсия иначе не кончилась бы. Шаг вверх по цепи —
+## +2 (_anchor_group → _host_group → _anchor_group), цепь без цикла короче числа узлов: предел 2 × узлов её не режет.
+func _anchor_group(uid: String, depth: int) -> String:
 	var n := find_node(uid)
 	var p := String(n.get("parent", ""))
-	if n.is_empty() or p == "":
+	if n.is_empty() or p == "" or depth > 2 * nodes.size():
 		return ""
-	var d := part_def(String(n.get("part", "")))
-	if d != null and d.attach == "fixed":
+	if is_fixed_part(part_def(String(n.get("part", "")))):
 		return ""
 	var pn := find_node(p)
 	var a: Dictionary = part_anchors(part_def(String(pn.get("part", "")))).get(String(n.get("anchor", "")), {})
 	var g := String(a.get("joint_group", ""))
 	if g == "auto":
-		var pg := _host_group(p)
+		var pg := _host_group(p, depth + 1)
 		g = String(AUTO_NEXT.get(pg, "Wrist"))
 	return g
 
 
 ## Группа сустава тела, в которое входит деталь uid (fixed-детали — группа тела-хозяина).
-func _host_group(uid: String) -> String:
+func _host_group(uid: String, depth: int = 0) -> String:
+	if depth > 2 * nodes.size():
+		return ""
+	if is_fixed(uid):
+		return _host_group(String(find_node(uid).get("parent", "")), depth + 1)
+	return _anchor_group(uid, depth + 1)
+
+
+## Префикс имени тела узла: PartDef.name_prefix; у конечности кита (префикс по размеру: S — UpperArm, L — UpperLeg) на суставе
+## локтя / колена — LowerArm / LowerLeg: имя тела решает Damage.body_mult_of и монитор DollCombat.MONITORED, предплечье из
+## мастерской должно бить и слушать контакты как предплечье пресета (BODY_KIT.md §3.5). Плечо / бедро / бок и третий сегмент
+## (Wrist / Ankle) — префикс детали, как был (у пресетов пауков — без изменений).
+func name_prefix_of(uid: String) -> String:
 	var n := find_node(uid)
 	var d := part_def(String(n.get("part", "")))
-	if d != null and d.attach == "fixed" and String(n.get("parent", "")) != "":
-		return _host_group(String(n.get("parent", "")))
-	return joint_group_of(uid)
+	if n.is_empty() or d == null:
+		return ""
+	if d.kind == "limb" and d.connector:
+		match joint_group_of(uid):
+			"Elbow":
+				return "LowerArm"
+			"Knee":
+				return "LowerLeg"
+	return d.name_prefix
 
 
 ## Имя тела (BODY_CRAFT.md §2): явное name узла; ядро и голова — просто name_prefix («Torso», «Head»: Doll.torso()/head() и
-## Tuning.DOLL_CORE_PARTS ищут по имени); остальные — <name_prefix>_<uid>. У fixed-детали своего тела нет — имя тела-хозяина.
+## Tuning.DOLL_CORE_PARTS ищут по имени); остальные — <name_prefix_of>_<uid>. У fixed-детали своего тела нет — имя тела-хозяина.
 func body_name_of(uid: String) -> String:
 	var n := find_node(uid)
 	var d := part_def(String(n.get("part", "")))
 	if n.is_empty() or d == null:
 		return ""
-	if d.attach == "fixed" and String(n.get("parent", "")) != "":
+	if is_fixed(uid):
 		return body_name_of(String(n.get("parent", "")))
 	if String(n.get("name", "")) != "":
 		return String(n.get("name", ""))
 	if d.kind == "core" or d.kind == "head":
 		return d.name_prefix
-	return "%s_%s" % [d.name_prefix, uid]
+	return "%s_%s" % [name_prefix_of(uid), uid]
 
 
 ## Суффикс имени тела после последнего «_» («UpperArm_L» → «L», «Foot_3» → «3», «Head» → «»).
@@ -217,17 +269,154 @@ func control_body_names() -> PackedStringArray:
 	return out
 
 
+## Σ node_mass (материал узла меняет массу детали, §4).
 func total_mass() -> float:
 	var m := 0.0
 	for n in nodes:
-		var d := part_def(String(n.get("part", "")))
-		if d != null:
-			m += d.mass
+		m += _node_mass(n)
 	return m
+
+
+# --- кит v2: fixed / материал / тип шарнира узла (docs/plan-demo/BODY_KIT.md §4, §5.2–5.3) ---
+
+## Деталь сама по себе без своего тела: attach "fixed" или вид из PartDef.FIXED_KINDS (декор, броня — даже если attach "joint").
+static func is_fixed_part(d: PartDef) -> bool:
+	return d != null and (d.attach == "fixed" or PartDef.FIXED_KINDS.has(d.kind))
+
+
+## Узел uid сливается с телом родителя (своего тела и сустава нет): есть родитель и деталь fixed (is_fixed_part) или joint "weld".
+## Все проверки «fixed» сборки, мастерской и проб идут через него.
+func is_fixed(uid: String) -> bool:
+	return _is_fixed_n(find_node(uid))
+
+
+func _is_fixed_n(n: Dictionary) -> bool:
+	if n.is_empty() or String(n.get("parent", "")) == "":
+		return false
+	if KitJoint.is_weld(String(n.get("joint", ""))):
+		return true
+	return is_fixed_part(part_def(String(n.get("part", ""))))
+
+
+## Тип шарнира, которым узел uid висит на родителе (KitJoint.TYPES): ключ joint, без него — "pin". "" — сустава не бывает
+## (корень, fixed-деталь по PartDef, узла нет). Сваренный узел — "weld".
+func joint_type_of(uid: String) -> String:
+	var n := find_node(uid)
+	if n.is_empty() or String(n.get("parent", "")) == "" or is_fixed_part(part_def(String(n.get("part", "")))):
+		return ""
+	var jt := String(n.get("joint", ""))
+	return jt if jt != "" else KitJoint.DEFAULT
+
+
+## id MaterialDef узла: ключ mat, иначе PartDef.base_mat ("" — деталь не красится: старые wood_*, junk_*, craft).
+func node_mat(uid: String) -> String:
+	return _node_mat(find_node(uid))
+
+
+static func _node_mat(n: Dictionary) -> String:
+	var mid := String(n.get("mat", ""))
+	if mid != "":
+		return mid
+	var d := part_def(String(n.get("part", "")))
+	return d.base_mat if d != null else ""
+
+
+## Масса узла (кг): PartDef.mass × density материала узла / density base_mat; без base_mat (или без файла материала) — PartDef.mass.
+func node_mass(uid: String) -> float:
+	return _node_mass(find_node(uid))
+
+
+static func _node_mass(n: Dictionary) -> float:
+	var d := part_def(String(n.get("part", "")))
+	if d == null:
+		return 0.0
+	if d.base_mat == "":
+		return d.mass
+	var base := MaterialDef.get_def(d.base_mat)
+	var m := MaterialDef.get_def(_node_mat(n))
+	if base == null or m == null or base.density <= 0.0 or m == base:
+		return d.mass
+	return d.mass * m.density / base.density
+
+
+## Железо ли узел для магнита Свалки: у детали кита — MaterialDef.iron материала узла, у старых — PartDef.material == "iron".
+func node_iron(uid: String) -> bool:
+	return _node_iron(find_node(uid))
+
+
+static func _node_iron(n: Dictionary) -> bool:
+	var d := part_def(String(n.get("part", "")))
+	if d == null:
+		return false
+	var m: MaterialDef = null
+	if d.base_mat != "":
+		m = MaterialDef.get_def(_node_mat(n))
+	return m.iron if m != null else d.material == "iron"
+
+
+## Почему узлу uid нельзя материал mat_id ("" — можно). Мастерская показывает причину отказа кисти.
+func mat_error(uid: String, mat_id: String) -> String:
+	var n := find_node(uid)
+	var d := part_def(String(n.get("part", "")))
+	if n.is_empty() or d == null:
+		return "нет детали «%s»" % uid
+	return _mat_error(n, d, mat_id)
+
+
+static func _mat_error(n: Dictionary, d: PartDef, mat_id: String) -> String:
+	var uid := String(n.get("uid", ""))
+	if MaterialDef.get_def(mat_id) == null:
+		return "у «%s» неизвестный материал «%s»" % [uid, mat_id]
+	if d.base_mat == "":
+		return "«%s» (%s) не красится: материал «%s» — только для деталей кита" % [uid, d.id, mat_id]
+	return ""
+
+
+## Почему узлу uid нельзя тип шарнира jt ("" — можно, BODY_KIT.md §5.2). Мастерская показывает причину отказа.
+func joint_error(uid: String, jt: String) -> String:
+	var n := find_node(uid)
+	var d := part_def(String(n.get("part", "")))
+	if n.is_empty() or d == null:
+		return "нет детали «%s»" % uid
+	return _joint_error(n, d, jt)
+
+
+func _joint_error(n: Dictionary, d: PartDef, jt: String) -> String:
+	var uid := String(n.get("uid", ""))
+	if not KitJoint.is_type(jt):
+		return "у «%s» неизвестный тип шарнира «%s»" % [uid, jt]
+	if String(n.get("parent", "")) == "":
+		return "у корня «%s» нет сустава — шарнир «%s» ставить некуда" % [uid, jt]
+	if is_fixed_part(d):
+		return "«%s» (%s) крепится намертво — шарнир «%s» к ней не ставится" % [uid, d.id, jt]
+	if not KitJoint.is_weld(jt):
+		# мотор / пружина множат мышцу группы (ModularDoll._update_pair_gains): у группы без мышцы (k = 0 в Tuning.MUSCLE_GROUPS —
+		# Ankle: стопы, третий сегмент ноги, «прочие» якоря) они стоили бы энергию и ничего не давали. Группа — по якорю
+		# (anchor_group_of): узел может быть сейчас сварен, а спрашивают про мотор.
+		var km := float(KitJoint.info(jt).get("k", 1.0))
+		if km > 0.0 and jt != KitJoint.DEFAULT:
+			var g := _anchor_group(uid, 0)
+			var G: Dictionary = Tuning.MUSCLE_GROUPS.get(g, {})
+			if not G.is_empty() and float(G["k"]) <= 0.0:
+				return "у сустава «%s» (%s) нет мышцы — шарнир «%s» ничего не усилит" % [uid, g, KitJoint.info(jt)["title"]]
+		return ""
+	if d.kind == "head":
+		return "голову «%s» нельзя приварить: она держится на своём суставе Neck" % uid
+	if control.has(uid):
+		return "управляемую деталь «%s» нельзя приварить: рука мышью тянет её собственное тело" % uid
+	var anchors := part_anchors(d)
+	for c in nodes:
+		if String(c.get("parent", "")) != uid or _is_fixed_n(c):
+			continue
+		var an := String(c.get("anchor", ""))
+		if String((anchors.get(an, {}) as Dictionary).get("joint_group", "")) == "auto":
+			return "«%s» нельзя приварить: сустав «%s» на её якоре «%s» берёт группу от неё (auto)" % [uid, c.get("uid", ""), an]
+	return ""
 
 
 ## Проверки сборки поверх базовых: uid из 0-9A-Z, цепочки без циклов, якорь есть у родителя и принимает вид детали, один ребёнок
 ## на якорь, голова на Anchor_Neck ядра, имена тел и суставов не повторяются, группа сустава известна, управляемых ≤ 2.
+## mat / joint узлов (кит v2) проверяет validate() в базовом проходе: _mat_error, _joint_error.
 func _validate_assembly() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var sorted := sorted_nodes()
@@ -262,7 +451,7 @@ func _validate_assembly() -> PackedStringArray:
 			used_anchor[key] = uid
 			if d.kind == "head" and (p != root_uid or an != "Anchor_Neck"):
 				errors.append("голова «%s» должна висеть на Anchor_Neck ядра" % uid)
-		if d.attach == "fixed" and p != "":
+		if is_fixed(uid):
 			continue
 		var bn := body_name_of(uid)
 		if body_names.has(bn):

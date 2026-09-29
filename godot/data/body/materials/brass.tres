@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_51kcd"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_Brass.tres" id="2_sjrf7"]
+
+[resource]
+script = ExtResource("1_51kcd")
+id = "brass"
+title = "Латунь"
+surface = ExtResource("2_sjrf7")
+swatch = Color(0.735357, 0.6342527, 0.4100209, 1)
+density = 2.4
+friction = 0.45
+bounce = 0.15
+body_mult = 1.2

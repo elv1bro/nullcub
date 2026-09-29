@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Foot_Spring.glb" id="1_lgfpy"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_0auaf"]
+friction = 0.9
+bounce = 0.6
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_sp8ca"]
+height = 0.058
+radius = 0.062
+
+[node name="KitFootSpring" type="RigidBody3D" unique_id=346561495]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.7
+physics_material_override = SubResource("PhysicsMaterial_0auaf")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "foot"
+metadata/part_id = "kit_foot_spring"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1222199488]
+
+[node name="Shape_Foot" type="CollisionShape3D" parent="." unique_id=1258910073]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.061, 0)
+shape = SubResource("CylinderShape3D_sp8ca")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1820276434 instance=ExtResource("1_lgfpy")]
+metadata/rig_mesh = true

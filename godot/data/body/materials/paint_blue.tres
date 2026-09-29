@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_tsw6o"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_PaintBlue.tres" id="2_ku4yt"]
+
+[resource]
+script = ExtResource("1_tsw6o")
+id = "paint_blue"
+title = "Бирюзовая краска"
+surface = ExtResource("2_ku4yt")
+swatch = Color(0.13335153, 0.47312066, 0.4912152, 1)
+friction = 0.5

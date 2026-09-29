@@ -1,5 +1,6 @@
 ## UI мастерской (стиль HUD: деревянные таблички hud_theme.tres, кисть-леттеринг, лист R20). Дерево — workshop_ui.tscn, здесь
-## поведение: bind(WorkshopBuild) → шаблоны, полка (вкладки по видам, карточки part_card.gd с иконками PartIcons), правая панель
+## поведение: bind(WorkshopBuild) → шаблоны, полка (вкладки по видам, карточки part_card.gd с иконками PartIcons; у вкладок с tool —
+## инструмент над деталями: «Шарниры» — плашки типов joint_card.gd, «Материал» — плашки кисти material_card.gd), правая панель
 ## (ENERGY, масса, тела, разгон, рука мышью, оружие, ошибки validate() словами, сохранить / загрузить / отменить; на вкладке ОРУЖИЕ —
 ## верстак: характеристики словами, «В руку»), подсказка внизу, всплывающие сообщения сверху, иконка детали у курсора при протяжке.
 ## В испытании — плашка ИСПЫТАНИЕ, счёт урона, табличка HP над манекеном и цифры урона в точке удара.
@@ -7,11 +8,21 @@
 extends CanvasLayer
 
 const PartCard := preload("res://scenes/workshop/ui/part_card.gd")
+const MaterialCard := preload("res://scenes/workshop/ui/material_card.gd")
+const JointCard := preload("res://scenes/workshop/ui/joint_card.gd")
 ## Короткие подписи шаблонов на кнопках (полные — в подсказке).
 const PRESET_SHORT := {
 	"human": "Человек", "spider": "Паук", "long_arm": "Длиннорук", "big_arm": "Силач", "legless": "Безногий", "junk": "Хлам",
-	"flail": "Кистень", "mallet": "Киянка", "hammer": "Молот", "spiked_hammer": "С гвоздями", "heavy_hammer": "Тяжёлый",
+	"flail": "Кистень", "kit_human": "Кукла-кит", "kit_brawler": "Громила", "kit_bot": "Робот", "kit_horned": "Рогатый",
+	"kit_king": "Король", "kit_spider": "Кит-паук", "kit_devil": "Чёртик", "kit_skull": "Скелет", "kit_wheels": "Каталка",
+	"kit_lantern": "Фонарщик",
+	"mallet": "Киянка", "hammer": "Молот", "spiked_hammer": "С гвоздями", "heavy_hammer": "Тяжёлый",
 	"long_hammer": "Длинный", "sword": "Меч", "axe": "Топор", "concept_hammer": "Концепт",
+}
+## Строка над инструментом вкладки (CraftEdit.BODY_SHELVES tool).
+const TOOL_HINTS := {
+	"material": "Выбери материал и кликай по деталям куклы: масса меняется как новая плотность / прежняя (дерево = 1). Старые детали (не кит) не красятся.",
+	"joint": "Выбери тип и кликай по детали — так она держится за родителя. У ядра и декора шарнира нет.",
 }
 const TOAST_Y_BUILD := 18.0
 const TOAST_Y_TEST := 112.0
@@ -24,6 +35,8 @@ var ctl: WorkshopBuild
 var icons: PartIcons
 var shelf_tab := {"body": "limb", "weapon": "weapon_head"}
 var _cards: Dictionary = {}          # part id -> карточка
+var _tool_cards: Dictionary = {}     # id материала / тип шарнира -> плашка инструмента текущей вкладки
+var _tool := ""                      # инструмент текущей вкладки: "material" | "joint" | ""
 var _hint_t := 0.0
 var _toast_tween: Tween
 var _dmg_total := 0.0
@@ -41,7 +54,10 @@ var _preset_buttons: Array = []
 @onready var presets_box: GridContainer = $Root/Left/VBox/Presets
 @onready var shelf_title: Label = $Root/Left/VBox/ShelfTitle
 @onready var shelf_tabs: HFlowContainer = $Root/Left/VBox/ShelfTabs
-@onready var shelf: GridContainer = $Root/Left/VBox/ShelfScroll/Shelf
+@onready var shelf: GridContainer = $Root/Left/VBox/ShelfScroll/ShelfBox/Shelf
+@onready var tools_box: GridContainer = $Root/Left/VBox/ShelfScroll/ShelfBox/Tools
+@onready var tool_hint: Label = $Root/Left/VBox/ShelfScroll/ShelfBox/ToolHint
+@onready var parts_title: Label = $Root/Left/VBox/ShelfScroll/ShelfBox/PartsTitle
 @onready var shelf_scroll: ScrollContainer = $Root/Left/VBox/ShelfScroll
 @onready var body_box: Control = $Root/Right/VBox/BodyBox
 @onready var build_title: Label = $Root/Right/VBox/BodyBox/BuildTitle
@@ -148,14 +164,15 @@ func _build_left() -> void:
 		c.queue_free()
 	_preset_buttons.clear()
 	var ids: Array = CraftEdit.WEAPON_PRESETS if weapon else CraftEdit.BODY_PRESETS
+	var many := ids.size() > 9   # 17 шаблонов тела (с китом): 6 рядов по 3, кнопки ниже — полке остаётся место
 	for id in ids:
 		var title := _preset_title(String(id), weapon)
 		var b := Button.new()
 		b.text = String(PRESET_SHORT.get(String(id), title))
 		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(0, 40)
+		b.custom_minimum_size = Vector2(0, (32 if ids.size() > 15 else 35) if many else 40)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.add_theme_font_size_override("font_size", 18)
+		b.add_theme_font_size_override("font_size", 17 if many else 18)
 		b.clip_text = true
 		b.tooltip_text = title
 		var pid := String(id)
@@ -179,8 +196,11 @@ func _build_left() -> void:
 		b2.add_theme_stylebox_override("pressed", _gold_style())
 		b2.set_pressed_no_signal(String(s["id"]) == String(shelf_tab[_view_key()]))
 		var sid := String(s["id"])
+		var stool := String(s.get("tool", ""))
 		b2.pressed.connect(func() -> void:
 			shelf_tab[_view_key()] = sid
+			if ctl.active_tool() in ["material", "joint"] and ctl.active_tool() != stool:
+				ctl.clear_tools()   # ушёл с вкладки инструмента — кисть / шарнир кладутся
 			_build_left())
 		shelf_tabs.add_child(b2)
 	_build_shelf()
@@ -201,15 +221,39 @@ func _preset_title(id: String, weapon: bool) -> String:
 func _build_shelf() -> void:
 	for c in shelf.get_children():
 		c.queue_free()
+	for c in tools_box.get_children():
+		c.queue_free()
 	_cards.clear()
+	_tool_cards.clear()
 	var shelves: Array = CraftEdit.WEAPON_SHELVES if ctl.view == WorkshopBuild.View.WEAPON else CraftEdit.BODY_SHELVES
-	var kinds: Array = []
-	for s in shelves:
-		if String(s["id"]) == String(shelf_tab[_view_key()]):
-			kinds = s["kinds"]
-	for d in CraftEdit.parts_of_kinds(kinds):
+	var sh := CraftEdit.shelf_of(shelves, String(shelf_tab[_view_key()]))
+	var kinds: Array = sh.get("kinds", [])
+	_tool = String(sh.get("tool", ""))
+	# инструмент вкладки (кит v2, BODY_KIT.md §5.5): плашки материалов (2 колонки) / типов шарнира (строки) над деталями
+	if _tool == "material":
+		tools_box.columns = 2
+		for mid in MaterialDef.all_ids():
+			var mc := MaterialCard.new()
+			mc.setup(MaterialDef.get_def(mid))
+			mc.picked.connect(func(m: String) -> void: ctl.set_paint_mat(m))
+			tools_box.add_child(mc)
+			_tool_cards[mid] = mc
+	elif _tool == "joint":
+		tools_box.columns = 1
+		for jt in KitJoint.ORDER:
+			var jc := JointCard.new()
+			jc.setup(String(jt))
+			jc.picked.connect(func(t: String) -> void: ctl.set_joint_pick(t))
+			tools_box.add_child(jc)
+			_tool_cards[String(jt)] = jc
+	tools_box.visible = not _tool_cards.is_empty()
+	tool_hint.visible = tools_box.visible
+	tool_hint.text = String(TOOL_HINTS.get(_tool, ""))
+	var defs := CraftEdit.parts_of_kinds(kinds)
+	parts_title.visible = tools_box.visible and not defs.is_empty()
+	for d in defs:
 		var card := PartCard.new()
-		card.setup(d)
+		card.setup(d, ctl.view != WorkshopBuild.View.WEAPON)   # на полке тела навершие — только масса и форма (подсказка)
 		card.grabbed.connect(_on_card_grabbed)
 		shelf.add_child(card)
 		_cards[d.id] = card
@@ -218,6 +262,16 @@ func _build_shelf() -> void:
 			card.set_icon(tex)
 	shelf_scroll.scroll_vertical = 0
 	_update_card_fits()
+	_update_tool_cards()
+
+
+## Выбранная плашка инструмента — золотая (кисть / шарнир в руке у WorkshopBuild).
+func _update_tool_cards() -> void:
+	if ctl == null:
+		return
+	var sel := ctl.paint_mat if _tool == "material" else (ctl.joint_pick if _tool == "joint" else "")
+	for id in _tool_cards:
+		(_tool_cards[id]).set_selected(String(id) == sel)
 
 
 func _on_icon(part_id: String, tex: Texture2D) -> void:
@@ -286,6 +340,7 @@ func _refresh() -> void:
 	test_button.tooltip_text = "" if not test_button.disabled else "Сначала исправь: %s" % (s["errors"] as PackedStringArray)[0]
 	_refresh_weapon()
 	_update_card_fits()
+	_update_tool_cards()
 	_update_hint()
 
 
@@ -400,7 +455,8 @@ func _on_mode(m: int) -> void:
 		_dmg_hits = 0
 		_dmg_best = 0.0
 		_update_test_stats()
-		dummy_hp.set_hp(Tuning.MAX_HP, false)
+		dummy_hp.max_hp = _dummy_max_hp()
+		dummy_hp.set_hp(dummy_hp.max_hp, false)
 	for c in floaters.get_children():
 		c.queue_free()
 	_refresh()
@@ -462,9 +518,28 @@ func _update_dummy_panel() -> void:
 	var p := cam.unproject_position(top)
 	dummy_panel.position = p - Vector2(dummy_panel.size.x * 0.5, dummy_panel.size.y + 6.0)
 	var hp := float(d.call("hp"))
+	var mx := _dummy_max_hp()
+	if not is_equal_approx(mx, dummy_hp.max_hp):   # другой манекен (запас HP куклы — Doll.max_hp)
+		dummy_hp.max_hp = mx
+		dummy_hp.set_hp(hp, false)
 	if not is_equal_approx(hp, dummy_hp.hp):
 		dummy_hp.set_hp(hp, true)
-	dummy_hp_text.text = "%d / %d" % [roundi(hp), roundi(Tuning.MAX_HP)] if bool(d.call("alive")) else "KO! встаёт…"
+	dummy_hp_text.text = "%d / %d" % [roundi(hp), roundi(mx)] if bool(d.call("alive")) else "KO! встаёт…"
+
+
+## Полный запас HP манекена: TrainingDummy.max_hp() (= Doll.max_hp его куклы), иначе поле max_hp куклы, иначе Tuning.MAX_HP.
+func _dummy_max_hp() -> float:
+	var d: Node = ctl.dummy if ctl != null else null
+	if d == null or not is_instance_valid(d):
+		return Tuning.MAX_HP
+	if d.has_method("max_hp"):
+		return float(d.call("max_hp"))
+	var doll: Variant = d.get("doll")
+	if doll is Object and is_instance_valid(doll):
+		var mh: Variant = (doll as Object).get("max_hp")
+		if mh != null and float(mh) > 0.0:
+			return float(mh)
+	return Tuning.MAX_HP
 
 
 # ------------------------------------------------------------------ сохранить / загрузить

@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Head_Horned.glb" id="1_xhfqf"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5p7wq"]
+friction = 0.5
+bounce = 0.1
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_2qx4r"]
+radius = 0.16
+
+[node name="KitHeadHorned" type="RigidBody3D" unique_id=2133976403]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 6.0
+physics_material_override = SubResource("PhysicsMaterial_5p7wq")
+can_sleep = false
+continuous_cd = true
+linear_damp = 2.25
+angular_damp = 0.6
+metadata/kind = "head"
+metadata/part_id = "kit_head_horned"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1472724487]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Anchor_Top" type="Marker3D" parent="." unique_id=1644222774]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0.365, 0)
+metadata/accepts = PackedStringArray("deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Head" type="CollisionShape3D" parent="." unique_id=1297380868]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+shape = SubResource("SphereShape3D_2qx4r")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1644073708 instance=ExtResource("1_xhfqf")]
+metadata/rig_mesh = true

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_hand_fist.tscn" id="1_2evkx"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_nq6so"]
+
+[resource]
+script = ExtResource("2_nq6so")
+id = "kit_hand_fist"
+title = "Кулак"
+kind = "hand"
+scene = ExtResource("1_2evkx")
+mass = 1.5
+energy = 3
+body_mult = 2.0
+hit_mult = 1.1
+material = "iron"
+name_prefix = "Hand"
+base_mat = "rust"
+connector = true

@@ -12,6 +12,10 @@
 ##     курсора — «призрак» детали в посадке child = anchor × R(поза покоя) × socket⁻¹; отпустил → прикручено. Клик по карточке без
 ##     протяжки — деталь «в руке», следующий клик ставит (или ПКМ / Esc — отмена);
 ##   • ПКМ по детали — открутить с поддеревом; Q (кнопка «Рука мышью») и клик — пометить управляемую деталь (светится золотом);
+##   • кит v2 (docs/plan-demo/BODY_KIT.md §5.5), инструменты полки: вкладка «Материал» — кисть (paint_mat): клик по детали на стенде
+##     → set_material (узел mat, масса × новая плотность / прежняя; деталь без base_mat — отказ с причиной); вкладка «Шарниры» — тип шарнира
+##     (joint_pick): клик по детали → set_joint (связь детали с родителем: ось / свободный / пружина / мотор / сварка; корень и
+##     запреты §5.2 — отказ). Esc / ПКМ снимают инструмент. Инструменты, «рука мышью» и протяжка взаимно исключают друг друга;
 ##   • ТЕЛО / ОРУЖИЕ (Tab) — камера едет со стенда на верстак; на верстаке тот же drag&drop на WeaponBlueprint (корень — рукоять),
 ##     живое превью CraftedWeapon, характеристики словами (weapon_stats). «В руку» — blueprint.weapon (копия верстака, дальше
 ##     синхронизируется) + weapon_on = CraftEdit.weapon_mount(); на стенде оружие видно в кисти (как WeaponPickup.attach).
@@ -33,6 +37,7 @@ enum View { BODY, WEAPON }
 
 const MODULAR_DOLL := preload("res://scenes/body/modular_doll.tscn")
 const DummyScript := preload("res://scenes/workshop/training_dummy.gd")
+const JointCard := preload("res://scenes/workshop/ui/joint_card.gd")   # цвета типов шарнира (подсветка, сообщения)
 const CRATE_SCENE := "res://scenes/props/crate.tscn"
 const BARREL_SCENE := "res://scenes/props/barrel.tscn"
 const PICK_LAYER := 1 << 19
@@ -74,6 +79,8 @@ var bench_weapon: CraftedWeapon
 var held_weapon: CraftedWeapon          # оружие в кисти куклы на стенде (только показ)
 var drag: Dictionary = {}                # {part, targets, index, sticky, start, pos, moved}
 var control_pick := false
+var paint_mat := ""                      # кисть материала: id MaterialDef ("" — выключена)
+var joint_pick := ""                     # инструмент шарнира: тип KitJoint ("" — выключен)
 var hover: Dictionary = {}               # {target: "body"|"weapon", uid}
 var history: Array = []
 var last_result: Dictionary = {}
@@ -248,9 +255,129 @@ func set_control(uid: String) -> Dictionary:
 func toggle_control_pick() -> void:
 	control_pick = not control_pick
 	if control_pick:
+		paint_mat = ""
+		joint_pick = ""
 		cancel_drag()
 		set_view(View.BODY)
+	_apply_highlights()
 	changed.emit()
+
+
+# --- инструменты кита v2: кисть материала и тип шарнира (BODY_KIT.md §5.5) ---
+
+## Взять кисть материала mat_id (тот же id ещё раз или "" — положить). Снимает «руку мышью», шарнир и протяжку.
+func set_paint_mat(mat_id: String) -> void:
+	if mat_id != "" and (mat_id == paint_mat or MaterialDef.get_def(mat_id) == null):
+		mat_id = ""
+	paint_mat = mat_id
+	if paint_mat != "":
+		control_pick = false
+		joint_pick = ""
+		cancel_drag()
+		set_view(View.BODY)
+		_say("Кисть: %s — кликни по детали куклы" % CraftEdit.mat_title(paint_mat), MaterialDef.get_def(paint_mat).swatch.lightened(0.35))
+	_apply_highlights()
+	changed.emit()
+
+
+## Взять инструмент шарнира jt (тот же ещё раз или "" — положить).
+func set_joint_pick(jt: String) -> void:
+	if jt != "" and (jt == joint_pick or not KitJoint.is_type(jt)):
+		jt = ""
+	joint_pick = jt
+	if joint_pick != "":
+		control_pick = false
+		paint_mat = ""
+		cancel_drag()
+		set_view(View.BODY)
+		_say("Шарнир «%s» — кликни по детали куклы" % CraftEdit.joint_title(joint_pick), JointCard.colour(joint_pick))
+	_apply_highlights()
+	changed.emit()
+
+
+## Какой инструмент в руке: "control" | "material" | "joint" | "".
+func active_tool() -> String:
+	if control_pick:
+		return "control"
+	if paint_mat != "":
+		return "material"
+	if joint_pick != "":
+		return "joint"
+	return ""
+
+
+## Положить инструмент («рука мышью», кисть, шарнир). true — что-то было в руке.
+func clear_tools() -> bool:
+	var had := active_tool() != ""
+	control_pick = false
+	paint_mat = ""
+	joint_pick = ""
+	if had:
+		_apply_highlights()
+		changed.emit()
+	return had
+
+
+## Кисть: материал mat_id (по умолчанию — paint_mat) детали uid. История, node["mat"] (для base_mat ключ стирается), пересборка.
+## {ok, code, reason, changed, mass_before, mass_after} — CraftEdit.set_material; отказ — с причиной (деталь не красится и т. п.).
+func set_material(uid: String, mat_id := "") -> Dictionary:
+	if mat_id == "":
+		mat_id = paint_mat
+	var r := CraftEdit.check_material(blueprint, uid, mat_id)
+	var d := CraftEdit.def_of(blueprint, uid)
+	var what := d.title if d != null else uid
+	if not bool(r["ok"]):
+		last_result = r
+		_say(String(r["reason"]), COL_BAD)
+		return r
+	if not bool(r["changed"]):
+		last_result = r
+		_say("%s — уже %s" % [what, CraftEdit.mat_title(mat_id)], COL_INFO)
+		return r
+	_push_history()
+	r = CraftEdit.set_material(blueprint, uid, mat_id)
+	last_result = r
+	_name_custom_body()
+	_rebuild()
+	var dm := float(r["mass_after"]) - float(r["mass_before"])
+	var m := MaterialDef.get_def(mat_id)
+	_say("%s: %s → %s  (%.1f → %.1f кг%s)" % [what, CraftEdit.mat_title(String(r["mat_before"])), m.title, float(r["mass_before"]),
+		float(r["mass_after"]), "" if absf(dm) < 0.05 else ", %+.1f" % dm], m.swatch.lightened(0.35))
+	return r
+
+
+## Тип шарнира jt (по умолчанию — joint_pick) связи детали uid с родителем. История, node["joint"] ("pin" — ключ стирается),
+## пересборка. {ok, code, reason, changed, energy_after} — CraftEdit.set_joint; отказ (корень, fixed-деталь, запреты weld, энергия)
+## — с причиной.
+func set_joint(uid: String, jt := "") -> Dictionary:
+	if jt == "":
+		jt = joint_pick
+	var r := CraftEdit.check_joint(blueprint, uid, jt)
+	var d := CraftEdit.def_of(blueprint, uid)
+	var what := d.title if d != null else uid
+	if not bool(r["ok"]):
+		last_result = r
+		_say(String(r["reason"]), COL_BAD)
+		return r
+	if not bool(r["changed"]):
+		last_result = r
+		_say("%s — уже «%s»" % [what, CraftEdit.joint_title(jt)], COL_INFO)
+		return r
+	_push_history()
+	r = CraftEdit.set_joint(blueprint, uid, jt)
+	last_result = r
+	if blueprint.weapon != null and blueprint.weapon_on != "" and CraftEdit.is_fixed(blueprint, blueprint.weapon_on):
+		blueprint.weapon_on = String(CraftEdit.weapon_mount(blueprint)["uid"])   # сварили держатель оружия — в другую кисть
+	_name_custom_body()
+	_rebuild()
+	var e := KitJoint.energy_of(jt) - KitJoint.energy_of(String(r["joint_before"]))
+	var tail := "" if e == 0 else "  (⚡%+d)" % e
+	if KitJoint.is_weld(jt):
+		var host := CraftEdit.def_of(blueprint, CraftEdit.host_uid(blueprint, uid))
+		_say("Сварка: %s — теперь часть «%s»%s" % [what, host.title if host != null else "", tail], COL_OK)
+	else:
+		_say("Шарнир «%s» → «%s»: %s%s" % [CraftEdit.joint_title(String(r["joint_before"])), CraftEdit.joint_title(jt), what, tail], COL_OK)
+	return r
 
 
 ## «В руку»: оружие верстака — в кисть сборки (blueprint.weapon + weapon_on). Повторно — снять. {ok, uid, kind, reason}.
@@ -408,7 +535,7 @@ func _rebuild_stand() -> void:
 		if def == null or not stand.uid_body.has(uid):
 			continue
 		var host := String(stand.uid_body[uid])
-		if def.attach == "fixed" and String(n.get("parent", "")) != "":
+		if CraftEdit.is_fixed(blueprint, uid):   # слитая деталь (fixed, декор, броня, сварка): формы — <форма>_<uid> в хозяине
 			for sn in CraftEdit.shape_names(def):
 				_shape_uid["%s/%s_%s" % [host, sn, uid]] = uid
 		else:
@@ -460,7 +587,8 @@ func _make_held_weapon() -> void:
 ## Куда висит оружие: weapon_on чертежа, если он ещё есть, иначе CraftEdit.weapon_mount().
 func _mount() -> Dictionary:
 	var m := CraftEdit.weapon_mount(blueprint)
-	if blueprint.weapon_on != "" and not CraftEdit.find(blueprint, blueprint.weapon_on).is_empty():
+	if blueprint.weapon_on != "" and not CraftEdit.find(blueprint, blueprint.weapon_on).is_empty() \
+			and not CraftEdit.is_fixed(blueprint, blueprint.weapon_on):   # сваренная кисть — не держатель
 		var d := CraftEdit.def_of(blueprint, blueprint.weapon_on)
 		return {"uid": blueprint.weapon_on, "kind": "hand" if d != null and d.kind == "hand" else "end", "reason": ""}
 	return m
@@ -531,7 +659,7 @@ func anchor_xf(target: String, uid: String, anchor: String) -> Variant:
 	var body := stand.parts.get(String(stand.uid_body[uid])) as Node3D
 	if body == null or d == null:
 		return null
-	var fixed := d.attach == "fixed" and String(n.get("parent", "")) != ""
+	var fixed := CraftEdit.is_fixed(blueprint, uid)
 	var m := body.get_node_or_null(an + ("_" + uid if fixed else "")) as Node3D
 	return m.global_transform if m != null else null
 
@@ -595,6 +723,8 @@ func begin_drag(part_id: String, screen_pos: Vector2) -> void:
 	if mode != Mode.BUILD:
 		return
 	control_pick = false
+	paint_mat = ""
+	joint_pick = ""
 	var d := CraftEdit.part(part_id)
 	if d == null:
 		return
@@ -610,8 +740,7 @@ func begin_drag(part_id: String, screen_pos: Vector2) -> void:
 	if not any_ok and energy_block:
 		_say("Не хватает энергии: %s стоит %d, свободно %d" % [d.title, d.energy, energy_free()], COL_BAD)
 	elif not any_ok:
-		var kind_t := String(CraftEdit.KIND_TITLES.get(d.kind, d.kind))
-		_say("Некуда поставить %s: нет свободного подходящего якоря" % kind_t, COL_WARN)
+		_say("Некуда поставить деталь «%s»: нет свободного подходящего якоря" % d.title, COL_WARN)
 	update_drag(screen_pos)
 	changed.emit()
 
@@ -733,7 +862,9 @@ func ghost_transform(part_id: String, t: Dictionary) -> Dictionary:
 	var nu := String(res.get("uid", ""))
 	var mirror := target == "body" and CraftEdit.is_mirrored(trial, nu)
 	var rel := 0.0
-	if target == "weapon" or d.attach == "joint":
+	# слитая по PartDef деталь (декор, броня, навершие) — без угла покоя; сварка (при замене сваренной) — в позе покоя сустава, как
+	# ModularDoll._weld_rest
+	if target == "weapon" or not BodyBlueprint.is_fixed_part(d):
 		rel = CraftEdit.rest_rel_deg(trial, nu)
 	if target == "body" and mirror:
 		rel = -rel
@@ -826,6 +957,20 @@ func uid_title(target: String, uid: String) -> String:
 	return d.title if d != null else uid
 
 
+## Название детали и (у тела) её материал и шарнир: «Плечо · Железо, 4.4 кг · шарнир «Мотор»».
+func part_info(target: String, uid: String) -> String:
+	var s := uid_title(target, uid)
+	if target != "body" or CraftEdit.find(blueprint, uid).is_empty():
+		return s
+	var mid := blueprint.node_mat(uid)
+	if mid != "":
+		s += " · %s, %.1f кг" % [CraftEdit.mat_title(mid), blueprint.node_mass(uid)]
+	var jt := blueprint.joint_type_of(uid)
+	if jt != "" and jt != KitJoint.DEFAULT:
+		s += " · шарнир «%s»" % CraftEdit.joint_title(jt)
+	return s
+
+
 ## Меши детали uid: у детали-хозяина — узел Mesh её тела; у fixed-детали — Mesh_<uid> в теле-хозяине; у оружия — <uid>_<id>.
 func part_meshes(target: String, uid: String) -> Array:
 	var out: Array = []
@@ -843,7 +988,7 @@ func part_meshes(target: String, uid: String) -> Array:
 	var body := stand.parts.get(String(stand.uid_body[uid])) as Node3D
 	if body == null or d == null:
 		return out
-	var fixed := d.attach == "fixed" and String(n.get("parent", "")) != ""
+	var fixed := CraftEdit.is_fixed(blueprint, uid)
 	var mn := body.get_node_or_null("Mesh_" + uid if fixed else "Mesh")
 	if mn != null:
 		out.append(mn)
@@ -914,13 +1059,28 @@ func _apply_highlights() -> void:
 		return
 	if not hover.is_empty():
 		var tg := String(hover["target"])
+		var hu := String(hover["uid"])
 		var mat: Material = _mats["pick"] if control_pick else _mats["hover"]
-		var uids: PackedStringArray = [String(hover["uid"])]
+		var uids: PackedStringArray = [hu]
 		if control_pick:
-			uids = [CraftEdit.host_uid(blueprint, String(hover["uid"]))]
+			uids = [CraftEdit.host_uid(blueprint, hu)]
+		elif tg == "body" and paint_mat != "":   # кисть: цвет материала — покрасится, красный — не красится
+			var md := MaterialDef.get_def(paint_mat)
+			var sw := md.swatch if md != null else Color.WHITE
+			mat = _tint("paint_" + paint_mat, sw) if bool(CraftEdit.check_material(blueprint, hu, paint_mat)["ok"]) else _mats["remove"]
+		elif tg == "body" and joint_pick != "":   # шарнир: цвет типа — можно, красный — нельзя (корень, fixed, запреты)
+			mat = _tint("joint_" + joint_pick, JointCard.colour(joint_pick)) if bool(CraftEdit.check_joint(blueprint, hu, joint_pick)["ok"]) \
+				else _mats["remove"]
 		for u in uids:
 			for m in part_meshes(tg, u):
 				_set_overlay(m, mat)
+
+
+## Подсветка инструмента цветом c (плашка материала, тип шарнира), кэш в _mats[key].
+func _tint(key: String, c: Color) -> Material:
+	if not _mats.has(key):
+		_mats[key] = _overlay_mat(Color(c.r, c.g, c.b, 0.5).lightened(0.1))
+	return _mats[key]
 
 
 func set_hover(h: Dictionary) -> void:
@@ -977,23 +1137,35 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
 		var mb := event as InputEventMouseButton
 		var h := pick(mb.position)
+		var on_body := not h.is_empty() and String(h["target"]) == "body"
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
-			if control_pick:
-				control_pick = false
-				changed.emit()
+			if active_tool() != "":
+				clear_tools()   # ПКМ с инструментом в руке — положить его, а не откручивать
 			elif not h.is_empty():
 				hover = {}
 				detach_part(String(h["uid"]), String(h["target"]))
 			get_viewport().set_input_as_handled()
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
 			if control_pick:
-				if not h.is_empty() and String(h["target"]) == "body":
+				if on_body:
 					set_control(String(h["uid"]))
 				else:
 					_say("Кликни по детали куклы (Esc — отмена)", COL_WARN)
 				get_viewport().set_input_as_handled()
+			elif paint_mat != "":
+				if on_body:
+					set_material(String(h["uid"]))
+				else:
+					_say("Кисть: кликни по детали куклы (Esc / ПКМ — убрать кисть)", COL_WARN)
+				get_viewport().set_input_as_handled()
+			elif joint_pick != "":
+				if on_body:
+					set_joint(String(h["uid"]))
+				else:
+					_say("Шарнир: кликни по детали куклы (Esc / ПКМ — отмена)", COL_WARN)
+				get_viewport().set_input_as_handled()
 			elif not h.is_empty():
-				_say("%s — ПКМ: открутить%s" % [uid_title(String(h["target"]), String(h["uid"])),
+				_say("%s — ПКМ: открутить%s" % [part_info(String(h["target"]), String(h["uid"])),
 					"" if String(h["target"]) == "weapon" else ",  Q и клик: рука мышью"], COL_INFO)
 	elif event is InputEventKey and event.pressed and not event.echo:
 		var k := event as InputEventKey
@@ -1008,14 +1180,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				if k.ctrl_pressed or k.meta_pressed:
 					undo()
 			KEY_ESCAPE:
-				if control_pick:
-					control_pick = false
-					changed.emit()
-				elif _time < _esc_armed_until:
-					get_tree().quit()
-				else:
-					_esc_armed_until = _time + 1.5
-					_say("Esc ещё раз — выход", COL_INFO)
+				if not clear_tools():   # инструмент в руке — Esc его кладёт; иначе двойной Esc — выход
+					if _time < _esc_armed_until:
+						get_tree().quit()
+					else:
+						_esc_armed_until = _time + 1.5
+						_say("Esc ещё раз — выход", COL_INFO)
 			_:
 				return
 		get_viewport().set_input_as_handled()
@@ -1028,6 +1198,8 @@ func set_view(v: int) -> void:
 	view = v
 	if view == View.WEAPON:
 		control_pick = false
+		paint_mat = ""
+		joint_pick = ""
 	set_hover({})
 	view_changed.emit(view)
 	changed.emit()
@@ -1045,6 +1217,8 @@ func start_test() -> bool:
 		return false
 	cancel_drag()
 	control_pick = false
+	paint_mat = ""
+	joint_pick = ""
 	hover = {}
 	if autosave_on_test:
 		CraftEdit.save(blueprint, CraftEdit.AUTOSAVE)
@@ -1156,6 +1330,8 @@ func stop_test() -> void:
 
 # =================================================================== сводки для UI
 
+## Сводка тела для правой панели. Масса — Σ BodyBlueprint.node_mass (материал узла × плотность, BODY_KIT.md §4), тела — узлы
+## не is_fixed (сварка тело убирает).
 func body_stats() -> Dictionary:
 	var mass := blueprint.total_mass()
 	var wmass := 0.0
@@ -1167,7 +1343,7 @@ func body_stats() -> Dictionary:
 	var bodies := 0
 	for n in blueprint.nodes:
 		var d2 := CraftEdit.part(String(n.get("part", "")))
-		if d2 != null and (d2.attach != "fixed" or String(n.get("parent", "")) == ""):
+		if d2 != null and not CraftEdit.is_fixed(blueprint, String(n.get("uid", ""))):
 			bodies += 1
 	var ref := 40.0
 	if stand != null:
@@ -1222,6 +1398,30 @@ func hint_text() -> String:
 		return "WASD — лететь · Shift — рывок · Space — кувырок · ЛКМ — рука · E — схватить / бросить · R — заново · Esc — к сборке"
 	if control_pick:
 		return "Кликни по детали, которой будешь управлять мышью (золотая)   ·   Esc / ПКМ — отмена"
+	if paint_mat != "":
+		var mt := CraftEdit.mat_title(paint_mat)
+		if not hover.is_empty() and String(hover["target"]) == "body":
+			var hu := String(hover["uid"])
+			var c := CraftEdit.check_material(blueprint, hu, paint_mat)
+			if not bool(c["ok"]):
+				return String(c["reason"])
+			if not bool(c["changed"]):
+				return "%s — уже %s   ·   Esc / ПКМ — убрать кисть" % [uid_title("body", hu), mt]
+			return "Клик — %s: %s → %s, %.1f → %.1f кг   ·   Esc / ПКМ — убрать кисть" % [uid_title("body", hu),
+				CraftEdit.mat_title(String(c["mat_before"])), mt, float(c["mass_before"]), float(c["mass_after"])]
+		return "Кисть «%s»: кликни по детали куклы — перекрасить (масса × новая плотность / прежняя)   ·   Esc / ПКМ — убрать кисть" % mt
+	if joint_pick != "":
+		var jt := CraftEdit.joint_title(joint_pick)
+		if not hover.is_empty() and String(hover["target"]) == "body":
+			var hu2 := String(hover["uid"])
+			var cj := CraftEdit.check_joint(blueprint, hu2, joint_pick)
+			if not bool(cj["ok"]):
+				return String(cj["reason"])
+			if not bool(cj["changed"]):
+				return "%s — уже «%s»   ·   Esc / ПКМ — отмена" % [uid_title("body", hu2), jt]
+			return "Клик — %s: «%s» → «%s»   ·   Esc / ПКМ — отмена" % [uid_title("body", hu2),
+				CraftEdit.joint_title(String(cj["joint_before"])), jt]
+		return "Шарнир «%s»: кликни по детали — так она будет держаться за родителя   ·   Esc / ПКМ — отмена" % jt
 	if not drag.is_empty():
 		var t := drag_target()
 		if not t.is_empty() and not bool(t["ok"]):
@@ -1235,14 +1435,15 @@ func hint_text() -> String:
 		var bp: Resource = weapon_bp if String(hover["target"]) == "weapon" else blueprint
 		var n := CraftEdit.subtree(bp, String(hover["uid"])).size()
 		var more := "" if n <= 1 else " (+%d)" % (n - 1)
-		return "%s   ·   ПКМ — открутить%s   ·   Q — рука мышью" % [uid_title(String(hover["target"]), String(hover["uid"])), more]
+		return "%s   ·   ПКМ — открутить%s   ·   Q — рука мышью" % [part_info(String(hover["target"]), String(hover["uid"])), more]
 	if view == View.WEAPON:
 		return "Тащи рукоять, навершие или мод на верстак   ·   ПКМ по детали — снять   ·   «В руку» — дать кукле   ·   Tab — к телу"
 	return "Тащи деталь с полки на светящийся якорь   ·   ПКМ — открутить   ·   Q — рука мышью   ·   Ctrl+Z — отмена   ·   T — испытать"
 
 
-## Что рисовать поверх 3D (scenes/workshop/ui/anchor_overlay.gd): [{pos, dir, state, label}] в экранных точках.
-## state: target (выбран), ok, replace, bad (не влезает), idle (свободный якорь без протяжки), control (рука мышью).
+## Что рисовать поверх 3D (scenes/workshop/ui/anchor_overlay.gd): [{pos, dir, state, label, joint?}] в экранных точках.
+## state: target (выбран), ok, replace, bad (не влезает), idle (свободный якорь без протяжки), control (рука мышью),
+## joint / joint_hover (инструмент шарнира: точка связи детали с родителем, joint — тип KitJoint, наведённая — joint_hover).
 func overlay_items() -> Array:
 	var out: Array = []
 	var cam := get_viewport().get_camera_3d()
@@ -1263,9 +1464,24 @@ func overlay_items() -> Array:
 				st = "replace"
 			out.append(_overlay_item(cam, t["xf"], st, ""))
 		return out
-	# без протяжки: свободные якоря текущего вида — маленькие точки
 	var target := "weapon" if view == View.WEAPON else "body"
 	var bp: Resource = weapon_bp if target == "weapon" else blueprint
+	# инструмент шарнира: на каждой связи — кружок цвета типа и подпись (кроме обычной оси), наведённая деталь — крупнее
+	if target == "body" and joint_pick != "":
+		var hu := String(hover.get("uid", "")) if String(hover.get("target", "")) == "body" else ""
+		for n in blueprint.nodes:
+			var uid := String(n.get("uid", ""))
+			var jt := blueprint.joint_type_of(uid)
+			if jt == "":
+				continue
+			var xf: Variant = anchor_xf("body", String(n.get("parent", "")), String(n.get("anchor", "")))
+			if xf == null:
+				continue
+			var it := _overlay_item(cam, xf, "joint_hover" if uid == hu else "joint", "" if jt == KitJoint.DEFAULT else CraftEdit.joint_title(jt))
+			it["joint"] = jt
+			out.append(it)
+		return out
+	# без протяжки: свободные якоря текущего вида — маленькие точки
 	for n in CraftEdit.nodes_of(bp):
 		var uid := String(n.get("uid", ""))
 		for an in CraftEdit.anchors_of(bp, uid):

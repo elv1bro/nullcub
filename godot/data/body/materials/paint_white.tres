@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_8mxeq"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_PaintWhite.tres" id="2_qh51a"]
+
+[resource]
+script = ExtResource("1_8mxeq")
+id = "paint_white"
+title = "Белая краска"
+surface = ExtResource("2_qh51a")
+swatch = Color(0.9063318, 0.8962439, 0.86504203, 1)
+friction = 0.5

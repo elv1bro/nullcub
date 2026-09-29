@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_deco_crown.tscn" id="1_mid3u"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_hcggl"]
+
+[resource]
+script = ExtResource("2_hcggl")
+id = "kit_deco_crown"
+title = "Корона"
+kind = "deco"
+scene = ExtResource("1_mid3u")
+mass = 0.4
+energy = 1
+attach = "fixed"
+name_prefix = "Deco"
+base_mat = "brass"

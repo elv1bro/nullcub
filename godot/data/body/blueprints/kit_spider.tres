@@ -1,0 +1,126 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_0m85n"]
+
+[resource]
+script = ExtResource("1_0m85n")
+id = "kit_spider"
+title = "Паук из кита"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"parent": "",
+"part": "kit_core_ball",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"parent": "T",
+"part": "kit_head_round",
+"uid": "H"
+}, {
+"anchor": "Anchor_Hip_L",
+"parent": "T",
+"part": "kit_limb_basic_l",
+"rest_deg": 22.0,
+"uid": "1"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_2",
+"parent": "1",
+"part": "kit_limb_basic_l",
+"rest_deg": 15.0,
+"uid": "2"
+}, {
+"anchor": "Anchor_End",
+"parent": "2",
+"part": "kit_foot_boot",
+"uid": "3"
+}, {
+"anchor": "Anchor_Hip_R",
+"parent": "T",
+"part": "kit_limb_basic_l",
+"rest_deg": 22.0,
+"uid": "4"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_5",
+"parent": "4",
+"part": "kit_limb_basic_l",
+"rest_deg": 15.0,
+"uid": "5"
+}, {
+"anchor": "Anchor_End",
+"parent": "5",
+"part": "kit_foot_boot",
+"uid": "6"
+}, {
+"anchor": "Anchor_Side_L",
+"parent": "T",
+"part": "kit_limb_basic_l",
+"uid": "7"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_8",
+"parent": "7",
+"part": "kit_limb_basic_l",
+"rest_deg": 20.0,
+"uid": "8"
+}, {
+"anchor": "Anchor_End",
+"parent": "8",
+"part": "kit_foot_boot",
+"uid": "9"
+}, {
+"anchor": "Anchor_Side_R",
+"parent": "T",
+"part": "kit_limb_basic_l",
+"uid": "A"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_B",
+"parent": "A",
+"part": "kit_limb_basic_l",
+"rest_deg": 20.0,
+"uid": "B"
+}, {
+"anchor": "Anchor_End",
+"parent": "B",
+"part": "kit_foot_boot",
+"uid": "C"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"parent": "T",
+"part": "kit_limb_basic_l",
+"rest_deg": 110.0,
+"uid": "D"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_E",
+"parent": "D",
+"part": "kit_limb_basic_l",
+"rest_deg": 10.0,
+"uid": "E"
+}, {
+"anchor": "Anchor_End",
+"parent": "E",
+"part": "kit_foot_boot",
+"uid": "F"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"parent": "T",
+"part": "kit_limb_basic_l",
+"rest_deg": 110.0,
+"uid": "G"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_I",
+"parent": "G",
+"part": "kit_limb_basic_l",
+"rest_deg": 10.0,
+"uid": "I"
+}, {
+"anchor": "Anchor_End",
+"parent": "I",
+"part": "kit_foot_boot",
+"uid": "J"
+}])
+control = PackedStringArray("J")

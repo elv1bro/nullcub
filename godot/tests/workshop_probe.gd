@@ -1,7 +1,8 @@
 ## Проба мастерской (scenes/workshop/workshop_build.tscn) — через API WorkshopBuild, без мыши:
 ##   headless: godot --headless --path . --fixed-fps 60 res://tests/workshop_probe.tscn        → tests/workshop_probe_report.json, 0/1
 ##   кадры:    godot --path . --resolution 1920x1080 res://tests/workshop_probe.tscn -- "shots=/abs/dir"
-##             → <dir>/workshop-build-v1-{build,drag,weapon,test}.png (кукла испытания идёт на манекен сама)
+##             → <dir>/workshop-build-v1-{build,drag,weapon,test}.png (кукла испытания идёт на манекен сама) и кадры кита v2
+##               workshop-build-v1-kit-{mat,joint,armor,limb,head,core}.png (кисть, шарниры, призрак рогов, полки с иконками кита)
 ## Проверки (checks[].id):
 ##   preset_*   — шаблон human: чертёж без ошибок, кукла на стенде собрана (14 тел), тела заморожены и только на слое выбора;
 ##   targets_*  — для плеча светятся свободные якоря Side_L / Side_R (ok), занятые плечевые — замена; голова — только шея;
@@ -15,7 +16,24 @@
 ##   weapon_*   — верстак: пресет молота, гвозди на головку (урон ×1.25, масса +0.4), снять; своё оружие с нуля (длинная рукоять +
 ##                головка), «В руку» — кисть; без кисти — конец управляемой детали, без управления и кисти — подсказка;
 ##   test_*     — «испытать»: оружие в кисти (WeaponPickup), кукла летит на манекен — урон по манекену > 0; назад — чертёж тот же;
-##   save_*     — сохранить / загрузить чертёж (user://blueprints): одинаковые узлы, управление и оружие.
+##   save_*     — сохранить / загрузить чертёж (user://blueprints): одинаковые узлы, управление и оружие;
+##   кит тела v2 (docs/plan-demo/BODY_KIT.md §5.5):
+##   shelves_*  — вкладки полки: ядро / головы / конечности / кисти-стопы / броня-декор со своими деталями кита, «Шарниры» и
+##                «Материал» — инструменты (плашки в UI: 15 материалов, 5 типов шарнира); детали второй волны — на своих вкладках
+##                (навершия kit_weapons — на «Броня, декор»); kit_human_* на полках нет (дубли wood_*), но PartDef грузится;
+##   kit_preset_<id>_loads — каждый пресет кита: без ошибок, на стенде столько тел, сколько узлов не is_fixed;
+##   mat_*      — кисть: железо на плечо kit_human (узел mat, поверхность Base_ → Base_Iron, физматериал, масса ×2.2), материал по
+##                умолчанию стирает ключ, Ctrl+Z; деревянная деталь human — отказ «не красится»; клик мышью кистью; ПКМ кладёт кисть,
+##                а не откручивает; замена детали сохраняет mat только у детали с base_mat; сохранение / загрузка с mat и joint;
+##   joint_*    — шарнир: свободный локоть (meta joint_type сустава стенда), мотор (+8 энергии), сварка кисти (тел на одно меньше,
+##                луч по сваренной кисти — её узел), отказы (корень, голова, рука мышью, auto-сустав ребёнка, декор), Ctrl+Z,
+##                клик мышью, Esc кладёт инструмент, кружки типов на суставах;
+##   kit_test_live — сборка кита с материалом и шарнирами оживает в испытании: 1.5 с без взрыва;
+##   правки ревью кита: control_rehost_* — навершие вместо управляемой кисти (kit_devil — бур, human — шар булавы): рука мышью на
+##                теле-хозяине, в испытании ArmAssist ведёт предплечье; control_cleared_on_core — хозяин ядро: пометка снята;
+##                joint_motor_ankle_refused — мотор на стопе (сустав без мышцы) — отказ; joint_refusal_words — отказы словами
+##                игрока (без uid / Anchor_ / auto), «приваренный конец» — код welded; limb_elbow_name — конечность кита на локте —
+##                тело LowerArm_<uid>.
 extends Node
 
 const SCENE := "res://scenes/workshop/workshop_build.tscn"
@@ -95,6 +113,12 @@ func _run() -> void:
 	await _weapon()
 	await _test_hit()
 	await _save_load()
+	await _kit_shelves()
+	await _kit_presets()
+	await _kit_material()
+	await _kit_joint()
+	await _kit_save_live()
+	await _kit_fixes()
 	_finish()
 
 
@@ -468,6 +492,380 @@ func _save_load() -> void:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
+# ------------------------------------------------------------------ кит тела v2 (BODY_KIT.md §5.5)
+
+## Вкладки полки: у каждой вкладки деталей — детали кита, «Шарниры» и «Материал» — инструменты; то же в UI (плашки).
+func _kit_shelves() -> void:
+	var counts := {}
+	var ok := true
+	for id in ["core", "head", "limb", "end", "armor"]:
+		var n := 0
+		for d in CraftEdit.parts_of_kinds(CraftEdit.shelf_of(CraftEdit.BODY_SHELVES, id).get("kinds", [])):
+			if d.id.begins_with("kit_"):
+				n += 1
+		counts[id] = n
+		ok = ok and n > 0
+	var deco := CraftEdit.parts_of_kinds(["deco", "armor"]).size()
+	var jt_tab := CraftEdit.shelf_of(CraftEdit.BODY_SHELVES, "joint")
+	var mat_tab := CraftEdit.shelf_of(CraftEdit.BODY_SHELVES, "mat")
+	counts["deco_armor"] = deco
+	counts["materials"] = MaterialDef.all_ids().size()
+	_check("shelves_have_kit", ok and deco >= 6 and String(jt_tab.get("tool", "")) == "joint" and String(mat_tab.get("tool", "")) == "material"
+		and MaterialDef.all_ids().size() == MaterialDef.ORDER.size() and CraftEdit.KIND_ORDER.has("deco") and CraftEdit.KIND_ORDER.has("armor"),
+		"вкладки: детали кита на своих полках, декор/броня, инструменты «Шарниры» и «Материал»", counts)
+	# UI: плашки инструментов на вкладках
+	var tabs: Dictionary = ws.ui.get("shelf_tab")
+	var was := String(tabs["body"])
+	tabs["body"] = "mat"
+	ws.ui.call("_build_left")
+	var n_mat := (ws.ui.get("_tool_cards") as Dictionary).size()
+	tabs["body"] = "joint"
+	ws.ui.call("_build_left")
+	var n_jt := (ws.ui.get("_tool_cards") as Dictionary).size()
+	var n_jparts := (ws.ui.get("_cards") as Dictionary).size()
+	tabs["body"] = "armor"
+	ws.ui.call("_build_left")
+	var armor_cards: Dictionary = ws.ui.get("_cards")
+	var has_crown := armor_cards.has("kit_deco_crown") and armor_cards.has("kit_deco_pauldron")
+	var armor_new := armor_cards.has("kit_drill_head") and armor_cards.has("kit_deco_wings")   # _cards чистится при пересборке
+	var armor_human := armor_cards.has("kit_human_torso")
+	tabs["body"] = was
+	ws.ui.call("_build_left")
+	# kit_human_* (дубли wood_* под риг v3 для пресета kit_human) на полках не показываются, но PartDef грузится
+	var hidden: Array = []
+	for d in CraftEdit.all_parts():
+		if d.id.begins_with("kit_human_"):
+			hidden.append(d.id)
+	# детали второй волны кита — на своих вкладках (навершия — на «Броня, декор», §5.5)
+	var want := {"kit_head_lantern": "head", "kit_head_skull": "head", "kit_core_boiler": "core", "kit_core_cage": "core",
+		"kit_limb_curved_s": "limb", "kit_limb_rope_l": "limb", "kit_hand_clamp": "end", "kit_foot_wheel": "end",
+		"kit_deco_wings": "armor", "kit_deco_gauntlet_s": "armor", "kit_drill_head": "armor", "kit_pick_head": "armor"}
+	var misplaced: Array = []
+	for pid in want:
+		var on := false
+		for d in CraftEdit.parts_of_kinds(CraftEdit.shelf_of(CraftEdit.BODY_SHELVES, String(want[pid])).get("kinds", [])):
+			on = on or d.id == pid
+		if not on:
+			misplaced.append(pid)
+	_check("shelves_new_kit", misplaced.is_empty() and armor_new,
+		"новые детали кита на своих вкладках, на броне — бур и крылья", misplaced)
+	var human_def := BodyBlueprint.part_def("kit_human_torso")
+	_check("shelves_hide_kit_human", hidden.is_empty() and human_def != null and not armor_human,
+		"полки без kit_human_* (CraftEdit.SHELF_HIDDEN_PREFIXES), PartDef kit_human_torso грузится", hidden)
+	_check("shelves_ui_tools", n_mat == MaterialDef.all_ids().size() and n_jt == KitJoint.ORDER.size()
+		and n_jparts == CraftEdit.parts_of_kinds(["joint", "chain"]).size() and has_crown,
+		"UI: 15 плашек материала, 5 типов шарнира (+ детали суставов), на броне — корона и наплечник", [n_mat, n_jt, n_jparts, has_crown])
+
+
+## Пресеты кита на стенде: без ошибок, тел столько, сколько узлов со своим телом.
+func _kit_presets() -> void:
+	for id in CraftEdit.BODY_PRESETS:
+		if not String(id).begins_with("kit_"):
+			continue
+		var set_ok := ws.set_preset(String(id))
+		await _frames(1)
+		var bp := ws.blueprint
+		var own := 0
+		for n in bp.nodes:
+			if not CraftEdit.is_fixed(bp, String(n["uid"])):
+				own += 1
+		var built := ws.stand != null and ws.stand.build_errors.is_empty() and ws.stand.parts.size() == own
+		_check("kit_preset_%s_loads" % id, set_ok and bp.id == id and CraftEdit.friendly_errors(bp).is_empty() and built,
+			"пресет %s: без ошибок, на стенде %d тел" % [id, own],
+			{"bodies": ws.stand.parts.size() if ws.stand else -1, "energy": bp.energy_used(), "mass": snappedf(bp.total_mass(), 0.1),
+			"errors": CraftEdit.friendly_errors(bp)})
+
+
+## Поверхность с override-материалом m где-то под n.
+func _has_surface(n: Node, m: Material) -> bool:
+	if n is MeshInstance3D and (n as MeshInstance3D).mesh != null:
+		for s in range((n as MeshInstance3D).mesh.get_surface_count()):
+			if (n as MeshInstance3D).get_surface_override_material(s) == m:
+				return true
+	for c in n.get_children():
+		if _has_surface(c, m):
+			return true
+	return false
+
+
+## Клик мышью по экранной точке — как WorkshopBuild._unhandled_input (кнопка, нажатие).
+func _click(p: Vector2, button := MOUSE_BUTTON_LEFT) -> void:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = button
+	ev.pressed = true
+	ev.position = p
+	ev.global_position = p
+	ws._unhandled_input(ev)
+
+
+func _key(k: Key) -> void:
+	var ev := InputEventKey.new()
+	ev.physical_keycode = k
+	ev.keycode = k
+	ev.pressed = true
+	ws._unhandled_input(ev)
+
+
+## Экранная точка меша детали uid на стенде (центр габарита).
+func _part_screen(uid: String) -> Vector2:
+	var ms := ws.part_meshes("body", uid)
+	var cam := get_viewport().get_camera_3d()
+	if ms.is_empty() or cam == null:
+		return Vector2(-1, -1)
+	return cam.unproject_position(WorkshopBuild._visual_aabb(ms[0]).get_center())
+
+
+func _kit_material() -> void:
+	ws.set_preset("kit_human")
+	await _frames(1)
+	var sig0 := CraftEdit.signature(ws.blueprint)
+	var m0 := float(ws.body_stats()["mass"])
+	var h0 := ws.history.size()
+	var iron := MaterialDef.get_def("iron")
+	var r := ws.set_material("1", "iron")
+	await _frames(1)
+	var n1 := CraftEdit.find(ws.blueprint, "1")
+	var ua := ws.stand.parts.get("UpperArm_L") as RigidBody3D if ws.stand else null
+	var surf := ua != null and iron != null and _has_surface(ua.get_node("Mesh"), iron.surface)
+	var pm: PhysicsMaterial = ua.physics_material_override if ua != null else null
+	_check("mat_set", bool(r["ok"]) and String(n1.get("mat", "")) == "iron" and ws.history.size() == h0 + 1 and surf and pm != null
+		and is_equal_approx(pm.friction, iron.friction) and is_equal_approx(pm.bounce, iron.bounce),
+		"кисть: плечо kit_human → железо (mat, поверхность Base_Iron, физматериал 0.5 / 0.1)", [n1.get("mat", ""), surf, pm.friction if pm else -1.0])
+	var m1 := float(ws.body_stats()["mass"])
+	var want := 2.0 * (iron.density - 1.0)
+	_check("mat_mass", absf(m1 - m0 - want) < 0.01 and ua != null and absf(ua.mass - 2.0 * iron.density) < 0.01
+		and absf(float(r["mass_after"]) - 2.0 * iron.density) < 0.01, "масса: 2.0 кг × 2.2 = 4.4 (сборка +%.1f)" % want,
+		[snappedf(m0, 0.01), snappedf(m1, 0.01), snappedf(ua.mass, 0.01) if ua else -1.0])
+	var r2 := ws.set_material("1", "wood")
+	await _frames(1)
+	_check("mat_default_erases", bool(r2["ok"]) and not CraftEdit.find(ws.blueprint, "1").has("mat") and absf(float(ws.body_stats()["mass"]) - m0) < 0.01,
+		"материал по умолчанию (дерево) — ключ mat стёрт, масса как была")
+	ws.undo()
+	var back_iron := String(CraftEdit.find(ws.blueprint, "1").get("mat", "")) == "iron"
+	ws.undo()
+	await _frames(1)
+	_check("mat_undo", back_iron and CraftEdit.signature(ws.blueprint) == sig0 and absf(float(ws.body_stats()["mass"]) - m0) < 0.01
+		and ws.stand != null and ws.stand.parts.has("UpperArm_L") and not _has_surface(ws.stand.parts["UpperArm_L"], iron.surface),
+		"Ctrl+Z ×2: снова железо, потом дерево (узлы как у пресета)")
+	# подсветка кистью и подсказка
+	ws.set_paint_mat("iron")
+	ws.set_hover({"target": "body", "uid": "7"})
+	var lit := false
+	for mm in ws.part_meshes("body", "7"):
+		lit = lit or _has_overlay(mm)
+	var hint := ws.hint_text()
+	_check("mat_hover", ws.active_tool() == "material" and lit and hint.contains("Железо") and hint.contains("4.4"),
+		"кисть над плечом: подсветка и «дерево → железо, 2.0 → 4.4 кг»", hint)
+	ws.set_hover({})
+	ws.set_paint_mat("")
+	# старая деталь не красится
+	ws.set_preset("human")
+	await _frames(1)
+	var sig_h := CraftEdit.signature(ws.blueprint)
+	var hh := ws.history.size()
+	var rw := ws.set_material("1", "iron")
+	_check("mat_refused_wood", not bool(rw["ok"]) and String(rw["code"]) == "paint" and String(rw["reason"]).contains("не красится")
+		and CraftEdit.signature(ws.blueprint) == sig_h and ws.history.size() == hh, "human: деревянное плечо — отказ «не красится»", rw["reason"])
+	# мышью: кисть «ржавчина» + клик по правой кисти kit_human; ПКМ кладёт кисть и ничего не откручивает
+	ws.set_preset("kit_human")
+	await _frames(2)
+	ws.set_paint_mat("rust")
+	_click(_part_screen("9"))
+	await _frames(1)
+	var n9 := CraftEdit.find(ws.blueprint, "9")
+	_check("mat_click", String(n9.get("mat", "")) == "rust" and ws.paint_mat == "rust", "клик кистью по кисти куклы → ржавчина (кисть остаётся в руке)", n9.get("mat", ""))
+	var nodes0 := ws.blueprint.nodes.size()
+	_click(_part_screen("9"), MOUSE_BUTTON_RIGHT)
+	await _frames(1)
+	_check("mat_rmb_clears", ws.paint_mat == "" and ws.blueprint.nodes.size() == nodes0, "ПКМ с кистью — кисть убрана, деталь на месте")
+	# замена детали: mat остаётся у детали кита (есть base_mat), у старой — стирается
+	ws.set_material("1", "iron")
+	var rk := ws.attach_part("kit_limb_thick_s", "T", "Anchor_Shoulder_L", "body")
+	var mat_kit := String(CraftEdit.find(ws.blueprint, "1").get("mat", ""))
+	var rwd := ws.attach_part("wood_upper_arm", "T", "Anchor_Shoulder_L", "body")
+	var n1w := CraftEdit.find(ws.blueprint, "1")
+	_check("mat_replace", bool(rk["ok"]) and mat_kit == "iron" and bool(rwd["ok"]) and not n1w.has("mat") and ws.blueprint.validate().is_empty(),
+		"замена: толстая рука — железо осталось; деревянное плечо — mat стёрт", [mat_kit, n1w.get("mat", "")])
+
+
+func _kit_joint() -> void:
+	ws.set_preset("kit_human")
+	await _frames(1)
+	var sig0 := CraftEdit.signature(ws.blueprint)
+	var e0 := ws.blueprint.energy_used()
+	var r := ws.set_joint("2", "free")
+	await _frames(1)
+	var jn := String(ws.stand.uid_joint.get("2", "")) if ws.stand else ""
+	var j := ws.stand.joints.get(jn) as Node if ws.stand else null
+	_check("joint_set_free", bool(r["ok"]) and String(CraftEdit.find(ws.blueprint, "2").get("joint", "")) == "free" and j != null
+		and String(j.get_meta("joint_type", "")) == "free" and ws.blueprint.energy_used() == e0,
+		"локоть левой руки — свободный (узел joint, meta joint_type сустава %s, энергия та же)" % jn, j.get_meta("joint_type", "") if j else "")
+	var rm := ws.set_joint("5", "motor")
+	_check("joint_motor_energy", bool(rm["ok"]) and ws.blueprint.energy_used() == e0 + KitJoint.energy_of("motor"), "мотор на колено: энергия +8",
+		ws.blueprint.energy_used())
+	var bodies0 := ws.stand.parts.size() if ws.stand else -1
+	var rw := ws.set_joint("3", "weld")
+	await _frames(2)
+	var hp := ws.pick(_part_screen("3"))
+	_check("joint_weld_bodies", bool(rw["ok"]) and ws.stand != null and ws.stand.parts.size() == bodies0 - 1 and not ws.stand.parts.has("Hand_L")
+		and String(ws.stand.uid_body.get("3", "")) == "LowerArm_L" and int(ws.body_stats()["bodies"]) == bodies0 - 1,
+		"сварка кисти: тел на одно меньше, кисть — часть предплечья", [bodies0, ws.stand.parts.size() if ws.stand else -1, ws.stand.uid_body.get("3", "") if ws.stand else ""])
+	_check("joint_weld_pick", String(hp.get("uid", "")) == "3", "луч по сваренной кисти — её узел (формы в хозяине)", hp)
+	# отказы
+	var sig1 := CraftEdit.signature(ws.blueprint)
+	var rr := ws.set_joint("T", "free")
+	_check("joint_refused_root", not bool(rr["ok"]) and String(rr["code"]) == "root" and CraftEdit.signature(ws.blueprint) == sig1,
+		"ядро — корень: шарнира нет", rr["reason"])
+	var rh := ws.set_joint("H", "weld")
+	var rc := ws.set_joint("9", "weld")
+	ws.set_preset("kit_brawler")
+	await _frames(1)
+	var sig_b := CraftEdit.signature(ws.blueprint)
+	var ra := ws.set_joint("1", "weld")
+	var rd := ws.set_joint("D", "spring")
+	_check("joint_refused_rules", not bool(rh["ok"]) and not bool(rc["ok"]) and not bool(ra["ok"]) and not bool(rd["ok"]) and String(rd["code"]) == "fixed"
+		and CraftEdit.signature(ws.blueprint) == sig_b, "нельзя: сварить голову, руку мышью, плечо с локтем на auto-суставе; шарнир у наплечника",
+		[rh["reason"], rc["reason"], ra["reason"], rd["reason"]])
+	ws.undo()   # set_preset(kit_brawler) → назад к kit_human со сваркой
+	await _frames(1)
+	var welded := String(CraftEdit.find(ws.blueprint, "3").get("joint", "")) == "weld"
+	ws.undo()
+	ws.undo()
+	ws.undo()
+	await _frames(1)
+	_check("joint_undo", welded and CraftEdit.signature(ws.blueprint) == sig0 and ws.stand != null and ws.stand.parts.size() == 14
+		and ws.blueprint.energy_used() == e0, "Ctrl+Z: сварка, мотор, свободный сняты — снова kit_human (14 тел)", ws.stand.parts.size() if ws.stand else -1)
+	# мышью: инструмент «Пружина» + клик по правой кисти; кружки типов на суставах; Esc кладёт инструмент
+	await _frames(1)
+	ws.set_joint_pick("spring")
+	var n_j := 0
+	for it in ws.overlay_items():
+		if String(it["state"]).begins_with("joint"):
+			n_j += 1
+	_click(_part_screen("9"))
+	await _frames(1)
+	_check("joint_click", String(CraftEdit.find(ws.blueprint, "9").get("joint", "")) == "spring" and ws.joint_pick == "spring" and n_j == 13,
+		"клик инструментом по кисти → пружина; на 13 суставах кружки типов", [CraftEdit.find(ws.blueprint, "9").get("joint", ""), n_j])
+	_key(KEY_ESCAPE)
+	_check("joint_esc_clears", ws.joint_pick == "" and ws.active_tool() == "", "Esc — инструмент шарнира убран")
+	# сварили кисть с оружием: оружие переезжает в другую кисть (сваренная — не держатель)
+	ws.set_preset("kit_human")
+	ws.set_control("8")
+	var eq := ws.weapon_to_hand()
+	var on0 := ws.blueprint.weapon_on
+	var rwh := ws.set_joint("9", "weld")
+	await _frames(1)
+	_check("joint_weld_weapon", bool(eq.get("ok", false)) and on0 == "9" and bool(rwh["ok"]) and ws.blueprint.weapon_on == "3"
+		and String(ws._mount()["uid"]) == "3" and ws.held_weapon != null, "сварили кисть с оружием — оружие в другой кисти",
+		[on0, ws.blueprint.weapon_on])
+
+
+## Сохранение с mat / joint и испытание такой сборки.
+func _kit_save_live() -> void:
+	ws.set_preset("kit_human")
+	await _frames(1)
+	ws.set_material("1", "iron")
+	ws.set_material("T", "planks")
+	ws.set_joint("2", "free")
+	ws.set_joint("B", "motor")
+	ws.set_joint("3", "weld")
+	var sig := CraftEdit.signature(ws.blueprint)
+	var path := ws.save_as("Проба кита")
+	ws.set_preset("human")
+	await _frames(1)
+	var ok := ws.load_path(path)
+	await _frames(1)
+	_check("mat_save_roundtrip", path != "" and ok and CraftEdit.signature(ws.blueprint) == sig
+		and String(CraftEdit.find(ws.blueprint, "1").get("mat", "")) == "iron" and String(CraftEdit.find(ws.blueprint, "2").get("joint", "")) == "free",
+		"сохранить / загрузить: те же узлы с mat и joint", sig.size())
+	if path != "":
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	var nb := int(ws.body_stats()["bodies"])
+	var started := ws.start_test()
+	await _frames(1)
+	var d := ws.test_doll
+	var max_v := 0.0
+	var finite := true
+	for i in range(90):
+		await get_tree().physics_frame
+		if not is_instance_valid(d):
+			break
+		for b in d.parts.values():
+			max_v = maxf(max_v, (b as RigidBody3D).linear_velocity.length())
+			finite = finite and (b as RigidBody3D).global_position.is_finite()
+	_check("kit_test_live", started and d != null and d.build_errors.is_empty() and d.parts.size() == nb and finite and max_v < MAX_SPEED,
+		"кит с железом, досками, свободным локтем, мотором и сваркой оживает: 1.5 с без взрыва", [d.parts.size() if d else -1, snappedf(max_v, 0.01)])
+	ws.stop_test()
+	await _frames(1)
+	ws.set_preset("human")
+
+
+## Правки ревью кита (29.09): рука мышью после замены кисти на навершие, мотор на суставе без мышцы, отказы шарниров словами игрока,
+## имя тела конечности кита на локте.
+func _kit_fixes() -> void:
+	# (a) kit_devil: бур вместо управляемой кисти 9 (конец предплечья 8) — рука мышью переезжает на предплечье, испытание её ведёт
+	ws.set_preset("kit_devil")
+	await _frames(1)
+	var ra := ws.attach_part("kit_drill_head", "8", "Anchor_End", "body")
+	var ok_a := bool(ra.get("ok", false)) and ws.blueprint.control == PackedStringArray(["8"]) and CraftEdit.friendly_errors(ws.blueprint).is_empty()
+	var started := ws.start_test()
+	await _frames(2)
+	var arm := ws.test_doll.get_node_or_null("ArmAssist") as ArmAssist if ws.test_doll != null else null
+	_check("control_rehost_on_replace", ok_a and started and arm != null and arm.part != null and arm.part_name == "LowerArm_R",
+		"бур вместо управляемой кисти: рука мышью на предплечье, в испытании ArmAssist ведёт LowerArm_R",
+		[ra.get("code", ""), Array(ws.blueprint.control), arm.part_name if arm else ""])
+	ws.stop_test()
+	await _frames(1)
+	# (b) рука мышью на плече 7, бур на плечевой якорь ядра вместо него — хозяин ядро: пометка снимается, подсказка
+	ws.set_preset("kit_devil")
+	await _frames(1)
+	ws.set_control("7")
+	var rb := ws.attach_part("kit_drill_head", "T", "Anchor_Shoulder_R", "body")
+	_check("control_cleared_on_core", bool(rb.get("ok", false)) and ws.blueprint.control.is_empty() and not CraftEdit.warnings(ws.blueprint).is_empty()
+		and ws.blueprint.validate().is_empty(), "бур вместо управляемого плеча: хозяин — ядро, пометка снята, подсказка",
+		[rb.get("code", ""), Array(ws.blueprint.control), CraftEdit.warnings(ws.blueprint)])
+	# (c) human (старые детали): шар булавы вместо кисти 9 — рука мышью на предплечье 8
+	ws.set_preset("human")
+	await _frames(1)
+	var rc := ws.attach_part("head_mace_ball", "8", "Anchor_Wrist", "body")
+	_check("control_rehost_legacy", bool(rc.get("ok", false)) and ws.blueprint.control == PackedStringArray(["8"]) and ws.blueprint.validate().is_empty(),
+		"human: шар булавы вместо кисти — рука мышью на предплечье", [rc.get("reason", ""), Array(ws.blueprint.control)])
+	# (d) мотор на стопе (сустав Ankle без мышцы) — отказ, энергия та же
+	ws.set_preset("kit_human")
+	await _frames(1)
+	var e0 := ws.blueprint.energy_used()
+	var rm := ws.set_joint("6", "motor")
+	_check("joint_motor_ankle_refused", not bool(rm["ok"]) and String(rm["code"]) == "rule" and ws.blueprint.energy_used() == e0
+		and not CraftEdit.find(ws.blueprint, "6").has("joint"), "мотор на стопе (сустав без мышцы) — отказ, энергия та же", rm["reason"])
+	# (e) отказы сварки и «приваренный конец» — словами игрока: без uid, имён якорей и «auto»
+	ws.set_preset("kit_brawler")
+	await _frames(1)
+	var reasons: Array = [rm["reason"]]
+	for u in ["H", "9", "2"]:
+		reasons.append(String(ws.set_joint(u, "weld")["reason"]))
+	ws.detach_part("3")
+	var rw := ws.set_joint("2", "weld")
+	var ch := CraftEdit.check(ws.blueprint, "kit_hand_mitten", "2", "Anchor_End")
+	reasons.append(String(ch["reason"]))
+	var re := RegEx.create_from_string("«[0-9A-Z]»|Anchor_|auto")
+	var raw: Array = reasons.filter(func(x: Variant) -> bool: return String(x) == "" or re.search(String(x)) != null)
+	_check("joint_refusal_words", bool(rw["ok"]) and String(ch["code"]) == "welded" and raw.is_empty(),
+		"отказы сварки, мотора и «приваренный конец» — словами (без uid, Anchor_, auto)", reasons)
+	# (f) конечность кита (размер S, префикс UpperArm) на локте — тело LowerArm_<uid>: удар и монитор контактов предплечья
+	ws.set_preset("kit_brawler")
+	await _frames(1)
+	ws.detach_part("2")
+	var rl := ws.attach_part("kit_limb_thick_s", "1", "Anchor_End", "body")
+	var nu := String(rl.get("uid", ""))
+	var bn := ws.blueprint.body_name_of(nu)
+	await _frames(1)
+	_check("limb_elbow_name", bool(rl.get("ok", false)) and bn.begins_with("LowerArm_") and ws.stand != null and ws.stand.parts.has(bn)
+		and ws.stand.combat_monitored(bn) and is_equal_approx(Damage.body_mult_of(bn), float(Tuning.BODY_MULT["LowerArm"])),
+		"конечность кита на локте — тело LowerArm_<uid> (удар и монитор предплечья)", [nu, bn])
+	ws.set_preset("human")
+	await _frames(1)
+
+
 # ------------------------------------------------------------------ кадры (не headless)
 
 func _shots() -> void:
@@ -565,7 +963,68 @@ func _shots() -> void:
 		if hit_t >= 0.0 and t - hit_t > 0.2:
 			break
 	await _shot("test")
+	ws.stop_test()
+	await _kit_shots()
 	get_tree().quit(0)
+
+
+## Кадры кита v2: вкладка «Материал» с кистью над плечом громилы, «Шарниры» с кружками типов, «Броня, декор» с призраком рогов.
+func _kit_shots() -> void:
+	var tabs: Dictionary = ws.ui.get("shelf_tab")
+	ws.set_view(WorkshopBuild.View.BODY)
+	ws.set_preset("kit_brawler")
+	tabs["body"] = "mat"
+	ws.ui.call("_build_left")
+	ws.set_paint_mat("iron")
+	await _wait(1.0)
+	ws.set_hover({"target": "body", "uid": "7"})
+	await _wait(0.2)
+	await _shot("kit-mat")
+	ws.set_hover({})
+	tabs["body"] = "joint"
+	ws.ui.call("_build_left")
+	ws.set_joint_pick("motor")
+	ws.set_hover({"target": "body", "uid": "2"})
+	await _wait(0.3)
+	await _shot("kit-joint")
+	ws.set_hover({})
+	ws.clear_tools()
+	tabs["body"] = "armor"
+	ws.ui.call("_build_left")
+	ws.set_preset("kit_king")
+	await _wait(0.6)
+	ws.begin_drag("kit_deco_horns", Vector2(300, 700))
+	var tt := {}
+	for tg in ws.drag["targets"]:
+		if bool(tg["ok"]) and String(tg["anchor"]) == "Anchor_Top":
+			tt = tg
+	if tt.is_empty():
+		for tg in ws.drag["targets"]:
+			if bool(tg["ok"]) and tt.is_empty():
+				tt = tg
+	if not tt.is_empty():
+		var p := ws.target_screen_pos(tt) + Vector2(18, 12)
+		for i in range(10):
+			ws.update_drag(Vector2(300, 700).lerp(p, float(i + 1) / 10.0))
+			await get_tree().process_frame
+	await _wait(0.3)
+	await _shot("kit-armor")
+	ws.cancel_drag()
+	tabs["body"] = "limb"
+	ws.ui.call("_build_left")
+	ws.set_preset("kit_bot")
+	await _wait(0.6)
+	await _shot("kit-limb")
+	tabs["body"] = "head"
+	ws.ui.call("_build_left")
+	ws.set_preset("kit_horned")
+	await _wait(0.6)
+	await _shot("kit-head")
+	tabs["body"] = "core"
+	ws.ui.call("_build_left")
+	ws.set_preset("kit_spider")
+	await _wait(0.6)
+	await _shot("kit-core")
 
 
 func _shot(tag: String) -> void:

@@ -10,7 +10,8 @@
 ##     зеркальность наследуется вниз по цепи (локоть правой руки тоже правый);
 ##   • сустав — Generic6DOFJoint3D как в doll.tscn (tools/build_doll_scene.gd `_joint`): линейные оси и углы X/Y заперты, Z с лимитами,
 ##     мотор-трение Tuning.JOINT_FRICTION × friction_factor группы, meta friction_factor; имя — BodyBlueprint.joint_name_of(uid);
-##   • fixed-деталь сливается с телом родителя: формы и меш переезжают, масса складывается, центр масс — взвешенный (CUSTOM);
+##   • fixed-узел (BodyBlueprint.is_fixed: attach fixed, декор/броня, joint "weld") сливается с телом родителя: формы и меш
+##     переезжают, масса (BodyBlueprint.node_mass) складывается, центр масс — взвешенный (CUSTOM);
 ##   • кукла ставится на пол: нижняя точка форм собранного тела — y = 0 локально (у human торс ровно на 1.17, как в doll.tscn).
 ## Углы (градусы): от направления якоря (−Y), наружу = + для левой стороны, у зеркальной — знак меняется. Jolt считает угол сустава
 ## от собранной позы, Doll — measured = child.rot.z − parent.rot.z, поэтому поза покоя = a0 + знак × угол (a0 — measured-угол сборки).
@@ -19,17 +20,31 @@
 ##
 ## Поверх Doll (без правки doll.gd, хуки для другой сессии — BODY_CRAFT.md §6):
 ##   • фиксированная тяга Ядра (CONCEPT_V2 §7, fixed_thrust): сила = MOVE_FORCE_PER_KG × thrust_mass(), а не × total_mass — тяжёлая
-##     сборка разгоняется медленнее, лёгкая быстрее, у human (40 кг) тяга та же. Doll читает total_mass в _physics_process только в тяге
-##     и в клэмпе полёта (_cap_flight_speed, окно knockback_until) — на время тика вне полёта total_mass подменяется на thrust_mass();
-##     в окне полёта тяга прежняя (там она только рулит). Правильный хук — метод Doll.thrust_mass() в строках тяги.
-##   • демпфирование мышц по настоящей инерции цепи: Doll берёт c = 2ζ√(k·I) с I группы Tuning.MUSCLE_GROUPS (цепь куклы v3); у кисти
-##     прямо на локте или ноги на плече инерция в 0.05–4 раза другая — явный PD дрожит или болтается. Если I цепи отличается от I группы
-##     больше INERTIA_TOLERANCE, c масштабируется на √(I_цепи/I_группы) (у human все цепи в допуске — числа как у doll.tscn);
+##     сборка разгоняется медленнее, лёгкая быстрее, у human (40 кг) тяга та же. Doll зовёт thrust_mass() в обеих строках тяги
+##     (хук внесён 29.09), здесь он только переопределён; total_mass остаётся настоящей массой для отброса, отдачи и клэмпа полёта.
+##   • демпфирование мышц по настоящей инерции цепи: сустав несёт meta "chain_inertia" (_make_joint), Doll._pair_inertia берёт её
+##     вместо I группы Tuning.MUSCLE_GROUPS, если отличие больше Doll.CHAIN_INERTIA_TOLERANCE (= INERTIA_TOLERANCE, у human все цепи
+##     в допуске — числа как у doll.tscn). До 29.09 это масштабирование жило здесь в _update_pair_gains (перенесено в Doll по просьбе
+##     этой сессии; тяга — Doll.thrust_mass()); теперь _update_pair_gains здесь — только множители типа шарнира (ниже).
 ##   • DollCombat слушает контакты только частей с именами из DollCombat.MONITORED (Hand_L, Foot_R…) — у деталей «Foot_3», «Hand_C»
 ##     (по базовому имени, как Damage.body_mult_of) и у бьющих деталей STRIKER_KINDS («Chain_E» с шаром булавы) тот же монитор
 ##     включается здесь, когда DollCombat появляется ребёнком (Match.register).
 ##   • цепь (kind chain) — свободный шарнир с лимитами CHAIN_LIMITS; fixed-деталь с началом координат в Socket (детали оружия)
 ##     сливается с настоящим центром масс (центр объёмов форм, как AUTO у Jolt).
+##
+## Кит тела v2 (docs/plan-demo/BODY_KIT.md §4, §5.4; у деталей без base_mat и суставов pin — всё как раньше, human = doll.tscn):
+##   • материал узла (node_mat ≠ base_mat) — сразу после _mirror_part, до слияния: поверхности Base_* мешей → MaterialDef.surface,
+##     своё тело — physics_material_override (friction/bounce); масса узла = PartDef.mass × density / density base_mat;
+##   • тип шарнира (KitJoint, node["joint"]): _make_joint — трение × friction типа (force_limit и meta friction_factor), лимиты
+##     KitJoint.limits, meta joint_type; _update_pair_gains — k, tmax × множители типа, c × √k-множителя (free — 0, только трение);
+##     weld — узел сливается с родителем как fixed, но в позе покоя своего сустава (_weld_rest);
+##   • коннектор (PartDef.connector, не weld): Connector_<uid> на теле-ребёнке в точке сустава, шар цвета игрока (_add_connector);
+##   • meta тел: "material" — кг железа (float, ScrapMachine.iron_mass) у КАЖДОГО тела; "body_mult" (Damage.body_mult_of_body) —
+##     только если ≠ Damage.body_mult_of(имя): × body_mult материала своего узла × PartDef.hit_mult своего узла (форма: шипы, рога,
+##     клешня) × body_mult слитого декора/брони (шипы). PartDef.body_mult детали со своим телом не читается (= Tuning.BODY_MULT по
+##     префиксу, builder), hit_mult сваренного узла и weapon_mult слитого навершия — тоже (weapon_mult только для CraftedWeapon):
+##     навершие на теле добавляет массу и формы;
+##   • цвет игрока — _recolor с одной копией на исходный материал (коннекторы и Shirt_Kit каждой детали).
 class_name ModularDoll
 extends Doll
 
@@ -67,6 +82,7 @@ var assembly: Dictionary = {}
 var _bp_pose: Dictionary = {}          # имя сустава -> measured-градусы (поза покоя чертежа)
 var _chain_inertia: Dictionary = {}    # имя сустава -> кг·м², инерция дистальной цепи вокруг оси сустава (сборка, по прямой)
 var _striker: Dictionary = {}          # имя тела -> true: бьющая деталь (STRIKER_KINDS), монитор контактов в _hook_combat
+var _joint_type: Dictionary = {}       # имя сустава -> тип шарнира KitJoint ("pin", "free", "spring", "motor"), для _update_pair_gains
 
 
 func _ready() -> void:
@@ -91,6 +107,8 @@ func reset_pose(blend_s: float = 0.0) -> void:
 
 ## Масса, для которой считается фиксированная тяга (Н = MOVE_FORCE_PER_KG × эта масса).
 func thrust_mass() -> float:
+	if not fixed_thrust:
+		return total_mass   # обычная тяга Doll (Doll зовёт thrust_mass() в обеих строках тяги, и в окне полёта тоже)
 	if thrust_ref_mass > 0.0:
 		return thrust_ref_mass
 	# = Tuning.total_mass(); методы автолоада не компилируются, когда builder (-s) грузит этот скрипт
@@ -110,17 +128,6 @@ func control_part_names() -> PackedStringArray:
 
 func energy_used() -> int:
 	return blueprint.energy_used() if blueprint != null else 0
-
-
-func _physics_process(delta: float) -> void:
-	var t: Variant = get("_time")
-	if not fixed_thrust or is_broken() or t == null or float(t) + delta < knockback_until:
-		super._physics_process(delta)   # в окне полёта Doll._cap_flight_speed читает total_mass как настоящую массу
-		return
-	var real := total_mass
-	total_mass = thrust_mass()
-	super._physics_process(delta)
-	total_mass = real
 
 
 ## Спавн сразу в позе чертежа (как Doll.spawn_in_pose, группы по порядку: проксимальные раньше). Отличие от Doll._snap_to_pose:
@@ -162,21 +169,33 @@ static func _distal(b: RigidBody3D, pairs: Array) -> Array:
 	return out
 
 
-## Doll: c = 2ζ√(k·I_группы). Здесь — по инерции настоящей цепи, если она вне допуска (см. шапку).
+## Doll пересчитывает k/c/tmax пар из групп (и override сустава) в _ready, set_muscles, set_muscle_group, set_muscle_joint (оружие
+## в руке), clear_muscle_joint — поверх каждого раза множители типа шарнира (KitJoint.TYPES, BODY_KIT.md §5.4): k и tmax × k/tmax
+## типа, c × √(k-множителя) (c = 2ζ√(k·I)), если не задано единое c (Doll._uniform_c ≥ 0); free — k = c = tmax = 0 (только трение).
+## pin (все суставы human) не трогается — числа как у doll.tscn.
 func _update_pair_gains() -> void:
 	super._update_pair_gains()
-	var uc: Variant = get("_uniform_c")
-	if uc != null and float(uc) >= 0.0:
+	if _joint_type.is_empty():
 		return
 	var pairs: Variant = get("_muscle_pairs")
 	if not pairs is Array:
 		return
+	var uc: Variant = get("_uniform_c")
+	var uniform_c := uc != null and float(uc) >= 0.0
 	for e in pairs:
-		var g := String(e[MP_GROUP])
-		var ig := float((Tuning.MUSCLE_GROUPS[g] as Dictionary)["inertia"])
-		var ic := float(_chain_inertia.get(String(e[MP_NAME]), ig))
-		if ig > 0.0 and absf(ic / ig - 1.0) > INERTIA_TOLERANCE:
-			e[MP_C] = float(e[MP_C]) * sqrt(ic / ig)
+		var jt := String(_joint_type.get(String(e[MP_NAME]), KitJoint.DEFAULT))
+		if jt == KitJoint.DEFAULT:
+			continue
+		var ti := KitJoint.info(jt)
+		var km := float(ti.get("k", 1.0))
+		e[MP_K] = float(e[MP_K]) * km
+		e[MP_TMAX] = float(e[MP_TMAX]) * float(ti.get("tmax", 1.0))
+		if km <= 0.0:
+			e[MP_K] = 0.0
+			e[MP_C] = 0.0
+			e[MP_TMAX] = 0.0
+		elif not uniform_c:
+			e[MP_C] = float(e[MP_C]) * sqrt(km)
 
 
 # --- сборка ---
@@ -190,7 +209,9 @@ func _build() -> void:
 		blueprint = load(DEFAULT_BLUEPRINT) as BodyBlueprint
 	var info := {}          # uid -> {def, xf (кадр детали в кукле), mirror, anchors, body (хозяин), body_xf}
 	var bodies: Array[RigidBody3D] = []
-	var todo: Array = []    # суставы: {name, group, pos, a, b, limits, mirror, rest}
+	var todo: Array = []    # суставы: {name, group, type, pos, a, b, limits, mirror}
+	var iron := {}          # тело -> кг железа (meta material): свой узел + слитые, чей материал iron (BodyBlueprint.node_iron)
+	var mult := {}          # тело -> множитель удара сверх таблицы по имени: материал × форма (hit_mult) своего узла × шипастый декор/броня
 	for n in blueprint.sorted_nodes():
 		var uid := String(n["uid"])
 		var def := BodyBlueprint.part_def(String(n["part"]))
@@ -205,28 +226,49 @@ func _build() -> void:
 			a_xf = (p["xf"] as Transform3D) * (a["xf"] as Transform3D)
 			mirror = bool(p["mirror"]) != bool(a["mirror"])
 		_mirror_part(inst, mirror)
+		# кит v2 (BODY_KIT.md §4): материал узла — до слияния, пока меши ещё под инстансом детали
+		var mat_id := blueprint.node_mat(uid)
+		var mdef: MaterialDef = null
+		if def.base_mat != "":
+			mdef = MaterialDef.get_def(mat_id)
+		var repaint := mdef != null and mat_id != def.base_mat
+		if repaint and mdef.surface != null:
+			_swap_base_surfaces(inst, mdef.surface)
+		var node_mass := blueprint.node_mass(uid)
+		var node_iron := blueprint.node_iron(uid)
 		var sock := inst.get_node_or_null("Socket") as Node3D
 		var xf := Transform3D.IDENTITY
 		if parent != "":
 			xf = a_xf * (sock.transform if sock != null else Transform3D.IDENTITY).affine_inverse()
+			# сварка — в позе покоя сустава (до entry: дети, слияние, центр масс и пол берут повёрнутый кадр); fixed по PartDef — как был
+			if KitJoint.is_weld(String(n.get("joint", ""))) and not BodyBlueprint.is_fixed_part(def):
+				xf = _weld_rest(uid, n, a, mirror, a_xf.origin) * xf
 		var anchors := {}
 		for c in inst.get_children():
 			if c is Marker3D and String(c.name).begins_with("Anchor_"):
 				anchors[String(c.name)] = BodyBlueprint.anchor_info(c as Marker3D)
 		var entry := {"def": def, "xf": xf, "mirror": mirror, "anchors": anchors, "body": inst, "body_xf": xf}
 		info[uid] = entry
-		if def.attach == "fixed" and parent != "":
+		if blueprint.is_fixed(uid):   # fixed по PartDef (декор, броня, детали оружия) или joint "weld"
 			var host: RigidBody3D = info[parent]["body"]
 			entry["body"] = host
 			entry["body_xf"] = info[parent]["body_xf"]
-			_merge_into(host, entry["body_xf"], inst, xf, def.mass, uid)
+			_merge_into(host, entry["body_xf"], inst, xf, node_mass, uid)
+			if node_iron:
+				iron[host] = float(iron.get(host, 0.0)) + node_mass
+			if PartDef.FIXED_KINDS.has(def.kind) and not is_equal_approx(def.body_mult, 1.0):
+				mult[host] = float(mult.get(host, 1.0)) * def.body_mult
 			uid_body[uid] = String(host.name)
 			if STRIKER_KINDS.has(def.kind):
 				_striker[String(host.name)] = true
 			continue
 		inst.name = blueprint.body_name_of(uid)
-		inst.mass = def.mass
+		inst.mass = node_mass
 		inst.transform = xf
+		if repaint:   # по умолчанию у детали кита уже физматериал base_mat (builder), у kit_human — байт в байт как у wood_*
+			inst.physics_material_override = mdef.physics_material()
+		iron[inst] = node_mass if node_iron else 0.0
+		mult[inst] = (mdef.body_mult if mdef != null else 1.0) * def.hit_mult   # форма детали (шипы, рога, клешня) — BODY_KIT.md §5.4
 		bodies.append(inst)
 		uid_body[uid] = String(inst.name)
 		if STRIKER_KINDS.has(def.kind):
@@ -244,12 +286,16 @@ func _build() -> void:
 		var host_p: RigidBody3D = info[parent]["body"]
 		var a0 := rad_to_deg(_rot_z(xf.basis) - _rot_z((info[parent]["body_xf"] as Transform3D).basis))
 		var jn := blueprint.joint_name_of(uid)
+		var jt := blueprint.joint_type_of(uid)
 		uid_joint[uid] = jn
+		_joint_type[jn] = jt
 		todo.append({
-			"name": jn, "group": g, "pos": a_xf.origin, "a": host_p, "b": inst, "mirror": mirror,
-			"limits": _limits_for(a, g, def, info[parent]["def"]),
+			"name": jn, "group": g, "type": jt, "pos": a_xf.origin, "a": host_p, "b": inst, "mirror": mirror,
+			"limits": KitJoint.limits(jt, _limits_for(a, g, def, info[parent]["def"])),
 		})
 		_bp_pose[jn] = wrapf(a0 + (-rel if mirror else rel), -180.0, 180.0)
+		if def.connector:
+			_add_connector(inst, uid, jt, xf.affine_inverse() * a_xf, a, g)
 
 	# на пол: нижняя точка форм — y = 0
 	var min_y := INF
@@ -263,11 +309,36 @@ func _build() -> void:
 	for b in bodies:
 		b.transform.origin += shift
 		assembly[String(b.name)] = b.transform
+		# магнит Свалки (ScrapMachine.iron_mass: число = кг железа) и удар частью (Damage.body_mult_of_body) — BODY_KIT.md §5.4
+		b.set_meta("material", float(iron.get(b, 0.0)))
+		var bm0 := Damage.body_mult_of(String(b.name))
+		var bm := bm0 * float(mult.get(b, 1.0))
+		if not is_equal_approx(bm, bm0):
+			b.set_meta("body_mult", bm)
 		add_child(b)
 	for jd in todo:
 		jd["pos"] = (jd["pos"] as Vector3) + shift
 		_chain_inertia[jd["name"]] = _inertia_about(jd["b"], jd["pos"], todo)
 		add_child(_make_joint(jd))
+
+
+## Сварка (joint "weld", BODY_KIT.md §5.2, §5.4) замораживает деталь в позе покоя её сустава, а не прямо по якорю: поворот вокруг
+## точки сустава pivot (кадр куклы) на угол покоя — rest_deg узла, иначе Tuning.POSE группы якоря (rest_from_pose), иначе rest_deg
+## якоря, как у сустава в _build. Группа — BodyBlueprint.anchor_group_of (joint_group_of у сваренного узла пуст: сустава нет),
+## у зеркальной стороны знак меняется (как _bp_pose). Плечо, сваренное на Shoulder_*, торчит под 85°, а не висит вниз.
+func _weld_rest(uid: String, n: Dictionary, a: Dictionary, mirror: bool, pivot: Vector3) -> Transform3D:
+	var g := blueprint.anchor_group_of(uid)
+	var rel: float
+	if n.has("rest_deg"):
+		rel = float(n["rest_deg"])
+	elif bool(a.get("rest_from_pose", false)) and Tuning.POSE.has(g):
+		rel = float(Tuning.POSE[g])
+	else:
+		rel = float(a.get("rest_deg", 0.0))
+	if is_zero_approx(rel):
+		return Transform3D.IDENTITY
+	var r := Basis(Vector3(0, 0, 1), deg_to_rad(-rel if mirror else rel))
+	return Transform3D(r, pivot - r * pivot)
 
 
 ## Лимиты сустава: meta limit_deg якоря, иначе у цепи — CHAIN_LIMITS, иначе таблица групп (= doll.tscn).
@@ -281,9 +352,12 @@ static func _limits_for(a: Dictionary, group: String, child: PartDef, parent: Pa
 
 ## Generic6DOFJoint3D как tools/build_doll_scene.gd `_joint` (лимиты: намерение [lo, hi] левой стороны → Jolt [−hi, −lo],
 ## правой → [lo, hi], см. _lim там). Пути к телам ставятся до add_child: кадры сустава считаются один раз при входе в дерево.
+## Тип шарнира (KitJoint): трение × friction типа (и в meta friction_factor — Doll.joint_friction ≥ 0 читает её), лимиты уже
+## пересчитаны KitJoint.limits в _build, meta joint_type.
 func _make_joint(jd: Dictionary) -> Generic6DOFJoint3D:
 	var g := String(jd["group"])
-	var ff := float((Tuning.MUSCLE_GROUPS[g] as Dictionary)["friction_factor"])
+	var jt := String(jd.get("type", KitJoint.DEFAULT))
+	var ff := float((Tuning.MUSCLE_GROUPS[g] as Dictionary)["friction_factor"]) * float(KitJoint.info(jt).get("friction", 1.0))
 	var j := Generic6DOFJoint3D.new()
 	j.name = String(jd["name"])
 	j.position = jd["pos"]
@@ -307,6 +381,7 @@ func _make_joint(jd: Dictionary) -> Generic6DOFJoint3D:
 	j.set("angular_motor_z/force_limit", f)
 	j.set_meta("friction_factor", ff)
 	j.set_meta("chain_inertia", _chain_inertia.get(j.name, 0.0))
+	j.set_meta("joint_type", jt)
 	j.node_a = NodePath("../" + String((jd["a"] as Node).name))
 	j.node_b = NodePath("../" + String((jd["b"] as Node).name))
 	return j
@@ -337,6 +412,70 @@ func _mirror_part(inst: RigidBody3D, on: bool) -> void:
 
 static func _mirrored(t: Transform3D) -> Transform3D:
 	return Transform3D(MIRROR_X * t.basis * MIRROR_X, MIRROR_X * t.origin)
+
+
+## Цвет игрока — цикл Doll._recolor (зовётся из Doll._ready, GDScript отдаёт вызов сюда), но одна копия материала на ИСХОДНЫЙ
+## материал, а не на каждую поверхность: у куклы кита Shirt_Kit есть на каждой детали и на каждом коннекторе (13–19 шаров), у Doll
+## каждая поверхность получала свой дубликат — 25–37 одинаковых материалов на куклу (рендер их не делит), а в headless при
+## освобождении dummy-рендер писал «Parameter "material" is null» на каждую куклу кита. Альфа — своя у каждого исходника (Shirt и
+## Shirt_Paint остаются разными копиями). BODY_KIT.md §5.4.
+func _recolor(body: Node, material_name: String, colour: Color) -> void:
+	if body == null:
+		return
+	var cache := {}   # исходный материал -> его перекрашенная копия
+	for m in _find_meshes(body):
+		var mi: MeshInstance3D = m
+		if mi.mesh == null:
+			continue
+		for s in range(mi.mesh.get_surface_count()):
+			var mat: Material = mi.get_active_material(s)
+			if mat == null or not mat.resource_name.begins_with(material_name):
+				continue
+			if not cache.has(mat):
+				var dup: Material = mat.duplicate()
+				if dup is BaseMaterial3D:
+					var c := colour
+					c.a = dup.albedo_color.a
+					dup.albedo_color = c
+				cache[mat] = dup
+			mi.set_surface_override_material(s, cache[mat])
+
+
+## Материал узла кита (BODY_KIT.md §4): поверхности Base_* всех мешей детали → surface MaterialDef (override на инстансе, общий
+## ресурс меша не трогаем; Shirt_Kit, Face и фурнитура остаются — Doll._recolor потом красит Shirt_*).
+func _swap_base_surfaces(n: Node, surface: Material) -> void:
+	for m in _find_meshes(n):
+		var mi := m as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		for s in range(mi.mesh.get_surface_count()):
+			var cur := mi.get_active_material(s)
+			if cur != null and cur.resource_name.begins_with("Base_"):
+				mi.set_surface_override_material(s, surface)
+
+
+## Коннектор кита (BODY_KIT.md §5.4): шар шарнира на теле-ребёнке Connector_<uid> — инстанс KitJoint.connector_scene(тип) в точке
+## сустава (local — кадр якоря родителя в осях тела: у зеркальной детали точка уже зеркальная, сам шар симметричен и не отражается),
+## масштаб — meta joint_r якоря, иначе KitJoint.RADIUS группы. Без коллизий, meta rig_mesh; ставится до Doll._ready (_recolor
+## красит Shirt_Kit в цвет игрока). Сцены пишет tools/build_body_kit.gd — пока файла нет, шара нет.
+func _add_connector(body: RigidBody3D, uid: String, jt: String, local: Transform3D, a: Dictionary, group: String) -> void:
+	var path := KitJoint.connector_scene(jt)
+	if path == "" or not ResourceLoader.exists(path):
+		return
+	var ps := load(path) as PackedScene
+	if ps == null:
+		return
+	var c := ps.instantiate()
+	if not c is Node3D:
+		c.free()
+		return
+	var r := float(a.get("joint_r", 0.0))
+	if r <= 0.0:
+		r = KitJoint.radius_for(group)
+	c.name = "Connector_" + uid
+	(c as Node3D).transform = Transform3D(local.basis.orthonormalized().scaled(Vector3.ONE * r), local.origin)
+	c.set_meta("rig_mesh", true)
+	body.add_child(c)
 
 
 ## fixed-деталь: формы, меши и маркеры переезжают в тело-хозяина (host_xf — его кадр в кукле), масса складывается, центр масс —

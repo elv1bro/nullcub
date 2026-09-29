@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_curved_l.tscn" id="1_uabha"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_40jdg"]
+
+[resource]
+script = ExtResource("2_40jdg")
+id = "kit_limb_curved_l"
+title = "Гнутая труба (нога)"
+scene = ExtResource("1_uabha")
+mass = 4.4
+energy = 7
+body_mult = 0.6
+material = "iron"
+name_prefix = "UpperLeg"
+base_mat = "rust"
+connector = true

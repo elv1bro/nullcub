@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Head_Lantern.glb" id="1_v3et8"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_vq524"]
+friction = 0.45
+bounce = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3dd04"]
+size = Vector3(0.26, 0.3, 0.26)
+
+[node name="KitHeadLantern" type="RigidBody3D" unique_id=977158047]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 5.0
+physics_material_override = SubResource("PhysicsMaterial_vq524")
+can_sleep = false
+continuous_cd = true
+linear_damp = 2.25
+angular_damp = 0.6
+metadata/kind = "head"
+metadata/part_id = "kit_head_lantern"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=984458590]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Anchor_Top" type="Marker3D" parent="." unique_id=1768326918]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0.356, 0)
+metadata/accepts = PackedStringArray("deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Head" type="CollisionShape3D" parent="." unique_id=313906450]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+shape = SubResource("BoxShape3D_3dd04")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1376070313 instance=ExtResource("1_v3et8")]
+metadata/rig_mesh = true

@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/face_default.png" id="1_ped4v"]
+
+[resource]
+resource_name = "Face"
+albedo_texture = ExtResource("1_ped4v")
+roughness = 0.55

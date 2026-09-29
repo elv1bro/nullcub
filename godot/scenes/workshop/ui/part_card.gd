@@ -1,11 +1,20 @@
 ## Карточка детали на полке мастерской: иконка (PartIcons, рендер в рантайме), название, энергия и масса. Нажал ЛКМ — сигнал
 ## grabbed (WorkshopBuild.begin_drag: протяжка или «деталь в руке» по клику). Не влезает в бюджет — энергия красная, карточка тусклее.
-## Подсказка (tooltip) — вид, масса, крепление, множитель удара.
+## Подсказка (tooltip) — вид, масса, крепление, множитель удара; у деталей кита v2 — материал по умолчанию и его физика. Множитель
+## удара — тот, что правда в бою (BODY_KIT.md §5.4): у детали со своим телом — таблица по имени × материал по умолчанию × форма
+## (PartDef.hit_mult: «шипы: удар ×1.3»), у декора / брони — бонус телу-хозяину; weapon_mult навершия / мода на полке тела (on_body) —
+## только в оружии, на теле — масса и форма.
 extends PanelContainer
 
 signal grabbed(part_id: String, pos: Vector2)
 
 const ICON := 92
+## Чем бьёт форма детали (PartDef.hit_mult ≠ 1) — слово для подсказки по префиксу id; нет в таблице — «форма».
+const HIT_WORDS := {
+	"kit_limb_spiked": "шипы", "kit_head_horned": "рога", "kit_head_devil": "рожки", "kit_head_cow": "рога", "kit_hand_claw": "клешня",
+	"kit_hand_clamp": "тиски", "kit_hand_fist": "кулак", "kit_foot_peg": "острый колышек", "kit_limb_rope": "мягкая верёвка",
+	"kit_limb_tentacle": "мягкое щупальце",
+}
 
 var part_id := ""
 var def: PartDef
@@ -17,7 +26,7 @@ var _style_hover := StyleBoxFlat.new()
 var _fits := true
 
 
-func setup(d: PartDef) -> void:
+func setup(d: PartDef, on_body := false) -> void:
 	def = d
 	part_id = d.id
 	custom_minimum_size = Vector2(122, 168)
@@ -85,7 +94,7 @@ func setup(d: PartDef) -> void:
 	mass.add_theme_color_override("font_color", Color(0.8, 0.76, 0.7))
 	mass.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(mass)
-	tooltip_text = _tooltip(d)
+	tooltip_text = _tooltip(d, on_body)
 	mouse_entered.connect(func() -> void: add_theme_stylebox_override("panel", _style_hover))
 	mouse_exited.connect(func() -> void: add_theme_stylebox_override("panel", _style))
 
@@ -112,17 +121,50 @@ func _gui_input(event: InputEvent) -> void:
 
 
 static func _short_title(t: String) -> String:
-	return t.replace(" (клён)", "").replace(" (хлам)", " · хлам")
+	return t.replace(" (клён)", "").replace(" (хлам)", " · хлам").replace(" (кит «Человек»)", " · кит")
 
 
-static func _tooltip(d: PartDef) -> String:
+## Слово формы для подсказки: «шипы», «клешня»… (HIT_WORDS по префиксу id детали), иначе «форма».
+static func hit_word(part_id: String) -> String:
+	for k in HIT_WORDS:
+		if part_id.begins_with(String(k)):
+			return String(HIT_WORDS[k])
+	return "форма"
+
+
+## 1.3 → «1.3», 1.15 → «1.15», 0.85 → «0.85» (без хвостовых нулей).
+static func _mult_str(v: float) -> String:
+	var s := "%.2f" % v
+	return s.trim_suffix("0").trim_suffix(".") if s.ends_with("0") else s
+
+
+static func _tooltip(d: PartDef, on_body := false) -> String:
 	var lines: PackedStringArray = [d.title]
 	lines.append("%s · %.1f кг · энергия %d" % [String(CraftEdit.KIND_TITLES.get(d.kind, d.kind)).capitalize(), d.mass, d.energy])
-	lines.append("свой сустав — болтается" if d.attach == "joint" else "прикручивается намертво")
+	var fixed := BodyBlueprint.is_fixed_part(d)
+	lines.append("прикручивается намертво" if fixed else "свой сустав — болтается")
+	# кит v2 (BODY_KIT.md §4): материал по умолчанию и его физика; кисть «Материал» меняет его (масса — новая плотность / прежняя)
+	var md := MaterialDef.get_def(d.base_mat) if d.base_mat != "" else null
+	if md != null:
+		lines.append("материал: %s — %s" % [CraftEdit.mat_title(d.base_mat), CraftEdit.mat_line(d.base_mat)])
+	elif d.base_mat == "" and d.kind != "handle" and d.kind != "weapon_head" and d.kind != "mod":
+		lines.append("не красится (старая деталь)")
 	if d.weapon_mult > 1.0:
-		lines.append("урон оружия ×%.2f" % d.weapon_mult)
-	if d.body_mult >= 1.5:
-		lines.append("бьёт сильно (×%.1f)" % d.body_mult)
+		if on_body:
+			lines.append("на теле: только масса и форма (урон оружия ×%.2f — в оружии)" % d.weapon_mult)
+		else:
+			lines.append("урон оружия ×%.2f" % d.weapon_mult)
+	if fixed:
+		# декор / броня: бонус к удару телом-хозяином (шипы) — он в бою работает (meta body_mult хозяина)
+		if PartDef.FIXED_KINDS.has(d.kind) and not is_equal_approx(d.body_mult, 1.0):
+			lines.append("удар хозяином ×%.2f" % d.body_mult)
+	else:
+		# своё тело: удар = таблица по имени тела × материал узла × форма (hit_mult; PartDef.body_mult в бою не читается)
+		if not is_equal_approx(d.hit_mult, 1.0):
+			lines.append("%s: удар ×%s" % [hit_word(d.id), _mult_str(d.hit_mult)])
+		var bm := Damage.body_mult_of(d.name_prefix) * (md.body_mult if md != null else 1.0) * d.hit_mult
+		if bm >= 1.5:
+			lines.append("бьёт сильно (×%.1f%s)" % [bm, (", " + md.title.to_lower()) if md != null and not is_equal_approx(md.body_mult, 1.0) else ""])
 	var anchors := BodyBlueprint.part_anchors(d)
 	if not anchors.is_empty():
 		lines.append("якорей: %d" % anchors.size())

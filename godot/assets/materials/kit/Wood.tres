@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/maple_light/albedo.webp" id="1_e420n"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/maple_light/normal.webp" id="2_i5o5e"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/maple_light/roughness.webp" id="3_wn11v"]
+
+[resource]
+resource_name = "Wood"
+albedo_color = Color(1, 0.98669523, 0.9639762, 1)
+albedo_texture = ExtResource("1_e420n")
+roughness_texture = ExtResource("3_wn11v")
+normal_enabled = true
+normal_texture = ExtResource("2_i5o5e")

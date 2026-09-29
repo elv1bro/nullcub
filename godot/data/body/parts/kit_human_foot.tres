@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_human_foot.tscn" id="1_vkma2"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_42n2t"]
+
+[resource]
+script = ExtResource("2_42n2t")
+id = "kit_human_foot"
+title = "Ботинок (кит «Человек»)"
+kind = "foot"
+scene = ExtResource("1_vkma2")
+energy = 3
+body_mult = 1.2
+name_prefix = "Foot"
+base_mat = "wood"
+connector = true

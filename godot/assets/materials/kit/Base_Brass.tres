@@ -1,0 +1,15 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/brass_worn/albedo.webp" id="1_85qnx"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/brass_worn/metallic.webp" id="2_4ea4l"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/brass_worn/normal.webp" id="3_smyoo"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/brass_worn/roughness.webp" id="4_dl137"]
+
+[resource]
+resource_name = "Base_Brass"
+albedo_texture = ExtResource("1_85qnx")
+metallic = 0.7
+metallic_texture = ExtResource("2_4ea4l")
+roughness_texture = ExtResource("4_dl137")
+normal_enabled = true
+normal_texture = ExtResource("3_smyoo")

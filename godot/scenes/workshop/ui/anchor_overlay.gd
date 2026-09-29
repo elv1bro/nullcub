@@ -4,9 +4,12 @@
 ##   replace — занят, можно заменить: тонкое оранжевое колечко (не спорит с зелёными свободными);
 ##   bad     — принимает вид, но не влезает (энергия / сборка): красный крестик, без подсветки;
 ##   idle    — свободный якорь, пока ничего не тащишь: маленькая кремовая точка;
-##   control — управляемая деталь («рука мышью»): золотое кольцо и подпись.
+##   control — управляемая деталь («рука мышью»): золотое кольцо и подпись;
+##   joint / joint_hover — инструмент шарнира (кит v2): точка связи детали с родителем, кружок цвета типа (JointCard.COLORS) и
+##       подпись типа (у обычной оси без подписи); наведённая деталь — крупнее, с пульсом.
 extends Control
 
+const JointCard := preload("res://scenes/workshop/ui/joint_card.gd")
 const R_TARGET := 22.0
 const R_OK := 14.0
 const R_IDLE := 5.0
@@ -67,3 +70,17 @@ func _draw() -> void:
 					var tp := p + Vector2(rc + 8.0, 7.0)
 					draw_string_outline(font, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, Color(0, 0, 0, 0.9))
 					draw_string(font, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1.0, 0.85, 0.35))
+			"joint", "joint_hover":
+				var hov := String(it["state"]) == "joint_hover"
+				var col: Color = JointCard.colour(String(it.get("joint", "")))
+				var rj := (13.0 + 3.0 * pulse) if hov else 7.0
+				draw_circle(p, rj + 2.5, Color(0, 0, 0, 0.55))
+				draw_circle(p, rj, col)
+				if hov:
+					draw_arc(p, rj + 5.0, 0.0, TAU, 32, col.lightened(0.4), 3.0, true)
+				var jl := String(it.get("label", ""))
+				if jl != "" and font != null:
+					var fj := 20 if hov else 17
+					var tj := p + Vector2(rj + 6.0, 6.0)
+					draw_string_outline(font, tj, jl, HORIZONTAL_ALIGNMENT_LEFT, -1, fj, 6, Color(0, 0, 0, 0.9))
+					draw_string(font, tj, jl, HORIZONTAL_ALIGNMENT_LEFT, -1, fj, col.lightened(0.25))

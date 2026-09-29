@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/paint_marks/albedo.webp" id="1_s7yg4"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/paint_marks/roughness.webp" id="2_ahc2f"]
+
+[resource]
+resource_name = "Base_PaintGreen"
+albedo_color = Color(0.38260242, 0.38857287, 0.17184411, 1)
+albedo_texture = ExtResource("1_s7yg4")
+roughness = 0.75
+roughness_texture = ExtResource("2_ahc2f")

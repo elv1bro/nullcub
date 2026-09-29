@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Joint_Spring.glb" id="1_i8121"]
+
+[node name="ConnectorSpring" type="Node3D" unique_id=2092002862]
+metadata/rig_mesh = true
+metadata/connector_type = "spring"
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1431013781 instance=ExtResource("1_i8121")]
+metadata/rig_mesh = true

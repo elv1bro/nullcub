@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_head_lantern.tscn" id="1_k338t"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_7kbw6"]
+
+[resource]
+script = ExtResource("2_7kbw6")
+id = "kit_head_lantern"
+title = "Голова-фонарь"
+kind = "head"
+scene = ExtResource("1_k338t")
+mass = 5.0
+body_mult = 0.35
+name_prefix = "Head"
+base_mat = "brass"
+connector = true

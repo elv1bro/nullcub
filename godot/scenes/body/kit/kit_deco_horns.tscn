@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Deco_Horns.glb" id="1_vnedm"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_t0qxf"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_imq2q"]
+radius = 0.03
+height = 0.23724851
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_x63lj"]
+radius = 0.03
+height = 0.23724851
+
+[node name="KitDecoHorns" type="RigidBody3D" unique_id=320168729]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.8
+physics_material_override = SubResource("PhysicsMaterial_t0qxf")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "deco"
+metadata/part_id = "kit_deco_horns"
+
+[node name="Shape_Horn_R" type="CollisionShape3D" parent="." unique_id=792821406]
+transform = Transform3D(0.8532233, -0.5215458, 0, 0.5215458, 0.8532233, 0, 0, 0, 1, -0.1700855, 0.050719388, 0)
+shape = SubResource("CapsuleShape3D_imq2q")
+
+[node name="Shape_Horn_L" type="CollisionShape3D" parent="." unique_id=1061861412]
+transform = Transform3D(0.8532233, 0.5215458, 0, -0.5215458, 0.8532233, 0, 0, 0, 1, 0.1700855, 0.050719388, 0)
+shape = SubResource("CapsuleShape3D_x63lj")
+
+[node name="Socket" type="Marker3D" parent="." unique_id=213932548]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1576088668 instance=ExtResource("1_vnedm")]
+metadata/rig_mesh = true

@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rope/albedo.webp" id="1_31q6k"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rope/normal.webp" id="2_kklcd"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rope/roughness.webp" id="3_5nn3h"]
+
+[resource]
+resource_name = "Rope"
+albedo_texture = ExtResource("1_31q6k")
+roughness_texture = ExtResource("3_5nn3h")
+normal_enabled = true
+normal_texture = ExtResource("2_kklcd")

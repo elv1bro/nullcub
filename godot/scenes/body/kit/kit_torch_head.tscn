@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Torch_Head.glb" id="1_bbck3"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_cl5ct"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8r7rr"]
+size = Vector3(0.07, 0.075, 0.07)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_mleeu"]
+height = 0.18
+radius = 0.037
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_g70m3"]
+radius = 0.066
+
+[node name="KitTorchHead" type="RigidBody3D" unique_id=521525442]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.9
+physics_material_override = SubResource("PhysicsMaterial_cl5ct")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "weapon_head"
+metadata/part_id = "kit_torch_head"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1177361486]
+
+[node name="Shape_Collar" type="CollisionShape3D" parent="." unique_id=1035007879]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+shape = SubResource("BoxShape3D_8r7rr")
+
+[node name="Shape_Bundle" type="CollisionShape3D" parent="." unique_id=1626302822]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+shape = SubResource("CylinderShape3D_mleeu")
+
+[node name="Shape_Fire" type="CollisionShape3D" parent="." unique_id=6468743]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.29, 0)
+shape = SubResource("SphereShape3D_g70m3")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1089344346 instance=ExtResource("1_bbck3")]
+metadata/rig_mesh = true

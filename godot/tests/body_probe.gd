@@ -1,12 +1,14 @@
 ## Проба системы сборки тела (docs/plan-demo/BODY_CRAFT.md §1–3): ModularDoll по пресетам data/body/blueprints/*.tres.
 ## Headless: godot --headless --path . --fixed-fps 60 res://tests/body_probe.tscn        → tests/body_probe_report.json, код выхода 0/1
-## Кадр:     godot --path . --resolution 1920x1080 res://tests/body_probe.tscn -- "shot=<путь.png>"   (все пресеты рядом, подписи)
+## Кадр:     godot --path . --resolution 1920x1080 res://tests/body_probe.tscn -- "shot=<путь.png>[,only=<префикс id>]"
+##            (все пресеты сеткой с подписями; only=kit_ — только пресеты кита, крупнее; камера подгоняется под сетку)
 ##
 ## Проверки (всё в одном мире, куклы в 8 м друг от друга, пол y = 0):
-##   • пресет: validate() пуст, собирается (тела/суставы по чертежу, energy ≤ бюджета); 5 с покоя без взрыва — скорость частей
-##     ≤ MAX_IDLE_SPEED, суставы целы (точки сустава на обоих телах расходятся ≤ MAX_JOINT_GAP), ни одна часть не дальше от торса,
-##     чем длина её цепи + CHAIN_SLACK; внешний ввод (1, 0.4) 1.5 с двигает ЦМ вправо ≥ MIN_MOVE; knock_out() → break_apart
-##     (суставы сняты, тела целы и конечны); у деталей Foot_3 / Hand_C после DollCombat включён монитор контактов;
+##   • пресет (и kit_* кита v2): validate() пуст, собирается (тела/суставы по чертежу, energy ≤ бюджета); 5 с покоя без взрыва — торс
+##     над полом (пол под всеми пресетами), скорость частей ≤ MAX_IDLE_SPEED, суставы целы (точки сустава на обоих телах
+##     расходятся ≤ MAX_JOINT_GAP), ни одна часть не дальше от торса, чем длина её цепи + CHAIN_SLACK; внешний ввод (1, 0.4)
+##     1.5 с двигает ЦМ вправо ≥ MIN_MOVE; knock_out() → break_apart (суставы сняты, тела целы и конечны); у деталей Foot_3 / Hand_C
+##     после DollCombat включён монитор контактов;
 ##   • human против scenes/doll/doll.tscn: те же имена и порядок тел/суставов, массы, total_mass, формы, дамп, лимиты, трение,
 ##     группы и поза покоя; кадры сборки (≤ 1 мм); пара со spawn_in_pose = false (одна и та же физика) после 3 с покоя ≤ HUMAN_REST_TOL;
 ##     пара со спавном в позе — справочно (у Doll._snap_to_pose суставы после спавна расходятся на 7 см, см. modular_doll.gd _snap_pose);
@@ -23,6 +25,17 @@ const PRESETS := {
 	"legless": "res://scenes/body/presets/legless.tscn",
 	"junk": "res://scenes/body/presets/junk.tscn",
 	"flail": "res://scenes/body/presets/flail.tscn",
+	# кит тела v2 (docs/plan-demo/BODY_KIT.md §3.5; детали, материалы, шарниры — tests/kit_probe)
+	"kit_human": "res://scenes/body/presets/kit_human.tscn",
+	"kit_brawler": "res://scenes/body/presets/kit_brawler.tscn",
+	"kit_bot": "res://scenes/body/presets/kit_bot.tscn",
+	"kit_horned": "res://scenes/body/presets/kit_horned.tscn",
+	"kit_king": "res://scenes/body/presets/kit_king.tscn",
+	"kit_spider": "res://scenes/body/presets/kit_spider.tscn",
+	"kit_devil": "res://scenes/body/presets/kit_devil.tscn",
+	"kit_skull": "res://scenes/body/presets/kit_skull.tscn",
+	"kit_wheels": "res://scenes/body/presets/kit_wheels.tscn",
+	"kit_lantern": "res://scenes/body/presets/kit_lantern.tscn",
 }
 const SPACING := 8.0
 const IDLE_S := 5.0
@@ -38,6 +51,7 @@ const HUMAN_REST_TOL := 0.02     # м (~2 см, задача)
 const MOVE_INPUT := Vector2(1.0, 0.4)
 
 var shot_path := ""
+var shot_only := ""                # префикс id пресетов для кадра ("" — все)
 var report_path := "res://tests/body_probe_report.json"
 var t := 0.0
 var stage := 0
@@ -59,12 +73,18 @@ func _ready() -> void:
 			var p := kv.split("=")
 			if p.size() == 2 and p[0] == "shot":
 				shot_path = p[1]
+			elif p.size() == 2 and p[0] == "only":
+				shot_only = p[1]
 			elif p.size() == 2 and p[0] == "report":
 				report_path = p[1]
-	_floor(Vector3.ZERO, 120.0)
 	if shot_path != "":
+		_floor(Vector3.ZERO, 120.0)
 		_setup_shot()
 		return
+	# пол под всеми: пары human x −40…−16, пресеты 0…(n − 1) × SPACING (13 пресетов — до 96 м; пол 120 м кончался на 60 м,
+	# и пресеты правее падали в пустоту — в покое «без взрыва» проходили даром), ±8 м запаса
+	var x1 := (PRESETS.size() - 1) * SPACING
+	_floor(Vector3((x1 - 48.0) * 0.5 + 4.0, 0.0, 0.0), x1 + 64.0)
 	# human-пара: эталон doll.tscn и модульный human
 	ref_doll = DollScene.instantiate()
 	ref_doll.external_input = true
@@ -96,10 +116,11 @@ func _ready() -> void:
 		i += 1
 
 
-func _spawn(id: String, pos: Vector3) -> ModularDoll:
+func _spawn(id: String, pos: Vector3, player: int = 0) -> ModularDoll:
 	var ps: PackedScene = load(PRESETS[id])
 	var d := ps.instantiate() as ModularDoll
 	d.external_input = true
+	d.player_index = player   # до add_child: Doll._ready красит Shirt_* в цвет игрока один раз
 	d.position = pos
 	add_child(d)
 	return d
@@ -268,8 +289,7 @@ func _track_init(id: String, d: ModularDoll) -> void:
 	var nodes := d.blueprint.nodes.size()
 	var fixed := 0
 	for n in d.blueprint.nodes:
-		var pd := BodyBlueprint.part_def(String(n["part"]))
-		if pd != null and pd.attach == "fixed":
+		if d.blueprint.is_fixed(String(n["uid"])):   # attach fixed, декор/броня, joint "weld" (BODY_KIT.md §5.3)
 			fixed += 1
 	if d.parts.size() != nodes - fixed or d.joints.size() != nodes - fixed - 1:
 		_fail("%s: тел %d / суставов %d при %d деталях (%d fixed)" % [id, d.parts.size(), d.joints.size(), nodes, fixed])
@@ -344,6 +364,8 @@ func _idle_verdict() -> void:
 		r["idle_torso_y"] = snappedf(d.torso().global_position.y, 0.01)
 		if tr["nan"]:
 			_fail("%s: NaN в покое" % id)
+		if d.torso().global_position.y < 0.0:
+			_fail("%s: торс ниже пола (%.2f м) — кукла не на полу" % [id, d.torso().global_position.y])
 		if float(tr["max_speed"]) > MAX_IDLE_SPEED:
 			_fail("%s: в покое %s разогналась до %.1f м/с" % [id, tr["worst"], tr["max_speed"]])
 		if float(tr["max_gap"]) > MAX_JOINT_GAP:
@@ -478,7 +500,7 @@ func _physics_process(delta: float) -> void:
 		_playground_tick()
 
 
-# --- площадка scenes/playground_body.tscn: F1–F7 = set_preset(i), Match.register → DollCombat → монитор деталей ---
+# --- площадка scenes/playground_body.tscn: F1–F9, F11, F12 = set_preset(i) (F10 — пресет эффектов playground.gd), [ ] / PgUp PgDn — листание, Match.register → DollCombat → монитор ---
 
 const PG_FIRST_S := 1.0     # после загрузки площадки (отсчёт матча уже идёт)
 const PG_STEP_S := 0.6
@@ -518,11 +540,45 @@ func _playground_tick() -> void:
 		r["match_registered"] = (pg.get("match_node") as Match).dolls().has(p1)
 		if not r["match_registered"]:
 			_fail("площадка: P1 не зарегистрирован в Match")
+		_playground_cycle(r)
 		_finish()
 		stage = 4
 		return
 	pg.call("set_preset", int(pg_order[pg_step]))
 	pg_step += 1
+
+
+## Листание пресетов (кит v2: пресетов больше, чем F-клавиш): с human (0) «[» — на последний, PageDown — снова на первый
+## (по кругу), cycle_preset возвращает новую куклу с чертежом нужного пресета.
+func _playground_cycle(r: Dictionary) -> void:
+	var ps: Array = _pg_presets()
+	var ev := InputEventKey.new()
+	ev.pressed = true
+	ev.physical_keycode = KEY_BRACKETLEFT
+	pg.call("_unhandled_input", ev)
+	var back := int(pg.get("preset_index"))
+	ev.physical_keycode = KEY_PAGEDOWN
+	pg.call("_unhandled_input", ev)
+	var fwd := int(pg.get("preset_index"))
+	var d := pg.call("cycle_preset", -1) as ModularDoll
+	var last_id := d.blueprint.id if d != null else ""
+	r["cycle"] = {"bracket_left": back, "page_down": fwd, "cycle_back_id": last_id, "presets": ps.size()}
+	if back != ps.size() - 1 or fwd != 0 or last_id != String(ps[ps.size() - 1][0]):
+		_fail("площадка: листание пресетов [ / PgDn / cycle_preset(−1) — %s" % r["cycle"])
+	# F10 — пресет эффектов удара (playground.gd cycle_fx_preset), площадка тела его не глотает; F11 — пресет тела 11 (номер = номер)
+	var fx0 := FxPreset.current
+	var idx0 := int(pg.get("preset_index"))
+	ev.physical_keycode = KEY_F10
+	pg.call("_unhandled_input", ev)
+	var fx1 := FxPreset.current
+	var idx1 := int(pg.get("preset_index"))
+	ev.physical_keycode = KEY_F11
+	pg.call("_unhandled_input", ev)
+	var idx11 := int(pg.get("preset_index"))
+	FxPreset.set_preset(fx0, get_tree())
+	r["f_keys"] = {"fx_before": fx0, "fx_after_f10": fx1, "preset_before_f10": idx0, "preset_after_f10": idx1, "preset_after_f11": idx11}
+	if fx1 == fx0 or idx1 != idx0 or (ps.size() > 10 and idx11 != 10):
+		_fail("площадка: F10 должен листать пресет FX, а не пресет тела; F11 — пресет 11 — %s" % r["f_keys"])
 
 
 func _playground_check(r: Dictionary, i: int) -> void:
@@ -570,7 +626,8 @@ func _finish() -> void:
 
 # --- кадр пресетов ---
 
-const SHOT_COLS := 4
+const SHOT_ASPECT := 1.5          # колонок ≈ √(n × SHOT_ASPECT): 6 → 3×2, 7 → 4×2, 13 → 5×3
+const SHOT_FOV := 38.0
 const SHOT_DX := 3.3
 const SHOT_ROW_Y := 3.2
 const SHOT_T := 1.6
@@ -582,18 +639,18 @@ func _setup_shot() -> void:
 	_lighting()
 	var ids: Array = []
 	for id in PRESETS:
-		if ResourceLoader.exists(PRESETS[id]):
+		if ResourceLoader.exists(PRESETS[id]) and String(id).begins_with(shot_only):
 			ids.append(id)
-	var rows := int(ceil(ids.size() / float(SHOT_COLS)))
+	var cols := maxi(1, int(ceil(sqrt(ids.size() * SHOT_ASPECT))))
+	var rows := int(ceil(ids.size() / float(cols)))
 	for i in range(ids.size()):
-		var col := i % SHOT_COLS
-		var row := i / SHOT_COLS
+		var col := i % cols
+		var row := i / cols
 		var y := (rows - 1 - row) * SHOT_ROW_Y
-		var x := (col - (SHOT_COLS - 1) / 2.0) * SHOT_DX
+		var x := (col - (cols - 1) / 2.0) * SHOT_DX
 		if y > 0.0 and col == 0:
-			_floor(Vector3(0, y, 0), SHOT_COLS * SHOT_DX + 2.0)
-		var d := _spawn(ids[i], Vector3(x, y, 0))
-		d.player_index = i % 4
+			_floor(Vector3(0, y, 0), cols * SHOT_DX + 2.0)
+		var d := _spawn(ids[i], Vector3(x, y, 0), i % 4)
 		_shot_dolls.append(d)
 		var lb := Label3D.new()
 		lb.text = "%s — %s\nэнергия %d / %d · %.1f кг · тел %d" % [ids[i], d.blueprint.title, d.blueprint.energy_used(), d.blueprint.energy_budget,
@@ -605,9 +662,13 @@ func _setup_shot() -> void:
 		lb.modulate = Color(1, 0.95, 0.85)
 		add_child(lb)
 	var cam := Camera3D.new()
-	cam.fov = 38
+	cam.fov = SHOT_FOV
 	var mid_y := (rows - 1) * SHOT_ROW_Y * 0.5 + 0.8
-	cam.position = Vector3(0, mid_y + 0.4, 12.5)
+	# вся сетка в кадре: по высоте (ряды + подписи и головы) и по ширине (16:9); 2 ряда × 4 — прежние 12.5 м
+	var tv := tan(deg_to_rad(SHOT_FOV * 0.5))
+	var aspect := get_viewport().get_visible_rect().size.aspect()
+	var dist := maxf((rows * SHOT_ROW_Y * 0.5 + 1.2) / tv, (cols * SHOT_DX * 0.5 + 0.6) / (tv * aspect))
+	cam.position = Vector3(0, mid_y + 0.4, maxf(dist, 7.0))
 	add_child(cam)
 	cam.look_at(Vector3(0, mid_y, 0))
 	cam.make_current()

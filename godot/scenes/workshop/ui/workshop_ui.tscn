@@ -212,7 +212,33 @@ layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Shelf" type="GridContainer" parent="Root/Left/VBox/ShelfScroll"]
+[node name="ShelfBox" type="VBoxContainer" parent="Root/Left/VBox/ShelfScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="ToolHint" type="Label" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
+visible = false
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.84, 0.72, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="Tools" type="GridContainer" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
+
+[node name="PartsTitle" type="Label" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"SmallCaps"
+text = "ДЕТАЛИ — ТЯНИ НА КУКЛУ"
+
+[node name="Shelf" type="GridContainer" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 8
@@ -440,6 +466,7 @@ text = "[color=#fff0d0]●[/color]  свободный якорь
 [color=#ffa040]○[/color]  занято — встанет на замену
 [color=#ff5a45]✖[/color]  не влезает по энергии
 [color=#ffd050]◯[/color]  рука мышью (Q и клик по детали)
+[color=#8cd9ff]●[/color]  Шарниры, Материал: выбери на полке, кликни по детали
 ПКМ по детали — открутить вместе с тем, что на ней"
 fit_content = true
 scroll_active = false

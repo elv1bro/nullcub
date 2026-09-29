@@ -1,0 +1,15 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_painted_red/albedo.webp" id="1_8q4oc"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_painted_red/metallic.webp" id="2_fewsk"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_painted_red/normal.webp" id="3_4kk4r"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_painted_red/roughness.webp" id="4_ayyyo"]
+
+[resource]
+resource_name = "Base_RustRed"
+albedo_texture = ExtResource("1_8q4oc")
+metallic = 0.6
+metallic_texture = ExtResource("2_fewsk")
+roughness_texture = ExtResource("4_ayyyo")
+normal_enabled = true
+normal_texture = ExtResource("3_4kk4r")

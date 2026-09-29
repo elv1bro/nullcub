@@ -1,22 +1,33 @@
 ## Правки чертежей в мастерской (docs/plan-demo/BODY_CRAFT.md §1–4, CONCEPT_V2 §12 «взял деталь → поднёс к anchor → CLICK»).
 ## Только данные, без сцены: этим пользуются мастерская (scenes/workshop/workshop_build.gd) и проба tests/workshop_probe.gd.
-## Формат чертежей не меняется: BodyBlueprint / WeaponBlueprint, nodes — {uid, part, parent, anchor, rest_deg?, name?}.
+## Формат чертежей не меняется: BodyBlueprint / WeaponBlueprint, nodes — {uid, part, parent, anchor, rest_deg?, name?, mat?, joint?}
+## (mat / joint — кит тела v2, только у тела: docs/plan-demo/BODY_KIT.md §4, §5.2, §5.5).
 ##
 ## Операции (body — BodyBlueprint, weapon — WeaponBlueprint; обе — «деталь на якорь родителя»):
 ##   check(bp, part, parent, anchor)  — можно ли прикрутить: {ok, code, reason, replace, energy_after, drops}; code:
 ##       ""        — можно (якорь свободен);
 ##       "replace" — можно, якорь занят: деталь заменяется, её дети, которым нет места на новой, снимаются (drops);
 ##       "kind"    — якорь не принимает этот вид; "energy" — не влезает в бюджет Ядра; "head" — голова только на шею;
-##       "core"    — ядро не крепится на якорь (только заменить ядро); "invalid" — сборка не сошлась (текст validate).
+##       "core"    — ядро не крепится на якорь (только заменить ядро); "welded" — родитель приварен, а на его auto-конец встаёт
+##                   деталь со своим суставом (BODY_KIT.md §5.2); "invalid" — сборка не сошлась (текст validate).
 ##   attach(...) — то же и применить: новый узел получает свободный uid (имя тела и сустава не совпадают с чужими явными
 ##       именами пресета human: «UpperArm_L» у узла 1 — новый UpperArm не получит uid L); замена оставляет uid (и явное имя, если
-##       префикс тела тот же), чтобы не терялись control / weapon_on.
+##       префикс тела на этом месте тот же — BodyBlueprint.name_prefix_of), чтобы не терялись control / weapon_on; заменённая деталь
+##       стала fixed (навершие вместо управляемой кисти) — рука мышью переезжает на тело-хозяина (у ядра — снимается), оружие —
+##       в другую кисть.
 ##   set_root(...) — ядро (у тела) / рукоять (у оружия) в корень: пустой чертёж — новый корень, иначе замена.
 ##   detach(bp, uid) — открутить с поддеревом (корень тела не снимается; корень оружия — верстак пуст).
 ##   set_control(bp, uid) — рука мышью: не больше MAX_CONTROL (сейчас 1, новая пометка заменяет старую, повторная снимает);
 ##       fixed-деталь (броня) — управляется тело-хозяин; ядро нельзя.
 ##   weapon_mount(bp) — куда вешать крафтовое оружие: кисть управляемой цепи, иначе любая кисть, иначе конец управляемой детали
 ##       (контракт §2: «оружие на указанной детали»), иначе пусто с подсказкой.
+##   check_material / set_material(bp, uid, mat) — кисть материала (кит v2): mat узла, для материала по умолчанию (PartDef.base_mat)
+##       ключ стирается; деталь без base_mat не красится (отказ с причиной). {ok, code, reason, changed, mass_before, mass_after}.
+##   check_joint / set_joint(bp, uid, type) — тип шарнира связи узла с родителем (KitJoint.ORDER); "pin" = ключ стирается; отказ —
+##       корень, fixed-деталь, запреты weld и мотор / пружина на суставе без мышцы (BodyBlueprint.joint_error), энергия (мотор 8,
+##       пружина 2). {ok, code, reason, changed}. Причины — словами игрока (_joint_refusal: без uid, имён якорей и «auto»).
+## «fixed» (узел без своего тела) — только через is_fixed(): у тела это BodyBlueprint.is_fixed (attach fixed, декор / броня,
+## joint "weld"), у оружия — attach fixed.
 ## Энергия считается только у тела (детали оружия стоят 0, кроме цепи; оружие бюджет Ядра не ест — CONCEPT_V2 §6 про тело).
 ## Ошибки validate() переводятся в понятные строки (friendly_errors), предупреждения — отдельно (warnings).
 ## Сохранение — user://blueprints/<имя>.tres (ResourceSaver; оружие — встроенный под-ресурс).
@@ -28,16 +39,23 @@ const BODY_PRESET_DIR := "res://data/body/blueprints/"
 const WEAPON_PRESET_DIR := "res://data/body/weapons/"
 const SAVE_DIR := "user://blueprints/"
 const AUTOSAVE := "_autosave"
-const BODY_PRESETS := ["human", "spider", "long_arm", "big_arm", "legless", "junk", "flail"]
+const BODY_PRESETS := ["human", "spider", "long_arm", "big_arm", "legless", "junk", "flail",
+	"kit_human", "kit_brawler", "kit_bot", "kit_horned", "kit_king", "kit_spider", "kit_devil", "kit_skull", "kit_wheels", "kit_lantern"]
+## Детали, которых нет на полках: kit_human_* — дубли wood_* под риг v3 (BODY_KIT.md §3.2) для пресета kit_human; на полке
+## их не отличить от kit_limb_basic_* / kit_core_barrel. Чертежи с ними грузятся как обычно (BodyBlueprint.part_def).
+const SHELF_HIDDEN_PREFIXES := ["kit_human_"]
 const WEAPON_PRESETS := ["mallet", "hammer", "spiked_hammer", "heavy_hammer", "long_hammer", "flail", "sword", "axe", "concept_hammer"]
-## Полки мастерской: вкладка → виды деталей. Ударные навершия есть и у тела («тело становится частью оружия», CONCEPT_V2 §8).
+## Полки мастерской (BODY_KIT.md §5.5): вкладка → виды деталей; tool — инструмент вкладки над деталями: "joint" — плашки типов
+## шарнира (ui/joint_card.gd), "material" — кисть материала (ui/material_card.gd). Ударные навершия есть и у тела («тело становится
+## частью оружия», CONCEPT_V2 §8; якоря кита их принимают — ANY_LIMB) — на вкладке брони, после видов из контракта.
 const BODY_SHELVES := [
 	{"id": "core", "title": "Ядро", "kinds": ["core"]},
 	{"id": "head", "title": "Головы", "kinds": ["head"]},
 	{"id": "limb", "title": "Конечности", "kinds": ["limb"]},
 	{"id": "end", "title": "Кисти, стопы", "kinds": ["hand", "foot"]},
-	{"id": "joint", "title": "Суставы, цепь", "kinds": ["joint", "chain"]},
-	{"id": "plate", "title": "Броня, ударное", "kinds": ["plate", "weapon_head"]},
+	{"id": "joint", "title": "Шарниры", "kinds": ["joint", "chain"], "tool": "joint"},
+	{"id": "armor", "title": "Броня, декор", "kinds": ["plate", "armor", "deco", "mod", "weapon_head"]},
+	{"id": "mat", "title": "Материал", "kinds": [], "tool": "material"},
 ]
 const WEAPON_SHELVES := [
 	{"id": "handle", "title": "Рукояти", "kinds": ["handle"]},
@@ -45,10 +63,14 @@ const WEAPON_SHELVES := [
 	{"id": "mod", "title": "Моды", "kinds": ["mod"]},
 	{"id": "chain", "title": "Цепь", "kinds": ["chain"]},
 ]
-const KIND_ORDER := ["core", "head", "limb", "hand", "foot", "joint", "chain", "plate", "handle", "weapon_head", "mod"]
+const KIND_ORDER := ["core", "head", "limb", "hand", "foot", "joint", "chain", "plate", "armor", "deco", "handle", "weapon_head", "mod"]
 const KIND_TITLES := {
 	"core": "ядро", "head": "голова", "limb": "конечность", "hand": "кисть", "foot": "стопа", "joint": "сустав", "chain": "цепь",
-	"plate": "броня", "handle": "рукоять", "weapon_head": "навершие", "mod": "мод",
+	"plate": "щиток", "armor": "броня", "deco": "декор", "handle": "рукоять", "weapon_head": "навершие", "mod": "мод",
+}
+## Группы мышц словами (отказы шарниров): для «сустав без мышцы (лодыжка)».
+const GROUP_TITLES := {
+	"Neck": "шея", "Shoulder": "плечо", "Elbow": "локоть", "Wrist": "запястье", "Hip": "бедро", "Knee": "колено", "Ankle": "лодыжка",
 }
 const MAX_CONTROL := 1
 const UID_CHARS := BodyBlueprint.UID_CHARS
@@ -59,7 +81,7 @@ static var _scene_names: Dictionary = {}   # путь сцены детали ->
 
 # ------------------------------------------------------------------ детали
 
-## Все PartDef из data/body/parts, по порядку KIND_ORDER, внутри — по энергии и массе.
+## Все PartDef полок из data/body/parts (кроме SHELF_HIDDEN_PREFIXES), по порядку KIND_ORDER, внутри — по энергии и массе.
 static func all_parts() -> Array[PartDef]:
 	if not _parts_cache.is_empty():
 		return _parts_cache
@@ -69,7 +91,7 @@ static func all_parts() -> Array[PartDef]:
 		return out
 	for f in dir.get_files():
 		var fn := f.trim_suffix(".remap")
-		if not fn.ends_with(".tres"):
+		if not fn.ends_with(".tres") or SHELF_HIDDEN_PREFIXES.any(func(p: String) -> bool: return fn.begins_with(p)):
 			continue
 		var d := load(PARTS_DIR + fn) as PartDef
 		if d != null and d.is_valid():
@@ -94,6 +116,14 @@ static func parts_of_kinds(kinds: Array) -> Array[PartDef]:
 		if kinds.has(d.kind):
 			out.append(d)
 	return out
+
+
+## Вкладка полки по id ({} — нет такой).
+static func shelf_of(shelves: Array, id: String) -> Dictionary:
+	for s in shelves:
+		if String(s["id"]) == id:
+			return s
+	return {}
 
 
 static func part(part_id: String) -> PartDef:
@@ -142,6 +172,16 @@ static func root_uid(bp: Resource) -> String:
 static func def_of(bp: Resource, uid: String) -> PartDef:
 	var n := find(bp, uid)
 	return part(String(n.get("part", ""))) if not n.is_empty() else null
+
+
+## Узел без своего тела (сливается с родителем): у тела — BodyBlueprint.is_fixed (attach fixed, декор / броня по виду, joint "weld"),
+## у оружия — attach fixed. Корень — всегда своё тело.
+static func is_fixed(bp: Resource, uid: String) -> bool:
+	if bp is BodyBlueprint:
+		return (bp as BodyBlueprint).is_fixed(uid)
+	var n := find(bp, uid)
+	var d := part(String(n.get("part", "")))
+	return d != null and d.attach == "fixed" and String(n.get("parent", "")) != ""
 
 
 ## Якоря детали uid: {имя: {xf, accepts, joint_group, rest_deg, mirror, rest_from_pose}} (BodyBlueprint.part_anchors).
@@ -217,7 +257,7 @@ static func rest_rel_deg(bp: Resource, uid: String) -> float:
 	var a: Dictionary = anchors_of(bp, p).get(anchor_name(String(n.get("anchor", ""))), {})
 	if is_weapon(bp):
 		return float(a.get("rest_deg", 0.0))
-	var g := (bp as BodyBlueprint).joint_group_of(uid)
+	var g := (bp as BodyBlueprint).anchor_group_of(uid)   # у сваренного узла тоже: сварка держит позу покоя (ModularDoll._weld_rest)
 	var pose: Dictionary = Tuning.POSE
 	if bool(a.get("rest_from_pose", false)) and pose.has(g):
 		return float(pose[g])
@@ -269,12 +309,12 @@ static func load_weapon_preset(id: String) -> WeaponBlueprint:
 	return dup_weapon(load(path) as WeaponBlueprint)
 
 
-## Сигнатура узлов для сравнения (проба сохранения): отсортированные строки uid|part|parent|anchor|rest|name.
+## Сигнатура узлов для сравнения (проба сохранения): отсортированные строки uid|part|parent|anchor|rest|name|mat|joint.
 static func signature(bp: Resource) -> PackedStringArray:
 	var out: PackedStringArray = []
 	for n in nodes_of(bp):
-		out.append("%s|%s|%s|%s|%s|%s" % [n.get("uid", ""), n.get("part", ""), n.get("parent", ""), anchor_name(String(n.get("anchor", ""))) if String(n.get("parent", "")) != "" else "",
-			str(n.get("rest_deg", "")), n.get("name", "")])
+		out.append("%s|%s|%s|%s|%s|%s|%s|%s" % [n.get("uid", ""), n.get("part", ""), n.get("parent", ""), anchor_name(String(n.get("anchor", ""))) if String(n.get("parent", "")) != "" else "",
+			str(n.get("rest_deg", "")), n.get("name", ""), n.get("mat", ""), n.get("joint", "")])
 	out.sort()
 	return out
 
@@ -282,7 +322,8 @@ static func signature(bp: Resource) -> PackedStringArray:
 # ------------------------------------------------------------------ проверки
 
 ## Ошибки сборки, при которых ModularDoll / CraftedWeapon не соберутся (без «голов 0», энергии и управления — это правила игры,
-## мастерская показывает их отдельно, а куклу без головы всё равно собирает на стенде).
+## мастерская показывает их отдельно, а куклу без головы всё равно собирает на стенде). У тела сюда входят и mat / joint узлов
+## (BodyBlueprint.mat_error / joint_error): с ними validate() не пропустит чертёж, ModularDoll собрал бы human.
 static func structural_errors(bp: Resource) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var uids := {}
@@ -312,6 +353,18 @@ static func structural_errors(bp: Resource) -> PackedStringArray:
 	var body := bp as BodyBlueprint
 	if part(String(find(bp, root_uid(bp)).get("part", ""))).kind != "core":
 		errors.append("корень должен быть ядром")
+		return errors
+	for n in body.nodes:
+		var uid := String(n.get("uid", ""))
+		if String(n.get("mat", "")) != "":
+			var me := body.mat_error(uid, String(n["mat"]))
+			if me != "":
+				errors.append(me)
+		if String(n.get("joint", "")) != "":
+			var je := body.joint_error(uid, String(n["joint"]))
+			if je != "":
+				errors.append(je)
+	if not errors.is_empty():
 		return errors
 	errors.append_array(body._validate_assembly())
 	return errors
@@ -386,10 +439,19 @@ static func _friendly(e: String) -> String:
 			return "Перебор энергии: %d из %d" % [nums[0], nums[1]]
 	if e.begins_with("управляемая деталь"):
 		return "Деталь руки мышью снята — выбери новую"
+	if e.begins_with("рука мышью на"):
+		return "Рука мышью стоит на детали без своего тела — отметь конечность заново"
 	if e.begins_with("корн") or e.begins_with("корень"):
 		return "В центре должно быть ядро"
 	if e.begins_with("голова «"):
 		return "Голова крепится только на шею ядра"
+	# запасная сетка для строк BodyBlueprint._joint_error (в них uid, имена якорей, «auto»): check / check_joint переводят их сами
+	if e.contains("нельзя приварить"):
+		return "Эту деталь не приварить — сними сварку или деталь на её конце"
+	if e.contains("нет мышцы"):
+		return "У этого сустава нет мышцы — мотор и пружина тут ничего не дают"
+	if e.contains("крепится намертво"):
+		return "Эта деталь крепится намертво — шарнира у неё нет"
 	return _capital(e)
 
 
@@ -449,6 +511,15 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 		r["code"] = "head"
 		r["reason"] = "Голова — только на шею ядра"
 		return r
+	# приваренный родитель: деталь со своим суставом на его auto-конце взяла бы группу от сварки (BODY_KIT.md §5.2) — отказ словами
+	# игрока, а не строкой validate() с uid и «auto»; навершие, щиток, мод (fixed) — можно
+	if bp is BodyBlueprint and KitJoint.is_weld(String(find(bp, parent_uid).get("joint", ""))) \
+			and String((anchors[an] as Dictionary).get("joint_group", "")) == "auto" and not BodyBlueprint.is_fixed_part(d):
+		var pd := def_of(bp, parent_uid)
+		r["code"] = "welded"
+		r["reason"] = "Деталь «%s» приварена: на её конец встанет только навершие, щиток или мод — верни ей шарнир «Ось»" \
+			% (pd.title if pd != null else parent_uid)
+		return r
 	var trial: Resource = dup_body(bp as BodyBlueprint) if bp is BodyBlueprint else dup_weapon(bp as WeaponBlueprint)
 	var res := _apply_attach(trial, part_id, parent_uid, an)
 	r["replace"] = res.get("replace", "")
@@ -502,13 +573,20 @@ static func _apply_attach(bp: Resource, part_id: String, parent_uid: String, an:
 
 
 ## Заменить деталь uid на part_id: uid остаётся (control и weapon_on не теряются), явное имя — только если префикс тела тот же,
-## дети, которым нет якоря на новой детали (или вид не принимается), снимаются с поддеревом.
+## дети, которым нет якоря на новой детали (или вид не принимается), снимаются с поддеревом. Кит v2: mat остаётся, только если
+## новая деталь красится (есть base_mat; материал по умолчанию — ключ стирается), joint — если тип допустим и для новой детали
+## (у fixed-детали — декор, броня, attach fixed — шарнира нет; запреты weld — BodyBlueprint.joint_error).
 static func _replace(bp: Resource, uid: String, part_id: String) -> Dictionary:
 	var n := find(bp, uid)
 	var d := part(part_id)
 	var old := part(String(n.get("part", "")))
+	var body0 := bp as BodyBlueprint
+	# префикс имени на ЭТОМ месте (у тела — BodyBlueprint.name_prefix_of: конечность кита на локте — LowerArm): «LowerArm_L» переживает
+	# замену предплечья на конечность кита размера S (её name_prefix — UpperArm)
+	var prefix0 := body0.name_prefix_of(uid) if body0 != null else (old.name_prefix if old != null else "")
 	n["part"] = part_id
-	if n.has("name") and (old == null or d.name_prefix != old.name_prefix):
+	var prefix1 := body0.name_prefix_of(uid) if body0 != null else d.name_prefix
+	if n.has("name") and (old == null or prefix1 != prefix0):
 		n.erase("name")
 	var new_anchors := BodyBlueprint.part_anchors(d)
 	var drops: PackedStringArray = []
@@ -521,6 +599,27 @@ static func _replace(bp: Resource, uid: String, part_id: String) -> Dictionary:
 			ok = acc.is_empty() or (cd != null and acc.has(cd.kind))
 		if not ok:
 			drops.append_array(_remove_subtree(bp, String(c.get("uid", ""))))
+	if bp is BodyBlueprint:
+		var body := bp as BodyBlueprint
+		var mid := String(n.get("mat", ""))
+		if n.has("mat") and (mid == "" or d.base_mat == "" or mid == d.base_mat or body.mat_error(uid, mid) != ""):
+			n.erase("mat")
+		var jt := String(n.get("joint", ""))
+		if n.has("joint") and (jt == "" or BodyBlueprint.is_fixed_part(d) or body.joint_error(uid, jt) != ""):
+			n.erase("joint")
+		# деталь стала fixed (навершие вместо управляемой кисти): своего тела нет — рука мышью переезжает на тело-хозяина, как у
+		# set_control (у ядра — снимается: ядром не управляют, warnings() подскажет), оружие — в другую кисть (weapon_mount)
+		if body.is_fixed(uid):
+			if body.control.has(uid):
+				var h := host_uid(body, uid)
+				var ctrl: PackedStringArray = []
+				for c in body.control:
+					var nc := c if c != uid else ("" if h == root_uid(body) else h)
+					if nc != "" and not ctrl.has(nc):
+						ctrl.append(nc)
+				body.control = ctrl
+			if body.weapon_on == uid:
+				body.weapon_on = String(weapon_mount(body)["uid"])
 	return {"ok": true, "uid": uid, "drops": drops}
 
 
@@ -613,7 +712,8 @@ static func free_uid(bp: Resource, part_id: String, parent_uid: String, an: Stri
 		used[String(n.get("uid", ""))] = true
 	var prefer := "0123456789ABCDEFGIJKMNOPQSUVWXYZHLRT" if not is_weapon(bp) else UID_CHARS
 	var d := part(part_id)
-	var own_body := d != null and (d.attach != "fixed" or parent_uid == "")   # fixed-деталь живёт в теле хозяина: своих имён нет
+	# fixed-деталь живёт в теле хозяина: своих имён нет (у нового узла ключа joint нет — решает сама деталь)
+	var own_body := d != null and (not BodyBlueprint.is_fixed_part(d) or parent_uid == "")
 	for ch in prefer:
 		if used.has(ch):
 			continue
@@ -633,7 +733,7 @@ static func _name_taken(body: BodyBlueprint, bn: String, jn: String) -> bool:
 	for n in body.nodes:
 		var u := String(n.get("uid", ""))
 		var d := part(String(n.get("part", "")))
-		if d == null or (d.attach == "fixed" and String(n.get("parent", "")) != ""):
+		if d == null or body.is_fixed(u):
 			continue
 		if body.body_name_of(u) == bn:
 			return true
@@ -644,15 +744,14 @@ static func _name_taken(body: BodyBlueprint, bn: String, jn: String) -> bool:
 
 # ------------------------------------------------------------------ рука мышью и оружие
 
-## Тело, которым управляется деталь: fixed-деталь (броня, навершие на теле) — её хозяин по цепочке.
+## Тело, которым управляется деталь: fixed-деталь (броня, декор, навершие на теле, сваренная) — её хозяин по цепочке.
 static func host_uid(bp: Resource, uid: String) -> String:
 	var cur := uid
 	var guard := 0
 	while guard < 64:
 		guard += 1
 		var n := find(bp, cur)
-		var d := part(String(n.get("part", "")))
-		if n.is_empty() or d == null or d.attach != "fixed" or String(n.get("parent", "")) == "":
+		if n.is_empty() or part(String(n.get("part", ""))) == null or not is_fixed(bp, cur):
 			return cur
 		cur = String(n.get("parent", ""))
 	return cur
@@ -684,23 +783,23 @@ static func set_control(bp: BodyBlueprint, uid: String) -> Dictionary:
 ## любая кисть (правая раньше) → конец управляемой детали (у неё нет кисти: оружие продолжает конечность) → некуда.
 static func weapon_mount(bp: BodyBlueprint) -> Dictionary:
 	var ctrl := String(bp.control[0]) if not bp.control.is_empty() else ""
-	if ctrl != "" and _kind(bp, ctrl) == "hand":
+	if ctrl != "" and _is_hand(bp, ctrl):
 		return {"uid": ctrl, "kind": "hand", "reason": ""}
 	if ctrl != "":
 		for u in subtree(bp, ctrl):
-			if _kind(bp, u) == "hand":
+			if _is_hand(bp, u):
 				return {"uid": u, "kind": "hand", "reason": ""}
 	var hands: Array = []
 	for n in bp.nodes:
 		var u := String(n.get("uid", ""))
-		if _kind(bp, u) == "hand":
+		if _is_hand(bp, u):
 			hands.append(u)
 	hands.sort_custom(func(a: String, b: String) -> bool: return int(is_mirrored(bp, a)) > int(is_mirrored(bp, b)))
 	if not hands.is_empty():
 		return {"uid": hands[0], "kind": "hand", "reason": ""}
 	if ctrl != "":
 		var d := def_of(bp, ctrl)
-		if d != null and d.attach == "joint":
+		if d != null and not is_fixed(bp, ctrl):
 			return {"uid": ctrl, "kind": "end", "reason": ""}
 	return {"uid": "", "kind": "", "reason": "Оружие некуда взять: поставь кисть или отметь деталь для руки мышью"}
 
@@ -708,6 +807,197 @@ static func weapon_mount(bp: BodyBlueprint) -> Dictionary:
 static func _kind(bp: Resource, uid: String) -> String:
 	var d := def_of(bp, uid)
 	return d.kind if d != null else ""
+
+
+## Кисть со своим телом: сваренная (joint "weld") — часть предплечья, WeaponPickup держал бы оружие телом-хозяином.
+static func _is_hand(bp: Resource, uid: String) -> bool:
+	return _kind(bp, uid) == "hand" and not is_fixed(bp, uid)
+
+
+# ------------------------------------------------------------------ кит v2: материал и тип шарнира (BODY_KIT.md §4, §5.2, §5.5)
+
+## Название материала ("" → «не красится»).
+static func mat_title(mat_id: String) -> String:
+	var m := MaterialDef.get_def(mat_id)
+	return m.title if m != null else ("не красится" if mat_id == "" else mat_id)
+
+
+## Физика материала одной строкой: «плотность ×2.2 · трение 0.5 · упругость 0.1 · магнит».
+static func mat_line(mat_id: String) -> String:
+	var m := MaterialDef.get_def(mat_id)
+	if m == null:
+		return ""
+	var s := "плотность ×%s · трение %s · упругость %s" % [_num(m.density), _num(m.friction), _num(m.bounce)]
+	if not is_equal_approx(m.body_mult, 1.0):
+		s += " · удар ×%s" % _num(m.body_mult)
+	if m.iron:
+		s += " · магнит"
+	return s
+
+
+static func _num(x: float) -> String:
+	return String.num(snappedf(x, 0.01))
+
+
+static func joint_title(jt: String) -> String:
+	return String(KitJoint.info(jt).get("title", jt)) if jt != "" else "намертво"
+
+
+## Можно ли покрасить деталь uid материалом mat_id: {ok, code, reason, changed, mat_before, mass_before, mass_after}.
+## code: "" — можно; "same" — уже этот материал (ok, ничего не меняется); "paint" — деталь без base_mat; "unknown" — нет материала;
+## "invalid" — нет детали / не тело.
+static func check_material(bp: Resource, uid: String, mat_id: String) -> Dictionary:
+	var r := {"ok": false, "code": "invalid", "reason": "Нет такой детали", "changed": false, "mat_before": "", "mass_before": 0.0,
+		"mass_after": 0.0}
+	if not bp is BodyBlueprint or find(bp, uid).is_empty():
+		return r
+	var body := bp as BodyBlueprint
+	var d := def_of(bp, uid)
+	if d == null:
+		return r
+	r["mat_before"] = body.node_mat(uid)
+	r["mass_before"] = body.node_mass(uid)
+	r["mass_after"] = r["mass_before"]
+	if MaterialDef.get_def(mat_id) == null:
+		r["code"] = "unknown"
+		r["reason"] = "Нет материала «%s»" % mat_id
+		return r
+	if d.base_mat == "":
+		r["code"] = "paint"
+		r["reason"] = "%s не красится: материал меняется только у деталей кита" % d.title
+		return r
+	var err := body.mat_error(uid, mat_id)
+	if err != "":
+		r["reason"] = _capital(err)
+		return r
+	r["ok"] = true
+	r["reason"] = ""
+	if String(r["mat_before"]) == mat_id:
+		r["code"] = "same"
+		return r
+	var trial := dup_body(body)
+	_apply_material(trial, uid, mat_id)
+	r["mass_after"] = trial.node_mass(uid)
+	r["code"] = ""
+	r["changed"] = true
+	return r
+
+
+## Покрасить (с проверкой): материал по умолчанию (PartDef.base_mat) — ключ mat стирается.
+static func set_material(bp: Resource, uid: String, mat_id: String) -> Dictionary:
+	var r := check_material(bp, uid, mat_id)
+	if bool(r["ok"]) and bool(r["changed"]):
+		_apply_material(bp as BodyBlueprint, uid, mat_id)
+	r["uid"] = uid
+	return r
+
+
+static func _apply_material(bp: BodyBlueprint, uid: String, mat_id: String) -> void:
+	var n := find(bp, uid)
+	var d := part(String(n.get("part", "")))
+	if d != null and mat_id == d.base_mat:
+		n.erase("mat")
+	else:
+		n["mat"] = mat_id
+
+
+## Можно ли поставить узлу uid тип шарнира jt (связь с родителем): {ok, code, reason, changed, joint_before, energy_after}.
+## code: "" — можно; "same" — уже так (ok); "root" — корень; "fixed" — деталь крепится намертво сама (декор, броня, attach fixed);
+## "rule" — запрет weld (голова, рука мышью, auto-сустав ребёнка), мотор / пружина на суставе без мышцы (лодыжка) и прочие ошибки
+## BodyBlueprint.joint_error (причина — словами игрока, _joint_refusal); "energy" — не влезает
+## в бюджет Ядра; "invalid" — нет детали, неизвестный тип, сборка не сходится.
+static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
+	var r := {"ok": false, "code": "invalid", "reason": "Нет такой детали", "changed": false, "joint_before": "",
+		"energy_after": energy_used(bp)}
+	if not bp is BodyBlueprint or find(bp, uid).is_empty():
+		return r
+	var body := bp as BodyBlueprint
+	var n := find(bp, uid)
+	var d := def_of(bp, uid)
+	if d == null:
+		return r
+	if not KitJoint.is_type(jt):
+		r["reason"] = "Нет такого шарнира «%s»" % jt
+		return r
+	if String(n.get("parent", "")) == "":
+		r["code"] = "root"
+		r["reason"] = "%s — корень тела, сустава с родителем нет" % d.title
+		return r
+	if BodyBlueprint.is_fixed_part(d):
+		r["code"] = "fixed"
+		r["reason"] = "Деталь «%s» крепится намертво — шарнира нет (%s)" % [d.title, KIND_TITLES.get(d.kind, d.kind)]
+		return r
+	var cur := String(n.get("joint", ""))
+	r["joint_before"] = cur if cur != "" else KitJoint.DEFAULT
+	var err := body.joint_error(uid, jt)
+	if err != "":
+		r["code"] = "rule"
+		r["reason"] = _joint_refusal(body, uid, d, jt, err)
+		return r
+	if String(r["joint_before"]) == jt:
+		r["ok"] = true
+		r["code"] = "same"
+		r["reason"] = ""
+		return r
+	var trial := dup_body(body)
+	_apply_joint(trial, uid, jt)
+	var after := trial.energy_used()
+	r["energy_after"] = after
+	if after > body.energy_budget and after > body.energy_used():
+		r["code"] = "energy"
+		r["reason"] = "Не хватает энергии: шарнир «%s» стоит %d, свободно %d" % [joint_title(jt), KitJoint.energy_of(jt),
+			body.energy_budget - body.energy_used() + KitJoint.energy_of(String(r["joint_before"]))]
+		return r
+	var errs := structural_errors(trial)
+	if not errs.is_empty():
+		r["reason"] = _friendly(errs[0])
+		return r
+	r["ok"] = true
+	r["code"] = ""
+	r["reason"] = ""
+	r["changed"] = true
+	return r
+
+
+## Отказ BodyBlueprint.joint_error словами игрока — названия деталей, без uid, имён якорей и «(auto)». Сами строки joint_error —
+## диагностика validate() (их сверяет tests/kit_probe), поэтому перевод здесь, а не там; неизвестный случай — _friendly.
+static func _joint_refusal(body: BodyBlueprint, uid: String, d: PartDef, jt: String, err: String) -> String:
+	if KitJoint.is_weld(jt):
+		if d.kind == "head":
+			return "Голову не приварить — она держится на шее"
+		if body.control.has(uid):
+			return "Деталь «%s» ведёт рука мышью — сначала сними пометку (Q), потом приваривай" % d.title
+		var anchors := BodyBlueprint.part_anchors(d)
+		for c in children_of(body, uid):
+			if body.is_fixed(String(c.get("uid", ""))):
+				continue
+			var a: Dictionary = anchors.get(String(c.get("anchor", "")), {})
+			if String(a.get("joint_group", "")) == "auto":
+				var cd := part(String(c.get("part", "")))
+				return "Деталь «%s» не приварить: на её конце держится «%s» на своём суставе — сначала сними или приварь ту деталь" \
+					% [d.title, cd.title if cd != null else "деталь"]
+	elif err.contains("нет мышцы"):
+		var g := body.anchor_group_of(uid)
+		return "Деталь «%s» висит на суставе без мышцы (%s): шарнир «%s» ничего не усилит" % [d.title, GROUP_TITLES.get(g, g),
+			joint_title(jt)]
+	return _friendly(err)
+
+
+## Поставить тип шарнира (с проверкой): "pin" — ключ joint стирается (по умолчанию).
+static func set_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
+	var r := check_joint(bp, uid, jt)
+	if bool(r["ok"]) and bool(r["changed"]):
+		_apply_joint(bp as BodyBlueprint, uid, jt)
+	r["uid"] = uid
+	return r
+
+
+static func _apply_joint(bp: BodyBlueprint, uid: String, jt: String) -> void:
+	var n := find(bp, uid)
+	if jt == KitJoint.DEFAULT:
+		n.erase("joint")
+	else:
+		n["joint"] = jt
 
 
 # ------------------------------------------------------------------ сохранение

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "Pin"
+albedo_color = Color(0.80946815, 0.80946815, 0.8209799, 1)
+metallic = 0.6
+roughness = 0.45

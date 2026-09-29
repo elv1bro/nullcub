@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_2ybil"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_Planks.tres" id="2_1mema"]
+
+[resource]
+script = ExtResource("1_2ybil")
+id = "planks"
+title = "Доски"
+surface = ExtResource("2_1mema")
+swatch = Color(0.7014107, 0.5657284, 0.4100209, 1)
+density = 0.9
+friction = 0.65

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_curved_s.tscn" id="1_ygqw2"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_fisb0"]
+
+[resource]
+script = ExtResource("2_fisb0")
+id = "kit_limb_curved_s"
+title = "Гнутая труба (рука)"
+scene = ExtResource("1_ygqw2")
+mass = 2.2
+energy = 5
+body_mult = 0.8
+material = "iron"
+name_prefix = "UpperArm"
+base_mat = "rust"
+connector = true

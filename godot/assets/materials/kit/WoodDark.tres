@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/walnut_dark/albedo.webp" id="1_2nhio"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/walnut_dark/normal.webp" id="2_hv3lt"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/walnut_dark/roughness.webp" id="3_yt3yt"]
+
+[resource]
+resource_name = "WoodDark"
+albedo_color = Color(1, 0.9911565, 0.9822071, 1)
+albedo_texture = ExtResource("1_2nhio")
+roughness_texture = ExtResource("3_yt3yt")
+normal_enabled = true
+normal_texture = ExtResource("2_hv3lt")

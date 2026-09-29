@@ -1,0 +1,2227 @@
+{
+ "Kit_Anchor_Head": {
+  "glb": "Kit_Anchor_Head",
+  "builder": "Anchor_Head",
+  "size": "",
+  "kind": "weapon_head",
+  "title": "Якорь",
+  "id": "kit_anchor_head",
+  "mass": 3.2,
+  "energy": 0,
+  "attach": "fixed",
+  "weapon_mult": 1.1,
+  "name_prefix": "Hook",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2220,
+  "empties": [
+   "Shape_Box_Arm_L",
+   "Shape_Box_Arm_R",
+   "Shape_Box_Collar",
+   "Shape_Box_Fluke_L",
+   "Shape_Box_Fluke_R",
+   "Shape_Box_Shank",
+   "Shape_Box_Stock",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Iron",
+   "Rope",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Core_Ball": {
+  "glb": "Kit_Core_Ball",
+  "builder": "Core_Ball",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-хаб",
+  "id": "kit_core_ball",
+  "mass": 14.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": false,
+  "tris": 5928,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Sphere_Torso"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Core_Barrel": {
+  "glb": "Kit_Core_Barrel",
+  "builder": "Core_Barrel",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-бочка",
+  "id": "kit_core_barrel",
+  "mass": 12.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": false,
+  "tris": 5742,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Torso"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Shirt_Kit",
+   "Steel",
+   "WoodDark"
+  ]
+ },
+ "Kit_Core_Boiler": {
+  "glb": "Kit_Core_Boiler",
+  "builder": "Core_Boiler",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-котёл",
+  "id": "kit_core_boiler",
+  "mass": 18.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "rust_red",
+  "material": "iron",
+  "connector": false,
+  "tris": 5754,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Cyl_Torso"
+  ],
+  "materials": [
+   "Base_RustRed",
+   "Bone",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "RustDark",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Core_Cage": {
+  "glb": "Kit_Core_Cage",
+  "builder": "Core_Cage",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-клетка",
+  "id": "kit_core_cage",
+  "mass": 14.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "tris": 5920,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Cyl_Torso"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Core_Crate": {
+  "glb": "Kit_Core_Crate",
+  "builder": "Core_Crate",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-ящик",
+  "id": "kit_core_crate",
+  "mass": 11.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "planks",
+  "material": "wood",
+  "connector": false,
+  "tris": 3964,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Torso"
+  ],
+  "materials": [
+   "Base_Planks",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Shirt_Kit",
+   "Steel",
+   "WoodDark"
+  ]
+ },
+ "Kit_Core_Drum": {
+  "glb": "Kit_Core_Drum",
+  "builder": "Core_Drum",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-бочка из-под масла",
+  "id": "kit_core_drum",
+  "mass": 13.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "paint_blue",
+  "material": "wood",
+  "connector": false,
+  "tris": 5630,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Cyl_Torso"
+  ],
+  "materials": [
+   "Base_PaintBlue",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Core_Toy": {
+  "glb": "Kit_Core_Toy",
+  "builder": "Core_Toy",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-игрушка",
+  "id": "kit_core_toy",
+  "mass": 11.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": false,
+  "tris": 5572,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Torso"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Deco_Antenna": {
+  "glb": "Kit_Deco_Antenna",
+  "builder": "Deco_Antenna",
+  "size": "",
+  "kind": "deco",
+  "title": "Антенна",
+  "id": "kit_deco_antenna",
+  "mass": 0.3,
+  "energy": 1,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1520,
+  "empties": [
+   "Shape_Capsule_Antenna",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Deco_Banner": {
+  "glb": "Kit_Deco_Banner",
+  "builder": "Deco_Banner",
+  "size": "",
+  "kind": "deco",
+  "title": "Флажок",
+  "id": "kit_deco_banner",
+  "mass": 0.5,
+  "energy": 1,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "wood_dark",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 344,
+  "empties": [
+   "Shape_Box_Flag",
+   "Shape_Box_Pole",
+   "Socket"
+  ],
+  "materials": [
+   "Base_WoodDark",
+   "Brass",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Deco_Chimney": {
+  "glb": "Kit_Deco_Chimney",
+  "builder": "Deco_Chimney",
+  "size": "",
+  "kind": "deco",
+  "title": "Дымоход",
+  "id": "kit_deco_chimney",
+  "mass": 1.0,
+  "energy": 2,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "rust",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2220,
+  "empties": [
+   "Shape_Box_Pipe",
+   "Shape_Box_Stack",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Rust",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Deco_Crown": {
+  "glb": "Kit_Deco_Crown",
+  "builder": "Deco_Crown",
+  "size": "",
+  "kind": "deco",
+  "title": "Корона",
+  "id": "kit_deco_crown",
+  "mass": 0.4,
+  "energy": 1,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1362,
+  "empties": [
+   "Shape_Cyl_Crown",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "Gem"
+  ]
+ },
+ "Kit_Deco_Gauntlet_L": {
+  "glb": "Kit_Deco_Gauntlet_L",
+  "builder": "Deco_Gauntlet",
+  "size": "L",
+  "kind": "armor",
+  "title": "Наруч (нога)",
+  "id": "kit_deco_gauntlet_l",
+  "mass": 2.0,
+  "energy": 3,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Armor",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.1,
+  "tris": 2200,
+  "empties": [
+   "Shape_Cyl_Gauntlet",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Deco_Gauntlet_S": {
+  "glb": "Kit_Deco_Gauntlet_S",
+  "builder": "Deco_Gauntlet",
+  "size": "S",
+  "kind": "armor",
+  "title": "Наруч (рука)",
+  "id": "kit_deco_gauntlet_s",
+  "mass": 1.2,
+  "energy": 3,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Armor",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.1,
+  "tris": 2112,
+  "empties": [
+   "Shape_Cyl_Gauntlet",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Deco_Horns": {
+  "glb": "Kit_Deco_Horns",
+  "builder": "Deco_Horns",
+  "size": "",
+  "kind": "deco",
+  "title": "Рога",
+  "id": "kit_deco_horns",
+  "mass": 0.8,
+  "energy": 2,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.2,
+  "tris": 888,
+  "empties": [
+   "Shape_Capsule_Horn_L",
+   "Shape_Capsule_Horn_R",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "Iron"
+  ]
+ },
+ "Kit_Deco_Pauldron": {
+  "glb": "Kit_Deco_Pauldron",
+  "builder": "Deco_Pauldron",
+  "size": "",
+  "kind": "armor",
+  "title": "Наплечник",
+  "id": "kit_deco_pauldron",
+  "mass": 1.5,
+  "energy": 3,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Armor",
+  "base_mat": "rust_red",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1104,
+  "empties": [
+   "Shape_Box_Pauldron",
+   "Socket"
+  ],
+  "materials": [
+   "Base_RustRed",
+   "Brass",
+   "Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Deco_Plume": {
+  "glb": "Kit_Deco_Plume",
+  "builder": "Deco_Plume",
+  "size": "",
+  "kind": "deco",
+  "title": "Султан",
+  "id": "kit_deco_plume",
+  "mass": 0.3,
+  "energy": 1,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2290,
+  "empties": [
+   "Shape_Box_Plume",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "Bone",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Deco_Spikes_L": {
+  "glb": "Kit_Deco_Spikes_L",
+  "builder": "Deco_Spikes",
+  "size": "L",
+  "kind": "deco",
+  "title": "Шипастый ошейник (нога)",
+  "id": "kit_deco_spikes_l",
+  "mass": 0.8,
+  "energy": 3,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.25,
+  "tris": 540,
+  "empties": [
+   "Shape_Cyl_Spikes",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Deco_Spikes_S": {
+  "glb": "Kit_Deco_Spikes_S",
+  "builder": "Deco_Spikes",
+  "size": "S",
+  "kind": "deco",
+  "title": "Шипастый ошейник (рука)",
+  "id": "kit_deco_spikes_s",
+  "mass": 0.6,
+  "energy": 3,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.25,
+  "tris": 540,
+  "empties": [
+   "Shape_Cyl_Spikes",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Deco_Wings": {
+  "glb": "Kit_Deco_Wings",
+  "builder": "Deco_Wings",
+  "size": "",
+  "kind": "deco",
+  "title": "Жестяные крылья",
+  "id": "kit_deco_wings",
+  "mass": 1.2,
+  "energy": 3,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "rust_red",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1980,
+  "empties": [
+   "Shape_Box_Wing_L",
+   "Shape_Box_Wing_R",
+   "Socket"
+  ],
+  "materials": [
+   "Base_RustRed",
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Drill_Head": {
+  "glb": "Kit_Drill_Head",
+  "builder": "Drill_Head",
+  "size": "",
+  "kind": "weapon_head",
+  "title": "Бур",
+  "id": "kit_drill_head",
+  "mass": 2.4,
+  "energy": 0,
+  "attach": "fixed",
+  "weapon_mult": 1.45,
+  "name_prefix": "Blade",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2758,
+  "empties": [
+   "Shape_Box_Collar",
+   "Shape_Capsule_Bit",
+   "Shape_Cyl_Base",
+   "Shape_Cyl_Chuck",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Foot_Boot": {
+  "glb": "Kit_Foot_Boot",
+  "builder": "Foot_Boot",
+  "size": "",
+  "kind": "foot",
+  "title": "Ботинок",
+  "id": "kit_foot_boot",
+  "mass": 1.0,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "tris": 1310,
+  "empties": [
+   "Shape_Box_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Foot_Flipper": {
+  "glb": "Kit_Foot_Flipper",
+  "builder": "Foot_Flipper",
+  "size": "",
+  "kind": "foot",
+  "title": "Ласта",
+  "id": "kit_foot_flipper",
+  "mass": 0.7,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "paint_green",
+  "material": "wood",
+  "connector": true,
+  "tris": 1588,
+  "empties": [
+   "Shape_Box_Fin",
+   "Shape_Box_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintGreen",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Foot_Peg": {
+  "glb": "Kit_Foot_Peg",
+  "builder": "Foot_Peg",
+  "size": "",
+  "kind": "foot",
+  "title": "Колышек",
+  "id": "kit_foot_peg",
+  "mass": 0.5,
+  "energy": 2,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "wood_dark",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.15,
+  "tris": 1028,
+  "empties": [
+   "Shape_Sphere_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_WoodDark",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Foot_Spring": {
+  "glb": "Kit_Foot_Spring",
+  "builder": "Foot_Spring",
+  "size": "",
+  "kind": "foot",
+  "title": "Пого-пружина",
+  "id": "kit_foot_spring",
+  "mass": 0.7,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "rubber",
+  "material": "wood",
+  "connector": true,
+  "tris": 2132,
+  "empties": [
+   "Shape_Cyl_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Pink",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Foot_Wheel": {
+  "glb": "Kit_Foot_Wheel",
+  "builder": "Foot_Wheel",
+  "size": "",
+  "kind": "foot",
+  "title": "Колесо",
+  "id": "kit_foot_wheel",
+  "mass": 0.7,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": true,
+  "tris": 2328,
+  "empties": [
+   "Shape_Sphere_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Hand_Clamp": {
+  "glb": "Kit_Hand_Clamp",
+  "builder": "Hand_Clamp",
+  "size": "",
+  "kind": "hand",
+  "title": "Тиски",
+  "id": "kit_hand_clamp",
+  "mass": 1.1,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": true,
+  "hit_mult": 1.1,
+  "tris": 2094,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Hand_Claw": {
+  "glb": "Kit_Hand_Claw",
+  "builder": "Hand_Claw",
+  "size": "",
+  "kind": "hand",
+  "title": "Клешня",
+  "id": "kit_hand_claw",
+  "mass": 0.9,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": true,
+  "hit_mult": 1.15,
+  "tris": 1968,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Hand_Fist": {
+  "glb": "Kit_Hand_Fist",
+  "builder": "Hand_Fist",
+  "size": "",
+  "kind": "hand",
+  "title": "Кулак",
+  "id": "kit_hand_fist",
+  "mass": 1.5,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "rust",
+  "material": "iron",
+  "connector": true,
+  "hit_mult": 1.1,
+  "tris": 2108,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Rust",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Hand_Mitten": {
+  "glb": "Kit_Hand_Mitten",
+  "builder": "Hand_Mitten",
+  "size": "",
+  "kind": "hand",
+  "title": "Варежка",
+  "id": "kit_hand_mitten",
+  "mass": 0.5,
+  "energy": 2,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "tris": 950,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Hand_Paddle": {
+  "glb": "Kit_Hand_Paddle",
+  "builder": "Hand_Paddle",
+  "size": "",
+  "kind": "hand",
+  "title": "Лопасть",
+  "id": "kit_hand_paddle",
+  "mass": 0.6,
+  "energy": 2,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "tris": 2460,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Head_Bot": {
+  "glb": "Kit_Head_Bot",
+  "builder": "Head_Bot",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-экран",
+  "id": "kit_head_bot",
+  "mass": 4.5,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "paint_yellow",
+  "material": "wood",
+  "connector": true,
+  "tris": 2372,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Box_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintYellow",
+   "Face",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Head_Can": {
+  "glb": "Kit_Head_Can",
+  "builder": "Head_Can",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-банка",
+  "id": "kit_head_can",
+  "mass": 3.5,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": true,
+  "tris": 2582,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Cyl_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Bone",
+   "Face",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Head_Cow": {
+  "glb": "Kit_Head_Cow",
+  "builder": "Head_Cow",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-корова",
+  "id": "kit_head_cow",
+  "mass": 4.3,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.1,
+  "tris": 2820,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Box_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Bone",
+   "Brass",
+   "Face",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Head_Crate": {
+  "glb": "Kit_Head_Crate",
+  "builder": "Head_Crate",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-ящик",
+  "id": "kit_head_crate",
+  "mass": 3.5,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "planks",
+  "material": "wood",
+  "connector": true,
+  "tris": 2752,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Box_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Planks",
+   "Face",
+   "Iron",
+   "Steel",
+   "WoodDark"
+  ]
+ },
+ "Kit_Head_Devil": {
+  "glb": "Kit_Head_Devil",
+  "builder": "Head_Devil",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-чёртик",
+  "id": "kit_head_devil",
+  "mass": 4.0,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.15,
+  "tris": 2130,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Box_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Face",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Head_Horned": {
+  "glb": "Kit_Head_Horned",
+  "builder": "Head_Horned",
+  "size": "",
+  "kind": "head",
+  "title": "Рогатый шлем",
+  "id": "kit_head_horned",
+  "mass": 6.0,
+  "energy": 12,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": true,
+  "hit_mult": 1.3,
+  "tris": 2746,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Sphere_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Bone",
+   "Brass",
+   "Face",
+   "Iron"
+  ]
+ },
+ "Kit_Head_Lantern": {
+  "glb": "Kit_Head_Lantern",
+  "builder": "Head_Lantern",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-фонарь",
+  "id": "kit_head_lantern",
+  "mass": 5.0,
+  "energy": 10,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": true,
+  "tris": 1864,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Box_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "Bone",
+   "Brass",
+   "CoreGlow",
+   "Face",
+   "Glass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Head_Round": {
+  "glb": "Kit_Head_Round",
+  "builder": "Head_Round",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-игрушка",
+  "id": "kit_head_round",
+  "mass": 4.0,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "tris": 1648,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Sphere_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Brass",
+   "Face",
+   "Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Head_Skull": {
+  "glb": "Kit_Head_Skull",
+  "builder": "Head_Skull",
+  "size": "",
+  "kind": "head",
+  "title": "Череп с карточкой",
+  "id": "kit_head_skull",
+  "mass": 3.2,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 2778,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Box_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "Bone",
+   "CoreGlow",
+   "Face",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Joint_Free": {
+  "glb": "Kit_Joint_Free",
+  "builder": "Joint_Free",
+  "size": "",
+  "kind": "connector",
+  "title": "Свободный",
+  "id": "kit_joint_free",
+  "connector_type": "free",
+  "tris": 1424,
+  "empties": [
+   "Socket"
+  ],
+  "materials": [
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Joint_Motor": {
+  "glb": "Kit_Joint_Motor",
+  "builder": "Joint_Motor",
+  "size": "",
+  "kind": "connector",
+  "title": "Мотор",
+  "id": "kit_joint_motor",
+  "connector_type": "motor",
+  "tris": 2020,
+  "empties": [
+   "Socket"
+  ],
+  "materials": [
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Joint_Pin": {
+  "glb": "Kit_Joint_Pin",
+  "builder": "Joint_Pin",
+  "size": "",
+  "kind": "connector",
+  "title": "Ось",
+  "id": "kit_joint_pin",
+  "connector_type": "pin",
+  "tris": 1460,
+  "empties": [
+   "Socket"
+  ],
+  "materials": [
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Joint_Spring": {
+  "glb": "Kit_Joint_Spring",
+  "builder": "Joint_Spring",
+  "size": "",
+  "kind": "connector",
+  "title": "Пружина",
+  "id": "kit_joint_spring",
+  "connector_type": "spring",
+  "tris": 1688,
+  "empties": [
+   "Socket"
+  ],
+  "materials": [
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Basic_L": {
+  "glb": "Kit_Limb_Basic_L",
+  "builder": "Limb_Basic",
+  "size": "L",
+  "kind": "limb",
+  "title": "Базовая (нога)",
+  "id": "kit_limb_basic_l",
+  "mass": 4.0,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "tris": 1768,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Basic_LA": {
+  "glb": "Kit_Limb_Basic_LA",
+  "builder": "Limb_Basic",
+  "size": "LA",
+  "kind": "limb",
+  "title": "Базовая (предплечье v3)",
+  "id": "kit_limb_basic_la",
+  "mass": 1.5,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "LowerArm",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "tris": 1768,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Basic_LL": {
+  "glb": "Kit_Limb_Basic_LL",
+  "builder": "Limb_Basic",
+  "size": "LL",
+  "kind": "limb",
+  "title": "Базовая (голень v3)",
+  "id": "kit_limb_basic_ll",
+  "mass": 3.0,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "LowerLeg",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "tris": 1768,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Basic_S": {
+  "glb": "Kit_Limb_Basic_S",
+  "builder": "Limb_Basic",
+  "size": "S",
+  "kind": "limb",
+  "title": "Базовая (рука)",
+  "id": "kit_limb_basic_s",
+  "mass": 2.0,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "tris": 1768,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Bone_L": {
+  "glb": "Kit_Limb_Bone_L",
+  "builder": "Limb_Bone",
+  "size": "L",
+  "kind": "limb",
+  "title": "Кость (нога)",
+  "id": "kit_limb_bone_l",
+  "mass": 2.6,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 1556,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Bone_S": {
+  "glb": "Kit_Limb_Bone_S",
+  "builder": "Limb_Bone",
+  "size": "S",
+  "kind": "limb",
+  "title": "Кость (рука)",
+  "id": "kit_limb_bone_s",
+  "mass": 1.3,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 1556,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Curved_L": {
+  "glb": "Kit_Limb_Curved_L",
+  "builder": "Limb_Curved",
+  "size": "L",
+  "kind": "limb",
+  "title": "Гнутая труба (нога)",
+  "id": "kit_limb_curved_l",
+  "mass": 4.4,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "rust",
+  "material": "iron",
+  "connector": true,
+  "tris": 2392,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Bow",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Rust",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Curved_S": {
+  "glb": "Kit_Limb_Curved_S",
+  "builder": "Limb_Curved",
+  "size": "S",
+  "kind": "limb",
+  "title": "Гнутая труба (рука)",
+  "id": "kit_limb_curved_s",
+  "mass": 2.2,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "rust",
+  "material": "iron",
+  "connector": true,
+  "tris": 2392,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Bow",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Rust",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Fantasy_L": {
+  "glb": "Kit_Limb_Fantasy_L",
+  "builder": "Limb_Fantasy",
+  "size": "L",
+  "kind": "limb",
+  "title": "Сказочная (нога)",
+  "id": "kit_limb_fantasy_l",
+  "mass": 4.4,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2882,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Gem",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Fantasy_S": {
+  "glb": "Kit_Limb_Fantasy_S",
+  "builder": "Limb_Fantasy",
+  "size": "S",
+  "kind": "limb",
+  "title": "Сказочная (рука)",
+  "id": "kit_limb_fantasy_s",
+  "mass": 2.2,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2842,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Gem",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Piston_L": {
+  "glb": "Kit_Limb_Piston_L",
+  "builder": "Limb_Piston",
+  "size": "L",
+  "kind": "limb",
+  "title": "Поршень (нога)",
+  "id": "kit_limb_piston_l",
+  "mass": 5.2,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "paint_yellow",
+  "material": "wood",
+  "connector": true,
+  "tris": 2318,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintYellow",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Piston_S": {
+  "glb": "Kit_Limb_Piston_S",
+  "builder": "Limb_Piston",
+  "size": "S",
+  "kind": "limb",
+  "title": "Поршень (рука)",
+  "id": "kit_limb_piston_s",
+  "mass": 2.8,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "paint_yellow",
+  "material": "wood",
+  "connector": true,
+  "tris": 2274,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintYellow",
+   "Iron",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Plate_L": {
+  "glb": "Kit_Limb_Plate_L",
+  "builder": "Limb_Plate",
+  "size": "L",
+  "kind": "limb",
+  "title": "Бронированная (нога)",
+  "id": "kit_limb_plate_l",
+  "mass": 6.0,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "wood_dark",
+  "material": "wood",
+  "connector": true,
+  "tris": 2000,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_WoodDark",
+   "Brass",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Plate_S": {
+  "glb": "Kit_Limb_Plate_S",
+  "builder": "Limb_Plate",
+  "size": "S",
+  "kind": "limb",
+  "title": "Бронированная (рука)",
+  "id": "kit_limb_plate_s",
+  "mass": 3.2,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "wood_dark",
+  "material": "wood",
+  "connector": true,
+  "tris": 1956,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_WoodDark",
+   "Brass",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Robotic_L": {
+  "glb": "Kit_Limb_Robotic_L",
+  "builder": "Limb_Robotic",
+  "size": "L",
+  "kind": "limb",
+  "title": "Робо-гидравлика (нога)",
+  "id": "kit_limb_robotic_l",
+  "mass": 5.8,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "paint_yellow",
+  "material": "wood",
+  "connector": true,
+  "tris": 1140,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintYellow",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Robotic_S": {
+  "glb": "Kit_Limb_Robotic_S",
+  "builder": "Limb_Robotic",
+  "size": "S",
+  "kind": "limb",
+  "title": "Робо-гидравлика (рука)",
+  "id": "kit_limb_robotic_s",
+  "mass": 3.0,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "paint_yellow",
+  "material": "wood",
+  "connector": true,
+  "tris": 1172,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintYellow",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Rope_L": {
+  "glb": "Kit_Limb_Rope_L",
+  "builder": "Limb_Rope",
+  "size": "L",
+  "kind": "limb",
+  "title": "Верёвка (нога)",
+  "id": "kit_limb_rope_l",
+  "mass": 2.4,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 0.85,
+  "tris": 2956,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Rope_S": {
+  "glb": "Kit_Limb_Rope_S",
+  "builder": "Limb_Rope",
+  "size": "S",
+  "kind": "limb",
+  "title": "Верёвка (рука)",
+  "id": "kit_limb_rope_s",
+  "mass": 1.2,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 0.85,
+  "tris": 2620,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Spiked_L": {
+  "glb": "Kit_Limb_Spiked_L",
+  "builder": "Limb_Spiked",
+  "size": "L",
+  "kind": "limb",
+  "title": "Шипастая (нога)",
+  "id": "kit_limb_spiked_l",
+  "mass": 5.4,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "wood_dark",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.3,
+  "tris": 2804,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_WoodDark",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Spiked_S": {
+  "glb": "Kit_Limb_Spiked_S",
+  "builder": "Limb_Spiked",
+  "size": "S",
+  "kind": "limb",
+  "title": "Шипастая (рука)",
+  "id": "kit_limb_spiked_s",
+  "mass": 2.7,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "wood_dark",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.3,
+  "tris": 2804,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_WoodDark",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Spring_L": {
+  "glb": "Kit_Limb_Spring_L",
+  "builder": "Limb_Spring",
+  "size": "L",
+  "kind": "limb",
+  "title": "Пружина (нога)",
+  "id": "kit_limb_spring_l",
+  "mass": 4.4,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": true,
+  "tris": 2280,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Spring_S": {
+  "glb": "Kit_Limb_Spring_S",
+  "builder": "Limb_Spring",
+  "size": "S",
+  "kind": "limb",
+  "title": "Пружина (рука)",
+  "id": "kit_limb_spring_s",
+  "mass": 2.4,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": true,
+  "tris": 1616,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Tentacle_L": {
+  "glb": "Kit_Limb_Tentacle_L",
+  "builder": "Limb_Tentacle",
+  "size": "L",
+  "kind": "limb",
+  "title": "Щупальце (нога)",
+  "id": "kit_limb_tentacle_l",
+  "mass": 3.0,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "rubber",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 0.9,
+  "tris": 1740,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Pink",
+   "Bone",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Tentacle_S": {
+  "glb": "Kit_Limb_Tentacle_S",
+  "builder": "Limb_Tentacle",
+  "size": "S",
+  "kind": "limb",
+  "title": "Щупальце (рука)",
+  "id": "kit_limb_tentacle_s",
+  "mass": 1.6,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "rubber",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 0.9,
+  "tris": 1740,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Pink",
+   "Bone",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Thick_L": {
+  "glb": "Kit_Limb_Thick_L",
+  "builder": "Limb_Thick",
+  "size": "L",
+  "kind": "limb",
+  "title": "Толстая (нога)",
+  "id": "kit_limb_thick_l",
+  "mass": 7.0,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": true,
+  "tris": 2066,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Thick_S": {
+  "glb": "Kit_Limb_Thick_S",
+  "builder": "Limb_Thick",
+  "size": "S",
+  "kind": "limb",
+  "title": "Толстая (рука)",
+  "id": "kit_limb_thick_s",
+  "mass": 3.6,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": true,
+  "tris": 2066,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Thin_L": {
+  "glb": "Kit_Limb_Thin_L",
+  "builder": "Limb_Thin",
+  "size": "L",
+  "kind": "limb",
+  "title": "Тонкая (нога)",
+  "id": "kit_limb_thin_l",
+  "mass": 2.2,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": true,
+  "tris": 1816,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Thin_S": {
+  "glb": "Kit_Limb_Thin_S",
+  "builder": "Limb_Thin",
+  "size": "S",
+  "kind": "limb",
+  "title": "Тонкая (рука)",
+  "id": "kit_limb_thin_s",
+  "mass": 1.1,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": true,
+  "tris": 1816,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Pick_Head": {
+  "glb": "Kit_Pick_Head",
+  "builder": "Pick_Head",
+  "size": "",
+  "kind": "weapon_head",
+  "title": "Кирка",
+  "id": "kit_pick_head",
+  "mass": 2.6,
+  "energy": 0,
+  "attach": "fixed",
+  "weapon_mult": 1.35,
+  "name_prefix": "Hammer",
+  "base_mat": "rust_red",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1240,
+  "empties": [
+   "Anchor_Face_L",
+   "Shape_Box_Eye",
+   "Shape_Box_Pick",
+   "Shape_Box_Poll",
+   "Socket"
+  ],
+  "materials": [
+   "Base_RustRed",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Saw_Disc": {
+  "glb": "Kit_Saw_Disc",
+  "builder": "Saw_Disc",
+  "size": "",
+  "kind": "weapon_head",
+  "title": "Дисковая пила",
+  "id": "kit_saw_disc",
+  "mass": 1.8,
+  "energy": 0,
+  "attach": "fixed",
+  "weapon_mult": 1.55,
+  "name_prefix": "Blade",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2868,
+  "empties": [
+   "Shape_Box_Collar",
+   "Shape_Box_Fork",
+   "Shape_Sphere_Disc",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Spear_Tip": {
+  "glb": "Kit_Spear_Tip",
+  "builder": "Spear_Tip",
+  "size": "",
+  "kind": "weapon_head",
+  "title": "Наконечник копья",
+  "id": "kit_spear_tip",
+  "mass": 0.9,
+  "energy": 0,
+  "attach": "fixed",
+  "weapon_mult": 1.5,
+  "name_prefix": "Blade",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1230,
+  "empties": [
+   "Shape_Box_Blade",
+   "Shape_Box_Collar",
+   "Shape_Box_Neck",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Iron",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Torch_Head": {
+  "glb": "Kit_Torch_Head",
+  "builder": "Torch_Head",
+  "size": "",
+  "kind": "weapon_head",
+  "title": "Факел",
+  "id": "kit_torch_head",
+  "mass": 0.9,
+  "energy": 0,
+  "attach": "fixed",
+  "weapon_mult": 1.2,
+  "name_prefix": "Mace",
+  "base_mat": "wood",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2748,
+  "empties": [
+   "Shape_Box_Collar",
+   "Shape_Cyl_Bundle",
+   "Shape_Sphere_Fire",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Wood",
+   "CoreGlow",
+   "Iron",
+   "Rope",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ }
+}

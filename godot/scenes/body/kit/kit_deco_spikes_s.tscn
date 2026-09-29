@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Deco_Spikes_S.glb" id="1_gvgme"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ywcr8"]
+friction = 0.5
+bounce = 0.1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_nr7vb"]
+height = 0.05
+radius = 0.1067
+
+[node name="KitDecoSpikesS" type="RigidBody3D" unique_id=279880524]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.6
+physics_material_override = SubResource("PhysicsMaterial_ywcr8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "deco"
+metadata/part_id = "kit_deco_spikes_s"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1926611792]
+
+[node name="Shape_Spikes" type="CollisionShape3D" parent="." unique_id=2000383166]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+shape = SubResource("CylinderShape3D_nr7vb")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=264853385 instance=ExtResource("1_gvgme")]
+metadata/rig_mesh = true

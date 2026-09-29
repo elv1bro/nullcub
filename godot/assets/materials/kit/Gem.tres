@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "Gem"
+albedo_color = Color(0.76737565, 0.15170372, 0.18974829, 1)
+roughness = 0.12

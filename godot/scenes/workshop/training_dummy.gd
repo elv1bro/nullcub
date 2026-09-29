@@ -2,7 +2,8 @@
 ## верёвке с потолочной балки. «Верёвка» — мягкая пружина к точке дома (торс) + момент «стоять прямо»: удар отправляет манекен
 ## в полёт как обычно (Doll.apply_knockback, окно knockback_until — пружина молчит), потом он сам возвращается и выпрямляется.
 ## Верёвка рисуется цилиндром от крюка до макушки. HP видно (сигналы hit / hp для UI), на KO кукла рассыпается (Doll.break_apart),
-## через RESPAWN_S — новый манекен с полным HP. Урон считает DollCombat (ребёнок манекена), Match не нужен.
+## через RESPAWN_S — новый манекен с полным HP. Урон считает DollCombat (ребёнок манекена), Match не нужен. Запас HP — Doll.max_hp
+## куклы-манекена (max_hp(); у Doll без этого поля — Tuning.MAX_HP).
 extends Node3D
 
 signal hit(amount: float, position: Vector3, part: String, kind: String)
@@ -29,6 +30,7 @@ var hits := 0
 var last_hit: Dictionary = {}
 var kos := 0
 var _respawn_at := -1.0
+var _max_hp: float = Tuning.MAX_HP   # Doll.max_hp текущего манекена (запоминается при спавне: после KO кукла уже может быть освобождена)
 var _time := 0.0
 var _rope: MeshInstance3D
 
@@ -69,7 +71,9 @@ func spawn() -> void:
 	doll.knocked_out.connect(_on_ko)
 	home = doll.torso().global_position
 	_respawn_at = -1.0
-	hp_changed.emit(doll.hp, Tuning.MAX_HP)
+	var mh: Variant = doll.get("max_hp")
+	_max_hp = float(mh) if mh != null and float(mh) > 0.0 else Tuning.MAX_HP
+	hp_changed.emit(doll.hp, _max_hp)
 	respawned.emit(doll)
 
 
@@ -82,13 +86,13 @@ func _on_damaged(amount: float, _attacker: Node, part: String, position: Vector3
 	hits += 1
 	last_hit = {"amount": amount, "part": part, "kind": kind, "position": position, "t": _time}
 	hit.emit(amount, position, part, kind)
-	hp_changed.emit(doll.hp, Tuning.MAX_HP)
+	hp_changed.emit(doll.hp, _max_hp)
 
 
 func _on_ko(_attacker: Node, _record: Dictionary) -> void:
 	kos += 1
 	_respawn_at = _time + RESPAWN_S
-	hp_changed.emit(0.0, Tuning.MAX_HP)
+	hp_changed.emit(0.0, _max_hp)
 	knocked_out.emit()
 
 
@@ -136,3 +140,8 @@ func head_top() -> Vector3:
 
 func hp() -> float:
 	return doll.hp if alive() else 0.0
+
+
+## Полный запас HP манекена (Doll.max_hp; для HP-таблички в UI).
+func max_hp() -> float:
+	return _max_hp

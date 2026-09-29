@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Joint_Pin.glb" id="1_y7k3y"]
+
+[node name="ConnectorPin" type="Node3D" unique_id=167150107]
+metadata/rig_mesh = true
+metadata/connector_type = "pin"
+
+[node name="Mesh" type="Node3D" parent="." unique_id=2125166280 instance=ExtResource("1_y7k3y")]
+metadata/rig_mesh = true

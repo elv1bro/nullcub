@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Foot_Boot.glb" id="1_i1i43"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_linfc"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_m1et8"]
+size = Vector3(0.1, 0.08, 0.25)
+
+[node name="KitFootBoot" type="RigidBody3D" unique_id=1227420905]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+physics_material_override = SubResource("PhysicsMaterial_linfc")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "foot"
+metadata/part_id = "kit_foot_boot"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=506569114]
+
+[node name="Shape_Foot" type="CollisionShape3D" parent="." unique_id=1301404967]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0.05)
+shape = SubResource("BoxShape3D_m1et8")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=228235444 instance=ExtResource("1_i1i43")]
+metadata/rig_mesh = true

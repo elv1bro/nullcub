@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Deco_Gauntlet_L.glb" id="1_r8w4b"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_t2cr1"]
+friction = 0.5
+bounce = 0.1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_jg0gm"]
+height = 0.1798
+radius = 0.1114288
+
+[node name="KitDecoGauntletL" type="RigidBody3D" unique_id=445633973]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.0
+physics_material_override = SubResource("PhysicsMaterial_t2cr1")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "armor"
+metadata/part_id = "kit_deco_gauntlet_l"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1135641789]
+
+[node name="Shape_Gauntlet" type="CollisionShape3D" parent="." unique_id=1059019126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1399, 0)
+shape = SubResource("CylinderShape3D_jg0gm")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=492194888 instance=ExtResource("1_r8w4b")]
+metadata/rig_mesh = true

@@ -1,0 +1,16 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/iron/albedo.webp" id="1_qf76i"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/iron/metallic.webp" id="2_fhq0p"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/iron/normal.webp" id="3_43bnv"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/iron/roughness.webp" id="4_k4flc"]
+
+[resource]
+resource_name = "Iron"
+albedo_color = Color(1.7017179, 1.8823035, 1.8823035, 1)
+albedo_texture = ExtResource("1_qf76i")
+metallic = 0.6
+metallic_texture = ExtResource("2_fhq0p")
+roughness_texture = ExtResource("4_k4flc")
+normal_enabled = true
+normal_texture = ExtResource("3_43bnv")

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_core_drum.tscn" id="1_ubfqq"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_iamx3"]
+
+[resource]
+script = ExtResource("2_iamx3")
+id = "kit_core_drum"
+title = "Ядро-бочка из-под масла"
+kind = "core"
+scene = ExtResource("1_ubfqq")
+mass = 13.0
+energy = 0
+body_mult = 0.5
+name_prefix = "Torso"
+base_mat = "paint_blue"

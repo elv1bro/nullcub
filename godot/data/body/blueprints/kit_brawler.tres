@@ -1,0 +1,113 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_uuvn0"]
+
+[resource]
+script = ExtResource("1_uuvn0")
+id = "kit_brawler"
+title = "Громила"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "kit_core_crate",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"name": "Head",
+"parent": "T",
+"part": "kit_head_crate",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "kit_limb_thick_s",
+"uid": "1"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "kit_limb_thick_s",
+"rest_deg": 10.0,
+"uid": "2"
+}, {
+"anchor": "Anchor_End",
+"mat": "rust_red",
+"name": "Hand_L",
+"parent": "2",
+"part": "kit_hand_mitten",
+"uid": "3"
+}, {
+"anchor": "Anchor_Hip_L",
+"name": "UpperLeg_L",
+"parent": "T",
+"part": "kit_limb_piston_l",
+"uid": "4"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_L",
+"parent": "4",
+"part": "kit_limb_piston_l",
+"rest_deg": 5.0,
+"uid": "5"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_L",
+"parent": "5",
+"part": "kit_foot_boot",
+"uid": "6"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"joint": "motor",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "kit_limb_thick_s",
+"uid": "7"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_R",
+"parent": "7",
+"part": "kit_limb_thick_s",
+"rest_deg": 10.0,
+"uid": "8"
+}, {
+"anchor": "Anchor_End",
+"mat": "rust_red",
+"name": "Hand_R",
+"parent": "8",
+"part": "kit_hand_mitten",
+"uid": "9"
+}, {
+"anchor": "Anchor_Hip_R",
+"name": "UpperLeg_R",
+"parent": "T",
+"part": "kit_limb_piston_l",
+"uid": "A"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_R",
+"parent": "A",
+"part": "kit_limb_piston_l",
+"rest_deg": 5.0,
+"uid": "B"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_R",
+"parent": "B",
+"part": "kit_foot_boot",
+"uid": "C"
+}, {
+"anchor": "Anchor_Deco",
+"mat": "iron",
+"parent": "1",
+"part": "kit_deco_pauldron",
+"uid": "D"
+}, {
+"anchor": "Anchor_Deco",
+"mat": "iron",
+"parent": "7",
+"part": "kit_deco_pauldron",
+"uid": "E"
+}])
+control = PackedStringArray("9")

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_kj60q"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_Bone.tres" id="2_78gtb"]
+
+[resource]
+script = ExtResource("1_kj60q")
+id = "bone"
+title = "Кость"
+surface = ExtResource("2_78gtb")
+swatch = Color(0.935741, 0.886004, 0.7735731, 1)
+density = 0.9
+friction = 0.55
+bounce = 0.1
+body_mult = 1.05

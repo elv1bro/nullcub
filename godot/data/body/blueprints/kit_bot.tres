@@ -1,0 +1,110 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_q5xbk"]
+
+[resource]
+script = ExtResource("1_q5xbk")
+id = "kit_bot"
+title = "Робот"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"mat": "paint_blue",
+"name": "Torso",
+"parent": "",
+"part": "kit_core_ball",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"name": "Head",
+"parent": "T",
+"part": "kit_head_bot",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "kit_limb_spring_s",
+"uid": "1"
+}, {
+"anchor": "Anchor_End",
+"joint": "spring",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "kit_limb_spring_s",
+"rest_deg": 25.0,
+"uid": "2"
+}, {
+"anchor": "Anchor_End",
+"name": "Hand_L",
+"parent": "2",
+"part": "kit_hand_claw",
+"uid": "3"
+}, {
+"anchor": "Anchor_Hip_L",
+"mat": "paint_white",
+"name": "UpperLeg_L",
+"parent": "T",
+"part": "kit_limb_piston_l",
+"uid": "4"
+}, {
+"anchor": "Anchor_End",
+"mat": "paint_white",
+"name": "LowerLeg_L",
+"parent": "4",
+"part": "kit_limb_piston_l",
+"rest_deg": 8.0,
+"uid": "5"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_L",
+"parent": "5",
+"part": "kit_foot_peg",
+"uid": "6"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "kit_limb_spring_s",
+"uid": "7"
+}, {
+"anchor": "Anchor_End",
+"joint": "spring",
+"name": "LowerArm_R",
+"parent": "7",
+"part": "kit_limb_spring_s",
+"rest_deg": 25.0,
+"uid": "8"
+}, {
+"anchor": "Anchor_End",
+"name": "Hand_R",
+"parent": "8",
+"part": "kit_hand_claw",
+"uid": "9"
+}, {
+"anchor": "Anchor_Hip_R",
+"mat": "paint_white",
+"name": "UpperLeg_R",
+"parent": "T",
+"part": "kit_limb_piston_l",
+"uid": "A"
+}, {
+"anchor": "Anchor_End",
+"mat": "paint_white",
+"name": "LowerLeg_R",
+"parent": "A",
+"part": "kit_limb_piston_l",
+"rest_deg": 8.0,
+"uid": "B"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_R",
+"parent": "B",
+"part": "kit_foot_peg",
+"uid": "C"
+}, {
+"anchor": "Anchor_Back",
+"parent": "T",
+"part": "kit_deco_banner",
+"uid": "D"
+}])
+control = PackedStringArray("9")

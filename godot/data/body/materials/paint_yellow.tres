@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_148op"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_PaintYellow.tres" id="2_yyygs"]
+
+[resource]
+script = ExtResource("1_148op")
+id = "paint_yellow"
+title = "Горчичная краска"
+surface = ExtResource("2_yyygs")
+swatch = Color(0.58383155, 0.4565437, 0.1428257, 1)
+friction = 0.5

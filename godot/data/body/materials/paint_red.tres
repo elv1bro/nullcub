@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_qofu3"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_PaintRed.tres" id="2_csml5"]
+
+[resource]
+script = ExtResource("1_qofu3")
+id = "paint_red"
+title = "Бордовая краска"
+surface = ExtResource("2_csml5")
+swatch = Color(0.47312066, 0.12315822, 0.26479155, 1)
+friction = 0.5

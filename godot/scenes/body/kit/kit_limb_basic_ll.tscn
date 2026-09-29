@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_Basic_LL.glb" id="1_qgn7w"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n3rjh"]
+friction = 0.6
+bounce = 0.05
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_dyx6v"]
+radius = 0.064
+height = 0.4512
+
+[node name="KitLimbBasicLl" type="RigidBody3D" unique_id=180892038]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 3.0
+physics_material_override = SubResource("PhysicsMaterial_n3rjh")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+metadata/part_id = "kit_limb_basic_ll"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1340915852]
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1106931058]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.052
+
+[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=634743960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.035, 0)
+metadata/accepts = PackedStringArray("armor", "deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Limb" type="CollisionShape3D" parent="." unique_id=190982472]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+shape = SubResource("CapsuleShape3D_dyx6v")
+
+[node name="Grip" type="Marker3D" parent="." unique_id=1112537148]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=82556988 instance=ExtResource("1_qgn7w")]
+metadata/rig_mesh = true

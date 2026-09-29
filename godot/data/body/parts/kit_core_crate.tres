@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_core_crate.tscn" id="1_57jgh"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_tmle0"]
+
+[resource]
+script = ExtResource("2_tmle0")
+id = "kit_core_crate"
+title = "Ядро-ящик"
+kind = "core"
+scene = ExtResource("1_57jgh")
+mass = 11.0
+energy = 0
+body_mult = 0.5
+name_prefix = "Torso"
+base_mat = "planks"

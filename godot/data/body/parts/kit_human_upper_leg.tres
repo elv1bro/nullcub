@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_human_upper_leg.tscn" id="1_cfj00"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_fvhvr"]
+
+[resource]
+script = ExtResource("2_fvhvr")
+id = "kit_human_upper_leg"
+title = "Бедро (кит «Человек»)"
+scene = ExtResource("1_cfj00")
+mass = 4.0
+energy = 6
+body_mult = 0.6
+name_prefix = "UpperLeg"
+base_mat = "wood"
+connector = true

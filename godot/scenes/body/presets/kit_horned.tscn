@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/body/modular_doll.gd" id="1_mv7pa"]
+[ext_resource type="Resource" path="res://data/body/blueprints/kit_horned.tres" id="2_4h5yk"]
+
+[node name="ModularDoll" type="Node3D" unique_id=1992639368]
+script = ExtResource("1_mv7pa")
+blueprint = ExtResource("2_4h5yk")

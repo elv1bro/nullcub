@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Saw_Disc.glb" id="1_q84u6"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_x6nlj"]
+friction = 0.5
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vhv4r"]
+size = Vector3(0.07, 0.09, 0.07)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_je7b5"]
+size = Vector3(0.05, 0.16, 0.06)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_mdigg"]
+radius = 0.148
+
+[node name="KitSawDisc" type="RigidBody3D" unique_id=1610012357]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.8
+physics_material_override = SubResource("PhysicsMaterial_x6nlj")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "weapon_head"
+metadata/part_id = "kit_saw_disc"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=860793018]
+
+[node name="Shape_Collar" type="CollisionShape3D" parent="." unique_id=1121569959]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0)
+shape = SubResource("BoxShape3D_vhv4r")
+
+[node name="Shape_Fork" type="CollisionShape3D" parent="." unique_id=741926435]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+shape = SubResource("BoxShape3D_je7b5")
+
+[node name="Shape_Disc" type="CollisionShape3D" parent="." unique_id=747836109]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0)
+shape = SubResource("SphereShape3D_mdigg")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1259039253 instance=ExtResource("1_q84u6")]
+metadata/rig_mesh = true

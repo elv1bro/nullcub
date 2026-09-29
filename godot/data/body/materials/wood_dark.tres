@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/material_def.gd" id="1_jcqwc"]
+[ext_resource type="Material" path="res://assets/materials/kit/Base_WoodDark.tres" id="2_fe1gn"]
+
+[resource]
+script = ExtResource("1_jcqwc")
+id = "wood_dark"
+title = "Орех"
+surface = ExtResource("2_fe1gn")
+swatch = Color(0.5370987, 0.4100209, 0.29337206, 1)
+density = 1.15
+body_mult = 1.05

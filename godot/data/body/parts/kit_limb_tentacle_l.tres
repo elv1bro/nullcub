@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_tentacle_l.tscn" id="1_3c2nk"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_ssi1o"]
+
+[resource]
+script = ExtResource("2_ssi1o")
+id = "kit_limb_tentacle_l"
+title = "Щупальце (нога)"
+scene = ExtResource("1_3c2nk")
+mass = 3.0
+energy = 7
+body_mult = 0.6
+hit_mult = 0.9
+name_prefix = "UpperLeg"
+base_mat = "rubber"
+connector = true

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_human_lower_arm.tscn" id="1_3e686"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_228o3"]
+
+[resource]
+script = ExtResource("2_228o3")
+id = "kit_human_lower_arm"
+title = "Предплечье (кит «Человек»)"
+scene = ExtResource("1_3e686")
+mass = 1.5
+energy = 4
+name_prefix = "LowerArm"
+base_mat = "wood"
+connector = true

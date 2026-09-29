@@ -1,0 +1,16 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_metal/albedo.webp" id="1_vtl6w"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_metal/metallic.webp" id="2_tutbd"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_metal/normal.webp" id="3_eshjy"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_metal/roughness.webp" id="4_3nkpi"]
+
+[resource]
+resource_name = "RustDark"
+albedo_color = Color(0.9063318, 0.9063318, 0.9309246, 1)
+albedo_texture = ExtResource("1_vtl6w")
+metallic = 0.55
+metallic_texture = ExtResource("2_tutbd")
+roughness_texture = ExtResource("4_3nkpi")
+normal_enabled = true
+normal_texture = ExtResource("3_eshjy")

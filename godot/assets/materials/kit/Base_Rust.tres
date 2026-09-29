@@ -1,0 +1,16 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_metal/albedo.webp" id="1_it7ix"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_metal/metallic.webp" id="2_o0afy"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_metal/normal.webp" id="3_1lk2u"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rust_metal/roughness.webp" id="4_ygff7"]
+
+[resource]
+resource_name = "Base_Rust"
+albedo_color = Color(1.1405237, 1.1941764, 1.2282239, 1)
+albedo_texture = ExtResource("1_it7ix")
+metallic = 0.55
+metallic_texture = ExtResource("2_o0afy")
+roughness_texture = ExtResource("4_ygff7")
+normal_enabled = true
+normal_texture = ExtResource("3_1lk2u")

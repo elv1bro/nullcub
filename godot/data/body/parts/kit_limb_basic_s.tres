@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_basic_s.tscn" id="1_n2rfl"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_qfbgr"]
+
+[resource]
+script = ExtResource("2_qfbgr")
+id = "kit_limb_basic_s"
+title = "Базовая (рука)"
+scene = ExtResource("1_n2rfl")
+mass = 2.0
+energy = 4
+body_mult = 0.8
+name_prefix = "UpperArm"
+base_mat = "wood"
+connector = true
