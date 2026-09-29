@@ -3,7 +3,7 @@
 ## Дерево (арена, P1/P2 с WeaponPickup, Weapons, Camera, Match, HUD, UI/Hint) живёт в сцене: scenes/playground.tscn — «Руины»,
 ## scenes/playground_workshop.tscn — «Мастерская», scenes/playground_void.tscn — «Void» (пустое чёрное поле RM, без оружия;
 ## Weapons там пустой — только молот Sudden Death) (ASSET_PIPELINE.md, правило 2). Здесь только поведение:
-##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — выход, 1–6 — сменить площадку
+##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — выход, 1–7 — сменить площадку
 ##   (Руины / Мастерская / Void / Свалка / Тело / Сборка — последние две из сессии сборки тела, BODY_CRAFT.md);
 ##   пропасть (сигнал body_fell арены): во время боя — Doll.knock_out() (KO kind "self", Match сам заканчивает матч), иначе —
 ##   респавн через RESPAWN_DELAY_S через Match.respawn_doll (той же породы дерева);
@@ -22,13 +22,24 @@ const SCENES := {
 	"scrap": "res://scenes/playground_scrap.tscn",          # Свалка (биом 01, CONCEPT_V2)
 	"body": "res://scenes/playground_body.tscn",            # площадка сборки тела: пресеты F1–F12, [ ] / PgUp PgDn (BODY_CRAFT.md)
 	"build": "res://scenes/workshop/workshop_build.tscn",   # мастерская: сборка тела и оружия (BODY_CRAFT.md)
+	"pve": "res://scenes/playground_pve.tscn",              # PvE-волны на Свалке (сессия «Определение игры и планы»)
 }
+## Клавиши площадок: одна таблица на все сцены (площадки, не наследующие этот скрипт, зовут scene_for_key).
+const ARENA_KEYS := {KEY_1: "ruins", KEY_2: "workshop", KEY_3: "void", KEY_4: "scrap", KEY_5: "body", KEY_6: "build", KEY_7: "pve"}
+
+
+## Путь сцены площадки для клавиши 1–7 (physical_keycode) или "" — для площадок со своим скриптом:
+##   var path: String = preload("res://scenes/playground.gd").scene_for_key(event.physical_keycode)
+##   if path != "" and path != scene_file_path: get_tree().change_scene_to_file(path)
+static func scene_for_key(keycode: int) -> String:
+	var id: String = ARENA_KEYS.get(keycode, "")
+	return SCENES.get(id, "") if id != "" else ""
 const DOLLS_GROUP := "dolls"
 const RESPAWN_DELAY_S := 1.0
 const SD_HAMMER_DROP_M := 1.5      # молот Sudden Death появляется на столько метров ниже потолка арены и падает
 const FX_TOAST_S := 1.2            # с реального времени: тост пресета FX (F10) держится, потом гаснет за 0.3 с
 
-## Идентификатор текущей арены (ключ SCENES) — какую сцену НЕ перезагружать по 1–6.
+## Идентификатор текущей арены (ключ SCENES) — какую сцену НЕ перезагружать по 1–7.
 @export var arena_id := "ruins"
 
 var arena: Node3D                  # RuinsArena | WorkshopArena | VoidArena: spawn_points(), bounds(), сигнал body_fell
@@ -89,6 +100,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				switch_arena("body")
 			KEY_6:
 				switch_arena("build")
+			KEY_7:
+				switch_arena("pve")
 			KEY_F10:
 				cycle_fx_preset()
 
