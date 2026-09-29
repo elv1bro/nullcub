@@ -190,9 +190,16 @@ func _check_static() -> void:
 		if l == null or not (l.mesh is QuadMesh):
 			continue
 		found += 1
-		var m := l.get_active_material(0) as StandardMaterial3D
-		_check("unshaded_" + n, m != null and m.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED, m.shading_mode if m else "null", BaseMaterial3D.SHADING_MODE_UNSHADED)
-		_check("no_fog_" + n, m != null and m.disable_fog, m.disable_fog if m else "null", true)
+		var mat := l.get_active_material(0)
+		var m := mat as StandardMaterial3D
+		var sm := mat as ShaderMaterial
+		if sm != null:  # v2: небо и башни — шейдер parallax_layer_wrap* (продолжение за края картинки)
+			var code := sm.shader.code if sm.shader else ""
+			_check("unshaded_" + n, code.contains("unshaded"), "shader", "render_mode unshaded")
+			_check("no_fog_" + n, code.contains("fog_disabled"), "shader", "render_mode fog_disabled")
+		else:
+			_check("unshaded_" + n, m != null and m.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED, m.shading_mode if m else "null", BaseMaterial3D.SHADING_MODE_UNSHADED)
+			_check("no_fog_" + n, m != null and m.disable_fog, m.disable_fog if m else "null", true)
 		_check("no_shadow_" + n, l.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, l.cast_shadow, 0)
 	_check("layers_found", found == 4, found, 4)
 	if found < 4:
@@ -229,12 +236,17 @@ func _check_static() -> void:
 ## > 1 — растянуто. Ширина источника — metadata/source_px_w слоя (текстуры v1 апскейлены до 4096 из полос листа
 ## по ~1363 пкс, по ширине текстуры они выглядели бы резкими); без метаданных — ширина текстуры.
 func _check_magnification(l: MeshInstance3D, n: String) -> void:
-	var m := l.get_active_material(0) as StandardMaterial3D
-	if m == null or m.albedo_texture == null:
+	var mat := l.get_active_material(0)
+	var tex: Texture2D = null
+	if mat is StandardMaterial3D:
+		tex = (mat as StandardMaterial3D).albedo_texture
+	elif mat is ShaderMaterial:
+		tex = (mat as ShaderMaterial).get_shader_parameter("tex") as Texture2D
+	if tex == null:
 		return
 	var q := l.mesh as QuadMesh
-	var src_w := float(l.get_meta("source_px_w", m.albedo_texture.get_width()))
-	var texel_per_m := src_w / q.size.x
+	var src_w := float(l.get_meta("source_px_w", tex.get_width()))
+	var texel_per_m := src_w / float(l.get_meta("tex_span_m", q.size.x))
 	var d := 10.0 - l.global_position.z
 	var px_per_m := 1080.0 / (2.0 * tan(deg_to_rad(FOV / 2.0)) * d)
 	var mag := snappedf(px_per_m / texel_per_m, 0.01)

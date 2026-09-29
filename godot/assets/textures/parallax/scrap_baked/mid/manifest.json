@@ -2,288 +2,288 @@
  "elements": [
   {
    "file": "bridge_a.png",
-   "w": 1187,
-   "h": 1266,
+   "w": 991,
+   "h": 1058,
    "anchor": "bottom",
-   "fill": 0.208,
+   "fill": 0.207,
    "source": "Bridge_A.png",
    "bbox": [
-    53,
-    54,
-    1240,
-    1320
+    43,
+    43,
+    1034,
+    1101
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "conveyor_a.png",
-   "w": 1203,
-   "h": 1294,
+   "w": 1005,
+   "h": 1081,
    "anchor": "bottom",
-   "fill": 0.157,
+   "fill": 0.156,
    "source": "Conveyor_A.png",
    "bbox": [
-    53,
-    53,
-    1256,
-    1347
+    43,
+    43,
+    1048,
+    1124
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "crane_a.png",
-   "w": 929,
-   "h": 1224,
+   "w": 776,
+   "h": 1022,
    "anchor": "bottom",
-   "fill": 0.167,
+   "fill": 0.166,
    "source": "Crane_A.png",
    "bbox": [
-    53,
-    53,
-    982,
-    1277
+    43,
+    43,
+    819,
+    1065
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "crane_b.png",
-   "w": 1045,
-   "h": 1044,
+   "w": 873,
+   "h": 872,
    "anchor": "bottom",
-   "fill": 0.166,
+   "fill": 0.165,
    "source": "Crane_B.png",
    "bbox": [
-    53,
-    53,
-    1098,
-    1097
+    43,
+    43,
+    916,
+    915
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "crane_c.png",
-   "w": 945,
-   "h": 1464,
+   "w": 790,
+   "h": 1222,
    "anchor": "bottom",
-   "fill": 0.155,
+   "fill": 0.154,
    "source": "Crane_C.png",
    "bbox": [
-    53,
-    53,
-    998,
-    1517
+    43,
+    43,
+    833,
+    1265
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "factory_a.png",
-   "w": 862,
-   "h": 1212,
+   "w": 721,
+   "h": 1013,
    "anchor": "bottom",
-   "fill": 0.611,
+   "fill": 0.608,
    "source": "Factory_A.png",
    "bbox": [
-    53,
-    53,
-    915,
-    1265
+    43,
+    43,
+    764,
+    1056
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "hangar_a.png",
-   "w": 772,
-   "h": 499,
+   "w": 646,
+   "h": 419,
    "anchor": "bottom",
-   "fill": 0.817,
+   "fill": 0.808,
    "source": "Hangar_A.png",
    "bbox": [
-    53,
-    53,
-    825,
-    552
+    43,
+    43,
+    689,
+    462
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "hopper_a.png",
-   "w": 655,
-   "h": 917,
+   "w": 548,
+   "h": 767,
    "anchor": "bottom",
-   "fill": 0.4,
+   "fill": 0.397,
    "source": "Hopper_A.png",
    "bbox": [
-    53,
-    53,
-    708,
-    970
+    43,
+    43,
+    591,
+    810
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "mast_a.png",
-   "w": 1015,
-   "h": 1648,
+   "w": 849,
+   "h": 1376,
    "anchor": "bottom",
-   "fill": 0.073,
+   "fill": 0.075,
    "source": "Mast_A.png",
    "bbox": [
-    53,
-    53,
-    1068,
-    1701
+    43,
+    43,
+    892,
+    1419
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "pipes_a.png",
-   "w": 1436,
-   "h": 928,
+   "w": 1199,
+   "h": 774,
    "anchor": "bottom",
    "fill": 0.212,
    "source": "Pipes_A.png",
    "bbox": [
-    53,
-    53,
-    1489,
-    981
+    43,
+    44,
+    1242,
+    818
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "shed_a.png",
-   "w": 444,
-   "h": 903,
+   "w": 373,
+   "h": 755,
    "anchor": "bottom",
-   "fill": 0.395,
+   "fill": 0.391,
    "source": "Shed_A.png",
    "bbox": [
-    53,
-    53,
-    497,
-    956
+    43,
+    43,
+    416,
+    798
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "shed_b.png",
-   "w": 516,
-   "h": 1112,
+   "w": 432,
+   "h": 929,
    "anchor": "bottom",
-   "fill": 0.363,
+   "fill": 0.36,
    "source": "Shed_B.png",
    "bbox": [
-    53,
-    53,
-    569,
-    1165
+    43,
+    43,
+    475,
+    972
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "stack_a.png",
-   "w": 297,
-   "h": 1191,
+   "w": 250,
+   "h": 995,
    "anchor": "bottom",
-   "fill": 0.586,
+   "fill": 0.579,
    "source": "Stack_A.png",
    "bbox": [
-    53,
-    53,
-    350,
-    1244
+    43,
+    43,
+    293,
+    1038
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "stack_pair.png",
-   "w": 554,
-   "h": 1238,
+   "w": 464,
+   "h": 1034,
    "anchor": "bottom",
-   "fill": 0.45,
+   "fill": 0.447,
    "source": "Stack_Pair.png",
    "bbox": [
-    53,
-    53,
-    607,
-    1291
+    43,
+    43,
+    507,
+    1077
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "tank_a.png",
-   "w": 541,
-   "h": 1157,
+   "w": 453,
+   "h": 966,
    "anchor": "bottom",
-   "fill": 0.38,
+   "fill": 0.377,
    "source": "Tank_A.png",
    "bbox": [
-    53,
-    53,
-    594,
-    1210
+    43,
+    43,
+    496,
+    1009
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "tank_b.png",
-   "w": 513,
-   "h": 917,
+   "w": 430,
+   "h": 767,
    "anchor": "bottom",
-   "fill": 0.421,
+   "fill": 0.417,
    "source": "Tank_B.png",
    "bbox": [
-    53,
-    53,
-    566,
-    970
+    43,
+    43,
+    473,
+    810
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "tower_a.png",
-   "w": 342,
-   "h": 1416,
+   "w": 286,
+   "h": 1182,
    "anchor": "bottom",
-   "fill": 0.335,
+   "fill": 0.333,
    "source": "Tower_A.png",
    "bbox": [
-    53,
-    54,
-    395,
-    1470
+    44,
+    44,
+    330,
+    1226
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "tower_b.png",
-   "w": 365,
-   "h": 1177,
+   "w": 308,
+   "h": 982,
    "anchor": "bottom",
-   "fill": 0.311,
+   "fill": 0.307,
    "source": "Tower_B.png",
    "bbox": [
-    54,
-    53,
-    419,
-    1230
+    43,
+    44,
+    351,
+    1026
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   },
   {
    "file": "tower_c.png",
-   "w": 348,
-   "h": 1656,
+   "w": 291,
+   "h": 1383,
    "anchor": "bottom",
-   "fill": 0.314,
+   "fill": 0.312,
    "source": "Tower_C.png",
    "bbox": [
-    53,
-    54,
-    401,
-    1710
+    44,
+    43,
+    335,
+    1426
    ],
-   "m_per_px": 0.016667
+   "m_per_px": 0.02
   }
  ]
 }

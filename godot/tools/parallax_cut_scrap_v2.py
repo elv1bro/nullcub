@@ -308,7 +308,13 @@ TSCN_HEAD = """[gd_scene format=3 uid="uid://parallaxscrap02"]
 [ext_resource type="Texture2D" path="res://assets/textures/parallax/scrap_v2/layer2_mid.png" id="4_l2"]
 [ext_resource type="Texture2D" path="res://assets/textures/parallax/scrap_v2/layer2_fog.png" id="5_fog"]
 [ext_resource type="Texture2D" path="res://assets/textures/parallax/scrap/layer1_fore.png" id="6_l1"]
+[ext_resource type="Shader" path="res://scenes/arena/parallax_layer_wrap.gdshader" id="7_wrap"]
+[ext_resource type="Shader" path="res://scenes/arena/parallax_layer_wrap_alpha.gdshader" id="8_wrapa"]
 """
+# Небо и дальние башни — квад шире своей картинки (WRAP: копий по x, доля высоты картинки сверху и снизу), картинка
+# продолжена шейдером parallax_layer_wrap*: зеркально по x, крайними строками по y. Так камеры вне игрового диапазона
+# (заставка: вверх и вбок) не видят краёв квада, а видеопамять та же.
+WRAP = {"layer4_sky": (3, 1.0, 0.3), "layer3_far": (3, 0.0, 0.0)}
 # узел, ext-id текстуры, прозрачность, метаданные (max_mag — порог резкости снапшот-теста при 1080p, source_px_w —
 # ширина источника в пкс: по ней тест считает резкость, а не по ширине текстуры)
 TSCN_NODES = [
@@ -320,25 +326,44 @@ TSCN_NODES = [
 ]
 
 
+def wrap_geom(key, g):
+    """Размер/центр квада с продолжением и uv_rect одной копии картинки (x0, y0, w, h в UV квада)."""
+    n, up, down = WRAP[key]
+    w, h = g["width_m"], g["height_m"]
+    total = 1.0 + up + down
+    yc = g["y_centre"] + (up - down) * h / 2.0
+    uv = (round((n - 1) / 2.0 / n, 6), round(up / total, 6), round(1.0 / n, 6), round(1.0 / total, 6))
+    return round(w * n, 2), round(h * total, 2), round(yc, 3), uv
+
+
 def write_tscn(geoms):
     out = [TSCN_HEAD]
     for node, key, tex, alpha, _ in TSCN_NODES:
+        if key in WRAP:
+            uv = wrap_geom(key, geoms[key])[3]
+            out.append('\n[sub_resource type="ShaderMaterial" id="mat_%s"]\nshader = ExtResource("%s")\n'
+                       'shader_parameter/tex = ExtResource("%s")\nshader_parameter/uv_rect = Vector4(%s, %s, %s, %s)\n'
+                       % (key, "8_wrapa" if alpha else "7_wrap", tex, *uv))
+            continue
         out.append('\n[sub_resource type="StandardMaterial3D" id="mat_%s"]\n%sshading_mode = 0\ncull_mode = 2\n'
                    'albedo_texture = ExtResource("%s")\ntexture_repeat = false\ndisable_receive_shadows = true\n'
                    'disable_fog = true\n' % (key, "transparency = 1\n" if alpha else "", tex))
     for node, key, *_ in TSCN_NODES:
         g = geoms[key]
-        out.append('\n[sub_resource type="QuadMesh" id="quad_%s"]\nsize = Vector2(%s, %s)\n'
-                   % (key, g["width_m"], g["height_m"]))
+        w, h = (wrap_geom(key, g)[:2]) if key in WRAP else (g["width_m"], g["height_m"])
+        out.append('\n[sub_resource type="QuadMesh" id="quad_%s"]\nsize = Vector2(%s, %s)\n' % (key, w, h))
     out.append('\n[node name="ParallaxScrap" type="Node3D"]\nscript = ExtResource("1_pbg")\nmetadata/source = '
                '"docs/refs/biomes/01-scrap/parallax-v2/ → tools/parallax_cut_scrap_v2.py (сцена генерируется им же); '
                'передний план пока v1, его заменят элементы — docs/plan-demo/PARALLAX.md"\n')
     for node, key, _, _, meta in TSCN_NODES:
         g = geoms[key]
+        yc = wrap_geom(key, g)[2] if key in WRAP else g["y_centre"]
         out.append('\n[node name="%s" type="MeshInstance3D" parent="."]\n'
                    'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, %s, %s)\nmaterial_override = '
                    'SubResource("mat_%s")\ncast_shadow = 0\nmesh = SubResource("quad_%s")\n'
-                   % (node, g["y_centre"], g["z"], key, key))
+                   % (node, yc, g["z"], key, key))
+        if key in WRAP:   # ширина одной копии картинки, м — по ней тест считает резкость
+            meta = dict(meta, tex_span_m=g["width_m"])
         if key == "layer2_mid":
             meta = dict(meta, ground_y=round(LAYOUT["layer2_mid"]["anchor_y"], 2))
         for k, v in meta.items():

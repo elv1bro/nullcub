@@ -11,7 +11,7 @@
 
 Запуск (headless):
     /Applications/Blender.app/Contents/MacOS/Blender -b --python godot/tools/blender/scrap_backdrop.py -- out=/abs/dir
-        [ppm=60] [ppm_fore=180] [sets=mid,fore] [only=Name,…]
+        [ppm=50] [ppm_fore=120] [sets=mid,fore] [only=Name,…]
         → <out>/mid/<Name>.png  — 19 конструкций среднего плана (фермы, краны, трубы, баки, мост, сараи, эстакада,
                                   бункер, цех, мачта, конвейер, ангар), основание (z = 0) у нижнего края, поля 1 м
         → <out>/fore/<Name>.png — 13 элементов переднего плана: подвешенные (цепи с крюком/магнитом/блоком, балка на
@@ -723,8 +723,8 @@ def render_one(scn, cam, objs, path, ppm, hanging=False):
 def main():
     args = dict(a.split("=", 1) for a in C.args_after_dashdash() if "=" in a)
     out = args.get("out", "/tmp/ragdoll_scrap_backdrop")
-    ppm_mid = float(args.get("ppm", "60"))
-    ppm_fore = float(args.get("ppm_fore", "180"))
+    ppm_mid = float(args.get("ppm", "50"))
+    ppm_fore = float(args.get("ppm_fore", "120"))
     only = set(args["only"].split(",")) if "only" in args else None
     sets = args.get("sets", "mid,fore").split(",")
     C.reset_scene()

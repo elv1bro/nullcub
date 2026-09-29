@@ -4,12 +4,14 @@
 parallax_elements_cut.py --single --ppm в godot/assets/textures/parallax/scrap_baked/<группа>/ + manifest.json.
 
 Группы = папки полос ParallaxScatter3D в scenes/arena/parallax_scrap_scatter.tscn:
-  mid        — 19 конструкций среднего плана (60 пкс/м); та же папка у полосы дальних силуэтов
+  mid        — 19 конструкций среднего плана (50 пкс/м: при масштабе полосы ≤ 0.85 это ×1 и на 1440p); та же папка
+               у полосы дальних силуэтов
   fore_tall  — высокие стоящие элементы переднего плана (шестерни, балки, большая куча) — редко
   fore_low   — низкие кучи из моделей арены (увеличиваются полосой ×1.6–2.2) — плотно у нижнего края
   fore_hang  — подвешенные (цепи с крюком/магнитом/блоком, балка на цепях), якорь top
-Передний план — 180 пкс/м (≥ 240 пкс/м нужно для ×1 при максимальном приближении; полоса масштабирует 0.6–1.2), низкие
-кучи — 396 пкс/м (полоса увеличивает их ×1.6–2.2). Точный ppm каждого рендера Blender пишет в <renders>/<set>/_ppm.json.
+Передний план — 120 пкс/м, низкие кучи — 264 (полоса увеличивает их ×1.6–2.2): в игре он затемнён почти до чёрного
+силуэта (дымка 0.9), лишние пиксели там не видны, а память — видна. Точный ppm каждого рендера Blender пишет в
+<renders>/<set>/_ppm.json. Все PNG получают .import с VRAM-сжатием (BPTC, 1 байт/пкс) и мипмапами.
 
 Запуск: /usr/local/bin/python3 godot/tools/parallax_bake_scrap.py [--only Name,…] [--keep /abs/renders]
 """
@@ -26,7 +28,7 @@ BLENDER = "/Applications/Blender.app/Contents/MacOS/Blender"
 SCRIPT = os.path.join(ROOT, "godot", "tools", "blender", "scrap_backdrop.py")
 CUT = os.path.join(ROOT, "godot", "tools", "parallax_elements_cut.py")
 OUT = os.path.join(ROOT, "godot", "assets", "textures", "parallax", "scrap_baked")
-PPM = {"mid": 60, "fore": 180}
+PPM = {"mid": 50, "fore": 120}
 FORE_TALL = {"Gear_Big", "Gear_Small", "Beams_Tilted", "Pile_Massive"}
 FORE_HANG = {"Chain_Hook", "Chain_Magnet", "Chain_Block", "Chain_Short", "Hanging_Beam"}
 

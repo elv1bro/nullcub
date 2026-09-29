@@ -13,7 +13,7 @@
 площадью ≥ min_area; кроп по bbox + PAD, чужие части в bbox обнуляются. Якорь: «top» — объект касается верхнего края
 листа (подвешен: цепи, крюки, крановые тросы), иначе «bottom» (стоит).
 
-Выход в out_dir: <prefix>_NN.png + manifest.json (дописывается: записи с тем же source заменяются):
+Выход в out_dir: <prefix>_NN.png (+ .import: VRAM-сжатие и мипмапы, см. GODOT_IMPORT) + manifest.json (дописывается: записи с тем же source заменяются):
   {"elements": [{"file", "w", "h", "anchor", "fill" (средняя alpha — доля закрытой площади bbox), "source",
                  "bbox": [x0, y0, x1, y1]}]}
 
@@ -103,6 +103,34 @@ def split(rgb, a, min_area):
     return out
 
 
+# Импорт Godot для элементов: VRAM-сжатие (BPTC на десктопе, 1 байт/пкс) + мипмапы. Без этого файла Godot берёт
+# дефолт 2D — Lossless: текстура распаковывается на CPU при загрузке и лежит в видеопамяти несжатой (4 байта/пкс).
+GODOT_IMPORT = """[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+
+[params]
+
+compress/mode=2
+compress/high_quality=true
+compress/lossy_quality=0.7
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/size_limit=0
+detect_3d/compress_to=0
+"""
+
+
+def write_import(png_path):
+    with open(png_path + ".import", "w") as f:
+        f.write(GODOT_IMPORT)
+
+
 def to_png(rgb, a):
     arr = np.concatenate([rgb, a[..., None]], axis=2)
     return Image.fromarray(np.clip(arr * 255.0 + 0.5, 0, 255).astype(np.uint8), "RGBA")
@@ -148,12 +176,14 @@ def main():
     for e in manifest["elements"]:
         if e.get("source") == src:
             p = os.path.join(args.out_dir, e["file"])
-            if os.path.exists(p):
-                os.remove(p)
+            for q in (p, p + ".import"):
+                if os.path.exists(q):
+                    os.remove(q)
     manifest["elements"] = [e for e in manifest["elements"] if e.get("source") != src]
     for k, e in enumerate(elems):
         name = ("%s.png" % prefix) if args.single else ("%s_%02d.png" % (prefix, k))
         to_png(e["rgb"], e["a"]).save(os.path.join(args.out_dir, name), optimize=True)
+        write_import(os.path.join(args.out_dir, name))
         rec = {"file": name, "w": int(e["a"].shape[1]), "h": int(e["a"].shape[0]), "anchor": e["anchor"],
                "fill": round(float(e["a"].mean()), 3), "source": src, "bbox": e["bbox"]}
         if args.ppm > 0:

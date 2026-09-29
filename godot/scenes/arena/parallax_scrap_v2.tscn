@@ -6,23 +6,18 @@
 [ext_resource type="Texture2D" path="res://assets/textures/parallax/scrap_v2/layer2_mid.png" id="4_l2"]
 [ext_resource type="Texture2D" path="res://assets/textures/parallax/scrap_v2/layer2_fog.png" id="5_fog"]
 [ext_resource type="Texture2D" path="res://assets/textures/parallax/scrap/layer1_fore.png" id="6_l1"]
+[ext_resource type="Shader" path="res://scenes/arena/parallax_layer_wrap.gdshader" id="7_wrap"]
+[ext_resource type="Shader" path="res://scenes/arena/parallax_layer_wrap_alpha.gdshader" id="8_wrapa"]
 
-[sub_resource type="StandardMaterial3D" id="mat_layer4_sky"]
-shading_mode = 0
-cull_mode = 2
-albedo_texture = ExtResource("2_l4")
-texture_repeat = false
-disable_receive_shadows = true
-disable_fog = true
+[sub_resource type="ShaderMaterial" id="mat_layer4_sky"]
+shader = ExtResource("7_wrap")
+shader_parameter/tex = ExtResource("2_l4")
+shader_parameter/uv_rect = Vector4(0.333333, 0.434783, 0.333333, 0.434783)
 
-[sub_resource type="StandardMaterial3D" id="mat_layer3_far"]
-transparency = 1
-shading_mode = 0
-cull_mode = 2
-albedo_texture = ExtResource("3_l3")
-texture_repeat = false
-disable_receive_shadows = true
-disable_fog = true
+[sub_resource type="ShaderMaterial" id="mat_layer3_far"]
+shader = ExtResource("8_wrapa")
+shader_parameter/tex = ExtResource("3_l3")
+shader_parameter/uv_rect = Vector4(0.333333, 0.0, 0.333333, 1.0)
 
 [sub_resource type="StandardMaterial3D" id="mat_layer2_mid"]
 transparency = 1
@@ -52,10 +47,10 @@ disable_receive_shadows = true
 disable_fog = true
 
 [sub_resource type="QuadMesh" id="quad_layer4_sky"]
-size = Vector2(194.37, 117.3)
+size = Vector2(583.11, 269.79)
 
 [sub_resource type="QuadMesh" id="quad_layer3_far"]
-size = Vector2(128.09, 59.37)
+size = Vector2(384.27, 59.37)
 
 [sub_resource type="QuadMesh" id="quad_layer2_mid"]
 size = Vector2(82.44, 27.49)
@@ -71,12 +66,13 @@ script = ExtResource("1_pbg")
 metadata/source = "docs/refs/biomes/01-scrap/parallax-v2/ → tools/parallax_cut_scrap_v2.py (сцена генерируется им же); передний план пока v1, его заменят элементы — docs/plan-demo/PARALLAX.md"
 
 [node name="Layer4Sky" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.309, -100.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 48.364, -100.0)
 material_override = SubResource("mat_layer4_sky")
 cast_shadow = 0
 mesh = SubResource("quad_layer4_sky")
 metadata/max_mag = 1.6
 metadata/source_px_w = 2000
+metadata/tex_span_m = 194.37
 
 [node name="Layer3Far" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.065, -55.0)
@@ -85,6 +81,7 @@ cast_shadow = 0
 mesh = SubResource("quad_layer3_far")
 metadata/max_mag = 1.6
 metadata/source_px_w = 2000
+metadata/tex_span_m = 128.09
 
 [node name="Layer2Mid" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.464, -24.0)
