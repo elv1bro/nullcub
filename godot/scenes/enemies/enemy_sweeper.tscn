@@ -1,0 +1,31 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/body/modular_doll.gd" id="1_md"]
+[ext_resource type="Resource" path="res://data/enemies/sweeper.tres" id="2_bp"]
+[ext_resource type="Script" path="res://scenes/weapons/weapon_pickup.gd" id="3_wp"]
+[ext_resource type="Script" path="res://scripts/enemies/sweeper_brain.gd" id="4_brain"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/sweeper_broom.tscn" id="5_broom"]
+
+[node name="Sweeper" type="Node3D"]
+script = ExtResource("1_md")
+blueprint = ExtResource("2_bp")
+thrust_ref_mass = 48.0
+player_index = -1
+input_prefix = "enemy"
+external_input = true
+team = "tower"
+max_hp = 80.0
+
+[node name="WeaponPickup" type="Node" parent="."]
+script = ExtResource("3_wp")
+auto_pickup = false
+hold_angle_deg = 0.0
+
+[node name="Brain" type="Node" parent="."]
+script = ExtResource("4_brain")
+reaction_s = 0.35
+lead_s = 0.2
+aim_error_m = 0.3
+input_slew = 4.5
+telegraph_s = 0.45
+broom_scene = ExtResource("5_broom")

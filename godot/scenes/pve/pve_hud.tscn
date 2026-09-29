@@ -1,0 +1,177 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/pve/pve_hud.gd" id="1_hud"]
+[ext_resource type="Theme" uid="uid://hudtheme0001" path="res://scenes/ui/hud_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scenes/ui/announcer.gd" id="3_announcer"]
+
+[node name="PveHud" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="Marks" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Players" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="WaveBox" type="VBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -420.0
+offset_top = 16.0
+offset_right = 420.0
+offset_bottom = 170.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="WavePanel" type="PanelContainer" parent="Root/WaveBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_type_variation = &"WoodFrame"
+
+[node name="WaveVBox" type="VBoxContainer" parent="Root/WaveBox/WavePanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = -2
+
+[node name="WaveLabel" type="Label" parent="Root/WaveBox/WavePanel/WaveVBox"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 40
+text = "ВОЛНА 1/3"
+horizontal_alignment = 1
+
+[node name="LeftLabel" type="Label" parent="Root/WaveBox/WavePanel/WaveVBox"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 24
+text = "ВРАГОВ: 2 из 2"
+horizontal_alignment = 1
+
+[node name="TowerLine" type="Label" parent="Root/WaveBox"]
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(1, 0.72, 0.25, 1)
+theme_override_constants/outline_size = 9
+theme_override_font_sizes/font_size = 30
+text = "OBJECT REQUIRES SWEEPING"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Announcer" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_top = -150.0
+offset_bottom = -150.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_announcer")
+
+[node name="Stack" type="VBoxContainer" parent="Root/Announcer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = -10
+alignment = 1
+
+[node name="EndPanel" type="PanelContainer" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -380.0
+offset_top = -330.0
+offset_right = 380.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"WoodFrame"
+
+[node name="EndVBox" type="VBoxContainer" parent="Root/EndPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="EndTitle" type="Label" parent="Root/EndPanel/EndVBox"]
+layout_mode = 2
+theme_type_variation = &"BrushLabel"
+theme_override_font_sizes/font_size = 84
+text = "ПОБЕДА"
+horizontal_alignment = 1
+
+[node name="EndLine" type="Label" parent="Root/EndPanel/EndVBox"]
+layout_mode = 2
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(1, 0.72, 0.25, 1)
+theme_override_font_sizes/font_size = 26
+text = "FLOOR CLEAN. RETURN TO THE WORKSHOP"
+horizontal_alignment = 1
+
+[node name="EndHint" type="Label" parent="Root/EndPanel/EndVBox"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+text = "R — заново"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -76.0
+offset_right = 1600.0
+offset_bottom = -12.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 7
+theme_override_font_sizes/font_size = 22
+text = "P1: WASD + Shift (рывок) + Space (переворот), ЛКМ — рука к курсору, E — схватить / бросить
+R — заново    F2 — кооп (P2: стрелки + правый Ctrl + Enter)    F10 — эффекты    Esc — выход    своя оторванная деталь — коснись её"

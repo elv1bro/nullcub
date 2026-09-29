@@ -3,12 +3,15 @@
 ## Отчёт tests/scrap_machines_probe_report.json и stdout, exit 0/1. Стадии (checks[].id):
 ##   supports_behind          — коллизии опор, рам, перил, лестниц, башен и заднего плана (Back/*) не заходят в |z| < Z_CLEAR
 ##                              (ящик глубиной 1 м их не касается); в info — сколько форм проверено;
+##   props_start_clear        — в позах builder-а (до первого шага физики) ни одно свободное тело (Props/Junk/Loot) не вставлено
+##                              в другое тело или в статику (intersect_shape): иначе на первом пробуждении его выталкивает рывком;
 ##   machines_found / lamps_* — четыре механизма ScrapMachine, у каждого есть слоты ламп (телеграф);
 ##   cycle_<name>             — авто-цикл: за CYCLE_TIMEOUT_S каждый прошёл OFF → WARNING → ACTIVE → COOLDOWN → OFF;
 ##   warning_s_<name>         — WARNING длится ≈ 1 с (0.8…1.3);
 ##   blink_<name>             — в WARNING лампа мигает (min/max яркости различаются);
 ##   magnet_pulls_iron        — маятник остановлен, железная бочка 40 кг на полу в ~3.9 м от полюса: за MAGNET_S ACTIVE
-##                              приблизилась к полюсу ≥ MAGNET_IRON_MIN_M;
+##                              приблизилась к полюсу ≥ MAGNET_IRON_MIN_M. Бочка после авто-цикла лежит как её уронил магнит
+##                              (info.magnet_barrel_before) — проба ставит её стоя: _teleport() сбрасывает позу и обе скорости;
 ##   magnet_ignores_wood      — деревянный ящик на том же расстоянии сдвинулся < MAGNET_WOOD_MAX_M;
 ##   magnet_releases          — через MAGNET_RELEASE_S после начала COOLDOWN бочка отпущена (сила 0) и лежит на полу;
 ##   magnet_iron_part         — ModularDoll с железным предплечьем и кулаком (metal_forearm, iron_ball_fist): магнит тянет её
@@ -49,6 +52,8 @@ var p1: Doll
 var p2: Doll
 var report := {"checks": [], "info": {}, "ok": true}
 var out_of_bounds: Array = []
+var start_overlaps: Array = []
+var start_checked := false
 var t := 0.0
 
 
@@ -72,6 +77,9 @@ func _physics_process(delta: float) -> void:
 	t += delta
 	if arena == null:
 		return
+	if not start_checked:
+		start_checked = true
+		start_overlaps = _loose_overlaps()   # первый вызов — до первого шага физики: позы builder-а
 	for b in arena.loose_bodies():
 		var p := (b as Node3D).global_position
 		if absf(p.x) > HALF_W + 0.5 or p.y < -9.7 or p.y > CEIL_Y + 0.5:
@@ -112,6 +120,7 @@ func _run() -> void:
 		_finish()
 		return
 	_supports()
+	_check("props_start_clear", start_overlaps.size(), 0, "eq", "свободные тела вставлены друг в друга / в статику: %s" % [start_overlaps])
 	await _cycles()
 	for mm in arena.machines():
 		(mm as ScrapMachine).auto_cycle = false
@@ -127,6 +136,35 @@ func _run() -> void:
 
 
 # ------------------------------------------------------------------ стадии
+
+## Свободные тела (Props/Junk/Loot), чьи коллизии в позах builder-а пересекаются с другим телом (свободным или статикой) —
+## точный запрос формы (intersect_shape), не AABB. Тело, вставленное в другое, застревает в нём (решатель держит их вдавленными)
+## и при ударе выталкивается рывком: до 29.09 доска Junk/Bit_2 (x −3.9) лежала на 0.55 м внутри большого ящика ShippingCrate
+## (x −6.2…−3.8), ящик стоял на ней с креном 0.5°.
+func _loose_overlaps() -> Array:
+	var space := arena.get_world_3d().direct_space_state
+	var out: Array = []
+	for b in arena.loose_bodies():
+		var rb := b as RigidBody3D
+		for c in rb.get_children():
+			var cs := c as CollisionShape3D
+			if cs == null or cs.shape == null or cs.disabled:
+				continue
+			var q := PhysicsShapeQueryParameters3D.new()
+			q.shape = cs.shape
+			q.transform = cs.global_transform
+			q.exclude = [rb.get_rid()]
+			q.collide_with_areas = false
+			for r in space.intersect_shape(q, 16):
+				var other := r.get("collider") as Node
+				if other == null or other.get_parent() is Doll:
+					continue
+				var tag := "%s ↔ %s" % [arena.get_path_to(rb), arena.get_path_to(other) if arena.is_ancestor_of(other) else other.get_path()]
+				var rev := "%s ↔ %s" % [arena.get_path_to(other) if arena.is_ancestor_of(other) else other.get_path(), arena.get_path_to(rb)]
+				if not out.has(tag) and not out.has(rev):
+					out.append(tag)
+	return out
+
 
 func _supports() -> void:
 	var n := 0
@@ -237,6 +275,18 @@ func _spawn_prop(path: String, pos: Vector3) -> RigidBody3D:
 	return b
 
 
+## Телепорт свободного тела в pos стоя (поворот сцены пропса — Basis.IDENTITY, origin у пропсов — низ) и без скоростей.
+## Только global_position (как было до 29.09) сохранял поворот: железная бочка, которую магнит на авто-цикле поднял и уронил,
+## лежит в случайной позе, и если она перевёрнута (поворот ≳ 135°), её цилиндр (origin — низ, высота 0.91) с origin на y 0.02
+## занимает y −0.89…0.02 — насквозь через пол (плита 0.5 м, y −0.5…0). Выталкивать вниз ближе (0.52 м), чем вверх (0.89),
+## и Jolt выталкивает бочку под пол — она падает мимо всего (проба падала ~1 из 5: magnet_pulls_iron −7.7 м, бочка на y −9.7).
+## CCD тут ни при чём (он от туннелирования на скорости, не от старта внутри плиты), стыка модулей пола в x 6.5 нет (середина модуля).
+func _teleport(b: RigidBody3D, pos: Vector3) -> void:
+	b.global_transform = Transform3D(Basis.IDENTITY, pos)
+	b.linear_velocity = Vector3.ZERO
+	b.angular_velocity = Vector3.ZERO
+
+
 func _place_doll(d: Doll, pos: Vector3) -> void:
 	var low := INF
 	for part in d.parts.values():
@@ -255,10 +305,10 @@ func _magnet() -> void:
 	var pole := mag.pole_global()
 	var barrel := arena.get_node("Props/MetalBarrel") as RigidBody3D
 	await _clear_around(Vector3(pole.x, 0, 0), 6.0, [barrel])
+	report["info"]["magnet_barrel_before"] = "pos %s rot %.0f°" % [barrel.global_position.snapped(Vector3.ONE * 0.01), rad_to_deg(barrel.global_rotation.z)]
 	for d in [p1, p2]:
 		_place_doll(d, Vector3(-0.3 if d == p1 else 1.8, 0.05, 0))   # куклы между паром и магнитом, вне их зон
-	barrel.global_position = Vector3(pole.x - 0.9, 0.02, 0.0)
-	barrel.linear_velocity = Vector3.ZERO
+	_teleport(barrel, Vector3(pole.x - 0.9, 0.02, 0.0))
 	var crate := _spawn_prop(CRATE, Vector3(pole.x + 1.6, 0.02, 0.0))
 	await _secs(1.0)
 	var b0 := ScrapMachine.com_of(barrel)
@@ -289,8 +339,7 @@ func _magnet() -> void:
 		"через %.1f с COOLDOWN сила %.1f Н, ЦМ бочки на %.2f м (держалась на %.2f)" % [MAGNET_RELEASE_S, f_after, y_after, y_hold])
 	await _settle_off()
 	crate.queue_free()
-	barrel.global_position = Vector3(14.5, 0.02, 0.0)   # за радиусом магнита (≈ 7.5 м от полюса)
-	barrel.linear_velocity = Vector3.ZERO
+	_teleport(barrel, Vector3(14.5, 0.02, 0.0))   # за радиусом магнита (≈ 7.5 м от полюса)
 
 
 ## ModularDoll с железной рукой под магнитом: сила на железные части, не на деревянные.
@@ -307,7 +356,15 @@ func _magnet_doll() -> void:
 		nodes.append(e)
 	bp.nodes = nodes
 	bp.id = "probe_iron_arm"
-	var md := (load(MODULAR) as PackedScene).instantiate() as Doll
+	var inst := (load(MODULAR) as PackedScene).instantiate()
+	var md := inst as Doll
+	if md == null or not md.has_method("energy_used"):
+		# 29.09: ModularDoll не компилировался (конфликт имён с Doll) — сцена создалась без скрипта, стадия падала с ошибкой
+		# скрипта и проверка просто пропадала, а проба оставалась зелёной. Теперь это явный провал.
+		_check("magnet_iron_part", 0, 1, "eq", "ModularDoll не создался из %s (ошибка скрипта modular_doll.gd?)" % MODULAR)
+		if inst != null:
+			inst.free()
+		return
 	md.set("blueprint", bp)
 	md.external_input = true
 	md.name = "IronArm"
@@ -454,7 +511,37 @@ func _loot() -> void:
 	report["info"]["inventory"] = inv.snapshot()
 
 
+## Проверки, которые обязаны быть в отчёте: стадия, упавшая с ошибкой скрипта, не пишет свою проверку — без этой сверки проба
+## оставалась бы зелёной (так было 29.09 с magnet_iron_part). Префиксы — проверки по каждому механизму.
+const REQUIRED_CHECKS := ["machines_found", "supports_behind", "props_start_clear", "magnet_pulls_iron", "magnet_ignores_wood",
+	"magnet_releases", "magnet_iron_part", "steam_light_high", "steam_light_over_heavy", "press_damage", "press_breaks_crate",
+	"press_loot", "chute_count", "chute_in_bounds", "loot_touch", "loot_grab", "loot_counter", "bodies_in_bounds"]
+const REQUIRED_PREFIXES := ["cycle_", "lamps_", "blink_", "warning_s_"]
+
+
+func _missing_checks() -> Array:
+	var ids := {}
+	for c in report["checks"]:
+		ids[String(c["id"])] = true
+	var missing: Array = []
+	for id in REQUIRED_CHECKS:
+		if not ids.has(id):
+			missing.append(id)
+	for p in REQUIRED_PREFIXES:
+		var found := false
+		for id in ids:
+			if String(id).begins_with(p):
+				found = true
+				break
+		if not found:
+			missing.append(p + "*")
+	return missing
+
+
 func _finish() -> void:
+	if arena != null:
+		var missing := _missing_checks()
+		_check("all_checks_present", missing.size(), 0, "eq", "стадии без своих проверок (упали с ошибкой?): %s" % [missing])
 	report["info"]["godot"] = Engine.get_version_info()["string"]
 	report["info"]["sim_s"] = snappedf(t, 0.01)
 	var js := JSON.stringify(report, "  ")

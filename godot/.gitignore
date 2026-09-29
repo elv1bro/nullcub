@@ -4,3 +4,5 @@ export/
 tests/*_report.json
 tests/*.png
 tests/clip/
+__pycache__/
+*.pyc

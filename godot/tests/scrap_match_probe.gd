@@ -17,8 +17,17 @@
 ##   pit_ko / pit_ko_kind / pit_ko_time / pit_match_over / pit_winner — кукла, опущенная в провал, получает KO kind "self"
 ##                            (сигнал body_fell арены → playground → Doll.knock_out), матч кончается, победитель — другая;
 ##   pit_parts_caught       — через PIT_SETTLE_S части упавшей куклы лежат на дне (y ≥ −9.6), а не падают бесконечно;
+##   pit_crate_caught       — большой ящик 80 кг (Props/ShippingCrate) в шахте провала ниже пола летит вбок (SHAFT_SPEED, влево, потом
+##                            вправо): через SHAFT_SETTLE_S он лежит на дне шахты (ЦМ в x пропасти, y −9.6…−7.0), а не под полом мимо дна;
 ##   props_in_bounds        — все пропсы и куски (Props/*, Junk/*, включая обломки Breakable) весь прогон внутри арены:
-##                            |x| ≤ HALF_W + 0.5, y ∈ [−9.7, потолок + 0.5];
+##                            |x| ≤ HALF_W + 0.5, y ∈ [−9.7, потолок + 0.5]. Дно провала (PitBottom, y −9) — внутри: пропс, столкнутый
+##                            в провал, — нормальная физика; вне границ — только то, что провал не поймал (падает бесконечно);
+##   info.shipping_crate    — трекер большого ящика: x0, x_min, момент ухода в провал (pit_t), толчки (скачок скорости > 0.4 м/с за
+##                            тик: с кем был в контакте). 29.09 в каждом прогоне одинаково: на 1.5 с боя P1 после первой сшибки
+##                            отходит полной тягой (RUSH_RETREAT_S), сносит стопку ящиков у x −0.9, усиленный ящик 20 кг летит влево
+##                            ~5 м/с и бьёт большой (t 4.52–4.57, −1.4 м/с): тот съезжает к −5.8…−5.9 и нависает над провалом на
+##                            0.5–0.7 м; дальше его добивают ящики стопки / куски желоба / куклы (до −6.2) — иногда до провала;
+##   info.pit_drop_crate    — где большой ящик в момент, когда жертву опускают в провал;
 ##   ko_time                — KO основного боя не позже max_s (родитель) — в info время боя и вид KO.
 ## Запуск: godot --headless --path . --fixed-fps 60 res://tests/scrap_match_probe.tscn -- "max_s=120"
 ## Отчёт tests/scrap_match_probe_report.json, exit 0/1.
@@ -34,10 +43,13 @@ const FALL_THROUGH_Y := -0.6
 const SPAWN_SETTLE_S := 2.5
 const PIT_TIMEOUT_S := 8.0
 const PIT_SETTLE_S := 4.0
+const SHAFT_Y := -2.0           # стадия 4: низ ящика в шахте провала (верх −0.6 — под плитами пола, низ плит −0.5)
+const SHAFT_SPEED := 3.0        # м/с вбок: рывок куклы 40 кг (до 9 м/с) в ящик 80 кг — общая ≈ 3 м/с
+const SHAFT_SETTLE_S := 5.0     # падение 7 м при g = 2 ≈ 2.6 с + отскок
 
 var _scrap_ps: PackedScene           # держим ссылку: иначе ресурс освободится и кэш по пути забудет подмену
 var arena: Node3D
-var scrap_stage := 0                 # 0 бой родителя; 1 спавны 2/3; 2 провал; 3 дно; 4 конец
+var scrap_stage := 0                 # 0 бой родителя; 1 спавны 2/3; 2 провал; 3 дно; 4 ящик в провал; 5 конец
 var stage_t := 0.0
 var stand_checked := false
 var min_part_y := INF
@@ -51,6 +63,16 @@ var pit_over := false
 var pit_winner: Doll = null
 var spawn_dolls: Array = []
 var spawn23_checked := false
+var crate: RigidBody3D = null        # Props/ShippingCrate — трекер: кто и когда его двигал
+var crate_x0 := 0.0
+var crate_min_x := INF
+var crate_prev_v := Vector3.ZERO
+var crate_pushes: Array = []
+var crate_pit_t := -1.0
+var crate_shove_t := -1.0
+var crate_shove_i := 0
+var crate_shaft_ok := true
+var crate_shaft_res: Array = []
 
 
 func _ready() -> void:
@@ -68,6 +90,12 @@ func _ready() -> void:
 	_check("scrap_arena", 1.0 if arena is ScrapArena else 0.0, 1.0, "eq", "playground_scrap loaded (arena %s)" % [arena])
 	if not (arena is ScrapArena):
 		_scrap_finish()
+		return
+	crate = arena.get_node_or_null("Props/ShippingCrate") as RigidBody3D
+	if crate != null:
+		crate_x0 = crate.global_position.x
+		crate.contact_monitor = true     # только отчёт о контактах (кто толкал): на симуляцию не влияет
+		crate.max_contacts_reported = 8
 
 
 func _physics_process(delta: float) -> void:
@@ -95,7 +123,9 @@ func _physics_process(delta: float) -> void:
 						low = minf(low, (part as Node3D).global_position.y)
 				_check("pit_parts_caught", low, -9.6, "gte", "lowest part of the pit victim %.2f s after KO (PitBottom at −9)" % PIT_SETTLE_S)
 				scrap_stage = 4
-				_scrap_finish()
+				stage_t = 0.0
+		4:
+			_stage_crate_shove(delta)
 
 
 ## Родитель закончил (бой, итоги, restart): вместо записи его отчёта — дополнительные стадии Свалки.
@@ -174,6 +204,28 @@ func _track() -> void:
 				var tag := "%s/%s" % [g, c.name]
 				if props_out.size() < 20 and not props_out.any(func(e: Dictionary) -> bool: return e["body"] == tag):
 					props_out.append({"body": tag, "pos": var_to_str(p.snapped(Vector3.ONE * 0.01)), "t": snappedf(t, 0.01)})
+	_track_crate()
+
+
+## Большой ящик у края пропасти: минимум x, момент ухода в провал и толчки (скачок скорости > 0.4 м/с за тик — с кем в контакте).
+func _track_crate() -> void:
+	if crate == null or not is_instance_valid(crate):
+		return
+	var p := crate.global_position
+	crate_min_x = minf(crate_min_x, p.x)
+	if crate_pit_t < 0.0 and p.y < -0.6 and scrap_stage < 4:   # ушёл в провал сам (стадия 4 кладёт его туда нарочно)
+		crate_pit_t = t
+	var v := crate.linear_velocity
+	if (v - crate_prev_v).length() > 0.4 and crate_pushes.size() < 16:
+		var by: Array = []
+		for b in crate.get_colliding_bodies():
+			var d := ScrapMachine.doll_of(b)
+			var tag := "%s/%s" % [d.name, b.name] if d != null else String(b.name)
+			if d != null and b is RigidBody3D:
+				tag += " v%s" % [(b as RigidBody3D).linear_velocity.snapped(Vector3.ONE * 0.1)]
+			by.append(tag)
+		crate_pushes.append({"t": snappedf(t, 0.01), "stage": scrap_stage, "x": snappedf(p.x, 0.01), "v": var_to_str(v.snapped(Vector3.ONE * 0.01)), "by": by})
+	crate_prev_v = v
 
 
 func _stage_spawns(delta: float) -> void:
@@ -215,6 +267,8 @@ func _stage_spawns(delta: float) -> void:
 		pit_over = true
 		pit_winner = w)
 	report["info"]["pit_phase"] = match_node.phase
+	if crate != null and is_instance_valid(crate):
+		report["info"]["pit_drop_crate"] = var_to_str(crate.global_position.snapped(Vector3.ONE * 0.01))   # ящик мог нависнуть над провалом
 	scrap_stage = 2
 	stage_t = 0.0
 
@@ -235,7 +289,52 @@ func _stage_pit(delta: float) -> void:
 		stage_t = 0.0
 
 
+## Стадия 4: провал ловит то, что в него упало. Большой ящик 80 кг ставится стоя в шахту провала ниже пола (центр пропасти,
+## низ на SHAFT_Y: верх ящика −0.6 — под плитами пола) и летит вбок на SHAFT_SPEED — сначала влево, потом вправо. Через
+## SHAFT_SETTLE_S ЦМ ящика должен лежать на дне шахты (x пропасти, y −9.6…−7.0: Bounds/PitBottom верх −9, стенки PitWallL/R).
+## До 29.09 стенок не было: под полом провал открыт вбок, и ящик, столкнутый в бою в провал со скоростью вбок, пролетал под
+## полом мимо края PitBottom (x −11…−5) и падал бесконечно (x −12.7, y −9.7 → props_in_bounds FAIL, ~1 прогон из 3–6: ящик
+## уходит в провал не в каждом бою, см. info.shipping_crate). Пропс в провале — нормальная физика, дно его и ловит. Толчок с края
+## по полу так не проверить: быстрый (3.5 м/с) ловится торцом пола за провалом, медленный (1 м/с) заклинивает ящик верхним углом
+## под балкой PitBeam (низ y 1.66) — сам вылет вбок под полом зависит от боя; здесь он задан прямо.
+func _stage_crate_shove(delta: float) -> void:
+	stage_t += delta
+	if crate == null or not is_instance_valid(crate):
+		_check("pit_crate_caught", 0.0, 1.0, "eq", "Props/ShippingCrate missing")
+		scrap_stage = 5
+		_scrap_finish()
+		return
+	var pit: Rect2 = arena.get("pit_rect")
+	if crate_shove_t < 0.0:
+		crate_shove_t = stage_t
+		var dir := -1.0 if crate_shove_i == 0 else 1.0
+		# стоя (поза сброшена, не только позиция) и без вращения — как телепорт бочки в scrap_machines_probe
+		crate.global_transform = Transform3D(Basis.IDENTITY, Vector3(pit.get_center().x, SHAFT_Y, 0.0))
+		crate.angular_velocity = Vector3.ZERO
+		crate.linear_velocity = Vector3(dir * SHAFT_SPEED, 0.0, 0.0)
+		return
+	if stage_t < crate_shove_t + SHAFT_SETTLE_S:
+		return
+	var c := ScrapMachine.com_of(crate)
+	var ok := c.x > pit.position.x and c.x < pit.end.x and c.y >= -9.6 and c.y <= -7.0
+	crate_shaft_res.append("%s: COM %s" % ["left" if crate_shove_i == 0 else "right", c.snapped(Vector3.ONE * 0.01)])
+	crate_shaft_ok = crate_shaft_ok and ok
+	crate_shove_i += 1
+	crate_shove_t = -1.0
+	if crate_shove_i < 2:
+		return
+	_check("pit_crate_caught", 1.0 if crate_shaft_ok else 0.0, 1.0, "eq",
+		"ShippingCrate thrown sideways at %.1f m/s inside the pit shaft below the floor, %.0f s later %s (shaft x %.1f…%.1f, PitBottom top y −9)" %
+		[SHAFT_SPEED, SHAFT_SETTLE_S, crate_shaft_res, pit.position.x, pit.end.x])
+	scrap_stage = 5
+	_scrap_finish()
+
+
 func _scrap_finish() -> void:
+	if crate != null:
+		report["info"]["shipping_crate"] = {"x0": snappedf(crate_x0, 0.01), "x_min": snappedf(crate_min_x, 0.01),
+			"pos_end": var_to_str(crate.global_position.snapped(Vector3.ONE * 0.01)) if is_instance_valid(crate) else "freed",
+			"pit_t": snappedf(crate_pit_t, 0.01), "pushes": crate_pushes}
 	_check("no_fall_through", min_part_y, FALL_THROUGH_Y, "gte", "lowest alive doll part outside the pit x-range: %s" % min_part_where)
 	_check("props_in_bounds", float(props_out.size()), 0.0, "eq", "props/junk outside arena bounds: %s" % [props_out])
 	var ko_ok := false

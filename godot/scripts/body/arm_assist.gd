@@ -56,6 +56,16 @@
 ## Брошенный предмет бьёт: ThrownCredit (scripts/body/thrown_credit.gd) — ребёнок предмета, WINDOW_S = 2 с после отпускания урон
 ## засчитывается бросившему (kind weapon) через Doll.take_damage по Damage.compute(масса, скорость).
 ##
+## Своя оторванная деталь (Doll.detach_part — PvE: Разборщик; хук сессии куклы). Оторвали управляемую деталь или её цепь —
+## _on_part_detached отпускает предмет и перестаёт управлять (мышь не таскает оторванную кисть). Вернуть деталь:
+##   • касанием — любая часть куклы ближе REATTACH_TOUCH_M к своей оторванной детали (Doll.detached_parts(), meta detached_from ==
+##     эта кукла), прошло REATTACH_GRACE_S после отрыва и деталь не в чужой руке (реестр хватов holder_of: у вора её сначала надо
+##     выбить ударом — он роняет) → Doll.reattach_part. Касание, а не только клавиша: вернуть можно и без руки-мыши (её тоже могли
+##     оторвать), с клавиатуры и геймпада, как лут Свалки; подлетел к своей кисти — «щёлк», она на месте;
+##   • клавишей захвата (E / RB) — своя деталь в GRAB_RADIUS от хвата прикручивается сразу (раньше броска оружия).
+## Вернулась управляемая деталь (сигнал Doll.part_reattached) — цепь и IK собираются заново (_rebind), управление возобновляется.
+## Чужую деталь (meta detached_from — другая кукла) не прикручиваем: её можно только схватить, как пропс.
+##
 ## Подсказки: кольцо цвета игрока в точке цели, пока рука активна (ЛКМ / стик); подсветка (material_overlay) предмета, который
 ## будет схвачен по нажатию. Две руки на одном предмете делят общий реестр подсветки (_hl_registry): исходный overlay возвращается
 ## при любом порядке ухода рук.
@@ -110,6 +120,8 @@ const RELEASE_EXCEPT_S := 0.3      # с после отпускания: иск�
 const RELEASE_EXCEPT_MAX_S := 2.0  # и не позже этого, даже если предмет лежит на кукле (Jolt растолкнёт)
 const RELEASE_CLEAR_M := 0.15      # «отошёл»: зазор AABB предмета и частей куклы, м
 const REPICK_BLOCK_S := 1.0        # после броска оружия клавишей захвата WeaponPickup не подбирает столько секунд
+const REATTACH_TOUCH_M := 0.3      # своя оторванная деталь ближе этого к любой части куклы — прикручивается обратно
+const REATTACH_GRACE_S := 1.0      # но не раньше, чем через столько после отрыва (иначе прирастала бы в руках у вора на старте бегства)
 
 # --- подсказки ---
 const MARKER_RADIUS := 0.07        # м, кольцо цели
@@ -141,8 +153,10 @@ var last_assist_force := Vector3.ZERO
 var last_hold_force := Vector3.ZERO
 ## Последнее отпускание: {body, reason, t, velocity, position}.
 var last_release: Dictionary = {}
-## Последнее действие клавиши захвата: "grab" | "release" | "drop_weapon" | "none".
+## Последнее действие клавиши захвата: "grab" | "release" | "drop_weapon" | "reattach" | "none".
 var last_grab_action := ""
+## Последняя возвращённая деталь: {body, name, t, how: "touch" | "grab"} (для проб).
+var last_reattach: Dictionary = {}
 
 var _ready_done := false
 var _time := 0.0
@@ -167,10 +181,13 @@ var _saved_overlays: Dictionary = {}   # instance id GeometryInstance3D, под�
 var _hl_material: StandardMaterial3D
 var _query: PhysicsShapeQueryParameters3D
 var _bounds_cache: Dictionary = {}     # instance id -> AABB (локальные границы коллизий)
+var _detach_seen: Dictionary = {}      # instance id своей оторванной детали -> _time, когда её впервые увидели оторванной
 
 static var _actions_done := false
 ## Общий реестр подсветки: instance id GeometryInstance3D -> {orig: исходный material_overlay, users: [ArmAssist, …]}.
 static var _hl_registry: Dictionary = {}
+## Кто что держит: instance id тела -> ArmAssist (своя оторванная деталь в чужой руке не прирастает от касания).
+static var _holders: Dictionary = {}
 const HL_META := &"arm_assist_highlight"   # метка материала подсветки
 
 
@@ -329,6 +346,10 @@ func _setup() -> void:
 	if part == null or torso == null:
 		push_warning("ArmAssist: no control part '%s' in %s" % [part_name, doll.name])
 		return
+	if doll.has_signal("part_detached") and not doll.is_connected("part_detached", _on_part_detached):
+		doll.connect("part_detached", _on_part_detached)
+	if doll.has_signal("part_reattached") and not doll.is_connected("part_reattached", _on_part_reattached):
+		doll.connect("part_reattached", _on_part_reattached)
 	var g := part.get_node_or_null("Grip") as Node3D
 	if g != null:
 		grip_local = g.position
@@ -366,7 +387,7 @@ func _setup() -> void:
 			_l2 = reach - _l1
 		_setup_ik(chain)
 	_ready_done = true
-	if show_hints:
+	if show_hints and _marker == null:
 		_make_hints()
 
 
@@ -484,7 +505,10 @@ func credit() -> ThrownCredit:
 
 func _physics_process(delta: float) -> void:
 	_time += delta
-	if doll == null or not _ready_done or part == null:
+	if doll == null or not _ready_done:
+		return
+	_tick_reattach()   # и без управляемой детали: её саму могли оторвать, вернуть можно касанием
+	if part == null:
 		return
 	_tick_pending_release()
 	var dead := not doll.alive or doll.is_broken() or not is_instance_valid(part) or not is_instance_valid(torso)
@@ -687,6 +711,10 @@ func toggle_grab() -> void:
 	if doll.is_stunned():
 		last_grab_action = "none"
 		return   # в стане кукла — пассивный рэгдолл, кисть не хватает
+	var own := _own_detached_near(grip_global(), GRAB_RADIUS)
+	if own != null and reattach_own(own, "grab"):
+		last_grab_action = "reattach"
+		return
 	var wp := _weapon_pickup()
 	if wp != null and wp.call("weapon_in", part_name) != null:
 		wp.call("drop", part_name)
@@ -766,6 +794,7 @@ func grab(b: RigidBody3D) -> bool:
 	if od == null or not od.alive:
 		_credit = ThrownCredit.attach(b, doll)
 	_set_highlight(null)
+	_holders[b.get_instance_id()] = self
 	grabbed.emit(b)
 	return true
 
@@ -777,6 +806,7 @@ func release(reason: String = "toggle") -> void:
 	var b := held
 	held = null
 	last_hold_force = Vector3.ZERO
+	_unregister_hold(b)
 	if is_instance_valid(b):
 		last_release = {"body": b, "reason": reason, "t": _time, "velocity": b.linear_velocity, "position": b.global_position}
 		var c := credit()
@@ -792,9 +822,122 @@ func drop_all() -> void:
 	release("ko")
 
 
+## Doll.detach_part (Разборщик, пресс): если оторвали управляемую деталь или цепь, на которой она висит (её больше нет в
+## doll.parts), — отпустить предмет, вернуть позу руки и перестать управлять: мышь не таскает оторванную кисть.
+func _on_part_detached(_detached_name: String, _by: Node) -> void:
+	if part == null or doll.parts.has(part_name):
+		return
+	if held != null:
+		release("detached")
+	_set_flex(false)
+	arm_active = false
+	candidate = null
+	_update_hints()
+	_restore_weapon_pickup()
+	part = null
+
+
+## Doll.part_reattached: вернулась управляемая деталь (или цепь, на которой она висит) — собрать цепь и IK заново (как _setup).
+func _on_part_reattached(_name: String) -> void:
+	if part == null and doll.parts.has(part_name):
+		_rebind()
+
+
+func _rebind() -> void:
+	_ready_done = false
+	_mid_joints.clear()
+	_ik = {}
+	_l1 = 0.0
+	_l2 = 0.0
+	_flex_saved.clear()
+	_query = null   # исключения запроса кандидатов — по текущим частям куклы
+	_setup()
+
+
+## Кто держит тело (ArmAssist) или null.
+static func holder_of(b: Object) -> ArmAssist:
+	if b == null or not is_instance_valid(b):
+		return null
+	var h: Variant = _holders.get(b.get_instance_id(), null)
+	if h == null or not is_instance_valid(h) or (h as ArmAssist).held != b:
+		return null
+	return h
+
+
+func _unregister_hold(b: Object) -> void:
+	if b == null:
+		return
+	var id := b.get_instance_id()
+	if _holders.get(id, null) == self:
+		_holders.erase(id)
+
+
+## Своя оторванная деталь: касание любой частью куклы → на место (см. шапку: REATTACH_TOUCH_M, REATTACH_GRACE_S, не в чужой руке).
+func _tick_reattach() -> void:
+	if not doll.has_method("detached_parts") or not doll.alive or doll.is_broken():
+		return
+	var list: Array = doll.call("detached_parts")
+	if list.is_empty():
+		_detach_seen.clear()
+		return
+	for b in list:
+		var rb := b as RigidBody3D
+		if rb == null or not is_instance_valid(rb):
+			continue
+		var id := rb.get_instance_id()
+		if not _detach_seen.has(id):
+			_detach_seen[id] = _time
+			continue
+		if _time - float(_detach_seen[id]) < REATTACH_GRACE_S:
+			continue
+		var h := holder_of(rb)
+		if h != null and h != self:
+			continue   # в руке у вора (или у товарища) — сначала выбить
+		for p in doll.parts.values():
+			var pp := (p as Node3D).global_position
+			if closest_point(rb, pp).distance_to(pp) <= REATTACH_TOUCH_M:
+				if reattach_own(rb, "touch"):
+					return
+				break
+
+
+## Своя оторванная деталь в radius от точки p (для клавиши захвата), null — нет.
+func _own_detached_near(p: Vector3, radius: float) -> RigidBody3D:
+	if not doll.has_method("detached_parts"):
+		return null
+	var best: RigidBody3D = null
+	var best_d := radius
+	for b in doll.call("detached_parts"):
+		var rb := b as RigidBody3D
+		if rb == null or not is_instance_valid(rb):
+			continue
+		var h := holder_of(rb)
+		if h != null and h != self:
+			continue
+		var d := closest_point(rb, p).distance_to(p)
+		if d <= best_d:
+			best_d = d
+			best = rb
+	return best
+
+
+## Прикрутить свою оторванную деталь (Doll.reattach_part). Чужую — нет (meta detached_from).
+func reattach_own(rb: RigidBody3D, how: String) -> bool:
+	if rb == null or not is_instance_valid(rb) or rb.get_meta("detached_from", null) != doll:
+		return false
+	if held == rb:
+		release("reattach")
+	if not bool(doll.call("reattach_part", rb)):
+		return false
+	_detach_seen.erase(rb.get_instance_id())
+	last_reattach = {"body": rb, "name": String(rb.name), "t": _time, "how": how}
+	return true
+
+
 func _forget_held(reason: String) -> void:
 	var b := held
 	held = null
+	_unregister_hold(b)
 	_credit = null
 	released.emit(b, reason)
 

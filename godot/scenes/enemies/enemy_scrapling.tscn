@@ -1,0 +1,41 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/body/modular_doll.gd" id="1_md"]
+[ext_resource type="Resource" path="res://data/enemies/scrapling.tres" id="2_bp"]
+[ext_resource type="Script" path="res://scenes/weapons/weapon_pickup.gd" id="3_wp"]
+[ext_resource type="Script" path="res://scripts/body/arm_assist.gd" id="4_arm"]
+[ext_resource type="Script" path="res://scripts/enemies/scrapling_brain.gd" id="5_brain"]
+
+[node name="Scrapling" type="Node3D"]
+script = ExtResource("1_md")
+blueprint = ExtResource("2_bp")
+thrust_ref_mass = 34.0
+player_index = -1
+input_prefix = "enemy"
+external_input = true
+team = "tower"
+max_hp = 40.0
+
+[node name="WeaponPickup" type="Node" parent="."]
+script = ExtResource("3_wp")
+auto_pickup = false
+
+[node name="ArmL" type="Node" parent="."]
+script = ExtResource("4_arm")
+control_part = "Hand_L"
+use_mouse = 0
+show_hints = false
+
+[node name="ArmR" type="Node" parent="."]
+script = ExtResource("4_arm")
+control_part = "Hand_R"
+use_mouse = 0
+show_hints = false
+
+[node name="Brain" type="Node" parent="."]
+script = ExtResource("5_brain")
+reaction_s = 0.22
+lead_s = 0.3
+aim_error_m = 0.25
+input_slew = 7.0
+telegraph_s = 0.4

@@ -1,0 +1,74 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scenes/pve/playground_pve.gd" id="1_pg"]
+[ext_resource type="PackedScene" uid="uid://scraparena01" path="res://scenes/arena/scrap.tscn" id="2_scrap"]
+[ext_resource type="PackedScene" uid="uid://doll00000001" path="res://scenes/doll/doll.tscn" id="3_doll"]
+[ext_resource type="Script" path="res://scenes/weapons/weapon_pickup.gd" id="4_pickup"]
+[ext_resource type="Script" path="res://scripts/body/arm_assist.gd" id="5_arm"]
+[ext_resource type="PackedScene" uid="uid://doll00000002" path="res://scenes/doll/doll_dark.tscn" id="6_dolldark"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/weapon_hammer.tscn" id="7_hammer"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/weapon_sword.tscn" id="8_sword"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/weapon_pan.tscn" id="9_pan"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="10_cam"]
+[ext_resource type="Script" path="res://scripts/pve/wave_director.gd" id="11_wave"]
+[ext_resource type="Script" path="res://scripts/pve/pve_focus.gd" id="12_focus"]
+[ext_resource type="PackedScene" path="res://scenes/pve/pve_hud.tscn" id="13_hud"]
+
+[node name="PlaygroundPve" type="Node3D"]
+script = ExtResource("1_pg")
+
+[node name="Scrap" parent="." groups=["arena"] instance=ExtResource("2_scrap")]
+
+[node name="P1" parent="." groups=["dolls", "players"] instance=ExtResource("3_doll")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.05, 0)
+player_index = 0
+input_prefix = "p1"
+
+[node name="WeaponPickup" type="Node" parent="P1"]
+script = ExtResource("4_pickup")
+
+[node name="ArmAssist" type="Node" parent="P1"]
+script = ExtResource("5_arm")
+
+[node name="P2" parent="." groups=["dolls", "players"] instance=ExtResource("6_dolldark")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0.05, 0)
+player_index = 1
+input_prefix = "p2"
+
+[node name="WeaponPickup" type="Node" parent="P2"]
+script = ExtResource("4_pickup")
+
+[node name="ArmAssist" type="Node" parent="P2"]
+script = ExtResource("5_arm")
+
+[node name="Weapons" type="Node3D" parent="."]
+
+[node name="Hammer" parent="Weapons" instance=ExtResource("7_hammer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.3, 0)
+
+[node name="Sword" parent="Weapons" instance=ExtResource("8_sword")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4, 0.25, 0)
+
+[node name="Pan" parent="Weapons" instance=ExtResource("9_pan")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 6.6, 0.3, 0)
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Camera" type="Camera3D" parent="." groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 12)
+fov = 45.0
+script = ExtResource("10_cam")
+arena_path = NodePath("../Scrap")
+target_group = "pve_focus"
+
+[node name="WaveDirector" type="Node" parent="."]
+script = ExtResource("11_wave")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../Scrap")
+enemies_path = NodePath("../Enemies")
+weapons_path = NodePath("../Weapons")
+
+[node name="PveFocus" type="Node" parent="."]
+script = ExtResource("12_focus")
+
+[node name="HUD" parent="." instance=ExtResource("13_hud")]

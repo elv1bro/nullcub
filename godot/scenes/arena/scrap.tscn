@@ -343,22 +343,28 @@ size = Vector3(38, 1, 8)
 size = Vector3(6, 0.5, 6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_iaj5q"]
-size = Vector3(44, 0.4, 10.7)
+size = Vector3(1, 9.4, 6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_so3pp"]
-size = Vector3(2.8, 5, 6)
+size = Vector3(1, 9.4, 6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_mf6uh"]
+size = Vector3(44, 0.4, 10.7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_j1oal"]
+size = Vector3(2.8, 5, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_a3f1k"]
 size = Vector3(40, 1, 8)
 
-[node name="Scrap" type="Node3D" unique_id=703000553]
+[node name="Scrap" type="Node3D" unique_id=205131773]
 script = ExtResource("1_egjga")
 
-[node name="Environment" type="WorldEnvironment" parent="." unique_id=96725702]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1077822042]
 environment = ExtResource("2_hfx1y")
 camera_attributes = SubResource("CameraAttributesPractical_k3np4")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=201088998]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1433159612]
 transform = Transform3D(-0.73994005, -0.30299073, 0.60057086, 0, 0.8928127, 0.4504281, -0.6726728, 0.3332898, -0.6606279, 0, 10, 0)
 light_color = Color(1, 0.72, 0.48, 1)
 light_energy = 2.2
@@ -371,21 +377,21 @@ directional_shadow_mode = 1
 directional_shadow_split_1 = 0.3
 directional_shadow_max_distance = 50.0
 
-[node name="Fill" type="DirectionalLight3D" parent="." unique_id=703328413]
+[node name="Fill" type="DirectionalLight3D" parent="." unique_id=512529868]
 transform = Transform3D(0.86337197, 0.2272944, -0.45047325, 0, 0.89278996, 0.45047325, 0.50456804, -0.38892597, 0.77080977, 0, 8, 10)
 light_color = Color(0.62, 0.64, 1, 1)
 light_energy = 0.85
 light_indirect_energy = 0.0
 light_specular = 0.4
 
-[node name="Rim" type="DirectionalLight3D" parent="." unique_id=1569943382]
+[node name="Rim" type="DirectionalLight3D" parent="." unique_id=1834226022]
 transform = Transform3D(-0.8240419, 0.14127944, -0.5486302, 0, 0.96840644, 0.24937733, 0.56652886, 0.20549737, -0.7980075, 0, 8, -10)
 light_color = Color(0.72, 0.76, 1, 1)
 light_energy = 0.6
 light_indirect_energy = 0.0
 light_specular = 0.6
 
-[node name="CameraKey" type="SpotLight3D" parent="." unique_id=681310113]
+[node name="CameraKey" type="SpotLight3D" parent="." unique_id=663296014]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 14)
 light_color = Color(1, 0.93, 0.86, 1)
 light_energy = 14.0
@@ -397,95 +403,95 @@ spot_attenuation = 1.6
 spot_angle = 40.0
 spot_angle_attenuation = 0.6
 
-[node name="Parallax" type="Node3D" parent="." unique_id=574081464 instance=ExtResource("3_h6y86")]
+[node name="Parallax" type="Node3D" parent="." unique_id=1902530728 instance=ExtResource("3_h6y86")]
 script = ExtResource("4_i1t5g")
 layer2_y_offset = -0.2
 layer1_y_offset = -1.0
-metadata/source = "scenes/arena/parallax_scrap_scatter.tscn: небо и дальний фон — картинки v2, средний и передний планы — запечённые 3D-конструкции (tools/parallax_bake_scrap.py) — docs/plan-demo/PARALLAX.md"
+metadata/source = "Наследник parallax_scrap_v2.tscn: слои неба, дальнего фона и тумана — v2 (картинки ИИ), сплошной средний план и передний v1 скрыты; средний план, дальние силуэты и передний план — ParallaxScatter3D из запечённых 3D-конструкций (tools/parallax_bake_scrap.py: tools/blender/scrap_backdrop.py → parallax_elements_cut.py). docs/plan-demo/PARALLAX.md"
 
-[node name="Ground" type="Node3D" parent="." unique_id=525260031]
+[node name="Ground" type="Node3D" parent="." unique_id=1970585445]
 
 [node name="Floor" type="StaticBody3D" parent="Ground" unique_id=1680138124 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_1" type="StaticBody3D" parent="Ground" unique_id=248478557 instance=ExtResource("5_g3wmt")]
+[node name="Floor_1" type="StaticBody3D" parent="Ground" unique_id=570015624 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_2" type="StaticBody3D" parent="Ground" unique_id=1898302919 instance=ExtResource("5_g3wmt")]
+[node name="Floor_2" type="StaticBody3D" parent="Ground" unique_id=35480383 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_3" type="StaticBody3D" parent="Ground" unique_id=141484817 instance=ExtResource("5_g3wmt")]
+[node name="Floor_3" type="StaticBody3D" parent="Ground" unique_id=810082196 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_4" type="StaticBody3D" parent="Ground" unique_id=1794655960 instance=ExtResource("5_g3wmt")]
+[node name="Floor_4" type="StaticBody3D" parent="Ground" unique_id=1212366060 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_5" type="StaticBody3D" parent="Ground" unique_id=780401365 instance=ExtResource("5_g3wmt")]
+[node name="Floor_5" type="StaticBody3D" parent="Ground" unique_id=1704985692 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_6" type="StaticBody3D" parent="Ground" unique_id=1742798111 instance=ExtResource("5_g3wmt")]
+[node name="Floor_6" type="StaticBody3D" parent="Ground" unique_id=2049397099 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_7" type="StaticBody3D" parent="Ground" unique_id=1985243298 instance=ExtResource("5_g3wmt")]
+[node name="Floor_7" type="StaticBody3D" parent="Ground" unique_id=501006288 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_8" type="StaticBody3D" parent="Ground" unique_id=1659332056 instance=ExtResource("5_g3wmt")]
+[node name="Floor_8" type="StaticBody3D" parent="Ground" unique_id=442827272 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_9" type="StaticBody3D" parent="Ground" unique_id=554881283 instance=ExtResource("5_g3wmt")]
+[node name="Floor_9" type="StaticBody3D" parent="Ground" unique_id=94392209 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_10" type="StaticBody3D" parent="Ground" unique_id=512630709 instance=ExtResource("5_g3wmt")]
+[node name="Floor_10" type="StaticBody3D" parent="Ground" unique_id=1859096317 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_11" type="StaticBody3D" parent="Ground" unique_id=1256357217 instance=ExtResource("5_g3wmt")]
+[node name="Floor_11" type="StaticBody3D" parent="Ground" unique_id=48597872 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_12" type="StaticBody3D" parent="Ground" unique_id=1706298404 instance=ExtResource("5_g3wmt")]
+[node name="Floor_12" type="StaticBody3D" parent="Ground" unique_id=320560218 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_13" type="StaticBody3D" parent="Ground" unique_id=106173639 instance=ExtResource("5_g3wmt")]
+[node name="Floor_13" type="StaticBody3D" parent="Ground" unique_id=1906477791 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_14" type="StaticBody3D" parent="Ground" unique_id=403576605 instance=ExtResource("5_g3wmt")]
+[node name="Floor_14" type="StaticBody3D" parent="Ground" unique_id=1892627387 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_15" type="StaticBody3D" parent="Ground" unique_id=1416503275 instance=ExtResource("5_g3wmt")]
+[node name="Floor_15" type="StaticBody3D" parent="Ground" unique_id=775439264 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_16" type="StaticBody3D" parent="Ground" unique_id=955950883 instance=ExtResource("5_g3wmt")]
+[node name="Floor_16" type="StaticBody3D" parent="Ground" unique_id=1429925635 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_17" type="StaticBody3D" parent="Ground" unique_id=1764379205 instance=ExtResource("5_g3wmt")]
+[node name="Floor_17" type="StaticBody3D" parent="Ground" unique_id=1610502978 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_18" type="StaticBody3D" parent="Ground" unique_id=1449109703 instance=ExtResource("5_g3wmt")]
+[node name="Floor_18" type="StaticBody3D" parent="Ground" unique_id=2086059459 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Floor_19" type="StaticBody3D" parent="Ground" unique_id=440921609 instance=ExtResource("5_g3wmt")]
+[node name="Floor_19" type="StaticBody3D" parent="Ground" unique_id=389127297 instance=ExtResource("5_g3wmt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_diwqe")
 
-[node name="Start" type="Node3D" parent="." unique_id=1620242562]
+[node name="Start" type="Node3D" parent="." unique_id=81280401]
 
 [node name="Heap_Awakening" type="StaticBody3D" parent="Start" unique_id=1501877088 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, -17, 0, 0)
@@ -536,7 +542,7 @@ transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9
 transform = Transform3D(1.4917829, 0, 0.1567927, 0, 1.5, 0, -0.1567927, 0, 1.4917829, -14, -2, -12.5)
 physics_material_override = SubResource("PhysicsMaterial_caqxe")
 
-[node name="Platforms" type="Node3D" parent="." unique_id=20751328]
+[node name="Platforms" type="Node3D" parent="." unique_id=1142373388]
 
 [node name="PitBeam" type="StaticBody3D" parent="Platforms" unique_id=337293923 instance=ExtResource("19_17tj6")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, 0)
@@ -545,94 +551,94 @@ physics_material_override = SubResource("PhysicsMaterial_8oku5")
 [node name="PitChain" type="Node3D" parent="Platforms" unique_id=735511563 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 6, 0)
 
-[node name="PitChain_1" type="Node3D" parent="Platforms" unique_id=1656906837 instance=ExtResource("20_8frrs")]
+[node name="PitChain_1" type="Node3D" parent="Platforms" unique_id=1197676802 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 8, 0)
 
-[node name="PitChain_2" type="Node3D" parent="Platforms" unique_id=1447532984 instance=ExtResource("20_8frrs")]
+[node name="PitChain_2" type="Node3D" parent="Platforms" unique_id=1714433267 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 10, 0)
 
-[node name="PitChain_3" type="Node3D" parent="Platforms" unique_id=905926978 instance=ExtResource("20_8frrs")]
+[node name="PitChain_3" type="Node3D" parent="Platforms" unique_id=1688237234 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 12, 0)
 
-[node name="PitChain_4" type="Node3D" parent="Platforms" unique_id=480898286 instance=ExtResource("20_8frrs")]
+[node name="PitChain_4" type="Node3D" parent="Platforms" unique_id=274366761 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 14, 0)
 
-[node name="PitChain_5" type="Node3D" parent="Platforms" unique_id=1611277703 instance=ExtResource("20_8frrs")]
+[node name="PitChain_5" type="Node3D" parent="Platforms" unique_id=1048432781 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 16, 0)
 
-[node name="PitChain_6" type="Node3D" parent="Platforms" unique_id=1195036637 instance=ExtResource("20_8frrs")]
+[node name="PitChain_6" type="Node3D" parent="Platforms" unique_id=1579112502 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 18, 0)
 
-[node name="PitChain_7" type="Node3D" parent="Platforms" unique_id=324274510 instance=ExtResource("20_8frrs")]
+[node name="PitChain_7" type="Node3D" parent="Platforms" unique_id=1065622380 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 6, 0)
 
-[node name="PitChain_8" type="Node3D" parent="Platforms" unique_id=1229825477 instance=ExtResource("20_8frrs")]
+[node name="PitChain_8" type="Node3D" parent="Platforms" unique_id=250417887 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 8, 0)
 
-[node name="PitChain_9" type="Node3D" parent="Platforms" unique_id=81677039 instance=ExtResource("20_8frrs")]
+[node name="PitChain_9" type="Node3D" parent="Platforms" unique_id=204421392 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 10, 0)
 
-[node name="PitChain_10" type="Node3D" parent="Platforms" unique_id=555602468 instance=ExtResource("20_8frrs")]
+[node name="PitChain_10" type="Node3D" parent="Platforms" unique_id=1879790121 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 12, 0)
 
-[node name="PitChain_11" type="Node3D" parent="Platforms" unique_id=1014539951 instance=ExtResource("20_8frrs")]
+[node name="PitChain_11" type="Node3D" parent="Platforms" unique_id=199127374 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 14, 0)
 
-[node name="PitChain_12" type="Node3D" parent="Platforms" unique_id=535317034 instance=ExtResource("20_8frrs")]
+[node name="PitChain_12" type="Node3D" parent="Platforms" unique_id=1686600787 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 16, 0)
 
-[node name="PitChain_13" type="Node3D" parent="Platforms" unique_id=1690654308 instance=ExtResource("20_8frrs")]
+[node name="PitChain_13" type="Node3D" parent="Platforms" unique_id=1888010822 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 18, 0)
 
-[node name="Island" type="StaticBody3D" parent="Platforms" unique_id=1172296348 instance=ExtResource("19_17tj6")]
+[node name="Island" type="StaticBody3D" parent="Platforms" unique_id=1620938278 instance=ExtResource("19_17tj6")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 5.2, 0)
 physics_material_override = SubResource("PhysicsMaterial_8oku5")
 
-[node name="IslandChain" type="Node3D" parent="Platforms" unique_id=1278950333 instance=ExtResource("20_8frrs")]
+[node name="IslandChain" type="Node3D" parent="Platforms" unique_id=1258568714 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 9.2, 0)
 
-[node name="IslandChain_1" type="Node3D" parent="Platforms" unique_id=1295240138 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_1" type="Node3D" parent="Platforms" unique_id=1657701717 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 11.2, 0)
 
-[node name="IslandChain_2" type="Node3D" parent="Platforms" unique_id=1590413186 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_2" type="Node3D" parent="Platforms" unique_id=1818126168 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 13.2, 0)
 
-[node name="IslandChain_3" type="Node3D" parent="Platforms" unique_id=1097649071 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_3" type="Node3D" parent="Platforms" unique_id=696874521 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 15.2, 0)
 
-[node name="IslandChain_4" type="Node3D" parent="Platforms" unique_id=2052646151 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_4" type="Node3D" parent="Platforms" unique_id=182554943 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 17.2, 0)
 
-[node name="IslandChain_5" type="Node3D" parent="Platforms" unique_id=2145386426 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_5" type="Node3D" parent="Platforms" unique_id=1865323687 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 19.2, 0)
 
-[node name="IslandChain_6" type="Node3D" parent="Platforms" unique_id=1834369007 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_6" type="Node3D" parent="Platforms" unique_id=1405670280 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 9.2, 0)
 
-[node name="IslandChain_7" type="Node3D" parent="Platforms" unique_id=1547973210 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_7" type="Node3D" parent="Platforms" unique_id=67431325 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 11.2, 0)
 
-[node name="IslandChain_8" type="Node3D" parent="Platforms" unique_id=629323713 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_8" type="Node3D" parent="Platforms" unique_id=1535694297 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 13.2, 0)
 
-[node name="IslandChain_9" type="Node3D" parent="Platforms" unique_id=1208020564 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_9" type="Node3D" parent="Platforms" unique_id=1412157949 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 15.2, 0)
 
-[node name="IslandChain_10" type="Node3D" parent="Platforms" unique_id=1028117970 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_10" type="Node3D" parent="Platforms" unique_id=620524791 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 17.2, 0)
 
-[node name="IslandChain_11" type="Node3D" parent="Platforms" unique_id=1405864416 instance=ExtResource("20_8frrs")]
+[node name="IslandChain_11" type="Node3D" parent="Platforms" unique_id=2005262784 instance=ExtResource("20_8frrs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 19.2, 0)
 
 [node name="R1_Support" type="StaticBody3D" parent="Platforms" unique_id=317212471 instance=ExtResource("21_snicw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -1.7)
 physics_material_override = SubResource("PhysicsMaterial_hvr75")
 
-[node name="R1_DeckL" type="StaticBody3D" parent="Platforms" unique_id=759534736 instance=ExtResource("13_3suvp")]
+[node name="R1_DeckL" type="StaticBody3D" parent="Platforms" unique_id=539001577 instance=ExtResource("13_3suvp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 4, 0)
 physics_material_override = SubResource("PhysicsMaterial_e62nv")
 
-[node name="R1_DeckR" type="StaticBody3D" parent="Platforms" unique_id=912423550 instance=ExtResource("14_21ska")]
+[node name="R1_DeckR" type="StaticBody3D" parent="Platforms" unique_id=14573444 instance=ExtResource("14_21ska")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 4, 0)
 physics_material_override = SubResource("PhysicsMaterial_n3tx2")
 
@@ -640,19 +646,19 @@ physics_material_override = SubResource("PhysicsMaterial_n3tx2")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.8, 0, -1.7)
 physics_material_override = SubResource("PhysicsMaterial_pvl3p")
 
-[node name="R2_DeckL" type="StaticBody3D" parent="Platforms" unique_id=1694482157 instance=ExtResource("13_3suvp")]
+[node name="R2_DeckL" type="StaticBody3D" parent="Platforms" unique_id=354746040 instance=ExtResource("13_3suvp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.8, 7, 0)
 physics_material_override = SubResource("PhysicsMaterial_e62nv")
 
-[node name="R2_DeckR" type="StaticBody3D" parent="Platforms" unique_id=640104893 instance=ExtResource("14_21ska")]
+[node name="R2_DeckR" type="StaticBody3D" parent="Platforms" unique_id=604134399 instance=ExtResource("14_21ska")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.8, 7, 0)
 physics_material_override = SubResource("PhysicsMaterial_n3tx2")
 
-[node name="Railing_1" type="StaticBody3D" parent="Platforms" unique_id=166091294 instance=ExtResource("15_wih1a")]
+[node name="Railing_1" type="StaticBody3D" parent="Platforms" unique_id=1474583571 instance=ExtResource("15_wih1a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.9, 4, -1.05)
 physics_material_override = SubResource("PhysicsMaterial_h00x4")
 
-[node name="Railing_2" type="StaticBody3D" parent="Platforms" unique_id=1708090400 instance=ExtResource("15_wih1a")]
+[node name="Railing_2" type="StaticBody3D" parent="Platforms" unique_id=1330842612 instance=ExtResource("15_wih1a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.7, 7, -1.05)
 physics_material_override = SubResource("PhysicsMaterial_h00x4")
 
@@ -660,20 +666,20 @@ physics_material_override = SubResource("PhysicsMaterial_h00x4")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.2, 4, -1.05)
 physics_material_override = SubResource("PhysicsMaterial_n45lm")
 
-[node name="ChainHook_1" type="Node3D" parent="Platforms" unique_id=798718974 instance=ExtResource("16_plxdd")]
+[node name="ChainHook_1" type="Node3D" parent="Platforms" unique_id=683899674 instance=ExtResource("16_plxdd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.4, 3.62, -0.95)
 
 [node name="ExitBanner" type="StaticBody3D" parent="Platforms" unique_id=1302817247 instance=ExtResource("24_aelwf")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.4, 7, -1.3)
 physics_material_override = SubResource("PhysicsMaterial_p78i2")
 
-[node name="Pit" type="Node3D" parent="." unique_id=128117580]
+[node name="Pit" type="Node3D" parent="." unique_id=1166038232]
 
-[node name="Heap_PitWall" type="StaticBody3D" parent="Pit" unique_id=2039914009 instance=ExtResource("6_skmxq")]
+[node name="Heap_PitWall" type="StaticBody3D" parent="Pit" unique_id=1857015412 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -8, -2, -2)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Glow" type="OmniLight3D" parent="Pit" unique_id=2116184104]
+[node name="Glow" type="OmniLight3D" parent="Pit" unique_id=1094129367]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.9, -0.3)
 light_color = Color(1, 0.46, 0.16, 1)
 light_energy = 6.0
@@ -682,7 +688,7 @@ light_specular = 0.3
 omni_range = 4.8
 omni_attenuation = 1.3
 
-[node name="Embers" type="GPUParticles3D" parent="Pit" unique_id=1808971473]
+[node name="Embers" type="GPUParticles3D" parent="Pit" unique_id=1916186714]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.6, 0.1)
 amount = 110
 lifetime = 3.2
@@ -692,7 +698,7 @@ visibility_aabb = AABB(-3, -1, -2, 6, 7, 4)
 process_material = SubResource("ParticleProcessMaterial_k72e8")
 draw_pass_1 = SubResource("QuadMesh_3wtcr")
 
-[node name="Haze" type="GPUParticles3D" parent="Pit" unique_id=805805935]
+[node name="Haze" type="GPUParticles3D" parent="Pit" unique_id=1547689483]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.4, -0.2)
 amount = 14
 lifetime = 4.5
@@ -702,13 +708,13 @@ visibility_aabb = AABB(-4, -2, -3, 8, 7, 6)
 process_material = SubResource("ParticleProcessMaterial_qsjfs")
 draw_pass_1 = SubResource("QuadMesh_b8kpv")
 
-[node name="Back" type="Node3D" parent="." unique_id=341274175]
+[node name="Back" type="Node3D" parent="." unique_id=1064620179]
 
 [node name="Heap_Berm" type="StaticBody3D" parent="Back" unique_id=211075058 instance=ExtResource("26_g3v18")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -19.4, -0.45, -3.4)
 physics_material_override = SubResource("PhysicsMaterial_equ4y")
 
-[node name="Heap_Berm_1" type="StaticBody3D" parent="Back" unique_id=1280708420 instance=ExtResource("6_skmxq")]
+[node name="Heap_Berm_1" type="StaticBody3D" parent="Back" unique_id=1057035512 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9781476, 0, -0.2079117, 0, 1, 0, 0.2079117, 0, 0.9781476, -16.6, -0.45, -3.8)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
@@ -720,7 +726,7 @@ physics_material_override = SubResource("PhysicsMaterial_dlxy4")
 transform = Transform3D(0.99026805, 0, -0.1391731, 0, 1, 0, 0.1391731, 0, 0.99026805, -10.9, -0.45, -3.4)
 physics_material_override = SubResource("PhysicsMaterial_e2ryx")
 
-[node name="Heap_Berm_4" type="StaticBody3D" parent="Back" unique_id=1370224983 instance=ExtResource("6_skmxq")]
+[node name="Heap_Berm_4" type="StaticBody3D" parent="Back" unique_id=336833020 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9975641, 0, 0.06975647, 0, 1, 0, -0.06975647, 0, 0.9975641, -8, -0.45, -3.8)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
@@ -735,7 +741,7 @@ physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, 0.9, -0.9, -4.2)
 physics_material_override = SubResource("PhysicsMaterial_6mwbg")
 
-[node name="Heap_Berm_8" type="StaticBody3D" parent="Back" unique_id=1111266869 instance=ExtResource("30_gxsmt")]
+[node name="Heap_Berm_8" type="StaticBody3D" parent="Back" unique_id=1000407934 instance=ExtResource("30_gxsmt")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 4, -0.9, -4.2)
 physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 
@@ -743,92 +749,92 @@ physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 transform = Transform3D(0.9975641, 0, -0.06975647, 0, 1, 0, 0.06975647, 0, 0.9975641, 7.2, -0.9, -4.2)
 physics_material_override = SubResource("PhysicsMaterial_wnsdv")
 
-[node name="Heap_Berm_10" type="StaticBody3D" parent="Back" unique_id=1256558554 instance=ExtResource("26_g3v18")]
+[node name="Heap_Berm_10" type="StaticBody3D" parent="Back" unique_id=1306306490 instance=ExtResource("26_g3v18")]
 transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, 10.2, -0.45, -3.6)
 physics_material_override = SubResource("PhysicsMaterial_equ4y")
 
-[node name="Heap_Berm_11" type="StaticBody3D" parent="Back" unique_id=2129240911 instance=ExtResource("27_hy05m")]
+[node name="Heap_Berm_11" type="StaticBody3D" parent="Back" unique_id=266458656 instance=ExtResource("27_hy05m")]
 transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 12.8, -0.45, -3.6)
 physics_material_override = SubResource("PhysicsMaterial_dlxy4")
 
-[node name="Heap_Berm_12" type="StaticBody3D" parent="Back" unique_id=1429707821 instance=ExtResource("6_skmxq")]
+[node name="Heap_Berm_12" type="StaticBody3D" parent="Back" unique_id=1274554335 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, 15.4, -0.45, -3.8)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Berm_13" type="StaticBody3D" parent="Back" unique_id=545422651 instance=ExtResource("28_ypbn3")]
+[node name="Heap_Berm_13" type="StaticBody3D" parent="Back" unique_id=788183751 instance=ExtResource("28_ypbn3")]
 transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, 18.6, -0.45, -3.4)
 physics_material_override = SubResource("PhysicsMaterial_e2ryx")
 
-[node name="Heap_MountainR" type="StaticBody3D" parent="Back" unique_id=518106506 instance=ExtResource("18_7srmx")]
+[node name="Heap_MountainR" type="StaticBody3D" parent="Back" unique_id=529046285 instance=ExtResource("18_7srmx")]
 transform = Transform3D(1.1388083, 0, -0.16004907, 0, 1.15, 0, 0.16004907, 0, 1.1388083, 15, -2, -13)
 physics_material_override = SubResource("PhysicsMaterial_caqxe")
 
-[node name="Front" type="Node3D" parent="." unique_id=255334793]
+[node name="Front" type="Node3D" parent="." unique_id=1226694087]
 
-[node name="Heap_Bank" type="StaticBody3D" parent="Front" unique_id=164867098 instance=ExtResource("6_skmxq")]
+[node name="Heap_Bank" type="StaticBody3D" parent="Front" unique_id=1244193611 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -20, -1.6, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_1" type="StaticBody3D" parent="Front" unique_id=185346473 instance=ExtResource("31_4od7o")]
+[node name="Heap_Bank_1" type="StaticBody3D" parent="Front" unique_id=80022440 instance=ExtResource("31_4od7o")]
 transform = Transform3D(0.99026805, 0, -0.1391731, 0, 1, 0, 0.1391731, 0, 0.99026805, -17.3, -0.8, 1.4)
 physics_material_override = SubResource("PhysicsMaterial_6mwbg")
 
-[node name="Heap_Bank_2" type="StaticBody3D" parent="Front" unique_id=1204678532 instance=ExtResource("6_skmxq")]
+[node name="Heap_Bank_2" type="StaticBody3D" parent="Front" unique_id=1044642309 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9702957, 0, -0.2419219, 0, 1, 0, 0.2419219, 0, 0.9702957, -14.8, -1.62, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_3" type="StaticBody3D" parent="Front" unique_id=389134320 instance=ExtResource("28_ypbn3")]
+[node name="Heap_Bank_3" type="StaticBody3D" parent="Front" unique_id=649305683 instance=ExtResource("28_ypbn3")]
 transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, -12.2, -0.95, 1.4)
 physics_material_override = SubResource("PhysicsMaterial_e2ryx")
 
-[node name="Heap_Bank_4" type="StaticBody3D" parent="Front" unique_id=1141135374 instance=ExtResource("30_gxsmt")]
+[node name="Heap_Bank_4" type="StaticBody3D" parent="Front" unique_id=187149569 instance=ExtResource("30_gxsmt")]
 transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, -10.5, -0.95, 1.5)
 physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 
-[node name="Heap_Bank_5" type="StaticBody3D" parent="Front" unique_id=405240415 instance=ExtResource("30_gxsmt")]
+[node name="Heap_Bank_5" type="StaticBody3D" parent="Front" unique_id=1880493929 instance=ExtResource("30_gxsmt")]
 transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, -5.5, -0.95, 1.5)
 physics_material_override = SubResource("PhysicsMaterial_kpgsm")
 
-[node name="Heap_Bank_6" type="StaticBody3D" parent="Front" unique_id=556794329 instance=ExtResource("6_skmxq")]
+[node name="Heap_Bank_6" type="StaticBody3D" parent="Front" unique_id=852988144 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, -3.3, -1.6, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_7" type="StaticBody3D" parent="Front" unique_id=144652106 instance=ExtResource("26_g3v18")]
+[node name="Heap_Bank_7" type="StaticBody3D" parent="Front" unique_id=2100012582 instance=ExtResource("26_g3v18")]
 transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, -0.6, -0.66, 1.4)
 physics_material_override = SubResource("PhysicsMaterial_equ4y")
 
-[node name="Heap_Bank_8" type="StaticBody3D" parent="Front" unique_id=973747770 instance=ExtResource("6_skmxq")]
+[node name="Heap_Bank_8" type="StaticBody3D" parent="Front" unique_id=1398614614 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9781476, 0, -0.2079117, 0, 1, 0, 0.2079117, 0, 0.9781476, 2, -1.62, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_9" type="StaticBody3D" parent="Front" unique_id=1240473652 instance=ExtResource("31_4od7o")]
+[node name="Heap_Bank_9" type="StaticBody3D" parent="Front" unique_id=1883039440 instance=ExtResource("31_4od7o")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 4.7, -0.8, 1.4)
 physics_material_override = SubResource("PhysicsMaterial_6mwbg")
 
-[node name="Heap_Bank_10" type="StaticBody3D" parent="Front" unique_id=1622842348 instance=ExtResource("6_skmxq")]
+[node name="Heap_Bank_10" type="StaticBody3D" parent="Front" unique_id=1090845182 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9975641, 0, 0.06975647, 0, 1, 0, -0.06975647, 0, 0.9975641, 7.3, -1.6, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_11" type="StaticBody3D" parent="Front" unique_id=1436545649 instance=ExtResource("32_cu3md")]
+[node name="Heap_Bank_11" type="StaticBody3D" parent="Front" unique_id=1543459672 instance=ExtResource("32_cu3md")]
 transform = Transform3D(0.99026805, 0, -0.1391731, 0, 1, 0, 0.1391731, 0, 0.99026805, 10, -1, 1.4)
 physics_material_override = SubResource("PhysicsMaterial_wnsdv")
 
-[node name="Heap_Bank_12" type="StaticBody3D" parent="Front" unique_id=528541237 instance=ExtResource("6_skmxq")]
+[node name="Heap_Bank_12" type="StaticBody3D" parent="Front" unique_id=1559790466 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9702957, 0, 0.2419219, 0, 1, 0, -0.2419219, 0, 0.9702957, 12.6, -1.62, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_13" type="Node3D" parent="Front" unique_id=1524267488 instance=ExtResource("29_8ya26")]
+[node name="Heap_Bank_13" type="Node3D" parent="Front" unique_id=741793145 instance=ExtResource("29_8ya26")]
 transform = Transform3D(0.9975641, 0, -0.06975647, 0, 1, 0, 0.06975647, 0, 0.9975641, 15.2, -0.98, 1.4)
 
-[node name="Heap_Bank_14" type="StaticBody3D" parent="Front" unique_id=1688826763 instance=ExtResource("6_skmxq")]
+[node name="Heap_Bank_14" type="StaticBody3D" parent="Front" unique_id=1020959420 instance=ExtResource("6_skmxq")]
 transform = Transform3D(0.9945219, 0, -0.104528464, 0, 1, 0, 0.104528464, 0, 0.9945219, 17.8, -1.6, 1.6)
 physics_material_override = SubResource("PhysicsMaterial_bbt74")
 
-[node name="Heap_Bank_15" type="StaticBody3D" parent="Front" unique_id=66022252 instance=ExtResource("31_4od7o")]
+[node name="Heap_Bank_15" type="StaticBody3D" parent="Front" unique_id=1964173787 instance=ExtResource("31_4od7o")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, 20.6, -0.8, 1.4)
 physics_material_override = SubResource("PhysicsMaterial_6mwbg")
 
-[node name="Machines" type="Node3D" parent="." unique_id=544887275]
+[node name="Machines" type="Node3D" parent="." unique_id=9622029]
 
 [node name="Magnet" type="Node3D" parent="Machines" unique_id=1995646117 instance=ExtResource("33_x07lf")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.4, 12.8, 0)
@@ -873,7 +879,7 @@ phase_offset_s = 4.0
 lamp_warn_color = Color(1, 0.65, 0.12, 1)
 lamp_active_color = Color(1, 0.5, 0.1, 1)
 
-[node name="Props" type="Node3D" parent="." unique_id=1515742899]
+[node name="Props" type="Node3D" parent="." unique_id=335887480]
 
 [node name="Crate" type="RigidBody3D" parent="Props" unique_id=1451019626 instance=ExtResource("41_d85wb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 0.02, 0)
@@ -949,7 +955,7 @@ linear_damp = 0.2
 angular_damp = 0.5
 metadata/material = "iron"
 
-[node name="CrateAnvil" type="RigidBody3D" parent="Props" unique_id=1185975749 instance=ExtResource("41_d85wb")]
+[node name="CrateAnvil" type="RigidBody3D" parent="Props" unique_id=860243523 instance=ExtResource("41_d85wb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.4, 0.14, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -966,7 +972,7 @@ kind = "crate"
 hp = 20.0
 metadata/material = "wood"
 
-[node name="Crate_1" type="RigidBody3D" parent="Props" unique_id=126925124 instance=ExtResource("41_d85wb")]
+[node name="Crate_1" type="RigidBody3D" parent="Props" unique_id=1275178424 instance=ExtResource("41_d85wb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.7, 0.02, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -983,7 +989,7 @@ kind = "crate"
 hp = 20.0
 metadata/material = "wood"
 
-[node name="Barrel_1" type="RigidBody3D" parent="Props" unique_id=1227747992 instance=ExtResource("44_v1ick")]
+[node name="Barrel_1" type="RigidBody3D" parent="Props" unique_id=821792392 instance=ExtResource("44_v1ick")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9, 5.22, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1022,7 +1028,7 @@ linear_damp = 0.2
 angular_damp = 0.5
 metadata/material = "iron"
 
-[node name="Junk" type="Node3D" parent="." unique_id=1317523612]
+[node name="Junk" type="Node3D" parent="." unique_id=1665574348]
 
 [node name="Bit" type="RigidBody3D" parent="Junk" unique_id=1764335993 instance=ExtResource("49_kd42u")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 0.17, 0)
@@ -1049,7 +1055,7 @@ angular_damp = 0.5
 metadata/material = "iron"
 
 [node name="Bit_2" type="RigidBody3D" parent="Junk" unique_id=1716222626 instance=ExtResource("51_r8o62")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9, 0.06, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.3, 1.48, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
@@ -1108,9 +1114,9 @@ linear_damp = 0.2
 angular_damp = 0.5
 metadata/material = "iron"
 
-[node name="Loot" type="Node3D" parent="." unique_id=1887942780]
+[node name="Loot" type="Node3D" parent="." unique_id=1712160430]
 
-[node name="Dust" type="GPUParticles3D" parent="." unique_id=1924862632]
+[node name="Dust" type="GPUParticles3D" parent="." unique_id=917586407]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0.6)
 amount = 500
 lifetime = 14.0
@@ -1120,57 +1126,65 @@ visibility_aabb = AABB(-20, -6, -4, 40, 13, 8)
 process_material = SubResource("ParticleProcessMaterial_i6u0n")
 draw_pass_1 = SubResource("QuadMesh_mraqd")
 
-[node name="Bounds" type="StaticBody3D" parent="." unique_id=766008700]
+[node name="Bounds" type="StaticBody3D" parent="." unique_id=71308572]
 
-[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=1749775241]
+[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=2015995499]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 10, 0)
 shape = SubResource("BoxShape3D_wr0v1")
 
-[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=386567770]
+[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=570833212]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 10, 0)
 shape = SubResource("BoxShape3D_8mgkj")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=1061036454]
+[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=1065469578]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.5, 0)
 shape = SubResource("BoxShape3D_06rg1")
 
-[node name="PitBottom" type="CollisionShape3D" parent="Bounds" unique_id=1083199571]
+[node name="PitBottom" type="CollisionShape3D" parent="Bounds" unique_id=721886410]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -9.25, 0)
 shape = SubResource("BoxShape3D_633sl")
 
-[node name="BackFloor" type="CollisionShape3D" parent="Bounds" unique_id=1289993413]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.7, -6.65)
+[node name="PitWallL" type="CollisionShape3D" parent="Bounds" unique_id=347312950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -4.8, 0)
 shape = SubResource("BoxShape3D_iaj5q")
 
-[node name="DeathZone" type="Area3D" parent="." unique_id=1976847380]
-
-[node name="Pit" type="CollisionShape3D" parent="DeathZone" unique_id=188347481]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -5.5, 0)
+[node name="PitWallR" type="CollisionShape3D" parent="Bounds" unique_id=1344821645]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, -4.8, 0)
 shape = SubResource("BoxShape3D_so3pp")
 
-[node name="Floor_20" type="CollisionShape3D" parent="DeathZone" unique_id=1491831011]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -14.5, 0)
+[node name="BackFloor" type="CollisionShape3D" parent="Bounds" unique_id=1476888624]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.7, -6.65)
 shape = SubResource("BoxShape3D_mf6uh")
 
-[node name="Spawns" type="Node3D" parent="." unique_id=1857938569]
+[node name="DeathZone" type="Area3D" parent="." unique_id=1596018906]
 
-[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=1323743429]
+[node name="Pit" type="CollisionShape3D" parent="DeathZone" unique_id=1598987094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -5.5, 0)
+shape = SubResource("BoxShape3D_j1oal")
+
+[node name="Floor_20" type="CollisionShape3D" parent="DeathZone" unique_id=352125439]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -14.5, 0)
+shape = SubResource("BoxShape3D_a3f1k")
+
+[node name="Spawns" type="Node3D" parent="." unique_id=1377131384]
+
+[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=222847213]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=539503141]
+[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=1737221295]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0.05, 0)
 
-[node name="Spawn2" type="Marker3D" parent="Spawns" unique_id=1432256930]
+[node name="Spawn2" type="Marker3D" parent="Spawns" unique_id=1333337398]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 5.25, 0)
 
-[node name="Spawn3" type="Marker3D" parent="Spawns" unique_id=909856712]
+[node name="Spawn3" type="Marker3D" parent="Spawns" unique_id=1716094668]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.4, 4.05, 0)
 
-[node name="LootCounter" type="CanvasLayer" parent="." unique_id=821570877]
+[node name="LootCounter" type="CanvasLayer" parent="." unique_id=1161005834]
 layer = 5
 script = ExtResource("56_g48oj")
 
-[node name="Text" type="Label" parent="LootCounter" unique_id=955718209]
+[node name="Text" type="Label" parent="LootCounter" unique_id=406115292]
 visible = false
 anchors_preset = 3
 anchor_left = 1.0

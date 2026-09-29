@@ -31,9 +31,11 @@
 ##                          над стартом — уступ Ledge на 5 м (опора M x=−16, x −18…−14) с кучей голов (спихнуть вниз)
 ##   ПРОПАСТЬ   x −9.5…−6.5 («провал в недра», 3 м): балка на цепях PitBeam (верх y=2, x −10…−6) продолжает скат, цепи — вверх
 ##                          из кадра (deco_chain_long); Area3D DeathZone/Pit с y=−3 (KO kind self — через площадку), тёплый
-##                          свет снизу, искры, марево; дно Bounds/PitBottom на y=−9
-##   ЦЕНТР      x −6.5…+10  открытый пол: у края пропасти — большой ящик ShippingCrate 80 кг (препятствие, столкнуть в провал
-##                          тяжело); паровой клапан SteamVent x=−2.8; над ним высоко — раструб желоба Chute (x −6, y 11);
+##                          свет снизу, искры, марево; шахта до дна: невидимые стенки Bounds/PitWallL/R (грань = торец пола),
+##                          дно Bounds/PitBottom на y=−9
+##   ЦЕНТР      x −6.5…+10  открытый пол: у края пропасти — большой ящик ShippingCrate 80 кг (x −6.2…−3.8, препятствие; кукла
+##                          тягой 480 Н его сдвигает — трение 128 Н при g = 2 — и может столкнуть в провал: дно его ловит), на нём
+##                          доска (кусок Bit); паровой клапан SteamVent x=−2.8; над ним высоко — раструб желоба Chute (x −6, y 11);
 ##                          спавны P1 x 0.6 / P2 x 4.4 (как куклы в playground_scrap.tscn); висящий островок Island
 ##                          (балка на цепях, верх y 5.2, x 0.5…4.5) — спавн 2 и бочка сверху; магнит на цепи Magnet (подвес x 7.4, y 12.8, полюс y ≈ 3.6, качка ±11°:
 ##                          x 5.65…9.15) над железной бочкой 40 кг, рядом тележка 30 кг; лёгкие ящики/бочки у пола — метать
@@ -60,7 +62,8 @@
 ##   │   ReinforcedCrate (их позиции переопределяет scenes/playground_arm.tscn)
 ##   ├── Node3D "Junk": свободные куски bit_* (и куски, высыпанные желобом), "Loot": лут из разбитых пропсов
 ##   ├── GPUParticles3D "Dust": пыль по всему объёму
-##   ├── StaticBody3D "Bounds": стены x=±HALF_W, потолок CEIL_Y, дно пропасти PitBottom, страховочный BackFloor под задником
+##   ├── StaticBody3D "Bounds": стены x=±HALF_W, потолок CEIL_Y, стенки шахты пропасти PitWallL/R, дно PitBottom, страховочный
+##   │   BackFloor под задником
 ##   ├── Area3D "DeathZone": Pit (x пропасти, y −8…−3) + страховочный Floor (y −15)
 ##   ├── Node3D "Spawns": Marker3D Spawn0..3 (пол центра ×2, островок, ярус R1)
 ##   └── CanvasLayer "LootCounter" (scenes/ui/run_inventory_counter.gd): счётчик материалов RunInventory в правом нижнем углу
@@ -88,6 +91,9 @@ const DECK_UNDER := 0.38        # низ балки настила под пов
 const PIT_X0 := -9.5            # пропасть: между модулями пола
 const PIT_X1 := -6.5
 const PIT_KO_Y := -3.0          # верх зоны KO
+const PIT_BOTTOM_Y := -9.0      # верх дна шахты провала (Bounds/PitBottom)
+const SHIP_X := -5.0            # большой ящик у края пропасти (prop_large_shipping_crate 2.4 × 1.4: x −6.2…−3.8)
+const SHIP_H := 1.4
 const BEAM_Y := 2.0             # верх балки на цепях над пропастью = верх ската
 const ISLAND_X := 2.5           # висящий островок (балка на цепях) в центре: x 0.5…4.5
 const ISLAND_Y := 5.2
@@ -500,7 +506,7 @@ func _props() -> void:
 		["prop_wooden_crate", "CrateAnvil", PRESS_X - 0.2, 0.12, "wood"],
 		["prop_wooden_crate", "Crate", 13.7, 0.0, "wood"],
 		["prop_wooden_barrel", "Barrel", ISLAND_X + 1.4, ISLAND_Y, "wood"],
-		["prop_large_shipping_crate", "ShippingCrate", -5.0, 0.0, "wood"],
+		["prop_large_shipping_crate", "ShippingCrate", SHIP_X, 0.0, "wood"],
 		["prop_metal_barrel_dented", "MetalBarrel", R1_X + 1.3, DECK_S, "iron"],
 	]
 	for it in items:
@@ -509,12 +515,15 @@ func _props() -> void:
 
 
 ## Свободный хлам на плоскости боя: несколько кусков bit_* — толкаются, не мешают; железные (meta material) тянет магнит.
+## Куски не вставлять в пропсы и статику (tests/scrap_machines_probe: props_start_clear): тело внутри другого застревает и при
+## ударе выстреливает. Доска (0.89 × 0.08 м) лежала на полу в x −3.9 — на 0.55 м внутри большого ящика (x −6.2…−3.8); между
+## ящиком и патрубком пара (x −3.22) ей места нет — лежит на ящике (верх 0.02 + SHIP_H).
 func _junk() -> void:
 	var j := _group("Junk")
 	var bits := [
 		["bit_doll_head_cracked", -1.9, 0.15, "wood"],
 		["bit_gear_medium", 8.55, 0.25, "iron"],
-		["bit_scrap_board", -3.9, 0.04, "wood"],
+		["bit_scrap_board", SHIP_X - 0.3, 0.02 + SHIP_H + 0.04, "wood"],
 		["bit_helmet", 6.9, 0.13, "iron"],
 		["bit_bolt", 8.2, 0.1, "iron"],
 		["bit_doll_head_sad", R1_X - 0.8, DECK_S + 0.15, "wood"],
@@ -597,7 +606,13 @@ func _bounds() -> void:
 	_box_shape(b, "WallR", HALF_W, HALF_W + 1.0, -10.0, 30.0, 0.0, 8.0)
 	_box_shape(b, "Ceiling", -HALF_W - 1.0, HALF_W + 1.0, CEIL_Y, CEIL_Y + 1.0, 0.0, 8.0)
 	# дно пропасти: всё, что упало (оружие, пропсы, части KO-нутой куклы), ложится здесь, а не падает бесконечно
-	_box_shape(b, "PitBottom", PIT_X0 - 1.5, PIT_X1 + 1.5, -9.5, -9.0, 0.0, 6.0)
+	_box_shape(b, "PitBottom", PIT_X0 - 1.5, PIT_X1 + 1.5, PIT_BOTTOM_Y - 0.5, PIT_BOTTOM_Y, 0.0, 6.0)
+	# стенки шахты: под плитами пола (низ −0.5) провал был открыт вбок — ящик 80 кг, упавший в провал со скоростью вбок, пролетал
+	# под полом мимо края дна и падал бесконечно (29.09: x −12.7, y −9.7; tests/scrap_match_probe pit_crate_caught). Грань стенки —
+	# торец пола (x PIT_X0 / PIT_X1), верх внутри плиты (−0.1 < 0): на ходовой поверхности новых рёбер нет; с зоной KO (±0.1 м
+	# внутрь) не пересекается
+	_box_shape(b, "PitWallL", PIT_X0 - 1.0, PIT_X0, PIT_BOTTOM_Y - 0.5, -0.1, 0.0, 6.0)
+	_box_shape(b, "PitWallR", PIT_X1, PIT_X1 + 1.0, PIT_BOTTOM_Y - 0.5, -0.1, 0.0, 6.0)
 	# под задним планом (z −12…−1.3): спящие куски на кучах вала (SR), если их разбудят, падают сюда (ниже видимой земли)
 	_box_shape(b, "BackFloor", -HALF_W - 4.0, HALF_W + 4.0, -2.9, -2.5, -6.65, 10.7)
 	var dz := Area3D.new()

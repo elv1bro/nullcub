@@ -10,7 +10,8 @@
 ## в body_entered — часть живой чужой куклы → скорость точки контакта предмета (v + ω × r, по скоростям ДО шага физики — они
 ## пишутся в _physics_process) и части жертвы (DollCombat.prev_vel, иначе текущая); v = min(|v_rel · n|, max собственных по n);
 ## бьёт, только если предмет быстрее части (жертва, сама налетевшая на ящик, — не удар). Урон Damage.compute(масса предмета, v,
-## BodyMult 1, WeaponMult PROP_WEAPON_MULT, TargetMult — в голову ×HEAD_HIT_MULT), кап массы Tuning.MASS_CAP тот же, что у оружия.
+## BodyMult 1, WeaponMult PROP_WEAPON_MULT, TargetMult — в голову ×HEAD_HIT_MULT), масса — как у оружия: с 29.09 без MASS_CAP,
+## мягкий потолок Tuning.WEAPON_MASS_SOFT_CAP (Damage.weapon_mass: ящик 10 кг — 10 кг, 30-кг хлам — 17.3 кг).
 ## Применяется в следующем _physics_process (в коллбэке физики тела не трогаем): статистика атакующего (damage_dealt, hardest_hit,
 ## weapon_hits), hit_meta, take_damage, отброс Damage.knockback_impulse (+KNOCKBACK_MIN, как удар куклой), стан Damage.stun_seconds,
 ## щепки ImpactFx, Match.on_hit (надписи, hit_feel, HUD). Пока Match не в бою (combat_active = false) — не бьёт.
@@ -20,7 +21,7 @@ extends Node
 
 const WINDOW_S := 2.0              # столько секунд после отпускания предмет засчитывается бросившему (контракт §5: ~2 с)
 const VICTIM_COOLDOWN_S := 0.5     # одна жертва от одного броска — не чаще (ящик, лёгший на куклу, не бьёт каждый тик)
-const PROP_WEAPON_MULT := 1.0      # WeaponMult пропса: урон только от массы (кап 4 кг) и скорости — ящик 10 кг на 6 м/с ≈ 17 HP
+const PROP_WEAPON_MULT := 1.0      # WeaponMult пропса: урон только от массы (Damage.weapon_mass) и скорости — ящик 10 кг на 4 м/с ≈ 24 HP
 const MAX_CONTACTS := 8            # как DollCombat.MAX_CONTACTS: лежащий на полу ящик держит 4 точки, новый контакт не вытесняется
 const FX_STRENGTH_BASE := 4.0      # как DollCombat: щепки ∝ урону
 const FX_STRENGTH_PER_HP := 0.4
@@ -195,7 +196,7 @@ func _on_body_entered(other: Node) -> void:
 	var closing := absf(rel.dot(nrm)) if found else rel.length()
 	var own := maxf(absf(v_item.dot(nrm)), absf(v_part.dot(nrm))) if found else maxf(v_item.length(), v_part.length())
 	closing = minf(closing, own)
-	var dmg := Damage.compute(item.mass, closing, 1.0, PROP_WEAPON_MULT, 1.0, 1.0, Damage.target_mult_of(part.name))
+	var dmg := Damage.compute(item.mass, closing, 1.0, PROP_WEAPON_MULT, 1.0, 1.0, Damage.target_mult_of(part.name), true)
 	if dmg <= 0.0:
 		return
 	var key := victim.get_instance_id()
