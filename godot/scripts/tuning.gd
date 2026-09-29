@@ -10,12 +10,17 @@ const SUDDEN_DEATH_STEP_S := 10.0
 const BATTLE_HARD_TIMEOUT_S := 180.0
 const SPAWN_GRACE_S := 0.7
 
-# --- урон (CONCEPT.md §8, план 06): Damage = min(m, MASS_CAP) × max(0, v − MIN_IMPACT_SPEED) × DAMAGE_COEF × BodyMult × TargetMult × WeaponMult × combo ---
+# --- урон (CONCEPT.md §8, план 06): Damage = m_eff × max(0, v − MIN_IMPACT_SPEED) × DAMAGE_COEF × BodyMult × TargetMult × WeaponMult × combo ---
 # Калибровка (scripts/core/damage.gd печатает таблицу; tests/combat_gate.gd проверяет полосы): торс о торс 3 м/с ≈ 2.9 (1–3),
 # кисть в торс 10 м/с ≈ 8.1 (8–15), молот 8 м/с ≈ 29.6 (20–30), торс в голову 15 м/с ≈ 38 (30–50).
 const MIN_IMPACT_SPEED := 1.5           # м/с относительной скорости по нормали, ниже урона нет
 const DAMAGE_COEF := 0.95               # HP на (кг·м/с) сверх порога
-const MASS_CAP := 4.0                   # кг; торс 12 и молот 6 не «давят массой» — иначе полосы концепта не сходятся
+const MASS_CAP := 4.0                   # кг; только ЧАСТИ ТЕЛА (торс 12 не «давит массой» — иначе полосы концепта не сходятся) и окружение
+# Потолок массы 29.09 (решение автора «сделай»): оружие (стандартное, крафтовое, брошенный пропс) MASS_CAP не режется — тяжелее
+# головка, сильнее удар (Damage.weapon_mass). Кап стандартного оружия перенесён в его множитель: WEAPON[id].damage_mult × 4/масса
+# для масс > 4 кг (молот 6 кг: 1.2 → 0.8), урон стандартного оружия прежний (combat_gate). Выше мягкого потолка масса растёт по
+# корню S·√(m/S): 30-кг хлам считается как 17.3 кг, 6.5-кг кистень — как есть.
+const WEAPON_MASS_SOFT_CAP := 10.0      # кг
 const DAMAGE_MAX := 60.0                # HP за один удар; «экстремальное столкновение 30–50+», один удар не снимает 100
 # Голова как бьющая часть 0.35 (ниже торса 0.5): голова — уязвимая цель (×1.5), а не таран; оружие скилла — конечности по
 # инерции (Hand 2.0). В CONCEPT_GAP предлагалось 1.5: тогда обычный встречный разбег давал обоим по 40 HP, и таран головой бил
@@ -32,6 +37,8 @@ const ANNOUNCE_MIN_DAMAGE := 5.0        # надписи HEAD/BODY BLOW толь
 const ENV_DAMAGE_ENABLED := false   # решение автора 28.09: стены/пол/пропсы урона не наносят (статистика wall_collisions остаётся)
 const ENV_MIN_IMPACT_SPEED := 6.0       # м/с; падение с яруса — 0, влёт головой в стену на 15 м/с ≈ 26 HP
 const ENV_DAMAGE_MULT := 0.5
+const TEAM_DAMAGE_MULT := 0.25          # урон между куклами одной непустой Doll.team (PvE-волны: враги толкают друг друга в пропасть,
+                                        # но почти не ранят); толчки/отброс/стан — полные
 const ENV_WALL_COLLISION_SPEED := 4.0   # м/с: с этой скорости контакт со статикой идёт в stats.wall_collisions (Wall Inspector)
 const WEAPON_ATTACKER_WINDOW_S := 3.0   # брошенное оружие засчитывается бывшему владельцу столько секунд, дальше «environment»
 
@@ -220,9 +227,85 @@ const PLAYER_COLORS := [Color("2f6fde"), Color("d9342b"), Color("2e9e4f"), Color
 # --- оружие (CONCEPT.md §11, план 07 по R16): масса кг, множитель урона, длина м от хвата до дальнего конца ---
 # Массы пишет в сцены tools/build_weapon_scenes.gd; damage_mult/length читает scenes/weapons/weapon.gd.
 const WEAPON := {
-	"hammer": {"mass": 6.0, "damage_mult": 1.2, "length": 1.05},
+	"hammer": {"mass": 6.0, "damage_mult": 0.8, "length": 1.05},   # 1.2 × 4/6: до 29.09 масса резалась MASS_CAP 4 кг — урон тот же
 	"mace": {"mass": 4.0, "damage_mult": 1.1, "length": 0.97},
 	"sword": {"mass": 1.5, "damage_mult": 1.6, "length": 0.93},
 	"axe": {"mass": 3.0, "damage_mult": 1.3, "length": 0.90},
 	"pan": {"mass": 2.0, "damage_mult": 1.5, "length": 0.80},
 }
+
+# --- удар-презентация и крит (docs/plan-demo/HIT_FX.md, 29.09): уровни light / heavy / crit / ko / ko_crit ---
+# Оценка удара score = урон × (1 + CRIT_HEAD_BONUS·[в голову]) × (1 + CRIT_DASH_BONUS·[бьющий в рывке]) × (1 + CRIT_COMBO_BONUS·[комбо ≥ N]).
+# Урон уже включает MASS_CAP (тело) / WEAPON_MASS_SOFT_CAP (оружие), HEAD_HIT_MULT и комбо; бонусы — «стиль» удара. Калибровка на ботах match_probe (29.09, 98 ударов,
+# 87.5 с боя на трёх площадках): heavy 15 (раз в ~6 с), crit 3 + ko_crit 1 (раз в ~22 с), light 77, ko 2.
+# Перекалибровка 29.09 (вечер, tests/hitfx_core_probe: боты match_probe, 8 матчей до KO × Void/Руины/Мастерская × 2 сида, ~2100 с
+# боя, ~1350 ударов): после правок куклы за день боты бьют слабее (95-й перцентиль урона ~12 HP), и с засухой 40 с × 0.8 / MIN 16
+# крит выходил раз в 57–68 с (Void — раз в 96 с). Основной порог 22 оставлен: сильный удар человека — крит, частоту держат кулдауны.
+# Засуха короче и глубже: 15 с без крита → порог 22 × 0.5 = 11 при уроне ≥ 10 — вялый бой тоже получает кинематограф (первый
+# крепкий удар после паузы). Итог: crit + ko_crit раз в 35–48 с (8 матчей × сид), 30.6 с в пробе по умолчанию (6 матчей × сиды 29, 7),
+# heavy 12–15 % (полосы проекта 15–45 с, 5–30 %).
+# v2 «честный крит» (HIT_FX.md §11.1, критик v1: 56 % критов давала засуха, 18 из 64 — удары 10–14 HP): CRIT_MIN_DAMAGE 14 — слабее
+# никогда не крит; засуха × 0.75 и только «стильным» ударам (голова, рывок, оружие, комбо ≥ 3); CRIT_SCORE 22 → 18 (2 × heavy, топ ~3 %
+# ударов ботов), иначе честных критов у ботов раз в 45–55 с. Итог (боты, 4 площадки × 2 сида, ~1850 с): раз в 35–39 с, засуха 2–11 %,
+# слабейший крит 14.4 HP, heavy 14 %.
+# Для людей — перепроверить после ручной игры автора (HIT_FX.md §6).
+const HITFX_ENABLED := true             # Match создаёт HitFxDirector и SfxDirector; false — только старый hit_feel
+const HITFX_HEAVY_SCORE := 9.0          # score ≥ — heavy (ниже — light)
+const CRIT_ENABLED := true              # false — уровни не выше heavy (и ko без крита)
+const CRIT_SCORE := 18.0                # score ≥ — crit («CRUSHING BLOW!»); v2: было 22 (§11.1) — 2 × heavy
+const CRIT_MIN_DAMAGE := 15.0           # HP: слабее — никогда не крит (и не ko_crit) при любых бонусах и засухе; v2: 10 → 14 (§11.1), v3: 14 → 15 (§12.4)
+const CRIT_HEAD_BONUS := 0.25
+const CRIT_DASH_BONUS := 0.15
+const CRIT_COMBO_BONUS := 0.1
+const CRIT_COMBO_N := 3                 # комбо атакующего (n нового удара) с этого числа
+const CRIT_KINDS := ["head", "body", "weapon"]   # environment/self и DOUBLE BLOW (второе тело клинча) критом не бывают
+const CRIT_MIN_FIGHT_S := 5.0           # с от FIGHT!: первая сшибка — не кинематограф
+const CRIT_COOLDOWN_S := 8.0            # с боя (Match.fight_time) между критами в матче — не чаще раза в 8 с
+const CRIT_ATTACKER_COOLDOWN_S := 15.0  # с боя между критами одного атакующего
+const CRIT_DROUGHT_S := 15.0            # без крита столько с боя — порог × CRIT_DROUGHT_SCORE_MULT, только «стильным» ударам (HitTier.stylish)
+const CRIT_DROUGHT_SCORE_MULT := 0.75   # 18 × 0.75 = 13.5 < CRIT_MIN_DAMAGE: засуха лишь подтягивает стильные удары ≥ 15 HP со score < 18
+const CRIT_KO_GAP_S := 2.0              # ko_crit: кулдауны не действуют, но от прошлого крита не меньше столько с боя
+# v3 (HIT_FX.md §12.4, критик v2: кулдаун атакующего 15 с отдавал в heavy удары 25–41 HP, а критом становились 14–16 HP): «сокрушительный»
+# удар — score ≥ CRIT_BYPASS_SCORE или урон ≥ CRIT_BYPASS_DAMAGE — крит сквозь кулдауны 8 / 15 с, если от прошлого крита ≥ CRIT_BYPASS_GAP_S боя
+# (кинематограф 1.3 с реального времени — ≈ 0.4 с боя — к тому времени кончился). Обход снимает и CRIT_MIN_FIGHT_S, и исключение DOUBLE BLOW
+# (у ботов 40–50 HP оружием на 1-й секунде и молот 36 HP вторым телом клинча оставались heavy); CRIT_MIN_DAMAGE и CRIT_KINDS действуют.
+# Обход добавляет ~6 критов на 1800 с боя ботов; CRIT_MIN_DAMAGE 14 → 15 возвращает их из нижнего края (стильные 14–15 HP) и держит
+# частоту в середине полосы 25–45 с (боты, 4 площадки × 2 пары сидов, §12.4).
+const CRIT_BYPASS_SCORE := 27.0         # 1.5 × CRIT_SCORE
+const CRIT_BYPASS_DAMAGE := 25.0        # HP: удар такой силы не остаётся heavy из-за кулдауна
+const CRIT_BYPASS_GAP_S := 4.0          # с боя от прошлого крита (любого атакующего)
+const CRIT_KNOCKBACK_MULT := 1.6        # отлёт крита: скорость ЦМ жертвы вдоль удара × это после обычного отброса,
+const CRIT_LAUNCH_MIN_SPEED := 5.5      # м/с, но не меньше (≈ 3 H/с) ...
+const CRIT_FLIGHT_MAX_SPEED := 7.5      # ... и не больше (≈ 4 H/с): свой клэмп полёта вместо FLIGHT_MAX_SPEED на CRIT_FLIGHT_S
+const CRIT_FLIGHT_S := 1.6              # с (физических) окна крит-полёта: клэмп CRIT_FLIGHT_MAX_SPEED, дамп CRIT_FLIGHT_LINEAR_DAMP до land()
+const CRIT_FLIGHT_LINEAR_DAMP := 1.0    # дамп всех частей в крит-полёте (обычный 1.8/1.5): 7.5 м/с → стена Void за ~1 с
+const CRIT_ATTACKER_STOP_SPEED := 1.5   # м/с: v2 — ЦМ атакующего вдоль отлёта не быстрее (не летит следом за жертвой, не дожимает её)
+const CRIT_ATTACKER_LOCK_S := 0.5       # с (физических): тяга атакующего после крита выключена, рывок снят (почти всё — внутри замедления)
+const HEAVY_ATTACKER_BRAKE_SPEED := 2.5 # м/с: v3 (HIT_FX.md §12.2) — на heavy ЦМ атакующего вдоль отлёта в момент удара не быстрее
+const HEAVY_ATTACKER_BRAKE_S := 0.0     # с (физических) окна тормоза; 0 — только мгновенный клэмп. Окно 0.18 с разлёт не увеличило
+                                        # (отдача DollCombat уже гасит сближение; в клинче тормоз держит жертву: −0.28…+0.04 м на +400 мс)
+const CRIT_KO_LAUNCH_SPEED := 3.0       # м/с: ko_crit — части разорванной куклы получают это вдоль удара сверх KO_BURST_SPEED
+const CRIT_SLOWMO_SCALE := 0.3          # после крупного плана: отлёт в замедлении (реальные секунды, Match.request_time_scale)
+const CRIT_SLOWMO_S := 0.55
+const HITFX_HEAVY_STOP_S := 0.083       # v2: было 0.05 (5 кадров при 60 fps); hit stop heavy-удара ниже HIT_STOP_DAMAGE_1 (там уже 80/120 мс), time_scale HIT_STOP_TIME_SCALE
+const HITFX_TIME_SCALE_MIN := 0.02      # «стоп-кадр» не 0: Match._process считает реальное время как delta / time_scale
+const HITFX_SLAM_SPEED := 4.0           # м/с: касание статики с этой скорости → Match.env_slam (пыль/звук, урона нет)
+const HITFX_SLAM_SHAKE_SPEED := 6.0     # м/с: с этой скорости удар о стену/пол ещё и трясёт камеру
+# Доступность (фоточувствительность): значения по умолчанию; HitFxDirector копирует их в свои var (меню 11 меняет на лету).
+const HITFX_FLASH_INTENSITY := 1.0      # 0–1: вспышки, impact frame, белый кадр крита
+const HITFX_SHAKE_INTENSITY := 1.0      # 0–1: тряска, крен и наезд камеры
+const HITFX_IMPACT_FRAMES := true       # кадры инверсии (heavy/ko/crit); false — без них
+const HITFX_CRIT_CINEMATIC := true      # false — крит без крупного плана/рентгена: надпись, отлёт, замедление
+const HITFX_MAX_FLASHES_PER_S := 3      # полноэкранных вспышек/инверсий не больше 3 в секунду (WCAG 2.3.1)
+const HITFX_SFX_VOLUME_DB := 0.0        # громкость шин SFX и SFX_Crit (SfxDirector, дБ; 0 — как смикшировано; −80 — без звука ударов)
+# Пресеты FX для игрока (v2, HIT_FX.md §11.2): F10 на площадке — full → reduced → off. FxPreset.apply пишет flash/shake/impact_frames/
+# crit_cinematic в HitFxDirector (CritCinematic читает их у директора); time_fx = false — Match.request_time_scale отказывает всем тегам,
+# кроме ko* (heavy_stop, стоп-кадр и замедление крита), и старый hit stop 80/120 мс не ставится; KO slow-mo остаётся всегда.
+# Щепки, пыль, звук и крит-отлёт (баланс) — во всех пресетах.
+const HITFX_PRESETS := {
+	"full": {"flash": HITFX_FLASH_INTENSITY, "shake": HITFX_SHAKE_INTENSITY, "impact_frames": HITFX_IMPACT_FRAMES, "crit_cinematic": HITFX_CRIT_CINEMATIC, "time_fx": true},
+	"reduced": {"flash": 0.4, "shake": 0.5, "impact_frames": false, "crit_cinematic": false, "time_fx": true},   # крит без ката: надпись, стоп 80 мс, замедление 0.4 с
+	"off": {"flash": 0.0, "shake": 0.0, "impact_frames": false, "crit_cinematic": false, "time_fx": false},
+}
+const HITFX_PRESET_ORDER := ["full", "reduced", "off"]
+const HITFX_PRESET_DEFAULT := "full"

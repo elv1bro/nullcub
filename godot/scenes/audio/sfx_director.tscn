@@ -1,0 +1,240 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/audio/sfx_director.gd" id="1_jr6k6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/tok/wood_tok_01.ogg" id="2_ijp2n"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/tok/wood_tok_02.ogg" id="3_fmlow"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/tok/wood_tok_03.ogg" id="4_70mg8"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/tok/wood_tok_04.ogg" id="5_nnhsm"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/tok/wood_tok_05.ogg" id="6_m13bm"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/tok/wood_tok_06.ogg" id="7_rgg7l"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/tok/wood_tok_07.ogg" id="8_mbe3l"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/tok/wood_tok_08.ogg" id="9_xxs5g"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/punch/hit_28.ogg" id="10_vni8c"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/punch/hit_34.ogg" id="11_lgy6b"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/punch/qubodup_punch_01.ogg" id="12_xu8p5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/punch/qubodup_punch_02.ogg" id="13_djf2r"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/punch/qubodup_punch_03.ogg" id="14_s3877"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/punch/qubodup_punch_04.ogg" id="15_ak3xd"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/punch/qubodup_punch_05.ogg" id="16_j8arw"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crack/wood_crack_01.ogg" id="17_awmje"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crack/wood_crack_02.ogg" id="18_qphvl"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crack/wood_crack_03.ogg" id="19_abxix"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crack/wood_crack_04.ogg" id="20_1wgil"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/hit_19_low.ogg" id="21_r6u7l"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/hit_35_low.ogg" id="22_v6nfy"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/thud_01.ogg" id="23_hapx2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/thud_02.ogg" id="24_7fyed"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/thud_03.ogg" id="25_wfc30"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/boom/boom_01.ogg" id="26_18opq"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/boom/boom_02.ogg" id="27_d6v2i"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/zap_low/zap_1.ogg" id="28_2gxc7"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/zap_low/zap_2.ogg" id="29_ew7mh"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/whistle/phaser_up_1.ogg" id="30_kxoil"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/whistle/phaser_up_3.ogg" id="31_6n8cs"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/whoosh/whoosh_01.ogg" id="32_084s5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/whoosh/whoosh_02.ogg" id="33_la1vu"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/whoosh/whoosh_03.ogg" id="34_n73bv"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/whoosh/whoosh_04.ogg" id="35_uauhs"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/inhale/inhale_rev_01.ogg" id="36_jej1h"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/inhale/inhale_rev_02.ogg" id="37_625po"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/fiber_creak_01.ogg" id="38_07ia0"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/fiber_creak_02.ogg" id="39_ytl75"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crash/crash_01.ogg" id="40_nfnlg"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crash/crash_02.ogg" id="41_fnt0l"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shatter/shatter_01.ogg" id="42_luirr"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/shatter/shatter_02.ogg" id="43_7hwio"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ko/ko_01.ogg" id="44_sbddt"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ko/ko_02.ogg" id="45_ry36n"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/gong/fight_gong.ogg" id="46_6mapq"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crowd_cheer/crowd_cheer.ogg" id="47_xlwws"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crowd_oof/crowd_oof_01.ogg" id="48_q5ee3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/crowd_oof/crowd_oof_02.ogg" id="49_14y7b"]
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_41u6h"]
+resource_name = "tok"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 8
+stream_0/stream = ExtResource("2_ijp2n")
+stream_1/stream = ExtResource("3_fmlow")
+stream_2/stream = ExtResource("4_70mg8")
+stream_3/stream = ExtResource("5_nnhsm")
+stream_4/stream = ExtResource("6_m13bm")
+stream_5/stream = ExtResource("7_rgg7l")
+stream_6/stream = ExtResource("8_mbe3l")
+stream_7/stream = ExtResource("9_xxs5g")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_k65se"]
+resource_name = "punch"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 7
+stream_0/stream = ExtResource("10_vni8c")
+stream_1/stream = ExtResource("11_lgy6b")
+stream_2/stream = ExtResource("12_xu8p5")
+stream_3/stream = ExtResource("13_djf2r")
+stream_4/stream = ExtResource("14_s3877")
+stream_5/stream = ExtResource("15_ak3xd")
+stream_6/stream = ExtResource("16_j8arw")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_prput"]
+resource_name = "crack"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 4
+stream_0/stream = ExtResource("17_awmje")
+stream_1/stream = ExtResource("18_qphvl")
+stream_2/stream = ExtResource("19_abxix")
+stream_3/stream = ExtResource("20_1wgil")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_tt30j"]
+resource_name = "thud"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 5
+stream_0/stream = ExtResource("21_r6u7l")
+stream_1/stream = ExtResource("22_v6nfy")
+stream_2/stream = ExtResource("23_hapx2")
+stream_3/stream = ExtResource("24_7fyed")
+stream_4/stream = ExtResource("25_wfc30")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_pqpuj"]
+resource_name = "boom"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("26_18opq")
+stream_1/stream = ExtResource("27_d6v2i")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_dvs1f"]
+resource_name = "zap_low"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("28_2gxc7")
+stream_1/stream = ExtResource("29_ew7mh")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_v543j"]
+resource_name = "whistle"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("30_kxoil")
+stream_1/stream = ExtResource("31_6n8cs")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_88r8m"]
+resource_name = "whoosh"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 4
+stream_0/stream = ExtResource("32_084s5")
+stream_1/stream = ExtResource("33_la1vu")
+stream_2/stream = ExtResource("34_n73bv")
+stream_3/stream = ExtResource("35_uauhs")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_bnyba"]
+resource_name = "inhale"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("36_jej1h")
+stream_1/stream = ExtResource("37_625po")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_r4m5d"]
+resource_name = "creak"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("38_07ia0")
+stream_1/stream = ExtResource("39_ytl75")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_f4sde"]
+resource_name = "crash"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("40_nfnlg")
+stream_1/stream = ExtResource("41_fnt0l")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_vra24"]
+resource_name = "shatter"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("42_luirr")
+stream_1/stream = ExtResource("43_7hwio")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_qrvgt"]
+resource_name = "ko"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("44_sbddt")
+stream_1/stream = ExtResource("45_ry36n")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_2kxto"]
+resource_name = "gong"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 1
+stream_0/stream = ExtResource("46_6mapq")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_osypj"]
+resource_name = "crowd_cheer"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 1
+stream_0/stream = ExtResource("47_xlwws")
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_vk5n0"]
+resource_name = "crowd_oof"
+random_pitch = 1.08
+random_volume_offset_db = 1.5
+streams_count = 2
+stream_0/stream = ExtResource("48_q5ee3")
+stream_1/stream = ExtResource("49_14y7b")
+
+[node name="SfxDirector" type="Node" unique_id=554703421]
+script = ExtResource("1_jr6k6")
+layers = Dictionary[String, AudioStreamRandomizer]({
+"boom": SubResource("AudioStreamRandomizer_pqpuj"),
+"crack": SubResource("AudioStreamRandomizer_prput"),
+"crash": SubResource("AudioStreamRandomizer_f4sde"),
+"creak": SubResource("AudioStreamRandomizer_r4m5d"),
+"crowd_cheer": SubResource("AudioStreamRandomizer_osypj"),
+"crowd_oof": SubResource("AudioStreamRandomizer_vk5n0"),
+"gong": SubResource("AudioStreamRandomizer_2kxto"),
+"inhale": SubResource("AudioStreamRandomizer_bnyba"),
+"ko": SubResource("AudioStreamRandomizer_qrvgt"),
+"punch": SubResource("AudioStreamRandomizer_k65se"),
+"shatter": SubResource("AudioStreamRandomizer_vra24"),
+"thud": SubResource("AudioStreamRandomizer_tt30j"),
+"tok": SubResource("AudioStreamRandomizer_41u6h"),
+"whistle": SubResource("AudioStreamRandomizer_v543j"),
+"whoosh": SubResource("AudioStreamRandomizer_88r8m"),
+"zap_low": SubResource("AudioStreamRandomizer_dvs1f")
+})
+
+[node name="Voice00" type="AudioStreamPlayer" parent="." unique_id=1151994224]
+
+[node name="Voice01" type="AudioStreamPlayer" parent="." unique_id=1524599027]
+
+[node name="Voice02" type="AudioStreamPlayer" parent="." unique_id=1604355897]
+
+[node name="Voice03" type="AudioStreamPlayer" parent="." unique_id=2131917298]
+
+[node name="Voice04" type="AudioStreamPlayer" parent="." unique_id=678344375]
+
+[node name="Voice05" type="AudioStreamPlayer" parent="." unique_id=421203914]
+
+[node name="Voice06" type="AudioStreamPlayer" parent="." unique_id=1058566076]
+
+[node name="Voice07" type="AudioStreamPlayer" parent="." unique_id=1228934358]
+
+[node name="Voice08" type="AudioStreamPlayer" parent="." unique_id=1332076229]
+
+[node name="Voice09" type="AudioStreamPlayer" parent="." unique_id=1009667670]
+
+[node name="Voice10" type="AudioStreamPlayer" parent="." unique_id=851483054]
+
+[node name="Voice11" type="AudioStreamPlayer" parent="." unique_id=2134131370]

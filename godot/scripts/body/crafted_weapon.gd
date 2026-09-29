@@ -14,8 +14,8 @@
 ## Сборка — в _ready() ДО Weapon._ready() (тот собирает shapes/Model из детей и читает Tuning.WEAPON[weapon_id]); после
 ## super._ready() damage_mult и length перезаписываются своими (в Tuning.WEAPON крафтового id нет — там были бы 1.0 и 0.0).
 ## Сцена scenes/body/crafted_weapon.tscn (tools/build_craft_parts.gd), пресеты data/body/weapons/<id>.tres.
-## Урон ∝ масса × скорость, но Damage.compute режет массу Tuning.MASS_CAP (4 кг): выгоду тяжелее 4 кг видно только через
-## скорость (длина рычага), не через массу — хук BODY_CRAFT.md §6 (tests/craft_probe.gd печатает, где это съедает разницу).
+## Урон ∝ масса × скорость. С 29.09 масса оружия MASS_CAP (4 кг) не режется (Damage.weapon_mass, мягкий потолок
+## Tuning.WEAPON_MASS_SOFT_CAP 10 кг): тяжелее головка — сильнее удар при той же скорости (BODY_CRAFT.md §6, tests/hitfx_core_probe).
 class_name CraftedWeapon
 extends Weapon
 

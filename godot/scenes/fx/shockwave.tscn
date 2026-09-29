@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/fx/shockwave.gd" id="1_sw"]
+[ext_resource type="Shader" path="res://scenes/fx/shaders/shockwave.gdshader" id="2_sh"]
+
+[sub_resource type="ShaderMaterial" id="Mat"]
+render_priority = 8
+shader = ExtResource("2_sh")
+shader_parameter/colour = Color(1, 1, 1, 0.8)
+shader_parameter/progress = 0.0
+shader_parameter/thickness = 0.16
+shader_parameter/arc_dir = Vector2(0, 0)
+shader_parameter/distort = 0.012
+
+[sub_resource type="QuadMesh" id="Quad"]
+size = Vector2(2, 2)
+
+[node name="Shockwave" type="MeshInstance3D"]
+cast_shadow = 0
+material_override = SubResource("Mat")
+mesh = SubResource("Quad")
+script = ExtResource("1_sw")

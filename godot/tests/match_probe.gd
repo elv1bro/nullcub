@@ -13,11 +13,14 @@
 ##   sd=1 — режим Sudden Death: time_limit_s = 3, куклы стоят; проверки sd_phase, sd_hammer (площадка уронила молот на шаге
 ##   SUDDEN_DEATH_HEAVY_WEAPON_STEP), sd_bridges (RopeBridge.break_apart на шаге SUDDEN_DEATH_BREAK_PLATFORMS_STEP; только Руины),
 ##   sd_stability (Doll.stability_mult по шагу), sd_no_damage (стоящие куклы без урона), hud_sd_label (надпись SUDDEN DEATH в HUD).
-## Запуск: godot --headless --path . --fixed-fps 60 res://tests/match_probe.tscn -- "scene=ruins,max_s=120" (scene=ruins|workshop|void)
-## Отчёт tests/match_probe_report.json, exit 0/1.
+##   HIT_FX (29.09): fx_directors — Match создал HitFxDirector и SfxDirector; hitfx_env_kind — ударов kind environment с уровнем 0;
+##   info.hitfx — гистограмма уровней Match.hit_fx, crits[] (t, tier, score, damage), env_slam, fight_s_per_crit.
+## Запуск: godot --headless --path . --fixed-fps 60 res://tests/match_probe.tscn -- "scene=ruins,max_s=120" (scene=ruins|workshop|void|scrap)
+## Отчёт tests/match_probe_report.json (или out=res://…), exit 0/1.
 extends Node3D
 
-const SCENES := {"ruins": "res://scenes/playground.tscn", "workshop": "res://scenes/playground_workshop.tscn", "void": "res://scenes/playground_void.tscn"}
+const SCENES := {"ruins": "res://scenes/playground.tscn", "workshop": "res://scenes/playground_workshop.tscn", "void": "res://scenes/playground_void.tscn",
+	"scrap": "res://scenes/playground_scrap.tscn"}
 const P2_OFFSET := Vector3(3.8, 0.0, 0.0)
 const RUSH_NEAR := 1.3
 const RUSH_RETREAT_S := 1.2             # отход полной тягой: разбег 2–3 м до следующего наскока. v7: 1.0 → 1.2 — с мягкими конечностями
@@ -30,6 +33,11 @@ const UNSTICK_S := 1.2
 const RESULTS_WAIT_REAL_MS := 6000
 
 var scene_id := "ruins"
+var out_path := "res://tests/match_probe_report.json"
+var hitfx_tiers: Dictionary = {}     # HIT_FX: tier -> число ударов (Match.hit_fx, только бой до restart)
+var hitfx_crits: Array = []
+var hitfx_env_kind := 0
+var env_slams := 0
 var max_s := 120.0
 var sd_mode := false
 const SD_TIME_LIMIT_S := 3.0
@@ -65,6 +73,7 @@ var fx_seen := false
 var rush_retreat: Dictionary = {}
 var last_hit_t := 0.0
 var unstick_until := -1.0
+var unstick_n := 0                     # номер попытки расклинивания (чередование врозь / через препятствие)
 var fight_seen := false               # фаза FIGHT наступала (до неё Match.phase == OVER — начальное значение)
 var report := {"ok": true, "checks": [], "info": {}}
 
@@ -79,6 +88,7 @@ func _ready() -> void:
 				"scene": scene_id = p[1]
 				"max_s": max_s = float(p[1])
 				"sd": sd_mode = p[1] != "0"
+				"out": out_path = p[1]
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
 	add_child(pg)
 	p1 = pg.get_node("P1")
@@ -124,6 +134,21 @@ func _ready() -> void:
 		over_winner = winner
 		over_results = results
 		results_wait_ms = Time.get_ticks_msec())
+	if match_node.has_signal("hit_fx"):
+		match_node.connect("hit_fx", func(ctx: Dictionary) -> void:
+			if stage != 0:
+				return
+			var tier := String(ctx.get("tier", ""))
+			hitfx_tiers[tier] = int(hitfx_tiers.get(tier, 0)) + 1
+			if String(ctx.get("kind", "")) == "environment":
+				hitfx_env_kind += 1
+			if tier == "crit" or tier == "ko_crit":
+				hitfx_crits.append({"t": snappedf(float(ctx.get("fight_time", 0.0)), 0.01), "tier": tier, "score": snappedf(float(ctx.get("score", 0.0)), 0.1),
+					"damage": snappedf(float(ctx.get("damage", 0.0)), 0.1), "kind": ctx.get("kind", ""), "part": ctx.get("part", "")}))
+	if match_node.has_signal("env_slam"):
+		match_node.connect("env_slam", func(_ctx: Dictionary) -> void:
+			if stage == 0:
+				env_slams += 1)
 	report["info"]["scene"] = scene_id
 
 
@@ -137,10 +162,17 @@ func _rush(d: Doll, other: Doll) -> void:
 	var sgn := signf(dx) if absf(dx) > 0.05 else 1.0
 	var vy := clampf(dy / 1.5, -1.0, 1.0) if absf(dy) > 0.8 else 0.0
 	# заклинило (нет ударов STUCK_S): обе куклы прыгают врозь и вверх, потом вниз — ломает упор в полку/станок
+	# v2 (HIT_FX §11.6): чётная попытка — врозь, нечётная — вверх и через препятствие к сопернику (станок Мастерской
+	# между куклами: врозь-вниз их не разводит, обе снова упираются в станок с двух сторон)
 	if t - last_hit_t > STUCK_S and t > unstick_until + STUCK_S:
 		unstick_until = t + UNSTICK_S
+		unstick_n += 1
 	if t < unstick_until:
-		d.input_vec = Vector2(-sgn, 1.0 if t < unstick_until - UNSTICK_S * 0.5 else -1.0)
+		var first_half := t < unstick_until - UNSTICK_S * 0.5
+		if unstick_n % 2 == 0:
+			d.input_vec = Vector2(sgn * 0.35, 1.0) if first_half else Vector2(sgn, 0.3)
+		else:
+			d.input_vec = Vector2(-sgn, 1.0 if first_half else -1.0)
 		return
 	var until := float(rush_retreat.get(d, -1.0))
 	if t < until:
@@ -320,6 +352,13 @@ func _checks_ko() -> void:
 		_check("ko_card", 1.0 if ko_card_seen else 0.0, 1.0, "eq", "HUD KO card shown on ko signal")
 		_check("announce_ko", 1.0 if _has_announce("ko") else 0.0, 1.0, "eq", "KO! announced")
 		report["info"]["ko"] = {"t": ko_t, "fight_time": match_node.fight_time, "victim": ko_victim.name, "record": _record_summary(ko_victim.last_ko_record)}
+	if Tuning.HITFX_ENABLED:
+		var dirs := int(match_node.get_node_or_null("HitFxDirector") != null) + int(match_node.get_node_or_null("SfxDirector") != null)
+		_check("fx_directors", float(dirs), 2.0, "eq", "Match created HitFxDirector + SfxDirector (_ensure_fx_directors)")
+		_check("hitfx_env_kind", float(hitfx_env_kind), 0.0, "eq", "hit_fx with kind environment (env damage stays 0)")
+	var n_crit := int(hitfx_tiers.get("crit", 0)) + int(hitfx_tiers.get("ko_crit", 0))
+	report["info"]["hitfx"] = {"tiers": hitfx_tiers, "crits": hitfx_crits, "env_slam": env_slams, "fight_time": snappedf(match_node.fight_time, 0.01),
+		"fight_s_per_crit": snappedf(match_node.fight_time / float(n_crit), 0.1) if n_crit > 0 else -1.0}
 	report["info"]["hits"] = hits
 	report["info"]["hit_list"] = hit_list
 	report["info"]["hp"] = {"p1": p1.hp, "p2": p2.hp}
@@ -389,7 +428,7 @@ func _finish() -> void:
 	var js := JSON.stringify(report, "  ")
 	print("=== MATCH PROBE ===")
 	print(js)
-	var f := FileAccess.open("res://tests/match_probe_report.json", FileAccess.WRITE)
+	var f := FileAccess.open(out_path, FileAccess.WRITE)
 	if f:
 		f.store_string(js)
 		f.close()

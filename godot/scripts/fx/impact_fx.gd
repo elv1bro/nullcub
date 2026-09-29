@@ -2,7 +2,7 @@
 ##   ImpactFx.spawn_impact(parent, position, normal, strength, kind)
 ## Вспышка (как в Ragdoll Masters): мягкий диск + два луча из квадов с радиальным градиентом, аддитивно, без теста глубины,
 ## лицом к камере (+Z), цвет по kind — body белая, head красно-оранжевая, weapon жёлтая, environment/self голубоватая;
-## размер по strength; поведение и время жизни — scripts/fx/impact_flash.gd (ImpactFlash). Материалы вспышки общие на kind
+## размер по strength; поведение и время жизни — scripts/fx/impact_flash.gd (ImpactFlash). Яркость × FxPreset.flash() (§11.2), при 0 звезды нет. Материалы вспышки общие на kind
 ## (flash_material); prewarm(parent) в начале матча создаёт их заранее, чтобы первый удар не ловил стал компиляции шейдера.
 ## инстанцирует res://scenes/fx/splinters.tscn и res://scenes/fx/dust_puff.tscn под общим Node3D, ориентирует их
 ## +Z вдоль нормали (щепки летят от поверхности), масштабирует число частиц и скорость по strength (м/с относительной
@@ -112,12 +112,15 @@ static func prewarm(parent: Node) -> void:
 
 ## Вспышка: ImpactFlash (диск + два луча) к камере (+Z), чуть перед точкой контакта; размер по силе удара.
 static func _spawn_flash(root: Node3D, position: Vector3, k: float, kind: String) -> void:
+	var alpha := FxPreset.flash()   # пресет FX игрока (HIT_FX.md §11.2): reduced — тусклее, off — без звезды
+	if alpha <= 0.001:
+		return
 	var size := FLASH_SIZE_MIN + FLASH_SIZE_PER_K * k
 	var flash := ImpactFlash.new()
 	flash.name = "Flash"
 	root.add_child(flash)
 	flash.global_transform = Transform3D(Basis.IDENTITY, position + Vector3(0.0, 0.0, 0.18))
-	flash.setup(flash_material(kind), size)
+	flash.setup(flash_material(kind), size, alpha)
 
 
 static func _on_finished(root: Node3D) -> void:

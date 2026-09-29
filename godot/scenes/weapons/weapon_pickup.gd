@@ -7,10 +7,13 @@
 ## Использование: doll.add_child(WeaponPickup.new())  (или load("res://scenes/weapons/weapon_pickup.gd").new()).
 ## v7: рука с оружием жёстче пустой — attach ставит суставам плеча/локтя/кисти этой стороны Tuning.WEAPON_ARM_MUSCLES
 ## (Doll.set_muscle_joint), drop/KO возвращает групповые (Doll.clear_muscle_joint); вторая рука остаётся мягкой.
+## 29.09 (сборка тела, BODY_CRAFT.md): кисти — все части с базовым именем "Hand" (Hand_L / Hand_R у doll.tscn, Hand_<uid> у ModularDoll),
+## суставы жёсткой руки ищутся вверх по цепочке от кисти (Wrist → Elbow → Shoulder), блокировка подбора — по кисти (set_hand_blocked),
+## общий auto_pickup остаётся.
 class_name WeaponPickup
 extends Node
 
-const HANDS := ["Hand_L", "Hand_R"]
+const HAND_BASE := "Hand"
 
 @export var pickup_radius := 0.45  # ART_DIRECTION.md v3: манекен 1.8 м, риг по высотам как v1 — радиус подбора снова 0.45
 @export var drop_cooldown_s := 0.35
@@ -28,6 +31,8 @@ var _cooldown_until: Dictionary = {}
 ## [weapon, time] — исключения коллизий снимаются, когда кулдаун прошёл
 var _pending_release: Array = []
 var _time := 0.0
+## hand name -> true: подбор этой кистью выключен (ArmAssist держит ею пропс и т. п.)
+var _blocked: Dictionary = {}
 
 
 func _ready() -> void:
@@ -38,6 +43,35 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	drop_all()
+
+
+## Кисти куклы: части с базовым именем HAND_BASE, по имени (порядок стабилен: Hand_L раньше Hand_R).
+func hand_names() -> Array:
+	var out: Array = []
+	if doll == null:
+		return out
+	for pn in doll.parts.keys():
+		if Doll.part_base_name(String(pn)) == HAND_BASE:
+			out.append(String(pn))
+	out.sort()
+	return out
+
+
+## Выключить / включить подбор одной кистью (оружие в ней не трогается).
+func set_hand_blocked(hand_name: String, on: bool) -> void:
+	if on:
+		_blocked[hand_name] = true
+	else:
+		_blocked.erase(hand_name)
+
+
+func is_hand_blocked(hand_name: String) -> bool:
+	return _blocked.has(hand_name)
+
+
+func _hand_free(hand_name: String) -> bool:
+	return not held.has(hand_name) and not _blocked.has(hand_name) and hand(hand_name) != null \
+		and _time >= float(_cooldown_until.get(hand_name, 0.0))
 
 
 func hand(hand_name: String) -> RigidBody3D:
@@ -90,10 +124,8 @@ func _physics_process(delta: float) -> void:
 			i += 1
 	if not auto_pickup:
 		return
-	for hand_name in HANDS:
-		if held.has(hand_name) or hand(hand_name) == null:
-			continue
-		if _time < _cooldown_until.get(hand_name, 0.0):
+	for hand_name in hand_names():
+		if not _hand_free(hand_name):
 			continue
 		var w := nearest_free_weapon(hand_name)
 		if w != null and _closest_free_hand(w) == hand_name:
@@ -101,12 +133,12 @@ func _physics_process(delta: float) -> void:
 
 
 ## Какая из свободных кистей (не занята, не в кулдауне) ближе к хвату оружия. У манекена v3 кисти стоят в 0.44 м друг от
-## друга (< pickup_radius): без этой проверки молот, лежащий у правой кисти, хватала левая (первая в HANDS).
+## друга (< pickup_radius): без этой проверки молот, лежащий у правой кисти, хватала левая (первая в hand_names()).
 func _closest_free_hand(w: Weapon) -> String:
 	var best := ""
 	var best_d := INF
-	for hand_name in HANDS:
-		if held.has(hand_name) or hand(hand_name) == null or _time < _cooldown_until.get(hand_name, 0.0):
+	for hand_name in hand_names():
+		if not _hand_free(hand_name):
 			continue
 		var d := hand_grip_global(hand_name).distance_to(w.grip_global())
 		if d < best_d:
@@ -139,7 +171,7 @@ func attach(hand_name: String, weapon: Weapon) -> bool:
 	var h := hand(hand_name)
 	if h == null:
 		return false
-	var side := 1.0 if hand_name.ends_with("L") else -1.0
+	var side := _hand_side(hand_name, h)
 	var basis: Basis = h.global_transform.basis * Basis(Vector3(0, 0, 1), deg_to_rad(-90.0 + hold_angle_deg * side))
 	var grip_g := hand_grip_global(hand_name)
 	# оружие не должно бить хозяина
@@ -169,15 +201,53 @@ func attach(hand_name: String, weapon: Weapon) -> bool:
 	return true
 
 
-## Жёсткость руки с оружием: суставы Shoulder/Elbow/Wrist той же стороны, что кисть (Hand_L → *_L), по Tuning.WEAPON_ARM_MUSCLES.
+## Сторона кисти для угла хвата: +1 левая, −1 правая. Hand_L / Hand_R — по суффиксу (как раньше); у деталей Hand_<uid> — по тому,
+## с какой стороны торса кисть в его локальных координатах (кукла смотрит в камеру, левая сторона — +X).
+func _hand_side(hand_name: String, h: RigidBody3D) -> float:
+	if hand_name.ends_with("_L"):
+		return 1.0
+	if hand_name.ends_with("_R"):
+		return -1.0
+	# ModularDoll: кадр детали в сборке (кукла лицом в камеру, левая сторона +X) — не зависит от того, как кукла повёрнута сейчас
+	var asm: Variant = doll.get("assembly")
+	if asm is Dictionary and (asm as Dictionary).has(hand_name) and (asm as Dictionary)[hand_name] is Transform3D:
+		return 1.0 if ((asm as Dictionary)[hand_name] as Transform3D).origin.x >= 0.0 else -1.0
+	var t := doll.torso() if doll.parts.has("Torso") else null
+	if t == null:
+		return 1.0
+	return 1.0 if t.to_local(h.global_position).x >= 0.0 else -1.0
+
+
+## Суставы руки от кисти вверх по цепочке (Wrist → Elbow → Shoulder у doll.tscn), чьи группы есть в Tuning.WEAPON_ARM_MUSCLES:
+## идём от тела к родителю по суставу, где тело — node_b, пока группа сустава в таблице.
+func _arm_joints(hand_name: String) -> Array:
+	var out: Array = []
+	var body: Node = hand(hand_name)
+	var guard := 0
+	while body != null and guard < 6:
+		guard += 1
+		var up: Generic6DOFJoint3D = null
+		for j in doll.joints.values():
+			if not is_instance_valid(j):
+				continue
+			var jj := j as Generic6DOFJoint3D
+			if jj != null and jj.get_node_or_null(jj.node_b) == body:
+				up = jj
+				break
+		if up == null or not Tuning.WEAPON_ARM_MUSCLES.has(String(up.name).split("_")[0]):
+			break
+		out.append(String(up.name))
+		body = up.get_node_or_null(up.node_a)
+	return out
+
+
+## Жёсткость руки с оружием: суставы этой руки (_arm_joints) по Tuning.WEAPON_ARM_MUSCLES их группы.
 func _set_arm_stiff(hand_name: String, on: bool) -> void:
-	if doll == null or not is_instance_valid(doll):
+	if doll == null or not is_instance_valid(doll) or hand(hand_name) == null:
 		return
-	var side := hand_name.substr(hand_name.length() - 2)   # "_L" / "_R"
-	for g in Tuning.WEAPON_ARM_MUSCLES:
-		var jn: String = String(g) + side
+	for jn in _arm_joints(hand_name):
 		if on:
-			var e: Dictionary = Tuning.WEAPON_ARM_MUSCLES[g]
+			var e: Dictionary = Tuning.WEAPON_ARM_MUSCLES[String(jn).split("_")[0]]
 			doll.set_muscle_joint(jn, float(e["k"]), float(e.get("tmax", -1.0)), float(e.get("zeta", -1.0)))
 		else:
 			doll.clear_muscle_joint(jn)
@@ -200,6 +270,8 @@ func drop(hand_name: String) -> void:
 		_pending_release.append([w, _time + drop_cooldown_s])
 	_cooldown_until[hand_name] = _time + drop_cooldown_s
 	_set_arm_stiff(hand_name, false)
+	for other in held.keys():   # у сборки две кисти могут делить суставы руки — вторая с оружием остаётся жёсткой
+		_set_arm_stiff(String(other), true)
 
 
 ## Отпустить конкретное оружие (Weapon.drop() делегирует сюда).

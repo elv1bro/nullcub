@@ -30,6 +30,10 @@ signal damaged(amount: float, attacker: Node, part: String, position: Vector3, k
 ## HP кончилось (или knock_out() извне): record — KoRecord {victim, attacker, part, kind, damage, speed, weapon_id, position, time, ...}.
 signal knocked_out(attacker: Node, record: Dictionary)
 signal stunned(seconds: float)
+## Часть оторвана detach_part (PvE: Разборщик, пресс, Садовник): part_name — имя оторванного тела, by — кто оторвал (или null).
+signal part_detached(part_name: String, by: Node)
+## Оторванная часть прикручена обратно reattach_part.
+signal part_reattached(part_name: String)
 
 enum StunPhase { NONE, STUNNED, RECOVER }
 
@@ -63,6 +67,10 @@ const SPAWN_POSE_GROUPS := ["Shoulder", "Elbow", "Hip", "Knee"]   # прокси
 @export var control_mode := ""         # пусто = Tuning.CONTROL_MODE
 ## Куда прикладывать тягу: "torso" (центр тела, концепт) или "head" (порт Ragdoll Masters).
 @export var control_target := ""       # пусто = Tuning.CONTROL_TARGET
+## Команда (PvE-волны): урон от куклы той же непустой команды × Tuning.TEAM_DAMAGE_MULT (take_damage); толчки полные.
+@export var team := ""
+## Запас HP этой куклы (PvE-враги 40 / 80); hp в _ready и reset_for_match = max_hp; Match.hp_changed и HUD берут его отсюда.
+@export var max_hp: float = Tuning.MAX_HP
 
 ## Подбор дампа без правки Tuning (tests/feel_probe: ldc/ldl/adl/fdc/fdl/brake): ключи "core", "limb", "limb_ang", "flight_core",
 ## "flight_limb", "brake", "core_ang" перекрывают Tuning.DOLL_LINEAR_DAMP / DOLL_LIMB_LINEAR_DAMP / DOLL_LIMB_ANGULAR_DAMP / FLIGHT_LINEAR_DAMP /
@@ -76,12 +84,16 @@ var parts: Dictionary = {}    # name -> RigidBody3D
 var joints: Dictionary = {}   # name -> Generic6DOFJoint3D
 ## Пара мышцы на сустав: [body_a, body_b, rest (рад, measured), k, c, tmax, group, joint_name]. k/c/tmax — база (без стана/SD).
 var _muscle_pairs: Array = []
+var _req_dash := false   # request_dash(): рывок на ближайшем тике управления (боты, external_input)
+var _req_flip := false   # request_flip(): переворот на ближайшем тике управления
 const MP_REST := 2
 const MP_K := 3
 const MP_C := 4
 const MP_TMAX := 5
 const MP_GROUP := 6
 const MP_NAME := 7
+## Допуск |I_цепи / I_группы − 1|, в котором демпфирование мышцы берётся по инерции группы (см. _pair_inertia).
+const CHAIN_INERTIA_TOLERANCE := 0.15
 var _muscle_mult := 1.0       # stability_mult × стан-рампа (0 в стане, 0 после break_apart)
 var _k := 0.0                 # справочно (отчёты гейтов): эффективная k группы Shoulder = база × _muscle_mult
 var _c := 0.0
@@ -101,6 +113,15 @@ var stunned_until := 0.0
 var _stun_phase := StunPhase.NONE
 var _stun_recover_t0 := 0.0
 var total_mass := 0.0
+## Точка сустава в локальных координатах тела-родителя (node_a), снятая в _ready до спавна в позе: узел сустава после поворота
+## родителя остаётся на месте сборки, а якорь Jolt едет вместе с родителем (_snap_to_pose поворачивает вокруг якоря).
+var _joint_local_a: Dictionary = {}
+## Кадр сустава в системе родителя / ребёнка на момент _ready (сборка): reattach_part совмещает их, как было при сборке.
+var _joint_xf_a: Dictionary = {}
+var _joint_xf_b: Dictionary = {}
+## Оторванные корни (RigidBody3D) -> запись для reattach_part: сустав подвеса (отключён, остаётся ребёнком куклы), родитель,
+## поддерево, внутренние суставы с трением, снятые пары мышц, тела под монитором DollCombat.
+var _detached: Dictionary = {}
 var dash_until := 0.0
 var dash_ready_at := 0.0
 var _time := 0.0
@@ -112,6 +133,9 @@ var stats: Dictionary = fresh_stats()
 var grace_until: float = Tuning.SPAWN_GRACE_S
 ## После удара до этого момента клэмп MAX_MOVE_SPEED не действует (полёт); читает DynamicCamera для упреждения.
 var knockback_until := 0.0
+## Крит-полёт (HIT_FX.md §2.3, CritLaunch): свой клэмп ЦМ вместо Tuning.FLIGHT_MAX_SPEED до _flight_cap_until (_time).
+var _flight_cap := 0.0
+var _flight_cap_until := -1.0
 ## Множитель Sudden Death к мышцам и трению (Match.set_stability).
 var stability_mult := 1.0
 ## DollCombat кладёт сюда {speed, weapon_id, striker, ...} перед take_damage — попадает в damaged/KoRecord.
@@ -148,6 +172,7 @@ const SHIRT_MATERIAL := "Shirt"             # префикс имени мате
 
 
 func _ready() -> void:
+	hp = max_hp
 	_zeta = muscle_zeta if muscle_zeta >= 0.0 else Tuning.MUSCLE_ZETA
 	_uniform_c = muscle_damping
 	for g in Tuning.MUSCLE_GROUPS:
@@ -168,6 +193,9 @@ func _ready() -> void:
 		if a == null or b == null:
 			push_error("Doll: joint %s has no bodies (%s / %s)" % [j.name, j.node_a, j.node_b])
 			continue
+		_joint_local_a[String(j.name)] = a.to_local(j.global_position)
+		_joint_xf_a[String(j.name)] = a.global_transform.affine_inverse() * j.global_transform
+		_joint_xf_b[String(j.name)] = b.global_transform.affine_inverse() * j.global_transform
 		var group: String = String(j.name).split("_")[0]
 		if not Tuning.MUSCLE_GROUPS.has(group):
 			push_error("Doll: joint %s has no muscle group %s in Tuning.MUSCLE_GROUPS" % [j.name, group])
@@ -213,6 +241,9 @@ func _ready() -> void:
 
 ## Ставит суставы групп groups (по порядку: проксимальные раньше) в позу покоя до первого шага физики: дистальная цепь сустава
 ## поворачивается вокруг его оси (точка сустава на оси — якоря Jolt совпадают, лимиты считаются от собранной сцены, как раньше).
+## Центр поворота — точка сустава на ТЕКУЩЕМ родителе (_joint_local_a), а не узел сустава: после поворота плеча узел локтя остаётся
+## на месте сборки, и поворот вокруг него отрывал предплечье от плеча на 5–7 см (Jolt стягивал сустав рывком на первых шагах;
+## tests/body_probe doll_spawn_joint_gap_m).
 func _snap_to_pose(groups: Array) -> void:
 	for g in groups:
 		for e in _muscle_pairs:
@@ -224,12 +255,24 @@ func _snap_to_pose(groups: Array) -> void:
 			var delta := wrapf(float(e[MP_REST]) - cur, -PI, PI)
 			if absf(delta) < 1e-4:
 				continue
-			var pivot: Vector3 = (joints[e[MP_NAME]] as Node3D).global_position
+			var pivot: Vector3 = joint_pivot_global(String(e[MP_NAME]))
 			var rot := Basis(Vector3(0, 0, 1), delta)
 			for body in _distal_bodies(b):
 				var rb := body as RigidBody3D
 				var tr := rb.global_transform
 				rb.global_transform = Transform3D(rot * tr.basis, pivot + rot * (tr.origin - pivot))
+
+
+## Точка сустава в мире сейчас: якорь на теле-родителе (node_a), как его держит Jolt. Узел сустава для этого не годится — он остаётся
+## на месте сборки, когда родитель повернулся (спавн в позе, _snap тестов). Для сустава без записи — позиция узла.
+func joint_pivot_global(joint_name: String) -> Vector3:
+	var j := joints.get(joint_name) as Generic6DOFJoint3D
+	if j == null:
+		return Vector3.ZERO
+	var a := j.get_node_or_null(j.node_a) as RigidBody3D
+	if a == null or not _joint_local_a.has(joint_name):
+		return j.global_position
+	return a.global_transform * (_joint_local_a[joint_name] as Vector3)
 
 
 ## Тело b и все тела ниже него по цепочке суставов (плечо → предплечье → кисть).
@@ -349,10 +392,24 @@ func _update_pair_gains() -> void:
 				tmax = float(ov["tmax"])
 			if float(ov["zeta"]) >= 0.0:
 				zeta = float(ov["zeta"])
-		var inertia: float = float((Tuning.MUSCLE_GROUPS[g] as Dictionary)["inertia"])
+		var inertia: float = _pair_inertia(String(e[MP_NAME]), float((Tuning.MUSCLE_GROUPS[g] as Dictionary)["inertia"]))
 		e[MP_K] = k
 		e[MP_C] = _uniform_c if _uniform_c >= 0.0 else 2.0 * zeta * sqrt(maxf(k, 0.0) * inertia)
 		e[MP_TMAX] = tmax
+
+
+## Инерция цепи для демпфирования c = 2ζ√(k·I): инерция группы из Tuning.MUSCLE_GROUPS (цепь куклы v3), а если сустав несёт
+## meta "chain_inertia" (ModularDoll: настоящая дистальная цепь сборки) и она отличается от группы больше CHAIN_INERTIA_TOLERANCE — она.
+## В допуске остаётся групповая (human-сборка даёт числа doll.tscn; у кисти прямо на локте или ноги на плече I в 0.05–4 раза другая —
+## с групповой явный PD дрожит или болтается).
+func _pair_inertia(joint_name: String, group_inertia: float) -> float:
+	var j := joints.get(joint_name) as Node
+	if j == null or group_inertia <= 0.0:
+		return group_inertia
+	var ci := float(j.get_meta("chain_inertia", 0.0))
+	if ci > 0.0 and absf(ci / group_inertia - 1.0) > CHAIN_INERTIA_TOLERANCE:
+		return ci
+	return group_inertia
 
 
 ## Угол покоя сустава (рад, measured). deg — градусы; mirror=true — deg задан для ЛЕВОЙ стороны и у *_R меняет знак.
@@ -483,6 +540,8 @@ func can_take_damage() -> bool:
 ## Урон: amount HP от attacker (Doll | null) в часть part (имя узла) в точке position с нормалью normal; kind ∈ head|body|weapon|environment|self.
 ## Игнорируется, если кукла мертва или в spawn grace. hp ≤ 0 → knock_out(attacker, record).
 func take_damage(amount: float, attacker: Node, part: String, position: Vector3, normal: Vector3, kind: String) -> void:
+	if team != "" and attacker is Doll and attacker != self and (attacker as Doll).team == team:
+		amount *= Tuning.TEAM_DAMAGE_MULT
 	if amount <= 0.0 or not can_take_damage():
 		hit_meta = {}
 		return
@@ -502,6 +561,204 @@ func take_damage(amount: float, attacker: Node, part: String, position: Vector3,
 	damaged.emit(amount, attacker, part, position, kind)
 	if hp <= 0.0:
 		knock_out(attacker, record)
+
+
+## Рывок на ближайшем тике управления — для ботов (external_input): Input они не читают. Те же правила, что у кнопки
+## (перезарядка DASH_COOLDOWN_S, не в стане, не во время отдачи после удара).
+func request_dash() -> void:
+	_req_dash = true
+
+
+## Переворот (FLIP_IMPULSE) на ближайшем тике управления — для ботов; направление — по input_vec.x, как у кнопки.
+func request_flip() -> void:
+	_req_flip = true
+
+
+## Оторвать часть вместе с поддеревом (PvE, CONCEPT_V2: Разборщик откручивает деталь, позже пресс и Садовник).
+## Снимается один сустав, которым часть висит на родителе; внутренние суставы поддерева остаются (оторванная рука гнётся), но без
+## мышц и трения; пары мышц поддерева, переопределения и смешивание позы удаляются; DollCombat перестаёт слушать эти тела; оружие
+## в оторванной кисти выпадает; тела получают мировой дамп и через 0.2 с сталкиваются с куклой (сразу нельзя — они перекрываются
+## в точке сустава, Jolt растолкнул бы их). Кукла живёт дальше. Голова или торс — KO (kind "detach"). Возвращает оторванное тело.
+func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
+	var b := parts.get(part_name) as RigidBody3D
+	if b == null or _broken:
+		return null
+	var base := part_base_name(part_name)
+	if base == "Head" or base == "Torso" or b == parts.get("Torso"):
+		if alive:
+			knock_out(by, {"kind": "detach", "part": part_name})
+		part_detached.emit(part_name, by)
+		return b
+	var hang: Generic6DOFJoint3D = null
+	var hang_name := ""
+	for jn in joints.keys():
+		var j := joints[jn] as Generic6DOFJoint3D
+		if j != null and is_instance_valid(j) and j.get_node_or_null(j.node_b) == b:
+			hang = j
+			hang_name = String(jn)
+			break
+	if hang == null:
+		return null
+	# поддерево: b и всё, что висит на нём по суставам
+	var sub: Array = [b]
+	var sub_joints: Array = []
+	var i := 0
+	while i < sub.size():
+		for jn in joints.keys():
+			var j := joints[jn] as Generic6DOFJoint3D
+			if j == null or not is_instance_valid(j) or j == hang:
+				continue
+			if j.get_node_or_null(j.node_a) == sub[i]:
+				var child := j.get_node_or_null(j.node_b) as RigidBody3D
+				if child != null and not sub.has(child):
+					sub.append(child)
+					sub_joints.append(String(jn))
+		i += 1
+	var sub_names: Array = []
+	for s in sub:
+		sub_names.append(String((s as Node).name))
+	# оружие в оторванной кисти выпадает (WeaponPickup и похожие: is_holding / drop)
+	for c in get_children():
+		if c.has_method("is_holding") and c.has_method("drop"):
+			for hn in sub_names:
+				if bool(c.call("is_holding", hn)):
+					c.call("drop", hn)
+	var rec := {"hang": hang, "hang_name": hang_name, "parent": hang.get_node_or_null(hang.node_a), "sub": sub,
+		"hang_friction": float(_friction_base.get(hang, 0.0)), "sub_joints": [], "pairs": [], "monitored": []}
+	# сустав подвеса не удаляется: без тел он инертен и остаётся ребёнком куклы (reattach_part подключит его снова)
+	hang.set("angular_motor_z/enabled", false)
+	hang.node_a = NodePath()
+	hang.node_b = NodePath()
+	joints.erase(hang_name)
+	_friction_base.erase(hang)
+	_joint_override.erase(hang_name)
+	_pose_blend.erase(hang_name)
+	for jn in sub_joints:
+		var j := joints[jn] as Generic6DOFJoint3D
+		(rec["sub_joints"] as Array).append([String(jn), j, float(_friction_base.get(j, 0.0))])
+		j.set("angular_motor_z/enabled", false)
+		_friction_base.erase(j)
+		joints.erase(jn)
+		_joint_override.erase(jn)
+		_pose_blend.erase(jn)
+	var keep: Array = []
+	for e in _muscle_pairs:
+		if not (sub.has(e[0]) or sub.has(e[1])):
+			keep.append(e)
+		else:
+			(rec["pairs"] as Array).append(e)
+	_muscle_pairs = keep
+	for c in get_children():
+		var mon0: Variant = c.get("_monitored")
+		if mon0 is Array:
+			for s in sub:
+				if (mon0 as Array).has(s) and not (rec["monitored"] as Array).has(s):
+					(rec["monitored"] as Array).append(s)
+	_detached[b] = rec
+	for s in sub:
+		var rb := s as RigidBody3D
+		for con in rb.body_entered.get_connections():
+			var cal: Callable = con["callable"]
+			var o: Object = cal.get_object()
+			if o != null and o.has_method("_on_part_contact"):
+				rb.body_entered.disconnect(cal)
+		for c in get_children():
+			var mon: Variant = c.get("_monitored")
+			if mon is Array:
+				(mon as Array).erase(rb)
+		parts.erase(rb.name)
+		rb.linear_damp = Tuning.LINEAR_DAMP
+		rb.angular_damp = Tuning.ANGULAR_DAMP
+		rb.set_meta("detached_from", self)
+		rb.add_to_group("detached_parts")
+	total_mass = 0.0
+	for p in parts.values():
+		total_mass += (p as RigidBody3D).mass
+	if _self_exceptions and is_inside_tree():
+		var rest: Array = parts.values()
+		get_tree().create_timer(0.2).timeout.connect(func() -> void:
+			if not _detached.has(b):
+				return   # уже прикручена обратно — исключения нужны
+			for s in sub:
+				for p in rest:
+					if is_instance_valid(s) and is_instance_valid(p):
+						(s as RigidBody3D).remove_collision_exception_with(p))
+	part_detached.emit(part_name, by)
+	return b
+
+
+## Прикрутить обратно часть, оторванную detach_part (PvE: отобранную у Разборщика кисть игрок возвращает себе). body — корень
+## оторванного поддерева (то, что вернул detach_part). Поддерево ставится так, чтобы кадр сустава на нём совпал с кадром на
+## родителе (поза сборки), скорости — как у родителя; сустав подвеса подключается снова, внутренние суставы получают трение, пары
+## мышц, мониторы DollCombat и исключения коллизий возвращаются, масса пересчитывается. false — не наша часть, кукла сломана/мертва,
+## родитель тоже оторван, тела освобождены.
+func reattach_part(body: RigidBody3D) -> bool:
+	if body == null or not is_instance_valid(body) or _broken or not alive or not _detached.has(body):
+		return false
+	var rec: Dictionary = _detached[body]
+	var a := rec["parent"] as RigidBody3D
+	var hang := rec["hang"] as Generic6DOFJoint3D
+	var hn: String = rec["hang_name"]
+	if a == null or not is_instance_valid(a) or not parts.values().has(a) or hang == null or not is_instance_valid(hang):
+		return false
+	for s in rec["sub"]:
+		if not is_instance_valid(s):
+			return false
+	var target: Transform3D = a.global_transform * (_joint_xf_a[hn] as Transform3D) * (_joint_xf_b[hn] as Transform3D).affine_inverse()
+	var delta: Transform3D = target * body.global_transform.affine_inverse()
+	for s in rec["sub"]:
+		var rb := s as RigidBody3D
+		rb.global_transform = delta * rb.global_transform
+		rb.linear_velocity = a.linear_velocity
+		rb.angular_velocity = a.angular_velocity
+		rb.remove_meta("detached_from")
+		rb.remove_from_group("detached_parts")
+		parts[rb.name] = rb
+	if _self_exceptions:
+		for s in rec["sub"]:
+			for p in parts.values():
+				if p != s and not (rec["sub"] as Array).has(p):
+					(s as RigidBody3D).add_collision_exception_with(p)
+	hang.global_transform = a.global_transform * (_joint_xf_a[hn] as Transform3D)
+	hang.node_a = hang.get_path_to(a)
+	hang.node_b = hang.get_path_to(body)
+	var hf: float = rec["hang_friction"]
+	hang.set("angular_motor_z/enabled", hf > 0.0)
+	hang.set("angular_motor_z/target_velocity", 0.0)
+	hang.set("angular_motor_z/force_limit", hf)
+	joints[hn] = hang
+	_friction_base[hang] = hf
+	for sj in rec["sub_joints"]:
+		var j := sj[1] as Generic6DOFJoint3D
+		var f: float = sj[2]
+		j.set("angular_motor_z/enabled", f > 0.0)
+		j.set("angular_motor_z/force_limit", f)
+		joints[String(sj[0])] = j
+		_friction_base[j] = f
+	for e in rec["pairs"]:
+		_muscle_pairs.append(e)
+	_update_pair_gains()
+	_refresh_muscles()
+	for c in get_children():
+		if c.has_method("_monitor"):
+			for rb in rec["monitored"]:
+				c.call("_monitor", rb)
+	total_mass = 0.0
+	for p in parts.values():
+		total_mass += (p as RigidBody3D).mass
+	_apply_base_damp(_flight_damp)
+	_detached.erase(body)
+	part_reattached.emit(String(body.name))
+	return true
+
+
+## Оторванные этой куклой и ещё не прикрученные корни (для UI «вернуть деталь»).
+func detached_parts() -> Array:
+	var out: Array = []
+	for k in _detached.keys():
+		if is_instance_valid(k):
+			out.append(k)
+	return out
 
 
 ## KO (CONCEPT.md §10, В3): кукла мертва, суставы рвутся (break_apart), сигнал knocked_out с KoRecord.
@@ -587,7 +844,7 @@ func is_broken() -> bool:
 ## Сброс к началу матча: HP, статистика, стан, grace. Сломанную куклу (после KO) не чинит — Match.respawn_doll() инстанцирует
 ## сцену заново (doll.tscn / doll_dark.tscn) и переносит player_index / input_prefix / external_input / skin_*.
 func reset_for_match() -> void:
-	hp = Tuning.MAX_HP
+	hp = max_hp
 	stats = fresh_stats()
 	hit_meta = {}
 	last_hit = {}
@@ -596,6 +853,7 @@ func reset_for_match() -> void:
 	stunned_until = 0.0
 	_stun_phase = StunPhase.NONE
 	knockback_until = 0.0
+	_flight_cap_until = -1.0
 	stability_mult = 1.0
 	dash_until = 0.0
 	dash_ready_at = 0.0
@@ -730,6 +988,8 @@ func _soft_factor() -> float:
 func apply_recoil(dir: Vector3, recoil_speed: float, lock_s: float) -> void:
 	if _broken or parts.is_empty():
 		return
+	if _time < _flight_cap_until:
+		return   # HIT_FX §2.3: крит-полёт не гасится отдачей встречного удара (клинч: оба тела бьют в одном тике)
 	var n := Vector3(dir.x, dir.y, 0.0)
 	if n.length_squared() < 1e-6:
 		return
@@ -756,9 +1016,10 @@ func _cap_flight_speed() -> void:
 		p += (b as RigidBody3D).linear_velocity * (b as RigidBody3D).mass
 	var v := p / total_mass
 	var sp := v.length()
-	if sp <= Tuning.FLIGHT_MAX_SPEED:
+	var cap := _flight_cap if _time < _flight_cap_until else Tuning.FLIGHT_MAX_SPEED
+	if sp <= cap:
 		return
-	var excess := v * (1.0 - Tuning.FLIGHT_MAX_SPEED / sp)
+	var excess := v * (1.0 - cap / sp)
 	for b in parts.values():
 		(b as RigidBody3D).linear_velocity -= excess
 
@@ -770,6 +1031,21 @@ func land() -> void:
 
 func is_flying() -> bool:
 	return _time < knockback_until
+
+
+## Крит-полёт (CritLaunch): клэмп ЦМ speed вместо FLIGHT_MAX_SPEED на seconds (физических), knockback_until продлевается.
+func set_flight_cap(speed: float, seconds: float) -> void:
+	_flight_cap = speed
+	_flight_cap_until = _time + seconds
+	knockback_until = maxf(knockback_until, _time + seconds)
+
+
+func flight_cap_active() -> bool:
+	return _time < _flight_cap_until
+
+
+func is_dashing() -> bool:
+	return _time < dash_until
 
 
 ## Стан (CONCEPT.md §9, В7): контроль ×(1 − STUN_CONTROL_LOSS), мышцы STUN_MUSCLE_STIFFNESS, трение STUN_JOINT_FRICTION —
@@ -818,11 +1094,50 @@ func _apply_muscles() -> void:
 		a.apply_torque(Vector3(0, 0, -torque))
 
 
+## Масса, под которую считается сила тяги (Н = MOVE_FORCE_PER_KG × эта масса). У Doll — вся масса куклы (разгон одинаков);
+## ModularDoll переопределяет под фиксированную тягу Ядра (тяжёлая сборка разгоняется медленнее, BODY_CRAFT.md).
+func thrust_mass() -> float:
+	return total_mass
+
+
+## Базовое имя части/сустава без короткого суффикса стороны или детали: «Hand_L» → «Hand», «Foot_3» → «Foot»
+## (как Damage.body_mult_of и ModularDoll.base_name: режется суффикс длиной ≤ 1 символа).
+static func part_base_name(part_name: String) -> String:
+	var us := part_name.rfind("_")
+	if us > 0 and part_name.length() - us <= 2:
+		return part_name.substr(0, us)
+	return part_name
+
+
 func centre_of_mass() -> Vector3:
 	var acc := Vector3.ZERO
 	for b in parts.values():
-		acc += b.global_position * b.mass
+		acc += part_centre(b as RigidBody3D) * (b as RigidBody3D).mass
 	return acc / total_mass
+
+
+## Центр масс части в мире. У частей doll.tscn origin в центре формы (совпадает), у деталей кита ModularDoll origin = Socket
+## (точка сустава) — там центр масс смещён: CUSTOM — RigidBody3D.center_of_mass, AUTO — центр форм, посчитанный физикой
+## (PhysicsDirectBodyState3D.center_of_mass_local). Локальная точка постоянна для твёрдого тела — кэш по телу.
+func part_centre(b: RigidBody3D) -> Vector3:
+	return b.global_transform * _part_com_local(b)
+
+
+var _part_com_cache: Dictionary = {}   # RigidBody3D -> Vector3 (локальный центр масс; имя не _com_local — в ModularDoll есть static func _com_local)
+
+func _part_com_local(b: RigidBody3D) -> Vector3:
+	if _part_com_cache.has(b):
+		return _part_com_cache[b]
+	var v := Vector3.ZERO
+	if b.center_of_mass_mode == RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM:
+		v = b.center_of_mass
+	elif b.is_inside_tree():
+		var st := PhysicsServer3D.body_get_direct_state(b.get_rid())
+		if st == null:
+			return v   # тело ещё не в физике — не кэшируем
+		v = st.center_of_mass_local
+	_part_com_cache[b] = v
+	return v
 
 
 func max_part_speed() -> float:
@@ -847,6 +1162,10 @@ func _control_body() -> RigidBody3D:
 
 func _physics_process(delta: float) -> void:
 	_time += delta
+	var req_dash := _req_dash   # одноразовые запросы ботов: живут один тик (стан/нет управления — пропадают)
+	var req_flip := _req_flip
+	_req_dash = false
+	_req_flip = false
 	if _stun_phase == StunPhase.STUNNED and not is_stunned():
 		_stun_phase = StunPhase.RECOVER
 		_stun_recover_t0 = _time
@@ -873,6 +1192,8 @@ func _physics_process(delta: float) -> void:
 		v = Input.get_vector(input_prefix + "_left", input_prefix + "_right", input_prefix + "_down", input_prefix + "_up")
 		dash_pressed = Input.is_action_just_pressed(input_prefix + "_dash")
 		flip_pressed = Input.is_action_just_pressed(input_prefix + "_flip")
+	dash_pressed = dash_pressed or req_dash
+	flip_pressed = flip_pressed or req_flip
 	var locked := _time < thrust_lock_until
 	if locked:
 		v = Vector2.ZERO   # отдача после удара: тяги нет (RM: бьющий не дожимает жертву)
@@ -888,10 +1209,10 @@ func _physics_process(delta: float) -> void:
 		if abs(v.x) > 0.01:
 			torso().apply_torque(Vector3(0, 0, -v.x * Tuning.ROTATE_TORQUE * mult))
 		if abs(v.y) > 0.01:
-			body.apply_central_force(Vector3(0, v.y, 0) * Tuning.MOVE_FORCE_PER_KG * total_mass * mult)
+			body.apply_central_force(Vector3(0, v.y, 0) * Tuning.MOVE_FORCE_PER_KG * thrust_mass() * mult)
 	var max_speed: float = Tuning.MAX_MOVE_SPEED * (Tuning.DASH_MULT if _time < dash_until else 1.0)
 	if mode != "rotate" and v.length_squared() > 0.0001:
-		var f := Vector3(v.x, v.y, 0.0).limit_length(1.0) * Tuning.MOVE_FORCE_PER_KG * total_mass * mult
+		var f := Vector3(v.x, v.y, 0.0).limit_length(1.0) * Tuning.MOVE_FORCE_PER_KG * thrust_mass() * mult
 		if _time < knockback_until and body.linear_velocity.length() > max_speed:
 			# в полёте после удара тяга не разгоняет дальше, только рулит/тормозит
 			var vdir := body.linear_velocity.normalized()

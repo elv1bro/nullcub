@@ -9,6 +9,10 @@
 ## soft (качество мягких теней 0..5), atlas (размер атласа теней), splits (0..2: 1/2/4 сплита),
 ## ssaoq (качество SSAO 0..4), bicubic (апскейл glow 0/1), orange (дальность факелов, м),
 ## sdfgi/ssil/fog/vfog/dof (0/1: SDFGI, SSIL, depth fog, объёмный туман, DOF camera_attributes — окружение v3 ruins_env.tres).
+## HIT_FX (29.09): hitfx=1 — нагрузка эффектами (HIT_FX.md §5.5): после 2 с heavy каждую секунду и crit каждые 3 с (настоящий
+## Match.on_hit с тестовым переключателем Match.hit_tiers.force_next; жертвы чередуются, hp возвращается к 100 — без KO). Время и FPS в
+## этом режиме и всегда — по реальным часам (Time.get_ticks_usec), не по delta: slow-mo крита иначе завышал бы FPS. min_sec_fps_hitfx=N —
+## exit 1, если худшее секундное окно ниже N. Пишет load average; при load > числа ядер — WARN (чужая нагрузка), не провал.
 ## Godot запускать нативно (arm64 → Metal): x86_64-обёртки (например /usr/local/bin/timeout) тянут Rosetta → MoltenVK.
 extends Node3D
 var t := 0.0
@@ -28,6 +32,15 @@ var min_fps := 0.0
 var fps_frames := 0
 var fps_time := 0.0
 var min_sec_fps := INF
+var hitfx := false
+const WARMUP_FRAMES := 30
+var warm := 0
+var hit_n := 0
+var next_hit_s := 2.0
+var min_sec_fps_req := 0.0
+var _last_us := 0
+var match_node: Match
+var hits_done := {"heavy": 0, "crit": 0}
 func _ready() -> void:
 	var scale := 1.0
 	var msaa := -1
@@ -75,13 +88,19 @@ func _ready() -> void:
 				"dof": dof = int(p[1])
 				"scene": scene_id = p[1]
 				"min_fps": min_fps = float(p[1])
+				"hitfx": hitfx = p[1] != "0"
+				"min_sec_fps_hitfx": min_sec_fps_req = float(p[1])
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	get_viewport().scaling_3d_scale = scale
 	if msaa >= 0: get_viewport().msaa_3d = msaa
 	if ssaa >= 0: get_viewport().screen_space_aa = ssaa
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
+	match_node = pg.get_node_or_null("Match") as Match
+	if hitfx and match_node != null:
+		match_node.countdown_s = 0.0
 	add_child(pg)
+	_last_us = Time.get_ticks_usec()
 	pg.get_node("P1").external_input = true
 	pg.get_node("P2").external_input = true
 	var arena: Node = pg.get("arena")
@@ -111,7 +130,38 @@ func _ready() -> void:
 			l.omni_range = orange
 	if fsr >= 0: get_viewport().scaling_3d_mode = fsr
 	print("window=", DisplayServer.window_get_size(), " visible=", get_viewport().get_visible_rect().size, " texture=", get_viewport().get_texture().get_size(), " screen_scale=", DisplayServer.screen_get_scale(), " max_scale=", DisplayServer.screen_get_max_scale(), " msaa=", get_viewport().msaa_3d, " ssaa=", get_viewport().screen_space_aa, " driver=", RenderingServer.get_current_rendering_driver_name(), " method=", RenderingServer.get_current_rendering_method())
-func _process(delta: float) -> void:
+## Удар как DollCombat._deliver (take_damage → apply_knockback → ImpactFx → Match.on_hit), из физики.
+func _physics_process(_d: float) -> void:
+	if not hitfx or match_node == null or t < next_hit_s:
+		return
+	next_hit_s += 1.0
+	hit_n += 1
+	var crit := hit_n % 3 == 0
+	var v := pg.get_node("P2" if hit_n % 2 == 0 else "P1") as Doll
+	var a := pg.get_node("P1" if hit_n % 2 == 0 else "P2") as Doll
+	if not v.alive or not v.can_take_damage():
+		return
+	v.hp = 100.0
+	var part := v.parts["Head" if crit else "Torso"] as RigidBody3D
+	var dir := Vector3(signf(v.centre_of_mass().x - a.centre_of_mass().x), 0.35, 0.0).normalized()
+	var pos := part.global_position - dir * 0.12
+	match_node.hit_tiers.force_next = "crit" if crit else "heavy"
+	v.hit_meta = {"dir": dir, "striker_name": "Hand_R"}
+	var dmg := 24.0 if crit else 12.0
+	v.take_damage(dmg, a, part.name, pos, -dir, "head" if crit else "body")
+	v.apply_knockback(Damage.knockback_dir(dir) * 3.0 * v.total_mass, v.torso(), 0.3, dir)
+	ImpactFx.spawn_impact(match_node, pos, -dir, 4.0 + dmg * 0.4, "head" if crit else "body")
+	match_node.on_hit(v, a, dmg, "head" if crit else "body", pos, 1, false, "", 7.0)
+	hits_done["crit" if crit else "heavy"] += 1
+
+
+func _process(_delta: float) -> void:
+	var now_us := Time.get_ticks_usec()
+	var delta := float(now_us - _last_us) / 1e6
+	_last_us = now_us
+	if warm < WARMUP_FRAMES:   # первые кадры — загрузка и компиляция пайплайнов (под чужой нагрузкой до 10+ с), не рендер
+		warm += 1
+		return
 	t += delta
 	frames += 1
 	sec_frames += 1
@@ -131,5 +181,19 @@ func _process(delta: float) -> void:
 		print(" | ".join(rows), " | avg TIME_PROCESS after 1s: %.2f ms" % (tp_sum / max(tp_n, 1) * 1000.0), " gpu=%.2f ms cpu=%.2f ms" % [gpu_sum / max(tp_n, 1), cpu_sum / max(tp_n, 1)], " | objects=", Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME), " prims=", Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME), " draw=", Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
 		var avg_fps := fps_frames / maxf(fps_time, 0.001)
 		var ok := avg_fps >= min_fps
-		print("PERF scene=%s avg_fps=%.1f min_sec_fps=%.1f min_fps=%.1f %s" % [scene_id, avg_fps, min_sec_fps, min_fps, "OK" if ok else "FAIL"])
+		var la: Array = []
+		OS.execute("/usr/sbin/sysctl", ["-n", "vm.loadavg"], la)
+		var load_s := (String(la[0]) if la.size() > 0 else "").strip_edges().replace("{ ", "").replace(" }", "")
+		var load1 := float(load_s.split(" ")[0]) if load_s != "" else 0.0
+		var busy := load1 > float(OS.get_processor_count())
+		if hitfx:
+			var fx_ok := min_sec_fps >= min_sec_fps_req
+			if not fx_ok and busy:
+				print("WARN hitfx: min_sec_fps %.1f < %.1f under foreign load %.1f > %d cores — not a failure" % [min_sec_fps, min_sec_fps_req, load1, OS.get_processor_count()])
+			elif not fx_ok:
+				ok = false
+			if busy and avg_fps < min_fps:
+				print("WARN hitfx: avg_fps %.1f < %.1f under foreign load — not a failure" % [avg_fps, min_fps])
+				ok = true
+		print("PERF scene=%s hitfx=%s hits=%s avg_fps=%.1f min_sec_fps=%.1f min_fps=%.1f load=[%s] cores=%d %s" % [scene_id, str(hitfx), str(hits_done), avg_fps, min_sec_fps, min_fps, load_s, OS.get_processor_count(), "OK" if ok else "FAIL"])
 		get_tree().quit(0 if ok else 1)

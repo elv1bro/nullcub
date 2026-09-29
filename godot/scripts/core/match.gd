@@ -10,6 +10,9 @@
 ## Итоги: {places, stats: {doll: stats}, medals: {name: doll}, winner, draw, reason, duration_s, ko_records, combo_score: {doll: float}}.
 ## Медали (09): Winner, Hardest Hit, Frequent Flyer, Wall Inspector, Weapon Master, Self Destruction, Acrobat, Survivor
 ## (одна медаль — один игрок, при нулевом показателе не выдаётся; Showman — только с вебкой, этап 10).
+## Стабильный API для подклассов (scripts/pve/wave_director.gd, WaveDirector extends Match — 29.09): члены _late_ready, _physics_process,
+## _on_doll_ko, _on_doll_damaged, _check_over, _set_phase, _camera_fx, _time_effect, _ko_order, _scan_t, _started не переименовывать и
+## не менять сигнатуры без согласования с сессией PvE (или сначала дать виртуальный хук «конец матча / выбор победителя»).
 ## hit_feel(strength, position): тряска и zoom impulse DynamicCamera (camera_path | группа "camera" | текущая камера) и hit stop
 ## через Engine.time_scale (80 мс от 20 HP, 120 мс от 35 HP), KO — slow-mo 0.25× на 1.2 с; таймеры в реальном времени.
 ## restart(): все куклы инстанцируются заново на точках спавна арены (arena_path | группа "arena" | сосед с spawn_points()),
@@ -30,6 +33,10 @@ signal match_over(winner: Doll, results: Dictionary)
 signal hit(victim: Doll, attacker: Node, damage: float, kind: String, position: Vector3)
 signal sudden_death_step(n: int)
 signal doll_replaced(old_doll: Doll, new_doll: Doll)
+## Эффекты удара (docs/plan-demo/HIT_FX.md §4.1): каждый удар с уроном > 0 (kind != environment) после hit_feel — ctx с уровнем
+## (HitTier); удар о статику ≥ HITFX_SLAM_SPEED без урона (DollCombat._notify_env_slam → on_env_slam).
+signal hit_fx(ctx: Dictionary)
+signal env_slam(ctx: Dictionary)
 
 const GROUP := "match"
 const DollCombatScript := preload("res://scripts/core/doll_combat.gd")
@@ -66,10 +73,25 @@ var _scan_t := 0.0
 var _started := false
 var _time_effects: Array = []   # [{"scale": float, "left": float}] — hit stop / slow-mo в реальных секундах
 
+# --- эффекты удара и крит (HIT_FX.md §4.1; вся логика — в конце файла) ---
+const HIT_FX_DIRECTOR_SCENE := "res://scenes/fx/hit_fx_director.tscn"
+const SFX_DIRECTOR_SCENE := "res://scenes/audio/sfx_director.tscn"
+## false — уровни не выше heavy/ko и без крит-отлёта (тесты, гейты с чужими числами).
+var crit_enabled: bool = Tuning.CRIT_ENABLED
+## Правило уровней и кулдауны крита; reset() — на COUNTDOWN (_on_phase_hitfx).
+var hit_tiers := HitTier.new()
+## Счётчики для проб: hit_fx / env_slam за жизнь Match.
+var hit_fx_count := 0
+var env_slam_count := 0
+var _camera_owner := ""
+var _captured_from: Camera3D = null
+
 
 func _ready() -> void:
 	ImpactFx.prewarm(self)  # шейдеры вспышек/частиц до первого удара
+	FxClock.ensure(self)    # масштаб времени, с которым посчитан delta кадра (hit stop из физики, HIT_FX.md §2.2)
 	add_to_group(GROUP)
+	_ensure_fx_directors()
 	call_deferred("_late_ready")
 
 
@@ -191,6 +213,15 @@ func respawn_doll(old: Doll) -> Doll:
 	d.skin_bone_map = old.skin_bone_map
 	d.control_mode = old.control_mode
 	d.control_target = old.control_target
+	d.muscle_zeta = old.muscle_zeta
+	d.team = old.team
+	d.max_hp = old.max_hp
+	# ModularDoll (BODY_CRAFT.md): чертёж из мастерской переживает KO / R — ставится до add_child, сборка идёт в _ready.
+	# Только чертёж в памяти (CraftEdit.dup_body → BodyBlueprint.new(), resource_path ""): пресет .tres приходит со сценой, а
+	# playground_body.set_preset меняет scene_file_path и зовёт respawn — копия старого чертежа затёрла бы новый пресет.
+	var bp: Variant = old.get("blueprint")
+	if bp is Resource and (bp as Resource).resource_path == "":
+		d.set("blueprint", bp)
 	for g in old.get_groups():
 		d.add_to_group(g)
 	if not d.is_in_group(dolls_group):
@@ -249,7 +280,7 @@ func begin() -> void:
 	_countdown_left = countdown_s
 	_countdown_shown = -1
 	for d in dolls():
-		hp_changed.emit(d, (d as Doll).hp, Tuning.MAX_HP)
+		hp_changed.emit(d, (d as Doll).hp, (d as Doll).max_hp)
 	time_left.emit(time_limit_s)
 	if countdown_s <= 0.0:
 		_start_fight()
@@ -283,7 +314,7 @@ func _start_fight() -> void:
 	fight_time = 0.0
 	_set_phase(Phase.FIGHT)
 	for d in dolls():
-		hp_changed.emit(d, (d as Doll).hp, Tuning.MAX_HP)
+		hp_changed.emit(d, (d as Doll).hp, (d as Doll).max_hp)
 	announce.emit("FIGHT!", ANNOUNCE_COLORS["fight"], "fight")
 
 
@@ -362,7 +393,7 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if _time_effects.is_empty():
 		return
-	var real := delta / maxf(Engine.time_scale, 1e-4)
+	var real := FxClock.real_delta(delta)  # не delta / Engine.time_scale: стоп, поставленный в физике этого кадра, истекал сразу
 	var scale := 1.0
 	var i := 0
 	while i < _time_effects.size():
@@ -391,6 +422,7 @@ func on_hit(victim: Doll, attacker: Node, damage: float, kind: String, position:
 		if combo_n >= 2:
 			announce.emit("%d HIT COMBO!" % combo_n, COMBO_COLORS[clampi(combo_n - 2, 0, COMBO_COLORS.size() - 1)], "combo")
 	hit_feel(damage, position)
+	_emit_hit_fx(victim, attacker, damage, kind, position, combo_n, double_blow, _weapon_id, _speed)
 
 
 func on_combo(doll: Doll, n: int) -> void:
@@ -398,7 +430,7 @@ func on_combo(doll: Doll, n: int) -> void:
 
 
 func _on_doll_damaged(_amount: float, _attacker: Node, _part: String, _position: Vector3, _kind: String, doll: Doll) -> void:
-	hp_changed.emit(doll, doll.hp, Tuning.MAX_HP)
+	hp_changed.emit(doll, doll.hp, doll.max_hp)
 
 
 func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
@@ -415,7 +447,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 		var s: Dictionary = (attacker as Doll).stats
 		s["kos"] = int(s["kos"]) + 1
 	victim.stats["kos_taken"] = maxi(int(victim.stats["kos_taken"]), 1)
-	hp_changed.emit(victim, 0.0, Tuning.MAX_HP)
+	hp_changed.emit(victim, 0.0, victim.max_hp)
 	combo_changed.emit(victim, 0)
 	announce.emit("KO!", ANNOUNCE_COLORS["ko"], "ko")
 	ko.emit(victim, attacker, rec)
@@ -447,10 +479,11 @@ func _camera_fx(strength: float, _position: Vector3) -> void:
 	var cam := _camera()
 	if cam == null:
 		return
-	if cam.has_method("shake"):
-		cam.call("shake", Tuning.HIT_SHAKE_PER_10HP * strength / 10.0)
-	if strength >= Tuning.HIT_ZOOM_DAMAGE and cam.has_method("zoom_impulse"):
-		cam.call("zoom_impulse", Tuning.HIT_ZOOM_FRAC, Tuning.HIT_ZOOM_S)
+	var k := FxPreset.shake()   # пресет FX (HIT_FX.md §11.2): full 1, reduced 0.5, off 0
+	if cam.has_method("shake") and k > 0.0:
+		cam.call("shake", Tuning.HIT_SHAKE_PER_10HP * strength / 10.0 * k)
+	if strength >= Tuning.HIT_ZOOM_DAMAGE and cam.has_method("zoom_impulse") and k > 0.0:
+		cam.call("zoom_impulse", Tuning.HIT_ZOOM_FRAC * k, Tuning.HIT_ZOOM_S)
 
 
 func _time_effect(scale: float, real_seconds: float) -> void:
@@ -463,6 +496,8 @@ func hit_feel(strength: float, position: Vector3) -> void:
 	if not feel_enabled:
 		return
 	_camera_fx(strength, position)
+	if not FxPreset.time_fx():
+		return   # пресет FX off: без hit stop
 	if strength >= Tuning.HIT_STOP_DAMAGE_2:
 		_time_effect(Tuning.HIT_STOP_TIME_SCALE, Tuning.HIT_STOP_S_2)
 	elif strength >= Tuning.HIT_STOP_DAMAGE_1:
@@ -573,3 +608,176 @@ static func _medal_max(medals: Dictionary, medal: String, places: Array, key: St
 			best = d
 	if best != null:
 		medals[medal] = best
+
+
+# --- эффекты удара и крит (docs/plan-demo/HIT_FX.md §4.1): ctx удара, уровень, крит-отлёт, время и камера для эффектов ---
+
+## Директоры эффектов и звука детьми Match (если их нет, есть сцена и Tuning.HITFX_ENABLED) — эффекты работают на всех площадках
+## с Match без правки их сцен. Сброс кулдаунов крита — свой обработчик phase_changed.
+func _ensure_fx_directors() -> void:
+	if not phase_changed.is_connected(_on_phase_hitfx):
+		phase_changed.connect(_on_phase_hitfx)
+	if not Tuning.HITFX_ENABLED:
+		return
+	for e in [[HIT_FX_DIRECTOR_SCENE, "HitFxDirector"], [SFX_DIRECTOR_SCENE, "SfxDirector"]]:
+		if get_node_or_null(String(e[1])) != null or not ResourceLoader.exists(String(e[0])):
+			continue
+		var ps := load(String(e[0])) as PackedScene
+		if ps == null:
+			continue
+		var n := ps.instantiate()
+		n.name = String(e[1])
+		add_child(n)
+		if n.is_in_group(FxPreset.DIRECTOR_GROUP):
+			FxPreset.apply(n)   # пресет FX игрока (F10, HIT_FX.md §11.2)
+
+
+## COUNTDOWN (begin / restart): кулдауны крита заново; захваченная камера возвращается. OVER без KO (таймаут) — тоже;
+## OVER после KO камеру не трогает — крупный план ko_crit ещё идёт, его закончит сам кинематограф.
+func _on_phase_hitfx(p: int) -> void:
+	if p == Phase.COUNTDOWN:
+		hit_tiers.reset()
+	if _camera_owner != "" and (p == Phase.COUNTDOWN or (p == Phase.OVER and _ko_order.is_empty())):
+		release_camera(_camera_owner)
+
+
+## ctx удара → уровень (HitTier) → крит-отлёт (CritLaunch) → hit stop heavy → сигнал hit_fx. Зовёт on_hit последней строкой.
+func _emit_hit_fx(victim: Doll, attacker: Node, damage: float, kind: String, position: Vector3, combo_n: int, double_blow: bool, weapon_id: String, speed: float) -> void:
+	if victim == null or not is_instance_valid(victim) or damage <= 0.0 or kind == "environment":
+		return
+	var ctx := make_hit_ctx(victim, attacker, damage, kind, position, combo_n, double_blow, weapon_id, speed)
+	var tier := hit_tiers.classify(ctx, fight_time, crit_enabled)
+	ctx["tier"] = tier
+	ctx["launch_dv"] = Vector3.ZERO
+	if tier == HitTier.CRIT or tier == HitTier.KO_CRIT:
+		ctx["launch_dv"] = CritLaunch.apply(ctx, knockback_mult())
+	if tier == HitTier.HEAVY: ctx["brake_cut"] = CritLaunch.brake_attacker(ctx, Tuning.HEAVY_ATTACKER_BRAKE_SPEED, Tuning.HEAVY_ATTACKER_BRAKE_S)   # HIT_FX §12.2
+	if tier == HitTier.HEAVY and damage < Tuning.HIT_STOP_DAMAGE_1:
+		request_time_scale(Tuning.HIT_STOP_TIME_SCALE, Tuning.HITFX_HEAVY_STOP_S, "heavy_stop")
+	hit_fx_count += 1
+	hit_fx.emit(ctx)
+
+
+## Поля ctx (HIT_FX.md §4.1): victim, attacker, damage, kind, part, part_base, striker, position, normal, dir, speed, weapon_id, combo,
+## double_blow, dash, score, tier, is_ko, hp_after, fight_time, sd_mult, colour (score/tier дописывает classify / _emit_hit_fx).
+func make_hit_ctx(victim: Doll, attacker: Node, damage: float, kind: String, position: Vector3, combo_n: int, double_blow: bool, weapon_id: String, speed: float) -> Dictionary:
+	var lh: Dictionary = victim.last_hit
+	var part := String(lh.get("part", ""))
+	var normal: Vector3 = lh.get("normal", Vector3.ZERO)
+	var dir: Vector3 = lh.get("dir", Vector3.ZERO)
+	dir.z = 0.0
+	if dir.length_squared() < 1e-6:
+		dir = Vector3(-normal.x, -normal.y, 0.0)
+	dir = dir.normalized() if dir.length_squared() > 1e-6 else Vector3.RIGHT
+	var striker := weapon_id if weapon_id != "" else String(lh.get("striker_name", ""))
+	var dash := false
+	if attacker != null and is_instance_valid(attacker) and attacker.has_method("is_dashing"):
+		dash = bool(attacker.call("is_dashing"))
+	var pi := victim.player_index
+	var colour: Color = Tuning.PLAYER_COLORS[pi % Tuning.PLAYER_COLORS.size()] if pi >= 0 else Color.WHITE
+	return {
+		"victim": victim, "attacker": attacker if attacker != null and is_instance_valid(attacker) else null, "damage": damage, "kind": kind,
+		"part": part, "part_base": Doll.part_base_name(part), "striker": striker, "position": position, "normal": normal, "dir": dir,
+		"speed": speed, "weapon_id": weapon_id, "combo": combo_n, "double_blow": double_blow, "dash": dash, "score": 0.0, "tier": "",
+		"is_ko": not victim.alive, "hp_after": victim.hp, "fight_time": fight_time, "sd_mult": knockback_mult(), "colour": colour,
+	}
+
+
+## Удар о статику ≥ HITFX_SLAM_SPEED (DollCombat, без урона) → сигнал env_slam(ctx) в конце кадра физики (не в коллбэке контакта).
+func on_env_slam(doll: Doll, part: String, speed: float, position: Vector3, normal: Vector3) -> void:
+	if doll == null or not is_instance_valid(doll):
+		return
+	var ctx := {
+		"doll": doll, "part": part, "speed": speed, "position": position, "normal": normal, "flying": doll.is_flying(),
+		"crit_flight": bool(doll.call("flight_cap_active")) if doll.has_method("flight_cap_active") else false, "fight_time": fight_time,
+	}
+	env_slam_count += 1
+	call_deferred("_emit_env_slam", ctx)
+
+
+func _emit_env_slam(ctx: Dictionary) -> void:
+	env_slam.emit(ctx)
+
+
+## Замедление/стоп-кадр для эффектов поверх _time_effects (hit stop и KO slow-mo не меняются: действует минимум). scale ≥
+## HITFX_TIME_SCALE_MIN, real_s — реальные секунды; тот же tag заменяет прежнюю запись. false и ничего — при feel_enabled = false.
+func request_time_scale(scale: float, real_s: float, tag: String = "") -> bool:
+	if not feel_enabled or real_s <= 0.0:
+		return false
+	if not FxPreset.time_tag_allowed(tag):
+		return false   # пресет FX off (HIT_FX.md §11.2): без стоп-кадров и замедлений, кроме KO
+	if tag != "":
+		_drop_time_tag(tag)
+	var s := clampf(scale, Tuning.HITFX_TIME_SCALE_MIN, 1.0)
+	# −1 мкс: сумма кадров 3 × 1/60 не добирает до 0.05 на ошибку округления, и стоп держался бы лишний кадр
+	_time_effects.append({"scale": s, "left": real_s - 1e-6, "tag": tag})
+	Engine.time_scale = minf(Engine.time_scale, s)
+	return true
+
+
+## Снять записи с тегом: Engine.time_scale = min(оставшиеся, 1).
+func cancel_time_scale(tag: String) -> void:
+	if tag == "":
+		return
+	_drop_time_tag(tag)
+	var scale := 1.0
+	for e in _time_effects:
+		scale = minf(scale, float(e["scale"]))
+	Engine.time_scale = scale
+
+
+func time_scale_tags() -> Array:
+	var out: Array = []
+	for e in _time_effects:
+		var tg := String((e as Dictionary).get("tag", ""))
+		if tg != "" and not out.has(tg):
+			out.append(tg)
+	return out
+
+
+func _drop_time_tag(tag: String) -> void:
+	var i := 0
+	while i < _time_effects.size():
+		if String((_time_effects[i] as Dictionary).get("tag", "")) == tag:
+			_time_effects.remove_at(i)
+		else:
+			i += 1
+
+
+## Игровая камера площадки (DynamicCamera: camera_path | группа "camera"); пока камера захвачена — та, что была до захвата.
+func game_camera() -> Camera3D:
+	var c: Node = get_node_or_null(camera_path) if camera_path != NodePath() else null
+	if c == null:
+		c = get_tree().get_first_node_in_group("camera")
+	if c == null and _captured_from != null and is_instance_valid(_captured_from):
+		c = _captured_from
+	if c == null:
+		c = get_viewport().get_camera_3d()
+	return c as Camera3D
+
+
+## Захват камеры эффектом (крупный план крита): cam.make_current(), владелец tag. Повторный захват тем же владельцем — смена камеры.
+func capture_camera(cam: Camera3D, tag: String) -> void:
+	if cam == null or not is_instance_valid(cam) or tag == "":
+		return
+	if _camera_owner != "" and _camera_owner != tag:
+		return
+	if _camera_owner == "":
+		_captured_from = game_camera()
+	_camera_owner = tag
+	cam.make_current()
+
+
+## Вернуть игровую камеру, если владелец — tag.
+func release_camera(tag: String) -> void:
+	if tag == "" or _camera_owner != tag:
+		return
+	_camera_owner = ""
+	var g := game_camera()
+	_captured_from = null
+	if g != null and is_instance_valid(g) and g.is_inside_tree():
+		g.make_current()
+
+
+func camera_owner() -> String:
+	return _camera_owner

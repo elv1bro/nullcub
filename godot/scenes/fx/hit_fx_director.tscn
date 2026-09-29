@@ -1,0 +1,59 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/fx/hit_fx_director.gd" id="1_dir"]
+[ext_resource type="Script" path="res://scripts/fx/screen_fx.gd" id="2_scr"]
+[ext_resource type="Shader" path="res://scenes/fx/shaders/impact_frame.gdshader" id="3_imp"]
+[ext_resource type="Shader" path="res://scenes/fx/shaders/speed_lines.gdshader" id="4_lines"]
+
+[sub_resource type="ShaderMaterial" id="ImpactMat"]
+shader = ExtResource("3_imp")
+shader_parameter/mode = 0
+shader_parameter/strength = 1.0
+
+[sub_resource type="ShaderMaterial" id="LinesMat"]
+shader = ExtResource("4_lines")
+shader_parameter/centre = Vector2(0.5, 0.5)
+shader_parameter/dir = Vector2(1, 0)
+shader_parameter/alpha = 0.0
+shader_parameter/t = 0.0
+shader_parameter/aspect = 1.7778
+shader_parameter/clear_radius = 0.24
+
+[node name="HitFxDirector" type="Node" groups=["hit_fx_director"]]
+script = ExtResource("1_dir")
+
+[node name="FxRoot" type="Node3D" parent="."]
+
+[node name="ScreenFx" type="CanvasLayer" parent="."]
+layer = 5
+script = ExtResource("2_scr")
+
+[node name="SpeedLines" type="ColorRect" parent="ScreenFx"]
+visible = false
+material = SubResource("LinesMat")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ImpactFrame" type="ColorRect" parent="ScreenFx"]
+visible = false
+material = SubResource("ImpactMat")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Flash" type="ColorRect" parent="ScreenFx"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.25)

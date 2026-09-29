@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://hittierprobe1"]
+
+[ext_resource type="Script" path="res://tests/hitfx_core_probe.gd" id="1_ht"]
+
+[node name="HitTierProbe" type="Node3D"]
+script = ExtResource("1_ht")
+default_only = "tier"

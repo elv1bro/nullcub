@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/sfx_probe.gd" id="1_sfx"]
+
+[node name="SfxProbe" type="Node3D"]
+script = ExtResource("1_sfx")

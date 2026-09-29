@@ -3,8 +3,8 @@
 ## Дерево (арена, P1/P2 с WeaponPickup, Weapons, Camera, Match, HUD, UI/Hint) живёт в сцене: scenes/playground.tscn — «Руины»,
 ## scenes/playground_workshop.tscn — «Мастерская», scenes/playground_void.tscn — «Void» (пустое чёрное поле RM, без оружия;
 ## Weapons там пустой — только молот Sudden Death) (ASSET_PIPELINE.md, правило 2). Здесь только поведение:
-##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — выход, 1 / 2 / 3 — сменить арену
-##   (Руины / Мастерская / Void);
+##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — выход, 1–6 — сменить площадку
+##   (Руины / Мастерская / Void / Свалка / Тело / Сборка — последние две из сессии сборки тела, BODY_CRAFT.md);
 ##   пропасть (сигнал body_fell арены): во время боя — Doll.knock_out() (KO kind "self", Match сам заканчивает матч), иначе —
 ##   респавн через RESPAWN_DELAY_S через Match.respawn_doll (той же породы дерева);
 ##   Sudden Death (Match.sudden_death_step): шаг SUDDEN_DEATH_HEAVY_WEAPON_STEP — молот падает в центр арены,
@@ -12,19 +12,30 @@
 ##   камера: snap на отсчёте (после рестарта куклы стоят на новых местах); меши оружия → gi_mode DYNAMIC (SDFGI в окружении).
 ## Щепки/пыль (ImpactFx) и урон считает DollCombat — ребёнок каждой куклы, его добавляет Match.register.
 ## P1: WASD, Shift рывок, Space переворот. P2: стрелки, правый Ctrl рывок, Enter переворот.
+## F10 — пресет эффектов ударов full → reduced → off (FxPreset, HIT_FX.md §11.2), тост «FX: …» внизу экрана на FX_TOAST_S.
 extends Node3D
 
-const SCENES := {"ruins": "res://scenes/playground.tscn", "workshop": "res://scenes/playground_workshop.tscn", "void": "res://scenes/playground_void.tscn"}
+const SCENES := {
+	"ruins": "res://scenes/playground.tscn",
+	"workshop": "res://scenes/playground_workshop.tscn",
+	"void": "res://scenes/playground_void.tscn",
+	"scrap": "res://scenes/playground_scrap.tscn",          # Свалка (биом 01, CONCEPT_V2)
+	"body": "res://scenes/playground_body.tscn",            # площадка сборки тела: пресеты F1–F12, [ ] / PgUp PgDn (BODY_CRAFT.md)
+	"build": "res://scenes/workshop/workshop_build.tscn",   # мастерская: сборка тела и оружия (BODY_CRAFT.md)
+}
 const DOLLS_GROUP := "dolls"
 const RESPAWN_DELAY_S := 1.0
 const SD_HAMMER_DROP_M := 1.5      # молот Sudden Death появляется на столько метров ниже потолка арены и падает
+const FX_TOAST_S := 1.2            # с реального времени: тост пресета FX (F10) держится, потом гаснет за 0.3 с
 
-## Идентификатор текущей арены (ключ SCENES) — какую сцену НЕ перезагружать по 1/2/3.
+## Идентификатор текущей арены (ключ SCENES) — какую сцену НЕ перезагружать по 1–6.
 @export var arena_id := "ruins"
 
 var arena: Node3D                  # RuinsArena | WorkshopArena | VoidArena: spawn_points(), bounds(), сигнал body_fell
 var hits := 0                      # число ударов с начала (Match.hit) — читают тесты
 var sd_hammer: Weapon = null       # молот Sudden Death (один на матч)
+var fx_toast: Label = null         # тост F10 (создаётся при первом нажатии, CanvasLayer 20 — поверх HUD)
+var _fx_toast_tw: Tween = null
 
 @onready var cam: DynamicCamera = $Camera
 @onready var match_node: Match = $Match
@@ -72,6 +83,51 @@ func _unhandled_input(event: InputEvent) -> void:
 				switch_arena("workshop")
 			KEY_3:
 				switch_arena("void")
+			KEY_4:
+				switch_arena("scrap")
+			KEY_5:
+				switch_arena("body")
+			KEY_6:
+				switch_arena("build")
+			KEY_F10:
+				cycle_fx_preset()
+
+
+## F10: следующий пресет FX (применяется ко всем HitFxDirector сразу) и тост. Возвращает имя пресета.
+func cycle_fx_preset() -> String:
+	var preset := FxPreset.cycle(get_tree())
+	_show_fx_toast(FxPreset.label())
+	return preset
+
+
+func _show_fx_toast(text: String) -> void:
+	if fx_toast == null or not is_instance_valid(fx_toast):
+		var layer := CanvasLayer.new()
+		layer.name = "FxToast"
+		layer.layer = 20
+		add_child(layer)
+		fx_toast = Label.new()
+		fx_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		fx_toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		fx_toast.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		fx_toast.offset_left = -160.0
+		fx_toast.offset_right = 160.0
+		fx_toast.offset_top = -120.0
+		fx_toast.offset_bottom = -80.0
+		fx_toast.add_theme_font_size_override("font_size", 26)
+		fx_toast.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		fx_toast.add_theme_constant_override("outline_size", 6)
+		fx_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		layer.add_child(fx_toast)
+	fx_toast.text = text
+	fx_toast.modulate = Color(1, 1, 1, 1)
+	fx_toast.visible = true
+	if _fx_toast_tw != null and _fx_toast_tw.is_valid():
+		_fx_toast_tw.kill()
+	_fx_toast_tw = fx_toast.create_tween().set_ignore_time_scale(true)
+	_fx_toast_tw.tween_interval(FX_TOAST_S)
+	_fx_toast_tw.tween_property(fx_toast, "modulate:a", 0.0, 0.3)
+	_fx_toast_tw.tween_callback(func() -> void: fx_toast.visible = false)
 
 
 ## Смена арены: загрузка другой площадки целиком (Match._exit_tree возвращает Engine.time_scale = 1).

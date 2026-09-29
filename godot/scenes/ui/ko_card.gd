@@ -23,6 +23,11 @@ var _burst_base := Vector2.ZERO
 var _last_ms := 0
 var _hide_at_ms := 0
 var _tw: Tween
+# HIT_FX §3.3 (ko_crit): карточка откладывается на время крупного плана крита и показывается заново
+var _defer_until_ms := 0
+var _defer_gen := 0
+var _last_name := ""
+var _last_colour := Color.WHITE
 
 
 func _ready() -> void:
@@ -38,6 +43,8 @@ func set_splatter_alpha(a: float) -> void:
 
 ## Осталось секунд показа (0, если карточка скрыта) — HUD откладывает панель итогов до конца карточки.
 func remaining_s() -> float:
+	if _defer_until_ms > 0:   # HIT_FX §3.3: отложенный показ (ko_crit)
+		return maxf(float(_defer_until_ms - Time.get_ticks_msec()) / 1000.0, 0.0) + SHOW_S
 	if not visible:
 		return 0.0
 	return maxf(float(_hide_at_ms - Time.get_ticks_msec()) / 1000.0, 0.0)
@@ -47,6 +54,8 @@ func show_card(victim_name: String = "", colour: Color = Color.WHITE) -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
 	visible = true
+	_last_name = victim_name
+	_last_colour = colour
 	modulate = Color.WHITE
 	victim_label.visible = victim_name != ""
 	victim_label.text = victim_name
@@ -69,6 +78,30 @@ func show_card(victim_name: String = "", colour: Color = Color.WHITE) -> void:
 	_tw.tween_property(self, "modulate:a", 0.0, FADE_S).set_delay(SHOW_S - FADE_S)
 	_tw.set_parallel(false)
 	_tw.tween_callback(hide)
+
+
+## HIT_FX §3.3: спрятать карточку сейчас и показать её заново (полные SHOW_S) через real_s реального времени.
+## remaining_s() учитывает отложенный показ — итоги матча ждут карточку.
+func defer(real_s: float) -> void:
+	if not visible and _defer_until_ms == 0:
+		return
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	visible = false
+	_defer_gen += 1
+	var gen := _defer_gen
+	_defer_until_ms = Time.get_ticks_msec() + int(maxf(real_s, 0.0) * 1000.0)
+	get_tree().create_timer(maxf(real_s, 0.0), true, false, true).timeout.connect(func() -> void:
+		if gen != _defer_gen or _defer_until_ms == 0:
+			return
+		_defer_until_ms = 0
+		show_card(_last_name, _last_colour))
+
+
+## Отменить отложенный показ (restart / COUNTDOWN).
+func cancel_defer() -> void:
+	_defer_gen += 1
+	_defer_until_ms = 0
 
 
 func _process(_delta: float) -> void:

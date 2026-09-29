@@ -1,0 +1,102 @@
+[gd_scene load_steps=11 format=3 uid="uid://critoverlay01"]
+
+[ext_resource type="Script" path="res://scenes/ui/crit_overlay.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://hudtheme0001" path="res://scenes/ui/hud_theme.tres" id="2_theme"]
+[ext_resource type="Shader" path="res://assets/shaders/fx/speed_lines.gdshader" id="3_speed"]
+[ext_resource type="Shader" path="res://assets/shaders/fx/screen_crack.gdshader" id="4_crack"]
+[ext_resource type="Shader" path="res://assets/shaders/fx/crit_screen.gdshader" id="5_screen"]
+[ext_resource type="Texture2D" path="res://assets/textures/fx/crack_screen.png" id="6_cracktex"]
+
+[sub_resource type="ShaderMaterial" id="speed_mat"]
+shader = ExtResource("3_speed")
+
+[sub_resource type="ShaderMaterial" id="crack_mat"]
+shader = ExtResource("4_crack")
+shader_parameter/crack_tex = ExtResource("6_cracktex")
+
+[sub_resource type="ShaderMaterial" id="screen_mat"]
+shader = ExtResource("5_screen")
+
+[node name="CritOverlay" type="CanvasLayer"]
+layer = 30
+script = ExtResource("1_script")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="SpeedLines" type="ColorRect" parent="Root"]
+visible = false
+material = SubResource("speed_mat")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ScreenCrack" type="ColorRect" parent="Root"]
+visible = false
+material = SubResource("crack_mat")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Letterbox" type="Control" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Top" type="ColorRect" parent="Root/Letterbox"]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 119.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Bottom" type="ColorRect" parent="Root/Letterbox"]
+layout_mode = 0
+offset_top = 961.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Caption" type="Label" parent="Root"]
+visible = false
+layout_mode = 0
+offset_top = 550.0
+offset_right = 1920.0
+offset_bottom = 790.0
+mouse_filter = 2
+theme_type_variation = &"AnnounceLabel"
+text = "CRUSHING BLOW!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CutFlash" type="ColorRect" parent="Root"]
+visible = false
+material = SubResource("screen_mat")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

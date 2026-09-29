@@ -261,6 +261,7 @@ func _next() -> void:
 		"band_hammer":
 			a = _spawn_doll(DollScene, 0, Vector3(-2.0, 0, 0))
 			b = _spawn_doll(DollDarkScene, 1, Vector3(1.2, 0, 0))
+			_target_arms_down(b)
 		"idle_no_damage":
 			a = _spawn_doll(DollScene, 0, Vector3(-2.0, 0, 0))
 			b = _spawn_doll(DollDarkScene, 1, Vector3(2.0, 0, 0))
@@ -273,6 +274,7 @@ func _next() -> void:
 		"weapon_still":
 			a = _spawn_doll(DollScene, 0, Vector3(-2.0, 0, 0))
 			b = _spawn_doll(DollDarkScene, 1, Vector3(1.2, 0, 0))
+			_target_arms_down(b)
 			_make_feel_match()
 		"weapon_thrown":
 			a = _spawn_doll(DollScene, 0, Vector3(1.0, 0, 0))
@@ -421,6 +423,15 @@ func _fly_prop(v: Vector3) -> void:
 ## вдоль ±X (aim_x — знак, в сторону цели), какой бы ни была поза покоя руки: attach ставит оружие под углом
 ## φ_кисти − 90° + hold_angle·side (Hand_L: side = +1). Иначе при руках «в стороны» (POSE Shoulder 90°) молот торчит
 ## вертикально и первым касается кисть — сценарий проверял бы не оружие.
+## Цель молота опускает руки (плечи 12° вместо Т-позы 85°, сразу до первого шага физики): молот, вытянутый вдоль руки атакующего,
+## бьёт в корпус / голову, а не по касательной в вытянутую навстречу кисть. С Т-позой первый контакт — скольжение молота по пальцам
+## (0.39 HP), и откат пары PAIR_HIT_COOLDOWN_S съедает настоящий удар; до 29.09 этого не было только потому, что спавн в позе
+## (Doll._snap_to_pose) отрывал предплечье на 5–7 см и кисть цели висела ниже линии молота.
+func _target_arms_down(d: Doll) -> void:
+	d.set_pose({"Shoulder": 12.0, "Elbow": 5.0})
+	d._snap_to_pose(["Shoulder", "Elbow"])
+
+
 func _attach_hammer(d: Doll, aim_x: float) -> bool:
 	var pickup: WeaponPickup = PickupScript.new()
 	pickup.name = "WeaponPickup"

@@ -191,9 +191,13 @@ func _spawn_debris() -> void:
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.UP
 		body.linear_velocity = linear_velocity + dir * burst_speed + Vector3.UP * burst_speed * 0.4
 		body.angular_velocity = Vector3(0.0, 0.0, randf_range(-5.0, 5.0))
+		# weakref: сцену могут освободить раньше таймеров (смена арены, конец теста) — лямбда не держит мёртвую ссылку
+		var wr: WeakRef = weakref(body)
 		tree.create_timer(debris_freeze_s).timeout.connect(func() -> void:
-			if is_instance_valid(body):
-				body.freeze = true)
+			var rb := wr.get_ref() as RigidBody3D
+			if rb != null:
+				rb.freeze = true)
 		tree.create_timer(debris_free_s).timeout.connect(func() -> void:
-			if is_instance_valid(body):
-				body.queue_free())
+			var rb := wr.get_ref() as RigidBody3D
+			if rb != null:
+				rb.queue_free())

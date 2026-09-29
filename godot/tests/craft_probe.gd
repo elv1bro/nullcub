@@ -422,7 +422,7 @@ func _snap(d: Doll, jn: String, target_deg: float, bodies: Array) -> void:
 	var pb := j.get_node(j.node_b) as RigidBody3D
 	var cur := wrapf(pb.global_rotation.z - pa.global_rotation.z, -PI, PI)
 	var delta := wrapf(deg_to_rad(target_deg) - cur, -PI, PI)
-	var pivot := j.global_position
+	var pivot := d.joint_pivot_global(jn)   # якорь на родителе; узел сустава стоит на месте сборки (29.09: Doll спавнится в позе без разрыва)
 	var rot := Basis(Vector3(0, 0, 1), delta)
 	for n in bodies:
 		var rb: RigidBody3D = d.parts[n]

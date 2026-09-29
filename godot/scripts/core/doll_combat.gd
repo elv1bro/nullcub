@@ -11,6 +11,7 @@
 ##     той же v без бонуса «в голову» (RM);
 ##   • Weapon → kind weapon (масса оружия, damage_mult, атакующий = Weapon.attacker(3 с) → Doll; своё оружие = kind self);
 ##     оружие без атрибуции (никто не держит и не бросал ≤ 3 с, например толкнутое другой куклой) = kind environment;
+##     масса оружия с 29.09 не режется MASS_CAP (Damage.weapon_mass; кап стандартного оружия — в его damage_mult);
 ##   • статика/пропс → kind environment, если v ≥ ENV_MIN_IMPACT_SPEED (масса = min(кукла или пропс, MASS_CAP), ×ENV_DAMAGE_MULT;
 ##     без нормали контакта статика не бьёт — скольжение вдоль пола не отличить от удара).
 ## Урон от окружения выключен (Tuning.ENV_DAMAGE_ENABLED = false, решение автора 28.09): kind environment — и статика/пропс, и
@@ -91,18 +92,35 @@ func _setup() -> void:
 	_setup_done = true
 	for pn in MONITORED:
 		var b := doll.parts.get(pn) as RigidBody3D
-		if b == null:
+		if b != null:
+			_monitor(b)
+	# детали сборки (ModularDoll: «Hand_3», «Foot_C», бьющая цепь кистеня) — по базовому имени или решению самой куклы
+	var bases: Dictionary = {}
+	for pn in MONITORED:
+		bases[Doll.part_base_name(String(pn))] = true
+	for pn in doll.parts.keys():
+		var b := doll.parts[pn] as RigidBody3D
+		if b == null or _monitored.has(b):
 			continue
-		b.contact_monitor = true
-		b.max_contacts_reported = maxi(b.max_contacts_reported, MAX_CONTACTS)
-		b.body_entered.connect(_on_part_contact.bind(b))
-		_monitored.append(b)
-		prev_vel[b] = [b.linear_velocity, b.angular_velocity]
+		var want: bool = bool(doll.call("combat_monitored", String(pn))) if doll.has_method("combat_monitored") \
+			else bases.has(Doll.part_base_name(String(pn)))
+		if want:
+			_monitor(b)
 	for b in doll.parts.values():
 		prev_vel[b] = [(b as RigidBody3D).linear_velocity, (b as RigidBody3D).angular_velocity]
 	_prev_torso_rot = doll.torso().global_rotation.z
 	if match_ref == null:
 		match_ref = get_tree().get_first_node_in_group("match")
+
+
+func _monitor(b: RigidBody3D) -> void:
+	if _monitored.has(b):
+		return   # ModularDoll._hook_combat мог подключить деталь раньше _setup
+	b.contact_monitor = true
+	b.max_contacts_reported = maxi(b.max_contacts_reported, MAX_CONTACTS)
+	b.body_entered.connect(_on_part_contact.bind(b))
+	_monitored.append(b)
+	prev_vel[b] = [b.linear_velocity, b.angular_velocity]
 
 
 func _exit_tree() -> void:
@@ -241,7 +259,7 @@ func _contact_doll(part: RigidBody3D, other: RigidBody3D, other_doll: Doll, pos:
 		var dir := striker_v if striker_v.length_squared() > 1e-4 else (part.global_position - other.global_position)
 		_enqueue({
 			"victim_part": part, "striker": other, "attacker": other_doll, "kind": "head" if part.name.begins_with("Head") else "body",
-			"mass": other.mass, "body_mult": Damage.body_mult_of(other.name), "weapon_mult": 1.0, "weapon_id": "",
+			"mass": other.mass, "body_mult": Damage.body_mult_of_body(other), "weapon_mult": 1.0, "weapon_id": "",
 			"speed": closing, "target_mult": 1.0 if head_head else Damage.target_mult_of(part.name),
 			"pos": pos, "nrm": nrm, "dir": dir, "t": _time,
 		})
@@ -256,7 +274,7 @@ func _contact_doll(part: RigidBody3D, other: RigidBody3D, other_doll: Doll, pos:
 	var dir := striker_v if striker_v.length_squared() > 1e-4 else (other.global_position - part.global_position)
 	oc._enqueue({
 		"victim_part": other, "striker": part, "attacker": doll, "kind": "head" if other.name.begins_with("Head") else "body",
-		"mass": part.mass, "body_mult": Damage.body_mult_of(part.name), "weapon_mult": 1.0, "weapon_id": "",
+		"mass": part.mass, "body_mult": Damage.body_mult_of_body(part), "weapon_mult": 1.0, "weapon_id": "",
 		"speed": closing, "pos": pos, "nrm": nrm, "dir": dir, "t": _time,
 	})
 
@@ -295,6 +313,7 @@ func _contact_env(part: RigidBody3D, ob: PhysicsBody3D, pos: Vector3, nrm: Vecto
 	if closing >= Tuning.ENV_WALL_COLLISION_SPEED and _time - float(_wall_t.get(key, -10.0)) >= Tuning.PAIR_HIT_COOLDOWN_S:
 		_wall_t[key] = _time
 		doll.stats["wall_collisions"] = int(doll.stats["wall_collisions"]) + 1
+		_notify_env_slam(part, pos, nrm, closing)
 	if closing < Tuning.ENV_MIN_IMPACT_SPEED:
 		return
 	var rb := ob as RigidBody3D
@@ -317,6 +336,14 @@ func _contact_env(part: RigidBody3D, ob: PhysicsBody3D, pos: Vector3, nrm: Vecto
 		"mass": mass, "body_mult": 1.0, "weapon_mult": 1.0, "weapon_id": "",
 		"speed": closing, "pos": pos, "nrm": nrm, "dir": bounce, "t": _time,
 	})
+
+
+## Удар о статику/пропс без урона (docs/plan-demo/HIT_FX.md §2.4): Match.on_env_slam → сигнал env_slam (пыль, звук, тряска).
+## Тот же блок и кулдаун, что stats.wall_collisions; порог Tuning.HITFX_SLAM_SPEED. Очередь урона не трогается.
+func _notify_env_slam(part: RigidBody3D, pos: Vector3, nrm: Vector3, closing: float) -> void:
+	if closing < Tuning.HITFX_SLAM_SPEED or match_ref == null or not is_instance_valid(match_ref) or not match_ref.has_method("on_env_slam"):
+		return
+	match_ref.call("on_env_slam", doll, String(part.name), closing, pos, nrm)
 
 
 func _note_env_ignored(speed: float) -> void:
@@ -345,7 +372,7 @@ func _raw_damage(c: Dictionary, combo_mult: float) -> float:
 		return 0.0
 	if c["kind"] == "environment" and not (c["striker"] is Weapon):
 		return Damage.compute_env(float(c["mass"]), float(c["speed"]), target)
-	return Damage.compute(float(c["mass"]), float(c["speed"]), float(c["body_mult"]), float(c["weapon_mult"]), combo_mult, 1.0, target)
+	return Damage.compute(float(c["mass"]), float(c["speed"]), float(c["body_mult"]), float(c["weapon_mult"]), combo_mult, 1.0, target, c["striker"] is Weapon)
 
 
 func _resolve_queue() -> void:
@@ -451,10 +478,15 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 	var nrm: Vector3 = c["nrm"]
 	var speed: float = c["speed"]
 	var stun_s := Damage.stun_seconds(dmg)
+	# своя команда (Doll.team, PvE-волны): стан и учтённый урон × TEAM_DAMAGE_MULT, как HP в Doll.take_damage; толчки полные
+	var team_mult := 1.0
+	if attacker != null and attacker != doll and doll.team != "" and attacker.team == doll.team:
+		team_mult = Tuning.TEAM_DAMAGE_MULT
+		stun_s *= team_mult
 	# атакующий: статистика и комбо
 	if attacker != null and attacker != doll:
 		var s: Dictionary = attacker.stats
-		s["damage_dealt"] = float(s["damage_dealt"]) + dmg
+		s["damage_dealt"] = float(s["damage_dealt"]) + dmg * team_mult
 		s["hardest_hit"] = maxf(float(s["hardest_hit"]), dmg)
 		s["combo_score"] = float(s["combo_score"]) + dmg * combo_mult
 		if kind == "weapon":
@@ -476,6 +508,7 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 	doll.hit_meta = {
 		"speed": speed, "weapon_id": c["weapon_id"], "striker": c["striker"], "combo_mult": combo_mult, "double_blow": double_blow,
 		"knockback_mult": _knockback_mult(), "stun_s": stun_s,
+		"dir": c["dir"], "striker_name": String((c["striker"] as Node).name) if c["striker"] is Node else "",
 	}
 	doll.take_damage(dmg, attacker, vp.name, pos, nrm, kind)
 	# knockback: направление от бьющего к жертве + апбиас; SD множит

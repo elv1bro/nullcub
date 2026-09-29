@@ -15,11 +15,22 @@
 ## key_frames — номера кадров моментов для листа сравнения (rest / hit / return / wall).
 ## v6.2: info.separation_first_hit / separation_charge_hit (|Δx ЦМ| в момент удара, +0.6, +1.0 с; скорость атакующего к жертве) и
 ## info.p2_wall (скорость до касания стены, отскок, отношение; contact=false — жертва до стены не долетела).
+## HIT_FX (29.09): hitfx=1 — тот же бой, но с гарантированными уровнями через тестовый переключатель Match.hit_tiers.force_next:
+##   первый удар наскока → heavy, удар рывком → crit (кинематограф, крит-отлёт к стене → env_slam в крит-полёте). Кадры крита
+##   каждый кадр 0–1350 мс реального времени (часы HitFxDirector) → tests/clip/crit/crit_<мс>.png (лист crit-sequence).
+##   scene=ruins — то же на Руинах (P2 на 3.8 м правее P1, без сдвига к стене). info.hitfx: tiers, env_slam, crit_flight_slams, crit_ms.
+##   bots=1 (v3) — вместо сценария бот-бой как match_probe._rush (наскок, отход, рывок с разбега ≥ 2 м), ни одного force_next:
+##   снимается до первого НАСТОЯЩЕГО crit / ko_crit + BOTS_AFTER_CRIT_MS реального времени (max_s — потолок, без крита FAIL).
+##   seed=<n> — seed() (разлёт KO). info.hitfx.crit.process_frame — номер кадра _process в момент крита (Movie Maker пишет кадр
+##   на кадр: время в AVI = process_frame / 60), info.hitfx.tier_log — все уровни с t и кадром клипа (вырезать окно с heavy).
+##   Со звуком: добавить --write-movie <abs>.avi (Movie Maker пишет MJPEG + PCM; ffmpeg → mp4 с AAC).
 ## Запуск: godot --path . --resolution 960x540 --position 100,100 --fixed-fps 60 res://tests/clip_capture.tscn -- "every=4,end=9.5"
 ## Сборка: ffmpeg -framerate 15 -i tests/clip/frame_%04d.png … (см. godot/README.md).
 extends Node3D
 
 const SCENE := "res://scenes/playground_void.tscn"
+const SCENES := {"void": SCENE, "ruins": "res://scenes/playground.tscn"}
+const CRIT_SEQ_MS := 1350.0
 const OUT_DIR := "res://tests/clip"
 const REST_S := 1.0
 const PAUSE_S := 1.8
@@ -31,11 +42,33 @@ const WALL_X := 7.0
 # v7: обе куклы сдвинуты к правой стене Void (спавн −3/+3 → −3+SHIFT_X/+3+SHIFT_X): с отбросом RM (2.4 м/с, гаснет за ~1.1 с) жертва
 # после рывка пролетает ~1.5–2 м, и со спавна ±3 до стены x = 7 не долетала (v6.2: x ≈ 4.5, p2_wall.contact=false)
 const SHIFT_X := 2.8                # 2.6 / 2.8 / 3.0 — касание через 0.5 / 0.37 / 0.22 с после рывка; 3.1–3.2 — удар рывком вскользь, до стены нет
+const BOTS_RUSH_NEAR := 1.3          # bots=1: как match_probe (RUSH_NEAR / RUSH_RETREAT_S / DASH_FROM_M)
+const BOTS_RETREAT_S := 1.2
+const BOTS_DASH_FROM_M := 2.0
+const BOTS_AFTER_CRIT_MS := 4200.0
+const BOTS_STUCK_S := 6.0            # как match_probe: без ударов столько — прыжок врозь / вверх через препятствие
+const BOTS_UNSTICK_S := 1.2
 const LAG_JOINTS := ["Shoulder_L", "Shoulder_R", "Hip_L", "Hip_R"]
 
 var every := 4
 var end_s := 9.5
 var shift_x := SHIFT_X
+var hitfx := false
+var bots := false
+var bots_retreat: Dictionary = {}
+var bots_unstick_until := -INF
+var bots_unstick_n := 0
+var tier_log: Array = []
+var crit_process_frame := -1
+var shift_given := false
+var scene_id := "void"
+var hitfx_tiers: Dictionary = {}
+var env_slams := 0
+var crit_flight_slams := 0
+var crit_ms0 := -1.0
+var crit_saved := 0
+var min_ts := 1.0
+var crit_info: Dictionary = {}
 var pg: Node3D
 var p1: Doll
 var p2: Doll
@@ -64,16 +97,38 @@ func _ready() -> void:
 			match p[0]:
 				"every": every = maxi(1, int(p[1]))
 				"end": end_s = float(p[1])
-				"shift": shift_x = float(p[1])
+				"shift":
+					shift_x = float(p[1])
+					shift_given = true
+				"hitfx": hitfx = p[1] != "0"
+				"bots": bots = p[1] != "0"
+				"max_s": end_s = float(p[1])
+				"seed": seed(int(p[1]))
+				"scene": scene_id = p[1]
+	if bots and not shift_given:
+		shift_x = 0.0
+	if bots and is_equal_approx(end_s, 9.5):
+		end_s = 90.0
+	if scene_id != "void" and not shift_given:
+		shift_x = 0.0
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
 	var d := DirAccess.open(OUT_DIR)
 	if d != null:
 		for f in d.get_files():
 			if f.begins_with("frame_") and f.ends_with(".png"):
 				d.remove(f)
-	pg = load(SCENE).instantiate()
+	pg = load(SCENES.get(scene_id, SCENE)).instantiate()
 	for n in ["P1", "P2"]:
 		(pg.get_node(n) as Node3D).position.x += shift_x   # до add_child: Match запоминает спавн при регистрации
+	if scene_id != "void":
+		(pg.get_node("P2") as Node3D).position = (pg.get_node("P1") as Node3D).position + Vector3(3.8, 0.0, 0.0)
+	if hitfx:
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR.path_join("crit")))
+		var dc := DirAccess.open(OUT_DIR.path_join("crit"))
+		if dc != null:
+			for f in dc.get_files():
+				if f.ends_with(".png"):
+					dc.remove(f)
 	add_child(pg)
 	p1 = pg.get_node("P1")
 	p2 = pg.get_node("P2")
@@ -87,6 +142,27 @@ func _ready() -> void:
 			first_hit_t = t
 		if phase == "charge" and charge_hit_t < 0.0:
 			charge_hit_t = t)
+	if hitfx:
+		match_node.connect("hit_fx", func(ctx: Dictionary) -> void:
+			var tier := String(ctx.get("tier", ""))
+			hitfx_tiers[tier] = int(hitfx_tiers.get(tier, 0)) + 1
+			tier_log.append({"t": snappedf(t, 0.01), "frame": saved, "process_frame": frame, "tier": tier, "damage": snappedf(float(ctx.get("damage", 0.0)), 0.01),
+				"score": snappedf(float(ctx.get("score", 0.0)), 0.01), "kind": String(ctx.get("kind", "")), "part": String(ctx.get("part", "")),
+				"attacker": String((ctx["attacker"] as Node).name) if ctx.get("attacker") != null else "", "crit_bypass": ctx.get("crit_bypass", false)})
+			if (tier == "crit" or tier == "ko_crit") and crit_ms0 < 0.0:
+				crit_ms0 = _clock_ms()
+				crit_process_frame = frame
+				var cv := _com_velocity(ctx["victim"] as Doll)
+				crit_info = {"t": snappedf(t, 0.001), "victim": String((ctx["victim"] as Node).name), "damage": snappedf(float(ctx["damage"]), 0.01),
+					"dir": var_to_str(ctx.get("dir", Vector3.ZERO)), "launch_dv": var_to_str(ctx.get("launch_dv", Vector3.ZERO)),
+					"com_v_after": var_to_str(cv), "double_blow": ctx.get("double_blow", false),
+					"score": snappedf(float(ctx.get("score", 0.0)), 0.01), "crit_bypass": ctx.get("crit_bypass", false), "forced": not bots,
+					"part": String(ctx.get("part", "")), "kind": String(ctx.get("kind", "")), "tier": tier,
+					"process_frame": frame, "clip_frame": saved, "attacker": String((ctx["attacker"] as Node).name) if ctx.get("attacker") != null else ""})
+		match_node.connect("env_slam", func(ctx: Dictionary) -> void:
+			env_slams += 1
+			if bool(ctx.get("crit_flight", false)):
+				crit_flight_slams += 1)
 	report["info"]["resolution"] = var_to_str(get_viewport().get_visible_rect().size)
 	report["info"]["every"] = every
 
@@ -123,8 +199,12 @@ func _physics_process(delta: float) -> void:
 		"rest":
 			p1.input_vec = Vector2.ZERO
 			p2.input_vec = Vector2.ZERO
-			if t >= REST_S:
+			if t >= REST_S and bots:
+				_set_phase("bots")
+			elif t >= REST_S:
 				_set_phase("rush")
+				if hitfx:
+					match_node.hit_tiers.force_next = "heavy"
 		"rush":
 			# наскок: оба к сопернику и чуть вверх (в RM дерутся в воздухе)
 			p1.input_vec = _toward(p1, p2, AIR_Y)
@@ -137,6 +217,8 @@ func _physics_process(delta: float) -> void:
 			if t - phase_t0 >= PAUSE_S:
 				_set_phase("charge")
 				p1.dash_until = p1._time + Tuning.DASH_DURATION_S   # как Shift: рывок
+				if hitfx:
+					match_node.hit_tiers.force_next = "crit"
 		"charge":
 			p2.input_vec = Vector2.ZERO
 			p1.input_vec = _toward(p1, p2, -1.0)
@@ -146,6 +228,13 @@ func _physics_process(delta: float) -> void:
 		"wall":
 			p1.input_vec = Vector2.ZERO
 			p2.input_vec = Vector2.ZERO
+		"bots":
+			_bot(p1, p2)
+			_bot(p2, p1)
+			if crit_ms0 >= 0.0 and _clock_ms() - crit_ms0 > BOTS_AFTER_CRIT_MS:
+				done = true
+				_finish()
+				return
 	if wall_t < 0.0 and phase == "wall" and _max_x(p2) > WALL_X - 0.25:
 		wall_t = t
 		wall_stats0 = int(p2.stats.get("wall_collisions", 0))
@@ -161,6 +250,40 @@ func _max_part_vx(d: Doll) -> float:
 		if is_instance_valid(b):
 			mx = maxf(mx, (b as RigidBody3D).linear_velocity.x)
 	return mx
+
+
+## bots=1: бот как match_probe._rush: наскок, отход полной тягой у соперника, рывок с разбега, распутывание застреваний.
+func _bot(d: Doll, other: Doll) -> void:
+	if not d.alive or not other.alive:
+		d.input_vec = Vector2.ZERO
+		return
+	var dc := d.centre_of_mass()
+	var oc := other.centre_of_mass()
+	var dx := oc.x - dc.x
+	var dy := oc.y - dc.y
+	var sgn := signf(dx) if absf(dx) > 0.05 else 1.0
+	var vy := clampf(dy / 1.5, -1.0, 1.0) if absf(dy) > 0.8 else 0.0
+	var last_hit_t := float((hits.back() as Dictionary)["t"]) if not hits.is_empty() else REST_S
+	if d == p1 and t - last_hit_t > BOTS_STUCK_S and t > bots_unstick_until + BOTS_STUCK_S:
+		bots_unstick_until = t + BOTS_UNSTICK_S
+		bots_unstick_n += 1
+	if t < bots_unstick_until:
+		var first_half := t < bots_unstick_until - BOTS_UNSTICK_S * 0.5
+		if bots_unstick_n % 2 == 0:
+			d.input_vec = Vector2(sgn * 0.35, 1.0) if first_half else Vector2(sgn, 0.3)
+		else:
+			d.input_vec = Vector2(-sgn, 1.0 if first_half else -1.0)
+		return
+	if t < float(bots_retreat.get(d, -1.0)):
+		d.input_vec = Vector2(-sgn, 0.0)
+	elif absf(dx) < BOTS_RUSH_NEAR and absf(dy) < 1.2:
+		bots_retreat[d] = t + BOTS_RETREAT_S
+		d.input_vec = Vector2(-sgn, 0.0)
+	else:
+		if absf(dx) > BOTS_DASH_FROM_M and d._time >= d.dash_ready_at and not d.is_stunned():
+			d.dash_until = d._time + Tuning.DASH_DURATION_S
+			d.dash_ready_at = d._time + Tuning.DASH_COOLDOWN_S
+		d.input_vec = Vector2(sgn, vy)
 
 
 func _max_x(d: Doll) -> float:
@@ -294,9 +417,22 @@ func _wall_summary() -> Dictionary:
 		"wall_collisions_after": int(p2.stats.get("wall_collisions", 0)) - wall_stats0, "stat_speed": Tuning.ENV_WALL_COLLISION_SPEED}
 
 
+func _clock_ms() -> float:
+	var dir := match_node.get_node_or_null("HitFxDirector")
+	if dir != null and dir.has_method("clock_ms"):
+		return float(dir.call("clock_ms"))
+	return float(Time.get_ticks_msec())
+
+
 func _process(_delta: float) -> void:
 	if done:
 		return
+	min_ts = minf(min_ts, Engine.time_scale)
+	if hitfx and crit_ms0 >= 0.0:
+		var cms := _clock_ms() - crit_ms0
+		if cms <= CRIT_SEQ_MS:
+			crit_saved += 1
+			_save_crit_frame(cms)
 	frame += 1
 	if frame % every != 0:
 		return
@@ -307,6 +443,12 @@ func _process(_delta: float) -> void:
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
 	img.save_png(ProjectSettings.globalize_path(OUT_DIR).path_join("frame_%04d.png" % idx))
+
+
+func _save_crit_frame(cms: float) -> void:
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(ProjectSettings.globalize_path(OUT_DIR).path_join("crit/crit_%04d.png" % int(round(cms))))
 
 
 func _first_attacker() -> String:
@@ -353,10 +495,20 @@ func _finish() -> void:
 	report["info"]["separation_charge_hit"] = _separation_summary(charge_hit_t, "p1")
 	report["info"]["p2_wall"] = _wall_summary()
 	report["info"]["sim_s"] = snappedf(t, 0.01)
-	var ok := saved > 0 and first_hit_t >= 0.0 and charge_hit_t >= 0.0
+	var ok := saved > 0 and first_hit_t >= 0.0 and (charge_hit_t >= 0.0 or bots)
+	if hitfx:
+		var n_crit := int(hitfx_tiers.get("crit", 0)) + int(hitfx_tiers.get("ko_crit", 0))
+		report["info"]["hitfx"] = {"scene": scene_id, "tiers": hitfx_tiers, "env_slam": env_slams, "crit_flight_slams": crit_flight_slams,
+			"crit_frames": crit_saved, "crit": crit_info,
+			"bots": bots, "tier_log": tier_log, "crit_process_frame": crit_process_frame, "process_frames": frame, "min_time_scale": snappedf(min_ts, 0.001), "time_scale_end": Engine.time_scale}
+		ok = saved > 0 and int(hitfx_tiers.get("heavy", 0)) >= 1 and n_crit >= 1 and crit_saved > 0 and (env_slams >= 1 or scene_id != "void")
+		if bots:
+			ok = saved > 0 and n_crit >= 1 and crit_saved > 0
 	report["ok"] = ok
 	var f := FileAccess.open(OUT_DIR.path_join("clip_report.json"), FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(report, "  "))
 	print("CLIP frames=%d first_hit=%.2f charge_hit=%.2f wall=%.2f key=%s %s" % [saved, first_hit_t, charge_hit_t, wall_t, str(kf), "OK" if ok else "FAIL"])
+	if hitfx:
+		print("HITFX %s" % JSON.stringify(report["info"]["hitfx"]))
 	get_tree().quit(0 if ok else 1)

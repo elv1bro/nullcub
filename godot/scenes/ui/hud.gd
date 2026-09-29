@@ -37,6 +37,7 @@ var phase: int = Phase.COUNTDOWN
 var _pulse := 0.0
 var _last_ms := 0
 var _results_timer: SceneTreeTimer
+var _cinematic_hidden: Array = []   # [[CanvasItem, was_visible]] — HIT_FX §3.1 set_cinematic
 
 @onready var root: Control = $Root
 @onready var players_root: Control = $Root/Players
@@ -48,6 +49,7 @@ var _results_timer: SceneTreeTimer
 
 
 func _ready() -> void:
+	add_to_group("hud")   # HIT_FX §4.1: CritCinematic находит HUD по группе
 	sudden_death_label.visible = false
 	if ko_splatter_alpha >= 0.0:
 		ko_card.set_splatter_alpha(ko_splatter_alpha)
@@ -166,6 +168,8 @@ func _on_phase_changed(p: int) -> void:
 	if p == Phase.COUNTDOWN:
 		results.hide_panel()
 		ko_card.visible = false
+		ko_card.cancel_defer()
+		set_cinematic(false)
 		announcer.clear()
 		for i in panels.keys():
 			(panels[i] as PlayerPanel).reset()
@@ -220,6 +224,34 @@ func _on_match_over(winner: Object, match_results: Dictionary) -> void:
 	_results_timer.timeout.connect(func() -> void:
 		if phase == Phase.OVER:
 			results.show_results(winner, match_results))
+
+
+## HIT_FX §3.1: на время кинематографа крита прячет панели игроков, таймер и диктор; при выходе
+## возвращает видимость и чистит диктор (BODY BLOW! удара-крита не всплывает после ката).
+func set_cinematic(on: bool) -> void:
+	if on:
+		if not _cinematic_hidden.is_empty():
+			return
+		for n: CanvasItem in [players_root, $Root/TimerBox as CanvasItem, announcer]:
+			_cinematic_hidden.append([n, n.visible])
+			n.visible = false
+	else:
+		if _cinematic_hidden.is_empty():
+			return
+		for e: Array in _cinematic_hidden:
+			if is_instance_valid(e[0]):
+				(e[0] as CanvasItem).visible = bool(e[1]) and not (results.visible and e[0] != announcer)
+		_cinematic_hidden.clear()
+		announcer.clear()
+
+
+func is_cinematic() -> bool:
+	return not _cinematic_hidden.is_empty()
+
+
+## HIT_FX §3.3: карточка KO (уже показанная в KO) откладывается на real_s — показ после ката назад.
+func defer_ko_card(real_s: float) -> void:
+	ko_card.defer(real_s)
 
 
 func _on_rematch() -> void:
