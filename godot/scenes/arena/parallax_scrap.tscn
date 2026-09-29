@@ -58,6 +58,7 @@ script = ExtResource("1_pbg")
 metadata/source = "docs/refs/biomes/01-scrap/parallax.png → tools/parallax_cut_scrap.py; LAYER 3 NEAR SCRAP не используется (ближний план под 3D-кучи, см. docstring скрипта)"
 
 [node name="Layer4Sky" type="MeshInstance3D" parent="."]
+metadata/source_px_w = 761
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.12, -100)
 material_override = SubResource("mat_layer4")
 cast_shadow = 0
@@ -65,12 +66,14 @@ mesh = SubResource("quad_layer4")
 metadata/sun_x = 49.47
 
 [node name="Layer3Far" type="MeshInstance3D" parent="."]
+metadata/source_px_w = 1363
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.49, -50)
 material_override = SubResource("mat_layer3")
 cast_shadow = 0
 mesh = SubResource("quad_layer3")
 
 [node name="Layer2Mid" type="MeshInstance3D" parent="."]
+metadata/source_px_w = 1363
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5.64, -22)
 material_override = SubResource("mat_layer2")
 cast_shadow = 0
@@ -78,6 +81,7 @@ mesh = SubResource("quad_layer2")
 metadata/ground_y = -5.34
 
 [node name="Layer1Fore" type="MeshInstance3D" parent="."]
+metadata/source_px_w = 1363
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.044, 3)
 material_override = SubResource("mat_layer1")
 cast_shadow = 0

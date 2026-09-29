@@ -1,0 +1,80 @@
+[gd_scene format=3 uid="uid://parallaxscrapsc1"]
+
+[ext_resource type="PackedScene" path="res://scenes/arena/parallax_scrap_v2.tscn" id="1_v2"]
+[ext_resource type="Script" path="res://scenes/arena/parallax_scatter.gd" id="2_scatter"]
+[ext_resource type="Script" path="res://scenes/arena/parallax_scatter_band.gd" id="3_band"]
+
+[sub_resource type="Resource" id="band_far"]
+script = ExtResource("3_band")
+dir = "res://assets/textures/parallax/scrap_baked/mid"
+anchors = PackedStringArray("bottom")
+z_range = Vector2(-48, -36)
+scale_range = Vector2(0.9, 1.25)
+base_y = Vector2(-12, -8)
+gap_m = Vector2(-2, 5)
+haze = Vector2(0.62, 0.52)
+haze_color = Color(0.3, 0.25, 0.38, 1)
+base_fade = 0.25
+seed = 3
+
+[sub_resource type="Resource" id="band_mid"]
+script = ExtResource("3_band")
+dir = "res://assets/textures/parallax/scrap_baked/mid"
+anchors = PackedStringArray("bottom")
+z_range = Vector2(-32, -21)
+scale_range = Vector2(0.6, 0.85)
+base_y = Vector2(-9, -6)
+gap_m = Vector2(-3, 1.5)
+haze = Vector2(0.3, 0.1)
+haze_color = Color(0.46, 0.38, 0.5, 1)
+base_fade = 0.15
+seed = 7
+
+[sub_resource type="Resource" id="band_fore"]
+script = ExtResource("3_band")
+dir = "res://assets/textures/parallax/scrap_baked/fore_low"
+anchors = PackedStringArray("bottom")
+z_range = Vector2(2, 4)
+scale_range = Vector2(1.6, 2.2)
+base_y = Vector2(-3.9, -3.3)
+gap_m = Vector2(-1.2, 1)
+haze = Vector2(0.9, 0.93)
+haze_color = Color(0.03, 0.02, 0.03, 1)
+seed = 5
+
+[sub_resource type="Resource" id="band_fore_tall"]
+script = ExtResource("3_band")
+dir = "res://assets/textures/parallax/scrap_baked/fore_tall"
+anchors = PackedStringArray("bottom")
+z_range = Vector2(2.5, 4.5)
+scale_range = Vector2(0.6, 0.8)
+base_y = Vector2(-4.8, -4.2)
+gap_m = Vector2(4, 10)
+haze = Vector2(0.9, 0.93)
+haze_color = Color(0.03, 0.02, 0.03, 1)
+seed = 9
+
+[sub_resource type="Resource" id="band_hang"]
+script = ExtResource("3_band")
+dir = "res://assets/textures/parallax/scrap_baked/fore_hang"
+anchors = PackedStringArray("top")
+z_range = Vector2(3, 5)
+scale_range = Vector2(0.9, 1.2)
+top_y = Vector2(19, 21)
+gap_m = Vector2(12, 22)
+haze = Vector2(0.9, 0.93)
+haze_color = Color(0.03, 0.02, 0.03, 1)
+seed = 11
+
+[node name="ParallaxScrapScatter" instance=ExtResource("1_v2")]
+metadata/source = "Наследник parallax_scrap_v2.tscn: слои неба, дальнего фона и тумана — v2 (картинки ИИ), сплошной средний план и передний v1 скрыты; средний план, дальние силуэты и передний план — ParallaxScatter3D из запечённых 3D-конструкций (tools/parallax_bake_scrap.py: tools/blender/scrap_backdrop.py → parallax_elements_cut.py). docs/plan-demo/PARALLAX.md"
+
+[node name="Layer2Mid" parent="." index="2"]
+visible = false
+
+[node name="Layer1Fore" parent="." index="4"]
+visible = false
+
+[node name="Scatter" type="Node3D" parent="."]
+script = ExtResource("2_scatter")
+bands = Array[ExtResource("3_band")]([SubResource("band_far"), SubResource("band_mid"), SubResource("band_fore_tall"), SubResource("band_fore"), SubResource("band_hang")])

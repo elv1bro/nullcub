@@ -1,0 +1,60 @@
+{
+ "elements": [
+  {
+   "file": "mid_00.png",
+   "w": 250,
+   "h": 943,
+   "anchor": "bottom",
+   "fill": 0.253,
+   "source": "mid_sheet.png",
+   "bbox": [
+    65,
+    66,
+    315,
+    1009
+   ]
+  },
+  {
+   "file": "mid_01.png",
+   "w": 443,
+   "h": 918,
+   "anchor": "bottom",
+   "fill": 0.08,
+   "source": "mid_sheet.png",
+   "bbox": [
+    399,
+    91,
+    842,
+    1009
+   ]
+  },
+  {
+   "file": "mid_02.png",
+   "w": 183,
+   "h": 923,
+   "anchor": "bottom",
+   "fill": 0.761,
+   "source": "mid_sheet.png",
+   "bbox": [
+    919,
+    84,
+    1102,
+    1007
+   ]
+  },
+  {
+   "file": "mid_03.png",
+   "w": 284,
+   "h": 747,
+   "anchor": "bottom",
+   "fill": 0.243,
+   "source": "mid_sheet.png",
+   "bbox": [
+    1178,
+    262,
+    1462,
+    1009
+   ]
+  }
+ ]
+}

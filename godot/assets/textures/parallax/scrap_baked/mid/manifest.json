@@ -1,0 +1,289 @@
+{
+ "elements": [
+  {
+   "file": "bridge_a.png",
+   "w": 1187,
+   "h": 1266,
+   "anchor": "bottom",
+   "fill": 0.208,
+   "source": "Bridge_A.png",
+   "bbox": [
+    53,
+    54,
+    1240,
+    1320
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "conveyor_a.png",
+   "w": 1203,
+   "h": 1294,
+   "anchor": "bottom",
+   "fill": 0.157,
+   "source": "Conveyor_A.png",
+   "bbox": [
+    53,
+    53,
+    1256,
+    1347
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "crane_a.png",
+   "w": 929,
+   "h": 1224,
+   "anchor": "bottom",
+   "fill": 0.167,
+   "source": "Crane_A.png",
+   "bbox": [
+    53,
+    53,
+    982,
+    1277
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "crane_b.png",
+   "w": 1045,
+   "h": 1044,
+   "anchor": "bottom",
+   "fill": 0.166,
+   "source": "Crane_B.png",
+   "bbox": [
+    53,
+    53,
+    1098,
+    1097
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "crane_c.png",
+   "w": 945,
+   "h": 1464,
+   "anchor": "bottom",
+   "fill": 0.155,
+   "source": "Crane_C.png",
+   "bbox": [
+    53,
+    53,
+    998,
+    1517
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "factory_a.png",
+   "w": 862,
+   "h": 1212,
+   "anchor": "bottom",
+   "fill": 0.611,
+   "source": "Factory_A.png",
+   "bbox": [
+    53,
+    53,
+    915,
+    1265
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "hangar_a.png",
+   "w": 772,
+   "h": 499,
+   "anchor": "bottom",
+   "fill": 0.817,
+   "source": "Hangar_A.png",
+   "bbox": [
+    53,
+    53,
+    825,
+    552
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "hopper_a.png",
+   "w": 655,
+   "h": 917,
+   "anchor": "bottom",
+   "fill": 0.4,
+   "source": "Hopper_A.png",
+   "bbox": [
+    53,
+    53,
+    708,
+    970
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "mast_a.png",
+   "w": 1015,
+   "h": 1648,
+   "anchor": "bottom",
+   "fill": 0.073,
+   "source": "Mast_A.png",
+   "bbox": [
+    53,
+    53,
+    1068,
+    1701
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "pipes_a.png",
+   "w": 1436,
+   "h": 928,
+   "anchor": "bottom",
+   "fill": 0.212,
+   "source": "Pipes_A.png",
+   "bbox": [
+    53,
+    53,
+    1489,
+    981
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "shed_a.png",
+   "w": 444,
+   "h": 903,
+   "anchor": "bottom",
+   "fill": 0.395,
+   "source": "Shed_A.png",
+   "bbox": [
+    53,
+    53,
+    497,
+    956
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "shed_b.png",
+   "w": 516,
+   "h": 1112,
+   "anchor": "bottom",
+   "fill": 0.363,
+   "source": "Shed_B.png",
+   "bbox": [
+    53,
+    53,
+    569,
+    1165
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "stack_a.png",
+   "w": 297,
+   "h": 1191,
+   "anchor": "bottom",
+   "fill": 0.586,
+   "source": "Stack_A.png",
+   "bbox": [
+    53,
+    53,
+    350,
+    1244
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "stack_pair.png",
+   "w": 554,
+   "h": 1238,
+   "anchor": "bottom",
+   "fill": 0.45,
+   "source": "Stack_Pair.png",
+   "bbox": [
+    53,
+    53,
+    607,
+    1291
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "tank_a.png",
+   "w": 541,
+   "h": 1157,
+   "anchor": "bottom",
+   "fill": 0.38,
+   "source": "Tank_A.png",
+   "bbox": [
+    53,
+    53,
+    594,
+    1210
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "tank_b.png",
+   "w": 513,
+   "h": 917,
+   "anchor": "bottom",
+   "fill": 0.421,
+   "source": "Tank_B.png",
+   "bbox": [
+    53,
+    53,
+    566,
+    970
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "tower_a.png",
+   "w": 342,
+   "h": 1416,
+   "anchor": "bottom",
+   "fill": 0.335,
+   "source": "Tower_A.png",
+   "bbox": [
+    53,
+    54,
+    395,
+    1470
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "tower_b.png",
+   "w": 365,
+   "h": 1177,
+   "anchor": "bottom",
+   "fill": 0.311,
+   "source": "Tower_B.png",
+   "bbox": [
+    54,
+    53,
+    419,
+    1230
+   ],
+   "m_per_px": 0.016667
+  },
+  {
+   "file": "tower_c.png",
+   "w": 348,
+   "h": 1656,
+   "anchor": "bottom",
+   "fill": 0.314,
+   "source": "Tower_C.png",
+   "bbox": [
+    53,
+    54,
+    401,
+    1710
+   ],
+   "m_per_px": 0.016667
+  }
+ ]
+}

@@ -1,0 +1,64 @@
+{
+ "elements": [
+  {
+   "file": "beams_tilted.png",
+   "w": 1011,
+   "h": 1141,
+   "anchor": "bottom",
+   "fill": 0.142,
+   "source": "Beams_Tilted.png",
+   "bbox": [
+    173,
+    173,
+    1184,
+    1314
+   ],
+   "m_per_px": 0.005556
+  },
+  {
+   "file": "gear_big.png",
+   "w": 1026,
+   "h": 1015,
+   "anchor": "bottom",
+   "fill": 0.338,
+   "source": "Gear_Big.png",
+   "bbox": [
+    173,
+    173,
+    1199,
+    1188
+   ],
+   "m_per_px": 0.005556
+  },
+  {
+   "file": "gear_small.png",
+   "w": 647,
+   "h": 628,
+   "anchor": "bottom",
+   "fill": 0.323,
+   "source": "Gear_Small.png",
+   "bbox": [
+    173,
+    173,
+    820,
+    801
+   ],
+   "m_per_px": 0.005556
+  },
+  {
+   "file": "pile_massive.png",
+   "w": 1798,
+   "h": 1054,
+   "anchor": "bottom",
+   "fill": 0.512,
+   "source": "Pile_Massive.png",
+   "bbox": [
+    204,
+    173,
+    2002,
+    1227
+   ],
+   "m_per_px": 0.005556
+  }
+ ]
+}

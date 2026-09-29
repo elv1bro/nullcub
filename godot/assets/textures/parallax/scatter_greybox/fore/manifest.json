@@ -1,0 +1,88 @@
+{
+ "elements": [
+  {
+   "file": "fore_00.png",
+   "w": 39,
+   "h": 677,
+   "anchor": "top",
+   "fill": 0.355,
+   "source": "fore_sheet.png",
+   "bbox": [
+    71,
+    0,
+    110,
+    677
+   ]
+  },
+  {
+   "file": "fore_01.png",
+   "w": 73,
+   "h": 580,
+   "anchor": "top",
+   "fill": 0.232,
+   "source": "fore_sheet.png",
+   "bbox": [
+    194,
+    0,
+    267,
+    580
+   ]
+  },
+  {
+   "file": "fore_02.png",
+   "w": 263,
+   "h": 608,
+   "anchor": "bottom",
+   "fill": 0.189,
+   "source": "fore_sheet.png",
+   "bbox": [
+    1004,
+    399,
+    1267,
+    1007
+   ]
+  },
+  {
+   "file": "fore_03.png",
+   "w": 410,
+   "h": 410,
+   "anchor": "bottom",
+   "fill": 0.405,
+   "source": "fore_sheet.png",
+   "bbox": [
+    295,
+    565,
+    705,
+    975
+   ]
+  },
+  {
+   "file": "fore_04.png",
+   "w": 290,
+   "h": 292,
+   "anchor": "bottom",
+   "fill": 0.408,
+   "source": "fore_sheet.png",
+   "bbox": [
+    755,
+    684,
+    1045,
+    976
+   ]
+  },
+  {
+   "file": "fore_05.png",
+   "w": 313,
+   "h": 263,
+   "anchor": "bottom",
+   "fill": 0.518,
+   "source": "fore_sheet.png",
+   "bbox": [
+    1204,
+    744,
+    1517,
+    1007
+   ]
+  }
+ ]
+}

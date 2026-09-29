@@ -1,0 +1,88 @@
+{
+ "elements": [
+  {
+   "file": "far_00.png",
+   "w": 152,
+   "h": 930,
+   "anchor": "bottom",
+   "fill": 0.208,
+   "source": "far_sheet.png",
+   "bbox": [
+    44,
+    79,
+    196,
+    1009
+   ]
+  },
+  {
+   "file": "far_01.png",
+   "w": 140,
+   "h": 831,
+   "anchor": "bottom",
+   "fill": 0.252,
+   "source": "far_sheet.png",
+   "bbox": [
+    290,
+    178,
+    430,
+    1009
+   ]
+  },
+  {
+   "file": "far_02.png",
+   "w": 158,
+   "h": 862,
+   "anchor": "bottom",
+   "fill": 0.228,
+   "source": "far_sheet.png",
+   "bbox": [
+    531,
+    147,
+    689,
+    1009
+   ]
+  },
+  {
+   "file": "far_03.png",
+   "w": 180,
+   "h": 860,
+   "anchor": "bottom",
+   "fill": 0.244,
+   "source": "far_sheet.png",
+   "bbox": [
+    770,
+    149,
+    950,
+    1009
+   ]
+  },
+  {
+   "file": "far_04.png",
+   "w": 156,
+   "h": 889,
+   "anchor": "bottom",
+   "fill": 0.253,
+   "source": "far_sheet.png",
+   "bbox": [
+    1042,
+    120,
+    1198,
+    1009
+   ]
+  },
+  {
+   "file": "far_05.png",
+   "w": 158,
+   "h": 930,
+   "anchor": "bottom",
+   "fill": 0.235,
+   "source": "far_sheet.png",
+   "bbox": [
+    1311,
+    79,
+    1469,
+    1009
+   ]
+  }
+ ]
+}

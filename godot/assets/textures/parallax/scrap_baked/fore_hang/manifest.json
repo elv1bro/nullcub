@@ -1,0 +1,79 @@
+{
+ "elements": [
+  {
+   "file": "chain_block.png",
+   "w": 164,
+   "h": 1577,
+   "anchor": "top",
+   "fill": 0.207,
+   "source": "Chain_Block.png",
+   "bbox": [
+    173,
+    0,
+    337,
+    1577
+   ],
+   "m_per_px": 0.005556
+  },
+  {
+   "file": "chain_hook.png",
+   "w": 190,
+   "h": 1609,
+   "anchor": "top",
+   "fill": 0.131,
+   "source": "Chain_Hook.png",
+   "bbox": [
+    173,
+    0,
+    363,
+    1609
+   ],
+   "m_per_px": 0.005556
+  },
+  {
+   "file": "chain_magnet.png",
+   "w": 374,
+   "h": 1267,
+   "anchor": "top",
+   "fill": 0.158,
+   "source": "Chain_Magnet.png",
+   "bbox": [
+    173,
+    0,
+    547,
+    1267
+   ],
+   "m_per_px": 0.005556
+  },
+  {
+   "file": "chain_short.png",
+   "w": 190,
+   "h": 889,
+   "anchor": "top",
+   "fill": 0.128,
+   "source": "Chain_Short.png",
+   "bbox": [
+    173,
+    0,
+    363,
+    889
+   ],
+   "m_per_px": 0.005556
+  },
+  {
+   "file": "hanging_beam.png",
+   "w": 979,
+   "h": 1045,
+   "anchor": "top",
+   "fill": 0.096,
+   "source": "Hanging_Beam.png",
+   "bbox": [
+    173,
+    0,
+    1152,
+    1045
+   ],
+   "m_per_px": 0.005556
+  }
+ ]
+}

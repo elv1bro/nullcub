@@ -1,0 +1,64 @@
+{
+ "elements": [
+  {
+   "file": "barrels_pipes.png",
+   "w": 1806,
+   "h": 447,
+   "anchor": "bottom",
+   "fill": 0.609,
+   "source": "Barrels_Pipes.png",
+   "bbox": [
+    389,
+    389,
+    2195,
+    836
+   ],
+   "m_per_px": 0.002525
+  },
+  {
+   "file": "pile_gears.png",
+   "w": 2018,
+   "h": 556,
+   "anchor": "bottom",
+   "fill": 0.416,
+   "source": "Pile_Gears.png",
+   "bbox": [
+    399,
+    389,
+    2417,
+    945
+   ],
+   "m_per_px": 0.002525
+  },
+  {
+   "file": "pile_limbs.png",
+   "w": 1941,
+   "h": 466,
+   "anchor": "bottom",
+   "fill": 0.571,
+   "source": "Pile_Limbs.png",
+   "bbox": [
+    400,
+    389,
+    2341,
+    855
+   ],
+   "m_per_px": 0.002525
+  },
+  {
+   "file": "wagon.png",
+   "w": 917,
+   "h": 588,
+   "anchor": "bottom",
+   "fill": 0.638,
+   "source": "Wagon.png",
+   "bbox": [
+    389,
+    390,
+    1306,
+    978
+   ],
+   "m_per_px": 0.002525
+  }
+ ]
+}

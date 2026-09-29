@@ -10,11 +10,14 @@
 ## как в tools/parallax_cut_scrap.py); слои 3, 2 и передний план закрывают ширину и низ кадра; кромка переднего плана
 ## на плоскости боя не выше 0.4 м, линия земли слоя 2 — в [−1.0, 0.4] м (из камеры A); в кадрах нет пурпура;
 ## кадры A и B различаются.
+## v2 (scenes/arena/parallax_scrap_v2.tscn): scene=v2 → кадры scrap-parallax-godot-v2a/b/c.png; дополнительно
+## проверка резкости: экранных пикселей на тексель в ближайшей точке диапазона камеры при 1080p ≤ max_mag
+## (metadata/max_mag слоя; слои без неё — только в отчёте). Нижняя граница линии земли слоя 2 — metadata/ground_play_min.
 ## Запуск (не headless — нужен рендер): godot --path . --resolution 1280x720 --position 100,100
-##   res://tests/parallax_scrap_snapshot.tscn -- "out=/abs/dir/,dof=0"
+##   res://tests/parallax_scrap_snapshot.tscn -- "out=/abs/dir/,dof=0,scene=v2"
 extends Node3D
 
-const BgScene := preload("res://scenes/arena/parallax_scrap.tscn")
+const SCENES := {"v1": "res://scenes/arena/parallax_scrap.tscn", "v2": "res://scenes/arena/parallax_scrap_v2.tscn"}
 const FOV := 45.0
 const CAMS := [Vector3(0, 4, 20), Vector3(11, 7, 15), Vector3(-13, 2.5, 10)]
 const SUFFIX := ["a", "b", "c"]
@@ -31,6 +34,9 @@ var stage := 0
 var busy := false
 var out_dir := ""
 var use_dof := true
+var tag := "v1"
+var pan := 0  # pan=N — ещё N кадров проезда камеры x −13 → 13 (z 12, y 4) в out/pan_<tag>/ (для GIF)
+var dof_override := {}  # dofd/doft/dofa — подбор DOF дали: distance / transition / amount
 var report := {"ok": true, "checks": []}
 var frames: Array[Image] = []
 
@@ -46,15 +52,25 @@ func _ready() -> void:
 				out_dir = p[1]
 			elif p[0] == "dof":
 				use_dof = p[1] != "0"
+			elif p[0] == "pan":
+				pan = int(p[1])
+			elif p[0] == "scene" and SCENES.has(p[1]):
+				tag = p[1]
+			elif p[0] in ["dofd", "doft", "dofa"]:
+				dof_override[p[0]] = float(p[1])
 	_lighting()
 	_play_plane()
-	bg = BgScene.instantiate()
+	bg = (load(SCENES[tag]) as PackedScene).instantiate()
 	add_child(bg)
 	cam = Camera3D.new()
 	cam.fov = FOV
 	cam.position = CAMS[0]
 	if use_dof and ResourceLoader.exists("res://assets/environments/ruins_camera.tres"):
-		cam.attributes = load("res://assets/environments/ruins_camera.tres")
+		var ca := (load("res://assets/environments/ruins_camera.tres") as CameraAttributesPractical).duplicate()
+		ca.dof_blur_far_distance = dof_override.get("dofd", ca.dof_blur_far_distance)
+		ca.dof_blur_far_transition = dof_override.get("doft", ca.dof_blur_far_transition)
+		ca.dof_blur_amount = dof_override.get("dofa", ca.dof_blur_amount)
+		cam.attributes = ca
 	add_child(cam)
 	cam.make_current()
 	_check_static()
@@ -185,8 +201,13 @@ func _check_static() -> void:
 	_check("sky_covers_frustum_margin_m", m4 >= 1.0, snappedf(m4, 0.01), ">= 1.0")
 	var m3 := _cover_margin(_quad_rect(bg.layer("Layer3Far")), [true, true, true, false])
 	_check("far_covers_width_bottom_margin_m", m3 >= 0.5, snappedf(m3, 0.01), ">= 0.5")
-	var m2 := _cover_margin(_quad_rect(bg.layer("Layer2Mid")), [true, true, true, false])
+	# v2: низ среднего плана растворяется сам, низ кадра за ним закрывает квад тумана Layer2Fog
+	var fog := bg.get_node_or_null("Layer2Fog") as MeshInstance3D
+	var m2 := _cover_margin(_quad_rect(bg.layer("Layer2Mid")), [true, fog == null, true, false])
 	_check("mid_covers_width_bottom_margin_m", m2 >= 0.5, snappedf(m2, 0.01), ">= 0.5")
+	if fog != null:
+		var mf := _cover_margin(_quad_rect(fog), [true, true, true, false])
+		_check("fog_covers_width_bottom_margin_m", mf >= 0.5, snappedf(mf, 0.01), ">= 0.5")
 	var m1 := _cover_margin(_quad_rect(bg.layer("Layer1Fore")), [true, true, true, false])
 	_check("fore_covers_width_bottom_margin_m", m1 >= 0.5, snappedf(m1, 0.01), ">= 0.5")
 	var a: Vector3 = CAMS[0]
@@ -197,7 +218,31 @@ func _check_static() -> void:
 	var l2 := bg.layer("Layer2Mid")
 	var g2 := float(l2.get_meta("ground_y", _quad_rect(l2)[1]))
 	var g2_play := _to_play(a, g2, l2.global_position.z)
-	_check("mid_ground_below_floor_m", g2_play <= 0.4 and g2_play >= -1.0, snappedf(g2_play, 0.01), "[-1.0, 0.4]")
+	var g2_min := float(l2.get_meta("ground_play_min", -1.0))
+	_check("mid_ground_below_floor_m", g2_play <= 0.4 and g2_play >= g2_min, snappedf(g2_play, 0.01),
+			"[%s, 0.4]" % g2_min)
+	for n in names:
+		_check_magnification(bg.layer(n), n)
+
+
+## Резкость: экранных пикселей 1080p на пиксель ИСТОЧНИКА в ближайшей к слою точке диапазона камеры (min z камеры = 10).
+## > 1 — растянуто. Ширина источника — metadata/source_px_w слоя (текстуры v1 апскейлены до 4096 из полос листа
+## по ~1363 пкс, по ширине текстуры они выглядели бы резкими); без метаданных — ширина текстуры.
+func _check_magnification(l: MeshInstance3D, n: String) -> void:
+	var m := l.get_active_material(0) as StandardMaterial3D
+	if m == null or m.albedo_texture == null:
+		return
+	var q := l.mesh as QuadMesh
+	var src_w := float(l.get_meta("source_px_w", m.albedo_texture.get_width()))
+	var texel_per_m := src_w / q.size.x
+	var d := 10.0 - l.global_position.z
+	var px_per_m := 1080.0 / (2.0 * tan(deg_to_rad(FOV / 2.0)) * d)
+	var mag := snappedf(px_per_m / texel_per_m, 0.01)
+	if l.has_meta("max_mag"):
+		var lim := float(l.get_meta("max_mag"))
+		_check("mag_1080_" + n, mag <= lim, mag, "<= %s" % lim)
+	else:
+		report["checks"].append({"id": "mag_1080_" + n, "ok": true, "value": mag, "limit": "info"})
 
 
 func _process(delta: float) -> void:
@@ -207,12 +252,21 @@ func _process(delta: float) -> void:
 	if stage < CAMS.size() and t >= 0.5 + 0.3 * stage:
 		busy = true
 		cam.position = CAMS[stage]
-		var img := await _capture("scrap-parallax-godot-v1%s.png" % SUFFIX[stage])
+		var img := await _capture("scrap-parallax-godot-%s%s.png" % [tag, SUFFIX[stage]])
 		frames.append(img)
 		stage += 1
 		busy = false
 	elif stage == CAMS.size():
 		stage += 1
+		busy = true
+		if pan > 0:
+			var dir := out_dir.path_join("pan_" + tag)
+			DirAccess.make_dir_recursive_absolute(dir)
+			for i in pan:
+				cam.position = Vector3(lerpf(-13.0, 13.0, float(i) / float(maxi(pan - 1, 1))), 4.0, 12.0)
+				await RenderingServer.frame_post_draw
+				await RenderingServer.frame_post_draw
+				get_viewport().get_texture().get_image().save_png(dir.path_join("pan_%03d.png" % i))
 		_check_frames()
 		print(JSON.stringify(report))
 		get_tree().quit(0 if report["ok"] else 1)
@@ -251,7 +305,8 @@ func _check_frames() -> void:
 	var bottom := a.get_pixel(a.get_width() / 2, a.get_height() - 4)
 	var top := a.get_pixel(a.get_width() / 2, 4)
 	_check("bottom_is_dark_fore", bottom.get_luminance() < 0.25, snappedf(bottom.get_luminance(), 0.01), "< 0.25")
-	_check("top_is_sky", top.get_luminance() > 0.3, snappedf(top.get_luminance(), 0.01), "> 0.3")
+	_check("top_is_sky", top.get_luminance() > 0.1 and top.b > top.r, [snappedf(top.get_luminance(), 0.01),
+			snappedf(top.b - top.r, 0.01)], "lum > 0.1, b > r")
 
 
 func _capture(file: String) -> Image:
