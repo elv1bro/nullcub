@@ -65,6 +65,7 @@ def setup_materials(export=False):
         "Hall_PrintWhite": ((0.80, 0.80, 0.78, 1.0), 0.6, 0.0),
         "Hall_PrintDark": ((0.035, 0.036, 0.04, 1.0), 0.7, 0.0),
         "Hall_Rubber": ((0.02, 0.02, 0.02, 1.0), 0.8, 0.0),
+        "Hall_Membrane": ((0.2, 0.45, 0.9, 1.0), 0.2, 0.0),
     })
     K.FORCE_FLAT = export
     k = 0.0 if export else 1.0
@@ -688,6 +689,31 @@ def build_Floor_Platform():
     return done(objs, 0.01), []
 
 
+def build_Membrane_Strip():
+    """Лента мембраны поля: полуокружность радиуса 1 в плоскости XY (от +X через верх к −X), глубина z = −1..1.
+    В Godot узел растягивается до полуосей купола и глубины ленты, вид и прогиб — шейдер null_membrane.gdshader.
+    UV: u — доля дуги 0..1, v — поперёк ленты 0..1. Origin — центр (середина пола купола)."""
+    seg, rows = 160, 6
+    bm = bmesh.new()
+    grid = []
+    for j in range(rows + 1):
+        z = -1.0 + 2.0 * j / rows
+        grid.append([bm.verts.new((math.cos(math.pi * i / seg), math.sin(math.pi * i / seg), z)) for i in range(seg + 1)])
+    faces = []
+    for j in range(rows):
+        for i in range(seg):
+            faces.append(bm.faces.new((grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i])))
+    o = K._obj("Membrane_Strip", bm, "Hall_Membrane")
+    uvl = o.data.uv_layers.new(name="UVMap")
+    for loop in o.data.loops:
+        co = o.data.vertices[loop.vertex_index].co          # Blender (x, −z_g, y_g)
+        ang = math.atan2(co.z, co.x)
+        uvl.data[loop.index].uv = (ang / math.pi, (-co.y + 1.0) * 0.5)
+    for p in o.data.polygons:
+        p.use_smooth = True
+    return [o], []
+
+
 def build_Wall_Panel_01():
     """Панель стены зала 6 × 8 м (не с листа ассетов, а с главного кадра): вертикальные рёбра, горизонтальные пояса, крупное
     «01» тёмной краской. Лицо +Z. Origin — низ по центру. Вариант без номера — Wall_Panel."""
@@ -714,7 +740,7 @@ def wall_panel(number):
 MODULES = ["Stand_Segment", "Spectator_A", "Spectator_B", "Catwalk", "Support_Column", "Stairs", "Railing", "Light_Rig",
            "Big_Screen", "Small_Scoreboard", "Banner_Red", "Banner_Blue", "Null_Emitter", "Membrane_Anchor_A", "Membrane_Anchor_B",
            "Fighter_Gate", "Camera_Broadcast", "Speaker", "Tech_Box", "Crate", "Cables_Pipes", "Debris", "Floor_Platform",
-           "Wall_Panel_01", "Wall_Panel"]
+           "Wall_Panel_01", "Wall_Panel", "Membrane_Strip"]
 MULTI = {"Fighter_Gate", "Debris"}   # несколько узлов в одном glb (створки ворот, 4 обломка)
 
 
@@ -737,7 +763,11 @@ def tris_of(objs):
 
 
 def export_all(names):
+    rp = os.path.join(OUT, "kit_report.json")
     report = {}
+    if os.path.exists(rp):   # экспорт части модулей не стирает остальные строки отчёта
+        with open(rp) as f:
+            report = json.load(f)
     bad = []
     for name in names:
         C.reset_scene()
@@ -754,8 +784,8 @@ def export_all(names):
         print("%-20s %5d / %5d tris  %s" % (name, tris, budget, ", ".join(mats)))
         if tris > budget:
             bad.append(name)
-    with open(os.path.join(OUT, "kit_report.json"), "w") as f:
-        json.dump(report, f, ensure_ascii=False, indent=1)
+    with open(rp, "w") as f:
+        json.dump(dict(sorted(report.items())), f, ensure_ascii=False, indent=1)
     if bad:
         print("ERROR: over budget:", bad)
         sys.exit(1)

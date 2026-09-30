@@ -1,8 +1,8 @@
 ## Витрина и проверка арены 01 «Old NULL Hall» (docs/plan-demo/ART_NULL.md, лист 5). Нужен рендер (окно; в контейнере — xvfb-run):
 ##   godot --path godot --resolution 1600x900 res://tests/null_hall_snapshot.tscn -- "sheet=res://../docs/plan-demo/img/null-hall-v1.png"
 ## Кадры: 1 — игровая камера по листу камеры (вариант 4: часть арены, боец 8–12 % высоты кадра), 2 — весь зал,
-## 3 — край поля: якорь мембраны и N0 у борта. Две куклы (doll.tscn, заморожены) на спавнах, N0 висит у края поля.
-## Проверки (exit 1): модули на месте (33 секции трибун, ≥ 1000 зрителей, ≥ 8 якорей, 2 ворот, экран и табло),
+## 3 — удар о мембрану: кукла P2 влетает в правый бок купола (поле ↗ 0.24 G), лента прогибается и светится. Две куклы (doll.tscn, заморожены) на спавнах, N0 висит у края поля.
+## Проверки (exit 1): модули на месте (33 секции трибун, ≥ 1000 зрителей, ≥ 8 якорей и эмиттеров, 2 ворот, экран и табло),
 ## материалы ролей пришли из assets/materials/null_hall, табло показывает гравитацию и обновляется при смене поля,
 ## рост бойца в игровом кадре 8–12 % высоты. Отчёт — tests/null_hall_snapshot_report.json.
 extends Node3D
@@ -63,13 +63,27 @@ func _run() -> void:
 	cam.look_at(Vector3(0.0, 11.0, -6.0))
 	await _frames(6)
 	var img2 := _grab()
-	# кадр 3: край поля — якорь и N0
-	hall.gravity_g = 0.24
-	hall.gravity_dir = Vector2(0.7, 0.7)
-	cam.position = Vector3(-4.0, 12.5, 11.0)
-	cam.look_at(Vector3(-12.0, 13.5, -2.0))
-	await _frames(6)
+	# кадр 3: удар о мембрану — кукла P2 влетает в правый бок купола, лента прогибается и светится
+	hall.set_field(0.24, Vector2(0.7, 0.7))
+	var d2 := dolls[1] as Doll
+	for b in d2.parts.values():
+		(b as RigidBody3D).freeze = false
+	d2.global_position = Vector3(9.0, 6.0, 0.0)
+	await _frames(2)
+	for b in d2.parts.values():
+		(b as RigidBody3D).linear_velocity = Vector3(15.0, 1.0, 0.0)
+	cam.position = Vector3(8.0, 8.5, 17.0)
+	cam.look_at(Vector3(14.0, 7.0, 0.0))
+	var stretch := 0.0
+	for i in range(60):
+		await get_tree().physics_frame
+		stretch = maxf(stretch, hall.field.max_stretch_seen)
+		if hall.field.max_stretch_seen > 0.6 and i > 10:
+			break
+	await _frames(1)
 	var img3 := _grab()
+	_check("membrane_stretched_in_frame", stretch > 0.4, "stretch %.2f m" % stretch)
+	await _frames(int(Tuning.NULL_FIELD_BLEND_S * 60.0) + 5)
 	var lbl := hall.find_children("*", "Label3D", true, false)
 	var grav_texts: Array = []
 	for l in lbl:
@@ -109,8 +123,8 @@ func _check_structure() -> void:
 	var surfaces := 0
 	for mi in hall.find_children("*", "MeshInstance3D", true, false):
 		var mesh := (mi as MeshInstance3D).mesh
-		if mesh == null:
-			continue
+		if mesh == null or (mi as MeshInstance3D).material_override != null:
+			continue   # лента мембраны — шейдер (material_override), не материал роли
 		for i in range(mesh.get_surface_count()):
 			surfaces += 1
 			var m := mesh.surface_get_material(i)
@@ -119,7 +133,7 @@ func _check_structure() -> void:
 					flat.append("%s:%s" % [mi.name, m.resource_name if m != null else "null"])
 	_check("role_materials", flat.is_empty(), "%d surfaces, flat: %s" % [surfaces, flat])
 	var g := hall.gravity_text()
-	_check("gravity_text", g == "↘ 0.35G", g)
+	_check("gravity_text", g == "↓ 0.20G", g)   # поле по умолчанию = проектная гравитация (Tuning.GRAVITY)
 
 
 ## Доля высоты кадра, которую занимает кукла (по AABB её мешей в экранных координатах).

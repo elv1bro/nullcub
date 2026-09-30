@@ -341,7 +341,7 @@ func steer(goal: Vector2, max_in: float = 1.0) -> Vector2:
 	var e := goal - my_pos()
 	var v := my_vel()
 	var w := e * STEER_KP - v * STEER_KD
-	w.y += hover_input()
+	w += hover_vec()
 	return w.limit_length(max_in)
 
 
@@ -352,14 +352,33 @@ func steer_speed(goal: Vector2, max_speed: float, max_in: float = 1.0) -> Vector
 	var l := e.length()
 	var v_des := e / l * minf(max_speed, l * 2.5) if l > 0.01 else Vector2.ZERO
 	var w := (v_des - my_vel()) * 0.45
-	w.y += hover_input()
+	w += hover_vec()
 	return w.limit_length(max_in)
 
 
-## Ввод, при котором тяга держит вес куклы (g = Tuning.GRAVITY): у тяжёлой сборки больше.
-func hover_input() -> float:
+## Ввод, при котором тяга держит вес куклы против гравитации у неё (вектор): поле арены NULL (Area3D, NullField) может тянуть
+## вбок и вверх, без поля — Tuning.GRAVITY вниз. У тяжёлой сборки ввод больше.
+func hover_vec() -> Vector2:
 	var thrust := Tuning.MOVE_FORCE_PER_KG * doll.thrust_mass()
-	return clampf(Tuning.GRAVITY * doll.total_mass / maxf(thrust, 1.0), 0.0, 0.9)
+	return (-gravity_vec() * doll.total_mass / maxf(thrust, 1.0)).limit_length(0.9)
+
+
+## Вертикальная часть hover_vec() (старый API: sweeper_brain и прочие, кто складывает только y).
+func hover_input() -> float:
+	return hover_vec().y
+
+
+## Гравитация, которая действует на куклу сейчас (м/с², плоскость XY): total_gravity тела торса/ядра — с учётом Area3D.
+func gravity_vec() -> Vector2:
+	var body: RigidBody3D = doll.parts.get("Torso", null) if doll != null else null
+	if body == null and doll != null and not doll.parts.is_empty():
+		body = doll.parts.values()[0]
+	if body != null:
+		var st := PhysicsServer3D.body_get_direct_state(body.get_rid())
+		if st != null:
+			var g := st.total_gravity
+			return Vector2(g.x, g.y)
+	return Vector2(0.0, -Tuning.GRAVITY)
 
 
 ## Над пропастью ниже PIT_SAFE_Y — тяга вверх: враг сам в провал не лезет (выбить туда можно — в полёте после удара тяга

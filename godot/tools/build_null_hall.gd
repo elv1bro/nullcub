@@ -34,13 +34,17 @@ const ARC_TO := 344.0
 const STAND_ROWS := 5
 const SEATS := 10
 # поле и мембрана
-const FIELD_C := Vector2(0.0, 10.5)
-const FIELD_A := 15.0
-const FIELD_B := 10.5
-const ANCHORS := 12
-const ANCHOR_Z := -2.5
+## купол поля (лор §4: «LARGE HEMISPHERE / DOME»): полуэллипс над полом, центр — середина пола
+const DOME_A := 16.0             # полуширина
+const DOME_B := 19.0             # высота
+const DOME_DEPTH := 2.5          # полуглубина ленты мембраны по z (лента z = −2.5..2.5)
+const ANCHORS := 9               # якоря по дуге (без ног — там эмиттеры)
+const ANCHOR_Z := -3.0           # за задним краем ленты
 const SPAWN_X: Array[float] = [-5.0, 5.0, -9.0, 9.0]
-const SPAWN_Y := 4.0
+const SPAWN_Y := 2.5
+const FIELD_SCRIPT := "res://scenes/arena/null_field.gd"
+const MEMBRANE_SHADER := "res://assets/shaders/null_membrane.gdshader"
+const PLAYGROUND_OUT := "res://scenes/playground_null_hall.tscn"
 
 const MATS := {
 	"Hall_Steel": {"pbr": "paint_marks", "tint": [0.085, 0.09, 0.105], "rough": 0.75, "metal": 0.35},
@@ -222,6 +226,7 @@ func _build_scene() -> void:
 	_boards()
 	_decor()
 	_membrane()
+	_field()
 	_spawns()
 	var ps := PackedScene.new()
 	var err := ps.pack(hall)
@@ -232,6 +237,7 @@ func _build_scene() -> void:
 	else:
 		print("build_null_hall: %s" % OUT)
 	hall.free()
+	_build_playground()
 
 
 func _environment() -> void:
@@ -313,7 +319,7 @@ func _floor() -> void:
 	body.name = "FloorBody"
 	var cs := CollisionShape3D.new()
 	var bs := BoxShape3D.new()
-	bs.size = Vector3(36.0, 1.0, 6.0)
+	bs.size = Vector3(46.0, 1.0, 8.0)
 	cs.shape = bs
 	cs.position = Vector3(0.0, -0.5, 0.0)
 	body.add_child(cs)
@@ -496,27 +502,67 @@ func _decor() -> void:
 		var deg := ARC_FROM + step * (2.0 + i * 3.5)
 		var p := ring(HALL_R[2] + 0.4, deg, 22.5)
 		_place("Cables_Pipes", g, p, face_center_yaw(p), "Pipes_%d" % i)
-	for i in range(3):
-		_place("Debris", g, Vector3(-13.0 + i * 12.0, 0.0, -2.2), rng.randf_range(0.0, 360.0), "Debris_%d" % i, 0.8)
+	for i in range(2):   # обломки у ног купола, за лентой мембраны
+		_place("Debris", g, Vector3([-19.5, 19.5][i], 0.0, -4.0), rng.randf_range(0.0, 360.0), "Debris_%d" % i, 0.8)
 
 
+## Якоря по дуге купола за лентой (светящимся торцом вперёд, к ленте) и эмиттеры у ног купола; лента мембраны.
 func _membrane() -> void:
-	var g := _group("Membrane")
+	var g := _group("Anchors")
 	for i in range(ANCHORS):
-		var a := TAU * i / ANCHORS + PI * 0.5
-		var p2 := FIELD_C + Vector2(FIELD_A * cos(a), FIELD_B * sin(a))
-		if p2.y < 0.5:
-			continue   # низ поля — пол: там стоят эмиттеры
-		var p := Vector3(p2.x, p2.y, ANCHOR_Z)
+		var a := PI * (i + 1) / (ANCHORS + 1)
+		var p := Vector3(DOME_A * cos(a), DOME_B * sin(a), ANCHOR_Z)
 		var module := "Membrane_Anchor_A" if i % 2 == 0 else "Membrane_Anchor_B"
-		var n := _place(module, g, p, 0.0, "Anchor_%d" % i, 0.9)
-		if n != null:   # лицо (+Z) к центру поля в плоскости XY
-			var to_c := Vector3(FIELD_C.x, FIELD_C.y, 0.0) - p
-			n.basis = Basis.looking_at(-to_c.normalized(), Vector3.FORWARD if absf(to_c.normalized().y) > 0.95 else Vector3.UP) \
-				.scaled(Vector3.ONE * 0.9)
+		_place(module, g, p, 0.0, "Anchor_%d" % i, 0.85)
 	for i in range(2):
-		var x: float = [-17.5, 17.5][i]
-		_place("Null_Emitter", g, Vector3(x, 0.0, -1.0), [60.0, -60.0][i], ["Emitter_L", "Emitter_R"][i])
+		var x: float = [-DOME_A - 1.4, DOME_A + 1.4][i]
+		_place("Null_Emitter", g, Vector3(x, 0.0, -0.8), [90.0, -90.0][i], ["Emitter_L", "Emitter_R"][i])
+	# лента мембраны: полуокружность радиуса 1 из кита, растянута до купола; вид и прогиб — шейдер
+	var ps := _kit("Membrane_Strip")
+	if ps == null:
+		return
+	var inst := ps.instantiate()
+	var mesh: Mesh = null
+	for c in inst.find_children("*", "MeshInstance3D", true, false):
+		mesh = (c as MeshInstance3D).mesh
+		break
+	inst.free()
+	var mi := MeshInstance3D.new()
+	mi.name = "Membrane"
+	mi.mesh = mesh
+	mi.scale = Vector3(DOME_A, DOME_B, DOME_DEPTH)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.extra_cull_margin = 4.0
+	var mat := ShaderMaterial.new()
+	mat.shader = load(MEMBRANE_SHADER)
+	mat.set_shader_parameter("centre", Vector2.ZERO)
+	mat.set_shader_parameter("axes", Vector2(DOME_A, DOME_B))
+	mi.material_override = mat
+	hall.add_child(mi)
+	mi.owner = hall
+
+
+## Поле NULL: Area3D на весь зал — гравитация (замена) и мембрана (null_field.gd).
+func _field() -> void:
+	var f := Area3D.new()
+	f.name = "Field"
+	f.set_script(load(FIELD_SCRIPT))
+	f.set("centre", Vector2.ZERO)
+	f.set("axes", Vector2(DOME_A, DOME_B))
+	f.set("membrane_path", NodePath("../Membrane"))
+	f.collision_layer = 0
+	f.collision_mask = 0xFFFFFFFF
+	f.monitorable = false
+	var cs := CollisionShape3D.new()
+	cs.name = "Shape"
+	var bs := BoxShape3D.new()
+	bs.size = Vector3(80.0, 60.0, 16.0)
+	cs.shape = bs
+	cs.position = Vector3(0.0, 24.0, 0.0)
+	f.add_child(cs)
+	hall.add_child(f)
+	f.owner = hall
+	cs.owner = hall
 
 
 func _spawns() -> void:
@@ -532,3 +578,103 @@ func _spawns() -> void:
 func _err(msg: String) -> void:
 	errors += 1
 	push_error("build_null_hall: " + msg)
+
+
+# --- площадка: зал + две куклы + камера по листу камеры + Match + HUD + стрелки за экраном + N0 ---
+## Как playground_void.tscn (скрипт scenes/playground.gd, arena_id "null_hall"), но камера по листу камеры (ART_NULL.md, лист 1):
+## часть арены, боец 8–12 % высоты кадра → полувысота кадра 7.5…11 м (кукла 1.8 м), без fit_bounds; стрелки за экраном —
+## scenes/ui/offscreen_markers.gd; N0 висит у левой ноги купола (снаружи, в бою не участвует).
+func _build_playground() -> void:
+	var pg := Node3D.new()
+	pg.name = "Playground"
+	pg.set_script(load("res://scenes/playground.gd"))
+	pg.set("arena_id", "null_hall")
+	var arena := (load(OUT) as PackedScene).instantiate()
+	arena.name = "NullHall"
+	pg.add_child(arena)
+	arena.owner = pg
+	arena.add_to_group("arena", true)
+	var doll_scenes := ["res://scenes/doll/doll.tscn", "res://scenes/doll/doll_dark.tscn"]
+	for i in range(2):
+		var d := (load(doll_scenes[i]) as PackedScene).instantiate() as Node3D
+		d.name = "P%d" % (i + 1)
+		d.position = Vector3(SPAWN_X[i], 0.05, 0.0)
+		d.set("player_index", i)
+		d.set("input_prefix", "p%d" % (i + 1))
+		pg.add_child(d)
+		d.owner = pg
+		d.add_to_group("dolls", true)
+	var w := Node3D.new()
+	w.name = "Weapons"
+	pg.add_child(w)
+	w.owner = pg
+	var cam := Camera3D.new()
+	cam.name = "Camera"
+	cam.set_script(load("res://scenes/camera/dynamic_camera.gd"))
+	cam.fov = 40.0
+	cam.far = 400.0
+	cam.position = Vector3(0.0, 8.0, 24.0)
+	cam.set("arena_path", NodePath("../NullHall"))
+	cam.set("floor_inset", 0.0)
+	cam.set("padding", 3.0)
+	cam.set("padding_y", 2.0)
+	cam.set("min_half_height", 7.5)
+	cam.set("max_half_height", 11.0)
+	cam.set("fit_bounds", false)
+	cam.set("zoom_out_tau", 0.25)
+	cam.set("zoom_in_tau", 1.0)
+	cam.set("follow_tau", 0.3)
+	pg.add_child(cam)
+	cam.owner = pg
+	cam.add_to_group("camera", true)
+	var m := Node.new()
+	m.name = "Match"
+	m.set_script(load("res://scripts/core/match.gd"))
+	m.set("camera_path", NodePath("../Camera"))
+	m.set("arena_path", NodePath("../NullHall"))
+	pg.add_child(m)
+	m.owner = pg
+	var hud := (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate()
+	hud.name = "HUD"
+	pg.add_child(hud)
+	hud.owner = pg
+	var marks := CanvasLayer.new()
+	marks.name = "Offscreen"
+	marks.layer = 5
+	marks.set_script(load("res://scenes/ui/offscreen_markers.gd"))
+	pg.add_child(marks)
+	marks.owner = pg
+	var n0 := (load("res://scenes/n0/n0.tscn") as PackedScene).instantiate() as Node3D
+	n0.name = "N0"
+	n0.position = Vector3(-DOME_A - 2.6, 6.5, 1.5)
+	n0.rotation_degrees = Vector3(0.0, 28.0, 0.0)
+	pg.add_child(n0)
+	n0.owner = pg
+	var ui := CanvasLayer.new()
+	ui.name = "UI"
+	pg.add_child(ui)
+	ui.owner = pg
+	var hint := Label.new()
+	hint.name = "Hint"
+	hint.anchor_top = 1.0
+	hint.anchor_bottom = 1.0
+	hint.offset_left = 20.0
+	hint.offset_top = -46.0
+	hint.offset_right = 1800.0
+	hint.offset_bottom = -12.0
+	hint.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
+	hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	hint.add_theme_constant_override("outline_size", 7)
+	hint.add_theme_font_size_override("font_size", 22)
+	hint.text = "P1: WASD + Shift + Space    P2: стрелки + правый Ctrl + Enter    G: сменить поле NULL    R: заново    1–8: площадки    Esc: выход"
+	ui.add_child(hint)
+	hint.owner = pg
+	var ps := PackedScene.new()
+	var err := ps.pack(pg)
+	if err == OK:
+		err = ResourceSaver.save(ps, PLAYGROUND_OUT)
+	if err != OK:
+		_err("площадка %s: %d" % [PLAYGROUND_OUT, err])
+	else:
+		print("build_null_hall: %s" % PLAYGROUND_OUT)
+	pg.free()

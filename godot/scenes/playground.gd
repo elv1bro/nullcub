@@ -23,9 +23,11 @@ const SCENES := {
 	"body": "res://scenes/playground_body.tscn",            # площадка сборки тела: пресеты F1–F12, [ ] / PgUp PgDn (BODY_CRAFT.md)
 	"build": "res://scenes/workshop/workshop_build.tscn",   # мастерская: сборка тела и оружия (BODY_CRAFT.md)
 	"pve": "res://scenes/playground_pve.tscn",              # PvE-волны на Свалке (сессия «Определение игры и планы»)
+	"null_hall": "res://scenes/playground_null_hall.tscn",  # арена 01 «Old NULL Hall»: купол с мембраной, поле NULL (ART_NULL.md)
 }
 ## Клавиши площадок: одна таблица на все сцены (площадки, не наследующие этот скрипт, зовут scene_for_key).
-const ARENA_KEYS := {KEY_1: "ruins", KEY_2: "workshop", KEY_3: "void", KEY_4: "scrap", KEY_5: "body", KEY_6: "build", KEY_7: "pve"}
+const ARENA_KEYS := {KEY_1: "ruins", KEY_2: "workshop", KEY_3: "void", KEY_4: "scrap", KEY_5: "body", KEY_6: "build", KEY_7: "pve",
+	KEY_8: "null_hall"}
 
 
 ## Путь сцены площадки для клавиши 1–7 (physical_keycode) или "" — для площадок со своим скриптом:
@@ -102,6 +104,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				switch_arena("build")
 			KEY_7:
 				switch_arena("pve")
+			KEY_8:
+				switch_arena("null_hall")
 			KEY_F10:
 				cycle_fx_preset()
 
