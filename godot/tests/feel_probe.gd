@@ -339,10 +339,11 @@ func _next() -> void:
 			_add_combat(attacker)
 		"lag_thrust_x", "lag_thrust_y", "lag_dash", "lag_spin", "lag_flip":
 			_spawn(Vector3(0, HOVER_H, 0), true)
+			if id == "lag_spin":
+				# 29.09: присваивание стояло в ветке weapon_arm — lag_spin шёл в thrust4 и давал метрики lag_thrust_x один в один
+				doll.control_mode = "rotate"
 		"weapon_arm":
 			_spawn(Vector3(0, HIT_H, 0), false)
-			if id == "lag_spin":
-				doll.control_mode = "rotate"
 	S["com0"] = doll.centre_of_mass()
 	S["head0"] = doll.head().global_position.y
 

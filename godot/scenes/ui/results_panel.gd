@@ -2,8 +2,10 @@
 ## REMATCH (сигнал rematch → Match.restart()) и MAIN MENU (заглушка, disabled); справа деревянная рамка:
 ## места с портретами, таблица статистики (KO, урон нанесён/получен, сильнейший удар, время в воздухе, MAX COMBO,
 ## COMBO SCORE; лучшее в строке — золотом) и ряд медалей из results.medals {name: Doll}.
-## show_results(winner, results): results = {places: Array[Doll], stats: {doll: stats}, medals: {name: doll}};
-## stats читаются по ключу-кукле, запасной ключ — player_index. winner == null → «DRAW!».
+## show_results(winner, results): results = {places: Array[Doll], stats: {doll: stats}, medals: {name: doll}, ranks, ko_records};
+## stats читаются по ключу-кукле, запасной ключ — player_index. winner == null → «DRAW!» без короны. ranks[i] — место places[i]
+## (Match.build_results: двойной KO в одном тике — оба «1ST»); KO на портрете — жертвы ko_records; без ranks/ko_records —
+## место по индексу и KO у всех, кроме первого.
 ## Дерево узлов — scenes/ui/results_panel.tscn; строки таблицы/места/медали строятся по данным при показе.
 class_name ResultsPanel
 extends Control
@@ -94,6 +96,11 @@ func show_results(winner: Object, results: Dictionary) -> void:
 	var places: Array = results.get("places", [])
 	var stats: Dictionary = results.get("stats", {})
 	var medals: Dictionary = results.get("medals", {})
+	var ranks: Array = results.get("ranks", [])
+	var has_ko := results.has("ko_records")
+	var knocked: Array = []
+	for r in results.get("ko_records", []):
+		knocked.append((r as Dictionary).get("victim"))
 	if winner != null:
 		winner_name.text = label_of(winner)
 		winner_name.add_theme_color_override("font_color", colour_of(winner).lightened(0.25))
@@ -115,13 +122,14 @@ func show_results(winner: Object, results: Dictionary) -> void:
 		p.custom_minimum_size = Vector2(72, 72)
 		col.add_child(p)
 		p.set_player(player_of(d))
-		p.set_ko(i > 0 and d != winner)
+		p.set_ko(knocked.has(d) if has_ko else (i > 0 and d != winner))
+		var rank := int(ranks[i]) if i < ranks.size() else i
 		var place := Label.new()
 		place.theme_type_variation = &"DisplayLabel"
 		place.add_theme_font_size_override("font_size", 22)
-		place.text = PLACE_NAMES[mini(i, PLACE_NAMES.size() - 1)]
+		place.text = PLACE_NAMES[mini(rank, PLACE_NAMES.size() - 1)]
 		place.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		if i == 0:
+		if rank == 0:
 			place.add_theme_color_override("font_color", GOLD)
 		col.add_child(place)
 		places_row.add_child(col)

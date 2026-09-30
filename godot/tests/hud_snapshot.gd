@@ -3,7 +3,9 @@
 ##   tests/hud_fight.png         — панели игроков, таймер, комбо ×3, стек диктора (HEAD BLOW! + 3 HIT COMBO!);
 ##   tests/hud_sudden_death.png  — красная SUDDEN DEATH под таймером, надпись диктора;
 ##   tests/hud_ko.png            — карточка KO (брызги, KO!, BETTER LUCK NEXT TIME!) при Engine.time_scale 0.25;
-##   tests/hud_results.png       — итоги: P1 WINS!, места, статистика, медали, кнопки REMATCH / MAIN MENU.
+##   tests/hud_results.png       — итоги: P1 WINS!, места, статистика, медали, кнопки REMATCH / MAIN MENU;
+##   tests/hud_results_draw.png  — после REMATCH двойной KO (оба в одном тике, Match.build_results): match_over(null) — «DRAW!» без
+##                                 короны, P1 и P2 оба «1ST» с KO на портретах, корона раунда никому не прибавилась.
 ## Фон — затемнённый и размытый tests/playground_action.png (если нет — тёмный градиент).
 ## Печатает JSON и пишет tests/hud_report.json (панели = игроки, таймер, карточка скрыта к итогам, итоги видны,
 ## REMATCH зовёт restart() стаба). Exit 0/1.
@@ -166,6 +168,21 @@ func _results(winner: FakeDoll) -> Dictionary:
 	return {"places": places, "stats": stats, "medals": medals}
 
 
+## Ничья двойным KO как у Match.build_results: P1 и P2 выбыли в одном тике последними (ranks 0, 0), остальные — раньше; медали Winner нет.
+func _draw_results() -> Dictionary:
+	var r := _results(dolls[0])
+	var places: Array = dolls.duplicate()
+	var ranks: Array = [0, 0]
+	var ko_records: Array = []
+	for i in range(2, places.size()):
+		ranks.append(i)
+	for d in places:
+		ko_records.append({"victim": d, "kind": "head"})
+	var medals: Dictionary = r["medals"]
+	medals.erase("Winner")
+	return {"places": places, "ranks": ranks, "ko_records": ko_records, "stats": r["stats"], "medals": medals, "winner": null, "draw": true, "reason": "ko"}
+
+
 func _run() -> void:
 	var p1: FakeDoll = dolls[0]
 	var p2: FakeDoll = dolls[1]
@@ -238,6 +255,31 @@ func _run() -> void:
 	_check("results_hidden_after_rematch", not hud.results.visible)
 	var p2_panel: PlayerPanel = hud.panels[1]
 	_check("panel_reset_after_rematch", p2_panel.hp_bar.hp == 100.0 and not p2_panel.portrait.knocked_out, p2_panel.hp_bar.hp)
+	# двойной KO в одном тике → ничья: match_over(null) — короны раунда никому, «DRAW!» без короны, оба «1ST» с KO
+	stub.phase_changed.emit(1)
+	await _wait(0.3)
+	for d in dolls:
+		stub.hp_changed.emit(d, 0.0, 100.0)
+	stub.announce.emit("KO!", NO_COLOR, "ko")
+	stub.ko.emit(p1, p2, {"time": 42.5, "damage": 6.0, "weapon": ""})
+	stub.ko.emit(p2, p1, {"time": 42.5, "damage": 6.0, "weapon": ""})
+	stub.phase_changed.emit(3)
+	stub.match_over.emit(null, _draw_results())
+	await _wait(1.6)
+	_check("draw_no_crown", int(hud.wins.get(0, 0)) == 1 and int(hud.wins.get(1, 0)) == 0, hud.wins)
+	_check("draw_results_visible", hud.results.visible)
+	_check("draw_label", hud.results.winner_name.text == "DRAW!" and not hud.results.crown.visible, hud.results.winner_name.text)
+	var firsts := 0
+	var ko_marks := 0
+	for col in hud.results.places_row.get_children():
+		for c in col.get_children():
+			if c is Label and (c as Label).text == "1ST":
+				firsts += 1
+			if c is Portrait and (c as Portrait).knocked_out:
+				ko_marks += 1
+	_check("draw_places_shared", firsts == 2, firsts)
+	_check("draw_ko_marks", ko_marks == dolls.size(), ko_marks)
+	await _capture("hud_results_draw.png")
 	var json := JSON.stringify(report, "  ")
 	print(json)
 	var f := FileAccess.open(out_dir.path_join("hud_report.json"), FileAccess.WRITE)

@@ -26,17 +26,28 @@
 ##   ko_burst       — hp 5 → удар: knocked_out, суставов 0, частей 14, части разлетелись;
 ##   sd_step        — Match с time_limit 5 с: фаза SUDDEN_DEATH, через 10 с шага knockback ×1.25, стабильность ×0.85;
 ##   match_over     — Match, у одной куклы hp 10: match_over с winner, places/medals/combo_score, time_scale вернулся к 1;
-##                    затем restart(): куклы пересозданы на точках спавна, живые, hp 100, фаза FIGHT.
+##                    затем restart(): куклы пересозданы на точках спавна, живые, hp 100, фаза FIGHT;
+##   double_ko      — одновременный KO (06-combat-hud.md «Одновременный KO»): Match + HUD, обе куклы с hp DKO_HP лежат в воздухе
+##                    головами навстречу (руки Т-позы поперёк — первой касается голова), наезд по DKO_SPEED каждая: голова о голову бьёт
+##                    обоих (~6 HP) → KO обоих в одном тике физики; ждём ничью: match_over(null), draw, reason ko, ranks [0, 0], медали
+##                    Winner нет, HUD — корон не прибавилось, итоги «DRAW!» без короны, оба «1ST» с KO на портретах;
+##   double_ko_rev  — то же, но B добавлена в дерево раньше A (её DollCombat разрешает очередь первой): итог не зависит от порядка.
 extends Node3D
 
 const DollScene := preload("res://scenes/doll/doll.tscn")
 const DollDarkScene := preload("res://scenes/doll/doll_dark.tscn")
 const PickupScript := preload("res://scenes/weapons/weapon_pickup.gd")
 const CrateScene := preload("res://scenes/props/crate.tscn")
+const HudScene := preload("res://scenes/ui/hud.tscn")
 const WALL_X := 8.0
 const PROBE_AFTER_S := 0.2       # через столько после касания стены/пропса проверяем стан и отброс
 const SETTLE_AFTER_S := 1.5      # итог env-сценариев: касание + падение на пол
 const BLOW_KINDS := ["head", "body", "double", "combo"]
+const DKO_HP := 2.0              # double_ko: hp обеих к FIGHT; голова о голову на 6 м/с — 4 кг × 4.5 × 0.95 × Head 0.35 ≈ 6 HP каждой
+const DKO_SPEED := 6.0
+const DKO_X := 2.1               # начало куклы (стопы) на ∓DKO_X, повёрнута на ∓90°: макушки (1.775 м от начала) в 0.65 м друг от друга
+const DKO_Y := 2.5
+const DKO_RESULTS_S := 2.0       # итоги HUD — через карточку KO (1.2 с) + 0.15 с
 
 
 ## Заглушка DynamicCamera: Match.hit_feel ищет камеру в группе "camera" и зовёт shake / zoom_impulse.
@@ -52,7 +63,7 @@ class CameraStub extends Node3D:
 const LIMB_PREFIXES := ["Hand", "Foot", "LowerArm", "LowerLeg", "UpperArm", "UpperLeg"]
 
 var scenarios := ["rush_damage", "band_torso", "band_hand", "band_hammer", "idle_no_damage", "env_wall", "prop_push", "loose_weapon",
-	"weapon_still", "weapon_thrown", "ko_burst", "sd_step", "match_over"]
+	"weapon_still", "weapon_thrown", "ko_burst", "sd_step", "match_over", "double_ko", "double_ko_rev"]
 var only := ""
 var idx := -1
 var t := 0.0
@@ -82,6 +93,7 @@ var min_time_scale := 1.0
 var wall_right: StaticBody3D
 # env / prop / weapon сценарии
 var cam: CameraStub = null
+var hud: Hud = null
 var match_hits: Array = []      # Match.hit: {kind, damage, victim, attacker}
 var stun_events: Array = []     # Doll.stunned: {doll, seconds, t}
 var scen_min_ts := 1.0          # min Engine.time_scale за сценарий (hit stop / slow-mo)
@@ -226,6 +238,7 @@ func _next() -> void:
 	old_ids = []
 	rush_retreat = {}
 	cam = null
+	hud = null
 	match_hits = []
 	stun_events = []
 	scen_min_ts = 1.0
@@ -292,6 +305,24 @@ func _next() -> void:
 			m.phase_changed.connect(func(p: int) -> void:
 				if p == Match.Phase.FIGHT and is_instance_valid(b):
 					b.hp = 10.0)
+		"double_ko", "double_ko_rev":
+			if s == "double_ko_rev":
+				b = _spawn_doll(DollDarkScene, 1, Vector3(DKO_X, DKO_Y, 0))
+				a = _spawn_doll(DollScene, 0, Vector3(-DKO_X, DKO_Y, 0))
+			else:
+				a = _spawn_doll(DollScene, 0, Vector3(-DKO_X, DKO_Y, 0))
+				b = _spawn_doll(DollDarkScene, 1, Vector3(DKO_X, DKO_Y, 0))
+			a.rotation.z = -PI * 0.5   # голова к +X
+			b.rotation.z = PI * 0.5    # голова к −X
+			m = _make_match(90.0, 0.0, false)
+			hud = HudScene.instantiate()
+			world.add_child(hud)
+			hud.bind(m)
+			m.phase_changed.connect(func(p: int) -> void:
+				if p == Match.Phase.FIGHT:
+					for d in [a, b]:
+						if is_instance_valid(d):
+							(d as Doll).hp = DKO_HP)
 	if a != null:
 		_hook(a, hits_a)
 	if b != null:
@@ -730,6 +761,13 @@ func _physics_process(delta: float) -> void:
 				_check("restart_phase", 1.0 if m.phase == Match.Phase.FIGHT else 0.0, 1.0, "eq", "phase FIGHT after restart with countdown 0 (phase=%d)" % m.phase)
 				_check("restart_group", float(get_tree().get_nodes_in_group("dolls").size()), 2.0, "eq", "group dolls has exactly 2 (old freed)")
 				_next()
+		"double_ko", "double_ko_rev":
+			if t >= 1.0 and t < 6.0 and not ko_fired and hits_a.is_empty() and hits_b.is_empty():
+				_inject(a, Vector3(DKO_SPEED, 0, 0))
+				_inject(b, Vector3(-DKO_SPEED, 0, 0))
+			if over_fired and t >= over_t + DKO_RESULTS_S or t >= 10.0:
+				_checks_double_ko(s)
+				_next()
 
 
 func _checks_match_over() -> void:
@@ -754,6 +792,52 @@ func _checks_match_over() -> void:
 	report["info"]["match"] = {"over_t": over_t, "duration": over_results.get("duration_s", -1.0), "reason": over_results.get("reason", ""),
 		"medals": medal_names, "stats_a": a.stats.duplicate(), "stats_b": b.stats.duplicate(), "events": events.slice(0, 20), "hits_b": hits_b.slice(0, 5),
 		"min_time_scale": min_time_scale}
+
+
+func _checks_double_ko(id: String) -> void:
+	var recs: Array = m.ko_records
+	var frames: Array = []
+	var head_head := 0
+	for r in recs:
+		frames.append(int((r as Dictionary).get("physics_frame", -1)))
+		if String((r as Dictionary).get("part", "")).begins_with("Head") and (r as Dictionary).get("kind", "") == "head":
+			head_head += 1
+	_check(id + "_both_ko", float(int(not a.alive) + int(not b.alive)), 2.0, "eq", "both dolls knocked out")
+	_check(id + "_same_tick", 1.0 if frames.size() == 2 and frames[0] == frames[1] else 0.0, 1.0, "eq",
+		"two KO records in the same physics tick (frames %s)" % str(frames))
+	_check(id + "_head_head", float(head_head), 2.0, "eq", "both KOs by a head-to-head clash (part Head, kind head)")
+	_check(id + "_over", 1.0 if over_fired else 0.0, 1.0, "eq", "match_over emitted")
+	_check(id + "_draw", 1.0 if bool(over_results.get("draw", false)) else 0.0, 1.0, "eq", "results.draw (no living doll)")
+	_check(id + "_winner_null", 1.0 if over_fired and over_winner == null and over_results.get("winner", 0) == null else 0.0, 1.0, "eq",
+		"match_over winner and results.winner are null (a dead doll is never the winner)")
+	_check(id + "_reason", 1.0 if over_results.get("reason", "") == "ko" else 0.0, 1.0, "eq", "results.reason == ko (%s)" % over_results.get("reason", ""))
+	var medals: Dictionary = over_results.get("medals", {})
+	_check(id + "_no_winner_medal", 0.0 if medals.has("Winner") else 1.0, 1.0, "eq", "no Winner medal")
+	var places: Array = over_results.get("places", [])
+	var ranks: Array = over_results.get("ranks", [])
+	_check(id + "_ranks", 1.0 if places.size() == 2 and ranks == [0, 0] else 0.0, 1.0, "eq", "both share first place: ranks %s" % str(ranks))
+	var crowns := 0
+	for k in hud.wins:
+		crowns += int(hud.wins[k])
+	_check(id + "_hud_no_crown", float(crowns), 0.0, "eq", "HUD awarded no round crown (wins %s)" % str(hud.wins))
+	var rp := hud.results
+	_check(id + "_hud_draw", 1.0 if rp.visible and rp.winner_name.text == "DRAW!" and not rp.crown.visible else 0.0, 1.0, "eq",
+		"HUD results visible with DRAW! and no crown (visible %s, text %s, crown %s)" % [rp.visible, rp.winner_name.text, rp.crown.visible])
+	var firsts := 0
+	var ko_marks := 0
+	for col in rp.places_row.get_children():
+		for c in col.get_children():
+			if c is Label and (c as Label).text == "1ST":
+				firsts += 1
+			if c is Portrait and (c as Portrait).knocked_out:
+				ko_marks += 1
+	_check(id + "_hud_places", float(firsts), 2.0, "eq", "HUD places: both 1ST")
+	_check(id + "_hud_ko_marks", float(ko_marks), 2.0, "eq", "HUD places: both portraits knocked out")
+	var rec_info: Array = []
+	for r in recs:
+		rec_info.append(_record_summary(r))
+	report["info"][id] = {"ko_frames": frames, "records": rec_info, "over_t": over_t, "hits_a": hits_a.slice(0, 4), "hits_b": hits_b.slice(0, 4),
+		"ranks": ranks, "draw": over_results.get("draw", null), "events": events.slice(0, 12)}
 
 
 func _is_limb(name_: String) -> bool:
