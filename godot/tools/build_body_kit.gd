@@ -16,7 +16,9 @@
 ##   scenes/body/kit/<id>.tscn + data/body/parts/<id>.tres       детали из glb (§3.1) и PartDef (поля каталога);
 ##   scenes/body/kit/connectors/<type>.tscn                       коннекторы шарниров (§3.4): Node3D + glb, без физики;
 ##   scenes/body/kit/kit_human_*.tscn + data/body/parts/kit_human_*.tres   кит «Человек» на риге v3 (§3.2) + самосверка с wood_*;
-##   data/body/blueprints/kit_*.tres + scenes/body/presets/kit_*.tscn     пресеты (§3.5); id "human" не пишется никогда.
+##   data/body/blueprints/kit_*.tres + scenes/body/presets/kit_*.tscn     пресеты (§3.5); id "human" не пишется никогда;
+##     витрина покраски (BODY_PAINT.md §4): kit_graffiti, kit_camo — узлы kit_human / kit_brawler + paint (PaintLayer.pattern с
+##     постоянным seed) и stickers (трафареты «stencil:<имя>», кадр — луч по треугольникам меша детали).
 ## В конце — строка «=== BODY KIT BUILD === {json}» (счётчики, самосверка, предупреждения); код выхода 1, если есть ошибки.
 ##
 ## Текстуры: копии 512² с мип-мапами assets/materials/kit/tex/<папка>/*.webp (gen_kit_face.py), как CRAFT_TEX_SIZE деталей крафта.
@@ -43,6 +45,9 @@ const MODULAR_SCRIPT := "res://scripts/body/modular_doll.gd"
 const PART_DEF_SCRIPT := "res://scripts/body/part_def.gd"
 const MATERIAL_DEF_SCRIPT := "res://scripts/body/material_def.gd"
 const BLUEPRINT_SCRIPT := "res://scripts/body/body_blueprint.gd"
+## Покраска витринных пресетов (docs/plan-demo/BODY_PAINT.md §2, §4): слой краски и габарит меша детали — по пути, как прочие скрипты.
+const PAINT_LAYER_SCRIPT := "res://scripts/body/paint_layer.gd"
+const BODY_PAINT_SCRIPT := "res://scripts/body/body_paint.gd"
 
 ## Роль материала → StandardMaterial3D. Роли и папки — как KIT_MATS / KIT_FLAT (tools/blender/kit_common.py) и MAT_DEFS / FLAT
 ## (tools/blender/craft_parts.py); числа не везде те же (albedo железа, металличность ржавчины, Joint / Pin) — список расхождений
@@ -871,6 +876,7 @@ static func _chain(out: Array, uids: String, anchor: String, parts: Array, names
 func _build_presets() -> void:
 	# kit_human — human.tres узел в узел (те же uid, имена тел, углы, control), детали kit_human_*
 	var human := ResourceLoader.load(BLUEPRINT_DIR + "human.tres", "", ResourceLoader.CACHE_MODE_REPLACE)
+	var kit_human_nodes: Array = []
 	if human == null:
 		_err("нет %shuman.tres" % BLUEPRINT_DIR)
 	else:
@@ -888,6 +894,7 @@ func _build_presets() -> void:
 			nodes.append(n)
 		if ok:
 			_save_blueprint("kit_human", "Кит «Человек»", nodes, Array(human.get("control")), int(human.get("energy_budget")))
+			kit_human_nodes = nodes
 
 	# brawler — ящик, голова-ящик, толстые руки (варежки — крашеный лист), поршни, ботинки, железные наплечники (крашеный лист по
 	# умолчанию сливался с крашеными руками в одно пятно); правое плечо — мотор (бьёт), его шестерня видна из-под наплечника
@@ -901,6 +908,7 @@ func _build_presets() -> void:
 	n.append(_n("D", "kit_deco_pauldron", "1", "Anchor_Deco", "", {"mat": "iron"}))
 	n.append(_n("E", "kit_deco_pauldron", "7", "Anchor_Deco", "", {"mat": "iron"}))
 	_save_blueprint("kit_brawler", "Громила", n, ["9"])
+	var brawler_nodes: Array = n.duplicate(true)
 
 	# bot — ядро-хаб синей краской, голова-экран, пружинные руки с локтями-пружинами (согнуты), клешни, белые поршни, колышки, флажок
 	n = [_n("T", "kit_core_ball", "", "", "Torso", {"mat": "paint_blue"}), _n("H", "kit_head_bot", "T", "Anchor_Neck", "Head")]
@@ -1006,6 +1014,127 @@ func _build_presets() -> void:
 	_chain(n, "ABC", "Anchor_Hip_R", leg, LEG_R, [{}, {"rest_deg": KNEE_REST}, iron])
 	n.append(_n("D", "kit_deco_chimney", "T", "Anchor_Back"))
 	_save_blueprint("kit_lantern", "Фонарщик", n, ["8"])
+
+	# --- витрина покраски (docs/plan-demo/BODY_PAINT.md §1, §4): тело то же, сверху краска и трафареты ---
+	if not kit_human_nodes.is_empty():
+		_build_graffiti(kit_human_nodes.duplicate(true), Array(human.get("control")), int(human.get("energy_budget")))
+	_build_camo(brawler_nodes)
+
+
+## kit_graffiti — kit_human узел в узел: ноги в пламени, руки в полоску, на груди тег граффити и две золотые звезды по бокам окошка
+## ядра (между обручами и окошком), золотая корона на лбу — по верхнему краю плашки лица (глаза открыты).
+## Парные детали (L / R) — один seed: корень меша правой детали зеркальный, раскраска выходит симметричной.
+func _build_graffiti(nodes: Array, control: Array, budget: int) -> void:
+	var seeds := {"4": 11, "A": 11, "5": 12, "B": 12, "6": 13, "C": 13, "1": 21, "7": 21, "2": 22, "8": 22, "3": 23, "9": 23}
+	var stripes := [Color(0.97, 0.96, 0.9), Color(0.12, 0.42, 0.86)]
+	var ok := true
+	for nd in nodes:
+		var uid := String(nd["uid"])
+		if uid in ["4", "5", "6", "A", "B", "C"]:
+			ok = _paint_pattern(nd, "flames", [], int(seeds[uid])) and ok
+		elif uid in ["1", "2", "3", "7", "8", "9"]:
+			ok = _paint_pattern(nd, "stripes", stripes, int(seeds[uid])) and ok
+		elif uid == "T":
+			ok = _paint_pattern(nd, "graffiti", [Color(1.0, 0.36, 0.72), Color(0.08, 0.07, 0.07)], 31) and ok
+			for sx in [-0.55, 0.55]:
+				ok = _add_stencil(nd, "star", Vector3(sx, 0.35, 1.0), Vector3(0, 0, -1), 0.09, Color(1.0, 0.8, 0.12)) and ok
+		elif uid == "H":
+			ok = _add_stencil(nd, "crown", Vector3(0.0, 0.62, 1.0), Vector3(0, 0, -1), 0.085, Color(1.0, 0.8, 0.12)) and ok
+	if ok:
+		_save_blueprint("kit_graffiti", "Граффити", nodes, control, budget)
+
+
+## kit_camo — громила (kit_brawler узел в узел) в светлом лесном камуфляже целиком (олива, песок, тёмная зелень — палитра по
+## умолчанию в полутёмной мастерской сливается), на груди над окошком — оранжевая мишень.
+func _build_camo(nodes: Array) -> void:
+	var ok := true
+	var woodland := [Color(0.5, 0.56, 0.3), Color(0.74, 0.64, 0.44), Color(0.16, 0.2, 0.12)]
+	for nd in nodes:
+		var uid := String(nd["uid"])
+		# пары L / R и пара наплечников — один seed (см. _build_graffiti)
+		var key := {"7": "1", "8": "2", "9": "3", "A": "4", "B": "5", "C": "6", "E": "D"}.get(uid, uid) as String
+		ok = _paint_pattern(nd, "camo", woodland, 500 + key.unicode_at(0)) and ok
+		if uid == "T":
+			ok = _add_stencil(nd, "target", Vector3(0.0, 0.5, 1.0), Vector3(0, 0, -1), 0.13, Color(0.97, 0.45, 0.1)) and ok
+	if ok:
+		_save_blueprint("kit_camo", "Камуфляж", nodes, ["9"])
+
+
+## Корень меша детали part_id в её сцене (узел «Mesh», как BodyPaint.mesh_root_of у детали со своим телом и у слитой): [инстанс, корень];
+## [] — нет сцены / меша. Инстанс освобождает вызывающий.
+func _part_mesh_root(part_id: String) -> Array:
+	var def := ResourceLoader.load(PART_DIR + part_id + ".tres")
+	var ps: PackedScene = def.get("scene") if def != null else null
+	if ps == null:
+		return []
+	var inst := ps.instantiate()
+	var root := inst.get_node_or_null("Mesh") as Node3D
+	if root == null:
+		inst.free()
+		return []
+	return [inst, root]
+
+
+## Раскраска узла nd (ключ paint, BODY_PAINT.md §4): слой по габариту мешей корня (BodyPaint.mesh_aabb — как ModularDoll.ensure_paint),
+## PaintLayer.pattern(kind, colors, seed) вдоль +Y корня (у конечностей — к суставу родителя: пламя от стопы вверх).
+func _paint_pattern(nd: Dictionary, kind: String, colors: Array, pattern_seed: int) -> bool:
+	var mr := _part_mesh_root(String(nd["part"]))
+	if mr.is_empty():
+		_err("покраска: у детали «%s» нет Mesh" % nd["part"])
+		return false
+	var box: AABB = load(BODY_PAINT_SCRIPT).mesh_aabb(mr[1])
+	(mr[0] as Node).free()
+	var layer: RefCounted = load(PAINT_LAYER_SCRIPT).for_aabb(box)
+	layer.call("pattern", kind, colors, pattern_seed, Vector3.UP)
+	if bool(layer.call("is_empty")):
+		_err("покраска: раскраска «%s» детали «%s» пустая" % [kind, nd["part"]])
+		return false
+	nd["paint"] = layer.call("to_dict")
+	return true
+
+
+## Трафарет name на деталь узла nd (ключ stickers): луч в кадре корня меша из точки центр габарита + at × (полгабарита) по dir, по
+## треугольникам мешей (без Connector_*); кадр — Y по нормали наружу, «верх» картинки — +Y корня (как мастерская: X = Y × Z).
+func _add_stencil(nd: Dictionary, stencil: String, at: Vector3, dir: Vector3, side: float, colour: Color) -> bool:
+	var mr := _part_mesh_root(String(nd["part"]))
+	if mr.is_empty():
+		_err("трафарет: у детали «%s» нет Mesh" % nd["part"])
+		return false
+	var root: Node3D = mr[1]
+	var bp_script: GDScript = load(BODY_PAINT_SCRIPT)
+	var box: AABB = bp_script.mesh_aabb(root)
+	var from := box.get_center() + at * box.size * 0.5 - dir * 0.05
+	var best := {}
+	for mi in bp_script.meshes(root):
+		var m := mi as MeshInstance3D
+		var rel := Transform3D.IDENTITY
+		var cur: Node = m
+		while cur != null and cur != root:
+			rel = (cur as Node3D).transform * rel
+			cur = cur.get_parent()
+		var inv := rel.affine_inverse()
+		var tm := m.mesh.generate_triangle_mesh()
+		if tm == null:
+			continue
+		var r := tm.intersect_ray(inv * from, inv.basis * dir)
+		if r.is_empty():
+			continue
+		var p: Vector3 = rel * (r["position"] as Vector3)
+		var d := (p - from).dot(dir)
+		if d > 0.0 and (best.is_empty() or d < float(best["d"])):
+			var nrm := (rel.basis.inverse().transposed() * (r["normal"] as Vector3)).normalized()
+			best = {"d": d, "p": p, "n": -nrm if nrm.dot(dir) > 0.0 else nrm}
+	(mr[0] as Node).free()
+	if best.is_empty():
+		_err("трафарет «%s»: луч мимо детали «%s»" % [stencil, nd["part"]])
+		return false
+	var y: Vector3 = best["n"]
+	var z := -(Vector3.UP - y * Vector3.UP.dot(y)).normalized()
+	var xf := Transform3D(Basis(y.cross(z).normalized(), y, z), best["p"])
+	var sts: Array = nd.get("stickers", [])
+	sts.append({"img": "stencil:" + stencil, "xf": xf, "size": Vector2(side, side), "color": colour})
+	nd["stickers"] = sts
+	return true
 
 
 func _save_blueprint(id: String, title: String, nodes: Array, control: Array, budget: int = 100) -> void:

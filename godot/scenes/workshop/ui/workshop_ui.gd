@@ -1,6 +1,7 @@
 ## UI мастерской (стиль HUD: деревянные таблички hud_theme.tres, кисть-леттеринг, лист R20). Дерево — workshop_ui.tscn, здесь
 ## поведение: bind(WorkshopBuild) → шаблоны, полка (вкладки по видам, карточки part_card.gd с иконками PartIcons; у вкладок с tool —
-## инструмент над деталями: «Шарниры» — плашки типов joint_card.gd, «Материал» — плашки кисти material_card.gd), правая панель
+## инструмент над деталями: «Шарниры» — плашки типов joint_card.gd, «Материал» — плашки кисти material_card.gd, «Покраска» — полка
+## paint_panel.gd (docs/plan-demo/BODY_PAINT.md §1, §6; шаблоны на ней прячутся — место под палитру и сетки), правая панель
 ## (ENERGY, масса, тела, разгон, рука мышью, оружие, ошибки validate() словами, сохранить / загрузить / отменить; на вкладке ОРУЖИЕ —
 ## верстак: характеристики словами, «В руку»), подсказка внизу, всплывающие сообщения сверху, иконка детали у курсора при протяжке.
 ## В испытании — плашка ИСПЫТАНИЕ, счёт урона, табличка HP над манекеном и цифры урона в точке удара.
@@ -10,12 +11,13 @@ extends CanvasLayer
 const PartCard := preload("res://scenes/workshop/ui/part_card.gd")
 const MaterialCard := preload("res://scenes/workshop/ui/material_card.gd")
 const JointCard := preload("res://scenes/workshop/ui/joint_card.gd")
+const PaintPanel := preload("res://scenes/workshop/ui/paint_panel.gd")
 ## Короткие подписи шаблонов на кнопках (полные — в подсказке).
 const PRESET_SHORT := {
 	"human": "Человек", "spider": "Паук", "long_arm": "Длиннорук", "big_arm": "Силач", "legless": "Безногий", "junk": "Хлам",
 	"flail": "Кистень", "kit_human": "Кукла-кит", "kit_brawler": "Громила", "kit_bot": "Робот", "kit_horned": "Рогатый",
 	"kit_king": "Король", "kit_spider": "Кит-паук", "kit_devil": "Чёртик", "kit_skull": "Скелет", "kit_wheels": "Каталка",
-	"kit_lantern": "Фонарщик",
+	"kit_lantern": "Фонарщик", "kit_graffiti": "Граффити", "kit_camo": "Камуфляж",
 	"mallet": "Киянка", "hammer": "Молот", "spiked_hammer": "С гвоздями", "heavy_hammer": "Тяжёлый",
 	"long_hammer": "Длинный", "sword": "Меч", "axe": "Топор", "concept_hammer": "Концепт",
 }
@@ -52,6 +54,7 @@ var _preset_buttons: Array = []
 @onready var body_tab: Button = $Root/Left/VBox/ViewTabs/BodyTab
 @onready var weapon_tab: Button = $Root/Left/VBox/ViewTabs/WeaponTab
 @onready var presets_box: GridContainer = $Root/Left/VBox/Presets
+@onready var presets_title: Label = $Root/Left/VBox/PresetsTitle
 @onready var shelf_title: Label = $Root/Left/VBox/ShelfTitle
 @onready var shelf_tabs: HFlowContainer = $Root/Left/VBox/ShelfTabs
 @onready var shelf: GridContainer = $Root/Left/VBox/ShelfScroll/ShelfBox/Shelf
@@ -128,8 +131,18 @@ func bind(c: WorkshopBuild) -> void:
 	ctl.mode_changed.connect(_on_mode)
 	ctl.view_changed.connect(func(_v: int) -> void: _build_left())
 	ctl.dummy_hit.connect(_on_dummy_hit)
+	if ctl.paint != null:
+		ctl.paint.open_tab.connect(open_paint_tab)   # файл брошен в окно — полка покраски
 	_build_left()
 	_refresh()
+
+
+## Открыть вкладку «Покраска» (вид — ТЕЛО).
+func open_paint_tab() -> void:
+	if ctl.view != WorkshopBuild.View.BODY:
+		ctl.set_view(WorkshopBuild.View.BODY)
+	shelf_tab["body"] = "paint"
+	_build_left()
 
 
 ## Точка над панелью / всплывающим окном (клик туда не ставит деталь в «липком» режиме протяжки).
@@ -158,7 +171,11 @@ func _build_left() -> void:
 	var weapon := ctl.view == WorkshopBuild.View.WEAPON
 	body_tab.set_pressed_no_signal(not weapon)
 	weapon_tab.set_pressed_no_signal(weapon)
-	shelf_title.text = "ПОЛКА — ТЯНИ ДЕТАЛЬ НА ВЕРСТАК" if weapon else "ПОЛКА — ТЯНИ ДЕТАЛЬ НА КУКЛУ"
+	var painting := not weapon and String(shelf_tab["body"]) == "paint"
+	shelf_title.text = "ПОЛКА — ТЯНИ ДЕТАЛЬ НА ВЕРСТАК" if weapon else ("ПОКРАСКА — СВОЙ СТИЛЬ КУКЛЫ" if painting
+		else "ПОЛКА — ТЯНИ ДЕТАЛЬ НА КУКЛУ")
+	presets_box.visible = not painting   # на покраске шаблоны не нужны — место палитре и сеткам
+	presets_title.visible = not painting
 	# шаблоны
 	for c in presets_box.get_children():
 		c.queue_free()
@@ -198,9 +215,14 @@ func _build_left() -> void:
 		var sid := String(s["id"])
 		var stool := String(s.get("tool", ""))
 		b2.pressed.connect(func() -> void:
+			var was := String(shelf_tab[_view_key()])
 			shelf_tab[_view_key()] = sid
-			if ctl.active_tool() in ["material", "joint"] and ctl.active_tool() != stool:
-				ctl.clear_tools()   # ушёл с вкладки инструмента — кисть / шарнир кладутся
+			if ctl.active_tool() in ["material", "joint", "paint"] and ctl.active_tool() != stool:
+				ctl.clear_tools()   # ушёл с вкладки инструмента — кисть / шарнир / баллончик кладутся
+			if was == "paint" and sid != "paint" and ctl.paint != null:
+				ctl.paint.reset_turn()   # стенд снова лицом
+			if sid == "paint" and was != "paint" and ctl.paint != null and ctl.paint.tool == "":
+				ctl.paint.set_tool("spray")   # пришёл красить — баллончик сразу в руке
 			_build_left())
 		shelf_tabs.add_child(b2)
 	_build_shelf()
@@ -229,6 +251,8 @@ func _build_shelf() -> void:
 	var sh := CraftEdit.shelf_of(shelves, String(shelf_tab[_view_key()]))
 	var kinds: Array = sh.get("kinds", [])
 	_tool = String(sh.get("tool", ""))
+	if ctl.paint != null:
+		ctl.paint.tab_open = _tool == "paint"
 	# инструмент вкладки (кит v2, BODY_KIT.md §5.5): плашки материалов (2 колонки) / типов шарнира (строки) над деталями
 	if _tool == "material":
 		tools_box.columns = 2
@@ -246,8 +270,13 @@ func _build_shelf() -> void:
 			jc.picked.connect(func(t: String) -> void: ctl.set_joint_pick(t))
 			tools_box.add_child(jc)
 			_tool_cards[String(jt)] = jc
-	tools_box.visible = not _tool_cards.is_empty()
-	tool_hint.visible = tools_box.visible
+	elif _tool == "paint":
+		tools_box.columns = 1
+		var pp := PaintPanel.new()
+		tools_box.add_child(pp)
+		pp.setup(ctl)
+	tools_box.visible = not _tool_cards.is_empty() or _tool == "paint"
+	tool_hint.visible = tools_box.visible and TOOL_HINTS.has(_tool)
 	tool_hint.text = String(TOOL_HINTS.get(_tool, ""))
 	var defs := CraftEdit.parts_of_kinds(kinds)
 	parts_title.visible = tools_box.visible and not defs.is_empty()
@@ -270,6 +299,8 @@ func _update_tool_cards() -> void:
 	if ctl == null:
 		return
 	var sel := ctl.paint_mat if _tool == "material" else (ctl.joint_pick if _tool == "joint" else "")
+	if _tool == "paint":
+		return
 	for id in _tool_cards:
 		(_tool_cards[id]).set_selected(String(id) == sel)
 

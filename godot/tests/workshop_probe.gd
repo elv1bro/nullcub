@@ -2,7 +2,9 @@
 ##   headless: godot --headless --path . --fixed-fps 60 res://tests/workshop_probe.tscn        → tests/workshop_probe_report.json, 0/1
 ##   кадры:    godot --path . --resolution 1920x1080 res://tests/workshop_probe.tscn -- "shots=/abs/dir"
 ##             → <dir>/workshop-build-v1-{build,drag,weapon,test}.png (кукла испытания идёт на манекен сама) и кадры кита v2
-##               workshop-build-v1-kit-{mat,joint,armor,limb,head,core}.png (кисть, шарниры, призрак рогов, полки с иконками кита)
+##               workshop-build-v1-kit-{mat,joint,armor,limb,head,core}.png (кисть, шарниры, призрак рогов, полки с иконками кита),
+##               покраска workshop-build-v1-paint{,-stencil,-presets}.png (баллончик с кольцом, трафарет и наклейка; сетка трафаретов
+##               с превью; витрина kit_graffiti на раскрасках)
 ## Проверки (checks[].id):
 ##   preset_*   — шаблон human: чертёж без ошибок, кукла на стенде собрана (14 тел), тела заморожены и только на слое выбора;
 ##   targets_*  — для плеча светятся свободные якоря Side_L / Side_R (ok), занятые плечевые — замена; голова — только шея;
@@ -29,6 +31,28 @@
 ##                луч по сваренной кисти — её узел), отказы (корень, голова, рука мышью, auto-сустав ребёнка, декор), Ctrl+Z,
 ##                клик мышью, Esc кладёт инструмент, кружки типов на суставах;
 ##   kit_test_live — сборка кита с материалом и шарнирами оживает в испытании: 1.5 с без взрыва;
+##   покраска (docs/plan-demo/BODY_PAINT.md §6; WorkshopPaint, курсор — из API, virtual_mouse):
+##   paint_*    — вкладка «Покраска» (полка, шаблоны спрятаны, баллончик); штрих баллончиком по экранным точкам меняет живой слой
+##                плеча и node.paint (тот же слой), одна запись истории на штрих; симметрия красит правое плечо; Shirt* / Face* без
+##                краски; ластик; Ctrl+Z; сохранить / загрузить (узлы, байты слоя, наклейка, фото); раскраска всей куклы — по кадрам,
+##                каждая деталь, одна запись; старая кукла human тоже красится; поворот стенда (тела едут, физлуч попадает);
+##                Esc и «Испытать» кладут баллончик; витрина kit_graffiti / kit_camo собирается с краской и трафаретами;
+##   sticker_*  — трафарет-звезда на груди (одна, у оси симметрии; меш-наклейка, не Decal), колесо — больше, Q — +15°, тащить —
+##                переезд, ПКМ — снять; наклейка на плечо — с парой на другом плече;
+##   face_import_fixture — tests/fixtures/paint/sticker_fixture.png через import_files → node.face головы, плашка лица с картинкой;
+##   paint_replace_drops — замена детали снимает её paint / stickers, фото на заменённой голове кита остаётся;
+##   правки ревью покраски (_paint_fixes): paint_brush_min_radius — кисть 1 см на ядре kit_human (ячейка 14 мм): каждый мазок
+##                красит; paint_noop_stroke — штрих, который ничего не поменял, — без записи истории и «*»; paint_trackpad_size —
+##                прокрутка / щипок трекпада (InputEventPanGesture / MagnifyGesture) меняют размер кисти и наклейки;
+##                sticker_axis_single — наклейка 12 см в 3 см от оси — одна, на оси; face_legacy_* — старая голова: фото
+##                наклейкой одно (повтор — без записи), клик в 3D мимо головы — ничего, «Снять фото» снимает, повторно — нечего;
+##                face_kit_same_noop — то же фото на голову кита — без записи; paint_replace_face — замена головы кита на
+##                wood_head / metal_head / junk_head_sad снимает face (face_lost), у kit_head_* — остаётся; face_replace_live —
+##                в мастерской фото переезжает наклейкой на новую старую голову той же записью истории; pattern_legacy_mirror —
+##                раскраска плеча старой human: правое — зеркальная копия левого (байт в байт), у кита — одинаковые байты;
+##                pattern_frame_budget — раскраска всей куклы: кадр очереди ≤ PATTERN_FRAME_MAX_MS; import_async — импорт в
+##                потоке; image_delete_used — картинку на кукле не удалить; autosave_edits — правка краски через 2 с — в файле
+##                автосейва (своё имя, не _autosave);
 ##   правки ревью кита: control_rehost_* — навершие вместо управляемой кисти (kit_devil — бур, human — шар булавы): рука мышью на
 ##                теле-хозяине, в испытании ArmAssist ведёт предплечье; control_cleared_on_core — хозяин ядро: пометка снята;
 ##                joint_motor_ankle_refused — мотор на стопе (сустав без мышцы) — отказ; joint_refusal_words — отказы словами
@@ -45,6 +69,7 @@ const MAX_JOINT_GAP := 0.06     # м
 const HIT_TIMEOUT_S := 9.0
 const GHOST_POS_TOL := 0.01
 const GHOST_ANG_TOL := 1.0
+const PATTERN_FRAME_MAX_MS := 20.0   # шаг очереди раскраски (бюджет 4 мс + срез) — с запасом на headless под нагрузкой
 
 var ws: WorkshopBuild
 var report := {"ok": true, "checks": []}
@@ -119,6 +144,8 @@ func _run() -> void:
 	await _kit_joint()
 	await _kit_save_live()
 	await _kit_fixes()
+	await _paint()
+	await _paint_fixes()
 	_finish()
 
 
@@ -866,6 +893,516 @@ func _kit_fixes() -> void:
 	await _frames(1)
 
 
+# ------------------------------------------------------------------ покраска (docs/plan-demo/BODY_PAINT.md §6)
+
+const PAINT_FIXTURE := "res://tests/fixtures/paint/sticker_fixture.png"
+
+
+## Штрих баллончиком / ластиком: n физкадров, курсор идёт от p на step за кадр.
+func _stroke(pt: WorkshopPaint, p: Vector2, n := 12, step := Vector2(0, 2)) -> PackedStringArray:
+	pt.stroke_begin(p)
+	for i in n:
+		pt.stroke_move(p + step * float(i))
+		await _frames(1)
+	return pt.stroke_end()
+
+
+## Слой краски узла uid из чертежа (null — ключа нет / битый).
+func _node_layer(uid: String) -> PaintLayer:
+	var n := CraftEdit.find(ws.blueprint, uid)
+	return PaintLayer.from_dict(n["paint"]) if n.has("paint") else null
+
+
+## [число поверхностей Shirt* / Face* с краской, число красимых поверхностей с краской] под узлом n.
+func _paint_surfaces(n: Node) -> Array:
+	var bad := 0
+	var good := 0
+	var stack: Array = [n]
+	while not stack.is_empty():
+		var cur: Node = stack.pop_back()
+		if cur is MeshInstance3D and (cur as MeshInstance3D).mesh != null:
+			var m3 := cur as MeshInstance3D
+			for s in range(m3.mesh.get_surface_count()):
+				var m := m3.get_active_material(s)
+				if m == null or BodyPaint.paint_pass(m) == null:
+					continue
+				if m.resource_name.begins_with("Shirt") or m.resource_name.begins_with("Face") or String(cur.name).begins_with("Connector_"):
+					bad += 1
+				else:
+					good += 1
+		for c in cur.get_children():
+			stack.append(c)
+	return [bad, good]
+
+
+func _paint() -> void:
+	var pt: WorkshopPaint = ws.paint
+	pt.virtual_mouse = true
+	pt.hold_check = false
+	ws.set_preset("kit_human")
+	ws.history.clear()   # история ограничена HISTORY_MAX (50) — счёт записей ниже с чистого листа
+	await _frames(2)
+	# вкладка «Покраска»: полка покраски, шаблоны спрятаны, баллончик в руке
+	ws.ui.call("open_paint_tab")
+	pt.set_tool("spray")
+	await _frames(1)
+	var panel := ws.ui.find_child("PaintPanel", true, false)
+	var presets_hidden := not (ws.ui.get("presets_box") as Control).visible
+	_check("paint_tab_ui", panel != null and presets_hidden and pt.tab_open and ws.active_tool() == "paint" and ws.paint_tool == "spray"
+		and ws.overlay_items().is_empty(), "вкладка «Покраска»: полка, шаблоны спрятаны, баллончик в руке, точек якорей нет",
+		[panel != null, presets_hidden, ws.paint_tool])
+	# штрих баллончиком по левому плечу (узел 1), симметрия — правое (7)
+	pt.symmetry = true
+	pt.set_color(Color(0.1, 0.8, 0.25))
+	var p1 := pt.screen_point_on("1")
+	var h0 := ws.history.size()
+	var touched := await _stroke(pt, p1)
+	var hd: Dictionary = ws.stand.paint_handle("1")
+	var live: PaintLayer = hd.get("layer")
+	var l1 := _node_layer("1")
+	_check("paint_spray_changes_layer", p1.x >= 0.0 and live != null and not live.is_empty() and l1 != null and not l1.is_empty()
+		and l1.data == live.data, "штрих по плечу: живой слой и node.paint — одна и та же краска", [p1, touched])
+	_check("paint_stroke_one_history", ws.history.size() == h0 + 1, "штрих — одна запись истории (12 кадров мазков)", ws.history.size() - h0)
+	var l7 := _node_layer("7")
+	_check("paint_symmetry_right_arm", touched.has("7") and l7 != null and not l7.is_empty() and not ws.stand.paint_handle("7").is_empty(),
+		"симметрия: правое плечо (7) покрашено тем же штрихом", touched)
+	var ps := _paint_surfaces(ws.stand)
+	_check("paint_shirt_untouched", int(ps[0]) == 0 and int(ps[1]) > 0, "Shirt* / Face* / коннекторы без краски, красимые — с краской", ps)
+	# ластик: альфа слоя падает
+	var sum0 := 0
+	for i in range(3, live.data.size(), 4):
+		sum0 += live.data[i]
+	pt.set_tool("erase")
+	pt.pressure = 1.0
+	await _stroke(pt, p1, 20, Vector2.ZERO)
+	var live2: PaintLayer = ws.stand.paint_handle("1").get("layer")
+	var sum1 := 0
+	for i in range(3, live2.data.size(), 4):
+		sum1 += live2.data[i]
+	_check("paint_erase", sum1 < sum0 * 0.8 and ws.history.size() == h0 + 2, "ластик: краски на плече меньше, ещё одна запись", [sum0, sum1])
+	pt.pressure = 0.85
+	# Ctrl+Z ×2 — как до штриха: ключа paint нет, стенд без слоя
+	_key_ctrl_z()
+	_key_ctrl_z()
+	await _frames(1)
+	_check("paint_undo", not CraftEdit.find(ws.blueprint, "1").has("paint") and not CraftEdit.find(ws.blueprint, "7").has("paint")
+		and ws.stand.paint_handle("1").is_empty() and ws.history.size() == h0, "Ctrl+Z ×2: ластик и штрих отменены, слоя нет")
+	# трафарет: звезда на груди (у оси — одна), колесо, Q, тащить, ПКМ
+	pt.set_tool("stencil")
+	pt.stencil = "star"
+	pt.sticker_cm = 12.0
+	pt.sticker_rot = 0.0
+	var pc := pt.screen_point_on("T")
+	var hs := ws.history.size()
+	var rs := pt.place_sticker(pc)
+	var stT: Array = CraftEdit.find(ws.blueprint, "T").get("stickers", [])
+	var decs := ws.stand.stickers_of("T")
+	_check("sticker_place", bool(rs.get("ok", false)) and stT.size() == 1 and decs.size() == 1 and String(rs.get("twin_uid", "x")) == ""
+		and decs[0] is MeshInstance3D and (decs[0] as MeshInstance3D).mesh.get_surface_count() == 1 and String(stT[0]["img"]) == "stencil:star"
+		and ws.history.size() == hs + 1, "звезда на груди: node.stickers, живая меш-наклейка на груди, у оси — без пары", [rs, stT.size(), decs.size()])
+	var d0 := decs[0] as MeshInstance3D
+	var size0 := BodyPaint.sticker_dims(d0).x
+	var x0 := d0.global_basis.x.normalized()
+	_click(pc, MOUSE_BUTTON_WHEEL_UP)
+	_click(pc, MOUSE_BUTTON_WHEEL_UP)
+	_key(KEY_Q)
+	var st1: Dictionary = (CraftEdit.find(ws.blueprint, "T").get("stickers", [{}]) as Array)[0]
+	var ang := rad_to_deg(x0.angle_to(d0.global_basis.x.normalized()))
+	var dims0 := BodyPaint.sticker_dims(d0)
+	_check("sticker_rotate_scale", absf(dims0.x - size0 * WorkshopPaint.SCALE_STEP * WorkshopPaint.SCALE_STEP) < 0.002
+		and absf((st1["size"] as Vector2).x - dims0.x) < 1e-4 and absf(ang - 15.0) < 0.5 and ws.history.size() == hs + 3,
+		"колесо ×2 — больше (одна запись), Q — +15° (ещё одна), чертёж = наклейка", [snappedf(size0, 0.001), snappedf(dims0.x, 0.001),
+		snappedf(ang, 0.1), ws.history.size() - hs])
+	# тащить: ЛКМ на наклейке, курсор ниже, отпустить — наклейка там
+	var o0 := d0.global_position
+	_mouse_button(pc, MOUSE_BUTTON_LEFT, true)
+	_mouse_move(pc + Vector2(0, 40))
+	_mouse_button(pc + Vector2(0, 40), MOUSE_BUTTON_LEFT, false)
+	var decs2 := ws.stand.stickers_of("T")
+	var moved := decs2.size() == 1 and (decs2[0] as Node3D).global_position.distance_to(o0) > 0.02
+	var st2: Array = CraftEdit.find(ws.blueprint, "T").get("stickers", [])
+	var xf2: Transform3D = st2[0]["xf"] if st2.size() == 1 else Transform3D.IDENTITY
+	var root_t := BodyPaint.mesh_root_of(ws.stand, "T")
+	_check("sticker_move", moved and root_t != null and (root_t.global_transform * xf2).origin.distance_to((decs2[0] as Node3D).global_position) < 0.002
+		and (decs2[0] as MeshInstance3D).mesh.get_surface_count() == 1,
+		"тащить наклейку: переехала вниз, кадр в чертеже = наклейка, меш пересобран", [snappedf((decs2[0] as Node3D).global_position.distance_to(o0), 0.001) if not decs2.is_empty() else -1.0])
+	_click(pc + Vector2(0, 40), MOUSE_BUTTON_RIGHT)
+	_check("sticker_remove", not CraftEdit.find(ws.blueprint, "T").has("stickers") and ws.stand.stickers_of("T").is_empty()
+		and ws.paint_tool == "stencil", "ПКМ по наклейке — снята (инструмент остался в руке)")
+	# наклейка на плечо — с парой (симметрия)
+	var fx_id := KitImages.import_file(PAINT_FIXTURE)
+	pt.set_tool("sticker")
+	pt.image = fx_id
+	var ra := pt.place_sticker(pt.screen_point_on("1"))
+	_check("sticker_symmetry", bool(ra.get("ok", false)) and String(ra.get("uid", "")) == "1" and String(ra.get("twin_uid", "")) == "7"
+		and ws.stand.stickers_of("7").size() == 1, "наклейка на левое плечо — пара на правом", ra)
+	# фото: импорт фикстуры (как из диалога — путь ОС) → голова
+	pt.set_tool("face")
+	var ids := pt.import_files(PackedStringArray([ProjectSettings.globalize_path(PAINT_FIXTURE)]))
+	var rf := pt.set_face_image(ids[0] if not ids.is_empty() else "")
+	var tex := KitImages.texture(ids[0]) if not ids.is_empty() else null
+	var on_plate := false
+	var hroot := BodyPaint.mesh_root_of(ws.stand, "H")
+	for mi in BodyPaint.meshes(hroot):
+		for s in range((mi as MeshInstance3D).mesh.get_surface_count()):
+			var m := (mi as MeshInstance3D).get_active_material(s)
+			if m is BaseMaterial3D and m.resource_name.begins_with("Face") and (m as BaseMaterial3D).albedo_texture == tex:
+				on_plate = true
+	_check("face_import_fixture", ids.size() == 1 and ids[0] == fx_id and bool(rf.get("ok", false)) and String(rf.get("mode", "")) == "face"
+		and String(CraftEdit.find(ws.blueprint, "H").get("face", "")) == fx_id and on_plate, "фикстура: импорт → node.face головы, плашка с картинкой",
+		[ids, rf])
+	# сохранить / загрузить: слой, наклейки, фото
+	pt.set_tool("spray")
+	await _stroke(pt, pt.screen_point_on("2"))
+	var sig := CraftEdit.signature(ws.blueprint)
+	var data2 := _node_layer("2").data if _node_layer("2") != null else PackedByteArray()
+	var path := ws.save_as("Проба покраски")
+	ws.set_preset("human")
+	await _frames(1)
+	var ok_load := ws.load_path(path)
+	await _frames(1)
+	var l2 := _node_layer("2")
+	_check("paint_save_roundtrip", path != "" and ok_load and CraftEdit.signature(ws.blueprint) == sig and not data2.is_empty() and l2 != null
+		and l2.data == data2 and not ws.stand.paint_handle("2").is_empty() and ws.stand.stickers_of("1").size() == 1
+		and String(CraftEdit.find(ws.blueprint, "H").get("face", "")) == fx_id, "сохранить / загрузить: те же узлы, байты слоя, наклейки, фото",
+		sig.size())
+	if path != "":
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	# подпись ловит потерю краски
+	var lost := CraftEdit.dup_body(ws.blueprint)
+	CraftEdit.find(lost, "2").erase("paint")
+	_check("paint_signature", CraftEdit.signature(lost) != sig, "signature видит пропажу слоя краски")
+	# раскраска всей куклы: по кадрам, каждая деталь, одна запись
+	ws.set_preset("kit_human")
+	await _frames(1)
+	pt.set_tool("pattern")
+	var hp := ws.history.size()
+	var np := pt.apply_pattern("T", true, "camo")
+	var frames := 0
+	while pt.busy() and frames < 240:
+		await _frames(1)
+		frames += 1
+	var painted := 0
+	for n in ws.blueprint.nodes:
+		var lay := _node_layer(String(n["uid"]))
+		if lay != null and not lay.is_empty() and not ws.stand.paint_handle(String(n["uid"])).is_empty():
+			painted += 1
+	_check("paint_pattern_whole_doll", np == ws.blueprint.nodes.size() and painted == np and frames >= 2 and ws.history.size() == hp + 1,
+		"Shift+клик «Камуфляж»: все %d деталей, волной за %d кадров, одна запись истории" % [np, frames], [np, painted, frames])
+	# замена детали: слой и наклейки — в кадре меша прежней детали, снимаются; фото на голове остаётся (новая голова — своя плашка)
+	var bp_r := CraftEdit.dup_body(ws.blueprint)
+	CraftEdit.find(bp_r, "1")["stickers"] = [{"img": "stencil:star", "xf": Transform3D.IDENTITY, "size": Vector2(0.1, 0.1), "color": Color.WHITE}]
+	CraftEdit.find(bp_r, "H")["face"] = fx_id
+	var had := CraftEdit.find(bp_r, "1").has("paint") and CraftEdit.find(bp_r, "H").has("paint")
+	var ra1 := CraftEdit.attach(bp_r, "kit_limb_thick_s", "T", "Anchor_Shoulder_L")
+	var rh1 := CraftEdit.attach(bp_r, "kit_head_crate", "T", "Anchor_Neck")
+	var n1r := CraftEdit.find(bp_r, "1")
+	var nhr := CraftEdit.find(bp_r, "H")
+	_check("paint_replace_drops", had and bool(ra1["ok"]) and bool(rh1["ok"]) and not n1r.has("paint") and not n1r.has("stickers")
+		and not nhr.has("paint") and String(nhr.get("face", "")) == fx_id and String(rh1.get("face_lost", "x")) == "" and CraftEdit.find(bp_r, "4").has("paint"),
+		"замена детали: краска и наклейки сняты, фото на новой голове кита осталось, соседи (бедро) не тронуты",
+		[had, ra1["code"], rh1["code"], n1r.keys(), nhr.keys()])
+	# старая кукла (wood_*) тоже красится
+	ws.set_preset("human")
+	await _frames(2)
+	pt.set_tool("spray")
+	var ph := pt.screen_point_on("1")
+	await _stroke(pt, ph)
+	var lh := _node_layer("1")
+	_check("paint_legacy_human", ph.x >= 0.0 and lh != null and not lh.is_empty(), "старая кукла human: баллончик красит плечо", ph)
+	# поворот стенда (R): кукла повернулась, замороженные тела едут с корнем — и в физике (луч выбора), кольцо / штрих по-прежнему
+	# попадают
+	var torso := ws.stand.parts["Torso"] as Node3D
+	var rel0 := ws.stand.global_transform.affine_inverse() * torso.global_transform
+	_key(KEY_R)
+	await _wait(WorkshopPaint.TURN_S + 0.1)
+	var arm := ws.stand.parts["UpperArm_L"] as RigidBody3D
+	var phys: Transform3D = PhysicsServer3D.body_get_state(arm.get_rid(), PhysicsServer3D.BODY_STATE_TRANSFORM)
+	var pa := pt.screen_point_on("T")
+	var side_ok := false
+	if pa.x >= 0.0:
+		await _stroke(pt, pa, 6)
+		var lt := _node_layer("T")
+		side_ok = lt != null and not lt.is_empty()
+	var rot_ok := absf(wrapf(ws.stand.rotation.y - PI * 0.5, -PI, PI)) < 0.01
+	var rel1 := ws.stand.global_transform.affine_inverse() * torso.global_transform   # торс в кадре куклы — как до поворота
+	var turned := ws.stand.global_basis.z.normalized().dot(Vector3.RIGHT) > 0.99 and rel1.origin.distance_to(rel0.origin) < 0.001 \
+		and rel1.basis.x.distance_to(rel0.basis.x) < 0.001 and rel1.basis.z.distance_to(rel0.basis.z) < 0.001
+	_check("paint_turn_stand", pt.turn_degrees() == 90 and rot_ok and turned and phys.origin.distance_to(arm.global_position) < 0.005
+		and side_ok, "R: стенд на 90°, кукла повёрнута целиком (физтело плеча там же, где узел), бок торса красится",
+		[pt.turn_degrees(), rot_ok, turned, snappedf(phys.origin.distance_to(arm.global_position), 0.0001), pa, side_ok])
+	# Esc кладёт баллончик; «Испытать» — тоже и стенд прямо
+	_key(KEY_ESCAPE)
+	var esc_ok := ws.paint_tool == ""
+	pt.set_tool("spray")
+	var started := ws.start_test()
+	await _frames(1)
+	_check("paint_mode_cleared_on_test", esc_ok and started and ws.paint_tool == "" and ws.active_tool() == "" and pt.turn_degrees() == 0,
+		"Esc — баллончик положен; «Испытать» — инструмент снят, стенд прямо", [esc_ok, ws.paint_tool])
+	ws.stop_test()
+	await _frames(1)
+	# витрина: пресеты с краской и трафаретами
+	var pres := {}
+	var pres_ok := true
+	for id in ["kit_graffiti", "kit_camo"]:
+		ws.set_preset(id)
+		await _frames(1)
+		var np2 := 0
+		var ns2 := 0
+		var ok2 := ws.stand != null and CraftEdit.friendly_errors(ws.blueprint).is_empty()
+		for n in ws.blueprint.nodes:
+			var u := String(n["uid"])
+			if n.has("paint"):
+				np2 += 1
+				ok2 = ok2 and not ws.stand.paint_handle(u).is_empty()
+			if n.has("stickers"):
+				ns2 += (n["stickers"] as Array).size()
+				ok2 = ok2 and ws.stand.stickers_of(u).size() == (n["stickers"] as Array).size()
+		pres[id] = [np2, ns2]
+		pres_ok = pres_ok and ok2 and np2 >= 12 and ns2 >= 1
+	_check("paint_preset_loads", pres_ok, "витрина kit_graffiti / kit_camo: слои и трафареты на стенде", pres)
+	ws.clear_tools()
+	ws.ui.set("shelf_tab", {"body": "limb", "weapon": "weapon_head"})
+	ws.ui.call("_build_left")
+	pt.virtual_mouse = false
+	pt.hold_check = true
+	ws.set_preset("human")
+	await _frames(1)
+
+
+## Правки ревью покраски (docs/plan-demo/BODY_PAINT.md §6.2): мелкая кисть, пустой штрих, трекпад, наклейка у оси, фото на старой
+## голове, замена головы, зеркальная раскраска старой куклы, бюджет кадра раскраски, импорт в потоке, удаление картинки, автосейв.
+func _paint_fixes() -> void:
+	var pt: WorkshopPaint = ws.paint
+	pt.virtual_mouse = true
+	pt.hold_check = false
+	ws.set_view(WorkshopBuild.View.BODY)
+	ws.set_preset("kit_human")
+	ws.history.clear()
+	await _frames(2)
+	ws.ui.call("open_paint_tab")
+	pt.reset_turn()
+	pt.symmetry = false
+	# кисть 1 см на ядре (ячейка ≈ 14 мм): каждый мазок-клик красит (раньше ≈ 80 % не задевали ни одного центра ячейки)
+	pt.set_tool("spray")
+	pt.set_size_cm(1.0)
+	pt.set_color(Color(0.9, 0.2, 0.6))
+	var pc := pt.screen_point_on("T")
+	var tried := 0
+	var painted := 0
+	for k in 16:
+		var p := pc + Vector2((k % 4) * 9.0 - 13.0, (k / 4) * 11.0 - 17.0)
+		if String(pt.surface_hit(p).get("uid", "")) != "T" or pt.protected_hit(pt.surface_hit(p)):
+			continue
+		tried += 1
+		pt.stroke_begin(p)
+		if pt.stroke_end().has("T"):
+			painted += 1
+	var cell_t := pt.cell_world("T")
+	_check("paint_brush_min_radius", tried >= 8 and painted == tried and pt.eff_radius("T") >= cell_t * WorkshopPaint.BRUSH_CELL_MIN - 1e-6
+		and cell_t > 0.012, "кисть 1 см на ядре (ячейка %.1f мм): каждый мазок красит, кольцо — не мельче 0.9 ячейки" % (cell_t * 1000.0),
+		[tried, painted, snappedf(pt.eff_radius("T") * 1000.0, 0.1)])
+	# штрих, который ничего не поменял (ластик по голове без краски): ни записи истории, ни «*»
+	pt.set_tool("erase")
+	var h0 := ws.history.size()
+	var title0 := ws.blueprint.title
+	var out := await _stroke(pt, pt.screen_point_on("H"), 6)
+	_check("paint_noop_stroke", out.is_empty() and ws.history.size() == h0 and ws.blueprint.title == title0,
+		"ластик по детали без краски: штрих пустой — без записи истории и «*»", [out, ws.history.size() - h0, ws.blueprint.title])
+	# трекпад: прокрутка жестом (не колесом) — размер кисти; щипок над пустым местом — размер следующей наклейки
+	pt.set_tool("spray")
+	pt.set_size_cm(4.0)
+	var pg := InputEventPanGesture.new()
+	pg.delta = Vector2(0, -2.0)
+	pg.position = pc
+	ws._unhandled_input(pg)
+	var size_pan := pt.size_cm
+	pt.set_tool("stencil")
+	pt.stencil = "star"
+	pt.set_sticker_cm(12.0)
+	var mg := InputEventMagnifyGesture.new()
+	mg.factor = WorkshopPaint.SCALE_STEP * WorkshopPaint.SCALE_STEP * 1.01
+	mg.position = Vector2(4, 4)
+	ws._unhandled_input(mg)
+	_check("paint_trackpad_size", is_equal_approx(size_pan, 5.0) and absf(pt.sticker_cm - 12.0 * WorkshopPaint.SCALE_STEP * WorkshopPaint.SCALE_STEP) < 0.01,
+		"трекпад: прокрутка вверх ×2 — кисть 4 → 5 см, щипок — наклейка ×1.12²", [size_pan, snappedf(pt.sticker_cm, 0.01)])
+	# наклейка 12 см в 3 см от оси симметрии: одна (две легли бы наполовину друг на друга), ровно на оси
+	pt.symmetry = true
+	pt.set_sticker_cm(12.0)
+	pt.sticker_rot = 0.0
+	var hc := pt.surface_hit(pc)
+	var dx := 0.03 * pt._ppm(hc["point"]) if not hc.is_empty() else 13.0
+	var n0 := ws.stand.stickers_of("T").size()
+	var ra := pt.place_sticker(pc + Vector2(dx, 0))
+	var sts := ws.stand.stickers_of("T")
+	var ax := absf(pt._to_doll((sts[sts.size() - 1] as Node3D).global_position).x) if sts.size() > n0 else 1.0
+	_check("sticker_axis_single", bool(ra.get("ok", false)) and String(ra.get("twin_uid", "x")) == "" and sts.size() == n0 + 1 and ax < 0.006,
+		"наклейка 12 см в 3 см от оси — одна, на оси (|x| = %.1f мм)" % (ax * 1000.0), [ra, sts.size() - n0])
+	# фото на старой голове (human, wood_head): одна фото-наклейка, повтор — без записи, клик мимо головы — ничего, «Снять фото»
+	var fx_id := KitImages.import_file(PAINT_FIXTURE)
+	ws.set_preset("human")
+	await _frames(2)
+	pt.set_tool("face")
+	var hf := ws.history.size()
+	var r1 := pt.set_face_image(fx_id)
+	var r2 := pt.set_face_image(fx_id)
+	_mouse_button(pt.screen_point_on("T"), MOUSE_BUTTON_LEFT, true)
+	_mouse_button(pt.screen_point_on("T"), MOUSE_BUTTON_LEFT, false)
+	var hn: Dictionary = CraftEdit.find(ws.blueprint, "H")
+	var hst: Array = hn.get("stickers", [])
+	_check("face_legacy_single", String(r1.get("mode", "")) == "sticker" and bool(r2.get("same", false)) and hst.size() == 1
+		and bool((hst[0] as Dictionary).get("face", false)) and ws.stand.stickers_of("H").size() == 1 and ws.history.size() == hf + 1
+		and not hn.has("face"), "старая голова: фото — одна наклейка с пометкой face, повтор и клик по торсу — без изменений, одна запись",
+		[r1, r2, hst.size(), ws.history.size() - hf])
+	var c1 := pt.clear_face()
+	var c2 := pt.clear_face()
+	_check("face_legacy_clear", c1 and not c2 and not CraftEdit.find(ws.blueprint, "H").has("stickers") and ws.stand.stickers_of("H").is_empty()
+		and ws.history.size() == hf + 2, "«Снять фото» снимает фото-наклейку старой головы (одна запись), повторно — нечего", [c1, c2])
+	# голова кита: то же фото повторно — без новой записи истории
+	ws.set_preset("kit_human")
+	await _frames(1)
+	var hk := ws.history.size()
+	var k1 := pt.set_face_image(fx_id)
+	var k2 := pt.set_face_image(fx_id)
+	_check("face_kit_same_noop", String(k1.get("mode", "")) == "face" and bool(k2.get("same", false)) and ws.history.size() == hk + 1,
+		"голова кита: то же фото повторно — без записи истории", [k1, k2, ws.history.size() - hk])
+	# замена головы кита на старую / мусорную: face снимается (face_lost), у головы кита — остаётся
+	var lost_ok := true
+	var lost_info := {}
+	for hid in ["wood_head", "metal_head", "junk_head_sad", "kit_head_round"]:
+		var b := CraftEdit.dup_body(ws.blueprint)
+		CraftEdit.find(b, "H")["face"] = fx_id
+		var rr := CraftEdit.attach(b, hid, "T", "Anchor_Neck")
+		var kit := String(hid).begins_with("kit_")
+		var keeps := String(CraftEdit.find(b, "H").get("face", "")) == fx_id
+		var fl := String(rr.get("face_lost", ""))
+		lost_info[hid] = [bool(rr["ok"]), keeps, fl != ""]
+		lost_ok = lost_ok and bool(rr["ok"]) and keeps == kit and (fl == "" if kit else fl == fx_id)
+	_check("paint_replace_face", lost_ok, "замена головы: у wood / metal / junk face снят (face_lost), у головы кита — остался", lost_info)
+	# в мастерской: фото с головы кита переезжает наклейкой на лицо новой старой головы — той же записью истории
+	var hr := ws.history.size()
+	var rw := ws.attach_part("wood_head", "T", "Anchor_Neck", "body")
+	var hn2: Dictionary = CraftEdit.find(ws.blueprint, "H")
+	var hst2: Array = hn2.get("stickers", [])
+	_check("face_replace_live", bool(rw.get("ok", false)) and not hn2.has("face") and hst2.size() == 1 and bool((hst2[0] as Dictionary).get("face", false))
+		and String((hst2[0] as Dictionary).get("img", "")) == fx_id and ws.stand.stickers_of("H").size() == 1 and ws.history.size() == hr + 1,
+		"голова кита → wood_head: фото наклейкой на новое лицо, одна запись истории", [rw.get("face_lost", ""), hst2.size(), ws.history.size() - hr])
+	# раскраска плеча старой human: правое (Mesh_R, корень не зеркальный) — отражённая копия левого, байт в байт
+	ws.set_preset("human")
+	await _frames(2)
+	pt.set_tool("pattern")
+	pt.symmetry = true
+	pt.apply_pattern("1", false, "camo")
+	var fr := 0
+	while pt.busy() and fr < 120:
+		await _frames(1)
+		fr += 1
+	var l1 := _node_layer("1")
+	var l7 := _node_layer("7")
+	var mism := -1
+	if l1 != null and l7 != null and l1.res == l7.res:
+		mism = 0
+		for z in l1.res.z:
+			for y in l1.res.y:
+				for x in l1.res.x:
+					var a := ((z * l1.res.y + y) * l1.res.x + x) * 4
+					var b := ((z * l1.res.y + y) * l1.res.x + (l1.res.x - 1 - x)) * 4
+					if l1.data.slice(a, a + 4) != l7.data.slice(b, b + 4):
+						mism += 1
+	ws.set_preset("kit_human")
+	await _frames(2)
+	pt.apply_pattern("1", false, "camo")
+	fr = 0
+	while pt.busy() and fr < 120:
+		await _frames(1)
+		fr += 1
+	var k1l := _node_layer("1")
+	var k7l := _node_layer("7")
+	_check("pattern_legacy_mirror", mism == 0 and k1l != null and k7l != null and k1l.data == k7l.data,
+		"раскраска пары: у старой human правое плечо — зеркальная копия левого, у кита — те же байты (корень правой уже зеркальный)", mism)
+	# бюджет кадра: раскраска всей куклы очередью — ни один шаг рисования не держит кадр (последний шаг ещё и будит правую панель
+	# мастерской — ws.changed → WorkshopUI._refresh → BodyBlueprint.validate, как после любой правки; его время — отдельно)
+	pt.apply_pattern("T", true, "camo")
+	var steps_ms: Array = []
+	while pt.busy() and steps_ms.size() < 600:
+		var t0 := Time.get_ticks_usec()
+		pt._pattern_step()
+		steps_ms.append((Time.get_ticks_usec() - t0) / 1000.0)
+	var worst := 0.0
+	for i in steps_ms.size() - 1:
+		worst = maxf(worst, float(steps_ms[i]))
+	var last_ms: float = steps_ms[steps_ms.size() - 1] if not steps_ms.is_empty() else -1.0
+	_check("pattern_frame_budget", not pt.busy() and steps_ms.size() >= 6 and worst <= PATTERN_FRAME_MAX_MS,
+		"камуфляж на всю куклу — %d шагов очереди, самый долгий %.1f мс (≤ %.0f); последний с обновлением панели — %.0f мс"
+		% [steps_ms.size(), worst, PATTERN_FRAME_MAX_MS, last_ms], [steps_ms.size(), snappedf(worst, 0.1), snappedf(last_ms, 0.1)])
+	# импорт в потоке
+	var got: Array = []
+	pt.import_files_async(PackedStringArray([ProjectSettings.globalize_path(PAINT_FIXTURE)]), func(ids: PackedStringArray) -> void:
+		got.append_array(Array(ids)))
+	var wf := 0
+	while got.is_empty() and wf < 240:
+		await _frames(1)
+		wf += 1
+	_check("import_async", got.size() == 1 and String(got[0]) == fx_id, "импорт в потоке (WorkerThreadPool): тот же id, колбэк на главном потоке", [got, wf])
+	# картинку на кукле не удалить
+	pt.set_face_image(fx_id)
+	_check("image_delete_used", not pt.delete_image(fx_id) and FileAccess.file_exists(KitImages.image_path(fx_id)),
+		"картинку на кукле из «Моих картинок» не удалить (кукла потеряла бы наклейку)")
+	# автосейв правок: через AUTOSAVE_DELAY_S после мазка — файл (своё имя — сборку игрока не трогаем), в нём та же краска
+	var an := "_probe_autosave"
+	var apath := CraftEdit.save_path(an)
+	if FileAccess.file_exists(apath):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(apath))
+	ws.autosave_name = an
+	ws.autosave_on_test = true
+	pt.set_tool("spray")
+	pt.set_size_cm(4.0)
+	await _stroke(pt, pt.screen_point_on("2"), 6)
+	await _wait(WorkshopBuild.AUTOSAVE_DELAY_S + 0.4)
+	var saved := CraftEdit.load_saved(apath) if FileAccess.file_exists(apath) else null
+	_check("autosave_edits", saved != null and CraftEdit.signature(saved) == CraftEdit.signature(ws.blueprint)
+		and CraftEdit.find(saved, "2").has("paint"), "правка краски без «Испытать» — через %.0f с в автосейве" % WorkshopBuild.AUTOSAVE_DELAY_S,
+		apath)
+	ws.autosave_on_test = false
+	ws.autosave_name = CraftEdit.AUTOSAVE
+	if FileAccess.file_exists(apath):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(apath))
+	pt.set_tool("")
+	ws.clear_tools()
+	ws.ui.set("shelf_tab", {"body": "limb", "weapon": "weapon_head"})
+	ws.ui.call("_build_left")
+	pt.symmetry = true
+	pt.virtual_mouse = false
+	pt.hold_check = true
+	ws.set_preset("human")
+	await _frames(1)
+
+
+func _key_ctrl_z() -> void:
+	var ev := InputEventKey.new()
+	ev.physical_keycode = KEY_Z
+	ev.keycode = KEY_Z
+	ev.ctrl_pressed = true
+	ev.pressed = true
+	ws._unhandled_input(ev)
+
+
+func _mouse_button(p: Vector2, button: MouseButton, pressed: bool) -> void:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = button
+	ev.pressed = pressed
+	ev.position = p
+	ev.global_position = p
+	ws._unhandled_input(ev)
+
+
+func _mouse_move(p: Vector2) -> void:
+	var ev := InputEventMouseMotion.new()
+	ev.position = p
+	ev.global_position = p
+	ws._unhandled_input(ev)
+
+
 # ------------------------------------------------------------------ кадры (не headless)
 
 func _shots() -> void:
@@ -965,6 +1502,7 @@ func _shots() -> void:
 	await _shot("test")
 	ws.stop_test()
 	await _kit_shots()
+	await _paint_shots()
 	get_tree().quit(0)
 
 
@@ -1025,6 +1563,75 @@ func _kit_shots() -> void:
 	ws.set_preset("kit_spider")
 	await _wait(0.6)
 	await _shot("kit-core")
+
+
+## Кадры покраски: вкладка «Покраска», баллончик над плечом (кольцо и кольцо пары), штрихи, звезда-трафарет, наклейка-фикстура;
+## трафарет-молния с превью и сеткой масок; витрина kit_graffiti и полка раскрасок с превью узоров.
+func _paint_shots() -> void:
+	var pt: WorkshopPaint = ws.paint
+	pt.virtual_mouse = true
+	pt.hold_check = false
+	ws.set_view(WorkshopBuild.View.BODY)
+	ws.set_preset("kit_human")
+	ws.ui.call("open_paint_tab")
+	pt.set_tool("spray")
+	await _wait(1.2)
+	pt.size_cm = 5.0
+	pt.pressure = 0.9
+	pt.set_color(Color("ff4fa0"))
+	var ct := pt.screen_point_on("T")
+	# полоса поверху бочки и две волны по бокам окошка (симметрия: левая волна рисует и правую)
+	var p0 := ct + Vector2(-75, -95)
+	pt.stroke_begin(p0)
+	for i in 26:
+		pt.stroke_move(p0 + Vector2(i * 6.0, sin(i * 0.25) * 5.0))
+		await _frames(1)
+	pt.stroke_end()
+	pt.set_color(Color("f26a1b"))
+	pt.size_cm = 4.0
+	var p1 := ct + Vector2(-58, -70)
+	pt.stroke_begin(p1)
+	for i in 24:
+		pt.stroke_move(p1 + Vector2(sin(i * 0.4) * 8.0, i * 5.0))
+		await _frames(1)
+	pt.stroke_end()
+	pt.size_cm = 5.0
+	pt.set_color(Color("35c6d9"))
+	var a := pt.screen_point_on("1")
+	var b := pt.screen_point_on("2")
+	pt.stroke_begin(a)
+	for i in 24:
+		pt.stroke_move(a.lerp(b, float(i) / 23.0) + Vector2(0, sin(i * 0.9) * 6.0))
+		await _frames(1)
+	pt.stroke_end()
+	pt.set_tool("stencil")
+	pt.stencil = "star"
+	pt.set_color(Color("f7c21a"))
+	pt.sticker_cm = 10.0
+	pt.place_sticker(ct + Vector2(0, -72))   # над окошком ядра
+	var id := KitImages.import_file(PAINT_FIXTURE)
+	pt.set_tool("sticker")
+	pt.image = id
+	pt.sticker_cm = 11.0
+	pt.place_sticker(pt.screen_point_on("4"))
+	pt.set_tool("spray")
+	pt.set_color(Color("ff4fa0"))
+	pt.set_mouse(pt.screen_point_on("7"))
+	await _wait(0.5)
+	await _shot("paint")
+	pt.set_tool("stencil")
+	pt.stencil = "lightning"
+	pt.set_color(Color("35c6d9"))
+	pt.set_mouse(pt.screen_point_on("5"))
+	await _wait(0.4)
+	await _shot("paint-stencil")
+	ws.set_preset("kit_graffiti")
+	pt.set_tool("pattern")
+	pt.set_mouse(Vector2(-1, -1))
+	await _wait(1.0)
+	await _shot("paint-presets")
+	pt.virtual_mouse = false
+	pt.hold_check = true
 
 
 func _shot(tag: String) -> void:

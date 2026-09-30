@@ -59,6 +59,9 @@ const PRESETS := {
 	"kit_skull": "res://scenes/body/presets/kit_skull.tscn",
 	"kit_wheels": "res://scenes/body/presets/kit_wheels.tscn",
 	"kit_lantern": "res://scenes/body/presets/kit_lantern.tscn",
+	# витрина покраски (docs/plan-demo/BODY_PAINT.md §4): узлы kit_human / kit_brawler + paint / stickers
+	"kit_graffiti": "res://scenes/body/presets/kit_graffiti.tscn",
+	"kit_camo": "res://scenes/body/presets/kit_camo.tscn",
 }
 ## Пресеты из старых деталей (wood_*, junk_*, craft): коннекторов и meta body_mult у них быть не должно.
 const LEGACY := {"junk": "res://scenes/body/presets/junk.tscn", "flail": "res://scenes/body/presets/flail.tscn"}
@@ -702,7 +705,8 @@ static func _meshes(n: Node) -> Array:
 	return out
 
 
-## resource_path материалов поверхностей Base_* под узлом n.
+## resource_path материалов поверхностей Base_* под узлом n. Покрашенная поверхность (BODY_PAINT.md §5: дубль исходного материала
+## с next_pass краски, имя то же) — путь исходника по имени (assets/materials/kit/<имя>.tres).
 static func _base_surfaces(n: Node) -> Array:
 	var out: Array = []
 	for mi in _meshes(n):
@@ -710,7 +714,10 @@ static func _base_surfaces(n: Node) -> Array:
 		for s in range(m3.mesh.get_surface_count()):
 			var m := m3.get_active_material(s)
 			if m != null and m.resource_name.begins_with("Base_"):
-				out.append(m.resource_path if m.resource_path != "" else "<%s без пути>" % m.resource_name)
+				var pth := m.resource_path
+				if pth == "" and BodyPaint.paint_pass(m) != null:
+					pth = KIT_MAT_DIR + m.resource_name + ".tres"
+				out.append(pth if pth != "" else "<%s без пути>" % m.resource_name)
 	return out
 
 

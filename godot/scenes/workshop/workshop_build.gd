@@ -16,13 +16,18 @@
 ##     → set_material (узел mat, масса × новая плотность / прежняя; деталь без base_mat — отказ с причиной); вкладка «Шарниры» — тип шарнира
 ##     (joint_pick): клик по детали → set_joint (связь детали с родителем: ось / свободный / пружина / мотор / сварка; корень и
 ##     запреты §5.2 — отказ). Esc / ПКМ снимают инструмент. Инструменты, «рука мышью» и протяжка взаимно исключают друг друга;
+##   • покраска (docs/plan-demo/BODY_PAINT.md §1, §6), вкладка «Покраска»: paint — WorkshopPaint (scenes/workshop/workshop_paint.gd),
+##     paint_tool ∈ {"", spray, erase, fill, pattern, pick, stencil, sticker, face} — ещё один инструмент в руке (снимается, как
+##     кисть материала: смена вкладки / вида, испытание, Esc / ПКМ); ввод 3D сначала идёт ему (handle_input), штрих рисует в живые слои
+##     стенда без пересборки, отпустил — одна запись истории; стенд поворачивается (R) для боков и спины;
 ##   • ТЕЛО / ОРУЖИЕ (Tab) — камера едет со стенда на верстак; на верстаке тот же drag&drop на WeaponBlueprint (корень — рукоять),
 ##     живое превью CraftedWeapon, характеристики словами (weapon_stats). «В руку» — blueprint.weapon (копия верстака, дальше
 ##     синхронизируется) + weapon_on = CraftEdit.weapon_mount(); на стенде оружие видно в кисти (как WeaponPickup.attach).
 ## Режим ИСПЫТАНИЯ (Mode.TEST, T / Enter / кнопка): кукла оживает на месте стенда (обычная физика: WASD, WeaponPickup, ArmAssist —
 ##   ЛКМ / E, DollCombat), рядом манекен на верёвке (training_dummy.gd, HP и цифры урона — сигнал dummy_hit), ящик и бочка для
 ##   броска, камера — DynamicCamera по группе TEST_GROUP. R — заново, Esc / Tab — назад к сборке, чертёж тот же (и автосохранение
-##   user://blueprints/_autosave.tres — с ним мастерская и стартует).
+##   user://blueprints/_autosave.tres — с ним мастерская и стартует; его же пишет каждая правка через AUTOSAVE_DELAY_S, закрытие
+##   окна и выход двойным Esc).
 class_name WorkshopBuild
 extends Node3D
 
@@ -67,8 +72,12 @@ class _PreviewBlueprint extends BodyBlueprint:
 @export var start_preset := "human"
 ## Загрузить автосохранение (user://blueprints/_autosave.tres), если оно есть и собирается.
 @export var load_autosave := true
-## «Испытать» пишет чертёж в user://blueprints/_autosave.tres (проба выключает, чтобы не затирать сборку игрока).
+## «Испытать» пишет чертёж в user://blueprints/_autosave.tres (проба выключает, чтобы не затирать сборку игрока); с ним же —
+## автосейв правок: через AUTOSAVE_DELAY_S после последней правки (деталь, материал, покраска, отмена), при закрытии окна и выходе
+## двойным Esc — полчаса покраски не пропадают без «Испытать» / «Сохранить».
 @export var autosave_on_test := true
+## Имя файла автосейва в user://blueprints (проба ставит своё).
+@export var autosave_name := CraftEdit.AUTOSAVE
 
 var blueprint: BodyBlueprint
 var weapon_bp: WeaponBlueprint
@@ -81,6 +90,11 @@ var drag: Dictionary = {}                # {part, targets, index, sticky, start,
 var control_pick := false
 var paint_mat := ""                      # кисть материала: id MaterialDef ("" — выключена)
 var joint_pick := ""                     # инструмент шарнира: тип KitJoint ("" — выключен)
+var paint: WorkshopPaint                 # покраска (BODY_PAINT.md §6): инструмент, кисть, наклейки, поворот стенда
+## Инструмент покраски в руке ("" — нет): WorkshopPaint.tool.
+var paint_tool: String:
+	get:
+		return paint.tool if paint != null else ""
 var hover: Dictionary = {}               # {target: "body"|"weapon", uid}
 var history: Array = []
 var last_result: Dictionary = {}
@@ -100,6 +114,11 @@ var _cam_pos := Vector3.ZERO
 var _cam_snap := true
 var _esc_armed_until := -1.0
 var _time := 0.0
+var _autosave_dirty := false
+var _autosave_at := 0.0
+
+## Автосейв правок: пауза после последней правки (серия мазков / колёсиком — одна запись).
+const AUTOSAVE_DELAY_S := 2.0
 
 @onready var arena: Node3D = $Workshop
 @onready var build_cam: Camera3D = $BuildCamera
@@ -122,6 +141,10 @@ func _ready() -> void:
 		if n != null:
 			n.queue_free()
 	_make_materials()
+	paint = WorkshopPaint.new()
+	paint.name = "Paint"
+	paint.ws = self
+	add_child(paint)
 	build_cam.fov = CAM_FOV
 	build_cam.make_current()
 	weapon_bp = CraftEdit.load_weapon_preset("hammer")
@@ -204,6 +227,11 @@ func attach_part(part_id: String, parent_uid: String, anchor: String, target := 
 	var d := CraftEdit.part(part_id)
 	var what := "Заменено" if String(r.get("replace", "")) != "" else "Прикручено"
 	var extra := "" if (r.get("drops", PackedStringArray()) as PackedStringArray).is_empty() else " (снято лишнее: %d)" % (r["drops"] as PackedStringArray).size()
+	# фото со старой головы: у новой плашка утоплена / её нет (BodyPaint.face_plate_ok) — фото наклейкой на лицо, та же запись истории
+	var lost := String(r.get("face_lost", ""))
+	if target == "body" and lost != "" and paint != null:
+		var rf := paint.set_face_image(lost, false)
+		extra += " — фото на лице наклейкой" if bool(rf.get("ok", false)) else " — фото снято (у этой головы нет лица)"
 	_say("%s: %s%s" % [what, d.title if d != null else part_id, extra], COL_OK)
 	return r
 
@@ -257,6 +285,7 @@ func toggle_control_pick() -> void:
 	if control_pick:
 		paint_mat = ""
 		joint_pick = ""
+		set_paint_tool("")
 		cancel_drag()
 		set_view(View.BODY)
 	_apply_highlights()
@@ -273,6 +302,7 @@ func set_paint_mat(mat_id: String) -> void:
 	if paint_mat != "":
 		control_pick = false
 		joint_pick = ""
+		set_paint_tool("")
 		cancel_drag()
 		set_view(View.BODY)
 		_say("Кисть: %s — кликни по детали куклы" % CraftEdit.mat_title(paint_mat), MaterialDef.get_def(paint_mat).swatch.lightened(0.35))
@@ -288,6 +318,7 @@ func set_joint_pick(jt: String) -> void:
 	if joint_pick != "":
 		control_pick = false
 		paint_mat = ""
+		set_paint_tool("")
 		cancel_drag()
 		set_view(View.BODY)
 		_say("Шарнир «%s» — кликни по детали куклы" % CraftEdit.joint_title(joint_pick), JointCard.colour(joint_pick))
@@ -295,7 +326,13 @@ func set_joint_pick(jt: String) -> void:
 	changed.emit()
 
 
-## Какой инструмент в руке: "control" | "material" | "joint" | "".
+## Инструмент покраски t (WorkshopPaint.TOOLS; "" — положить). Кладёт «руку мышью», кисть материала, шарнир и протяжку.
+func set_paint_tool(t: String) -> void:
+	if paint != null:
+		paint.set_tool(t)
+
+
+## Какой инструмент в руке: "control" | "material" | "joint" | "paint" | "".
 func active_tool() -> String:
 	if control_pick:
 		return "control"
@@ -303,15 +340,19 @@ func active_tool() -> String:
 		return "material"
 	if joint_pick != "":
 		return "joint"
+	if paint_tool != "":
+		return "paint"
 	return ""
 
 
-## Положить инструмент («рука мышью», кисть, шарнир). true — что-то было в руке.
+## Положить инструмент («рука мышью», кисть, шарнир, покраска). true — что-то было в руке.
 func clear_tools() -> bool:
 	var had := active_tool() != ""
 	control_pick = false
 	paint_mat = ""
 	joint_pick = ""
+	if paint_tool != "":
+		paint.set_tool("")
 	if had:
 		_apply_highlights()
 		changed.emit()
@@ -439,17 +480,53 @@ func _push_history() -> void:
 	history.append({"body": CraftEdit.dup_body(blueprint), "weapon": CraftEdit.dup_weapon(weapon_bp)})
 	while history.size() > HISTORY_MAX:
 		history.remove_at(0)
+	mark_dirty()   # запись истории — перед правкой; сейв отложен (AUTOSAVE_DELAY_S), правка к нему уже будет в чертеже
 
 
 func undo() -> bool:
-	if history.is_empty() or mode != Mode.BUILD:
+	if history.is_empty() or mode != Mode.BUILD or (paint != null and paint.busy()):
 		return false
 	var s: Dictionary = history.pop_back()
 	blueprint = s["body"]
 	weapon_bp = s["weapon"]
 	_rebuild()
+	mark_dirty()
 	_say("Отменено", COL_INFO)
 	return true
+
+
+# --- автосейв правок ---
+
+## Чертёж поменялся: автосейв через AUTOSAVE_DELAY_S (каждая новая правка отодвигает срок). Зовут _push_history, undo и
+## WorkshopPaint._push (и серия колёсиком / Q / E по наклейке без новой записи истории).
+func mark_dirty() -> void:
+	_autosave_dirty = true
+	_autosave_at = _time + AUTOSAVE_DELAY_S
+
+
+## Записать автосейв, если есть несохранённые правки. Не пишет: автосейв выключен (проба), испытание, идёт штрих / перетаскивание /
+## раскраска (слой ляжет в чертёж только по отпусканию — попробуем в следующем кадре; force — пишем как есть), чертёж не собирается
+## (старт мастерской отверг бы его и откатил к шаблону — пусть лежит прежний хороший).
+func _flush_autosave(force := false) -> bool:
+	if not _autosave_dirty or not autosave_on_test or mode != Mode.BUILD or blueprint == null:
+		return false
+	if paint != null and paint.busy() and not force:
+		return false
+	_autosave_dirty = false
+	if not CraftEdit.structural_errors(blueprint).is_empty():
+		return false
+	return CraftEdit.save(blueprint, autosave_name) != ""
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		if paint != null and paint.busy() and mode == Mode.BUILD:
+			paint._finish_all()   # окно закрыли посреди штриха / перетаскивания / раскраски — сначала в чертёж, потом сейв
+		_flush_autosave(true)   # auto_accept_quit по умолчанию: уведомление приходит до выхода, сейв — синхронно
+
+
+func _exit_tree() -> void:
+	_flush_autosave(true)
 
 
 # --- сохранение ---
@@ -487,6 +564,8 @@ func _rebuild() -> void:
 	_clear_ghost()
 	if mode == Mode.BUILD:
 		_rebuild_stand()
+		if paint != null:
+			paint.on_stand_rebuilt()   # кэши лучей покраски, поворот стенда — на новую куклу
 		_rebuild_bench()
 		_apply_highlights()
 	changed.emit()
@@ -526,6 +605,7 @@ func _rebuild_stand() -> void:
 		rb.collision_mask = 0
 		rb.linear_velocity = Vector3.ZERO
 		rb.angular_velocity = Vector3.ZERO
+		_unlock_axes(rb)   # стенд поворачивается (покраска, R): замки 2.5D вернули бы телам прежний поворот
 	for j in stand.joints.values():   # суставы между замороженными телами не нужны (и Jolt не должен их решать)
 		(j as Generic6DOFJoint3D).node_a = NodePath()
 		(j as Generic6DOFJoint3D).node_b = NodePath()
@@ -581,7 +661,18 @@ func _make_held_weapon() -> void:
 		rb.freeze = true
 		rb.collision_layer = 0
 		rb.collision_mask = 0
+		_unlock_axes(rb)
 	held_weapon = w
+
+
+## Замороженное тело стенда без замков осей (кукла 2.5D: вращение только вокруг Z, без сдвига по Z) — стенд крутится на 90°.
+static func _unlock_axes(rb: RigidBody3D) -> void:
+	rb.axis_lock_angular_x = false
+	rb.axis_lock_angular_y = false
+	rb.axis_lock_angular_z = false
+	rb.axis_lock_linear_x = false
+	rb.axis_lock_linear_y = false
+	rb.axis_lock_linear_z = false
 
 
 ## Куда висит оружие: weapon_on чертежа, если он ещё есть, иначе CraftEdit.weapon_mount().
@@ -725,6 +816,7 @@ func begin_drag(part_id: String, screen_pos: Vector2) -> void:
 	control_pick = false
 	paint_mat = ""
 	joint_pick = ""
+	set_paint_tool("")
 	var d := CraftEdit.part(part_id)
 	if d == null:
 		return
@@ -1071,6 +1163,11 @@ func _apply_highlights() -> void:
 		elif tg == "body" and joint_pick != "":   # шарнир: цвет типа — можно, красный — нельзя (корень, fixed, запреты)
 			mat = _tint("joint_" + joint_pick, JointCard.colour(joint_pick)) if bool(CraftEdit.check_joint(blueprint, hu, joint_pick)["ok"]) \
 				else _mats["remove"]
+		elif tg == "body" and paint_tool != "":   # покраска: заливка — цветом краски (и пара), раскраска — деталь и пара / вся кукла
+			var pm := paint.hover_material()
+			if pm != null:
+				mat = pm
+			uids = PackedStringArray(paint.hover_uids(hu))
 		for u in uids:
 			for m in part_meshes(tg, u):
 				_set_overlay(m, mat)
@@ -1132,8 +1229,12 @@ func _input(event: InputEvent) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if mode != Mode.BUILD:
 		return
+	if paint != null and paint.handle_input(event):   # покраска: штрих, наклейки, колесо, Q / E, R — первыми
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseMotion:
-		set_hover(pick((event as InputEventMouseMotion).position))
+		var mp := (event as InputEventMouseMotion).position
+		set_hover(paint.hover_pick(mp) if paint_tool != "" else pick(mp))
 	elif event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
 		var mb := event as InputEventMouseButton
 		var h := pick(mb.position)
@@ -1179,9 +1280,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_Z:
 				if k.ctrl_pressed or k.meta_pressed:
 					undo()
+			KEY_R:
+				if paint != null and paint.tab_open and view == View.BODY:
+					paint.turn_stand(-1 if k.shift_pressed else 1)   # полка «Покраска» без инструмента: тоже крутит стенд
 			KEY_ESCAPE:
 				if not clear_tools():   # инструмент в руке — Esc его кладёт; иначе двойной Esc — выход
 					if _time < _esc_armed_until:
+						_flush_autosave(true)
 						get_tree().quit()
 					else:
 						_esc_armed_until = _time + 1.5
@@ -1200,6 +1305,9 @@ func set_view(v: int) -> void:
 		control_pick = false
 		paint_mat = ""
 		joint_pick = ""
+		set_paint_tool("")
+		if paint != null:
+			paint.reset_turn()
 	set_hover({})
 	view_changed.emit(view)
 	changed.emit()
@@ -1219,9 +1327,13 @@ func start_test() -> bool:
 	control_pick = false
 	paint_mat = ""
 	joint_pick = ""
+	set_paint_tool("")
+	if paint != null:
+		paint.reset_turn()
 	hover = {}
 	if autosave_on_test:
-		CraftEdit.save(blueprint, CraftEdit.AUTOSAVE)
+		CraftEdit.save(blueprint, autosave_name)
+		_autosave_dirty = false
 	mode = Mode.TEST
 	_clear_ghost()
 	_free_node(held_weapon)
@@ -1396,6 +1508,10 @@ func weapon_stats() -> Dictionary:
 func hint_text() -> String:
 	if mode == Mode.TEST:
 		return "WASD — лететь · Shift — рывок · Space — кувырок · ЛКМ — рука · E — схватить / бросить · R — заново · Esc — к сборке"
+	if paint_tool != "":
+		return paint.hint_text()
+	if paint != null and paint.tab_open and view == View.BODY:
+		return "Выбери инструмент на полке «Покраска»: баллончик, трафарет, наклейка, фото…   ·   R — повернуть стенд"
 	if control_pick:
 		return "Кликни по детали, которой будешь управлять мышью (золотая)   ·   Esc / ПКМ — отмена"
 	if paint_mat != "":
@@ -1466,6 +1582,8 @@ func overlay_items() -> Array:
 		return out
 	var target := "weapon" if view == View.WEAPON else "body"
 	var bp: Resource = weapon_bp if target == "weapon" else blueprint
+	if target == "body" and paint != null and (paint_tool != "" or paint.tab_open):
+		return out   # покраска: точки якорей мешали бы красить
 	# инструмент шарнира: на каждой связи — кружок цвета типа и подпись (кроме обычной оси), наведённая деталь — крупнее
 	if target == "body" and joint_pick != "":
 		var hu := String(hover.get("uid", "")) if String(hover.get("target", "")) == "body" else ""
@@ -1527,6 +1645,8 @@ func _process(delta: float) -> void:
 	_time += delta
 	if mode != Mode.BUILD:
 		return
+	if _autosave_dirty and _time >= _autosave_at:
+		_flush_autosave()
 	var goal := _camera_goal()
 	if _cam_snap:
 		_cam_pos = goal

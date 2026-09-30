@@ -1,7 +1,8 @@
 ## Правки чертежей в мастерской (docs/plan-demo/BODY_CRAFT.md §1–4, CONCEPT_V2 §12 «взял деталь → поднёс к anchor → CLICK»).
 ## Только данные, без сцены: этим пользуются мастерская (scenes/workshop/workshop_build.gd) и проба tests/workshop_probe.gd.
-## Формат чертежей не меняется: BodyBlueprint / WeaponBlueprint, nodes — {uid, part, parent, anchor, rest_deg?, name?, mat?, joint?}
-## (mat / joint — кит тела v2, только у тела: docs/plan-demo/BODY_KIT.md §4, §5.2, §5.5).
+## Формат чертежей не меняется: BodyBlueprint / WeaponBlueprint, nodes — {uid, part, parent, anchor, rest_deg?, name?, mat?, joint?,
+## paint?, stickers?, face?} (mat / joint — кит тела v2, только у тела: docs/plan-demo/BODY_KIT.md §4, §5.2, §5.5; paint / stickers /
+## face — покраска, docs/plan-demo/BODY_PAINT.md §4: их пишет WorkshopPaint, здесь — только signature и замена детали).
 ##
 ## Операции (body — BodyBlueprint, weapon — WeaponBlueprint; обе — «деталь на якорь родителя»):
 ##   check(bp, part, parent, anchor)  — можно ли прикрутить: {ok, code, reason, replace, energy_after, drops}; code:
@@ -40,14 +41,16 @@ const WEAPON_PRESET_DIR := "res://data/body/weapons/"
 const SAVE_DIR := "user://blueprints/"
 const AUTOSAVE := "_autosave"
 const BODY_PRESETS := ["human", "spider", "long_arm", "big_arm", "legless", "junk", "flail",
-	"kit_human", "kit_brawler", "kit_bot", "kit_horned", "kit_king", "kit_spider", "kit_devil", "kit_skull", "kit_wheels", "kit_lantern"]
+	"kit_human", "kit_brawler", "kit_bot", "kit_horned", "kit_king", "kit_spider", "kit_devil", "kit_skull", "kit_wheels", "kit_lantern",
+	"kit_graffiti", "kit_camo"]
 ## Детали, которых нет на полках: kit_human_* — дубли wood_* под риг v3 (BODY_KIT.md §3.2) для пресета kit_human; на полке
 ## их не отличить от kit_limb_basic_* / kit_core_barrel. Чертежи с ними грузятся как обычно (BodyBlueprint.part_def).
 const SHELF_HIDDEN_PREFIXES := ["kit_human_"]
 const WEAPON_PRESETS := ["mallet", "hammer", "spiked_hammer", "heavy_hammer", "long_hammer", "flail", "sword", "axe", "concept_hammer"]
 ## Полки мастерской (BODY_KIT.md §5.5): вкладка → виды деталей; tool — инструмент вкладки над деталями: "joint" — плашки типов
-## шарнира (ui/joint_card.gd), "material" — кисть материала (ui/material_card.gd). Ударные навершия есть и у тела («тело становится
-## частью оружия», CONCEPT_V2 §8; якоря кита их принимают — ANY_LIMB) — на вкладке брони, после видов из контракта.
+## шарнира (ui/joint_card.gd), "material" — кисть материала (ui/material_card.gd), "paint" — покраска (BODY_PAINT.md §1, §6:
+## ui/paint_panel.gd, поведение — WorkshopPaint). Ударные навершия есть и у тела («тело становится частью оружия», CONCEPT_V2 §8;
+## якоря кита их принимают — ANY_LIMB) — на вкладке брони, после видов из контракта.
 const BODY_SHELVES := [
 	{"id": "core", "title": "Ядро", "kinds": ["core"]},
 	{"id": "head", "title": "Головы", "kinds": ["head"]},
@@ -56,6 +59,7 @@ const BODY_SHELVES := [
 	{"id": "joint", "title": "Шарниры", "kinds": ["joint", "chain"], "tool": "joint"},
 	{"id": "armor", "title": "Броня, декор", "kinds": ["plate", "armor", "deco", "mod", "weapon_head"]},
 	{"id": "mat", "title": "Материал", "kinds": [], "tool": "material"},
+	{"id": "paint", "title": "Покраска", "kinds": [], "tool": "paint"},
 ]
 const WEAPON_SHELVES := [
 	{"id": "handle", "title": "Рукояти", "kinds": ["handle"]},
@@ -309,14 +313,35 @@ static func load_weapon_preset(id: String) -> WeaponBlueprint:
 	return dup_weapon(load(path) as WeaponBlueprint)
 
 
-## Сигнатура узлов для сравнения (проба сохранения): отсортированные строки uid|part|parent|anchor|rest|name|mat|joint.
+## Сигнатура узлов для сравнения (проба сохранения): отсортированные строки uid|part|parent|anchor|rest|name|mat|joint|краска, где краска
+## (BODY_PAINT.md §4, §6) — «p<байт>:<хэш данных>», «s<число наклеек>:<хэш>», «f<id фото>» (пусто — ключа нет): сохранение ловит потерю.
 static func signature(bp: Resource) -> PackedStringArray:
 	var out: PackedStringArray = []
 	for n in nodes_of(bp):
-		out.append("%s|%s|%s|%s|%s|%s|%s|%s" % [n.get("uid", ""), n.get("part", ""), n.get("parent", ""), anchor_name(String(n.get("anchor", ""))) if String(n.get("parent", "")) != "" else "",
-			str(n.get("rest_deg", "")), n.get("name", ""), n.get("mat", ""), n.get("joint", "")])
+		out.append("%s|%s|%s|%s|%s|%s|%s|%s|%s" % [n.get("uid", ""), n.get("part", ""), n.get("parent", ""), anchor_name(String(n.get("anchor", ""))) if String(n.get("parent", "")) != "" else "",
+			str(n.get("rest_deg", "")), n.get("name", ""), n.get("mat", ""), n.get("joint", ""), paint_signature(n)])
 	out.sort()
 	return out
+
+
+## Краска узла одной строкой (для signature): слой — размер и хэш сжатых байт, наклейки — число и хэш картинок / кадров / размеров /
+## цветов (str: 6 знаков, как пишет .tres), фото — id.
+static func paint_signature(n: Dictionary) -> String:
+	var parts: PackedStringArray = []
+	var p: Variant = n.get("paint")
+	if p is Dictionary:
+		var data: Variant = (p as Dictionary).get("data")
+		parts.append("p%s:%d" % [str((p as Dictionary).get("size", "")), hash(data) if data is PackedByteArray else 0])
+	var sts: Variant = n.get("stickers")
+	if sts is Array and not (sts as Array).is_empty():
+		var acc := ""
+		for st in (sts as Array):
+			if st is Dictionary:
+				acc += "%s;%s;%s;%s/" % [st.get("img", ""), str(st.get("xf", "")), str(st.get("size", "")), str(st.get("color", ""))]
+		parts.append("s%d:%d" % [(sts as Array).size(), acc.hash()])
+	if String(n.get("face", "")) != "":
+		parts.append("f" + String(n["face"]))
+	return ",".join(parts)
 
 
 # ------------------------------------------------------------------ проверки
@@ -524,6 +549,7 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 	var res := _apply_attach(trial, part_id, parent_uid, an)
 	r["replace"] = res.get("replace", "")
 	r["drops"] = res.get("drops", PackedStringArray())
+	r["face_lost"] = res.get("face_lost", "")
 	if not bool(res.get("ok", false)):
 		r["code"] = String(res.get("code", "invalid"))
 		r["reason"] = String(res.get("reason", "Не встаёт"))
@@ -547,7 +573,7 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 	return r
 
 
-## Прикрутить (с проверкой): {ok, uid, code, reason, replace, drops}.
+## Прикрутить (с проверкой): {ok, uid, code, reason, replace, drops, face_lost (id фото, снятого с заменённой головы, или "")}.
 static func attach(bp: Resource, part_id: String, parent_uid: String, anchor: String) -> Dictionary:
 	var c := check(bp, part_id, parent_uid, anchor)
 	if not bool(c["ok"]):
@@ -575,7 +601,10 @@ static func _apply_attach(bp: Resource, part_id: String, parent_uid: String, an:
 ## Заменить деталь uid на part_id: uid остаётся (control и weapon_on не теряются), явное имя — только если префикс тела тот же,
 ## дети, которым нет якоря на новой детали (или вид не принимается), снимаются с поддеревом. Кит v2: mat остаётся, только если
 ## новая деталь красится (есть base_mat; материал по умолчанию — ключ стирается), joint — если тип допустим и для новой детали
-## (у fixed-детали — декор, броня, attach fixed — шарнира нет; запреты weld — BodyBlueprint.joint_error).
+## (у fixed-детали — декор, броня, attach fixed — шарнира нет; запреты weld — BodyBlueprint.joint_error). Покраска: другая деталь —
+## paint и stickers стираются (слой и кадры наклеек — в кадре меша прежней), face остаётся только у головы кита
+## (BodyPaint.face_plate_ok — то же правило, что у WorkshopPaint.set_face_image: у старых голов плашка утоплена или её нет);
+## снятое фото — в результате «face_lost» (мастерская кладёт его наклейкой на лицо новой головы).
 static func _replace(bp: Resource, uid: String, part_id: String) -> Dictionary:
 	var n := find(bp, uid)
 	var d := part(part_id)
@@ -590,6 +619,7 @@ static func _replace(bp: Resource, uid: String, part_id: String) -> Dictionary:
 		n.erase("name")
 	var new_anchors := BodyBlueprint.part_anchors(d)
 	var drops: PackedStringArray = []
+	var face_lost := ""
 	for c in children_of(bp, uid):
 		var an := anchor_name(String(c.get("anchor", "")))
 		var cd := part(String(c.get("part", "")))
@@ -607,6 +637,14 @@ static func _replace(bp: Resource, uid: String, part_id: String) -> Dictionary:
 		var jt := String(n.get("joint", ""))
 		if n.has("joint") and (jt == "" or BodyBlueprint.is_fixed_part(d) or body.joint_error(uid, jt) != ""):
 			n.erase("joint")
+		# покраска (BODY_PAINT.md §4) — в кадре меша прежней детали: другая деталь — слой и наклейки снимаются; фото остаётся только
+		# на голове кита (у неё плашка лица снаружи); со старой головы / не головы — снимается (face_lost)
+		if old == null or old.id != d.id:
+			n.erase("paint")
+			n.erase("stickers")
+			if not BodyPaint.face_plate_ok(d) and n.has("face"):
+				face_lost = String(n["face"])
+				n.erase("face")
 		# деталь стала fixed (навершие вместо управляемой кисти): своего тела нет — рука мышью переезжает на тело-хозяина, как у
 		# set_control (у ядра — снимается: ядром не управляют, warnings() подскажет), оружие — в другую кисть (weapon_mount)
 		if body.is_fixed(uid):
@@ -620,7 +658,7 @@ static func _replace(bp: Resource, uid: String, part_id: String) -> Dictionary:
 				body.control = ctrl
 			if body.weapon_on == uid:
 				body.weapon_on = String(weapon_mount(body)["uid"])
-	return {"ok": true, "uid": uid, "drops": drops}
+	return {"ok": true, "uid": uid, "drops": drops, "face_lost": face_lost}
 
 
 ## Корень: ядро тела / рукоять оружия. Пустой чертёж — новый корень, иначе замена корня (дети остаются, где есть якоря).

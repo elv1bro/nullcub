@@ -45,6 +45,11 @@
 ##     префиксу, builder), hit_mult сваренного узла и weapon_mult слитого навершия — тоже (weapon_mult только для CraftedWeapon):
 ##     навершие на теле добавляет массу и формы;
 ##   • цвет игрока — _recolor с одной копией на исходный материал (коннекторы и Shirt_Kit каждой детали).
+##
+## Покраска (docs/plan-demo/BODY_PAINT.md §5, BodyPaint): после Doll._ready — бит слоя наклеек мешам (кроме коннекторов), узлам с
+## ключами paint / stickers / face — слой краски (next_pass поверхностей, кроме Shirt* / Face*), наклейки (меш-декали — MeshInstance3D
+## «Sticker» на теле детали), фото на плашку лица. Физика не меняется. Ручки для мастерской: paint_handle(uid), ensure_paint(uid),
+## stickers_of(uid), add_sticker(uid, st).
 class_name ModularDoll
 extends Doll
 
@@ -83,6 +88,8 @@ var _bp_pose: Dictionary = {}          # имя сустава -> measured-гр�
 var _chain_inertia: Dictionary = {}    # имя сустава -> кг·м², инерция дистальной цепи вокруг оси сустава (сборка, по прямой)
 var _striker: Dictionary = {}          # имя тела -> true: бьющая деталь (STRIKER_KINDS), монитор контактов в _hook_combat
 var _joint_type: Dictionary = {}       # имя сустава -> тип шарнира KitJoint ("pin", "free", "spring", "motor"), для _update_pair_gains
+var _paint: Dictionary = {}            # uid -> ручка слоя краски BodyPaint.attach_layer {layer, tex, materials, mesh_root}
+var _stickers: Dictionary = {}         # uid -> Array[MeshInstance3D] наклеек узла (BodyPaint.add_sticker)
 
 
 func _ready() -> void:
@@ -91,6 +98,7 @@ func _ready() -> void:
 	spawn_in_pose = false   # Doll._ready поставил бы Tuning.POSE с зеркалом по «_R» — у чертежа свои углы (ниже)
 	super._ready()
 	spawn_in_pose = snap
+	_apply_paint()
 	set_pose(_bp_pose)
 	if snap:
 		_snap_pose(SPAWN_POSE_GROUPS)
@@ -128,6 +136,60 @@ func control_part_names() -> PackedStringArray:
 
 func energy_used() -> int:
 	return blueprint.energy_used() if blueprint != null else 0
+
+
+# --- покраска (docs/plan-demo/BODY_PAINT.md §5): только вид, физика не трогается ---
+
+## Ручка слоя краски узла uid ({layer: PaintLayer, tex: ImageTexture3D, materials: [ShaderMaterial], mesh_root}); {} — краски нет.
+## Мастерская рисует прямо в layer и зовёт layer.update_texture(tex).
+func paint_handle(uid: String) -> Dictionary:
+	return _paint.get(uid, {})
+
+
+## Ручка слоя узла uid; слоя не было — пустой слой по габариту меша детали (BodyPaint.mesh_aabb) и next_pass на её поверхностях.
+## {} — у узла нет меша.
+func ensure_paint(uid: String) -> Dictionary:
+	if _paint.has(uid):
+		return _paint[uid]
+	var root := BodyPaint.mesh_root_of(self, uid)
+	if root == null or BodyPaint.meshes(root).is_empty():
+		return {}
+	var h := BodyPaint.attach_layer(root, PaintLayer.for_aabb(BodyPaint.mesh_aabb(root)))
+	if not h.is_empty():
+		_paint[uid] = h
+	return h
+
+
+## Наклейки узла uid (MeshInstance3D «Sticker», meta «sticker» — словарь чертежа) — поставленные из чертежа и через add_sticker.
+func stickers_of(uid: String) -> Array:
+	return (_stickers.get(uid, []) as Array).filter(func(d: Variant) -> bool: return is_instance_valid(d))
+
+
+## Поставить наклейку на узел uid (st — словарь чертежа, BODY_PAINT.md §4) и запомнить её. null — нет узла / картинки.
+func add_sticker(uid: String, st: Dictionary) -> MeshInstance3D:
+	var d := BodyPaint.add_sticker(BodyPaint.body_of(self, uid), BodyPaint.mesh_root_of(self, uid), st)
+	if d != null:
+		if not _stickers.has(uid):
+			_stickers[uid] = []
+		(_stickers[uid] as Array).append(d)
+	return d
+
+
+## Бит слоя наклеек мешам (кроме коннекторов), потом покраска узлов чертежа с paint / stickers / face. Зовётся после Doll._ready (Shirt уже в цвете
+## игрока, BodyPaint его не трогает) — и при респавне Match: новый инстанс собирается из того же чертежа.
+func _apply_paint() -> void:
+	BodyPaint.tag_layers(self)
+	for n in blueprint.nodes:
+		if not (n.has("paint") or n.has("stickers") or n.has("face")):
+			continue
+		var uid := String(n.get("uid", ""))
+		if not uid_body.has(uid):
+			continue
+		var r := BodyPaint.apply_node(self, uid, n)
+		if not (r["paint"] as Dictionary).is_empty():
+			_paint[uid] = r["paint"]
+		if not (r["stickers"] as Array).is_empty():
+			_stickers[uid] = r["stickers"]
 
 
 ## Спавн сразу в позе чертежа (как Doll.spawn_in_pose, группы по порядку: проксимальные раньше). Отличие от Doll._snap_to_pose:

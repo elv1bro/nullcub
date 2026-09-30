@@ -36,6 +36,9 @@ const PRESETS := {
 	"kit_skull": "res://scenes/body/presets/kit_skull.tscn",
 	"kit_wheels": "res://scenes/body/presets/kit_wheels.tscn",
 	"kit_lantern": "res://scenes/body/presets/kit_lantern.tscn",
+	# витрина покраски (docs/plan-demo/BODY_PAINT.md §4)
+	"kit_graffiti": "res://scenes/body/presets/kit_graffiti.tscn",
+	"kit_camo": "res://scenes/body/presets/kit_camo.tscn",
 }
 const SPACING := 8.0
 const IDLE_S := 5.0
