@@ -1,7 +1,9 @@
 ## Лига кампании «История» (docs/plan-demo/17-career-trophy.md, LORE_NULL.md: карьера §13, правило трофея).
 ## Здесь только данные и правила, без сцен:
 ##   • лестница ступени лиги — соперники по порядку (чертёж пресета data/body/blueprints/<preset>.tres, уровень бота RivalBrain);
-##   • регламент: бюджет энергии сборки по ступени лиги — Tuning.LEAGUE_ENERGY (автор 30.09: энергия растёт с лигой);
+##   • регламент (apply_regulation): бюджет энергии сборки по ступени лиги — Tuning.LEAGUE_ENERGY (автор 30.09: энергия растёт
+##     с лигой); оружие в руке ест ту же энергию по массе — Tuning.LEAGUE_WEAPON_ENERGY_PER_KG (автор 30.09: «и на оружие
+##     ограничение»; BodyBlueprint.weapon_energy);
 ##   • стартовая полка мастерской — STARTER_PARTS, дальше её пополняют трофеи;
 ##   • правило трофея: после победы из сборки соперника выпадает СЛУЧАЙНАЯ деталь (решение автора 30.09); голова и ядро не выпадают
 ##     (предложение: без них соперник не кукла), детали, скрытые с полок мастерской (CraftEdit.SHELF_HIDDEN_PREFIXES), — тоже.
@@ -51,11 +53,23 @@ static func energy_budget(tier: String) -> int:
 	return int(Tuning.LEAGUE_ENERGY.get(tier, 100))
 
 
+## Энергия за кг оружия в руке по регламенту ступени лиги.
+static func weapon_energy_per_kg(tier: String) -> float:
+	return float(Tuning.LEAGUE_WEAPON_ENERGY_PER_KG.get(tier, 0.0))
+
+
+## Регламент ступени на чертёж: бюджет энергии и цена оружия в руке.
+static func apply_regulation(bp: BodyBlueprint, tier: String) -> void:
+	if bp != null:
+		bp.energy_budget = energy_budget(tier)
+		bp.weapon_energy_per_kg = weapon_energy_per_kg(tier)
+
+
 ## Чертёж соперника: копия пресета в памяти (resource_path "" — переживёт респавн Match) с бюджетом лиги.
 static func rival_blueprint(tier: String, r: Dictionary) -> BodyBlueprint:
 	var bp := preset(String(r.get("preset", "")))
 	if bp != null:
-		bp.energy_budget = energy_budget(tier)
+		apply_regulation(bp, tier)
 	return bp
 
 
@@ -77,7 +91,7 @@ static func preset(id: String) -> BodyBlueprint:
 ## Стартовая сборка игрока с бюджетом ступени лиги.
 static func start_blueprint(tier: String = LOCAL) -> BodyBlueprint:
 	var bp := preset(START_PRESET)
-	bp.energy_budget = energy_budget(tier)
+	apply_regulation(bp, tier)
 	return bp
 
 

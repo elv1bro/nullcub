@@ -234,7 +234,7 @@ anchor_right = 0.5
 offset_left = -344.0
 offset_top = 100.0
 offset_right = 546.0
-offset_bottom = 150.0
+offset_bottom = 158.0
 grow_horizontal = 2
 
 [node name="Row" type="HBoxContainer" parent="UI/WorkshopBar"]

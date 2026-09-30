@@ -4,8 +4,9 @@
 ## Правила (автор 30.09): все бои в куполе; поражение — бой переигрывается без штрафа; победа — случайная деталь соперника
 ## (CampaignState.record_result); энергия — регламент лиги (CampaignLeague.energy_budget). Сохранение — после каждого боя и выхода
 ## из мастерской (user://campaign.tres + чертёж user://blueprints/_campaign.tres; тот же файл мастерская пишет автосейвом).
-## Мастерская из кампании: на полке только стартовый кит и трофеи (CraftEdit.campaign_shelf), шаблоны тела закрыты
-## (CraftEdit.campaign_templates_locked). Esc в мастерской без инструмента и выбора — к лестнице.
+## Мастерская из кампании: на полке только стартовый кит и трофеи (CraftEdit.campaign_shelf), шаблоны тела и оружия закрыты
+## и спрятаны (CraftEdit.campaign_templates_locked), верстак пуст, если в руке ничего нет; оружие в руке ест энергию ядра по
+## регламенту лиги (BodyBlueprint.weapon_energy). Esc в мастерской без инструмента и выбора — к лестнице.
 ## Реплики N0 на лестнице — заглушки до этапа 14 (N0_VOICE.md).
 ## Пробы (tests/campaign_probe.gd): save_path / bp_name — свои файлы, load_save = false — новая кампания; start_fight(),
 ## finish_fight(won, info), open_workshop(), close_workshop() — те же шаги, что кнопки.
@@ -250,13 +251,16 @@ func open_workshop() -> void:
 	stage.add_child(ws)
 	CraftEdit.campaign_templates_locked = true
 	ws.load_path(CraftEdit.save_path(state.bp_name))
+	if ws.blueprint.weapon == null:
+		ws.clear_weapon()   # верстак стартует с молотом-шаблоном — в кампании оружие собирается только из деталей полки
 	ws.history.clear()
 	ws.redo_stack.clear()
+	ws.view_changed.emit(ws.view)   # UI перестраивает левую панель — плитки шаблонов прячутся (campaign_templates_locked)
 	workshop = ws
 	var r := state.current_rival()
-	%BarLabel.text = "КАМПАНИЯ · энергия %d · трофеев %d%s\nна полке — стартовый кит и трофеи, шаблоны закрыты" % [
-		CampaignLeague.energy_budget(state.tier), state.trophies.size(),
-		" · следующий: %s" % CampaignLeague.rival_title(r) if not r.is_empty() else ""]
+	%BarLabel.text = "КАМПАНИЯ%s · трофеев %d\nэнергия %d — тело и оружие (%d/кг) · шаблоны закрыты" % [
+		" · следующий: %s" % CampaignLeague.rival_title(r) if not r.is_empty() else "", state.trophies.size(),
+		CampaignLeague.energy_budget(state.tier), int(CampaignLeague.weapon_energy_per_kg(state.tier))]
 	%BarFight.visible = not state.finished()
 	_set_screen(Screen.WORKSHOP)
 

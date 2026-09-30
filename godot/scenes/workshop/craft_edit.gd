@@ -84,8 +84,9 @@ const UID_CHARS := BodyBlueprint.UID_CHARS
 
 static var _parts_cache: Array[PartDef] = []
 ## Кампания «История» (docs/plan-demo/17-career-trophy.md): пока мастерская открыта из кампании, на полках только детали
-## campaign_shelf (стартовый кит + трофеи; пусто — все), а при campaign_templates_locked шаблоны тела не ставятся
-## (load_body_preset → null). Ставит и снимает scenes/campaign/campaign_flow.gd.
+## campaign_shelf (стартовый кит + трофеи; пусто — все), а при campaign_templates_locked шаблоны тела и оружия не ставятся
+## (load_body_preset / load_weapon_preset → null) и не показываются (ui/workshop_ui.gd). Ставит и снимает
+## scenes/campaign/campaign_flow.gd.
 static var campaign_shelf: PackedStringArray = []
 static var campaign_templates_locked := false
 static var _scene_names: Dictionary = {}   # путь сцены детали -> PackedStringArray имён CollisionShape3D
@@ -288,6 +289,7 @@ static func dup_body(bp: BodyBlueprint) -> BodyBlueprint:
 	out.control_rmb = bp.control_rmb.duplicate()
 	out.weapon = dup_weapon(bp.weapon as WeaponBlueprint) if bp.weapon is WeaponBlueprint else null
 	out.weapon_on = bp.weapon_on
+	out.weapon_energy_per_kg = bp.weapon_energy_per_kg
 	return out
 
 
@@ -317,7 +319,7 @@ static func load_body_preset(id: String) -> BodyBlueprint:
 
 static func load_weapon_preset(id: String) -> WeaponBlueprint:
 	var path := WEAPON_PRESET_DIR + id + ".tres"
-	if not ResourceLoader.exists(path):
+	if campaign_templates_locked or not ResourceLoader.exists(path):
 		return null
 	return dup_weapon(load(path) as WeaponBlueprint)
 

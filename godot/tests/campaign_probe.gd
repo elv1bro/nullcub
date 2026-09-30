@@ -8,11 +8,14 @@
 ##   loss_no_advance   поражение: шаг тот же, поражений +1, трофея нет
 ##   win_advance       победа: шаг +1, трофей на полке
 ##   save_load         сохранение → загрузка: шаг, победы, поражения, трофеи, журнал и сборка те же
+##   weapon_energy     регламент: оружие в руке ест энергию по массе (киянка 2.1 кг → 11, стартовое тело + киянка в бюджете,
+##                     + молот — перерасход и «не готова к бою»); без регламента (свободная мастерская) оружие энергию не ест
 ##   flow_ladder       сцена кампании открывается лестницей, 4 соперника, кнопка «В БОЙ» активна
 ##   flow_fight        «В БОЙ»: в Stage сцена боя, P1 — сборка игрока, P2 — чертёж соперника с RivalBrain уровня шага
 ##   rival_fights      соперник ищет игрока: за 25 с боя подлетает ближе 2 м и бьёт (Match.hit от P2 ≥ 1)
 ##   flow_outcome      итог боя → экран исхода, трофей в кампании, сохранение на диске
-##   workshop_shelf    мастерская из кампании: на полках только стартовый кит и трофеи, шаблоны тела закрыты, сборка — кампании
+##   workshop_shelf    мастерская из кампании: на полках только стартовый кит и трофеи, шаблоны тела и оружия закрыты и
+##                     спрятаны, верстак пуст, сборка — кампании
 ##   workshop_back     выход из мастерской: фильтр снят, шаблоны открыты, сборка вернулась в кампанию, лестница
 ##   ladder_complete   4 победы → лига пройдена, «В БОЙ» выключена, бой не начинается
 ##   real_fight        (fight=1) настоящий бой двух ботов в куполе до конца матча → fight_finished → запись в кампанию
@@ -111,6 +114,24 @@ func _rules() -> void:
 		back.trophies if back else [], w.trophies, back.blueprint.nodes.size() if back and back.blueprint else -1, w.blueprint.nodes.size()])
 	CampaignState.erase(SAVE, BP)
 
+	var k := CampaignLeague.start_blueprint()
+	var body_e := k.energy_used()
+	k.weapon = CraftEdit.load_weapon_preset("mallet")
+	var mallet_e := k.weapon_energy()
+	var mallet_total := k.energy_used()
+	var mallet_ok := CraftEdit.friendly_errors(k).is_empty()
+	var kd := CraftEdit.dup_body(k)
+	k.weapon = CraftEdit.load_weapon_preset("hammer")
+	var hammer_total := k.energy_used()
+	var hammer_bad := not CraftEdit.friendly_errors(k).is_empty()
+	var free := CraftEdit.load_body_preset("kit_human")
+	var free_body := free.energy_used()
+	free.weapon = CraftEdit.load_weapon_preset("hammer")
+	_check("weapon_energy", mallet_e == 11 and mallet_total == body_e + 11 and mallet_ok and kd.energy_used() == mallet_total
+		and hammer_total == body_e + 21 and hammer_bad and free.energy_used() == free_body,
+		"тело %d; киянка +%d = %d (готова %s, копия %d); молот = %d (перерасход %s); без регламента с молотом %d" % [
+		body_e, mallet_e, mallet_total, mallet_ok, kd.energy_used(), hammer_total, hammer_bad, free.energy_used()])
+
 
 # ------------------------------------------------------------------ поток экранов
 
@@ -179,14 +200,21 @@ func _flow() -> void:
 		if not shelf.has(d.id):
 			extra.append(d.id)
 	var tr_on_shelf := CraftEdit.parts_of_kinds(CraftEdit.KIND_ORDER).any(func(d: PartDef) -> bool: return d.id == tr)
+	var presets: Control = ws.ui.get("presets_box") if ws != null and ws.ui != null else null
+	var tiles_hidden := presets != null and not presets.visible
+	var bench_empty := ws != null and ws.weapon_bp != null and ws.weapon_bp.nodes.is_empty()
 	_check("workshop_shelf", ws != null and ws.get_parent() == c.get_node("Stage") and extra.is_empty() and tr_on_shelf
-		and CraftEdit.load_body_preset("kit_king") == null and ws.blueprint.nodes.size() == st.blueprint.nodes.size()
+		and CraftEdit.load_body_preset("kit_king") == null and CraftEdit.load_weapon_preset("hammer") == null and tiles_hidden
+		and bench_empty and ws.blueprint.nodes.size() == st.blueprint.nodes.size() and ws.blueprint.weapon_energy_per_kg > 0.0
 		and (c.get_node("%WorkshopBar") as Control).visible,
-		"лишние на полке %s, трофей на полке %s, шаблон kit_king закрыт %s" % [extra, tr_on_shelf, CraftEdit.load_body_preset("kit_king") == null])
+		"лишние на полке %s, трофей на полке %s, шаблоны тела / оружия закрыты %s / %s, плитки спрятаны %s, верстак пуст %s" % [
+		extra, tr_on_shelf, CraftEdit.load_body_preset("kit_king") == null, CraftEdit.load_weapon_preset("hammer") == null,
+		tiles_hidden, bench_empty])
 	c.call("close_workshop")
 	c.call("show_ladder")
 	await _phys(2)
 	_check("workshop_back", c.get("workshop") == null and CraftEdit.campaign_shelf.is_empty() and CraftEdit.load_body_preset("kit_king") != null
+		and CraftEdit.load_weapon_preset("hammer") != null
 		and (c.get_node("%Ladder") as Control).visible and CraftEdit.friendly_errors(st.blueprint).is_empty(),
 		"мастерская закрыта %s, фильтр %s" % [c.get("workshop") == null, CraftEdit.campaign_shelf])
 

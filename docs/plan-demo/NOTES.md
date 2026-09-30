@@ -13,6 +13,11 @@
 
 ---
 
+## 2026-09-30 — этап 17: оружие в регламенте, шаблоны закрыты (облако)
+Сделано (решение автора): в кампании шаблоны тела и оружия закрыты и спрятаны (CraftEdit.campaign_templates_locked, workshop_ui), верстак пустой; оружие в руке ест энергию ядра по массе — BodyBlueprint.weapon_energy_per_kg (0 вне кампании), регламент местной лиги 5/кг (Tuning.LEAGUE_WEAPON_ENERGY_PER_KG).
+Проверки: campaign_probe 15/15 (с боем ботов), workshop_probe 186, body_probe OK, kit_probe 3140 OK.
+Открыто: «В руку» не отказывает при перерасходе (бой и «Испытать» не пускают) — отказ на кнопке в workshop_build.gd.
+
 ## 2026-09-30 — этап 17: карьера и трофеи v1 (облако)
 Сделано: кампания «История» — `scenes/campaign/campaign.tscn` (клавиша 9): лестница местной лиги (4 соперника, бот RivalBrain ур. 1–4), бой в куполе Old NULL Hall (ветка купола влита в claude/modest-brahmagupta-kocf6h), случайный трофей после победы, переигровка без штрафа, мастерская с полкой «старт + трофеи» и регламентом энергии 100, сохранение user://campaign.tres + blueprints/_campaign.tres. Итог и список файлов — 17-career-trophy.md.
 Проверки: campaign_probe 14/14 (с боем ботов до KO), workshop_probe 186 OK, null_field_probe 9/9, scene_switch OK; лист img/campaign-v1.jpg.

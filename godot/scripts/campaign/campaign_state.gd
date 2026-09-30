@@ -82,10 +82,9 @@ func record_result(won: bool, info: Dictionary = {}) -> String:
 	return trophy
 
 
-## Бюджет энергии по регламенту текущей ступени — всегда ставится на сборку игрока.
+## Регламент текущей ступени (бюджет энергии, цена оружия в руке) — всегда ставится на сборку игрока.
 func apply_regulation() -> void:
-	if blueprint != null:
-		blueprint.energy_budget = CampaignLeague.energy_budget(tier)
+	CampaignLeague.apply_regulation(blueprint, tier)
 
 
 # ------------------------------------------------------------------ сохранение

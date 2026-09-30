@@ -236,8 +236,9 @@ func _build_left() -> void:
 		c.queue_free()
 	_preset_buttons.clear()
 	_cat_icons.clear()
-	presets_box.visible = not painting
-	$Root/Left/VBox/TemplateRow.visible = not painting
+	var templates := not painting and not CraftEdit.campaign_templates_locked   # кампания: шаблоны закрыты (17-career-trophy.md)
+	presets_box.visible = templates
+	$Root/Left/VBox/TemplateRow.visible = templates
 	var tiles: Array = []
 	if weapon:
 		for id in CraftEdit.WEAPON_PRESETS:
