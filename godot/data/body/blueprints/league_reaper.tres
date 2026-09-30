@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_pqhgh")
 id = "league_reaper"
-title = "Жнец Ŋmoalü"
+title = "Жнец Аоэлюн"
 energy_budget = 140
 nodes = Array[Dictionary]([{
 "anchor": "",

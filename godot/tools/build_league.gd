@@ -34,7 +34,7 @@ const MATS := {
 ## Углы — в пределах суставов ModularDoll.JOINT_LIMITS (локоть и колено гнутся в одну сторону) и SIDE_LIMITS у боковых якорей.
 const LEAGUE_FIGHTERS := {
 	"league_reaper": {
-		"title": "Жнец Ŋmoalü",
+		"title": "Жнец Аоэлюн",
 		"hint": "ядро-око, голова-око с рогами; верхние руки — косы над головой, нижняя пара с когтями из боков; ноги-ходули на когтях",
 		"core": "kit_core_league_orb", "head": "kit_head_league_eye",
 		"chains": [
