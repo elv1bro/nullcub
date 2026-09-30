@@ -19,18 +19,14 @@ const COL_OK := Color(0.72, 0.86, 1.0)
 const COL_GO := Color(0.5, 0.9, 0.45)
 const COL_BAD := Color(0.95, 0.34, 0.27)
 const COL_AMBER := Color(1.0, 0.74, 0.3)
-const PHYSICS := "res://scenes/workshop/ws_physics.gd"
 
 var ctl: Node = null
 var _t := 0.0
 var _drag_t := 0.0
-var _physics: Script = null
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if ResourceLoader.exists(PHYSICS):
-		_physics = load(PHYSICS)
 
 
 func _process(delta: float) -> void:
@@ -105,6 +101,8 @@ func _draw() -> void:
 			"selected":
 				draw_arc(p, float(it.get("r", 30.0)), 0.0, TAU, 40, Color(COL_OK, 0.5), 1.5, true)
 			"com":
+				if bool(ctl.get("show_com")):
+					continue   # «Физика» включена — центр масс и его сдвиг рисует WsPhysics
 				var fl: Vector2 = it.get("floor", p)
 				_dashed(p, fl, Color(1.0, 0.92, 0.6, 0.45))
 				draw_circle(p, 7.0, Color(0, 0, 0, 0.5))
@@ -112,6 +110,8 @@ func _draw() -> void:
 				draw_arc(p, 10.0 + 2.0 * pulse, 0.0, TAU, 28, Color(1.0, 0.86, 0.45, 0.45), 1.5, true)
 				draw_circle(fl, 3.0, Color(1.0, 0.9, 0.45, 0.6))
 			"com_ghost":
+				if bool(ctl.get("show_com")):
+					continue
 				var fr: Vector2 = it.get("from", p)
 				_dashed(fr, p, Color(COL_OK, 0.85))
 				draw_arc(p, 7.0, 0.0, TAU, 24, Color(COL_OK, 0.95), 2.0, true)
@@ -150,7 +150,7 @@ func _draw() -> void:
 ## «Физика» включена: нагрузка суставов (зелёный → жёлтый → красный), распределение массы, опора и куда заваливается —
 ## рисует WsPhysics (если модуль есть). Выключена — модель чистая.
 func _draw_physics(font: Font) -> void:
-	if _physics == null or not bool(ctl.get("show_com")) or int(ctl.get("mode")) != 0 or int(ctl.get("view")) != 0:
+	if not bool(ctl.get("show_com")) or int(ctl.get("mode")) != 0 or int(ctl.get("view")) != 0:
 		return
 	var stand: Variant = ctl.get("stand")
 	var cam := get_viewport().get_camera_3d()
@@ -159,11 +159,11 @@ func _draw_physics(font: Font) -> void:
 	var paint: Variant = ctl.get("paint")
 	if paint != null and bool(paint.get("tab_open")):
 		return
-	var opts := {"t": _t}
+	var opts := {"t": _t, "labels": true, "floor_y": (ctl.get("stand_root") as Node3D).global_position.y}
 	var g: Variant = ctl.call("drag_com")
 	if g is Vector3:
 		opts["ghost_com"] = g
-	_physics.call("draw", self, cam, stand, font, opts)
+	WsPhysics.draw(self, cam, stand as Node, font, opts)
 
 
 func _dashed(a: Vector2, b: Vector2, col: Color) -> void:

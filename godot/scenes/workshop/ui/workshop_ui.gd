@@ -671,11 +671,11 @@ func _build_popups() -> void:
 			_close_popups())
 	root.add_child(dismiss)
 	# шаблоны и имя — под именем сборки
-	templates_popup = _popup("TemplatesPopup", Vector2(560, 0))
+	templates_popup = _popup("TemplatesPopup", Vector2(620, 0))
 	templates_popup.anchor_left = 0.5
 	templates_popup.anchor_right = 0.5
-	templates_popup.offset_left = -280
-	templates_popup.offset_right = 280
+	templates_popup.offset_left = -310
+	templates_popup.offset_right = 310
 	templates_popup.offset_top = TOP_Y + TOP_H + 6.0
 	var tv := templates_popup.get_child(0) as VBoxContainer
 	tv.add_child(_caption("Имя сборки"))
@@ -916,9 +916,20 @@ func _chip(icon_name: String, tip: String, on: bool) -> Button:
 	b.custom_minimum_size = Vector2(CHIP, CHIP)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	WsStyle.apply_button(b, "chip")
+	_tight(b, 5.0)   # десять значков в ряд на 400 px: поля чипа поуже, значок по центру
 	WsIcon.add_to_button(b, icon_name, 22.0)
 	b.set_pressed_no_signal(on)
 	return b
+
+
+## Поля кнопки по горизонтали — m px во всех состояниях (ряд значков, узкие плитки).
+static func _tight(b: Button, m: float) -> void:
+	for st_name in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		var sb := b.get_theme_stylebox(st_name).duplicate() as StyleBoxFlat
+		if sb != null:
+			sb.content_margin_left = m
+			sb.content_margin_right = m
+			b.add_theme_stylebox_override(st_name, sb)
 
 
 func _select_tab(id: String) -> void:
@@ -1232,9 +1243,10 @@ func _fill_templates() -> void:
 func _tile(text: String, icon_part: String) -> Button:
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(98, 112)
+	b.custom_minimum_size = Vector2(108, 112)
 	b.tooltip_text = text
 	WsStyle.apply_button(b)
+	_tight(b, 4.0)
 	b.set_meta("icon_part", icon_part)
 	var v := VBoxContainer.new()
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1495,23 +1507,45 @@ func _refresh_summary(s: Dictionary, pv: Dictionary) -> void:
 	physics_button.set_pressed_no_signal(ctl.show_com)
 	physics_info.text = _physics_text() if ctl.show_com else ""
 	physics_info.visible = ctl.show_com and physics_info.text != ""
+	if physics_info.visible:
+		var sm := WsPhysics.summary(ctl.stand)
+		physics_info.add_theme_color_override("font_color", WsPhysics.load_colour(float(sm.get("max_muscle_load", 0.0))).lerp(WsStyle.TEXT, 0.35))
 
 
-## Физика словами (кнопка «Физика»): куда заваливается, самый нагруженный сустав (WsPhysics.summary, если модуль есть).
+## Физика словами (кнопка «Физика», WsPhysics.summary): устойчивость и самый нагруженный сустав — цветом нагрузки.
 func _physics_text() -> String:
-	if ctl.stand == null or not ResourceLoader.exists("res://scenes/workshop/ws_physics.gd"):
+	if ctl.stand == null or not is_instance_valid(ctl.stand):
 		return ""
-	var ph: Script = load("res://scenes/workshop/ws_physics.gd")
-	if ph == null or not ph.has_method("summary"):
-		return ""
-	var sm: Variant = ph.call("summary", ctl.stand)
-	if not (sm is Dictionary):
-		return ""
-	var out: PackedStringArray = []
-	for k in ["tip_text", "stress_text", "text"]:
-		if (sm as Dictionary).has(k) and String(sm[k]) != "":
-			out.append(String(sm[k]))
-	return "\n".join(out)
+	var sm := WsPhysics.summary(ctl.stand)
+	var tip: Dictionary = sm.get("tip", {})
+	var margin := float(tip.get("margin", 1.0))
+	var dir := float(tip.get("dir", 0.0))
+	var side := "вправо" if dir > 0.0 else "влево"
+	var lines: PackedStringArray = []
+	if margin < 0.0:
+		lines.append("Заваливается %s" % side)
+	elif margin < 0.05:
+		lines.append("Еле стоит, клонит %s" % side)
+	else:
+		lines.append("Стоит устойчиво")
+	var j := String(sm.get("max_muscle_joint", sm.get("max_joint", "")))
+	if j != "":
+		lines.append("Тяжелее всего: %s — %d %%" % [_joint_words(j), roundi(float(sm.get("max_muscle_load", sm.get("max_load", 0.0))) * 100.0)])
+	var free: PackedStringArray = sm.get("free_joints", PackedStringArray())
+	if not free.is_empty():
+		lines.append("Болтается свободно: %d" % free.size())
+	return "\n".join(lines)
+
+
+## «Shoulder_L» → «плечо слева».
+static func _joint_words(j: String) -> String:
+	var base := j.get_slice("_", 0)
+	var w := String(CraftEdit.GROUP_TITLES.get(base, "сустав"))
+	if j.ends_with("_L"):
+		w += " слева"
+	elif j.ends_with("_R"):
+		w += " справа"
+	return w
 
 
 ## Паспорт выбранной детали: масса, энергия, длина; деталь / ветка; шарнир; тяга; действия.

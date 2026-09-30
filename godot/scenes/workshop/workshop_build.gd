@@ -1763,7 +1763,7 @@ func _make_materials() -> void:
 	_mats["control"] = _overlay_mat(Color(PULL_COLOURS["lmb"], 0.42))
 	_mats["control_rmb"] = _overlay_mat(Color(PULL_COLOURS["rmb"], 0.42))
 	_mats["hover"] = _overlay_mat(Color(1.0, 0.97, 0.85, 0.22))
-	_mats["selected"] = _overlay_mat(Color(0.55, 0.85, 1.0, 0.5))
+	_mats["selected"] = _overlay_mat(Color(0.55, 0.85, 1.0, 0.5))   # переопределён ниже ободком (v0.3: выбор — тонкий контур)
 	_mats["remove"] = _overlay_mat(Color(1.0, 0.25, 0.18, 0.45))
 	_mats["replace"] = _overlay_mat(Color(1.0, 0.55, 0.15, 0.4))
 	_mats["pick"] = _overlay_mat(Color(1.0, 0.85, 0.35, 0.3))
@@ -1795,6 +1795,11 @@ void fragment() {
 	var mg := g.duplicate() as StandardMaterial3D
 	mg.albedo_color = Color(0.55, 0.85, 1.0, 0.42)
 	_mats["mirror_ghost"] = mg
+	var sel := ShaderMaterial.new()   # выбранная деталь: бледно-голубой ободок по силуэту, без заливки
+	sel.shader = rim
+	sel.set_shader_parameter("rim", Color(0.62, 0.86, 1.0, 0.9))
+	sel.set_shader_parameter("power", 3.0)
+	_mats["selected"] = sel
 
 
 static func _overlay_mat(c: Color) -> StandardMaterial3D:
