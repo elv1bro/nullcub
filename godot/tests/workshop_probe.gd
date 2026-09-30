@@ -73,7 +73,7 @@ const GHOST_ANG_TOL := 1.0
 const PATTERN_FRAME_MAX_MS := 20.0   # шаг очереди раскраски (бюджет 4 мс + срез) — с запасом на headless под нагрузкой
 
 ## Столько проверок проба делает целиком (меньше — какой-то раздел упал с ошибкой скрипта).
-const MIN_CHECKS := 209
+const MIN_CHECKS := 210
 var ws: WorkshopBuild
 var report := {"ok": true, "checks": []}
 var shots_dir := ""
@@ -561,6 +561,12 @@ func _ui_v03() -> void:
 		energy_txt = (ui.get("energy_value") as Label).text
 	ws.cancel_drag()
 	_check("v03_drag_preview", arrows and energy_txt.contains("→"), "протяжка: справа «было → станет», энергия вверху «82 → …»", energy_txt)
+	# звуки мастерской (WsSfx): взял, щёлкнуло, открутил, отказ, отмена — прозвучали за пробу
+	var kinds := {}
+	for e in ws.sfx.played:
+		kinds[String(e["kind"])] = true
+	_check("v03_sfx", kinds.has("grab") and kinds.has("snap") and kinds.has("unscrew") and kinds.has("invalid") and kinds.has("undo"),
+		"звуки: взял, щёлкнуло, открутил, отказ, отмена", kinds.keys())
 	ws.set_preset("human")
 	ws.history.clear()
 	ws.redo_stack.clear()

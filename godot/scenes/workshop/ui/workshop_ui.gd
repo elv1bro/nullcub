@@ -368,7 +368,6 @@ func _icon_button(icon_name: String, tip: String, px := 22.0, kind := "button") 
 	b.custom_minimum_size = Vector2(40, 40)
 	WsStyle.apply_button(b, kind)
 	WsIcon.add_to_button(b, icon_name, px)
-	b.pressed.connect(func() -> void: _sfx("button"))
 	return b
 
 
@@ -488,7 +487,6 @@ func _build_right() -> void:
 	WsIcon.add_to_button(physics_button, "physics", 20.0)
 	physics_button.toggled.connect(func(on: bool) -> void:
 		ctl.show_com = on
-		_sfx("button")
 		_refresh())
 	summary_box.add_child(physics_button)
 	physics_info = Label.new()
@@ -625,9 +623,8 @@ func _build_bottom() -> void:
 	test_button.tooltip_text = "Испытать сборку на манекене  T"
 	WsStyle.apply_button(test_button, "cta")
 	WsIcon.add_to_button(test_button, "play", 22.0)
-	test_button.pressed.connect(func() -> void:
-		_sfx("test")
-		ctl.start_test())
+	test_button.set_meta("ws_sfx_kind", "test")
+	test_button.pressed.connect(func() -> void: ctl.start_test())
 	root.add_child(test_button)
 	var key := Label.new()
 	key.text = "T"
@@ -805,7 +802,7 @@ func _toggle_popup(p: Control) -> void:
 	dismiss.visible = true
 	root.move_child(dismiss, root.get_child_count() - 1)
 	root.move_child(p, root.get_child_count() - 1)
-	_sfx("tab")
+	_wire()
 
 
 func _close_popups() -> void:
@@ -906,6 +903,7 @@ func _build_left() -> void:
 	search.get_parent().visible = tab != "paint"
 	_build_shelf()
 	_update_name()
+	_wire()
 
 
 func _chip(icon_name: String, tip: String, on: bool) -> Button:
@@ -942,7 +940,6 @@ func _select_tab(id: String) -> void:
 		ctl.paint.reset_turn()   # стенд снова лицом
 	if id == "paint" and was != "paint" and ctl.paint != null and ctl.paint.tool == "":
 		ctl.paint.set_tool("spray")   # пришёл красить — баллончик сразу в руке
-	_sfx("tab")
 	_build_left()
 
 
@@ -1182,7 +1179,6 @@ func _on_favorite(part_id: String, on: bool) -> void:
 	elif not on and favorites.has(part_id):
 		favorites.remove_at(favorites.find(part_id))
 	_save_prefs()
-	_sfx("button")
 	if bool(filters["fav"]) and not on:
 		_build_shelf()
 
@@ -1456,6 +1452,7 @@ func _refresh() -> void:
 	_update_tool_cards()
 	_update_name()
 	_update_hint()
+	_wire()
 
 
 ## Энергия в верхней строке: «82 / 100»; при протяжке — «82 → 86», красным, если не встанет.
@@ -1665,6 +1662,7 @@ func _refresh_part() -> void:
 		mir.pressed.connect(func() -> void: ctl.start_mirror_preview(uid, bool(ctl.selected.get("branch", false))))
 		part_actions.add_child(mir)
 		var del := _action("delete", "Снять", "Снять с бойца  Del", "danger")
+		del.set_meta("ws_sfx_kind", "delete")
 		del.disabled = root_part
 		del.pressed.connect(func() -> void: ctl.delete_selected())
 		part_actions.add_child(del)
@@ -1977,7 +1975,14 @@ func _save_prefs() -> void:
 
 func _sfx(kind: String) -> void:
 	if ctl != null and ctl.sfx != null and is_instance_valid(ctl.sfx):
-		ctl.sfx.call("play", kind, "")
+		ctl.sfx.play(kind)
+
+
+## Звук кнопок (WsSfx.wire_buttons): наведение — тихий щелчок, нажатие — кнопка / вкладка, «Снять» — удаление, «Испытать» —
+## свой. Уже подключённые пропускаются — зовём после каждой пересборки панелей.
+func _wire() -> void:
+	if ctl != null and ctl.sfx != null and is_instance_valid(ctl.sfx):
+		ctl.sfx.wire_buttons(root)
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -72,7 +72,6 @@ const FREE_W_FRAC := 0.47   # UI v0.2: каталог 606 px + правая па
 const FREE_CX_FRAC := 0.553  # середина свободной зоны по ширине (606 … 1516 px из 1920)
 const FREE_H_FRAC := 0.78    # по высоте: между верхней панелью (92 px) и кнопкой ИСПЫТАТЬ
 const CAM_TAU := 0.22
-const SFX_SCRIPT := "res://scenes/workshop/ws_sfx.gd"
 const COL_OK := Color(0.55, 0.95, 0.45)
 const COL_WARN := Color(1.0, 0.72, 0.25)
 const COL_BAD := Color(1.0, 0.36, 0.28)
@@ -143,7 +142,7 @@ var pending_mirror: Dictionary = {}        # предпросмотр зерка
 var _preview_bp: BodyBlueprint = null      # стенд строится из него (предпросмотр зеркала)
 var _delete_armed: Dictionary = {}         # {uid, until} — удаление большой ветки ждёт второго Del
 var recent_parts: PackedStringArray = []   # недавно поставленные детали (фильтр каталога «Недавние»)
-var sfx: Node                              # звуки мастерской (WsSfx), если есть
+var sfx: WsSfx                             # звуки мастерской: щелчок по материалу, откручивание, отказ, кнопки
 var last_result: Dictionary = {}
 ## Испытание.
 var test_doll: ModularDoll
@@ -195,10 +194,9 @@ func _ready() -> void:
 	add_child(paint)
 	build_cam.fov = CAM_FOV
 	build_cam.make_current()
-	if ResourceLoader.exists(SFX_SCRIPT):
-		sfx = (load(SFX_SCRIPT) as GDScript).new() as Node
-		sfx.name = "Sfx"
-		add_child(sfx)
+	sfx = WsSfx.new()
+	sfx.name = "Sfx"
+	add_child(sfx)
 	weapon_bp = CraftEdit.load_weapon_preset("hammer")
 	var bp: BodyBlueprint = null
 	if load_autosave:
@@ -601,6 +599,7 @@ func undo() -> bool:
 	weapon_bp = s["weapon"]
 	_rebuild()
 	mark_dirty()
+	_play_sfx("undo", null)
 	_say("Отменено", COL_INFO)
 	return true
 
@@ -616,6 +615,7 @@ func redo() -> bool:
 	weapon_bp = s["weapon"]
 	_rebuild()
 	mark_dirty()
+	_play_sfx("redo", null)
 	_say("Возвращено", COL_INFO)
 	return true
 
@@ -1559,10 +1559,7 @@ static func _fade(n: Node, a: float) -> void:
 func _play_sfx(kind: String, d: PartDef, mat_id := "") -> void:
 	if sfx == null or not is_instance_valid(sfx):
 		return
-	var m := ""
-	if d != null and sfx.has_method("material_of"):
-		m = String(sfx.call("material_of", d, mat_id))
-	sfx.call("play", kind, m)
+	sfx.play(kind, WsSfx.material_of(d, mat_id) if d != null else "")
 
 
 func dragging() -> bool:
