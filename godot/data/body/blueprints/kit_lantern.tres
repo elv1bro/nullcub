@@ -47,7 +47,7 @@ nodes = Array[Dictionary]([{
 "anchor": "Anchor_End",
 "name": "LowerLeg_L",
 "parent": "4",
-"part": "kit_limb_piston_l",
+"part": "kit_limb_basic_l",
 "rest_deg": 5.0,
 "uid": "5"
 }, {
@@ -86,7 +86,7 @@ nodes = Array[Dictionary]([{
 "anchor": "Anchor_End",
 "name": "LowerLeg_R",
 "parent": "A",
-"part": "kit_limb_piston_l",
+"part": "kit_limb_basic_l",
 "rest_deg": 5.0,
 "uid": "B"
 }, {

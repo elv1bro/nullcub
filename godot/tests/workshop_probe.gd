@@ -62,6 +62,7 @@ extends Node
 
 const SCENE := "res://scenes/workshop/workshop_build.tscn"
 const REPORT := "res://tests/workshop_probe_report.json"
+const HUMAN_ENERGY := 82       # энергия human с ценой выноса (BodyBlueprint.reach_mult, WORKSHOP_V3.md §2); без выноса было 58
 const STABLE_S := 3.0
 const MAX_SPEED := 8.0          # м/с: покой после оживления (g = 2) — быстрее = «взрыв»
 const MAX_REACH := 2.6          # м от торса до любой части (самая длинная цепь сборки ≈ 1.6 м)
@@ -125,6 +126,14 @@ func _finish() -> void:
 
 # ------------------------------------------------------------------ headless
 
+## Σ BodyBlueprint.node_energy — energy_used() обязан совпадать с ценами узлов, которые видит игрок.
+func _sum_node_energy(bp: BodyBlueprint) -> int:
+	var t := 0
+	for n in bp.nodes:
+		t += bp.node_energy(String(n["uid"]))
+	return t
+
+
 func _run() -> void:
 	print("=== WORKSHOP PROBE ===")
 	await _frames(2)
@@ -161,7 +170,9 @@ func _presets() -> void:
 		frozen = frozen and (b as RigidBody3D).freeze
 		layer_ok = layer_ok and (b as RigidBody3D).collision_layer == WorkshopBuild.PICK_LAYER
 	_check("preset_stand_frozen", frozen and layer_ok, "тела заморожены, только слой выбора")
-	_check("preset_energy", bp.energy_used() == 58, "энергия human = 58", bp.energy_used())
+	# энергия по расстоянию (WORKSHOP_V3.md §2): 58 без выноса → 82 (кисти и стопы дальше от ядра — дороже)
+	_check("preset_energy", bp.energy_used() == HUMAN_ENERGY and bp.energy_used() == _sum_node_energy(bp), "энергия human = %d" % HUMAN_ENERGY,
+		bp.energy_used())
 	for id in CraftEdit.BODY_PRESETS:
 		var p := CraftEdit.load_body_preset(String(id))
 		_check("preset_%s_loads" % id, p != null and CraftEdit.friendly_errors(p).is_empty(), "пресет %s собирается" % id)
@@ -201,7 +212,8 @@ func _targets_attach() -> void:
 			n_head += 1
 	_check("targets_head_only_neck", n_head == 1 and String(_find_target(hs, "T", "Anchor_Neck").get("code", "")) == "replace",
 		"голова — только на шею (замена)", n_head)
-	# плечо на левый бок: призрак = посадка
+	# плечо на левый бок: призрак = посадка. Здесь проверяется посадка, не энергия: 4 новых узла на human не влезли бы в 100
+	ws.blueprint.energy_budget = 1000
 	var g1: Transform3D = ws.ghost_transform("wood_upper_arm", side_l)["xf"]
 	var n0 := ws.blueprint.nodes.size()
 	var r := ws.attach_part("wood_upper_arm", "T", "Anchor_Side_L", "body")
@@ -241,7 +253,8 @@ func _targets_attach() -> void:
 	for i in range(4):
 		ws.undo()
 	await _frames(1)
-	_check("attach_undo", ws.blueprint.nodes.size() == 14 and ws.blueprint.energy_used() == 58, "Ctrl+Z ×4 → снова human", ws.blueprint.nodes.size())
+	ws.blueprint.energy_budget = 100
+	_check("attach_undo", ws.blueprint.nodes.size() == 14 and ws.blueprint.energy_used() == HUMAN_ENERGY, "Ctrl+Z ×4 → снова human", ws.blueprint.nodes.size())
 
 
 func _detach() -> void:
@@ -266,28 +279,41 @@ func _detach() -> void:
 
 
 func _energy() -> void:
+	# энергия по расстоянию (WORKSHOP_V3.md §2): сначала снять левую ногу — на human (82 / 100) две руки с железом не встанут
+	var e0 := ws.blueprint.energy_used()
+	var leg := 0
+	for u in ["4", "5", "6"]:
+		leg += ws.blueprint.node_energy(u)
+	ws.detach_part("4", "body")
 	var r1 := ws.attach_part("wood_upper_arm", "T", "Anchor_Side_L", "body")
 	var u1 := String(r1.get("uid", ""))
 	var r2 := ws.attach_part("metal_forearm", u1, "Anchor_Elbow", "body")
 	var r3 := ws.attach_part("wood_upper_arm", "T", "Anchor_Side_R", "body")
 	var u3 := String(r3.get("uid", ""))
 	var used := ws.blueprint.energy_used()
-	_check("energy_filled", bool(r1["ok"]) and bool(r2["ok"]) and bool(r3["ok"]) and used == 84, "58 + 4 + 18 + 4 = 84", used)
+	var want := e0 - leg
+	for u in [u1, String(r2.get("uid", "")), u3]:
+		want += ws.blueprint.node_energy(u)
+	_check("energy_filled", bool(r1["ok"]) and bool(r2["ok"]) and bool(r3["ok"]) and used == want and used == _sum_node_energy(ws.blueprint),
+		"human − левая нога + плечо + железное предплечье + плечо = Σ цен узлов", [used, want])
+	_check("energy_reach_costs_more", ws.blueprint.node_energy(String(r2.get("uid", ""))) > CraftEdit.part("metal_forearm").energy,
+		"железное предплечье на локте дороже своей базовой цены (вынос от ядра)", ws.blueprint.node_energy(String(r2.get("uid", ""))))
 	var c := CraftEdit.check(ws.blueprint, "metal_forearm", u3, "Anchor_Elbow")
 	var n0 := ws.blueprint.nodes.size()
 	var sig := CraftEdit.signature(ws.blueprint)
 	var r4 := ws.attach_part("metal_forearm", u3, "Anchor_Elbow", "body")
 	_check("energy_refused", not bool(r4["ok"]) and String(c["code"]) == "energy" and ws.blueprint.nodes.size() == n0
-		and CraftEdit.signature(ws.blueprint) == sig and ws.blueprint.energy_used() == 84, "железное предплечье (18) не влезает в 16", c["reason"])
+		and CraftEdit.signature(ws.blueprint) == sig and ws.blueprint.energy_used() == used, "второе железное предплечье не влезает", c["reason"])
 	_check("energy_reason_text", String(c["reason"]).contains("энерги"), "причина — про энергию", c["reason"])
 	var t := _find_target(ws.targets_for("metal_forearm", "body"), u3, "Anchor_Elbow")
 	_check("energy_anchor_dark", bool(t.get("accepts", false)) and not bool(t.get("ok", true)), "якорь не светится (принимает вид, но энергии нет)")
 	var r5 := ws.attach_part("wood_lower_arm", u3, "Anchor_Elbow", "body")
-	_check("energy_small_fits", bool(r5["ok"]) and ws.blueprint.energy_used() == 88, "а деревянное (4) влезает", ws.blueprint.energy_used())
+	_check("energy_small_fits", bool(r5["ok"]) and ws.blueprint.energy_used() == used + ws.blueprint.node_energy(String(r5.get("uid", "")))
+		and ws.blueprint.energy_used() <= ws.blueprint.energy_budget, "а деревянное влезает", ws.blueprint.energy_used())
 
 
 func _stable() -> void:
-	# сборка из _energy: human + две руки на боках (одна с железным предплечьем)
+	# сборка из _energy: human без левой ноги + две руки на боках (одна с железным предплечьем)
 	var nodes := ws.blueprint.nodes.size()
 	var ok := ws.start_test()
 	await _frames(1)
@@ -355,13 +381,19 @@ func _mouse_path() -> void:
 	var hand := ws.stand.parts["Hand_R"] as Node3D
 	var h := ws.pick(cam.unproject_position(hand.global_position))
 	_check("pick_hand", String(h.get("uid", "")) == "9" and String(h.get("target", "")) == "body", "луч из камеры по кисти → узел 9", h)
-	# железное предплечье вместо деревянного (замена, кисть остаётся) и щиток на него (fixed: сливается с предплечьем)
+	# железное предплечье вместо деревянного (замена, кисть остаётся) и щиток на него (fixed: сливается с предплечьем). Энергия
+	# по расстоянию: сначала снять левую ногу, иначе щиток на железное предплечье не влезает в 100
+	ws.detach_part("4", "body")
+	var e0 := ws.blueprint.energy_used()
+	var old8 := ws.blueprint.node_energy("8")
 	var r1 := ws.attach_part("metal_forearm", "7", "Anchor_Elbow", "body")
 	var r2 := ws.attach_part("shield_plate", "8", "Anchor_Plate", "body")
 	await _frames(2)
 	var plate := String(r2.get("uid", ""))
 	_check("pick_replace_keeps_child", bool(r1["ok"]) and String(r1.get("replace", "")) == "8" and not CraftEdit.find(ws.blueprint, "9").is_empty()
-		and ws.blueprint.energy_used() == 84, "замена предплечья: кисть осталась, энергия 58 − 4 + 18 + 12", ws.blueprint.energy_used())
+		and ws.blueprint.energy_used() == e0 - old8 + ws.blueprint.node_energy(String(r1.get("uid", ""))) + ws.blueprint.node_energy(plate)
+		and ws.blueprint.energy_used() <= ws.blueprint.energy_budget, "замена предплечья: кисть осталась, энергия − старое + железное + щиток",
+		[ws.blueprint.energy_used(), e0, old8])
 	var ms := ws.part_meshes("body", plate)
 	var hp := {}
 	if not ms.is_empty():
@@ -727,9 +759,13 @@ func _kit_joint() -> void:
 	_check("joint_set_free", bool(r["ok"]) and String(CraftEdit.find(ws.blueprint, "2").get("joint", "")) == "free" and j != null
 		and String(j.get_meta("joint_type", "")) == "free" and ws.blueprint.energy_used() == e0,
 		"локоть левой руки — свободный (узел joint, meta joint_type сустава %s, энергия та же)" % jn, j.get_meta("joint_type", "") if j else "")
+	# энергия по расстоянию (WORKSHOP_V3.md §2): мотор 8 дорожает вместе с узлом колена — Δ = цена(база + 8) − цена(база)
+	var b5 := BodyBlueprint.node_base_energy(CraftEdit.find(ws.blueprint, "5"))
+	var d5 := float(ws.blueprint.node_reach().get("5", 0.0))
+	var want_m := e0 + BodyBlueprint.reach_cost(b5 + KitJoint.energy_of("motor"), d5) - BodyBlueprint.reach_cost(b5, d5)
 	var rm := ws.set_joint("5", "motor")
-	_check("joint_motor_energy", bool(rm["ok"]) and ws.blueprint.energy_used() == e0 + KitJoint.energy_of("motor"), "мотор на колено: энергия +8",
-		ws.blueprint.energy_used())
+	_check("joint_motor_energy", bool(rm["ok"]) and ws.blueprint.energy_used() == want_m, "мотор на колено: энергия +8 × вынос колена",
+		[ws.blueprint.energy_used(), want_m])
 	var bodies0 := ws.stand.parts.size() if ws.stand else -1
 	var rw := ws.set_joint("3", "weld")
 	await _frames(2)
@@ -745,15 +781,15 @@ func _kit_joint() -> void:
 		"ядро — корень: шарнира нет", rr["reason"])
 	var rh := ws.set_joint("H", "weld")
 	var rc := ws.set_joint("9", "weld")
-	ws.set_preset("kit_brawler")
+	ws.set_preset("kit_skull")   # D — султан на голове (декор; у Громилы наплечники сняты ради энергии, WORKSHOP_V3.md §2)
 	await _frames(1)
 	var sig_b := CraftEdit.signature(ws.blueprint)
 	var ra := ws.set_joint("1", "weld")
 	var rd := ws.set_joint("D", "spring")
 	_check("joint_refused_rules", not bool(rh["ok"]) and not bool(rc["ok"]) and not bool(ra["ok"]) and not bool(rd["ok"]) and String(rd["code"]) == "fixed"
-		and CraftEdit.signature(ws.blueprint) == sig_b, "нельзя: сварить голову, руку мышью, плечо с локтем на auto-суставе; шарнир у наплечника",
+		and CraftEdit.signature(ws.blueprint) == sig_b, "нельзя: сварить голову, руку мышью, плечо с локтем на auto-суставе; шарнир у декора",
 		[rh["reason"], rc["reason"], ra["reason"], rd["reason"]])
-	ws.undo()   # set_preset(kit_brawler) → назад к kit_human со сваркой
+	ws.undo()   # set_preset(kit_skull) → назад к kit_human со сваркой
 	await _frames(1)
 	var welded := String(CraftEdit.find(ws.blueprint, "3").get("joint", "")) == "weld"
 	ws.undo()

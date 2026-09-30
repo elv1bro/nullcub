@@ -830,7 +830,7 @@ func begin_drag(part_id: String, screen_pos: Vector2) -> void:
 		elif bool(t["accepts"]) and String(t["code"]) == "energy":
 			energy_block = true
 	if not any_ok and energy_block:
-		_say("Не хватает энергии: %s стоит %d, свободно %d" % [d.title, d.energy, energy_free()], COL_BAD)
+		_say("Не хватает энергии: %s стоит от ⚡%d (дальше от ядра дороже), свободно %d" % [d.title, d.energy, energy_free()], COL_BAD)
 	elif not any_ok:
 		_say("Некуда поставить деталь «%s»: нет свободного подходящего якоря" % d.title, COL_WARN)
 	update_drag(screen_pos)

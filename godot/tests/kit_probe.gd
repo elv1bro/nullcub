@@ -835,7 +835,7 @@ func _check_rejects() -> void:
 	var cases := [
 		["kit_human", "1", "mat", "unobtainium", "неизвестный материал", "mat_unknown"],
 		["human", "1", "mat", "iron", "не красится", "mat_on_wood"],
-		["kit_horned", "D", "joint", "free", "намертво", "joint_on_deco"],
+		["kit_skull", "D", "joint", "free", "намертво", "joint_on_deco"],   # султан на голове (декор)
 		["kit_human", "T", "joint", "motor", "корня", "joint_on_root"],
 		["kit_human", "H", "joint", "weld", "голову", "weld_head"],
 		["kit_human", "9", "joint", "weld", "управляемую", "weld_control"],
@@ -1221,8 +1221,13 @@ func _joint_test(pos: Vector3) -> void:
 	var ref: ModularDoll = presets.get("kit_human")
 	if not _check(ref != null, P + ": нужен пресет kit_human"):
 		return
-	_check(bp.energy_used() == ref.blueprint.energy_used() + 2 + 8, P + ": энергия + пружина 2 + мотор 8",
-		[bp.energy_used(), ref.blueprint.energy_used()])
+	# энергия по расстоянию (WORKSHOP_V3.md §2): шарнир дорожает вместе с узлом — пружина 2 на локте, мотор 8 на плече ×reach_mult
+	var reach := ref.blueprint.node_reach()
+	var want := ref.blueprint.energy_used()
+	for jj in [["2", 2], ["7", 8]]:
+		var base := BodyBlueprint.node_base_energy(ref.blueprint.find_node(jj[0]))
+		want += BodyBlueprint.reach_cost(base + int(jj[1]), float(reach[jj[0]])) - BodyBlueprint.reach_cost(base, float(reach[jj[0]]))
+	_check(bp.energy_used() == want, P + ": энергия + пружина 2 + мотор 8 (× вынос узла)", [bp.energy_used(), want])
 	var d := _spawn_bp(bp, pos, 3)
 	var r := _check_doll(P, d, bp.id)
 	_watch(P, d)

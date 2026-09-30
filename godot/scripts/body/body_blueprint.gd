@@ -33,15 +33,101 @@ static func part_def(part_id: String) -> PartDef:
 	return load(path) as PartDef
 
 
-## Σ PartDef.energy + Σ энергия типов шарниров (KitJoint: пружина 2, мотор 8).
+## Энергия по расстоянию (docs/plan-demo/WORKSHOP_V3.md §2): чем дальше деталь от ядра, тем дороже — дефицит без смены бюджета.
+## Цена узла = ceil((PartDef.energy + энергия шарнира) × reach_mult(d)), d — вынос детали от ядра по цепочке (node_reach).
+const ENERGY_REACH_FREE_M := 0.3      # ближе — без наценки (голова, плечи, бёдра)
+const ENERGY_REACH_PER_M := 1.0       # +100 % за каждый метр дальше ENERGY_REACH_FREE_M
+const _MIRROR_X := Basis(Vector3(-1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1))
+static var _socket_cache: Dictionary = {}
+
+
+## Множитель цены за вынос детали на d метров от центра ядра.
+static func reach_mult(d: float) -> float:
+	return 1.0 + maxf(0.0, d - ENERGY_REACH_FREE_M) * ENERGY_REACH_PER_M
+
+
+## Цена по расстоянию: базовая энергия base на расстоянии d.
+static func reach_cost(base: int, d: float) -> int:
+	return int(ceil(base * reach_mult(d) - 0.001)) if base > 0 else 0
+
+
+## Σ цен узлов (node_energy): детали и шарниры с наценкой за расстояние от ядра.
 func energy_used() -> int:
 	var total := 0
+	var reach := node_reach()
 	for n in nodes:
-		var d := part_def(String(n.get("part", "")))
-		if d != null:
-			total += d.energy
-		total += KitJoint.energy_of(String(n.get("joint", "")))
+		total += _node_energy(n, float(reach.get(String(n.get("uid", "")), 0.0)))
 	return total
+
+
+## Цена узла uid с наценкой за расстояние.
+func node_energy(uid: String) -> int:
+	var n := find_node(uid)
+	return _node_energy(n, float(node_reach().get(uid, 0.0))) if not n.is_empty() else 0
+
+
+## Базовая цена узла без расстояния: PartDef.energy + шарнир (KitJoint: пружина 2, мотор 8).
+static func node_base_energy(n: Dictionary) -> int:
+	var d := part_def(String(n.get("part", "")))
+	return (d.energy if d != null else 0) + KitJoint.energy_of(String(n.get("joint", "")))
+
+
+static func _node_energy(n: Dictionary, d: float) -> int:
+	return reach_cost(node_base_energy(n), d)
+
+
+## uid -> вынос детали от ядра (м): путь по цепочке — Σ расстояний между началами деталей от центра ядра до этой детали
+## (якоря, Socket и зеркало — как ModularDoll._build). От позы не зависит: кисть на согнутой и на вытянутой руке стоит одинаково.
+## Узлы, до которых цепочка не доходит, — 0.
+func node_reach() -> Dictionary:
+	var out := {}
+	var xf := {}       # uid -> Transform3D
+	var mir := {}      # uid -> bool
+	for n in sorted_nodes():
+		var uid := String(n.get("uid", ""))
+		var parent := String(n.get("parent", ""))
+		if parent == "" or not xf.has(parent):
+			xf[uid] = Transform3D.IDENTITY
+			mir[uid] = false
+			out[uid] = 0.0
+			continue
+		var pd := part_def(String(find_node(parent).get("part", "")))
+		var a: Dictionary = part_anchors(pd).get(String(n.get("anchor", "")), {})
+		if a.is_empty():
+			xf[uid] = xf[parent]
+			mir[uid] = mir[parent]
+			out[uid] = out[parent]
+			continue
+		var pm: bool = mir[parent]
+		var a_local: Transform3D = a["xf"]
+		if pm:
+			a_local = _mirror_xf(a_local)
+		var a_xf: Transform3D = (xf[parent] as Transform3D) * a_local
+		var m := pm != bool(a["mirror"])
+		var sock := _socket_xf(part_def(String(n.get("part", ""))))
+		if m:
+			sock = _mirror_xf(sock)
+		xf[uid] = a_xf * sock.affine_inverse()
+		mir[uid] = m
+		out[uid] = float(out[parent]) + (xf[uid] as Transform3D).origin.distance_to((xf[parent] as Transform3D).origin)
+	return out
+
+
+static func _mirror_xf(t: Transform3D) -> Transform3D:
+	return Transform3D(_MIRROR_X * t.basis * _MIRROR_X, _MIRROR_X * t.origin)
+
+
+## Локальный кадр маркера Socket сцены детали (кэш по сцене; нет Socket — IDENTITY).
+static func _socket_xf(d: PartDef) -> Transform3D:
+	if d == null or d.scene == null:
+		return Transform3D.IDENTITY
+	var key := d.scene.resource_path
+	if not _socket_cache.has(key):
+		var inst := d.scene.instantiate()
+		var s := inst.get_node_or_null("Socket") as Node3D
+		_socket_cache[key] = s.transform if s != null else Transform3D.IDENTITY
+		inst.free()
+	return _socket_cache[key]
 
 
 ## Пустой массив = чертёж корректен; иначе — список ошибок по-русски.

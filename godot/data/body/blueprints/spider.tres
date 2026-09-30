@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_sd8wt")
 id = "spider"
-title = "Паук: шесть ног"
+title = "Паук: четыре ноги"
 nodes = Array[Dictionary]([{
 "anchor": "",
 "parent": "",
@@ -50,38 +50,6 @@ nodes = Array[Dictionary]([{
 "parent": "5",
 "part": "wood_foot",
 "uid": "6"
-}, {
-"anchor": "Anchor_Side_L",
-"parent": "T",
-"part": "wood_upper_leg",
-"uid": "7"
-}, {
-"anchor": "Anchor_Knee",
-"parent": "7",
-"part": "wood_lower_leg",
-"rest_deg": 20.0,
-"uid": "8"
-}, {
-"anchor": "Anchor_Ankle",
-"parent": "8",
-"part": "wood_foot",
-"uid": "9"
-}, {
-"anchor": "Anchor_Side_R",
-"parent": "T",
-"part": "wood_upper_leg",
-"uid": "A"
-}, {
-"anchor": "Anchor_Knee",
-"parent": "A",
-"part": "wood_lower_leg",
-"rest_deg": 20.0,
-"uid": "B"
-}, {
-"anchor": "Anchor_Ankle",
-"parent": "B",
-"part": "wood_foot",
-"uid": "C"
 }, {
 "anchor": "Anchor_Shoulder_L",
 "parent": "T",

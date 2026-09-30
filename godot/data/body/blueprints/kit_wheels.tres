@@ -33,7 +33,7 @@ nodes = Array[Dictionary]([{
 "anchor": "Anchor_End",
 "name": "LowerArm_L",
 "parent": "1",
-"part": "kit_limb_robotic_s",
+"part": "kit_limb_thin_s",
 "rest_deg": 10.0,
 "uid": "2"
 }, {
@@ -50,7 +50,6 @@ nodes = Array[Dictionary]([{
 "uid": "4"
 }, {
 "anchor": "Anchor_End",
-"joint": "spring",
 "name": "LowerLeg_L",
 "parent": "4",
 "part": "kit_limb_robotic_l",
@@ -72,7 +71,7 @@ nodes = Array[Dictionary]([{
 "anchor": "Anchor_End",
 "name": "LowerArm_R",
 "parent": "7",
-"part": "kit_limb_robotic_s",
+"part": "kit_limb_thin_s",
 "rest_deg": 10.0,
 "uid": "8"
 }, {
@@ -89,7 +88,6 @@ nodes = Array[Dictionary]([{
 "uid": "A"
 }, {
 "anchor": "Anchor_End",
-"joint": "spring",
 "name": "LowerLeg_R",
 "parent": "A",
 "part": "kit_limb_robotic_l",

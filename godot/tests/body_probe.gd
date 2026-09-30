@@ -463,7 +463,7 @@ func _respawn_test() -> void:
 		_fail("respawn: нет spider")
 		return
 	var nd := m.respawn_doll(d) as ModularDoll
-	r["same_preset"] = nd != null and nd.blueprint.id == "spider" and nd.parts.size() == 20 and not nd.is_broken()
+	r["same_preset"] = nd != null and nd.blueprint.id == "spider" and nd.parts.size() == 14 and not nd.is_broken()   # 4 ноги × 3 + торс + голова (WORKSHOP_V3.md §2)
 	if not r["same_preset"]:
 		_fail("respawn: Match.respawn_doll не пересоздал spider")
 	if nd != null:

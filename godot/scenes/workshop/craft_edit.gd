@@ -502,6 +502,11 @@ static func energy_used(bp: Resource) -> int:
 	return 0
 
 
+## Отказ по энергии: цена детали зависит от выноса (BodyBlueprint.reach_mult, WORKSHOP_V3.md §2), поэтому — итог после установки.
+static func energy_reason(what: String, after: int, budget: int) -> String:
+	return "Не хватает энергии на %s: будет %d / %d. Чем дальше от ядра, тем дороже" % [what, after, budget]
+
+
 static func energy_budget(bp: Resource) -> int:
 	return (bp as BodyBlueprint).energy_budget if bp is BodyBlueprint else 0
 
@@ -558,10 +563,8 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 		var after := (trial as BodyBlueprint).energy_used()
 		r["energy_after"] = after
 		if after > (bp as BodyBlueprint).energy_budget and after > energy_used(bp):
-			var free_e: int = (bp as BodyBlueprint).energy_budget - energy_used(bp)
-			var freed: int = energy_used(bp) + d.energy - after   # энергия снятого при замене
 			r["code"] = "energy"
-			r["reason"] = "Не хватает энергии: %s стоит %d, свободно %d" % [d.title, d.energy, free_e + freed]
+			r["reason"] = energy_reason(d.title, after, (bp as BodyBlueprint).energy_budget)
 			return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():
@@ -983,8 +986,7 @@ static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
 	r["energy_after"] = after
 	if after > body.energy_budget and after > body.energy_used():
 		r["code"] = "energy"
-		r["reason"] = "Не хватает энергии: шарнир «%s» стоит %d, свободно %d" % [joint_title(jt), KitJoint.energy_of(jt),
-			body.energy_budget - body.energy_used() + KitJoint.energy_of(String(r["joint_before"]))]
+		r["reason"] = energy_reason("шарнир «%s»" % joint_title(jt), after, body.energy_budget)
 		return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():

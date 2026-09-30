@@ -896,17 +896,15 @@ func _build_presets() -> void:
 			_save_blueprint("kit_human", "Кит «Человек»", nodes, Array(human.get("control")), int(human.get("energy_budget")))
 			kit_human_nodes = nodes
 
-	# brawler — ящик, голова-ящик, толстые руки (варежки — крашеный лист), поршни, ботинки, железные наплечники (крашеный лист по
-	# умолчанию сливался с крашеными руками в одно пятно); правое плечо — мотор (бьёт), его шестерня видна из-под наплечника
+	# brawler — ящик, голова-ящик, толстые руки (варежки — крашеный лист), поршень + базовая голень, ботинки. Энергия по расстоянию
+	# (WORKSHOP_V3.md §2, 30.09): без мотора плеча и железных наплечников, нижняя голень базовая — 119 → ≤ 100
 	var n: Array = [_n("T", "kit_core_crate", "", "", "Torso"), _n("H", "kit_head_crate", "T", "Anchor_Neck", "Head")]
 	var arm := ["kit_limb_thick_s", "kit_limb_thick_s", "kit_hand_mitten"]
-	var leg := ["kit_limb_piston_l", "kit_limb_piston_l", "kit_foot_boot"]
+	var leg := ["kit_limb_piston_l", "kit_limb_basic_l", "kit_foot_boot"]
 	_chain(n, "123", "Anchor_Shoulder_L", arm, ARM_L, [{}, {"rest_deg": ELBOW_REST}, {"mat": "rust_red"}])
 	_chain(n, "456", "Anchor_Hip_L", leg, LEG_L, [{}, {"rest_deg": KNEE_REST}, {}])
-	_chain(n, "789", "Anchor_Shoulder_R", arm, ARM_R, [{"joint": "motor"}, {"rest_deg": ELBOW_REST}, {"mat": "rust_red"}])
+	_chain(n, "789", "Anchor_Shoulder_R", arm, ARM_R, [{}, {"rest_deg": ELBOW_REST}, {"mat": "rust_red"}])
 	_chain(n, "ABC", "Anchor_Hip_R", leg, LEG_R, [{}, {"rest_deg": KNEE_REST}, {}])
-	n.append(_n("D", "kit_deco_pauldron", "1", "Anchor_Deco", "", {"mat": "iron"}))
-	n.append(_n("E", "kit_deco_pauldron", "7", "Anchor_Deco", "", {"mat": "iron"}))
 	_save_blueprint("kit_brawler", "Громила", n, ["9"])
 	var brawler_nodes: Array = n.duplicate(true)
 
@@ -922,18 +920,16 @@ func _build_presets() -> void:
 	n.append(_n("D", "kit_deco_banner", "T", "Anchor_Back"))
 	_save_blueprint("kit_bot", "Робот", n, ["9"])
 
-	# horned — железная бочка, рогатый шлем, кости, бронеплиты с коленями-моторами (держат тяжёлое железо), клешни,
-	# железные ботинки, шипастые ошейники на бёдрах (meta body_mult ×1.25 у бедра)
+	# horned — железная бочка, рогатый шлем, кости, бронеплиты, клешни, железные ботинки. Энергия по расстоянию (WORKSHOP_V3.md §2,
+	# 30.09): колени без моторов и без шипастых ошейников на бёдрах — 124 → ≤ 100
 	n = [_n("T", "kit_core_barrel", "", "", "Torso", {"mat": "iron"}), _n("H", "kit_head_horned", "T", "Anchor_Neck", "Head")]
 	arm = ["kit_limb_bone_s", "kit_limb_bone_s", "kit_hand_claw"]
 	leg = ["kit_limb_plate_l", "kit_limb_plate_l", "kit_foot_boot"]
 	var iron := {"mat": "iron"}
 	_chain(n, "123", "Anchor_Shoulder_L", arm, ARM_L, [{}, {"rest_deg": ELBOW_REST}, {}])
-	_chain(n, "456", "Anchor_Hip_L", leg, LEG_L, [{}, {"joint": "motor", "rest_deg": KNEE_REST}, iron])
+	_chain(n, "456", "Anchor_Hip_L", leg, LEG_L, [{}, {"rest_deg": KNEE_REST}, iron])
 	_chain(n, "789", "Anchor_Shoulder_R", arm, ARM_R, [{}, {"rest_deg": ELBOW_REST}, {}])
-	_chain(n, "ABC", "Anchor_Hip_R", leg, LEG_R, [{}, {"joint": "motor", "rest_deg": KNEE_REST}, iron])
-	n.append(_n("D", "kit_deco_spikes_l", "4", "Anchor_Deco"))
-	n.append(_n("E", "kit_deco_spikes_l", "A", "Anchor_Deco"))
+	_chain(n, "ABC", "Anchor_Hip_R", leg, LEG_R, [{}, {"rest_deg": KNEE_REST}, iron])
 	_save_blueprint("kit_horned", "Рогатый", n, ["9"])
 
 	# king — ржавый хаб, белая голова с короной, оливковые толстые плечи, щупальца с шаром булавы вместо кисти, ноги из ореха. Кисти нет
@@ -951,11 +947,12 @@ func _build_presets() -> void:
 	_chain(n, "ABC", "Anchor_Hip_R", leg, LEG_R, [dark, {"mat": "wood_dark", "rest_deg": KNEE_REST}, {}])
 	_save_blueprint("kit_king", "Король-булава", n, ["8"])
 
-	# spider — хаб, круглая голова, шесть базовых ног L на бёдрах, боках и плечах, ботинки (углы — как пресет spider)
+	# spider — хаб, круглая голова, четыре базовые ноги L на бёдрах и плечах, ботинки (углы — как пресет spider). Энергия по
+	# расстоянию (WORKSHOP_V3.md §2, 30.09): шесть ног стоили 134 — боковые пары сняты
 	n = [_n("T", "kit_core_ball"), _n("H", "kit_head_round", "T", "Anchor_Neck")]
 	leg = ["kit_limb_basic_l", "kit_limb_basic_l", "kit_foot_boot"]
-	for s in [["123", "Anchor_Hip_L", 22.0, 15.0], ["456", "Anchor_Hip_R", 22.0, 15.0], ["789", "Anchor_Side_L", NAN, 20.0],
-			["ABC", "Anchor_Side_R", NAN, 20.0], ["DEF", "Anchor_Shoulder_L", 110.0, 10.0], ["GIJ", "Anchor_Shoulder_R", 110.0, 10.0]]:
+	for s in [["123", "Anchor_Hip_L", 22.0, 15.0], ["456", "Anchor_Hip_R", 22.0, 15.0],
+			["DEF", "Anchor_Shoulder_L", 110.0, 10.0], ["GIJ", "Anchor_Shoulder_R", 110.0, 10.0]]:
 		var u := String(s[0])
 		var up: Dictionary = {} if is_nan(float(s[2])) else {"rest_deg": float(s[2])}
 		_chain(n, u, String(s[1]), leg, ["", "LowerLeg_" + u[1]], [up, {"rest_deg": float(s[3])}, {}])
@@ -990,23 +987,24 @@ func _build_presets() -> void:
 	n.append(_n("E", "kit_deco_gauntlet_s", "8", "Anchor_Deco"))
 	_save_blueprint("kit_skull", "Скелет", n, ["9"])
 
-	# wheels — каталка: бочка из-под масла, голова-банка с антенной, робо-руки с лопастями, робо-ноги с коленями-пружинами
-	# (подпрыгивает на ходу), вместо стоп колёса
+	# wheels — каталка: бочка из-под масла, голова-банка с антенной, робо-плечи и тонкие предплечья с лопастями, робо-ноги, вместо
+	# стоп колёса. Энергия по расстоянию (WORKSHOP_V3.md §2, 30.09): колени без пружин, предплечья тонкие — 116 → ≤ 100
 	n = [_n("T", "kit_core_drum", "", "", "Torso"), _n("H", "kit_head_can", "T", "Anchor_Neck", "Head"),
 		_n("D", "kit_deco_antenna", "H", "Anchor_Top")]
-	arm = ["kit_limb_robotic_s", "kit_limb_robotic_s", "kit_hand_paddle"]
+	arm = ["kit_limb_robotic_s", "kit_limb_thin_s", "kit_hand_paddle"]
 	leg = ["kit_limb_robotic_l", "kit_limb_robotic_l", "kit_foot_wheel"]
 	_chain(n, "123", "Anchor_Shoulder_L", arm, ARM_L, [{}, {"rest_deg": ELBOW_REST}, {}])
-	_chain(n, "456", "Anchor_Hip_L", leg, LEG_L, [{}, knee_spring, {}])
+	_chain(n, "456", "Anchor_Hip_L", leg, LEG_L, [{}, {"rest_deg": KNEE_REST}, {}])
 	_chain(n, "789", "Anchor_Shoulder_R", arm, ARM_R, [{}, {"rest_deg": ELBOW_REST}, {}])
-	_chain(n, "ABC", "Anchor_Hip_R", leg, LEG_R, [{}, knee_spring, {}])
+	_chain(n, "ABC", "Anchor_Hip_R", leg, LEG_R, [{}, {"rest_deg": KNEE_REST}, {}])
 	_save_blueprint("kit_wheels", "Каталка", n, ["9"])
 
 	# lantern — фонарщик: ядро-котёл, голова-фонарь, дымоход на спине, руки — гнутая труба + тонкое предплечье; на правом вместо
 	# кисти бур (навершие кита, слито с предплечьем) на локте-моторе, на левом — тиски; поршневые ноги, железные ботинки.
-	# Рука мышью ведёт предплечье с буром (как у kit_king: control — деталь, несущая навершие)
+	# Рука мышью ведёт предплечье с буром (как у kit_king: control — деталь, несущая навершие). Энергия по расстоянию
+	# (WORKSHOP_V3.md §2, 30.09): нижняя голень базовая — 104 → ≤ 100
 	n = [_n("T", "kit_core_boiler", "", "", "Torso"), _n("H", "kit_head_lantern", "T", "Anchor_Neck", "Head")]
-	leg = ["kit_limb_piston_l", "kit_limb_piston_l", "kit_foot_boot"]
+	leg = ["kit_limb_piston_l", "kit_limb_basic_l", "kit_foot_boot"]
 	_chain(n, "123", "Anchor_Shoulder_L", ["kit_limb_curved_s", "kit_limb_thin_s", "kit_hand_clamp"], ARM_L, [{}, {"rest_deg": ELBOW_REST}, {}])
 	_chain(n, "456", "Anchor_Hip_L", leg, LEG_L, [{}, {"rest_deg": KNEE_REST}, iron])
 	_chain(n, "789", "Anchor_Shoulder_R", ["kit_limb_curved_s", "kit_limb_thin_s", "kit_drill_head"], ["UpperArm_R", "LowerArm_R"],
