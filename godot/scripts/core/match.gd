@@ -6,8 +6,9 @@
 ## DOUBLE BLOW!, «N HIT COMBO!», KO!, SUDDEN DEATH; цвет по виду), hp_changed, combo_changed, ko, match_over.
 ## Sudden Death (В8): с time_limit_s шаг n = floor((t − time_limit_s) / SUDDEN_DEATH_STEP_S): knockback ×(1 + 0.25n), мышцы/трение
 ## ×max(0.3, 1 − 0.15n) через Doll.set_stability; урон не растёт. Молот на n=1 и мост на n=3 — сигнал sudden_death_step(n) для арены.
-## Hard timeout: места по ключу HP → нанесённый урон → меньше полученного → сильнейший удар → ничья. KO: последний живой побеждает.
-## Итоги: {places, stats: {doll: stats}, medals: {name: doll}, winner, draw, reason, duration_s, ko_records, combo_score: {doll: float}}.
+## Hard timeout: места по ключу HP → нанесённый урон → меньше полученного → сильнейший удар → ничья. KO: последний живой побеждает;
+## все оставшиеся выбыли в одном тике физики (голова о голову) — ничья, победитель только живой (build_results).
+## Итоги: {places, ranks, stats: {doll: stats}, medals: {name: doll}, winner, draw, reason, duration_s, ko_records, combo_score: {doll: float}}.
 ## Медали (09): Winner, Hardest Hit, Frequent Flyer, Wall Inspector, Weapon Master, Self Destruction, Acrobat, Survivor
 ## (одна медаль — один игрок, при нулевом показателе не выдаётся; Showman — только с вебкой, этап 10).
 ## Стабильный API для подклассов (scripts/pve/wave_director.gd, WaveDirector extends Match — 29.09): члены _late_ready, _physics_process,
@@ -68,7 +69,7 @@ var _countdown_left := 0.0
 var _countdown_shown := -1
 var _order: Array = []          # куклы в порядке регистрации (Array[Doll])
 var _spawn: Dictionary = {}     # doll -> Vector3 (позиция при регистрации; fallback, если у арены нет spawn_points)
-var _ko_order: Array = []       # жертвы по порядку KO
+var _ko_order: Array = []       # жертвы по порядку KO (API подклассов и камеры; места — по ko_records, _ko_groups)
 var _scan_t := 0.0
 var _started := false
 var _time_effects: Array = []   # [{"scale": float, "left": float}] — hit stop / slow-mo в реальных секундах
@@ -442,6 +443,9 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	rec["attacker"] = attacker
 	rec["match_time"] = fight_time
 	rec["sd_step"] = sd_step
+	# тик физики: KO в одном тике (голова о голову бьёт обоих) делят место, живых не осталось — ничья (build_results).
+	# fight_time для этого не годится — Match может стоять в дереве между куклами и прибавить delta между их KO
+	rec["physics_frame"] = Engine.get_physics_frames()
 	ko_records.append(rec)
 	_ko_order.append(victim)
 	if attacker is Doll and attacker != victim:
@@ -535,7 +539,29 @@ func _finish(reason: String) -> void:
 	match_over.emit(winner, results)
 
 
+## Выбывшие группами по тику физики KO — от последнего тика к первому (Array[Array[Doll]]), внутри группы по player_index.
+func _ko_groups() -> Array:
+	var groups: Array = []
+	var frame := 0
+	for i in range(ko_records.size() - 1, -1, -1):
+		var r: Dictionary = ko_records[i]
+		var v: Variant = r.get("victim")
+		if not is_instance_valid(v):
+			continue
+		var f := int(r.get("physics_frame", -1 - i))
+		if groups.is_empty() or f != frame:
+			groups.append([])
+			frame = f
+		(groups[-1] as Array).append(v)
+	for g in groups:
+		(g as Array).sort_custom(func(a: Doll, b: Doll) -> bool: return a.player_index < b.player_index)
+	return groups
+
+
 ## Места, статистика, медали, combo_score. reason: "ko" | "timeout".
+## Победитель — только живая кукла. ranks[i] — место places[i] (0 = первое): живые с равным ключом и выбывшие в одном тике
+## делят место (1, 1, 3). Живых нет (все оставшиеся выбыли в одном тике — клинч голова-о-голову бьёт обоих) — ничья:
+## winner null, draw, медали Winner нет, у HUD нет короны (06-combat-hud.md «Одновременный KO»).
 func build_results(reason: String = "timeout") -> Dictionary:
 	var alive := alive_dolls()
 	alive.sort_custom(func(a: Doll, b: Doll) -> bool:
@@ -545,21 +571,30 @@ func build_results(reason: String = "timeout") -> Dictionary:
 			return a.player_index < b.player_index
 		return _key_gt(ka, kb))
 	var places: Array = []
-	places.append_array(alive)
-	for i in range(_ko_order.size() - 1, -1, -1):
-		var v: Doll = _ko_order[i]
-		if is_instance_valid(v) and not places.has(v):
-			places.append(v)
+	var ranks: Array = []
+	for i in range(alive.size()):
+		var tied := i > 0 and _key_eq(rank_key(alive[i]), rank_key(alive[i - 1]))
+		ranks.append(ranks[i - 1] if tied else i)
+		places.append(alive[i])
+	for g in _ko_groups():
+		var rank := places.size()
+		for v in g:
+			if not places.has(v):
+				places.append(v)
+				ranks.append(rank)
 	for d in dolls():
 		if not places.has(d):
+			ranks.append(places.size())
 			places.append(d)
 	var draw := false
 	var winner: Doll = null
-	if places.size() >= 1:
-		winner = places[0]
-		if alive.size() >= 2 and _key_eq(rank_key(alive[0]), rank_key(alive[1])):
-			draw = true
+	if not alive.is_empty():
+		winner = alive[0]
+		if alive.size() >= 2 and int(ranks[1]) == 0:
+			draw = true   # hard timeout: равный ключ HP → урон → полученный → сильнейший удар
 			winner = null
+	elif not places.is_empty():
+		draw = true   # живых нет: одновременный KO
 	var stats: Dictionary = {}
 	var combo_score: Dictionary = {}
 	for d in places:
@@ -593,7 +628,7 @@ func build_results(reason: String = "timeout") -> Dictionary:
 	if survivor != null:
 		medals["Survivor"] = survivor
 	return {
-		"places": places, "stats": stats, "medals": medals, "winner": winner, "draw": draw, "reason": reason,
+		"places": places, "ranks": ranks, "stats": stats, "medals": medals, "winner": winner, "draw": draw, "reason": reason,
 		"duration_s": fight_time, "ko_records": ko_records.duplicate(), "combo_score": combo_score,
 	}
 

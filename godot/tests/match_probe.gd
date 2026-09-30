@@ -7,7 +7,8 @@
 ##   и совпадает с Match.time_left_s(); hits — Match.hit ≥ 1; announce_hit — HEAD/BODY/DOUBLE BLOW! ≥ 1; hud_hp_synced — hp панели
 ##   HUD == hp куклы после каждого удара; fx — ImpactFx появлялся под Match;
 ##   ko — KO до max_s; ko_broken — у жертвы суставов 0, частей 14, разлёт ≥ 1.5 м через 1 с; ko_card — карточка KO показана;
-##   announce_ko; match_over с winner (живой), places 2, medals.Winner; results_visible — панель итогов показана (реальное время);
+##   announce_ko; match_over с winner (живой) или ничья при KO обоих в одном тике (winner null, draw), places 2, medals.Winner == winner;
+##   results_visible — панель итогов показана (реальное время);
 ##   time_scale_restored — Engine.time_scale вернулся к 1; restart — после restart(): фаза COUNTDOWN, итоги скрыты, куклы новые,
 ##   живые, hp 100, панели HUD сброшены.
 ##   sd=1 — режим Sudden Death: time_limit_s = 3, куклы стоят; проверки sd_phase, sd_hammer (площадка уронила молот на шаге
@@ -16,6 +17,7 @@
 ##   HIT_FX (29.09): fx_directors — Match создал HitFxDirector и SfxDirector; hitfx_env_kind — ударов kind environment с уровнем 0;
 ##   info.hitfx — гистограмма уровней Match.hit_fx, crits[] (t, tier, score, damage), env_slam, fight_s_per_crit.
 ## Запуск: godot --headless --path . --fixed-fps 60 res://tests/match_probe.tscn -- "scene=ruins,max_s=120" (scene=ruins|workshop|void|scrap)
+##   retreat=<с> — отход наскока вместо RUSH_RETREAT_S (retreat=1.0 в Void — клинч голова-о-голову, двойной KO → ничья).
 ## Отчёт tests/match_probe_report.json (или out=res://…), exit 0/1.
 extends Node3D
 
@@ -26,7 +28,8 @@ const RUSH_NEAR := 1.3
 const RUSH_RETREAT_S := 1.2             # отход полной тягой: разбег 2–3 м до следующего наскока. v7: 1.0 → 1.2 — с мягкими конечностями
                                         # и расслаблением на удар (FEEL_TARGET §9.4) при 1.0 в Void бой кончался клинчем голова-о-голову,
                                         # KO обоих в одном тике (42.5 с) → Match.winner мёртв, match_winner = 0 (3 прогона одинаково);
-                                        # 1.2 и 0.9 — KO одного на всех трёх площадках
+                                        # 1.2 и 0.9 — KO одного на всех трёх площадках. 29.09: двойной KO — ничья (Match.build_results),
+                                        # match_winner её принимает; 1.2 оставлен — проба проверяет обычный KO
 const DASH_FROM_M := 2.0                 # рывок, если до соперника дальше (кулдаун Tuning.DASH_COOLDOWN_S)
 const STUCK_S := 6.0                 # без ударов столько секунд — куклы заклинило геометрией (полка, станок): прыжок врозь
 const UNSTICK_S := 1.2
@@ -40,6 +43,7 @@ var hitfx_env_kind := 0
 var env_slams := 0
 var max_s := 120.0
 var sd_mode := false
+var rush_retreat_s := RUSH_RETREAT_S
 const SD_TIME_LIMIT_S := 3.0
 const SD_SETTLE_S := 2.0             # после шага обрыва мостов ждём столько: доски должны упасть
 var plank_y_at_break: Dictionary = {}   # RopeBridge -> Array[float] высоты досок в момент break_apart
@@ -89,6 +93,7 @@ func _ready() -> void:
 				"max_s": max_s = float(p[1])
 				"sd": sd_mode = p[1] != "0"
 				"out": out_path = p[1]
+				"retreat": rush_retreat_s = float(p[1])
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
 	add_child(pg)
 	p1 = pg.get_node("P1")
@@ -150,6 +155,7 @@ func _ready() -> void:
 			if stage == 0:
 				env_slams += 1)
 	report["info"]["scene"] = scene_id
+	report["info"]["rush_retreat_s"] = rush_retreat_s
 
 
 func _rush(d: Doll, other: Doll) -> void:
@@ -178,7 +184,7 @@ func _rush(d: Doll, other: Doll) -> void:
 	if t < until:
 		d.input_vec = Vector2(-sgn, 0.0)
 	elif absf(dx) < RUSH_NEAR and absf(dy) < 1.2:
-		rush_retreat[d] = t + RUSH_RETREAT_S
+		rush_retreat[d] = t + rush_retreat_s
 		d.input_vec = Vector2(-sgn, 0.0)
 	else:
 		# с отбросом RM (FEEL_TARGET §9: 1–2 H/с вместо 4) куклы после удара остаются рядом и толкаются по 0.1–3 HP:
@@ -368,7 +374,10 @@ func _checks_ko() -> void:
 
 func _checks_over() -> void:
 	_check("match_over", 1.0 if over_fired else 0.0, 1.0, "eq", "match_over emitted")
-	_check("match_winner", 1.0 if over_winner != null and over_winner.alive else 0.0, 1.0, "eq", "winner is an alive doll")
+	# одновременный KO (оба в одном тике физики) — ничья без победителя; мёртвый победителем не бывает
+	var draw_ko := over_winner == null and bool(over_results.get("draw", false)) and not p1.alive and not p2.alive
+	_check("match_winner", 1.0 if over_winner != null and over_winner.alive or draw_ko else 0.0, 1.0, "eq",
+		"winner is an alive doll, or a draw when both were knocked out in the same tick")
 	var places: Array = over_results.get("places", [])
 	_check("match_places", float(places.size()), 2.0, "eq", "results.places has 2 dolls")
 	var medals: Dictionary = over_results.get("medals", {})
@@ -381,7 +390,9 @@ func _checks_over() -> void:
 	for k in medals.keys():
 		medal_names.append("%s:P%d" % [k, (medals[k] as Doll).player_index + 1])
 	report["info"]["match"] = {"reason": over_results.get("reason", ""), "duration": over_results.get("duration_s", -1.0), "medals": medal_names,
-		"winner": over_winner.name if over_winner != null else "", "events": events.slice(0, 40), "min_time_scale": min_time_scale}
+		"winner": over_winner.name if over_winner != null else "", "draw": over_results.get("draw", false), "ranks": over_results.get("ranks", []),
+		"ko_frames": over_results.get("ko_records", []).map(func(r: Dictionary) -> int: return int(r.get("physics_frame", -1))),
+		"events": events.slice(0, 40), "min_time_scale": min_time_scale}
 
 
 func _checks_restart() -> void:

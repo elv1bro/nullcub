@@ -8,7 +8,8 @@
 ## bind(match): подписка на сигналы Match (phase_changed, time_left, announce, hp_changed, combo_changed, ko,
 ## match_over) по имени — типы не требуются, стаб с теми же сигналами (tests/hud_snapshot.gd) тоже подходит.
 ## Панели ключуются по player_index, а не по узлу куклы: после restart()/респавна куклы могут быть новыми инстансами.
-## Короны раундов — победы в этой сессии (match_over инкрементирует), слоты round_slots (0..3).
+## Короны раундов — победы в этой сессии (match_over инкрементирует), слоты round_slots (0..3). winner null — ничья (равный ключ на
+## таймауте или двойной KO в одном тике, Match.build_results): корону не получает никто, итоги пишут «DRAW!».
 ## Все размеры — в единицах базового вьюпорта 1920×1080 (project.godot: stretch canvas_items), на 1280×720 масштабируются.
 class_name Hud
 extends CanvasLayer
@@ -213,7 +214,7 @@ func _on_ko(victim: Object, _attacker: Variant, _record: Dictionary) -> void:
 func _on_match_over(winner: Object, match_results: Dictionary) -> void:
 	phase = Phase.OVER
 	var w := player_of(winner)
-	if w >= 0:
+	if w >= 0:   # ничья (winner null) — без короны
 		wins[w] = int(wins.get(w, 0)) + 1
 		var p := panel_for(w)
 		if p != null:

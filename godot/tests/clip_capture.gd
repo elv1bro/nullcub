@@ -12,7 +12,8 @@
 ##           wall_collisions_after (stats считает касания частей ≥ Tuning.ENV_WALL_COLLISION_SPEED = 4 м/с).
 ## Пишет tests/clip/clip_report.json: по кадру t, фаза, ЦМ/скорость/угол торса обеих кукол (cvx/cvy — скорость ЦМ, w — ω торса °/с,
 ## flying, lag — отклонение плеч/бёдер от позы, °), удары, контакт со стеной, info.p2_flight_after_charge (v0, время до < 0.4 м/с, vy);
-## key_frames — номера кадров моментов для листа сравнения (rest / hit / return / wall).
+## key_frames — номера кадров моментов для листа сравнения (rest / hit / return / wall). hits[]: part — ударенная часть, striker — бьющее
+## тело, double_blow — второе тело того же атакующего в DOUBLE_BLOW_WINDOW_S (×DOUBLE_BLOW_MULT; не повтор первого удара).
 ## v6.2: info.separation_first_hit / separation_charge_hit (|Δx ЦМ| в момент удара, +0.6, +1.0 с; скорость атакующего к жертве) и
 ## info.p2_wall (скорость до касания стены, отскок, отношение; contact=false — жертва до стены не долетела).
 ## HIT_FX (29.09): hitfx=1 — тот же бой, но с гарантированными уровнями через тестовый переключатель Match.hit_tiers.force_next:
@@ -137,7 +138,12 @@ func _ready() -> void:
 	p1.external_input = true
 	p2.external_input = true
 	match_node.hit.connect(func(victim: Doll, attacker: Node, damage: float, kind: String, _pos: Vector3) -> void:
-		hits.append({"t": snappedf(t, 0.01), "frame": saved, "victim": victim.name, "attacker": attacker.name if attacker != null else "", "damage": snappedf(damage, 0.01), "kind": kind})
+		# 29.09: часть/бьющее тело и double_blow — «первый удар дважды» (2.04 HP кистью, через тик 2.0 HP предплечьем) это DOUBLE BLOW
+		# (другое тело того же атакующего в DOUBLE_BLOW_WINDOW_S, ×DOUBLE_BLOW_MULT), а не дыра в кулдауне пары
+		var lh: Dictionary = victim.last_hit
+		var striker: Object = lh.get("striker", null)
+		hits.append({"t": snappedf(t, 0.01), "frame": saved, "victim": victim.name, "attacker": attacker.name if attacker != null else "", "damage": snappedf(damage, 0.01), "kind": kind,
+			"part": lh.get("part", ""), "striker": striker.name if striker != null and is_instance_valid(striker) else "", "double_blow": bool(lh.get("double_blow", false))})
 		if first_hit_t < 0.0:
 			first_hit_t = t
 		if phase == "charge" and charge_hit_t < 0.0:
