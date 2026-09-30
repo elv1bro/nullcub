@@ -55,7 +55,7 @@ const HOLD_ANGLE_DEG := 90.0      # как WeaponPickup.hold_angle_deg: оруж
 const HAND_GRIP := Vector3(0, -0.03, 0)   # WeaponPickup.hand_grip_offset
 const CAM_FOV := 38.0
 ## Свободная середина экрана между панелями (UI: слева и справа по 460 px из 1920) — по ней вписывается кукла.
-const FREE_W_FRAC := 0.5
+const FREE_W_FRAC := 0.6   # компактный экран: панели 400 + 320 px, кукле ~60 % ширины (WORKSHOP_V3.md §6)
 const CAM_TAU := 0.22
 const COL_OK := Color(0.55, 0.95, 0.45)
 const COL_WARN := Color(1.0, 0.72, 0.25)
@@ -1278,7 +1278,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			elif not h.is_empty():
 				_say("%s — ПКМ: открутить%s" % [part_info(String(h["target"]), String(h["uid"])),
-					"" if String(h["target"]) == "weapon" else ",  Q и клик: рука мышью"], COL_INFO)
+					"" if String(h["target"]) == "weapon" else ",  Q и клик: тяга ЛКМ / ПКМ"], COL_INFO)
 	elif event is InputEventKey and event.pressed and not event.echo:
 		var k := event as InputEventKey
 		match k.physical_keycode:
@@ -1571,10 +1571,10 @@ func hint_text() -> String:
 		var bp: Resource = weapon_bp if String(hover["target"]) == "weapon" else blueprint
 		var n := CraftEdit.subtree(bp, String(hover["uid"])).size()
 		var more := "" if n <= 1 else " (+%d)" % (n - 1)
-		return "%s   ·   ПКМ — открутить%s   ·   Q — рука мышью" % [part_info(String(hover["target"]), String(hover["uid"])), more]
+		return "%s   ·   ПКМ — открутить%s   ·   Q — тяги" % [part_info(String(hover["target"]), String(hover["uid"])), more]
 	if view == View.WEAPON:
 		return "Тащи рукоять, навершие или мод на верстак   ·   ПКМ по детали — снять   ·   «В руку» — дать кукле   ·   Tab — к телу"
-	return "Тащи деталь с полки на светящийся якорь   ·   ПКМ — открутить   ·   Q — рука мышью   ·   Ctrl+Z — отмена   ·   T — испытать"
+	return "Тащи деталь с полки на светящийся якорь   ·   ПКМ — открутить   ·   Q — тяги   ·   Ctrl+Z — отмена   ·   T — испытать"
 
 
 ## Что рисовать поверх 3D (scenes/workshop/ui/anchor_overlay.gd): [{pos, dir, state, label, joint?}] в экранных точках.

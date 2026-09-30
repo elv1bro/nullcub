@@ -26,7 +26,7 @@ const TOOL_HINTS := {
 	"material": "Выбери материал и кликай по деталям куклы: масса меняется как новая плотность / прежняя (дерево = 1). Старые детали (не кит) не красятся.",
 	"joint": "Выбери тип и кликай по детали — так она держится за родителя. У ядра и декора шарнира нет.",
 }
-const TOAST_Y_BUILD := 18.0
+const TOAST_Y_BUILD := 112.0   # под верхней полосой энергии (компактный экран, WORKSHOP_V3.md §6)
 const TOAST_Y_TEST := 112.0
 const TOAST_HOLD_S := 1.9
 const TOAST_FADE_S := 0.35
@@ -65,11 +65,16 @@ var _preset_buttons: Array = []
 @onready var shelf_scroll: ScrollContainer = $Root/Left/VBox/ShelfScroll
 @onready var body_box: Control = $Root/Right/VBox/BodyBox
 @onready var build_title: Label = $Root/Right/VBox/BodyBox/BuildTitle
-@onready var energy_value: Label = $Root/Right/VBox/BodyBox/EnergyHead/EnergyValue
-@onready var energy_bar: Control = $Root/Right/VBox/BodyBox/Energy
+@onready var energy_value: Label = $Root/TopBar/V/EnergyHead/EnergyValue
+@onready var energy_bar: Control = $Root/TopBar/V/Energy
+@onready var top_bar: Control = $Root/TopBar
+@onready var presets_toggle: Button = $Root/Left/VBox/PresetsToggle
+@onready var legend: Control = $Root/Right/VBox/Legend
+@onready var legend_button: Button = $Root/Right/VBox/BodyBox/Files/LegendButton
 @onready var mass_v: Label = $Root/Right/VBox/BodyBox/Stats/MassV
 @onready var bodies_v: Label = $Root/Right/VBox/BodyBox/Stats/BodiesV
 @onready var accel_v: Label = $Root/Right/VBox/BodyBox/Stats/AccelV
+@onready var accel_l: Label = $Root/Right/VBox/BodyBox/Stats/AccelL
 @onready var control_label: Label = $Root/Right/VBox/BodyBox/ControlBox/V/ControlLabel
 @onready var control_button: Button = $Root/Right/VBox/BodyBox/ControlBox/V/ControlButton
 @onready var weapon_line: Label = $Root/Right/VBox/BodyBox/ControlBox/V/WeaponLine
@@ -118,6 +123,10 @@ func _ready() -> void:
 	clear_button.pressed.connect(func() -> void: ctl.clear_weapon())
 	test_button.pressed.connect(func() -> void: ctl.start_test())
 	back_button.pressed.connect(func() -> void: ctl.stop_test())
+	presets_toggle.toggled.connect(func(on: bool) -> void:
+		presets_toggle.text = "ШАБЛОНЫ  ▾" if on else "ШАБЛОНЫ  ▸"
+		_build_left())
+	legend_button.toggled.connect(func(on: bool) -> void: legend.visible = on)
 	$Root/SavePopup/V/Buttons/OkButton.pressed.connect(_do_save)
 	$Root/SavePopup/V/Buttons/CancelButton.pressed.connect(func() -> void: save_popup.visible = false)
 	name_edit.text_submitted.connect(func(_t: String) -> void: _do_save())
@@ -175,8 +184,10 @@ func _build_left() -> void:
 	var painting := not weapon and String(shelf_tab["body"]) == "paint"
 	shelf_title.text = "ПОЛКА — ТЯНИ ДЕТАЛЬ НА ВЕРСТАК" if weapon else ("ПОКРАСКА — СВОЙ СТИЛЬ КУКЛЫ" if painting
 		else "ПОЛКА — ТЯНИ ДЕТАЛЬ НА КУКЛУ")
-	presets_box.visible = not painting   # на покраске шаблоны не нужны — место палитре и сеткам
-	presets_title.visible = not painting
+	# шаблоны свёрнуты за кнопкой «ШАБЛОНЫ ▸» (компактный экран, WORKSHOP_V3.md §6); на покраске не нужны — место палитре и сеткам
+	presets_toggle.visible = not painting
+	presets_box.visible = not painting and presets_toggle.button_pressed
+	presets_title.visible = false
 	# шаблоны
 	for c in presets_box.get_children():
 		c.queue_free()
@@ -354,7 +365,8 @@ func _refresh() -> void:
 	mass_v.text = "%.1f кг" % float(s["mass"]) if wm <= 0.0 else "%.1f + %.1f кг" % [float(s["mass"]), wm]
 	bodies_v.text = "%d  (%d)" % [int(s["bodies"]), int(s["parts"])]
 	var acc := float(s["accel"])
-	accel_v.text = "×%.2f  %s" % [acc, "быстрый" if acc > 1.15 else ("как кукла" if acc > 0.87 else ("тяжеловат" if acc > 0.65 else "танк"))]
+	accel_v.text = "×%.2f" % acc
+	accel_l.text = "Разгон · %s" % ("быстрый" if acc > 1.15 else ("как кукла" if acc > 0.87 else ("тяжеловат" if acc > 0.65 else "танк")))
 	control_label.text = "Тяги: %s" % (String(s["control"]) if String(s["control"]) != "" else "— нет (Q и клик по детали)")
 	control_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4) if String(s["control"]) != "" else Color(0.9, 0.6, 0.45))
 	control_button.set_pressed_no_signal(ctl.control_pick)
@@ -473,6 +485,7 @@ func _on_mode(m: int) -> void:
 	var test := m == WorkshopBuild.Mode.TEST
 	left.visible = not test
 	right.visible = not test
+	top_bar.visible = not test
 	test_bar.visible = test
 	test_stats.visible = test
 	dummy_panel.visible = test
