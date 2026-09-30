@@ -33,7 +33,9 @@
 | 6 | Sudden Death | `SUDDEN DEATH` | `SUDDEN DEATH` + мелко `FIELD LIMIT EXTENDED` | Лига продлевает поле сверх регламента — тонкий намёк, что поле можно «перекачать». |
 | 7 | PvE, начало | `UNKNOWN CORE DETECTED` | `MEMBRANE BREACH` | Старая строка из лора Башни (Ядро теперь в архиве). Прорыв мембраны — §15. |
 | 8 | PvE, волны | `WAVE N` / `CLEAR!` | `INCURSION N` / `BREACH SEALED` | Та же механика, словами NULL. |
-| 9 | PvE, итог | `FLOOR CLEAN!` / `DISPOSED` | `ARENA SECURE` / `FIELD LOST` | «Пол», «утилизация» — лексика Башни. |
+| 9 | PvE, итог | `FLOOR CLEAN!` / `DISPOSED` | `FIELD CLEAR!` / `FIGHTER DOWN` — как в PR #1 | «Пол», «утилизация» — лексика Башни. |
+
+PvE-строки уже меняет PR #1 («Убрать старый лор Башни»): там `FIELD CLEAR!` / `FIGHTER DOWN`. Код N0 строится поверх его строк; `MEMBRANE BREACH` и `INCURSION N` — предложение сверх него.
 
 HEAD / BODY / DOUBLE BLOW! и N HIT COMBO! оставить как есть: это счёт, они и так звучат как табло.
 
