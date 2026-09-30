@@ -293,6 +293,7 @@ func _core_v03() -> void:
 	_mouse_button(p7, MOUSE_BUTTON_LEFT, true)
 	var mv := InputEventMouseMotion.new()
 	mv.position = p7 + Vector2(40, 0)
+	mv.button_mask = MOUSE_BUTTON_MASK_LEFT
 	ws._input(mv)
 	var moving := ws.dragging() and String(ws.drag.get("move", "")) == "7"
 	var hidden := true
@@ -412,6 +413,7 @@ func _core_v03() -> void:
 	var om := InputEventMouseMotion.new()
 	om.position = ph + Vector2(80, 10)
 	om.relative = Vector2(80, 10)
+	om.button_mask = MOUSE_BUTTON_MASK_RIGHT
 	ws._input(om)
 	var upr := InputEventMouseButton.new()
 	upr.button_index = MOUSE_BUTTON_RIGHT

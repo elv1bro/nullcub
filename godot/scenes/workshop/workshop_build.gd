@@ -1913,6 +1913,9 @@ func _input(event: InputEvent) -> void:
 	if not _rmb.is_empty():
 		if event is InputEventMouseMotion:
 			var mm := event as InputEventMouseMotion
+			if mm.button_mask & MOUSE_BUTTON_MASK_RIGHT == 0:
+				_rmb = {}   # отпустили вне окна (отпускание не пришло) — жест кончился, без клика
+				return
 			if not bool(_rmb["moved"]) and mm.position.distance_to(_rmb["pos"]) > 6.0:
 				_rmb["moved"] = true
 			if bool(_rmb["moved"]):
@@ -1932,6 +1935,9 @@ func _input(event: InputEvent) -> void:
 	if not _lmb.is_empty():
 		if event is InputEventMouseMotion:
 			var lm := event as InputEventMouseMotion
+			if lm.button_mask & MOUSE_BUTTON_MASK_LEFT == 0:
+				_lmb = {}
+				return
 			if lm.position.distance_to(_lmb["pos"]) > DRAG_MOVE_PX:
 				var l := _lmb
 				_lmb = {}
