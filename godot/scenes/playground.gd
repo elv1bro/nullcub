@@ -3,7 +3,7 @@
 ## Дерево (арена, P1/P2 с WeaponPickup, Weapons, Camera, Match, HUD, UI/Hint) живёт в сцене: scenes/playground.tscn — «Руины»,
 ## scenes/playground_workshop.tscn — «Мастерская», scenes/playground_void.tscn — «Void» (пустое чёрное поле RM, без оружия;
 ## Weapons там пустой — только молот Sudden Death) (ASSET_PIPELINE.md, правило 2). Здесь только поведение:
-##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — выход, 1–7 — сменить площадку
+##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — выход, 1–9 — сменить площадку (9 — кампания)
 ##   (Руины / Мастерская / Void / Свалка / Тело / Сборка — последние две из сессии сборки тела, BODY_CRAFT.md);
 ##   пропасть (сигнал body_fell арены): во время боя — Doll.knock_out() (KO kind "self", Match сам заканчивает матч), иначе —
 ##   респавн через RESPAWN_DELAY_S через Match.respawn_doll (той же породы дерева);
@@ -24,10 +24,11 @@ const SCENES := {
 	"build": "res://scenes/workshop/workshop_build.tscn",   # мастерская: сборка тела и оружия (BODY_CRAFT.md)
 	"pve": "res://scenes/playground_pve.tscn",              # PvE-волны на Свалке (сессия «Определение игры и планы»)
 	"null_hall": "res://scenes/playground_null_hall.tscn",  # арена 01 «Old NULL Hall»: купол с мембраной, поле NULL (ART_NULL.md)
+	"campaign": "res://scenes/campaign/campaign.tscn",      # кампания «История»: лестница местной лиги (17-career-trophy.md)
 }
 ## Клавиши площадок: одна таблица на все сцены (площадки, не наследующие этот скрипт, зовут scene_for_key).
 const ARENA_KEYS := {KEY_1: "ruins", KEY_2: "workshop", KEY_3: "void", KEY_4: "scrap", KEY_5: "body", KEY_6: "build", KEY_7: "pve",
-	KEY_8: "null_hall"}
+	KEY_8: "null_hall", KEY_9: "campaign"}
 
 
 ## Путь сцены площадки для клавиши 1–7 (physical_keycode) или "" — для площадок со своим скриптом:
@@ -106,6 +107,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				switch_arena("pve")
 			KEY_8:
 				switch_arena("null_hall")
+			KEY_9:
+				switch_arena("campaign")
 			KEY_F10:
 				cycle_fx_preset()
 

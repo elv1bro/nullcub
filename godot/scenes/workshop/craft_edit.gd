@@ -83,6 +83,11 @@ const MAX_CONTROL := BodyBlueprint.MAX_PULLS   # тяг на куклу (пре�
 const UID_CHARS := BodyBlueprint.UID_CHARS
 
 static var _parts_cache: Array[PartDef] = []
+## Кампания «История» (docs/plan-demo/17-career-trophy.md): пока мастерская открыта из кампании, на полках только детали
+## campaign_shelf (стартовый кит + трофеи; пусто — все), а при campaign_templates_locked шаблоны тела не ставятся
+## (load_body_preset → null). Ставит и снимает scenes/campaign/campaign_flow.gd.
+static var campaign_shelf: PackedStringArray = []
+static var campaign_templates_locked := false
 static var _scene_names: Dictionary = {}   # путь сцены детали -> PackedStringArray имён CollisionShape3D
 
 
@@ -120,7 +125,7 @@ static func all_parts() -> Array[PartDef]:
 static func parts_of_kinds(kinds: Array) -> Array[PartDef]:
 	var out: Array[PartDef] = []
 	for d in all_parts():
-		if kinds.has(d.kind):
+		if kinds.has(d.kind) and (campaign_shelf.is_empty() or campaign_shelf.has(d.id)):
 			out.append(d)
 	return out
 
@@ -305,7 +310,7 @@ static func _dup_nodes(src: Array) -> Array[Dictionary]:
 
 static func load_body_preset(id: String) -> BodyBlueprint:
 	var path := BODY_PRESET_DIR + id + ".tres"
-	if not ResourceLoader.exists(path):
+	if campaign_templates_locked or not ResourceLoader.exists(path):
 		return null
 	return dup_body(load(path) as BodyBlueprint)
 

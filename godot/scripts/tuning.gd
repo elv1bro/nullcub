@@ -333,3 +333,16 @@ const MEMBRANE_RETURN_GAIN := 1.25       # пружина на возврате 
 const MEMBRANE_MAX_STRETCH := 2.5        # м: дальше — жёсткий упор (K × MEMBRANE_HARD_MULT)
 const MEMBRANE_HARD_MULT := 8.0
 const MEMBRANE_NEAR_M := 2.5             # м: ближе к мембране — она начинает светиться у бойца (лист камеры: «видна только вблизи»)
+
+# --- Кампания «История», карьера (docs/plan-demo/17-career-trophy.md; решения автора 30.09) ---
+# Энергия — регламент лиги: бюджет сборки задаёт ступень лиги и растёт с ней. В демо одна ступень — местная лига.
+const LEAGUE_ENERGY := {"local": 100}
+# Уровни бота-соперника (scripts/campaign/rival_brain.gd): реакция (с), ошибка прицела (м), упреждение (с), отход после наскока (с),
+# рывок с разбега. 1 — первый соперник лестницы, 4 — финал местной лиги.
+const RIVAL_LEVELS := {
+	1: {"reaction_s": 0.36, "aim_error_m": 0.55, "lead_s": 0.15, "retreat_s": 1.5, "dash": false},
+	2: {"reaction_s": 0.30, "aim_error_m": 0.45, "lead_s": 0.2, "retreat_s": 1.35, "dash": true},
+	3: {"reaction_s": 0.24, "aim_error_m": 0.35, "lead_s": 0.25, "retreat_s": 1.2, "dash": true},
+	4: {"reaction_s": 0.2, "aim_error_m": 0.25, "lead_s": 0.3, "retreat_s": 1.1, "dash": true},
+}
+const CAMPAIGN_RESULT_DELAY_S := 3.5     # с реального времени: после конца боя — итоги HUD, потом экран исхода кампании

@@ -1,0 +1,96 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/campaign/campaign_fight.gd" id="1_cfight"]
+[ext_resource type="PackedScene" path="res://scenes/arena/null_hall.tscn" id="2_hall"]
+[ext_resource type="Script" path="res://scenes/arena/null_hall.gd" id="3_hallgd"]
+[ext_resource type="PackedScene" path="res://scenes/body/modular_doll.tscn" id="4_mdoll"]
+[ext_resource type="Script" path="res://scenes/weapons/weapon_pickup.gd" id="5_pickup"]
+[ext_resource type="Script" path="res://scripts/campaign/rival_brain.gd" id="6_brain"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="7_cam"]
+[ext_resource type="Script" path="res://scripts/core/match.gd" id="8_match"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="9_hud"]
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="10_hudgd"]
+[ext_resource type="Script" path="res://scenes/ui/offscreen_markers.gd" id="11_off"]
+[ext_resource type="PackedScene" path="res://scenes/n0/n0.tscn" id="12_n0"]
+[ext_resource type="Script" path="res://scripts/n0/n0_drone.gd" id="13_n0gd"]
+[ext_resource type="Script" path="res://scripts/n0/n0_host.gd" id="14_host"]
+
+[node name="CampaignFight" type="Node3D"]
+script = ExtResource("1_cfight")
+arena_id = "campaign"
+
+[node name="NullHall" type="Node3D" parent="." groups=["arena"] instance=ExtResource("2_hall")]
+script = ExtResource("3_hallgd")
+
+[node name="P1" parent="." groups=["dolls", "players"] instance=ExtResource("4_mdoll")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.05, 0)
+player_index = 0
+input_prefix = "p1"
+
+[node name="WeaponPickup" type="Node" parent="P1"]
+script = ExtResource("5_pickup")
+
+[node name="P2" parent="." groups=["dolls", "rivals"] instance=ExtResource("4_mdoll")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.05, 0)
+player_index = 1
+input_prefix = "p2"
+external_input = true
+
+[node name="WeaponPickup" type="Node" parent="P2"]
+script = ExtResource("5_pickup")
+
+[node name="Brain" type="Node" parent="P2"]
+script = ExtResource("6_brain")
+
+[node name="Weapons" type="Node3D" parent="."]
+
+[node name="Camera" type="Camera3D" parent="." groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 24)
+fov = 40.0
+far = 400.0
+script = ExtResource("7_cam")
+arena_path = NodePath("../NullHall")
+floor_inset = 0.0
+padding = 3.0
+padding_y = 2.0
+min_half_height = 7.5
+max_half_height = 11.0
+zoom_out_tau = 0.25
+zoom_in_tau = 1.0
+follow_tau = 0.3
+
+[node name="Match" type="Node" parent="."]
+script = ExtResource("8_match")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../NullHall")
+
+[node name="HUD" type="CanvasLayer" parent="." instance=ExtResource("9_hud")]
+layer = 10
+script = ExtResource("10_hudgd")
+
+[node name="Offscreen" type="CanvasLayer" parent="."]
+layer = 5
+script = ExtResource("11_off")
+
+[node name="N0" type="Node3D" parent="." instance=ExtResource("12_n0")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -14, 14, 3.2)
+script = ExtResource("13_n0gd")
+
+[node name="Host" type="Node" parent="N0"]
+script = ExtResource("14_host")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="UI"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -46.0
+offset_right = 1800.0
+offset_bottom = -12.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 7
+text = "Кампания"

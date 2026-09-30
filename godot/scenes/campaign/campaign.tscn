@@ -1,0 +1,266 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/campaign/campaign_flow.gd" id="1_flow"]
+
+[node name="Campaign" type="Node"]
+script = ExtResource("1_flow")
+
+[node name="Stage" type="Node" parent="."]
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 30
+
+[node name="Ladder" type="Control" parent="UI"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Bg" type="ColorRect" parent="UI/Ladder"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.05, 0.06, 0.08, 1)
+
+[node name="Box" type="VBoxContainer" parent="UI/Ladder"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -600.0
+offset_top = -430.0
+offset_right = 600.0
+offset_bottom = 430.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Title" type="Label" parent="UI/Ladder/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 60
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 6
+theme_override_colors/font_color = Color(1, 0.93, 0.8, 1)
+text = "КАМПАНИЯ «ИСТОРИЯ»"
+horizontal_alignment = 1
+
+[node name="Tier" type="Label" parent="UI/Ladder/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 6
+theme_override_colors/font_color = Color(0.8, 0.85, 0.95, 1)
+text = "Местная лига"
+horizontal_alignment = 1
+
+[node name="N0Line" type="Label" parent="UI/Ladder/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 6
+theme_override_colors/font_color = Color(0.45, 0.9, 1, 1)
+text = "N0"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Gap" type="Control" parent="UI/Ladder/Box"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 12)
+
+[node name="Rivals" type="VBoxContainer" parent="UI/Ladder/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Gap2" type="Control" parent="UI/Ladder/Box"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 12)
+
+[node name="Record" type="Label" parent="UI/Ladder/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 6
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+text = "Побед: 0"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Message" type="Label" parent="UI/Ladder/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 6
+theme_override_colors/font_color = Color(1, 0.5, 0.4, 1)
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="UI/Ladder/Box"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="FightButton" type="Button" parent="UI/Ladder/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(250, 64)
+theme_override_font_sizes/font_size = 26
+text = "В БОЙ ▶"
+
+[node name="WorkshopButton" type="Button" parent="UI/Ladder/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(250, 64)
+theme_override_font_sizes/font_size = 26
+text = "МАСТЕРСКАЯ"
+
+[node name="NewButton" type="Button" parent="UI/Ladder/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(330, 64)
+theme_override_font_sizes/font_size = 26
+text = "НОВАЯ КАМПАНИЯ"
+
+[node name="ExitButton" type="Button" parent="UI/Ladder/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180, 64)
+theme_override_font_sizes/font_size = 26
+text = "ВЫХОД"
+
+[node name="Outcome" type="Control" parent="UI"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+
+[node name="Bg" type="ColorRect" parent="UI/Outcome"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03, 0.04, 0.06, 0.93)
+
+[node name="Box" type="VBoxContainer" parent="UI/Outcome"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -600.0
+offset_top = -280.0
+offset_right = 600.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 26
+alignment = 1
+
+[node name="Headline" type="Label" parent="UI/Outcome/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 96
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 6
+text = "ПОБЕДА"
+horizontal_alignment = 1
+
+[node name="Detail" type="Label" parent="UI/Outcome/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 6
+theme_override_colors/font_color = Color(1, 0.93, 0.8, 1)
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="UI/Outcome/Box"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="OutcomeNext" type="Button" parent="UI/Outcome/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(330, 64)
+theme_override_font_sizes/font_size = 26
+text = "СЛЕДУЮЩИЙ БОЙ ▶"
+
+[node name="OutcomeWorkshop" type="Button" parent="UI/Outcome/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(250, 64)
+theme_override_font_sizes/font_size = 26
+text = "МАСТЕРСКАЯ"
+
+[node name="OutcomeLadder" type="Button" parent="UI/Outcome/Box/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(250, 64)
+theme_override_font_sizes/font_size = 26
+text = "К ЛЕСТНИЦЕ"
+
+[node name="WorkshopBar" type="PanelContainer" parent="UI"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -344.0
+offset_top = 100.0
+offset_right = 546.0
+offset_bottom = 150.0
+grow_horizontal = 2
+
+[node name="Row" type="HBoxContainer" parent="UI/WorkshopBar"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="BarLabel" type="Label" parent="UI/WorkshopBar/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "КАМПАНИЯ"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="BarFight" type="Button" parent="UI/WorkshopBar/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(150, 40)
+theme_override_font_sizes/font_size = 22
+text = "В БОЙ ▶"
+
+[node name="BarLadder" type="Button" parent="UI/WorkshopBar/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(150, 40)
+theme_override_font_sizes/font_size = 22
+text = "К ЛЕСТНИЦЕ"
