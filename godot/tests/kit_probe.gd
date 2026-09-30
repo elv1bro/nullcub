@@ -62,6 +62,8 @@ const PRESETS := {
 	# витрина покраски (docs/plan-demo/BODY_PAINT.md §4): узлы kit_human / kit_brawler + paint / stickers
 	"kit_graffiti": "res://scenes/body/presets/kit_graffiti.tscn",
 	"kit_camo": "res://scenes/body/presets/kit_camo.tscn",
+	"kit_spinner": "res://scenes/body/presets/kit_spinner.tscn",
+	"kit_empty": "res://scenes/body/presets/kit_empty.tscn",
 }
 ## Пресеты из старых деталей (wood_*, junk_*, craft): коннекторов и meta body_mult у них быть не должно.
 const LEGACY := {"junk": "res://scenes/body/presets/junk.tscn", "flail": "res://scenes/body/presets/flail.tscn"}
@@ -108,6 +110,8 @@ const HIT_MULT := {
 	"kit_hand_clamp": 1.1, "kit_hand_fist": 1.1, "kit_foot_peg": 1.15, "kit_limb_rope_": 0.85, "kit_limb_tentacle_": 0.9,
 }
 
+## Заготовки (UI v0.2, шаблон «Пустой»: ядро и голова) — не бойцы: не стоят и тяг у них нет; остальные проверки — как у всех.
+const BARE_PRESETS := ["kit_empty"]
 const SPACING := 8.0
 const IDLE_S := 5.0
 const MOVE_S := 1.5
@@ -1367,6 +1371,8 @@ func _arm_setup() -> void:
 	h.queue_free()
 	var i := 1
 	for id in PRESETS:
+		if BARE_PRESETS.has(id):
+			continue   # заготовка без рук и тяг — ArmAssist вести нечего
 		var d := _spawn_scene(PRESETS[id], Vector3(ARM_X0 + 3.0 * i, 40.0, 0), true, 0)
 		i += 1
 		if d == null:
@@ -1660,7 +1666,7 @@ func _idle_verdict() -> void:
 			[tr["worst"], snappedf(float(tr["max_speed"]), 0.01)])
 		_check(float(tr["max_gap"]) <= MAX_JOINT_GAP, id + ": суставы целы (≤ %.2f м)" % MAX_JOINT_GAP, snappedf(float(tr["max_gap"]), 0.0001))
 		_check(float(tr["max_reach_over"]) <= CHAIN_SLACK, id + ": части не дальше цепи от торса", snappedf(float(tr["max_reach_over"]), 0.0001))
-		if presets.has(id):
+		if presets.has(id) and not BARE_PRESETS.has(id):
 			_check(d.torso().global_position.y >= STAND_MIN_Y, id + ": стоит (торс выше %.1f м)" % STAND_MIN_Y, r["idle_torso_y"])
 
 

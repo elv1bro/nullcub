@@ -134,6 +134,89 @@ func _sum_node_energy(bp: BodyBlueprint) -> int:
 	return t
 
 
+## UI v0.2 (мастерская «как в ААА»): характеристики, выбор, УСТАНОВИТЬ / ДУБЛИКАТ / ЗЕРКАЛО / УДАЛИТЬ, Redo, Physics Overlay.
+func _ui_v02() -> void:
+	ws.set_preset("kit_human")
+	await _frames(2)
+	var st := ws.body_stats()
+	var in01 := true
+	for k in ["handling", "stability", "durability"]:
+		in01 = in01 and float(st[k]) >= 0.0 and float(st[k]) <= 1.0
+	_check("v02_stats", in01 and float(st["stability"]) > 0.05 and ws.stand_com().y > 0.2, "характеристики 0…1, ЦМ над полом",
+		[st["handling"], st["stability"], st["durability"], snappedf(ws.stand_com().y, 0.01)])
+	# УСТАНОВИТЬ: левая кисть снята → из каталога ставится на свободный разъём, выбор — на неё
+	ws.detach_part("3")
+	await _frames(1)
+	var n0 := ws.blueprint.nodes.size()
+	ws.select_shelf("kit_human_hand")
+	var ri := ws.install_part("kit_hand_mitten")
+	await _frames(1)
+	_check("v02_install", bool(ri.get("ok", false)) and ws.blueprint.nodes.size() == n0 + 1 and String(ws.selected.get("source", "")) == "stand"
+		and ws.blueprint.validate().is_empty(), "УСТАНОВИТЬ: деталь на свободный разъём, выбрана на кукле", [ri.get("code", ""), ws.selected])
+	# ЗЕРКАЛО: левая рука снята целиком → копия правой (плечо, предплечье, кисть) на левую сторону; голова — по центру, отказ
+	ws.set_preset("kit_human")
+	await _frames(1)
+	ws.detach_part("1")
+	var n1 := ws.blueprint.nodes.size()
+	var rm := ws.mirror_part("7")
+	await _frames(1)
+	var left_ok := CraftEdit.occupant(ws.blueprint, "T", "Anchor_Shoulder_L") != ""
+	_check("v02_mirror", bool(rm.get("ok", false)) and int(rm.get("count", 0)) == 3 and ws.blueprint.nodes.size() == n1 + 3 and left_ok
+		and ws.blueprint.validate().is_empty(), "ЗЕРКАЛО: правая рука (3 детали) — на левое плечо", [rm.get("count", 0), rm.get("reason", "")])
+	var rc := ws.mirror_part("H")
+	_check("v02_mirror_center", not bool(rc.get("ok", true)) and String(rc.get("code", "")) == "center", "голова по центру — зеркалить некуда", rc.get("code", ""))
+	# Undo / Redo
+	var n_after := ws.blueprint.nodes.size()
+	ws.undo()
+	await _frames(1)
+	var n_undo := ws.blueprint.nodes.size()
+	ws.redo()
+	await _frames(1)
+	_check("v02_redo", n_undo == n1 and ws.blueprint.nodes.size() == n_after and ws.redo_stack.is_empty(), "Ctrl+Z → без руки, Ctrl+Y → снова с рукой",
+		[n_undo, ws.blueprint.nodes.size()])
+	ws.undo()
+	ws.detach_part("H")
+	_check("v02_redo_cleared", ws.redo_stack.is_empty(), "новая правка чистит Redo", ws.redo_stack.size())
+	# ДУБЛИКАТ: правое плечо (7) — на свободный разъём (бок), материал тот же
+	ws.set_preset("kit_human")
+	await _frames(1)
+	var n2 := ws.blueprint.nodes.size()
+	var rd := ws.duplicate_part("7")
+	await _frames(1)
+	_check("v02_duplicate", bool(rd.get("ok", false)) and ws.blueprint.nodes.size() == n2 + 1
+		and String(CraftEdit.find(ws.blueprint, String(rd.get("uid", ""))).get("part", "")) == String(CraftEdit.find(ws.blueprint, "7").get("part", "")),
+		"ДУБЛИКАТ: та же деталь на свободный разъём", [rd.get("uid", ""), rd.get("reason", "")])
+	# УДАЛИТЬ выбранное
+	ws.select_stand("C")
+	var gone := ws.delete_selected()
+	_check("v02_delete", gone.size() >= 1 and ws.selected.is_empty() and CraftEdit.find(ws.blueprint, "C").is_empty(), "УДАЛИТЬ: выбранная стопа снята, выбор сброшен", gone)
+	# Physics Overlay: при протяжке несовместимые разъёмы приглушены, у выбранного разъёма — сдвиг ЦМ
+	ws.set_preset("kit_human")
+	await _frames(1)
+	ws.detach_part("3")
+	await _frames(1)
+	var cam := get_viewport().get_camera_3d()
+	ws.begin_drag("kit_hand_mitten", Vector2(300, 600))
+	var tgt := _find_target(ws.targets_for("kit_hand_mitten"), "2", "Anchor_End")
+	if tgt.is_empty():
+		tgt = _find_target(ws.targets_for("kit_hand_mitten"), "2", "Anchor_Wrist")
+	var dims := 0
+	var com_items := 0
+	if not tgt.is_empty():
+		ws.update_drag(ws.target_screen_pos(tgt))
+		await _frames(1)
+		for it in ws.overlay_items():
+			dims += 1 if String(it["state"]) == "dim" else 0
+			com_items += 1 if String(it["state"]) in ["com", "com_ghost"] else 0
+	var dc: Variant = ws.drag_com()
+	ws.cancel_drag()
+	_check("v02_overlay", dims > 0 and com_items == 2 and dc is Vector3, "протяжка: несовместимые разъёмы приглушены, ЦМ и его сдвиг", [dims, com_items, dc])
+	ws.set_preset("human")
+	ws.history.clear()
+	ws.redo_stack.clear()
+	await _frames(1)
+
+
 func _run() -> void:
 	print("=== WORKSHOP PROBE ===")
 	await _frames(2)
@@ -147,6 +230,7 @@ func _run() -> void:
 	await _weapon()
 	await _test_hit()
 	await _save_load()
+	await _ui_v02()
 	await _kit_shelves()
 	await _kit_presets()
 	await _kit_material()
@@ -665,12 +749,16 @@ func _kit_shelves() -> void:
 	ws.ui.call("_build_left")
 	var n_jt := (ws.ui.get("_tool_cards") as Dictionary).size()
 	var n_jparts := (ws.ui.get("_cards") as Dictionary).size()
+	# UI v0.2: «Броня» и «Декор» — разные категории
+	tabs["body"] = "deco"
+	ws.ui.call("_build_left")
+	var deco_cards: Dictionary = (ws.ui.get("_cards") as Dictionary).duplicate()
 	tabs["body"] = "armor"
 	ws.ui.call("_build_left")
 	var armor_cards: Dictionary = ws.ui.get("_cards")
-	var has_crown := armor_cards.has("kit_deco_crown") and armor_cards.has("kit_deco_pauldron")
-	var armor_new := armor_cards.has("kit_drill_head") and armor_cards.has("kit_deco_wings")   # _cards чистится при пересборке
-	var armor_human := armor_cards.has("kit_human_torso")
+	var has_crown := deco_cards.has("kit_deco_crown") and armor_cards.has("kit_deco_pauldron")   # наплечник — вид armor
+	var armor_new := armor_cards.has("kit_drill_head") and deco_cards.has("kit_deco_wings")   # _cards чистится при пересборке
+	var armor_human := armor_cards.has("kit_human_torso") or deco_cards.has("kit_human_torso")
 	tabs["body"] = was
 	ws.ui.call("_build_left")
 	# kit_human_* (дубли wood_* под риг v3 для пресета kit_human) на полках не показываются, но PartDef грузится
@@ -681,7 +769,7 @@ func _kit_shelves() -> void:
 	# детали второй волны кита — на своих вкладках (навершия — на «Броня, декор», §5.5)
 	var want := {"kit_head_lantern": "head", "kit_head_skull": "head", "kit_core_boiler": "core", "kit_core_cage": "core",
 		"kit_limb_curved_s": "limb", "kit_limb_rope_l": "limb", "kit_hand_clamp": "end", "kit_foot_wheel": "end",
-		"kit_deco_wings": "armor", "kit_deco_gauntlet_s": "armor", "kit_drill_head": "armor", "kit_pick_head": "armor"}
+		"kit_deco_wings": "deco", "kit_deco_gauntlet_s": "armor", "kit_drill_head": "armor", "kit_pick_head": "armor"}
 	var misplaced: Array = []
 	for pid in want:
 		var on := false
@@ -696,7 +784,7 @@ func _kit_shelves() -> void:
 		"полки без kit_human_* (CraftEdit.SHELF_HIDDEN_PREFIXES), PartDef kit_human_torso грузится", hidden)
 	_check("shelves_ui_tools", n_mat == MaterialDef.all_ids().size() and n_jt == KitJoint.ORDER.size()
 		and n_jparts == CraftEdit.parts_of_kinds(["joint", "chain"]).size() and has_crown,
-		"UI: 15 плашек материала, 5 типов шарнира (+ детали суставов), на броне — корона и наплечник", [n_mat, n_jt, n_jparts, has_crown])
+		"UI: 15 плашек материала, 5 типов шарнира (+ детали суставов), корона в декоре, наплечник в броне", [n_mat, n_jt, n_jparts, has_crown])
 
 
 ## Пресеты кита на стенде: без ошибок, тел столько, сколько узлов со своим телом.
@@ -1095,7 +1183,10 @@ func _paint() -> void:
 		sum0 += live.data[i]
 	pt.set_tool("erase")
 	pt.pressure = 1.0
-	await _stroke(pt, p1, 20, Vector2.ZERO)
+	var erase_cm0 := pt.size_cm
+	pt.set_size_cm(erase_cm0 * 2.0)
+	await _stroke(pt, p1, 20)   # по тому же штриху, что баллончик, ластиком вдвое шире (точкой — доля стёртого зависит от кадра стенда)
+	pt.set_size_cm(erase_cm0)
 	var live2: PaintLayer = ws.stand.paint_handle("1").get("layer")
 	var sum1 := 0
 	for i in range(3, live2.data.size(), 4):
@@ -1684,6 +1775,26 @@ func _kit_shots() -> void:
 	ws.set_preset("kit_spider")
 	await _wait(0.6)
 	await _shot("kit-core")
+	# UI v0.2: выбранная деталь — паспорт и действия справа; шаблоны «Вертушка» и «Пустой»
+	tabs["body"] = "end"
+	ws.ui.call("_build_left")
+	ws.set_preset("kit_bot")
+	await _wait(0.4)
+	ws.select_stand("9")
+	await _wait(0.4)
+	await _shot("select-stand")
+	ws.select_shelf("kit_hand_claw")
+	await _wait(0.4)
+	await _shot("select-shelf")
+	ws.clear_selection()
+	tabs["body"] = "limb"
+	ws.ui.call("_build_left")
+	ws.set_preset("kit_spinner")
+	await _wait(0.6)
+	await _shot("spinner")
+	ws.set_preset("kit_empty")
+	await _wait(0.6)
+	await _shot("empty")
 
 
 ## Кадры покраски: вкладка «Покраска», баллончик над плечом (кольцо и кольцо пары), штрихи, звезда-трафарет, наклейка-фикстура;

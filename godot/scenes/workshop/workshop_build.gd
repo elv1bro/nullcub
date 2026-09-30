@@ -36,6 +36,9 @@ signal toast(text: String, colour: Color)
 signal mode_changed(mode: int)
 signal view_changed(view: int)
 signal dummy_hit(amount: float, position: Vector3, part: String, kind: String)
+## Выбор (UI v0.2, контекстная правая панель): {} — ничего; {"source": "shelf", "part": id} — деталь каталога;
+## {"source": "stand", "target": "body" | "weapon", "uid": uid} — деталь на кукле / верстаке.
+signal selection_changed
 
 enum Mode { BUILD, TEST }
 enum View { BODY, WEAPON }
@@ -55,7 +58,9 @@ const HOLD_ANGLE_DEG := 90.0      # как WeaponPickup.hold_angle_deg: оруж
 const HAND_GRIP := Vector3(0, -0.03, 0)   # WeaponPickup.hand_grip_offset
 const CAM_FOV := 38.0
 ## Свободная середина экрана между панелями (UI: слева и справа по 460 px из 1920) — по ней вписывается кукла.
-const FREE_W_FRAC := 0.5
+const FREE_W_FRAC := 0.47   # UI v0.2: каталог 606 px + правая панель 404 px — кукле ~47 % ширины
+const FREE_CX_FRAC := 0.553  # середина свободной зоны по ширине (606 … 1516 px из 1920)
+const FREE_H_FRAC := 0.78    # по высоте: между верхней панелью (92 px) и кнопкой ИСПЫТАТЬ
 const CAM_TAU := 0.22
 const COL_OK := Color(0.55, 0.95, 0.45)
 const COL_WARN := Color(1.0, 0.72, 0.25)
@@ -99,6 +104,10 @@ var paint_tool: String:
 		return paint.tool if paint != null else ""
 var hover: Dictionary = {}               # {target: "body"|"weapon", uid}
 var history: Array = []
+var redo_stack: Array = []                 # отменённые правки (Ctrl+Y); любая новая правка его чистит
+var selected: Dictionary = {}              # см. selection_changed
+var show_com := true                       # Physics Overlay: центр массы стенда (◎)
+var physics_hints := true                  # при протяжке: куда сместится ЦМ, всплывашка разъёма
 var last_result: Dictionary = {}
 ## Испытание.
 var test_doll: ModularDoll
@@ -486,6 +495,7 @@ func _name_custom_weapon() -> void:
 # --- история ---
 
 func _push_history() -> void:
+	redo_stack.clear()
 	history.append({"body": CraftEdit.dup_body(blueprint), "weapon": CraftEdit.dup_weapon(weapon_bp)})
 	while history.size() > HISTORY_MAX:
 		history.remove_at(0)
@@ -496,12 +506,143 @@ func undo() -> bool:
 	if history.is_empty() or mode != Mode.BUILD or (paint != null and paint.busy()):
 		return false
 	var s: Dictionary = history.pop_back()
+	redo_stack.append({"body": CraftEdit.dup_body(blueprint), "weapon": CraftEdit.dup_weapon(weapon_bp)})
 	blueprint = s["body"]
 	weapon_bp = s["weapon"]
 	_rebuild()
 	mark_dirty()
 	_say("Отменено", COL_INFO)
 	return true
+
+
+## Вернуть отменённое (Ctrl+Y / Ctrl+Shift+Z).
+func redo() -> bool:
+	if redo_stack.is_empty() or mode != Mode.BUILD or (paint != null and paint.busy()):
+		return false
+	var s: Dictionary = redo_stack.pop_back()
+	history.append({"body": CraftEdit.dup_body(blueprint), "weapon": CraftEdit.dup_weapon(weapon_bp)})
+	blueprint = s["body"]
+	weapon_bp = s["weapon"]
+	_rebuild()
+	mark_dirty()
+	_say("Возвращено", COL_INFO)
+	return true
+
+
+# --- выбор, установить / дубликат / зеркало / удалить (UI v0.2) ---
+
+func select_shelf(part_id: String) -> void:
+	selected = {"source": "shelf", "part": part_id} if CraftEdit.part(part_id) != null else {}
+	_apply_highlights()
+	selection_changed.emit()
+
+
+func select_stand(uid: String, target := "body") -> void:
+	var bp: Resource = weapon_bp if target == "weapon" else blueprint
+	selected = {"source": "stand", "target": target, "uid": uid} if not CraftEdit.find(bp, uid).is_empty() else {}
+	_apply_highlights()
+	selection_changed.emit()
+
+
+func clear_selection() -> bool:
+	if selected.is_empty():
+		return false
+	selected = {}
+	_apply_highlights()
+	selection_changed.emit()
+	return true
+
+
+## Деталь выбора (PartDef) — каталога или на кукле; null — ничего.
+func selected_def() -> PartDef:
+	if String(selected.get("source", "")) == "shelf":
+		return CraftEdit.part(String(selected["part"]))
+	if String(selected.get("source", "")) == "stand":
+		var bp: Resource = weapon_bp if String(selected["target"]) == "weapon" else blueprint
+		return CraftEdit.def_of(bp, String(selected["uid"]))
+	return null
+
+
+## «Установить»: деталь каталога — на лучший свободный подходящий разъём (без замены; нет свободного — отказ словами).
+func install_part(part_id: String) -> Dictionary:
+	var targets := targets_for(part_id)
+	var best: Dictionary = {}
+	for t in targets:
+		if not bool(t["accepts"]) or not bool(t["ok"]):
+			continue
+		if bool(t.get("root", false)) or String(t["replace"]) == "":
+			best = t
+			break
+	if best.is_empty():
+		var energy := false
+		for t in targets:
+			energy = energy or (bool(t["accepts"]) and String(t["code"]) == "energy")
+		var d := CraftEdit.part(part_id)
+		var why := "не хватает энергии" if energy else "нет свободного подходящего разъёма"
+		_say("«%s»: %s" % [d.title if d != null else part_id, why], COL_BAD if energy else COL_WARN)
+		return {"ok": false, "code": "energy" if energy else "no_socket"}
+	var r := attach_part(part_id, "" if bool(best.get("root", false)) else String(best["uid"]), String(best["anchor"]), String(best["target"]))
+	if bool(r.get("ok", false)) and String(r.get("uid", "")) != "":
+		select_stand(String(r["uid"]), String(best["target"]))
+	return r
+
+
+## «Дубликат»: такая же деталь (материал, шарнир) на свободный подходящий разъём — сначала зеркальный той же детали-родителя.
+func duplicate_part(uid: String, target := "body") -> Dictionary:
+	var bp: Resource = weapon_bp if target == "weapon" else blueprint
+	var n := CraftEdit.find(bp, uid)
+	if n.is_empty() or String(n.get("parent", "")) == "":
+		_say("Ядро не дублируется", COL_WARN)
+		return {"ok": false, "code": "root"}
+	var part_id := String(n["part"])
+	var want := CraftEdit.mirror_anchor(String(n.get("anchor", "")))
+	var best: Dictionary = {}
+	for t in targets_for(part_id, target):
+		if not bool(t["accepts"]) or not bool(t["ok"]) or String(t["replace"]) != "" or bool(t.get("root", false)):
+			continue
+		if best.is_empty():
+			best = t
+		if String(t["uid"]) == String(n["parent"]) and String(t["anchor"]) == want:
+			best = t
+			break
+	if best.is_empty():
+		_say("Дубликат некуда поставить: нет свободного разъёма (или энергии)", COL_WARN)
+		return {"ok": false, "code": "no_socket"}
+	var r := attach_part(part_id, String(best["uid"]), String(best["anchor"]), target)
+	if bool(r.get("ok", false)) and target == "body":
+		var n2 := CraftEdit.find(blueprint, String(r["uid"]))
+		if n.has("mat"):
+			n2["mat"] = n["mat"]
+		_rebuild()
+		select_stand(String(r["uid"]), target)
+	return r
+
+
+## «Зеркалить»: поддерево детали — на зеркальный разъём (Anchor_*_L ↔ _R той же детали-родителя или зеркальной ветки);
+## занятый разъём заменяется. Энергия — как при ручной сборке.
+func mirror_part(uid: String) -> Dictionary:
+	var trial := CraftEdit.dup_body(blueprint)
+	var r := CraftEdit.mirror_subtree(trial, uid)
+	if not bool(r["ok"]):
+		_say(String(r["reason"]), COL_BAD if String(r.get("code", "")) == "energy" else COL_WARN)
+		return r
+	_push_history()
+	blueprint = trial
+	_name_custom_body()
+	_rebuild()
+	_say("Зеркально: %d дет.%s" % [int(r["count"]), " (замена)" if String(r.get("replaced", "")) != "" else ""], COL_OK)
+	select_stand(String(r["uid"]))
+	return r
+
+
+## «Удалить» выбранного.
+func delete_selected() -> PackedStringArray:
+	if String(selected.get("source", "")) != "stand":
+		return PackedStringArray()
+	var gone := detach_part(String(selected["uid"]), String(selected["target"]))
+	if not gone.is_empty():
+		clear_selection()
+	return gone
 
 
 # --- автосейв правок ---
@@ -571,6 +712,11 @@ func load_path(path: String) -> bool:
 
 func _rebuild() -> void:
 	_clear_ghost()
+	if String(selected.get("source", "")) == "stand":   # выбранную деталь открутили / отменили — выбор снимается
+		var sbp: Resource = weapon_bp if String(selected["target"]) == "weapon" else blueprint
+		if CraftEdit.find(sbp, String(selected["uid"])).is_empty():
+			selected = {}
+			selection_changed.emit()
 	if mode == Mode.BUILD:
 		_rebuild_stand()
 		if paint != null:
@@ -1101,6 +1247,7 @@ func _make_materials() -> void:
 	_mats["control"] = _overlay_mat(Color(PULL_COLOURS["lmb"], 0.42))
 	_mats["control_rmb"] = _overlay_mat(Color(PULL_COLOURS["rmb"], 0.42))
 	_mats["hover"] = _overlay_mat(Color(1.0, 0.97, 0.85, 0.22))
+	_mats["selected"] = _overlay_mat(Color(0.55, 0.85, 1.0, 0.5))
 	_mats["remove"] = _overlay_mat(Color(1.0, 0.25, 0.18, 0.45))
 	_mats["replace"] = _overlay_mat(Color(1.0, 0.55, 0.15, 0.4))
 	_mats["pick"] = _overlay_mat(Color(1.0, 0.85, 0.35, 0.3))
@@ -1152,6 +1299,9 @@ func _apply_highlights() -> void:
 	for c in blueprint.control:
 		for m in part_meshes("body", c):
 			_set_overlay(m, _mats["control_rmb" if blueprint.control_rmb.has(c) else "control"])
+	if String(selected.get("source", "")) == "stand":
+		for m in part_meshes(String(selected["target"]), String(selected["uid"])):
+			_set_overlay(m, _mats["selected"])
 	if not drag.is_empty():
 		var t := drag_target()
 		if not t.is_empty() and String(t["replace"]) != "":
@@ -1277,8 +1427,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					_say("Шарнир: кликни по детали куклы (Esc / ПКМ — отмена)", COL_WARN)
 				get_viewport().set_input_as_handled()
 			elif not h.is_empty():
-				_say("%s — ПКМ: открутить%s" % [part_info(String(h["target"]), String(h["uid"])),
-					"" if String(h["target"]) == "weapon" else ",  Q и клик: рука мышью"], COL_INFO)
+				select_stand(String(h["uid"]), String(h["target"]))   # UI v0.2: справа паспорт детали и действия
+			else:
+				clear_selection()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		var k := event as InputEventKey
 		match k.physical_keycode:
@@ -1289,13 +1440,28 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_TAB:
 				set_view(View.WEAPON if view == View.BODY else View.BODY)
 			KEY_Z:
-				if k.ctrl_pressed or k.meta_pressed:
+				if (k.ctrl_pressed or k.meta_pressed) and k.shift_pressed:
+					redo()
+				elif k.ctrl_pressed or k.meta_pressed:
 					undo()
+			KEY_Y:
+				if k.ctrl_pressed or k.meta_pressed:
+					redo()
+			KEY_D:
+				if String(selected.get("source", "")) == "stand":
+					duplicate_part(String(selected["uid"]), String(selected["target"]))
+				elif String(selected.get("source", "")) == "shelf":
+					install_part(String(selected["part"]))
+			KEY_M:
+				if String(selected.get("source", "")) == "stand" and String(selected["target"]) == "body":
+					mirror_part(String(selected["uid"]))
+			KEY_DELETE, KEY_BACKSPACE:
+				delete_selected()
 			KEY_R:
 				if paint != null and paint.tab_open and view == View.BODY:
 					paint.turn_stand(-1 if k.shift_pressed else 1)   # полка «Покраска» без инструмента: тоже крутит стенд
 			KEY_ESCAPE:
-				if not clear_tools():   # инструмент в руке — Esc его кладёт; иначе двойной Esc — выход
+				if not clear_tools() and not clear_selection():   # инструмент в руке / выбор — Esc снимает; иначе двойной Esc — выход
 					if _time < _esc_armed_until:
 						_flush_autosave(true)
 						get_tree().quit()
@@ -1488,10 +1654,97 @@ func body_stats() -> Dictionary:
 		var m := _mount()
 		weapon_line = "%s → %s" % [(blueprint.weapon as WeaponBlueprint).title.trim_suffix(" *"),
 			uid_title("body", String(m["uid"])) if String(m["uid"]) != "" else "некуда"]
+	var accel := ref / maxf(mass + wmass, 0.1)
 	return {"title": blueprint.title, "energy": blueprint.energy_used(), "budget": blueprint.energy_budget, "mass": mass,
-		"weapon_mass": wmass, "bodies": bodies, "parts": blueprint.nodes.size(), "accel": ref / maxf(mass + wmass, 0.1),
+		"weapon_mass": wmass, "bodies": bodies, "parts": blueprint.nodes.size(), "accel": accel,
+		"handling": _handling(accel), "stability": _stability(), "durability": _durability(),
 		"control": ctrl, "weapon": weapon_line, "errors": CraftEdit.friendly_errors(blueprint),
 		"warnings": CraftEdit.warnings(blueprint)}
+
+
+## Управляемость 0…1 (UI v0.2): разгон × то, чем кукла правит — тяги, моторы (+), свободные шарниры (−).
+func _handling(accel: float) -> float:
+	var motors := 0
+	var free := 0
+	for n in blueprint.nodes:
+		match String(n.get("joint", "")):
+			"motor": motors += 1
+			"free": free += 1
+	return clampf(accel / 1.3 * (0.75 + 0.08 * blueprint.control.size() + 0.04 * motors - 0.04 * free), 0.0, 1.0)
+
+
+## Устойчивость 0…1 (UI v0.2): ширина опоры (нижние детали стенда) к высоте центра массы над полом.
+func _stability() -> float:
+	if stand == null or stand.parts.is_empty():
+		return 0.0
+	var com := stand_com()
+	var min_y := INF
+	for b in stand.parts.values():
+		min_y = minf(min_y, _visual_aabb(b).position.y)
+	var lo := INF
+	var hi := -INF
+	for b in stand.parts.values():
+		var bx := _visual_aabb(b)
+		if bx.position.y < min_y + 0.08:
+			lo = minf(lo, bx.position.x)
+			hi = maxf(hi, bx.end.x)
+	var span := hi - lo if hi > lo else 0.1
+	return clampf(span / maxf(com.y - min_y, 0.15) / 1.2, 0.0, 1.0)
+
+
+## Прочность 0…1 (UI v0.2): средняя CraftEdit.part_durability по массе узлов. Показатель мастерской — в бою пока не читается.
+func _durability() -> float:
+	var sm := 0.0
+	var sd := 0.0
+	for n in blueprint.nodes:
+		var uid := String(n.get("uid", ""))
+		var d := CraftEdit.part(String(n.get("part", "")))
+		var m := blueprint.node_mass(uid)
+		sm += m
+		sd += m * CraftEdit.part_durability(d, String(n.get("mat", "")))
+	return sd / sm if sm > 0.0 else 0.0
+
+
+## Центр массы стенда (мир); без стенда — ноль.
+func stand_com() -> Vector3:
+	if stand == null:
+		return Vector3.ZERO
+	var sm := 0.0
+	var acc := Vector3.ZERO
+	for b in stand.parts.values():
+		var rb := b as RigidBody3D
+		acc += rb.global_transform * ModularDoll._com_local(rb) * rb.mass
+		sm += rb.mass
+	return acc / sm if sm > 0.0 else Vector3.ZERO
+
+
+## Центр массы с деталью из протяжки на выбранном разъёме (Physics Overlay: куда он сместится); null — не тащим / не на теле.
+func drag_com() -> Variant:
+	if drag.is_empty() or stand == null:
+		return null
+	var t := drag_target()
+	if t.is_empty() or String(t["target"]) != "body" or not bool(t["ok"]):
+		return null
+	var d := CraftEdit.part(String(drag["part"]))
+	var g := ghost_transform(String(drag["part"]), t)
+	if d == null or not (g.get("xf") is Transform3D):
+		return null
+	var sm := 0.0
+	var acc := Vector3.ZERO
+	var gone := {}   # тела заменяемого поддерева (своё тело — не слитые fixed-детали, их тело — хозяин)
+	if String(t["replace"]) != "":
+		for u in CraftEdit.subtree(blueprint, String(t["replace"])):
+			if not CraftEdit.is_fixed(blueprint, u):
+				gone[String(stand.uid_body.get(u, ""))] = true
+	for bn in stand.parts:
+		var rb := stand.parts[bn] as RigidBody3D
+		if gone.has(String(bn)):
+			continue
+		acc += rb.global_transform * ModularDoll._com_local(rb) * rb.mass
+		sm += rb.mass
+	acc += (g["xf"] as Transform3D).origin * d.mass
+	sm += d.mass
+	return acc / sm if sm > 0.0 else null
 
 
 ## Оружие верстака: цифры CraftedWeapon.summary() и слова. [{label, value, word, frac}] + ошибки.
@@ -1571,10 +1824,10 @@ func hint_text() -> String:
 		var bp: Resource = weapon_bp if String(hover["target"]) == "weapon" else blueprint
 		var n := CraftEdit.subtree(bp, String(hover["uid"])).size()
 		var more := "" if n <= 1 else " (+%d)" % (n - 1)
-		return "%s   ·   ПКМ — открутить%s   ·   Q — рука мышью" % [part_info(String(hover["target"]), String(hover["uid"])), more]
+		return "%s   ·   ПКМ — открутить%s   ·   Q — тяги" % [part_info(String(hover["target"]), String(hover["uid"])), more]
 	if view == View.WEAPON:
 		return "Тащи рукоять, навершие или мод на верстак   ·   ПКМ по детали — снять   ·   «В руку» — дать кукле   ·   Tab — к телу"
-	return "Тащи деталь с полки на светящийся якорь   ·   ПКМ — открутить   ·   Q — рука мышью   ·   Ctrl+Z — отмена   ·   T — испытать"
+	return "Тащи деталь с полки на светящийся якорь   ·   ПКМ — открутить   ·   Q — тяги   ·   Ctrl+Z — отмена   ·   T — испытать"
 
 
 ## Что рисовать поверх 3D (scenes/workshop/ui/anchor_overlay.gd): [{pos, dir, state, label, joint?}] в экранных точках.
@@ -1590,6 +1843,7 @@ func overlay_items() -> Array:
 		for i in range(targets.size()):
 			var t: Dictionary = targets[i]
 			if not bool(t["accepts"]):
+				out.append(_overlay_item(cam, t["xf"], "dim", ""))   # несовместимый разъём — приглушён (UI v0.2)
 				continue
 			var st := "ok"
 			if i == int(drag["index"]):
@@ -1599,6 +1853,7 @@ func overlay_items() -> Array:
 			elif String(t["replace"]) != "":
 				st = "replace"
 			out.append(_overlay_item(cam, t["xf"], st, ""))
+		_com_items(cam, out)
 		return out
 	var target := "weapon" if view == View.WEAPON else "body"
 	var bp: Resource = weapon_bp if target == "weapon" else blueprint
@@ -1635,7 +1890,36 @@ func overlay_items() -> Array:
 				var box := _visual_aabb(ms[0])
 				out.append({"pos": cam.unproject_position(box.get_center()), "dir": Vector2.ZERO, "state": "control",
 					"label": "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"})
+	if String(selected.get("source", "")) == "stand" and String(selected["target"]) == target:
+		var ms2 := part_meshes(target, String(selected["uid"]))
+		if not ms2.is_empty():
+			var bx := _visual_aabb(ms2[0])
+			for mi in ms2:
+				bx = bx.merge(_visual_aabb(mi))
+			var c2 := cam.unproject_position(bx.get_center())
+			var r2 := cam.unproject_position(bx.get_center() + cam.global_basis.x * bx.size.length() * 0.5).distance_to(c2)
+			out.append({"pos": c2, "dir": Vector2.ZERO, "state": "selected", "r": clampf(r2, 18.0, 160.0), "label": ""})
+	_com_items(cam, out)
 	return out
+
+
+## Physics Overlay (UI v0.2): ◎ центр массы стенда и отвес до пола; при протяжке — куда он сместится (physics_hints).
+func _com_items(cam: Camera3D, out: Array) -> void:
+	if view != View.BODY or stand == null or (paint != null and paint.tab_open):
+		return
+	var floor_y := stand_root.global_position.y if stand_root != null else 0.0
+	if show_com:
+		var c := stand_com()
+		out.append({"pos": cam.unproject_position(c), "floor": cam.unproject_position(Vector3(c.x, floor_y, c.z)), "dir": Vector2.ZERO,
+			"state": "com", "label": ""})
+	if physics_hints:
+		var g: Variant = drag_com()
+		if g is Vector3:
+			var c0 := stand_com()
+			var dx := ((g as Vector3).x - c0.x) * 100.0
+			var dy := ((g as Vector3).y - c0.y) * 100.0
+			out.append({"pos": cam.unproject_position(g), "from": cam.unproject_position(c0), "dir": Vector2.ZERO, "state": "com_ghost",
+				"label": "ЦМ %s%.0f / %s%.0f см" % ["→" if dx >= 0 else "←", absf(dx), "↑" if dy >= 0 else "↓", absf(dy)]})
 
 
 func _overlay_item(cam: Camera3D, xf: Transform3D, state: String, label: String) -> Dictionary:
@@ -1693,12 +1977,14 @@ func _camera_goal() -> Vector3:
 	var vp := get_viewport().get_visible_rect().size
 	var aspect := vp.x / maxf(vp.y, 1.0)
 	var half_w_frac := FREE_W_FRAC   # доля ширины экрана, где кукла
-	var need_h := maxf(box.size.y * 0.5 + 0.28, (box.size.x * 0.5 + 0.25) / (aspect * half_w_frac))
+	# UI v0.2: сверху панель (энергия, файлы), снизу ИСПЫТАТЬ — по высоте кукле FREE_H_FRAC экрана
+	var need_h := maxf(box.size.y * 0.5 / FREE_H_FRAC + 0.12, (box.size.x * 0.5 + 0.25) / (aspect * half_w_frac))
 	need_h = maxf(need_h, min_h)
 	var dist := need_h / tan(deg_to_rad(CAM_FOV) * 0.5)
 	var c := box.get_center()
-	# низ экрана занят подсказкой — кукла чуть выше середины
-	return Vector3(c.x, c.y - need_h * 0.06, c.z + dist)
+	# кукла — в середине свободной зоны между каталогом и правой панелью (FREE_CX_FRAC), чуть выше центра (снизу ИСПЫТАТЬ)
+	var shift_x := (FREE_CX_FRAC - 0.5) * 2.0 * need_h * aspect
+	return Vector3(c.x - shift_x, c.y - need_h * 0.08, c.z + dist)
 
 
 func _say(text: String, colour: Color) -> void:
