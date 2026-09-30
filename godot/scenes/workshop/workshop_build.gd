@@ -52,6 +52,16 @@ const PICK_LAYER := 1 << 19
 const TEST_GROUP := "workshop_test"
 const POSE_GROUPS := ["Neck", "Shoulder", "Elbow", "Hip", "Knee", "Wrist", "Ankle"]
 const SNAP_PX := 110.0            # радиус «прилипания» к якорю на экране (база 1920×1080)
+const MAGNET_PX := 150.0          # v0.3: в этом радиусе деталь под курсором начинает поворачиваться и тянуться к разъёму
+const SNAP_IN_PX := 34.0         # ближе — деталь в руке садится на разъём целиком
+const CARRY_DEPTH := 0.35         # деталь под курсором — на столько ближе к камере, чем стенд
+const BIG_BRANCH := 5             # удаление ветки от стольких деталей — второе нажатие Del
+const ORBIT_YAW_MAX := 70.0
+const ORBIT_PITCH := Vector2(-10.0, 35.0)
+const ZOOM_RANGE := Vector2(0.55, 1.7)
+const EDGE_PAN_PX := 70.0         # протяжка у края рабочей зоны — камера мягко смещается
+const FLASH_S := 0.4
+const REFUSE_S := 1.1
 const DRAG_MOVE_PX := 10.0        # сдвиг, после которого нажатие на карточку — протяжка, а не клик
 const HISTORY_MAX := 50
 const HOLD_ANGLE_DEG := 90.0      # как WeaponPickup.hold_angle_deg: оружие в кисти в сторону от тела
@@ -62,6 +72,8 @@ const FREE_W_FRAC := 0.47   # UI v0.2: каталог 606 px + правая па
 const FREE_CX_FRAC := 0.553  # середина свободной зоны по ширине (606 … 1516 px из 1920)
 const FREE_H_FRAC := 0.78    # по высоте: между верхней панелью (92 px) и кнопкой ИСПЫТАТЬ
 const CAM_TAU := 0.22
+const PART_NAMES := "res://scripts/body/part_names.gd"
+const SFX_SCRIPT := "res://scenes/workshop/ws_sfx.gd"
 const COL_OK := Color(0.55, 0.95, 0.45)
 const COL_WARN := Color(1.0, 0.72, 0.25)
 const COL_BAD := Color(1.0, 0.36, 0.28)
@@ -106,8 +118,33 @@ var hover: Dictionary = {}               # {target: "body"|"weapon", uid}
 var history: Array = []
 var redo_stack: Array = []                 # отменённые правки (Ctrl+Y); любая новая правка его чистит
 var selected: Dictionary = {}              # см. selection_changed
-var show_com := true                       # Physics Overlay: центр массы стенда (◎)
-var physics_hints := true                  # при протяжке: куда сместится ЦМ, всплывашка разъёма
+var show_com := false                      # Physics Overlay (v0.3: кнопка ФИЗИКА, по умолчанию выключен — модель чистая)
+var physics_hints := true                  # при протяжке: ⚡ / кг у детали и «станет» справа
+## v0.3: камера — орбита правой кнопкой, колесо — зум, R — сброс; кадр с гистерезисом (не отъезжает от мелких движений)
+var cam_yaw := 0.0
+var cam_pitch := 0.0
+var cam_zoom := 1.0
+var _cam_pan := Vector3.ZERO               # сдвиг у края экрана при протяжке (в системе камеры), тает после
+var _frame_h := 0.0                        # полувысота кадра, которую держит камера
+var _rmb: Dictionary = {}                  # {pos, moved} — зажата ПКМ: орбита или клик
+var _lmb: Dictionary = {}                  # {uid, target, pos, moved} — нажатие по детали стенда: выбор или перенос
+var _last_click := {"uid": "", "t": -10.0}
+var _carry: Node3D                         # v0.3: настоящая 3D-деталь под курсором при протяжке
+var _carry_xf := Transform3D.IDENTITY
+var _s_pivot := Vector3.ZERO               # сглаженное состояние камеры (кадр, орбита, зум)
+var _s_h := 1.0
+var _s_yaw := 0.0
+var _s_pitch := 0.0
+var _s_zoom := 1.0
+var _frame_c := Vector3.ZERO
+var _edge_t := 0.0
+var _hidden_uids: PackedStringArray = []   # перенос ветки: её меши на стенде спрятаны, пока тащишь
+var fx_events: Array = []                  # вспышки поверх 3D: [{kind: "flash"|"refuse", pos: Vector3, t0, text}]
+var pending_mirror: Dictionary = {}        # предпросмотр зеркала: {uid, trial, new: PackedStringArray}
+var _preview_bp: BodyBlueprint = null      # стенд строится из него (предпросмотр зеркала)
+var _delete_armed: Dictionary = {}         # {uid, until} — удаление большой ветки ждёт второго Del
+var recent_parts: PackedStringArray = []   # недавно поставленные детали (фильтр каталога «Недавние»)
+var sfx: Node                              # звуки мастерской (WsSfx), если есть
 var last_result: Dictionary = {}
 ## Испытание.
 var test_doll: ModularDoll
@@ -159,6 +196,10 @@ func _ready() -> void:
 	add_child(paint)
 	build_cam.fov = CAM_FOV
 	build_cam.make_current()
+	if ResourceLoader.exists(SFX_SCRIPT):
+		sfx = (load(SFX_SCRIPT) as GDScript).new() as Node
+		sfx.name = "Sfx"
+		add_child(sfx)
 	weapon_bp = CraftEdit.load_weapon_preset("hammer")
 	var bp: BodyBlueprint = null
 	if load_autosave:
@@ -188,9 +229,10 @@ func set_preset(id: String) -> bool:
 		return false
 	_push_history()
 	_adopt(bp)
+	cancel_mirror()
 	_rebuild()
-	_say("Шаблон: %s" % bp.title, COL_INFO)
-	return true
+	_frame_h = 0.0   # новая сборка — кадр заново
+	return true   # без «Шаблон: X» над бойцом (v0.3 §44): имя — в верхней панели
 
 
 ## Шаблон оружия на верстак (data/body/weapons/<id>.tres). Если оружие в руке — в руке тоже оно.
@@ -244,7 +286,7 @@ func attach_part(part_id: String, parent_uid: String, anchor: String, target := 
 	if target == "body" and lost != "" and paint != null:
 		var rf := paint.set_face_image(lost, false)
 		extra += " — фото на лице наклейкой" if bool(rf.get("ok", false)) else " — фото снято (у этой головы нет лица)"
-	_say("%s: %s%s" % [what, d.title if d != null else part_id, extra], COL_OK)
+	_say("%s: %s%s" % [what, _pname(d) if d != null else part_id, extra], COL_OK)
 	return r
 
 
@@ -267,7 +309,7 @@ func detach_part(uid: String, target := "body") -> PackedStringArray:
 		_name_custom_body()
 	_rebuild()
 	var tail := "" if gone.size() <= 1 else " и ещё %d" % (gone.size() - 1)
-	_say("Откручено: %s%s" % [d.title if d != null else uid, tail], COL_WARN)
+	_say("Откручено: %s%s" % [_pname(d) if d != null else uid, tail], COL_WARN)
 	return gone
 
 
@@ -495,6 +537,7 @@ func _name_custom_weapon() -> void:
 # --- история ---
 
 func _push_history() -> void:
+	_drop_mirror()
 	redo_stack.clear()
 	history.append({"body": CraftEdit.dup_body(blueprint), "weapon": CraftEdit.dup_weapon(weapon_bp)})
 	while history.size() > HISTORY_MAX:
@@ -505,6 +548,7 @@ func _push_history() -> void:
 func undo() -> bool:
 	if history.is_empty() or mode != Mode.BUILD or (paint != null and paint.busy()):
 		return false
+	_drop_mirror()
 	var s: Dictionary = history.pop_back()
 	redo_stack.append({"body": CraftEdit.dup_body(blueprint), "weapon": CraftEdit.dup_weapon(weapon_bp)})
 	blueprint = s["body"]
@@ -519,6 +563,7 @@ func undo() -> bool:
 func redo() -> bool:
 	if redo_stack.is_empty() or mode != Mode.BUILD or (paint != null and paint.busy()):
 		return false
+	_drop_mirror()
 	var s: Dictionary = redo_stack.pop_back()
 	history.append({"body": CraftEdit.dup_body(blueprint), "weapon": CraftEdit.dup_weapon(weapon_bp)})
 	blueprint = s["body"]
@@ -537,11 +582,23 @@ func select_shelf(part_id: String) -> void:
 	selection_changed.emit()
 
 
-func select_stand(uid: String, target := "body") -> void:
+## Выбор детали на кукле / верстаке. branch — вся ветка (деталь и всё, что на ней: Shift-клик / двойной клик): дубликат и
+## зеркало тогда — всей ветки.
+func select_stand(uid: String, target := "body", branch := false) -> void:
 	var bp: Resource = weapon_bp if target == "weapon" else blueprint
-	selected = {"source": "stand", "target": target, "uid": uid} if not CraftEdit.find(bp, uid).is_empty() else {}
+	selected = {"source": "stand", "target": target, "uid": uid, "branch": branch} if not CraftEdit.find(bp, uid).is_empty() else {}
 	_apply_highlights()
 	selection_changed.emit()
+
+
+## Выбранные uid: деталь или ветка.
+func selected_uids() -> PackedStringArray:
+	if String(selected.get("source", "")) != "stand":
+		return PackedStringArray()
+	var bp: Resource = weapon_bp if String(selected["target"]) == "weapon" else blueprint
+	if bool(selected.get("branch", false)):
+		return CraftEdit.subtree(bp, String(selected["uid"]))
+	return PackedStringArray([String(selected["uid"])])
 
 
 func clear_selection() -> bool:
@@ -635,14 +692,98 @@ func mirror_part(uid: String) -> Dictionary:
 	return r
 
 
-## «Удалить» выбранного.
+## Зеркало v0.3 (M): сначала предпросмотр — зеркальная копия голубым полупрозрачным на кукле, Enter / M — поставить, Esc / ПКМ —
+## отмена. branch false — только сама деталь (её дети на копии не повторяются). Любая правка / отмена / протяжка снимает предпросмотр.
+func start_mirror_preview(uid: String, branch := true) -> Dictionary:
+	cancel_drag()
+	_drop_mirror()
+	var trial := CraftEdit.dup_body(blueprint)
+	var r := CraftEdit.mirror_subtree(trial, uid)
+	if bool(r["ok"]) and not branch:
+		for c in CraftEdit.children_of(trial, String(r["uid"])):
+			CraftEdit.detach(trial, String(c.get("uid", "")))
+		r["count"] = 1
+	if not bool(r["ok"]):
+		_say(String(r["reason"]), COL_BAD if String(r.get("code", "")) == "energy" else COL_WARN)
+		_play_sfx("invalid", null)
+		return r
+	pending_mirror = {"uid": uid, "trial": trial, "new": CraftEdit.subtree(trial, String(r["uid"])), "root": String(r["uid"]),
+		"count": int(r["count"]), "replaced": String(r.get("replaced", ""))}
+	_preview_bp = trial
+	_rebuild()
+	_say("Зеркало: Enter — поставить, Esc — отмена", COL_INFO)
+	return r
+
+
+## Поставить зеркальную копию из предпросмотра.
+func confirm_mirror() -> bool:
+	if pending_mirror.is_empty():
+		return false
+	var trial: BodyBlueprint = pending_mirror["trial"]
+	var root := String(pending_mirror["root"])
+	var cnt := int(pending_mirror["count"])
+	var rep_uid := String(pending_mirror["replaced"])
+	_push_history()   # снимает предпросмотр
+	blueprint = trial
+	_name_custom_body()
+	_rebuild()
+	for m in part_meshes("body", root):
+		fx_events.append({"kind": "flash", "pos": _visual_aabb(m).get_center(), "t0": _time, "text": ""})
+	_play_sfx("mirror", CraftEdit.def_of(blueprint, root))
+	_say("Зеркально: %d дет.%s" % [cnt, " (замена)" if rep_uid != "" else ""], COL_OK)
+	select_stand(root)
+	return true
+
+
+## Отменить предпросмотр зеркала (со стендом заново). false — предпросмотра не было.
+func cancel_mirror() -> bool:
+	if not _drop_mirror():
+		return false
+	if stand != null or mode == Mode.BUILD:
+		_rebuild()
+	return true
+
+
+func _drop_mirror() -> bool:
+	if pending_mirror.is_empty():
+		return false
+	pending_mirror = {}
+	_preview_bp = null
+	return true
+
+
+## Чертёж, по которому собран стенд (предпросмотр зеркала — пробный).
+func _stand_bp() -> BodyBlueprint:
+	return _preview_bp if _preview_bp != null else blueprint
+
+
+## «Удалить» выбранного: деталь с тем, что на ней (висеть ей не на чем). Большая ветка (≥ BIG_BRANCH деталей) — только со второго
+## нажатия (v0.3 §52), с анимацией откручивания.
 func delete_selected() -> PackedStringArray:
 	if String(selected.get("source", "")) != "stand":
 		return PackedStringArray()
-	var gone := detach_part(String(selected["uid"]), String(selected["target"]))
+	var uid := String(selected["uid"])
+	var tg := String(selected["target"])
+	if not confirm_big(uid, tg, "Del"):
+		return PackedStringArray()
+	var gone := unscrew(uid, tg)
 	if not gone.is_empty():
 		clear_selection()
 	return gone
+
+
+## Защита от случайного сноса большой ветки: первое нажатие — вопрос, второе (в течение 3 с, та же деталь) — да.
+func confirm_big(uid: String, target: String, key: String) -> bool:
+	var bp: Resource = weapon_bp if target == "weapon" else blueprint
+	var n := CraftEdit.subtree(bp, uid).size()
+	if n < BIG_BRANCH:
+		return true
+	if String(_delete_armed.get("uid", "")) == uid and _time < float(_delete_armed.get("until", 0.0)):
+		_delete_armed = {}
+		return true
+	_delete_armed = {"uid": uid, "until": _time + 3.0}
+	_say("Снять %s и ещё %d дет.? %s ещё раз — да" % [_pname(CraftEdit.def_of(bp, uid)), n - 1, key], COL_WARN)
+	return false
 
 
 # --- автосейв правок ---
@@ -704,6 +845,7 @@ func load_path(path: String) -> bool:
 	_push_history()
 	_adopt(bp)
 	_rebuild()
+	_frame_h = 0.0
 	_say("Загружено: %s" % bp.title, COL_OK)
 	return true
 
@@ -733,16 +875,17 @@ func _rebuild_stand() -> void:
 	stand = null
 	_shape_uid.clear()
 	_own_uid.clear()
-	if blueprint.nodes.is_empty() or not CraftEdit.structural_errors(blueprint).is_empty():
+	var sbp := _stand_bp()
+	if sbp.nodes.is_empty() or not CraftEdit.structural_errors(sbp).is_empty():
 		_update_pole()
 		return
 	var view_bp := _PreviewBlueprint.new()
-	view_bp.id = blueprint.id
-	view_bp.title = blueprint.title
+	view_bp.id = sbp.id
+	view_bp.title = sbp.title
 	view_bp.energy_budget = 100000
-	view_bp.nodes = CraftEdit._dup_nodes(blueprint.nodes)
-	view_bp.control = blueprint.control.duplicate()
-	view_bp.control_rmb = blueprint.control_rmb.duplicate()
+	view_bp.nodes = CraftEdit._dup_nodes(sbp.nodes)
+	view_bp.control = sbp.control.duplicate()
+	view_bp.control_rmb = sbp.control_rmb.duplicate()
 	var d := MODULAR_DOLL.instantiate() as ModularDoll
 	d.name = "StandDoll"
 	d.blueprint = view_bp
@@ -765,17 +908,21 @@ func _rebuild_stand() -> void:
 	for j in stand.joints.values():   # суставы между замороженными телами не нужны (и Jolt не должен их решать)
 		(j as Generic6DOFJoint3D).node_a = NodePath()
 		(j as Generic6DOFJoint3D).node_b = NodePath()
-	for n in blueprint.nodes:
+	for n in sbp.nodes:
 		var uid := String(n.get("uid", ""))
 		var def := CraftEdit.part(String(n.get("part", "")))
 		if def == null or not stand.uid_body.has(uid):
 			continue
 		var host := String(stand.uid_body[uid])
-		if CraftEdit.is_fixed(blueprint, uid):   # слитая деталь (fixed, декор, броня, сварка): формы — <форма>_<uid> в хозяине
+		if CraftEdit.is_fixed(sbp, uid):   # слитая деталь (fixed, декор, броня, сварка): формы — <форма>_<uid> в хозяине
 			for sn in CraftEdit.shape_names(def):
 				_shape_uid["%s/%s_%s" % [host, sn, uid]] = uid
 		else:
 			_own_uid[host] = uid
+	if not pending_mirror.is_empty():   # предпросмотр зеркала: копия — голубым полупрозрачным
+		for u in pending_mirror["new"]:
+			for m in part_meshes("body", u):
+				_set_material_override(m, _mats["mirror_ghost"])
 	_update_pole()
 	_make_held_weapon()
 
@@ -901,12 +1048,13 @@ func anchor_xf(target: String, uid: String, anchor: String) -> Variant:
 		return bench_weapon.global_transform * (info["rest"] as Transform3D) * (info["anchors"][an] as Transform3D)
 	if stand == null or not stand.uid_body.has(uid):
 		return null
-	var n := CraftEdit.find(blueprint, uid)
+	var sbp := _stand_bp()
+	var n := CraftEdit.find(sbp, uid)
 	var d := CraftEdit.part(String(n.get("part", "")))
 	var body := stand.parts.get(String(stand.uid_body[uid])) as Node3D
 	if body == null or d == null:
 		return null
-	var fixed := CraftEdit.is_fixed(blueprint, uid)
+	var fixed := CraftEdit.is_fixed(sbp, uid)
 	var m := body.get_node_or_null(an + ("_" + uid if fixed else "")) as Node3D
 	return m.global_transform if m != null else null
 
@@ -922,14 +1070,14 @@ func root_xf(target: String) -> Transform3D:
 
 ## Все цели для детали part_id в текущем виде: [{target, uid, anchor, xf, accepts, ok, code, reason, replace, root}].
 ## accepts — якорь принимает вид детали (только такие светятся); ok — можно поставить сейчас (check()).
-func targets_for(part_id: String, target := "") -> Array:
+func targets_for(part_id: String, target := "", src: Resource = null) -> Array:
 	if target == "":
 		target = "weapon" if view == View.WEAPON else "body"
 	var d := CraftEdit.part(part_id)
 	var out: Array = []
 	if d == null:
 		return out
-	var bp: Resource = weapon_bp if target == "weapon" else blueprint
+	var bp: Resource = src if src != null else (weapon_bp if target == "weapon" else blueprint)
 	var root_kind := "handle" if target == "weapon" else "core"
 	if d.kind == root_kind:
 		var c := CraftEdit.check_root(bp, part_id)
@@ -966,9 +1114,12 @@ func energy_free() -> int:
 
 # =================================================================== протяжка
 
-func begin_drag(part_id: String, screen_pos: Vector2) -> void:
+## Взять деталь в руку (v0.3 §13–19): part_id — из каталога; opts: {"copy_of": uid, "branch": bool} — дубликат детали / ветки
+## (D), {"move": uid} — перенос ветки с куклы. Под курсором — настоящая 3D-деталь; совместимые разъёмы проступают.
+func begin_drag(part_id: String, screen_pos: Vector2, opts := {}) -> void:
 	if mode != Mode.BUILD:
 		return
+	cancel_mirror()
 	control_pick = false
 	paint_mat = ""
 	joint_pick = ""
@@ -976,8 +1127,28 @@ func begin_drag(part_id: String, screen_pos: Vector2) -> void:
 	var d := CraftEdit.part(part_id)
 	if d == null:
 		return
-	var targets := targets_for(part_id)
-	drag = {"part": part_id, "targets": targets, "index": -1, "sticky": false, "start": screen_pos, "pos": screen_pos, "moved": false}
+	var src := blueprint
+	var move := String(opts.get("move", ""))
+	if move != "":
+		src = CraftEdit.dup_body(blueprint)   # разъёмы — без самой ветки (на себя не повесить)
+		CraftEdit.detach(src, move)
+		_hidden_uids = CraftEdit.subtree(blueprint, move)
+	var targets := targets_for(part_id, "", src)
+	drag = {"part": part_id, "targets": targets, "index": -1, "sticky": bool(opts.get("sticky", false)), "start": opts.get("start", screen_pos),
+		"pos": screen_pos, "moved": false, "copy_of": String(opts.get("copy_of", "")), "branch": bool(opts.get("branch", false)),
+		"move": move, "trials": {}}
+	if move != "" or bool(drag["branch"]):   # ветка: можно ли — решает пробная сборка целиком (энергия всей ветки)
+		for t in targets:
+			if bool(t["accepts"]):
+				var tr := drag_trial(t)
+				t["ok"] = bool(tr.get("ok", false))
+				t["code"] = String(tr.get("code", ""))
+				t["reason"] = String(tr.get("reason", ""))
+	for u in _hidden_uids:
+		for m in part_meshes("body", u):
+			(m as Node3D).visible = false
+	_make_carry(part_id)
+	_apply_highlights()
 	var any_ok := false
 	var energy_block := false
 	for t in targets:
@@ -986,9 +1157,10 @@ func begin_drag(part_id: String, screen_pos: Vector2) -> void:
 		elif bool(t["accepts"]) and String(t["code"]) == "energy":
 			energy_block = true
 	if not any_ok and energy_block:
-		_say("Не хватает энергии: %s стоит от ⚡%d (дальше от ядра дороже), свободно %d" % [d.title, d.energy, energy_free()], COL_BAD)
+		_say("Не хватает энергии — дальше от ядра дороже, свободно ⚡%d" % energy_free(), COL_BAD)
 	elif not any_ok:
-		_say("Некуда поставить деталь «%s»: нет свободного подходящего якоря" % d.title, COL_WARN)
+		_say("Некуда поставить: нет свободного подходящего разъёма", COL_WARN)
+	_play_sfx("grab", d)
 	update_drag(screen_pos)
 	changed.emit()
 
@@ -1021,7 +1193,53 @@ func update_drag(screen_pos: Vector2) -> void:
 		changed.emit()   # UI: энергия «станет» и подсказка
 
 
-## Отпустить: прикрутить на выбранную цель (если можно). Возвращает результат attach_part или {ok: false}.
+## Пробная сборка для цели протяжки (кэш по индексу): {ok, code, reason, bp, uid, energy_after, mass_after}. Новая деталь, дубликат
+## (с материалом и шарниром), дубликат ветки, перенос ветки — одна схема: считаем на копии чертежа, применяем её же.
+func drag_trial(t: Dictionary = {}) -> Dictionary:
+	if drag.is_empty():
+		return {}
+	if t.is_empty():
+		t = drag_target()
+	if t.is_empty() or String(t["target"]) != "body":
+		return {}
+	var key := "%s/%s" % [t["uid"], t["anchor"]]
+	var cache: Dictionary = drag["trials"]
+	if cache.has(key):
+		return cache[key]
+	var part_id := String(drag["part"])
+	var r := {}
+	if not bool(t["accepts"]):
+		r = {"ok": false, "code": "kind", "reason": "Сюда эта деталь не встанет"}
+	elif String(drag["move"]) != "":
+		r = CraftEdit.move_subtree(blueprint, String(drag["move"]), String(t["uid"]), String(t["anchor"]))
+	elif String(drag["copy_of"]) != "" and bool(drag["branch"]):
+		var tb := CraftEdit.dup_body(blueprint)
+		r = CraftEdit.graft_subtree(tb, blueprint, String(drag["copy_of"]), String(t["uid"]), String(t["anchor"]))
+		r["bp"] = tb
+	else:
+		var tb2 := CraftEdit.dup_body(blueprint)
+		r = CraftEdit.set_root(tb2, part_id) if bool(t["root"]) else CraftEdit.attach(tb2, part_id, String(t["uid"]), String(t["anchor"]))
+		if bool(r.get("ok", false)) and String(drag["copy_of"]) != "":
+			var src := CraftEdit.find(blueprint, String(drag["copy_of"]))
+			var dn := CraftEdit.find(tb2, String(r.get("uid", "")))
+			for k in ["mat", "joint", "rest_deg"]:
+				if src.has(k):
+					dn[k] = src[k]
+			if tb2.energy_used() > tb2.energy_budget:
+				r = {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason("копию", tb2.energy_used(), tb2.energy_budget)}
+		r["bp"] = tb2
+	if r.get("bp") is BodyBlueprint:
+		var tbp := r["bp"] as BodyBlueprint
+		r["energy_after"] = tbp.energy_used()
+		r["mass_after"] = tbp.total_mass()
+	else:
+		r["energy_after"] = blueprint.energy_used()
+		r["mass_after"] = blueprint.total_mass()
+	cache[key] = r
+	return r
+
+
+## Отпустить: поставить на выбранный разъём (если можно). Возвращает {ok, uid, reason}.
 func end_drag(screen_pos: Vector2) -> Dictionary:
 	if drag.is_empty():
 		return {"ok": false}
@@ -1029,25 +1247,277 @@ func end_drag(screen_pos: Vector2) -> Dictionary:
 	var i := int(drag["index"])
 	var part_id := String(drag["part"])
 	var targets: Array = drag["targets"]
-	cancel_drag()
+	var d := CraftEdit.part(part_id)
 	if i < 0:
-		return {"ok": false, "reason": "мимо якоря"}
+		_refuse({}, "")
+		cancel_drag()
+		return {"ok": false, "reason": "мимо разъёма"}
 	var t: Dictionary = targets[i]
-	if not bool(t["ok"]):
-		_say(String(t["reason"]), COL_BAD)
-		return {"ok": false, "reason": t["reason"]}
-	if bool(t["root"]):
-		return attach_part(part_id, "", "", String(t["target"]))
-	return attach_part(part_id, String(t["uid"]), String(t["anchor"]), String(t["target"]))
+	if String(t["target"]) == "weapon":
+		cancel_drag()
+		var rw := attach_part(part_id, "" if bool(t["root"]) else String(t["uid"]), String(t["anchor"]), "weapon")
+		if bool(rw.get("ok", false)):
+			_snap_fx("weapon", String(rw.get("uid", "")), t, d)
+		return rw
+	var tr := drag_trial(t)
+	if not bool(tr.get("ok", false)):
+		var why := String(tr.get("reason", t.get("reason", "")))
+		_refuse(t, why)
+		cancel_drag()
+		return {"ok": false, "reason": why}
+	var move := String(drag["move"])
+	cancel_drag()
+	_push_history()
+	blueprint = tr["bp"]
+	_name_custom_body()
+	var nu := String(tr.get("uid", ""))
+	_rebuild()
+	if not recent_parts.has(part_id):
+		recent_parts.insert(0, part_id)
+		if recent_parts.size() > 12:
+			recent_parts.resize(12)
+	else:
+		recent_parts.remove_at(recent_parts.find(part_id))
+		recent_parts.insert(0, part_id)
+	_snap_fx("body", nu, t, d)
+	if move != "" and nu != "":
+		select_stand(nu)
+	var what := "Перенесено" if move != "" else ("Заменено" if String(t["replace"]) != "" else "Поставлено")
+	_say("%s: %s" % [what, _pname(d)], COL_OK)
+	return {"ok": true, "uid": nu, "replace": t["replace"]}
 
 
 func cancel_drag() -> void:
 	if drag.is_empty():
 		return
 	drag = {}
+	for u in _hidden_uids:
+		for m in part_meshes("body", u):
+			(m as Node3D).visible = true
+	_hidden_uids = PackedStringArray()
+	_free_carry()
 	_clear_ghost()
 	_apply_highlights()
 	changed.emit()
+
+
+## Имя детали для игрока (PartNames: без внутренних id и «(v3)»).
+func _pname(d: PartDef) -> String:
+	if d == null:
+		return ""
+	var pn: Script = load(PART_NAMES) if ResourceLoader.exists(PART_NAMES) else null
+	return String(pn.call("of", d)) if pn != null else d.title
+
+
+# --- деталь под курсором (v0.3 §14–17) ---
+
+func _make_carry(part_id: String) -> void:
+	_free_carry()
+	var d := CraftEdit.part(part_id)
+	if d == null or d.scene == null:
+		return
+	var inst := d.scene.instantiate()
+	var root := Node3D.new()
+	root.name = "Carry"
+	for c in inst.get_children():
+		if c is Node3D and (String(c.name) == "Mesh" or c is Marker3D and String(c.name) == "Socket"):
+			var xf := (c as Node3D).transform
+			inst.remove_child(c)
+			c.owner = null
+			root.add_child(c)
+			(c as Node3D).transform = xf
+	inst.free()
+	var mesh := root.get_node_or_null("Mesh")
+	if mesh != null:
+		_set_overlay_recursive(mesh, _mats["carry_rim"])
+	add_child(root)
+	_carry = root
+	_carry_xf = Transform3D.IDENTITY
+	_update_carry(1.0, true)
+
+
+func _free_carry() -> void:
+	if _carry != null and is_instance_valid(_carry):
+		_carry.queue_free()
+	_carry = null
+
+
+static func _set_overlay_recursive(n: Node, m: Material) -> void:
+	if n is GeometryInstance3D:
+		(n as GeometryInstance3D).material_overlay = m
+	for c in n.get_children():
+		_set_overlay_recursive(c, m)
+
+
+## Точка курсора на плоскости перед стендом (перпендикулярно взгляду камеры, на CARRY_DEPTH ближе стенда).
+func _cursor_world(screen: Vector2) -> Vector3:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return Vector3.ZERO
+	var fwd := -cam.global_basis.z
+	var centre := stand_root.global_position + Vector3(0, 1.0, 0) if view == View.BODY else bench_spot.global_position
+	var plane := Plane(fwd, centre - fwd * CARRY_DEPTH)
+	var o := cam.project_ray_origin(screen)
+	var dir := cam.project_ray_normal(screen)
+	var hit: Variant = plane.intersects_ray(o, dir)
+	return hit if hit is Vector3 else o + dir * 2.0
+
+
+## Поза детали под курсором: свободно — разъём детали (Socket) чуть справа-снизу от курсора (курсор её не закрывает), деталь
+## вытянута от ближайшего совместимого разъёма бойца и слегка повёрнута к камере; у разъёма — магнит: к позе призрака.
+func _update_carry(delta: float, snap := false) -> void:
+	if _carry == null or drag.is_empty():
+		return
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var mp := drag["pos"] as Vector2
+	var cw := _cursor_world(mp + Vector2(26, 22))
+	var sock := _carry.get_node_or_null("Socket") as Node3D
+	var sock_xf: Transform3D = sock.transform if sock != null else Transform3D.IDENTITY
+	# куда смотрит разъём: на ближайший совместимый разъём (на экране), иначе вниз-влево к бойцу
+	var aim := Vector3.ZERO
+	var best := INF
+	for t in (drag["targets"] as Array):
+		if not bool(t["accepts"]):
+			continue
+		var tp: Vector3 = (t["xf"] as Transform3D).origin
+		var dd := cam.unproject_position(tp).distance_to(mp)
+		if dd < best:
+			best = dd
+			aim = tp
+	var up := (aim - cw) if aim != Vector3.ZERO else (stand_root.global_position + Vector3(0, 1.0, 0) - cw)
+	up = up - cam.global_basis.z * up.dot(cam.global_basis.z)
+	up = up.normalized() if up.length() > 1e-3 else Vector3.UP
+	var z := cam.global_basis.z
+	var x := up.cross(z).normalized()
+	var free_basis := Basis(x, up, x.cross(up)).rotated(up, 0.35).orthonormalized()   # чуть в три четверти — читается объём
+	var free_xf := Transform3D(free_basis, cw) * Transform3D(Basis.IDENTITY, -sock_xf.origin)
+	var goal := free_xf
+	var t2 := drag_target()
+	if not t2.is_empty():
+		var g := ghost_transform(String(drag["part"]), t2)
+		var gd := cam.unproject_position((t2["xf"] as Transform3D).origin).distance_to(mp)
+		# ближе SNAP_IN_PX к годному разъёму — деталь садится на место целиком (призрак прячется под ней); к негодному — только
+		# тянется наполовину, красный призрак виден
+		var ok := bool(t2["ok"])
+		var k := smoothstep(MAGNET_PX, SNAP_IN_PX, gd) * (1.0 if ok else 0.5)
+		var gxf: Transform3D = g["xf"]
+		goal = Transform3D(free_xf.basis.slerp(gxf.basis.orthonormalized(), k), free_xf.origin.lerp(gxf.origin, k))
+		if _ghost != null and is_instance_valid(_ghost):
+			_ghost.visible = k < 0.9
+	if snap:
+		_carry_xf = goal
+	else:
+		var a := 1.0 - exp(-delta / 0.06)
+		_carry_xf = Transform3D(_carry_xf.basis.slerp(goal.basis.orthonormalized(), a), _carry_xf.origin.lerp(goal.origin, a))
+	_carry.global_transform = _carry_xf
+
+
+## Экранная точка разъёма детали под курсором (кольцо «конец крепления» — оверлей).
+func carry_socket_screen() -> Variant:
+	if _carry == null or not is_instance_valid(_carry):
+		return null
+	var cam := get_viewport().get_camera_3d()
+	var sock := _carry.get_node_or_null("Socket") as Node3D
+	if cam == null or sock == null:
+		return null
+	return cam.unproject_position(sock.global_position)
+
+
+# --- щелчок, отказ, откручивание (v0.3 §22–24) ---
+
+## Деталь встала: вспышка разъёма, щепки / пыль, «усадка» меша, звук по материалу.
+func _snap_fx(target: String, uid: String, t: Dictionary, d: PartDef) -> void:
+	var p: Vector3 = (t["xf"] as Transform3D).origin
+	fx_events.append({"kind": "flash", "pos": p, "t0": _time, "text": ""})
+	ImpactFx.spawn_impact(self, p, Vector3.UP, 2.5, "")
+	for m in part_meshes(target, uid):
+		var n := m as Node3D
+		var s0 := n.scale
+		n.scale = s0 * 1.12
+		var tw := n.create_tween()
+		tw.tween_property(n, "scale", s0, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var mat := String(CraftEdit.find(blueprint, uid).get("mat", "")) if target == "body" else ""
+	_play_sfx("snap", d, mat)
+
+
+## Не встала: красный пульс у разъёма и короткая причина, деталь мягко отскакивает.
+func _refuse(t: Dictionary, why: String) -> void:
+	if not t.is_empty():
+		var short := why
+		if why.contains("энерги"):
+			short = "Не хватает энергии"
+		elif why == "" or why.length() > 34:
+			short = "Сюда не встанет" if not bool(t.get("accepts", true)) else "Соединение занято"
+		fx_events.append({"kind": "refuse", "pos": (t["xf"] as Transform3D).origin, "t0": _time, "text": short})
+	if _carry != null and is_instance_valid(_carry):
+		var c := _carry
+		_carry = null
+		var away := Vector3.ZERO
+		if not t.is_empty():
+			away = (c.global_position - (t["xf"] as Transform3D).origin).normalized() * 0.18
+		var tw := c.create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(c, "global_position", c.global_position + away + Vector3(0, 0.05, 0), 0.16).set_ease(Tween.EASE_OUT)
+		tw.tween_property(c, "scale", Vector3.ONE * 0.6, 0.28).set_delay(0.08)
+		tw.chain().tween_callback(c.queue_free)
+	_play_sfx("invalid", null)
+
+
+## Открутить с анимацией (ПКМ по детали): копия мешей ветки чуть отходит от разъёма и тает, в чертеже — сразу.
+func unscrew(uid: String, target := "body") -> PackedStringArray:
+	var bp: Resource = weapon_bp if target == "weapon" else blueprint
+	var n := CraftEdit.find(bp, uid)
+	if n.is_empty():
+		return PackedStringArray()
+	var ghost := Node3D.new()
+	ghost.name = "Unscrew"
+	add_child(ghost)
+	var centre := Vector3.ZERO
+	var cnt := 0
+	for u in CraftEdit.subtree(bp, uid):
+		for m in part_meshes(target, u):
+			var mi := (m as Node3D).duplicate() as Node3D
+			ghost.add_child(mi)
+			mi.global_transform = (m as Node3D).global_transform
+			_set_overlay(mi, null)
+			centre += mi.global_position
+			cnt += 1
+	var anchor := centre / maxf(cnt, 1)
+	var pxf: Variant = anchor_xf(target, String(n.get("parent", "")), String(n.get("anchor", "")))
+	if pxf is Transform3D:
+		anchor = (pxf as Transform3D).origin
+	var gone := detach_part(uid, target)
+	if gone.is_empty():
+		ghost.queue_free()
+		return gone
+	var out := ((centre / maxf(cnt, 1)) - anchor)
+	out = out.normalized() * 0.12 if out.length() > 1e-3 else Vector3(0, -0.12, 0)
+	fx_events.append({"kind": "flash", "pos": anchor, "t0": _time, "text": ""})
+	var tw := ghost.create_tween()
+	tw.tween_property(ghost, "position", out, 0.12).set_ease(Tween.EASE_OUT)
+	tw.tween_property(ghost, "position", out + Vector3(0, -0.5, 0), 0.3).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_method(func(a: float) -> void: _fade(ghost, a), 0.0, 1.0, 0.3)
+	tw.tween_callback(ghost.queue_free)
+	_play_sfx("unscrew", CraftEdit.part(String(n.get("part", ""))))
+	return gone
+
+
+static func _fade(n: Node, a: float) -> void:
+	if n is GeometryInstance3D:
+		(n as GeometryInstance3D).transparency = a
+	for c in n.get_children():
+		_fade(c, a)
+
+
+func _play_sfx(kind: String, d: PartDef, mat_id := "") -> void:
+	if sfx == null or not is_instance_valid(sfx):
+		return
+	var m := ""
+	if d != null and sfx.has_method("material_of"):
+		m = String(sfx.call("material_of", d, mat_id))
+	sfx.call("play", kind, m)
 
 
 func dragging() -> bool:
@@ -1231,12 +1701,13 @@ func part_meshes(target: String, uid: String) -> Array:
 		return out
 	if stand == null or not stand.uid_body.has(uid):
 		return out
-	var n := CraftEdit.find(blueprint, uid)
+	var sbp := _stand_bp()
+	var n := CraftEdit.find(sbp, uid)
 	var d := CraftEdit.part(String(n.get("part", "")))
 	var body := stand.parts.get(String(stand.uid_body[uid])) as Node3D
 	if body == null or d == null:
 		return out
-	var fixed := CraftEdit.is_fixed(blueprint, uid)
+	var fixed := CraftEdit.is_fixed(sbp, uid)
 	var mn := body.get_node_or_null("Mesh_" + uid if fixed else "Mesh")
 	if mn != null:
 		out.append(mn)
@@ -1261,6 +1732,24 @@ func _make_materials() -> void:
 	var gb := g.duplicate() as StandardMaterial3D
 	gb.albedo_color = Color(1.0, 0.35, 0.3, 0.45)
 	_mats["ghost_bad"] = gb
+	# v0.3: деталь в руке — тёплый ободок по силуэту (френель), предпросмотр зеркала — голубой полупрозрачный
+	var rim := Shader.new()
+	rim.code = """shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_back;
+uniform vec4 rim : source_color = vec4(1.0, 0.78, 0.4, 1.0);
+uniform float power = 2.2;
+void fragment() {
+	float f = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), power);
+	ALBEDO = rim.rgb * (0.12 + f);
+	ALPHA = clamp(0.1 + f, 0.0, 1.0) * rim.a;
+}
+"""
+	var cr := ShaderMaterial.new()
+	cr.shader = rim
+	_mats["carry_rim"] = cr
+	var mg := g.duplicate() as StandardMaterial3D
+	mg.albedo_color = Color(0.55, 0.85, 1.0, 0.42)
+	_mats["mirror_ghost"] = mg
 
 
 static func _overlay_mat(c: Color) -> StandardMaterial3D:
@@ -1297,11 +1786,13 @@ func _apply_highlights() -> void:
 	if mode != Mode.BUILD:
 		return
 	for c in blueprint.control:
-		for m in part_meshes("body", c):
-			_set_overlay(m, _mats["control_rmb" if blueprint.control_rmb.has(c) else "control"])
+		if pulls_visible(c):
+			for m in part_meshes("body", c):
+				_set_overlay(m, _mats["control_rmb" if blueprint.control_rmb.has(c) else "control"])
 	if String(selected.get("source", "")) == "stand":
-		for m in part_meshes(String(selected["target"]), String(selected["uid"])):
-			_set_overlay(m, _mats["selected"])
+		for u in selected_uids():
+			for m in part_meshes(String(selected["target"]), u):
+				_set_overlay(m, _mats["selected"])
 	if not drag.is_empty():
 		var t := drag_target()
 		if not t.is_empty() and String(t["replace"]) != "":
@@ -1334,6 +1825,13 @@ func _apply_highlights() -> void:
 				_set_overlay(m, mat)
 
 
+## Тяги видны не всегда (v0.3: на кукле без лишнего): инструмент «Тяги» (Q) в руке или выбрана сама эта деталь.
+func pulls_visible(uid := "") -> bool:
+	if control_pick:
+		return true
+	return uid != "" and String(selected.get("source", "")) == "stand" and String(selected.get("uid", "")) == uid
+
+
 ## Подсветка инструмента цветом c (плашка материала, тип шарнира), кэш в _mats[key].
 func _tint(key: String, c: Color) -> Material:
 	if not _mats.has(key):
@@ -1351,6 +1849,9 @@ func set_hover(h: Dictionary) -> void:
 
 # =================================================================== ввод
 
+## Захваченные жесты мыши (v0.3 §39): зажатая ПКМ — орбита (без сдвига — клик: открутить / положить инструмент / отменить);
+## зажатая ЛКМ на детали куклы — перенос ветки (без сдвига — выбор); деталь в руке — протяжка. Движение и отпускание ловим здесь,
+## даже над панелями.
 func _input(event: InputEvent) -> void:
 	if mode == Mode.TEST:
 		if event is InputEventKey and event.pressed and not event.echo:
@@ -1362,6 +1863,41 @@ func _input(event: InputEvent) -> void:
 				restart_test()
 				get_viewport().set_input_as_handled()
 		return
+	if not _rmb.is_empty():
+		if event is InputEventMouseMotion:
+			var mm := event as InputEventMouseMotion
+			if not bool(_rmb["moved"]) and mm.position.distance_to(_rmb["pos"]) > 6.0:
+				_rmb["moved"] = true
+			if bool(_rmb["moved"]):
+				orbit(mm.relative)
+			if not drag.is_empty():
+				update_drag(mm.position)
+			get_viewport().set_input_as_handled()
+			return
+		if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT \
+				and not (event as InputEventMouseButton).pressed:
+			var r := _rmb
+			_rmb = {}
+			if not bool(r["moved"]):
+				_right_click(r)
+			get_viewport().set_input_as_handled()
+			return
+	if not _lmb.is_empty():
+		if event is InputEventMouseMotion:
+			var lm := event as InputEventMouseMotion
+			if lm.position.distance_to(_lmb["pos"]) > DRAG_MOVE_PX:
+				var l := _lmb
+				_lmb = {}
+				_start_move(l, lm.position)
+			get_viewport().set_input_as_handled()
+			return
+		if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT \
+				and not (event as InputEventMouseButton).pressed:
+			var l2 := _lmb
+			_lmb = {}
+			_left_click(l2, (event as InputEventMouseButton).shift_pressed)
+			get_viewport().set_input_as_handled()
+			return
 	if drag.is_empty():
 		return
 	if event is InputEventMouseMotion:
@@ -1369,7 +1905,7 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-			cancel_drag()
+			_rmb = {"pos": mb.position, "moved": false, "drag": true}   # тащишь и крутишь; ПКМ без сдвига — отмена
 			get_viewport().set_input_as_handled()
 		elif mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed and not bool(drag["sticky"]):
 			if bool(drag["moved"]):
@@ -1398,45 +1934,53 @@ func _unhandled_input(event: InputEvent) -> void:
 		set_hover(paint.hover_pick(mp) if paint_tool != "" else pick(mp))
 	elif event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
 		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			var steps := mb.factor if mb.factor > 0.0 else 1.0
+			zoom_by(steps if mb.button_index == MOUSE_BUTTON_WHEEL_UP else -steps)
+			get_viewport().set_input_as_handled()
+			return
 		var h := pick(mb.position)
 		var on_body := not h.is_empty() and String(h["target"]) == "body"
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
-			if active_tool() != "":
-				clear_tools()   # ПКМ с инструментом в руке — положить его, а не откручивать
-			elif not h.is_empty():
-				hover = {}
-				detach_part(String(h["uid"]), String(h["target"]))
+			_rmb = {"pos": mb.position, "moved": false, "hit": h}
 			get_viewport().set_input_as_handled()
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
-			if control_pick:
+			if not pending_mirror.is_empty():   # предпросмотр зеркала: клик по копии — поставить, мимо — отмена
+				if on_body and (pending_mirror["new"] as PackedStringArray).has(String(h["uid"])):
+					confirm_mirror()
+				else:
+					cancel_mirror()
+			elif control_pick:
 				if on_body:
 					set_control(String(h["uid"]))
 				else:
-					_say("Кликни по детали куклы (Esc — отмена)", COL_WARN)
-				get_viewport().set_input_as_handled()
+					_say("Кликни по детали бойца (Esc — отмена)", COL_WARN)
 			elif paint_mat != "":
 				if on_body:
 					set_material(String(h["uid"]))
 				else:
-					_say("Кисть: кликни по детали куклы (Esc / ПКМ — убрать кисть)", COL_WARN)
-				get_viewport().set_input_as_handled()
+					_say("Кисть: кликни по детали бойца (Esc / ПКМ — убрать кисть)", COL_WARN)
 			elif joint_pick != "":
 				if on_body:
 					set_joint(String(h["uid"]))
 				else:
-					_say("Шарнир: кликни по детали куклы (Esc / ПКМ — отмена)", COL_WARN)
-				get_viewport().set_input_as_handled()
+					_say("Шарнир: кликни по детали бойца (Esc / ПКМ — отмена)", COL_WARN)
 			elif not h.is_empty():
-				select_stand(String(h["uid"]), String(h["target"]))   # UI v0.2: справа паспорт детали и действия
+				_lmb = {"pos": mb.position, "uid": String(h["uid"]), "target": String(h["target"])}   # клик — выбор, сдвиг — перенос
 			else:
 				clear_selection()
+			get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		var k := event as InputEventKey
+		var sel_stand := String(selected.get("source", "")) == "stand"
 		match k.physical_keycode:
 			KEY_Q:
 				toggle_control_pick()
-			KEY_T, KEY_ENTER, KEY_KP_ENTER:
+			KEY_T:
 				start_test()
+			KEY_ENTER, KEY_KP_ENTER:
+				if not confirm_mirror():
+					start_test()
 			KEY_TAB:
 				set_view(View.WEAPON if view == View.BODY else View.BODY)
 			KEY_Z:
@@ -1444,24 +1988,36 @@ func _unhandled_input(event: InputEvent) -> void:
 					redo()
 				elif k.ctrl_pressed or k.meta_pressed:
 					undo()
+				else:
+					return
 			KEY_Y:
 				if k.ctrl_pressed or k.meta_pressed:
 					redo()
+				else:
+					return
 			KEY_D:
-				if String(selected.get("source", "")) == "stand":
-					duplicate_part(String(selected["uid"]), String(selected["target"]))
+				if sel_stand:
+					duplicate_to_hand(String(selected["uid"]), String(selected["target"]), bool(selected.get("branch", false)))
 				elif String(selected.get("source", "")) == "shelf":
-					install_part(String(selected["part"]))
+					begin_drag(String(selected["part"]), get_viewport().get_mouse_position(), {"sticky": true})
+				else:
+					return
 			KEY_M:
-				if String(selected.get("source", "")) == "stand" and String(selected["target"]) == "body":
-					mirror_part(String(selected["uid"]))
+				if not pending_mirror.is_empty():
+					confirm_mirror()
+				elif sel_stand and String(selected["target"]) == "body":
+					start_mirror_preview(String(selected["uid"]), bool(selected.get("branch", false)))
+				else:
+					return
 			KEY_DELETE, KEY_BACKSPACE:
 				delete_selected()
 			KEY_R:
 				if paint != null and paint.tab_open and view == View.BODY:
 					paint.turn_stand(-1 if k.shift_pressed else 1)   # полка «Покраска» без инструмента: тоже крутит стенд
+				else:
+					reset_camera()
 			KEY_ESCAPE:
-				if not clear_tools() and not clear_selection():   # инструмент в руке / выбор — Esc снимает; иначе двойной Esc — выход
+				if not cancel_mirror() and not clear_tools() and not clear_selection():   # иначе двойной Esc — выход
 					if _time < _esc_armed_until:
 						_flush_autosave(true)
 						get_tree().quit()
@@ -1473,11 +2029,67 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+## ПКМ без сдвига: деталь в руке — положить; предпросмотр зеркала — отмена; инструмент — положить; по детали — открутить.
+func _right_click(r: Dictionary) -> void:
+	if bool(r.get("drag", false)):
+		cancel_drag()
+		return
+	if cancel_mirror() or clear_tools():
+		return
+	var h: Dictionary = r.get("hit", {})
+	if h.is_empty():
+		return
+	hover = {}
+	if confirm_big(String(h["uid"]), String(h["target"]), "ПКМ"):
+		unscrew(String(h["uid"]), String(h["target"]))
+
+
+## ЛКМ без сдвига по детали: выбор; Shift или двойной клик — вся ветка.
+func _left_click(l: Dictionary, shift: bool) -> void:
+	var uid := String(l["uid"])
+	var dbl := String(_last_click["uid"]) == uid and _time - float(_last_click["t"]) < 0.35
+	_last_click = {"uid": uid, "t": _time}
+	select_stand(uid, String(l["target"]), shift or dbl)
+	_play_sfx("button", null)
+
+
+## Потянул деталь с куклы: ветка едет в руку (ядро и оружие верстака не переносятся — только выбор).
+func _start_move(l: Dictionary, pos: Vector2) -> void:
+	var uid := String(l["uid"])
+	if String(l["target"]) != "body":
+		select_stand(uid, String(l["target"]))
+		return
+	var n := CraftEdit.find(blueprint, uid)
+	if n.is_empty() or String(n.get("parent", "")) == "":
+		select_stand(uid)
+		_say("Ядро не переносится — перетащи другое ядро поверх", COL_WARN)
+		return
+	clear_selection()
+	begin_drag(String(n["part"]), pos, {"move": uid, "start": l["pos"]})
+
+
+## Дубликат в руку (D, v0.3 §33): копия детали (или ветки) под курсором — поставь кликом у разъёма. Верстак — как раньше, сразу.
+func duplicate_to_hand(uid: String, target := "body", branch := false) -> bool:
+	if target == "weapon":
+		return bool(duplicate_part(uid, target).get("ok", false))
+	var n := CraftEdit.find(blueprint, uid)
+	if n.is_empty() or String(n.get("parent", "")) == "":
+		_say("Ядро не дублируется", COL_WARN)
+		return false
+	branch = branch and CraftEdit.subtree(blueprint, uid).size() > 1
+	begin_drag(String(n["part"]), get_viewport().get_mouse_position(), {"copy_of": uid, "branch": branch, "sticky": true})
+	if not drag.is_empty():
+		_play_sfx("duplicate", CraftEdit.part(String(n["part"])))
+	return not drag.is_empty()
+
+
 func set_view(v: int) -> void:
 	if v == view:
 		return
 	cancel_drag()
+	cancel_mirror()
 	view = v
+	_frame_h = 0.0
 	if view == View.WEAPON:
 		control_pick = false
 		paint_mat = ""
@@ -1830,6 +2442,46 @@ func hint_text() -> String:
 	return "Тащи деталь с полки на светящийся якорь   ·   ПКМ — открутить   ·   Q — тяги   ·   Ctrl+Z — отмена   ·   T — испытать"
 
 
+## Короткая подсказка по ситуации (v0.3 §47: вместо постоянной строки клавиш) — одна строка, «клавиша — действие».
+func context_help() -> String:
+	if mode == Mode.TEST:
+		return "WASD — движение  ·  ЛКМ / ПКМ — тяги  ·  R — заново  ·  Esc — к сборке"
+	if paint_tool != "" or (paint != null and paint.tab_open and view == View.BODY):
+		return hint_text()
+	if control_pick:
+		return "Клик по детали — тяга ЛКМ → ПКМ → снять  ·  Esc — готово"
+	if paint_mat != "" or joint_pick != "":
+		return hint_text()
+	if not pending_mirror.is_empty():
+		return "Зеркало: Enter или клик по копии — поставить  ·  Esc — отмена"
+	if not drag.is_empty():
+		var t := drag_target()
+		if not t.is_empty():
+			var tr := drag_trial(t) if String(t["target"]) == "body" else {}
+			if not bool(t["ok"]) or (not tr.is_empty() and not bool(tr.get("ok", false))):
+				var why := String(tr.get("reason", t.get("reason", ""))) if not tr.is_empty() else String(t["reason"])
+				return why if why != "" else "Сюда не встанет"
+			if String(t["replace"]) != "":
+				return "Отпусти — заменить: %s" % _pname(CraftEdit.def_of(weapon_bp if String(t["target"]) == "weapon" else blueprint,
+					String(t["replace"])))
+			return "Отпусти — встанет  ·  ПКМ — отмена"
+		if bool(drag["sticky"]):
+			return "Кликни у светящегося разъёма  ·  ПКМ / Esc — убрать"
+		return "Поднеси к светящемуся разъёму  ·  ПКМ — отмена"
+	if String(selected.get("source", "")) == "stand":
+		if String(selected["target"]) == "weapon":
+			return "D — копия  ·  Del — снять  ·  Tab — к телу"
+		return "Тащи — перенести  ·  D — копия  ·  M — зеркало  ·  Del — снять  ·  %s" % (
+			"клик — одна деталь" if bool(selected.get("branch", false)) else "Shift-клик — вся ветка")
+	if String(selected.get("source", "")) == "shelf":
+		return "Тащи на бойца или нажми D — деталь в руке"
+	if not hover.is_empty():
+		return "Клик — выбрать  ·  тащи — перенести  ·  ПКМ — открутить"
+	if view == View.WEAPON:
+		return "Тащи рукоять, навершие или мод на верстак  ·  Tab — к телу"
+	return "Тащи деталь из библиотеки на бойца  ·  ПКМ — вращать  ·  колесо — ближе  ·  R — вид"
+
+
 ## Что рисовать поверх 3D (scenes/workshop/ui/anchor_overlay.gd): [{pos, dir, state, label, joint?}] в экранных точках.
 ## state: target (выбран), ok, replace, bad (не влезает), idle (свободный якорь без протяжки), control (рука мышью),
 ## joint / joint_hover (инструмент шарнира: точка связи детали с родителем, joint — тип KitJoint, наведённая — joint_hover).
@@ -1838,12 +2490,14 @@ func overlay_items() -> Array:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null or mode != Mode.BUILD:
 		return out
+	_fx_items(cam, out)
 	if not drag.is_empty():
+		# v0.3 §15: разъёмы видны только пока деталь в руке — совместимые, ярче ближе к курсору; несовместимые не рисуем
 		var targets: Array = drag["targets"]
+		var mp := drag["pos"] as Vector2
 		for i in range(targets.size()):
 			var t: Dictionary = targets[i]
 			if not bool(t["accepts"]):
-				out.append(_overlay_item(cam, t["xf"], "dim", ""))   # несовместимый разъём — приглушён (UI v0.2)
 				continue
 			var st := "ok"
 			if i == int(drag["index"]):
@@ -1852,7 +2506,13 @@ func overlay_items() -> Array:
 				st = "bad"
 			elif String(t["replace"]) != "":
 				st = "replace"
-			out.append(_overlay_item(cam, t["xf"], st, ""))
+			var it := _overlay_item(cam, t["xf"], st, "")
+			it["near"] = clampf(1.0 - (it["pos"] as Vector2).distance_to(mp) / 420.0, 0.0, 1.0)
+			out.append(it)
+		var sp: Variant = carry_socket_screen()
+		if sp is Vector2:
+			out.append({"pos": sp, "dir": Vector2.ZERO, "state": "carry", "label": "",
+				"ok": not drag_target().is_empty() and bool(drag_target()["ok"])})
 		_com_items(cam, out)
 		return out
 	var target := "weapon" if view == View.WEAPON else "body"
@@ -1874,17 +2534,11 @@ func overlay_items() -> Array:
 			it["joint"] = jt
 			out.append(it)
 		return out
-	# без протяжки: свободные якоря текущего вида — маленькие точки
-	for n in CraftEdit.nodes_of(bp):
-		var uid := String(n.get("uid", ""))
-		for an in CraftEdit.anchors_of(bp, uid):
-			if CraftEdit.occupant(bp, uid, an) != "":
-				continue
-			var xf: Variant = anchor_xf(target, uid, an)
-			if xf != null:
-				out.append(_overlay_item(cam, xf, "idle", ""))
+	# без протяжки разъёмов не видно (v0.3 §44); тяги — только с инструментом Q или у выбранной детали-тяги
 	if target == "body" and stand != null:
 		for c in blueprint.control:
+			if not pulls_visible(c):
+				continue
 			var ms := part_meshes("body", c)
 			if not ms.is_empty():
 				var box := _visual_aabb(ms[0])
@@ -1903,9 +2557,21 @@ func overlay_items() -> Array:
 	return out
 
 
-## Physics Overlay (UI v0.2): ◎ центр массы стенда и отвес до пола; при протяжке — куда он сместится (physics_hints).
+## Вспышка у разъёма (деталь встала / открутилась) и красный пульс с причиной (не встала).
+func _fx_items(cam: Camera3D, out: Array) -> void:
+	for e in fx_events:
+		var p: Vector3 = e["pos"]
+		if cam.is_position_behind(p):
+			continue
+		var life := REFUSE_S if String(e["kind"]) == "refuse" else FLASH_S
+		out.append({"pos": cam.unproject_position(p), "dir": Vector2.ZERO, "state": String(e["kind"]), "label": String(e["text"]),
+			"age": clampf((_time - float(e["t0"])) / life, 0.0, 1.0)})
+
+
+## Physics Overlay (ФИЗИКА, выключен по умолчанию): центр массы, куда он сместится при протяжке. Рисует WsPhysics в UI —
+## здесь только точки для кольцевого слоя.
 func _com_items(cam: Camera3D, out: Array) -> void:
-	if view != View.BODY or stand == null or (paint != null and paint.tab_open):
+	if view != View.BODY or stand == null or (paint != null and paint.tab_open) or not show_com:
 		return
 	var floor_y := stand_root.global_position.y if stand_root != null else 0.0
 	if show_com:
@@ -1952,17 +2618,64 @@ func _process(delta: float) -> void:
 		return
 	if _autosave_dirty and _time >= _autosave_at:
 		_flush_autosave()
-	var goal := _camera_goal()
+	_prune_fx()
+	_edge_pan(delta)
+	_update_carry(delta)
+	var g := _camera_goal()
+	var pivot: Vector3 = g["pivot"]
+	var h := float(g["h"])
 	if _cam_snap:
-		_cam_pos = goal
+		_s_pivot = pivot
+		_s_h = h
+		_s_yaw = cam_yaw
+		_s_pitch = cam_pitch
+		_s_zoom = cam_zoom
 		_cam_snap = false
 	else:
-		_cam_pos = _cam_pos.lerp(goal, 1.0 - exp(-delta / CAM_TAU))
-	build_cam.global_transform = Transform3D(Basis.IDENTITY, _cam_pos)
+		var a := 1.0 - exp(-delta / CAM_TAU)
+		var b := 1.0 - exp(-delta / 0.07)   # орбита и зум — сразу за мышью, кадр — мягко
+		_s_pivot = _s_pivot.lerp(pivot, a)
+		_s_h = lerpf(_s_h, h, a)
+		_s_yaw = lerpf(_s_yaw, cam_yaw, b)
+		_s_pitch = lerpf(_s_pitch, cam_pitch, b)
+		_s_zoom = lerpf(_s_zoom, cam_zoom, b)
+	build_cam.global_transform = cam_transform(_s_pivot, _s_h, _s_yaw, _s_pitch, _s_zoom)
 
 
-## Куда встать камере: кукла (или оружие на верстаке) целиком в свободной середине экрана между панелями.
-func _camera_goal() -> Vector3:
+## Кадр камеры: точка pivot (середина сборки) — в середине свободной зоны экрана (free_rect), полувысота кадра h × zoom, орбита
+## yaw / pitch вокруг неё (v0.3 §39: ПКМ — вращать, колесо — ближе / дальше, R — сброс).
+func cam_transform(pivot: Vector3, h: float, yaw: float, pitch: float, zoom: float) -> Transform3D:
+	var basis := Basis.from_euler(Vector3(deg_to_rad(-pitch), deg_to_rad(yaw), 0.0))
+	var hz := h * zoom
+	var dist := hz / tan(deg_to_rad(CAM_FOV) * 0.5)
+	var vp := get_viewport().get_visible_rect().size
+	var aspect := vp.x / maxf(vp.y, 1.0)
+	var fr := free_rect()
+	var cx := fr.get_center().x / maxf(vp.x, 1.0)
+	var cy := fr.get_center().y / maxf(vp.y, 1.0)
+	var look := pivot + basis * Vector3(-(cx - 0.5) * 2.0 * hz * aspect, (cy - 0.5) * 2.0 * hz, 0.0)
+	return Transform3D(basis, look + basis.z * dist)
+
+
+## Свободная зона экрана для бойца (между библиотекой, правой панелью, верхней строкой и кнопкой испытания): у UI — free_rect(),
+## без UI — доли FREE_*.
+func free_rect() -> Rect2:
+	var vp := get_viewport().get_visible_rect().size
+	if ui != null and ui.has_method("free_rect"):
+		var r: Rect2 = ui.call("free_rect")
+		if r.size.x > 50.0 and r.size.y > 50.0:
+			return r
+	var w := vp.x * FREE_W_FRAC
+	var hh := vp.y * FREE_H_FRAC
+	return Rect2(vp.x * FREE_CX_FRAC - w * 0.5, vp.y * 0.46 - hh * 0.5, w, hh)
+
+
+## Что держит камера: {pivot, h}. Кадр не дёргается (v0.3 §40): растёт сразу, сжимается, только если сборка стала заметно меньше,
+## центр переезжает, только если ушёл дальше 12 % кадра; пока тащишь деталь или вращаешь — кадр стоит.
+func _camera_goal() -> Dictionary:
+	var busy := not drag.is_empty() or not _rmb.is_empty() or not _lmb.is_empty() or not pending_mirror.is_empty()
+	if busy and _frame_h > 0.0:
+		return {"pivot": _frame_c + _cam_pan, "h": _frame_h}
 	var box := AABB(stand_root.global_position + Vector3(-0.5, 0.0, -0.2), Vector3(1.0, 1.9, 0.4))
 	var min_h := 1.25
 	if view == View.WEAPON:
@@ -1976,15 +2689,77 @@ func _camera_goal() -> Vector3:
 			box = box.merge(_visual_aabb(held_weapon))
 	var vp := get_viewport().get_visible_rect().size
 	var aspect := vp.x / maxf(vp.y, 1.0)
-	var half_w_frac := FREE_W_FRAC   # доля ширины экрана, где кукла
-	# UI v0.2: сверху панель (энергия, файлы), снизу ИСПЫТАТЬ — по высоте кукле FREE_H_FRAC экрана
-	var need_h := maxf(box.size.y * 0.5 / FREE_H_FRAC + 0.12, (box.size.x * 0.5 + 0.25) / (aspect * half_w_frac))
+	var fr := free_rect()
+	var wf := fr.size.x / maxf(vp.x, 1.0)
+	var hf := fr.size.y / maxf(vp.y, 1.0)
+	var need_h := maxf(box.size.y * 0.5 / hf + 0.1, (box.size.x * 0.5 + 0.2) / (aspect * wf))
 	need_h = maxf(need_h, min_h)
-	var dist := need_h / tan(deg_to_rad(CAM_FOV) * 0.5)
 	var c := box.get_center()
-	# кукла — в середине свободной зоны между каталогом и правой панелью (FREE_CX_FRAC), чуть выше центра (снизу ИСПЫТАТЬ)
-	var shift_x := (FREE_CX_FRAC - 0.5) * 2.0 * need_h * aspect
-	return Vector3(c.x - shift_x, c.y - need_h * 0.08, c.z + dist)
+	if _frame_h <= 0.0 or need_h > _frame_h or need_h < _frame_h * 0.82:
+		_frame_h = need_h
+		_frame_c = c
+	elif c.distance_to(_frame_c) > _frame_h * 0.12:
+		_frame_c = c
+	return {"pivot": _frame_c + _cam_pan, "h": _frame_h}
+
+
+## Камера в исходный кадр (R).
+func reset_camera() -> void:
+	cam_yaw = 0.0
+	cam_pitch = 0.0
+	cam_zoom = 1.0
+	_cam_pan = Vector3.ZERO
+	_frame_h = 0.0
+
+
+func orbit(rel: Vector2) -> void:
+	cam_yaw = clampf(cam_yaw - rel.x * 0.3, -ORBIT_YAW_MAX, ORBIT_YAW_MAX)
+	cam_pitch = clampf(cam_pitch + rel.y * 0.22, ORBIT_PITCH.x, ORBIT_PITCH.y)
+
+
+func zoom_by(steps: float) -> void:
+	cam_zoom = clampf(cam_zoom * pow(0.9, steps), ZOOM_RANGE.x, ZOOM_RANGE.y)
+
+
+## Тащишь деталь у края рабочей зоны дольше 0.35 с — камера мягко едет туда (приближенную сборку можно «довести» до разъёма).
+func _edge_pan(delta: float) -> void:
+	if drag.is_empty() or build_cam == null:
+		_edge_t = 0.0
+		_cam_pan = _cam_pan.lerp(Vector3.ZERO, 1.0 - exp(-delta / 0.6)) if drag.is_empty() and _frame_h > 0.0 else _cam_pan
+		if drag.is_empty() and _cam_pan.length() < 0.002:
+			_cam_pan = Vector3.ZERO
+		return
+	var p := drag["pos"] as Vector2
+	var fr := free_rect()
+	var v := Vector2.ZERO
+	if fr.has_point(p):
+		if p.x < fr.position.x + EDGE_PAN_PX:
+			v.x = -1.0
+		elif p.x > fr.end.x - EDGE_PAN_PX:
+			v.x = 1.0
+		if p.y < fr.position.y + EDGE_PAN_PX:
+			v.y = 1.0
+		elif p.y > fr.end.y - EDGE_PAN_PX:
+			v.y = -1.0
+	if v == Vector2.ZERO:
+		_edge_t = 0.0
+		return
+	_edge_t += delta
+	if _edge_t < 0.35:
+		return
+	var b := build_cam.global_basis
+	_cam_pan += (b.x * v.x + b.y * v.y) * _frame_h * cam_zoom * 0.6 * delta
+	_cam_pan = _cam_pan.limit_length(_frame_h * 0.7)
+
+
+## Вспышки щелчка / отказа: живут FLASH_S / REFUSE_S.
+func _prune_fx() -> void:
+	var keep: Array = []
+	for e in fx_events:
+		var life := REFUSE_S if String(e["kind"]) == "refuse" else FLASH_S
+		if _time - float(e["t0"]) < life:
+			keep.append(e)
+	fx_events = keep
 
 
 func _say(text: String, colour: Color) -> void:
