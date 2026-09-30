@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "League_Gold"
+albedo_color = Color(0.9309246, 0.785777, 0.48452926, 1)
+metallic = 0.6
+roughness = 0.3

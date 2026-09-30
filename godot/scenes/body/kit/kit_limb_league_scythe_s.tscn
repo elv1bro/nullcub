@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_LeagueScythe_S.glb" id="1_v6jt4"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wcs7b"]
+friction = 0.5
+bounce = 0.1
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rq83j"]
+radius = 0.0435
+height = 0.3348
+
+[node name="KitLimbLeagueScytheS" type="RigidBody3D" unique_id=1349720746]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.4
+physics_material_override = SubResource("PhysicsMaterial_wcs7b")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+metadata/part_id = "kit_limb_league_scythe_s"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1125859420]
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1755770726]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.052
+
+[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=1132126234]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.035, 0)
+metadata/accepts = PackedStringArray("armor", "deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Limb" type="CollisionShape3D" parent="." unique_id=889744618]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+shape = SubResource("CapsuleShape3D_rq83j")
+
+[node name="Grip" type="Marker3D" parent="." unique_id=658356084]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=32296714 instance=ExtResource("1_v6jt4")]
+metadata/rig_mesh = true

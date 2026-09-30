@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "League_Crystal"
+transparency = 1
+albedo_color = Color(0.6262097, 0.86504203, 0.97769153, 0.55)
+metallic = 0.1
+roughness = 0.05
+emission_enabled = true
+emission = Color(0.48452926, 0.7977378, 1, 1)
+emission_energy_multiplier = 0.5
