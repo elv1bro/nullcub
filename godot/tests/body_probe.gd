@@ -39,6 +39,8 @@ const PRESETS := {
 	# витрина покраски (docs/plan-demo/BODY_PAINT.md §4)
 	"kit_graffiti": "res://scenes/body/presets/kit_graffiti.tscn",
 	"kit_camo": "res://scenes/body/presets/kit_camo.tscn",
+	"kit_spinner": "res://scenes/body/presets/kit_spinner.tscn",
+	"kit_empty": "res://scenes/body/presets/kit_empty.tscn",
 }
 const SPACING := 8.0
 const IDLE_S := 5.0

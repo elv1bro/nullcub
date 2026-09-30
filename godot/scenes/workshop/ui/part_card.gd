@@ -8,7 +8,7 @@ extends PanelContainer
 
 signal grabbed(part_id: String, pos: Vector2)
 
-const ICON := 80   # компактный экран (WORKSHOP_V3.md §6): три карточки в колонке 400 px
+const ICON := 92   # UI v0.2: крупнее превью, четыре карточки в каталоге 606 px
 ## Чем бьёт форма детали (PartDef.hit_mult ≠ 1) — слово для подсказки по префиксу id; нет в таблице — «форма».
 const HIT_WORDS := {
 	"kit_limb_spiked": "шипы", "kit_head_horned": "рога", "kit_head_devil": "рожки", "kit_head_cow": "рога", "kit_hand_claw": "клешня",
@@ -29,7 +29,7 @@ var _fits := true
 func setup(d: PartDef, on_body := false) -> void:
 	def = d
 	part_id = d.id
-	custom_minimum_size = Vector2(108, 152)
+	custom_minimum_size = Vector2(118, 164)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_default_cursor_shape = Control.CURSOR_DRAG
 	for s in [_style, _style_hover]:

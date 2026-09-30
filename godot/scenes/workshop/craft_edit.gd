@@ -43,7 +43,7 @@ const SAVE_DIR := "user://blueprints/"
 const AUTOSAVE := "_autosave"
 const BODY_PRESETS := ["human", "spider", "long_arm", "big_arm", "legless", "junk", "flail",
 	"kit_human", "kit_brawler", "kit_bot", "kit_horned", "kit_king", "kit_spider", "kit_devil", "kit_skull", "kit_wheels", "kit_lantern",
-	"kit_graffiti", "kit_camo"]
+	"kit_graffiti", "kit_camo", "kit_spinner", "kit_empty"]
 ## Детали, которых нет на полках: kit_human_* — дубли wood_* под риг v3 (BODY_KIT.md §3.2) для пресета kit_human; на полке
 ## их не отличить от kit_limb_basic_* / kit_core_barrel. Чертежи с ними грузятся как обычно (BodyBlueprint.part_def).
 const SHELF_HIDDEN_PREFIXES := ["kit_human_"]
@@ -52,15 +52,17 @@ const WEAPON_PRESETS := ["mallet", "hammer", "spiked_hammer", "heavy_hammer", "l
 ## шарнира (ui/joint_card.gd), "material" — кисть материала (ui/material_card.gd), "paint" — покраска (BODY_PAINT.md §1, §6:
 ## ui/paint_panel.gd, поведение — WorkshopPaint). Ударные навершия есть и у тела («тело становится частью оружия», CONCEPT_V2 §8;
 ## якоря кита их принимают — ANY_LIMB) — на вкладке брони, после видов из контракта.
+## UI v0.2: «Броня» и «Декор» — отдельные категории; icon — деталь, чья иконка (PartIcons) стоит на кнопке категории.
 const BODY_SHELVES := [
-	{"id": "core", "title": "Ядро", "kinds": ["core"]},
-	{"id": "head", "title": "Головы", "kinds": ["head"]},
-	{"id": "limb", "title": "Конечности", "kinds": ["limb"]},
-	{"id": "end", "title": "Кисти, стопы", "kinds": ["hand", "foot"]},
-	{"id": "joint", "title": "Шарниры", "kinds": ["joint", "chain"], "tool": "joint"},
-	{"id": "armor", "title": "Броня, декор", "kinds": ["plate", "armor", "deco", "mod", "weapon_head"]},
-	{"id": "mat", "title": "Материал", "kinds": [], "tool": "material"},
-	{"id": "paint", "title": "Покраска", "kinds": [], "tool": "paint"},
+	{"id": "core", "title": "Тело", "kinds": ["core"], "icon": "kit_core_barrel"},
+	{"id": "head", "title": "Головы", "kinds": ["head"], "icon": "kit_head_round"},
+	{"id": "limb", "title": "Конечности", "kinds": ["limb"], "icon": "kit_limb_spring_s"},
+	{"id": "end", "title": "Кисти/стопы", "kinds": ["hand", "foot"], "icon": "kit_hand_claw"},
+	{"id": "joint", "title": "Шарниры", "kinds": ["joint", "chain"], "tool": "joint", "icon": "chain_segment"},
+	{"id": "armor", "title": "Броня", "kinds": ["plate", "armor", "mod", "weapon_head"], "icon": "kit_deco_gauntlet_s"},
+	{"id": "deco", "title": "Декор", "kinds": ["deco"], "icon": "kit_deco_crown"},
+	{"id": "mat", "title": "Материал", "kinds": [], "tool": "material", "glyph": "▦"},
+	{"id": "paint", "title": "Покраска", "kinds": [], "tool": "paint", "glyph": "✎"},
 ]
 const WEAPON_SHELVES := [
 	{"id": "handle", "title": "Рукояти", "kinds": ["handle"]},
@@ -1128,3 +1130,149 @@ static func list_saved() -> Array:
 			return not bool(a["auto"])
 		return int(a["time"]) > int(b["time"]))
 	return out
+
+# ------------------------------------------------------------------ зеркало, паспорт детали (UI v0.2)
+
+## Прочность материала для паспорта детали и сводки «Прочность» (0…1): металл крепче дерева. Пока показатель мастерской — в бою
+## не читается (урон и HP от него не зависят); нет в таблице — 0.5.
+const MAT_DURABILITY := {
+	"iron": 1.0, "brass": 0.9, "rust": 0.8, "rust_red": 0.85, "bone": 0.6, "rubber": 0.7, "wood_dark": 0.6, "wood": 0.5,
+	"maple": 0.5, "planks": 0.45, "paint_red": 0.5, "paint_blue": 0.5, "paint_yellow": 0.5, "paint_white": 0.5, "paint_green": 0.5,
+	"cloth": 0.3,
+}
+static var _length_cache: Dictionary = {}
+
+
+## Зеркальное имя якоря: Anchor_Shoulder_L ↔ Anchor_Shoulder_R; "" — якорь по центру.
+static func mirror_anchor(an: String) -> String:
+	if an.ends_with("_L"):
+		return an.substr(0, an.length() - 2) + "_R"
+	if an.ends_with("_R"):
+		return an.substr(0, an.length() - 2) + "_L"
+	return ""
+
+
+## Узел на зеркальном месте узла uid ("" — нет / деталь по центру): тот же якорь у зеркального родителя или зеркальный якорь того же.
+static func mirror_uid(bp: BodyBlueprint, uid: String) -> String:
+	var n := find(bp, uid)
+	var p := String(n.get("parent", ""))
+	if n.is_empty() or p == "":
+		return ""
+	var ma := mirror_anchor(String(n.get("anchor", "")))
+	if ma != "":
+		return occupant(bp, p, ma)
+	var mp := mirror_uid(bp, p)
+	return occupant(bp, mp, String(n.get("anchor", ""))) if mp != "" else ""
+
+
+## Куда встанет зеркальная копия узла uid: [родитель, якорь]; [] — детали по центру зеркалить некуда.
+static func mirror_place(bp: BodyBlueprint, uid: String) -> Array:
+	var n := find(bp, uid)
+	var p := String(n.get("parent", ""))
+	if n.is_empty() or p == "":
+		return []
+	var ma := mirror_anchor(String(n.get("anchor", "")))
+	if ma != "":
+		return [p, ma]
+	var mp := mirror_uid(bp, p)
+	return [mp, String(n.get("anchor", ""))] if mp != "" and mp != p else []
+
+
+## Копия поддерева uid на зеркальное место (детали, материалы, шарниры, углы покоя; тяги не копируются). Занятое место — заменяется
+## со своим поддеревом. {ok, code, reason, uid (корень копии), count, replaced}.
+static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
+	var place := mirror_place(bp, uid)
+	if place.is_empty():
+		return {"ok": false, "code": "center", "reason": "Деталь по центру — зеркалить некуда (выбери деталь сбоку: руку, ногу, наплечник)"}
+	var replaced := occupant(bp, String(place[0]), String(place[1]))
+	if replaced != "":
+		if subtree(bp, uid).has(replaced) or subtree(bp, replaced).has(uid):
+			return {"ok": false, "code": "self", "reason": "Зеркальное место занято этой же веткой"}
+		detach(bp, replaced)
+	var queue: Array = [[uid, String(place[0]), String(place[1])]]
+	var first := ""
+	var count := 0
+	while not queue.is_empty():
+		var q: Array = queue.pop_front()
+		var src := find(bp, String(q[0]))
+		var part_id := String(src.get("part", ""))
+		var c := check(bp, part_id, String(q[1]), String(q[2]))
+		if not bool(c["ok"]):
+			var d := part(part_id)
+			return {"ok": false, "code": String(c["code"]), "reason": energy_reason("зеркальную копию", int(c["energy_after"]), bp.energy_budget)
+				if String(c["code"]) == "energy" else "Зеркально не встаёт «%s»: %s" % [d.title if d != null else part_id, c["reason"]]}
+		var res := _apply_attach(bp, part_id, String(q[1]), String(q[2]))
+		var nu := String(res.get("uid", ""))
+		var dst := find(bp, nu)
+		for k in ["mat", "joint", "rest_deg"]:
+			if src.has(k):
+				dst[k] = src[k]
+		if first == "":
+			first = nu
+		count += 1
+		for ch in children_of(bp, String(q[0])):
+			queue.append([String(ch["uid"]), nu, String(ch.get("anchor", ""))])
+	if bp.energy_used() > bp.energy_budget:
+		return {"ok": false, "code": "energy", "reason": energy_reason("зеркальную копию", bp.energy_used(), bp.energy_budget)}
+	var errs := structural_errors(bp)
+	if not errs.is_empty():
+		return {"ok": false, "code": "invalid", "reason": _friendly(errs[0])}
+	return {"ok": true, "code": "ok", "reason": "", "uid": first, "count": count, "replaced": replaced}
+
+
+## Длина детали, м: наибольший размер её форм столкновения (кэш по id).
+static func part_length(d: PartDef) -> float:
+	if d == null or d.scene == null:
+		return 0.0
+	if _length_cache.has(d.id):
+		return _length_cache[d.id]
+	var inst := d.scene.instantiate()
+	var box := AABB()
+	var first := true
+	for c in inst.get_children():
+		if c is CollisionShape3D and (c as CollisionShape3D).shape != null:
+			var h := ModularDoll._shape_half((c as CollisionShape3D).shape)
+			var w: AABB = (c as Node3D).transform * AABB(-h, h * 2.0)
+			box = w if first else box.merge(w)
+			first = false
+	inst.free()
+	var l := 0.0 if first else maxf(box.size.x, maxf(box.size.y, box.size.z))
+	_length_cache[d.id] = l
+	return l
+
+
+## Прочность детали 0…1 (материал узла или детали по умолчанию; броня и щитки крепче, ядро — чуть). Показатель мастерской.
+static func part_durability(d: PartDef, mat_id := "") -> float:
+	if d == null:
+		return 0.0
+	var m := mat_id if mat_id != "" else (d.base_mat if d.base_mat != "" else d.material)
+	var v := float(MAT_DURABILITY.get(m, 0.5))
+	if d.kind in ["plate", "armor"]:
+		v += 0.25
+	elif d.kind == "core":
+		v += 0.1
+	return clampf(v, 0.0, 1.0)
+
+
+## Паспорт детали словами (правая панель): что она делает в бою.
+static func part_desc(d: PartDef) -> String:
+	if d == null:
+		return ""
+	var lines: PackedStringArray = []
+	match d.kind:
+		"core": lines.append("Ядро — центр тела: к нему крепится всё остальное, чем дальше от него, тем дороже энергия.")
+		"head": lines.append("Голова: удар В неё ×%.1f — береги её." % Tuning.HEAD_HIT_MULT)
+		"hand": lines.append("Кисть: хват, бросок и удары. Удар В кисть почти не проходит (блок ×%.2f)." % Tuning.HAND_HIT_MULT)
+		"foot": lines.append("Стопа: опора и пинок.")
+		"limb": lines.append("Звено конечности: длиннее — дальше достаёт, но дороже по энергии.")
+		"joint", "chain": lines.append("Связующее звено: гибкость и размах.")
+		"plate", "armor": lines.append("Броня: сливается с деталью-хозяином, добавляет массу и прочность.")
+		"deco": lines.append("Декор: сливается с деталью-хозяином.")
+		"weapon_head": lines.append("Навершие: на оружии — множитель урона ×%.2f; на теле — масса и форма." % d.weapon_mult)
+		_: lines.append(String(KIND_TITLES.get(d.kind, d.kind)).capitalize() + ".")
+	var sm := minf(d.body_mult if BodyBlueprint.is_fixed_part(d) else d.hit_mult, Tuning.SHAPE_MULT_MAX)
+	match d.hit_profile:
+		"sharp": lines.append("Колющая форма: до ×%.2f на медленном точном тычке, на быстром ударе ×1." % sm)
+		"blunt": lines.append("Дробящая форма: до ×%.2f на размахе и рывке, на медленном ×1." % sm)
+		"soft": lines.append("Мягкая: бьёт слабее (×%.2f)." % sm)
+	return " ".join(lines)

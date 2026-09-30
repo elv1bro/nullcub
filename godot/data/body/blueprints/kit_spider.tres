@@ -90,3 +90,4 @@ nodes = Array[Dictionary]([{
 "uid": "J"
 }])
 control = PackedStringArray("J")
+control_rmb = PackedStringArray()
