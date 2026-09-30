@@ -12,6 +12,7 @@ mass = 2.4
 energy = 5
 body_mult = 0.6
 hit_mult = 0.85
+hit_profile = "soft"
 name_prefix = "UpperLeg"
 base_mat = "wood"
 connector = true

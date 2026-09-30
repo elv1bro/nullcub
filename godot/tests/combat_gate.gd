@@ -5,7 +5,7 @@
 ##                    ждут 0, а calib_*_if_enabled — что env_formula осталась в своей полосе (на случай, если урон вернут);
 ##   rush_damage    — две куклы 15 с бегут друг на друга: суммарный урон 20–120 HP, ни одного удара kind environment;
 ##   band_torso     — контролируемый наезд 3 м/с (скорости всех частей заданы): первый удар 0.5–5 HP;
-##   band_hand      — наезд 10 м/с: первый удар (конечность) 6–18 HP;
+##   band_hand      — наезд 10 м/с: первый удар (конечность) 6–18 HP до блока (в кисть — ÷ HAND_HIT_MULT, блок с 30.09);
 ##   band_hammer    — кукла с молотом в левой кисти (WeaponPickup.attach, молот нацелен по +X на цель) наезжает 8 м/с: первый удар
 ##                    оружием 15–40 HP (в голову — 30–50, как hammer_head_8), kind weapon;
 ##   idle_no_damage — 60 с две куклы стоят порознь: урон 0;
@@ -115,6 +115,7 @@ func _ready() -> void:
 		scenarios = [only]
 	_make_arena()
 	_calibration()
+	_shape_and_block()
 	wall_start_usec = Time.get_ticks_usec()
 	_next()
 
@@ -138,6 +139,35 @@ func _static_box(pos: Vector3, size: Vector3) -> StaticBody3D:
 	f.physics_material_override = pm
 	add_child(f)
 	return f
+
+
+## Форма × скорость и блок кистью (WORKSHOP_V3.md §4–5, решения автора 30.09): чистые функции Damage, без сцены.
+func _shape_and_block() -> void:
+	var lo := Tuning.SHAPE_SLOW_V
+	var hi := Tuning.SHAPE_FAST_V
+	var mid := (lo + hi) * 0.5
+	var rows := [
+		["shape_cap", Damage.shape_mult("", 1.3, mid), Tuning.SHAPE_MULT_MAX, "бонус формы не выше SHAPE_MULT_MAX"],
+		["shape_sharp_slow", Damage.shape_mult("sharp", 1.2, lo - 1.0), 1.2, "колющая: полный бонус на медленном тычке"],
+		["shape_sharp_fast", Damage.shape_mult("sharp", 1.2, hi + 2.0), 1.0, "колющая: на быстром ударе ×1"],
+		["shape_sharp_mid", Damage.shape_mult("sharp", 1.2, mid), 1.1, "колющая: посередине — половина бонуса"],
+		["shape_blunt_slow", Damage.shape_mult("blunt", 1.2, lo), 1.0, "дробящая: на медленном ×1"],
+		["shape_blunt_fast", Damage.shape_mult("blunt", 1.2, hi), 1.2, "дробящая: на размахе полный бонус"],
+		["shape_soft_any", Damage.shape_mult("soft", 0.85, hi + 5.0), 0.85, "мягкая (верёвка): штраф на любой скорости"],
+		["shape_penalty_keeps", Damage.shape_mult("sharp", 0.9, hi + 5.0), 0.9, "штраф < 1 профиль не снимает"],
+		["target_hand", Damage.target_mult_of("Hand_L"), Tuning.HAND_HIT_MULT, "удар в кисть — ×HAND_HIT_MULT (блок)"],
+		["target_hand_kit", Damage.target_mult_of("Hand_3"), Tuning.HAND_HIT_MULT, "кисть кита (Hand_<uid>) — тоже блок"],
+		["target_head", Damage.target_mult_of("Head"), Tuning.HEAD_HIT_MULT, "в голову ×HEAD_HIT_MULT"],
+		["target_forearm", Damage.target_mult_of("LowerArm_R"), 1.0, "предплечье — как тело (блока нет)"],
+	]
+	for r in rows:
+		_check(String(r[0]), float(r[1]), float(r[2]), "eq", String(r[3]))
+	# кулак в кулак 10 м/с: медленный кулак получает четверть «кисть в торс» (8.1 → ~2)
+	var fist_body := Damage.compute(0.5, 10.0, Damage.body_mult_of("Hand_R"))
+	var fist_fist := Damage.compute(0.5, 10.0, Damage.body_mult_of("Hand_R"), 1.0, 1.0, 1.0, Damage.target_mult_of("Hand_L"))
+	_check("block_fist_fist", fist_fist, fist_body * Tuning.HAND_HIT_MULT, "eq", "кулак в кулак = кисть в торс × HAND_HIT_MULT")
+	_check("block_fist_fist_small", fist_fist, 3.0, "lte", "кулак в кулак — касание (≤ 3 HP)")
+	report["info"]["block_fist_fist"] = snappedf(fist_fist, 0.01)
 
 
 func _calibration() -> void:
@@ -393,6 +423,16 @@ func _first(store: Array) -> Dictionary:
 	return store[0] if not store.is_empty() else {"amount": 0.0, "kind": "", "part": "", "striker": ""}
 
 
+## Первый удар для полос band_torso / band_hand — урон ДО блока: полосы калибруют скорость и массу удара, а кисть жертвы с 30.09 —
+## блок ×HAND_HIT_MULT (проверки block_* в _shape_and_block). В Т-позе кисти встречаются первыми: сумма такого удара ÷ HAND_HIT_MULT.
+func _first_unblocked(store: Array) -> Dictionary:
+	var f := _first(store).duplicate()
+	if String(f["part"]).begins_with("Hand"):
+		f["blocked_amount"] = f["amount"]
+		f["amount"] = float(f["amount"]) / Tuning.HAND_HIT_MULT
+	return f
+
+
 func _max_hit(store: Array) -> float:
 	var mx := 0.0
 	for h in store:
@@ -577,7 +617,7 @@ func _physics_process(delta: float) -> void:
 					injecting = false
 			var window := 0.5
 			if first_hit_t >= 0.0 and t >= first_hit_t + window or t >= 8.0:
-				var f := _first(hits_b)
+				var f := _first(hits_b) if s == "band_hammer" else _first_unblocked(hits_b)
 				var info := {"first": f, "all": hits_b.slice(0, 6), "first_hit_t": first_hit_t, "a_hp": a.hp, "b_hp": b.hp}
 				match s:
 					"band_torso":

@@ -321,7 +321,7 @@ META = {
     "Deco_Horns": {"kind": "deco", "title": "Рога", "mass": 0.8, "energy": 2, "body_mult": 1.2},
     "Deco_Crown": {"kind": "deco", "title": "Корона", "mass": 0.4, "energy": 1},
     "Deco_Pauldron": {"kind": "armor", "title": "Наплечник", "mass": 1.5, "energy": 3},
-    "Deco_Spikes": {"kind": "deco", "title": "Шипастый ошейник", "mass": {"S": 0.6, "L": 0.8}, "energy": 3, "body_mult": 1.25},
+    "Deco_Spikes": {"kind": "deco", "title": "Шипастый ошейник", "mass": {"S": 0.6, "L": 0.8}, "energy": 3, "body_mult": 1.2},
     "Deco_Banner": {"kind": "deco", "title": "Флажок", "mass": 0.5, "energy": 1},
     "Deco_Wings": {"kind": "deco", "title": "Жестяные крылья", "mass": 1.2, "energy": 3},
     "Deco_Plume": {"kind": "deco", "title": "Султан", "mass": 0.3, "energy": 1},

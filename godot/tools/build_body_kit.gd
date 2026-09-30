@@ -502,6 +502,7 @@ func _build_part(e: Dictionary) -> void:
 	def.set("attach", String(e.get("attach", "joint")))
 	def.set("body_mult", _body_mult(id, kind, e))
 	def.set("hit_mult", _hit_mult(id, kind, e))
+	def.set("hit_profile", _hit_profile(id))
 	def.set("material", String(e.get("material", "wood")))
 	def.set("name_prefix", String(e.get("name_prefix", "Part")))
 	def.set("weapon_mult", float(e.get("weapon_mult", 1.0)))
@@ -527,6 +528,23 @@ func _body_mult(id: String, kind: String, e: Dictionary) -> float:
 		_warn("%s: body_mult %.2f из каталога не используется — у детали со своим телом Tuning.BODY_MULT[%s] = %.2f (× материал, §3.3)"
 			% [id, bm, prefix, table])
 	return table
+
+
+## Профиль скорости формы (WORKSHOP_V3.md §4, Damage.shape_mult) по префиксу id: колющие — бонус на медленном тычке, дробящие —
+## на размахе; мягкие (верёвка, щупальце) — штраф на любой скорости. Нет в таблице — "" (множитель постоянный; у формы 1.0 не важен).
+const HIT_PROFILE := {
+	"kit_limb_spiked_": "sharp", "kit_head_horned": "sharp", "kit_head_devil": "sharp", "kit_hand_claw": "sharp", "kit_foot_peg": "sharp",
+	"kit_deco_spikes_": "sharp", "kit_deco_horns": "sharp",
+	"kit_hand_fist": "blunt", "kit_hand_clamp": "blunt", "kit_head_cow": "blunt", "kit_deco_gauntlet_": "blunt",
+	"kit_limb_rope_": "soft", "kit_limb_tentacle_": "soft",
+}
+
+
+func _hit_profile(id: String) -> String:
+	for k in HIT_PROFILE:
+		if id.begins_with(String(k)):
+			return String(HIT_PROFILE[k])
+	return ""
 
 
 ## PartDef.hit_mult (§3.3): множитель удара ЭТОЙ формой (шипы, рога, клешня) — из каталога (META hit_mult Blender-модуля), только у

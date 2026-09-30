@@ -13,6 +13,7 @@ mass = 0.5
 energy = 2
 body_mult = 1.2
 hit_mult = 1.15
+hit_profile = "sharp"
 name_prefix = "Foot"
 base_mat = "wood_dark"
 connector = true

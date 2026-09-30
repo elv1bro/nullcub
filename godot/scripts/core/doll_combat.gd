@@ -259,7 +259,7 @@ func _contact_doll(part: RigidBody3D, other: RigidBody3D, other_doll: Doll, pos:
 		var dir := striker_v if striker_v.length_squared() > 1e-4 else (part.global_position - other.global_position)
 		_enqueue({
 			"victim_part": part, "striker": other, "attacker": other_doll, "kind": "head" if part.name.begins_with("Head") else "body",
-			"mass": other.mass, "body_mult": Damage.body_mult_of_body(other), "weapon_mult": 1.0, "weapon_id": "",
+			"mass": other.mass, "body_mult": Damage.body_mult_of_body(other) * Damage.shape_mult_of_body(other, closing), "weapon_mult": 1.0, "weapon_id": "",
 			"speed": closing, "target_mult": 1.0 if head_head else Damage.target_mult_of(part.name),
 			"pos": pos, "nrm": nrm, "dir": dir, "t": _time,
 		})
@@ -274,7 +274,7 @@ func _contact_doll(part: RigidBody3D, other: RigidBody3D, other_doll: Doll, pos:
 	var dir := striker_v if striker_v.length_squared() > 1e-4 else (other.global_position - part.global_position)
 	oc._enqueue({
 		"victim_part": other, "striker": part, "attacker": doll, "kind": "head" if other.name.begins_with("Head") else "body",
-		"mass": part.mass, "body_mult": Damage.body_mult_of_body(part), "weapon_mult": 1.0, "weapon_id": "",
+		"mass": part.mass, "body_mult": Damage.body_mult_of_body(part) * Damage.shape_mult_of_body(part, closing), "weapon_mult": 1.0, "weapon_id": "",
 		"speed": closing, "pos": pos, "nrm": nrm, "dir": dir, "t": _time,
 	})
 

@@ -364,13 +364,13 @@ def build_Head_Lantern(base="Brass"):
 
 
 # Метаданные для kit_catalog.json (BODY_KIT.md §3.3): масса, энергия. Множитель удара головой — Tuning.BODY_MULT["Head"] × материал
-# (builder пишет таблицу в PartDef по name_prefix) × hit_mult — множитель удара ЭТОЙ формой (PartDef.hit_mult): рогатый шлем 1.3,
+# (builder пишет таблицу в PartDef по name_prefix) × hit_mult — множитель удара ЭТОЙ формой (PartDef.hit_mult): рогатый шлем 1.2 (потолок формы, WORKSHOP_V3.md §4),
 # рожки чёртика 1.15, коровы 1.1; своего body_mult у головы нет
 META = {
     "Head_Round": {"kind": "head", "title": "Голова-игрушка", "mass": 4.0, "energy": 8},
     "Head_Crate": {"kind": "head", "title": "Голова-ящик", "mass": 3.5, "energy": 7},
     "Head_Bot": {"kind": "head", "title": "Голова-экран", "mass": 4.5, "energy": 9},
-    "Head_Horned": {"kind": "head", "title": "Рогатый шлем", "mass": 6.0, "energy": 12, "hit_mult": 1.3},
+    "Head_Horned": {"kind": "head", "title": "Рогатый шлем", "mass": 6.0, "energy": 12, "hit_mult": 1.2},
     "Head_Cow": {"kind": "head", "title": "Голова-корова", "mass": 4.3, "energy": 9, "hit_mult": 1.1},
     "Head_Devil": {"kind": "head", "title": "Голова-чёртик", "mass": 4.0, "energy": 9, "hit_mult": 1.15},
     "Head_Skull": {"kind": "head", "title": "Череп с карточкой", "mass": 3.2, "energy": 7},

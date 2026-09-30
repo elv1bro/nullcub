@@ -29,6 +29,10 @@ const FIXED_KINDS := ["deco", "armor"]
 ## тела = Damage.body_mult_of(имя) × MaterialDef.body_mult × hit_mult × Π body_mult слитого декора / брони (ModularDoll, BODY_KIT.md
 ## §5.4). Только у деталей со своим телом (у кита — из kit_catalog.json, builder); у старых деталей и у fixed-видов 1.0.
 @export var hit_mult := 1.0
+## Профиль скорости формы (WORKSHOP_V3.md §4, Damage.shape_mult): "sharp" — колющая (шипы, когти, рога: бонус на медленном тычке),
+## "blunt" — дробящая (кулак, тиски, тяжёлые головы, наруч: бонус на размахе), "soft" / "" — постоянный множитель. Бонус с 30.09
+## не выше Tuning.SHAPE_MULT_MAX (1.2); у декора / брони — вместе с body_mult (форма хозяина, не множитель поверх).
+@export var hit_profile := ""
 @export_enum("wood", "iron", "cloth") var material := "wood"
 ## Префикс имени тела в собранной кукле: UpperArm, LowerArm, Hand, UpperLeg, LowerLeg, Foot, Head, Torso, Chain, Handle…
 @export var name_prefix := "Part"

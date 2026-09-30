@@ -13,5 +13,6 @@ mass = 0.8
 energy = 2
 attach = "fixed"
 body_mult = 1.2
+hit_profile = "sharp"
 name_prefix = "Deco"
 base_mat = "bone"

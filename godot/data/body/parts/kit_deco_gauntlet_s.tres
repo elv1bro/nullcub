@@ -13,6 +13,7 @@ mass = 1.2
 energy = 3
 attach = "fixed"
 body_mult = 1.1
+hit_profile = "blunt"
 material = "iron"
 name_prefix = "Armor"
 base_mat = "iron"

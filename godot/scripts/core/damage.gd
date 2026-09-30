@@ -129,8 +129,37 @@ static func body_mult_of_body(b: Node) -> float:
 	return body_mult_of(String(b.name))
 
 
+## Множитель жертвы по части, в которую попали: голова ×HEAD_HIT_MULT, кисть ×HAND_HIT_MULT («блок», 30.09), остальное 1.0.
 static func target_mult_of(part_name: String) -> float:
-	return Tuning.HEAD_HIT_MULT if part_name.begins_with("Head") else 1.0
+	if part_name.begins_with("Head"):
+		return Tuning.HEAD_HIT_MULT
+	if part_name.begins_with("Hand"):
+		return Tuning.HAND_HIT_MULT
+	return 1.0
+
+
+## Множитель формы бьющей детали на скорости удара v (WORKSHOP_V3.md §4): mult — бонус формы (клэмп сверху SHAPE_MULT_MAX),
+## profile — "sharp" (полный бонус до SHAPE_SLOW_V, ×1 от SHAPE_FAST_V), "blunt" (×1 до SHAPE_SLOW_V, полный от SHAPE_FAST_V),
+## иначе ("soft", "") — mult на любой скорости. Штраф (< 1: верёвка, щупальце) профиль не снимает.
+static func shape_mult(profile: String, mult: float, v: float) -> float:
+	var m := minf(mult, Tuning.SHAPE_MULT_MAX)
+	if m <= 1.0:
+		return m
+	var u := clampf((v - Tuning.SHAPE_SLOW_V) / maxf(Tuning.SHAPE_FAST_V - Tuning.SHAPE_SLOW_V, 1e-3), 0.0, 1.0)
+	match profile:
+		"sharp":
+			return lerpf(m, 1.0, u)
+		"blunt":
+			return lerpf(1.0, m, u)
+	return m
+
+
+## Множитель формы тела-бьющего на скорости v: meta shape_mult / shape_profile (ModularDoll: форма детали и шипастый декор);
+## нет меты — 1.0 (обычная кукла, оружие).
+static func shape_mult_of_body(b: Node, v: float) -> float:
+	if b == null or not b.has_meta("shape_mult"):
+		return 1.0
+	return shape_mult(String(b.get_meta("shape_profile", "")), float(b.get_meta("shape_mult")), v)
 
 
 ## Множитель комбо по числу предыдущих ударов атакующего в окне COMBO_WINDOW_S.

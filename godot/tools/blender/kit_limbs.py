@@ -362,7 +362,7 @@ def build_Limb_Fantasy(L=0.30, r=0.058, ja=0.064, jb=0.054, base="PaintWhite"):
 # Метаданные для kit_catalog.json (BODY_KIT.md §3.3): масса и энергия по размеру (S рука 0.30 · L нога 0.42 · LA/LL — риг v3);
 # Basic_S = 2.0 кг как wood_upper_arm; name_prefix по размеру — в body_kit.SIZE_PREFIX. body_mult нет: удар конечностью —
 # Tuning.BODY_MULT по имени тела (плечо / предплечье / бедро / голень) × материал узла × hit_mult — множитель удара ЭТОЙ формой
-# (PartDef.hit_mult, ModularDoll meta body_mult): шипы бьют сильнее (1.3), верёвка и щупальце — мягче (0.85 / 0.9); у остальных 1.0
+# (PartDef.hit_mult, ModularDoll meta body_mult): шипы бьют сильнее (1.2 — потолок формы, WORKSHOP_V3.md §4), верёвка и щупальце — мягче (0.85 / 0.9); у остальных 1.0
 META = {
     "Limb_Basic": {"kind": "limb", "title": "Базовая", "mass": {"S": 2.0, "LA": 1.5, "L": 4.0, "LL": 3.0},
                    "energy": {"S": 4, "LA": 4, "L": 6, "LL": 6}},
@@ -374,7 +374,7 @@ META = {
     "Limb_Tentacle": {"kind": "limb", "title": "Щупальце", "mass": {"S": 1.6, "L": 3.0}, "energy": {"S": 5, "L": 7}, "hit_mult": 0.9},
     "Limb_Thin": {"kind": "limb", "title": "Тонкая", "mass": {"S": 1.1, "L": 2.2}, "energy": {"S": 3, "L": 4}},
     "Limb_Curved": {"kind": "limb", "title": "Гнутая труба", "mass": {"S": 2.2, "L": 4.4}, "energy": {"S": 5, "L": 7}},
-    "Limb_Spiked": {"kind": "limb", "title": "Шипастая", "mass": {"S": 2.7, "L": 5.4}, "energy": {"S": 6, "L": 8}, "hit_mult": 1.3},
+    "Limb_Spiked": {"kind": "limb", "title": "Шипастая", "mass": {"S": 2.7, "L": 5.4}, "energy": {"S": 6, "L": 8}, "hit_mult": 1.2},
     "Limb_Robotic": {"kind": "limb", "title": "Робо-гидравлика", "mass": {"S": 3.0, "L": 5.8}, "energy": {"S": 7, "L": 9}},
     "Limb_Rope": {"kind": "limb", "title": "Верёвка", "mass": {"S": 1.2, "L": 2.4}, "energy": {"S": 3, "L": 5}, "hit_mult": 0.85},
     "Limb_Fantasy": {"kind": "limb", "title": "Сказочная", "mass": {"S": 2.2, "L": 4.4}, "energy": {"S": 5, "L": 7}},
