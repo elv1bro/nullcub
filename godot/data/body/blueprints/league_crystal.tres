@@ -6,7 +6,7 @@
 script = ExtResource("1_ll5ti")
 id = "league_crystal"
 title = "Кристаллид"
-energy_budget = 110
+energy_budget = 120
 nodes = Array[Dictionary]([{
 "anchor": "",
 "name": "Torso",
@@ -108,6 +108,12 @@ nodes = Array[Dictionary]([{
 "part": "kit_foot_league_hover",
 "rest_deg": -16.0,
 "uid": "D"
+}, {
+"anchor": "Anchor_Deco",
+"channel": 1,
+"parent": "5",
+"part": "kit_active_league_shield",
+"uid": "E"
 }])
 control = PackedStringArray("6")
 control_rmb = PackedStringArray()

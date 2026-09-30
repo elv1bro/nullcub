@@ -88,6 +88,12 @@ nodes = Array[Dictionary]([{
 "part": "kit_foot_league_hover",
 "rest_deg": 0.0,
 "uid": "A"
+}, {
+"anchor": "Anchor_Back",
+"channel": 1,
+"parent": "T",
+"part": "kit_active_league_phase",
+"uid": "B"
 }])
 control = PackedStringArray("5")
 control_rmb = PackedStringArray()

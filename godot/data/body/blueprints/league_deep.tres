@@ -6,7 +6,7 @@
 script = ExtResource("1_lt4pb")
 id = "league_deep"
 title = "Глубинный"
-energy_budget = 120
+energy_budget = 130
 nodes = Array[Dictionary]([{
 "anchor": "",
 "name": "Torso",
@@ -114,6 +114,12 @@ nodes = Array[Dictionary]([{
 "part": "kit_limb_league_tentacle_l",
 "rest_deg": 10.0,
 "uid": "E"
+}, {
+"anchor": "Anchor_Back",
+"channel": 1,
+"parent": "T",
+"part": "kit_active_league_repair",
+"uid": "F"
 }])
 control = PackedStringArray("6")
 control_rmb = PackedStringArray()

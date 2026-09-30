@@ -108,6 +108,9 @@ const CATALOG := "res://assets/models/body/kit/kit_catalog.json"
 const HIT_MULT := {
 	"kit_limb_spiked_": 1.2, "kit_head_horned": 1.2, "kit_head_devil": 1.15, "kit_head_cow": 1.1, "kit_hand_claw": 1.15,
 	"kit_hand_clamp": 1.1, "kit_hand_fist": 1.1, "kit_foot_peg": 1.15, "kit_limb_rope_": 0.85, "kit_limb_tentacle_": 0.9,
+	# детали лиги (tools/blender/kit_league.py META; профиль — HIT_PROFILE tools/build_body_kit.gd)
+	"kit_limb_league_scythe_": 1.2, "kit_hand_league_talon": 1.15, "kit_foot_league_spike": 1.15, "kit_head_league_eye": 1.15,
+	"kit_head_league_crystal": 1.1, "kit_hand_league_pincer": 1.1, "kit_limb_league_crystal_": 1.1, "kit_limb_league_tentacle_": 0.9,
 }
 
 ## Заготовки (UI v0.2, шаблон «Пустой»: ядро и голова) — не бойцы: не стоят и тяг у них нет; остальные проверки — как у всех.

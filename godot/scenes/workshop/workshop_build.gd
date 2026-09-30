@@ -494,6 +494,28 @@ func set_material(uid: String, mat_id := "") -> Dictionary:
 ## Тип шарнира jt (по умолчанию — joint_pick) связи детали uid с родителем. История, node["joint"] ("pin" — ключ стирается),
 ## пересборка. {ok, code, reason, changed, energy_after} — CraftEdit.set_joint; отказ (корень, fixed-деталь, запреты weld, энергия)
 ## — с причиной.
+## Канал активного блока uid (0 — снять, 1…3 — клавиша канала; docs/plan-demo/ACTIVE_BLOCKS.md): история, пересборка, тост.
+func set_channel(uid: String, ch: int) -> void:
+	var n := CraftEdit.find(blueprint, uid)
+	if n.is_empty() or not ActiveBlocks.is_active(String(n.get("part", ""))) or ActiveBlocks.channel_of(n) == ch:
+		return
+	_push_history()
+	CraftEdit.set_channel(blueprint, uid, ch)
+	_name_custom_body()
+	_rebuild()
+	var d := CraftEdit.def_of(blueprint, uid)
+	var what := d.title if d != null else uid
+	if ch == 0:
+		_say("%s — без канала: в бою молчит" % what, COL_INFO)
+	else:
+		var same := 0
+		for m in blueprint.nodes:
+			if ActiveBlocks.channel_of(m) == ch:
+				same += 1
+		_say("%s → канал %d (%s)%s" % [what, ch, ActiveBlocks.key_label("p1", ch), "  · на канале блоков: %d" % same if same > 1 else ""],
+			COL_OK)
+
+
 func set_joint(uid: String, jt := "") -> Dictionary:
 	if jt == "":
 		jt = joint_pick
@@ -716,6 +738,8 @@ func duplicate_part(uid: String, target := "body") -> Dictionary:
 		var n2 := CraftEdit.find(blueprint, String(r["uid"]))
 		if n.has("mat"):
 			n2["mat"] = n["mat"]
+		if n.has(ActiveBlocks.NODE_KEY):
+			n2[ActiveBlocks.NODE_KEY] = n[ActiveBlocks.NODE_KEY]
 		_rebuild()
 		select_stand(String(r["uid"]), target)
 	return r
@@ -1268,7 +1292,7 @@ func drag_trial(t: Dictionary = {}) -> Dictionary:
 		if bool(r.get("ok", false)) and String(drag["copy_of"]) != "":
 			var src := CraftEdit.find(blueprint, String(drag["copy_of"]))
 			var dn := CraftEdit.find(tb2, String(r.get("uid", "")))
-			for k in ["mat", "joint", "rest_deg"]:
+			for k in ["mat", "joint", "rest_deg", ActiveBlocks.NODE_KEY]:
 				if src.has(k):
 					dn[k] = src[k]
 			if tb2.energy_used() > tb2.energy_budget:
@@ -1873,6 +1897,17 @@ func _apply_highlights() -> void:
 
 
 ## Тяги видны не всегда (v0.3: на кукле без лишнего): инструмент «Тяги» (Q) в руке или выбрана сама эта деталь.
+## Плашки каналов активных блоков на стенде (v0.3 §44: лишнего на кукле не видно): выбран активный блок или открыта категория
+## «Активные блоки».
+func channels_visible() -> bool:
+	if String(selected.get("source", "")) == "stand":
+		var n := CraftEdit.find(blueprint, String(selected.get("uid", "")))
+		if not n.is_empty() and ActiveBlocks.is_active(String(n.get("part", ""))):
+			return true
+	var tabs: Variant = ui.get("shelf_tab") if ui != null else null
+	return tabs is Dictionary and String((tabs as Dictionary).get("body", "")) == "active"
+
+
 func pulls_visible(uid := "") -> bool:
 	if control_pick:
 		return true
@@ -2570,6 +2605,17 @@ func overlay_items() -> Array:
 				var box := _visual_aabb(ms[0])
 				out.append({"pos": cam.unproject_position(box.get_center()), "dir": Vector2.ZERO, "state": "control",
 					"label": "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"})
+	# активные блоки: значок клавиши канала у каждого (docs/plan-demo/ACTIVE_BLOCKS.md) — когда видны (channels_visible)
+	if target == "body" and stand != null and channels_visible():
+		for n in blueprint.nodes:
+			if not ActiveBlocks.is_active(String(n.get("part", ""))):
+				continue
+			var msa := part_meshes("body", String(n.get("uid", "")))
+			if msa.is_empty():
+				continue
+			var ch := ActiveBlocks.channel_of(n)
+			out.append({"pos": cam.unproject_position(_visual_aabb(msa[0]).get_center()), "dir": Vector2.ZERO, "state": "channel",
+				"channel": ch, "label": ActiveBlocks.key_label("p1", ch) if ch > 0 else "—"})
 	_com_items(cam, out)
 	return out
 

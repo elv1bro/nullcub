@@ -29,8 +29,10 @@ const MATS := {
 	"League_Flesh": {"albedo": [0.26, 0.018, 0.035], "rough": 0.35, "metal": 0.0, "glow": [0.35, 0.02, 0.06], "energy": 0.25, "rim": 0.3},
 }
 
-## Бойцы лиги — предложение облачной сессии (имена, роли и бюджет энергии — решения автора). Узел: [uid, деталь, родитель, якорь,
-## rest_deg (NAN — как у якоря), имя тела ("" — авто), доп. ключи]. Правая сторона — те же углы (зеркалит ModularDoll).
+## Бойцы лиги — предложение облачной сессии (имена, роли и бюджет энергии — решения автора). Цепь: [якорь ядра (без _L / _R — пара),
+## детали, rest_deg, декор / броня на последний сегмент, имена тел]. Правая сторона — те же углы (зеркалит ModularDoll).
+## actives — особые модули дома (активные блоки, ActiveBlocks.DEFS): [деталь, родитель (uid ядра / головы или имя тела), якорь,
+## канал 1–3].
 ## Углы — в пределах суставов ModularDoll.JOINT_LIMITS (локоть и колено гнутся в одну сторону) и SIDE_LIMITS у боковых якорей.
 const LEAGUE_FIGHTERS := {
 	"league_reaper": {
@@ -44,6 +46,7 @@ const LEAGUE_FIGHTERS := {
 				["UpperLeg", "LowerLeg", "Foot"]],
 		],
 		"control": "LowerArm_R",
+		"actives": [["kit_active_league_gravity", "T", "Anchor_Back", 1]],
 	},
 	"league_crystal": {
 		"title": "Кристаллид",
@@ -58,6 +61,7 @@ const LEAGUE_FIGHTERS := {
 				["UpperLeg", "LowerLeg", "Foot"]],
 		],
 		"control": "LowerArm_R",
+		"actives": [["kit_active_league_shield", "UpperArm_R", "Anchor_Deco", 1]],
 	},
 	"league_deep": {
 		"title": "Глубинный",
@@ -70,6 +74,7 @@ const LEAGUE_FIGHTERS := {
 			["Hip", ["kit_limb_league_tentacle_l", "kit_limb_league_tentacle_l"], [18.0, 10.0], "", ["UpperLeg", "LowerLeg"]],
 		],
 		"control": "Hand_R",
+		"actives": [["kit_active_league_repair", "T", "Anchor_Back", 1]],
 	},
 	"league_portal": {
 		"title": "Страж портала",
@@ -83,6 +88,7 @@ const LEAGUE_FIGHTERS := {
 			["Hip", ["kit_limb_league_float_s", "kit_foot_league_hover"], [22.0, 0.0], "", ["UpperLeg", "Foot"]],
 		],
 		"control": "LowerArm_R",
+		"actives": [["kit_active_league_phase", "T", "Anchor_Back", 1]],
 	},
 }
 const UIDS := "123456789ABCDEFGIJKLMNOPQRSUVWXYZ"   # без H и T (голова, ядро)
@@ -159,6 +165,13 @@ func _build_fighters() -> void:
 					var host := UIDS[next - 2] if (ch[1] as Array).size() > 2 else UIDS[next - 1]
 					nodes.append({"uid": UIDS[next], "part": String(ch[3]), "parent": host, "anchor": "Anchor_Deco"})
 					next += 1
+		for a in f.get("actives", []):
+			var host := String(a[1])
+			for n in nodes:
+				if String(n.get("name", "")) == host:
+					host = String(n["uid"])
+			nodes.append({"uid": UIDS[next], "part": String(a[0]), "parent": host, "anchor": String(a[2]), "channel": int(a[3])})
+			next += 1
 		var bp: Resource = bp_script.new()
 		bp.set("id", id)
 		bp.set("title", String(f["title"]))

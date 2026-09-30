@@ -53,6 +53,7 @@ const WEAPON_PRESETS := ["mallet", "hammer", "spiked_hammer", "heavy_hammer", "l
 ## ui/paint_panel.gd, поведение — WorkshopPaint). Ударные навершия есть и у тела («тело становится частью оружия», CONCEPT_V2 §8;
 ## якоря кита их принимают — ANY_LIMB) — на вкладке брони, после видов из контракта.
 ## UI v0.2: «Броня» и «Декор» — отдельные категории; icon — деталь, чья иконка (PartIcons) стоит на кнопке категории.
+## only — отбор внутри видов (shelf_allows): «Активные» — блоки с действием на клавише канала (вид deco, ActiveBlocks), «Декор» — без.
 const BODY_SHELVES := [
 	{"id": "core", "title": "Тело", "kinds": ["core"], "icon": "kit_core_barrel"},
 	{"id": "head", "title": "Головы", "kinds": ["head"], "icon": "kit_head_round"},
@@ -60,7 +61,8 @@ const BODY_SHELVES := [
 	{"id": "end", "title": "Кисти/стопы", "kinds": ["hand", "foot"], "icon": "kit_hand_claw"},
 	{"id": "joint", "title": "Шарниры", "kinds": ["joint", "chain"], "tool": "joint", "icon": "chain_segment"},
 	{"id": "armor", "title": "Броня", "kinds": ["plate", "armor", "mod", "weapon_head"], "icon": "kit_deco_gauntlet_s"},
-	{"id": "deco", "title": "Декор", "kinds": ["deco"], "icon": "kit_deco_crown"},
+	{"id": "deco", "title": "Декор", "kinds": ["deco"], "icon": "kit_deco_crown", "only": "passive"},
+	{"id": "active", "title": "Активные", "kinds": ["deco"], "icon": "kit_active_booster", "only": "active"},
 	{"id": "mat", "title": "Материал", "kinds": [], "tool": "material", "glyph": "▦"},
 	{"id": "paint", "title": "Покраска", "kinds": [], "tool": "paint", "glyph": "✎"},
 ]
@@ -129,6 +131,27 @@ static func parts_of_kinds(kinds: Array) -> Array[PartDef]:
 		if kinds.has(d.kind) and (campaign_shelf.is_empty() or campaign_shelf.has(d.id)):
 			out.append(d)
 	return out
+
+
+## Деталь d на полке sh: ключ only — "active" (только активные блоки, ActiveBlocks.DEFS) / "passive" (без них) / нет — все.
+static func shelf_allows(sh: Dictionary, d: PartDef) -> bool:
+	match String(sh.get("only", "")):
+		"active":
+			return ActiveBlocks.is_active(d.id)
+		"passive":
+			return not ActiveBlocks.is_active(d.id)
+	return true
+
+
+## Канал активного блока (docs/plan-demo/ACTIVE_BLOCKS.md): ключ узла "channel" 1…3, 0 — снять (блок молчит).
+static func set_channel(bp: BodyBlueprint, uid: String, ch: int) -> void:
+	var n := find(bp, uid)
+	if n.is_empty():
+		return
+	if ch >= 1 and ch <= ActiveBlocks.CHANNELS:
+		n[ActiveBlocks.NODE_KEY] = ch
+	else:
+		n.erase(ActiveBlocks.NODE_KEY)
 
 
 ## Вкладка полки по id ({} — нет такой).
@@ -329,8 +352,8 @@ static func load_weapon_preset(id: String) -> WeaponBlueprint:
 static func signature(bp: Resource) -> PackedStringArray:
 	var out: PackedStringArray = []
 	for n in nodes_of(bp):
-		out.append("%s|%s|%s|%s|%s|%s|%s|%s|%s" % [n.get("uid", ""), n.get("part", ""), n.get("parent", ""), anchor_name(String(n.get("anchor", ""))) if String(n.get("parent", "")) != "" else "",
-			str(n.get("rest_deg", "")), n.get("name", ""), n.get("mat", ""), n.get("joint", ""), paint_signature(n)])
+		out.append("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [n.get("uid", ""), n.get("part", ""), n.get("parent", ""), anchor_name(String(n.get("anchor", ""))) if String(n.get("parent", "")) != "" else "",
+			str(n.get("rest_deg", "")), n.get("name", ""), n.get("mat", ""), n.get("joint", ""), paint_signature(n), str(n.get(ActiveBlocks.NODE_KEY, ""))])
 	out.sort()
 	return out
 
@@ -608,6 +631,8 @@ static func _apply_attach(bp: Resource, part_id: String, parent_uid: String, an:
 	if uid == "":
 		return {"ok": false, "code": "full", "reason": "Больше деталей не поместится (кончились номера)"}
 	var n := {"uid": uid, "part": part_id, "parent": parent_uid, "anchor": an}
+	if ActiveBlocks.is_active(part_id):
+		n[ActiveBlocks.NODE_KEY] = 1   # новый активный блок сразу на канале 1 (Q)
 	(bp.get("nodes") as Array).append(n)
 	return {"ok": true, "uid": uid}
 
@@ -628,6 +653,10 @@ static func _replace(bp: Resource, uid: String, part_id: String) -> Dictionary:
 	# замену предплечья на конечность кита размера S (её name_prefix — UpperArm)
 	var prefix0 := body0.name_prefix_of(uid) if body0 != null else (old.name_prefix if old != null else "")
 	n["part"] = part_id
+	if not ActiveBlocks.is_active(part_id):
+		n.erase(ActiveBlocks.NODE_KEY)
+	elif not n.has(ActiveBlocks.NODE_KEY):
+		n[ActiveBlocks.NODE_KEY] = 1
 	var prefix1 := body0.name_prefix_of(uid) if body0 != null else d.name_prefix
 	if n.has("name") and (old == null or prefix1 != prefix0):
 		n.erase("name")
@@ -1211,7 +1240,7 @@ static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 		var res := _apply_attach(bp, part_id, String(q[1]), String(q[2]))
 		var nu := String(res.get("uid", ""))
 		var dst := find(bp, nu)
-		for k in ["mat", "joint", "rest_deg"]:
+		for k in ["mat", "joint", "rest_deg", ActiveBlocks.NODE_KEY]:
 			if src.has(k):
 				dst[k] = src[k]
 		if first == "":
@@ -1342,9 +1371,17 @@ static func part_desc(d: PartDef) -> String:
 		"limb": lines.append("Звено конечности: длиннее — дальше достаёт, но дороже по энергии.")
 		"joint", "chain": lines.append("Связующее звено: гибкость и размах.")
 		"plate", "armor": lines.append("Броня: сливается с деталью-хозяином, добавляет массу и прочность.")
-		"deco": lines.append("Декор: сливается с деталью-хозяином.")
+		"deco":
+			if ActiveBlocks.is_active(d.id):
+				var ad := ActiveBlocks.def_of(d.id)
+				var cost := "%.0f заряда за выстрел" % float(ad["cost"]) if String(ad["action"]) == "gun" else "%.0f заряда/с" % float(ad["cost"])
+				lines.append("Активный блок: %s. Работает, пока зажата клавиша его канала; тратит %s." % [String(ad["hint"]), cost])
+			else:
+				lines.append("Декор: сливается с деталью-хозяином.")
 		"weapon_head": lines.append("Навершие: на оружии — множитель урона ×%.2f; на теле — масса и форма." % d.weapon_mult)
 		_: lines.append(String(KIND_TITLES.get(d.kind, d.kind)).capitalize() + ".")
+	if ActiveBlocks.PASSIVE.has(d.id):
+		lines.append("Особое свойство: %s." % String(ActiveBlocks.PASSIVE[d.id]["hint"]))
 	var sm := minf(d.body_mult if BodyBlueprint.is_fixed_part(d) else d.hit_mult, Tuning.SHAPE_MULT_MAX)
 	match d.hit_profile:
 		"sharp": lines.append("Колющая форма: до ×%.2f на медленном точном тычке, на быстром ударе ×1." % sm)

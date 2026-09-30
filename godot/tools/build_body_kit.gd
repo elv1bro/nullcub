@@ -537,6 +537,10 @@ const HIT_PROFILE := {
 	"kit_deco_spikes_": "sharp", "kit_deco_horns": "sharp",
 	"kit_hand_fist": "blunt", "kit_hand_clamp": "blunt", "kit_head_cow": "blunt", "kit_deco_gauntlet_": "blunt",
 	"kit_limb_rope_": "soft", "kit_limb_tentacle_": "soft",
+	# детали лиги (tools/blender/kit_league.py): коса, когти, ходуля, рога — колющие; клешня и кристалл — дробящие; щупальце — мягкое
+	"kit_limb_league_scythe_": "sharp", "kit_hand_league_talon": "sharp", "kit_foot_league_spike": "sharp", "kit_head_league_eye": "sharp",
+	"kit_head_league_crystal": "sharp", "kit_hand_league_pincer": "blunt", "kit_limb_league_crystal_": "blunt",
+	"kit_limb_league_tentacle_": "soft",
 }
 
 

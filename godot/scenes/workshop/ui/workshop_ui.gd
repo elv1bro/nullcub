@@ -44,8 +44,10 @@ const CATS := [
 	{"id": "end", "title": "Кисти и стопы", "icon": "hand", "kinds": ["hand", "foot"]},
 	{"id": "weapon", "title": "Оружие", "icon": "weapon", "kinds": ["weapon_head", "mod"]},
 	{"id": "armor", "title": "Броня", "icon": "armor", "kinds": ["plate", "armor"]},
+	# активные блоки (docs/plan-demo/ACTIVE_BLOCKS.md): вид deco с действием на клавише канала — only, CraftEdit.shelf_allows
+	{"id": "active", "title": "Активные блоки", "icon": "energy", "kinds": ["deco"], "only": "active"},
 	{"id": "mat", "title": "Материал", "icon": "material", "kinds": [], "tool": "material"},
-	{"id": "deco", "title": "Декор и покраска", "icon": "decor", "kinds": ["deco"], "alt": "paint"},
+	{"id": "deco", "title": "Декор и покраска", "icon": "decor", "kinds": ["deco"], "alt": "paint", "only": "passive"},
 ]
 ## Вкладка «Покраска» — вторая у «Декора» (shelf_tab["body"] == "paint").
 const PAINT_TAB := {"id": "paint", "title": "Покраска", "icon": "paint", "kinds": [], "tool": "paint"}
@@ -159,6 +161,7 @@ var joint_row: HFlowContainer
 var pull_row: HBoxContainer
 var part_actions: HBoxContainer
 var part_desc: Label
+var channel_row: HBoxContainer
 var weapon_box: VBoxContainer
 var weapon_name: Label
 var wstats: GridContainer
@@ -535,6 +538,9 @@ func _build_right() -> void:
 	pull_row = HBoxContainer.new()
 	pull_row.add_theme_constant_override("separation", 4)
 	part_box.add_child(pull_row)
+	channel_row = HBoxContainer.new()
+	channel_row.add_theme_constant_override("separation", 4)
+	part_box.add_child(channel_row)
 	part_desc = Label.new()
 	WsStyle.label(part_desc, WsStyle.SIZE_XS, true)
 	part_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1002,9 +1008,10 @@ func _build_shelf() -> void:
 		for c in CATS:
 			if String(c["id"]) == "all" or (c["kinds"] as Array).is_empty():
 				continue
-			groups.append([String(c["title"]), CraftEdit.parts_of_kinds(c["kinds"])])
+			groups.append([String(c["title"]), CraftEdit.parts_of_kinds(c["kinds"]).filter(func(d: PartDef) -> bool:
+				return CraftEdit.shelf_allows(c, d))])
 	else:
-		var defs := CraftEdit.parts_of_kinds(kinds)
+		var defs := CraftEdit.parts_of_kinds(kinds).filter(func(d: PartDef) -> bool: return CraftEdit.shelf_allows(cat, d))
 		var gdef: Array = GROUPS.get(String(cat.get("id", "")), [])
 		if gdef.is_empty():
 			groups.append(["", defs])
@@ -1650,7 +1657,33 @@ func _refresh_part() -> void:
 				ctl.set_pull(uid, pid)
 				_refresh())
 			pull_row.add_child(b)
-	part_desc.text = CraftEdit.part_desc(d) if not on_stand else ""
+	# канал активного блока: — / Q / F / C (docs/plan-demo/ACTIVE_BLOCKS.md; цвет выбранного — цвет канала, как плашка на кукле)
+	for c in channel_row.get_children():
+		c.queue_free()
+	channel_row.visible = on_stand and ActiveBlocks.is_active(d.id)
+	if channel_row.visible:
+		var cap3 := _caption("Канал")
+		cap3.custom_minimum_size = Vector2(62, 0)
+		channel_row.add_child(cap3)
+		var cur_ch := ActiveBlocks.channel_of(n)
+		for ch in range(ActiveBlocks.CHANNELS + 1):
+			var c_ch := ch
+			var b := Button.new()
+			b.text = "—" if ch == 0 else ActiveBlocks.key_label("p1", ch)
+			b.toggle_mode = true
+			b.focus_mode = Control.FOCUS_NONE
+			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			b.tooltip_text = "Без канала: в бою молчит" if ch == 0 else "Канал %d: пока зажата %s (P2 — %s, геймпад — %s)" % [ch,
+				ActiveBlocks.key_label("p1", ch), ActiveBlocks.key_label("p2", ch), ActiveBlocks.PAD_LABELS[ch - 1]]
+			WsStyle.apply_button(b, "chip")
+			b.set_pressed_no_signal(ch == cur_ch)
+			if ch > 0 and ch == cur_ch:
+				b.add_theme_color_override("font_pressed_color", ActiveRig.COL_CH[ch - 1])
+			b.pressed.connect(func() -> void:
+				ctl.set_channel(uid, c_ch)
+				_refresh())
+			channel_row.add_child(b)
+	part_desc.text = CraftEdit.part_desc(d) if not on_stand or ActiveBlocks.is_active(d.id) else ""
 	part_desc.visible = part_desc.text != ""
 	# действия
 	for c in part_actions.get_children():

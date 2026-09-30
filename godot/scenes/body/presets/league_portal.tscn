@@ -4,9 +4,9 @@
 [ext_resource type="Resource" path="res://data/body/blueprints/league_portal.tres" id="2_0s6bk"]
 [ext_resource type="Script" path="res://scripts/league/league_look.gd" id="3_y61dx"]
 
-[node name="ModularDoll" type="Node3D" unique_id=1112190851]
+[node name="ModularDoll" type="Node3D" unique_id=723859148]
 script = ExtResource("1_hs628")
 blueprint = ExtResource("2_0s6bk")
 
-[node name="LeagueLook" type="Node" parent="." unique_id=1240519593]
+[node name="LeagueLook" type="Node" parent="." unique_id=214387515]
 script = ExtResource("3_y61dx")
