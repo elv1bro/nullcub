@@ -13,6 +13,7 @@ mass = 0.9
 energy = 3
 body_mult = 2.0
 hit_mult = 1.15
+hit_profile = "sharp"
 material = "iron"
 name_prefix = "Hand"
 base_mat = "iron"

@@ -12,6 +12,7 @@ mass = 1.2
 energy = 3
 body_mult = 0.8
 hit_mult = 0.85
+hit_profile = "soft"
 name_prefix = "UpperArm"
 base_mat = "wood"
 connector = true

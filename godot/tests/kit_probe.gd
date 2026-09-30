@@ -104,7 +104,7 @@ const JOINT_R_RANGE := Vector2(0.02, 0.15)   # м: meta joint_r якоря (ра
 const CATALOG := "res://assets/models/body/kit/kit_catalog.json"
 ## §3.3: множитель удара формой (PartDef.hit_mult) по префиксу id детали кита; остальные детали со своим телом — 1.0.
 const HIT_MULT := {
-	"kit_limb_spiked_": 1.3, "kit_head_horned": 1.3, "kit_head_devil": 1.15, "kit_head_cow": 1.1, "kit_hand_claw": 1.15,
+	"kit_limb_spiked_": 1.2, "kit_head_horned": 1.2, "kit_head_devil": 1.15, "kit_head_cow": 1.1, "kit_hand_claw": 1.15,
 	"kit_hand_clamp": 1.1, "kit_hand_fist": 1.1, "kit_foot_peg": 1.15, "kit_limb_rope_": 0.85, "kit_limb_tentacle_": 0.9,
 }
 
@@ -240,27 +240,44 @@ func _spawn_bp(bp: BodyBlueprint, pos: Vector3, player: int) -> ModularDoll:
 	return d
 
 
-## Удар формой на пресете (§5.4): у kit_devil meta body_mult тел — числа из контракта, без общей формулы _check_doll:
-## плечо / предплечье — шипастая конечность (орех, × 1.3), голова-чёртик (paint_red, × 1.15), клешня (железо, × 1.15),
-## кулак (ржавчина, × 1.1).
+## Удар формой на пресете (§5.4, WORKSHOP_V3.md §4): у kit_devil числа из контракта, без общей формулы _check_doll:
+## meta body_mult = таблица × материал (орех, paint_red, железо, ржавчина), форма — отдельно: meta shape_mult / shape_profile —
+## шипастая конечность 1.2 sharp, голова-чёртик 1.15 sharp, клешня 1.15 sharp, кулак 1.1 blunt. Damage.shape_mult_of_body: колющая
+## форма в полную силу на медленном тычке и ×1 на быстром ударе, дробящая — наоборот.
 func _check_devil_hit(d: ModularDoll) -> void:
 	var want := {
-		"UpperArm_L": Damage.body_mult_of("UpperArm_L") * MaterialDef.get_def("wood_dark").body_mult * 1.3,
-		"LowerArm_L": Damage.body_mult_of("LowerArm_L") * MaterialDef.get_def("wood_dark").body_mult * 1.3,
-		"UpperArm_R": Damage.body_mult_of("UpperArm_R") * MaterialDef.get_def("wood_dark").body_mult * 1.3,
-		"Head": Damage.body_mult_of("Head") * MaterialDef.get_def("paint_red").body_mult * 1.15,
-		"Hand_L": Damage.body_mult_of("Hand_L") * MaterialDef.get_def("iron").body_mult * 1.15,
-		"Hand_R": Damage.body_mult_of("Hand_R") * MaterialDef.get_def("rust").body_mult * 1.1,
+		"UpperArm_L": [MaterialDef.get_def("wood_dark").body_mult, 1.2, "sharp"],
+		"LowerArm_L": [MaterialDef.get_def("wood_dark").body_mult, 1.2, "sharp"],
+		"UpperArm_R": [MaterialDef.get_def("wood_dark").body_mult, 1.2, "sharp"],
+		"Head": [MaterialDef.get_def("paint_red").body_mult, 1.15, "sharp"],
+		"Hand_L": [MaterialDef.get_def("iron").body_mult, 1.15, "sharp"],
+		"Hand_R": [MaterialDef.get_def("rust").body_mult, 1.1, "blunt"],
 	}
 	var got := {}
 	var bad: Array = []
+	var slow := Tuning.SHAPE_SLOW_V
+	var fast := Tuning.SHAPE_FAST_V
 	for bn in want:
 		var b := d.parts.get(bn) as RigidBody3D
-		var v: Variant = b.get_meta("body_mult", null) if b != null else null
-		got[bn] = snappedf(float(v), 0.0001) if v != null else null
-		if b == null or v == null or absf(float(v) - float(want[bn])) > EPS or absf(Damage.body_mult_of_body(b) - float(want[bn])) > EPS:
-			bad.append("%s %s ≠ %.4f" % [bn, v, want[bn]])
-	_check(bad.is_empty(), "kit_devil: meta body_mult = таблица × материал × hit_mult (шипы 1.3, рожки 1.15, клешня 1.15, кулак 1.1)", bad)
+		var w: Array = want[bn]
+		var bm := Damage.body_mult_of(bn) * float(w[0])
+		if b == null:
+			bad.append("%s: нет тела" % bn)
+			continue
+		var sm := float(b.get_meta("shape_mult", 1.0))
+		var sp := String(b.get_meta("shape_profile", ""))
+		got[bn] = [snappedf(Damage.body_mult_of_body(b), 0.0001), sm, sp]
+		if absf(Damage.body_mult_of_body(b) - bm) > EPS:
+			bad.append("%s body_mult %.4f ≠ %.4f" % [bn, Damage.body_mult_of_body(b), bm])
+		if absf(sm - float(w[1])) > EPS or sp != String(w[2]):
+			bad.append("%s форма %.2f %s ≠ %.2f %s" % [bn, sm, sp, w[1], w[2]])
+		var at_slow := Damage.shape_mult_of_body(b, slow)
+		var at_fast := Damage.shape_mult_of_body(b, fast)
+		var want_slow := float(w[1]) if w[2] == "sharp" else 1.0
+		var want_fast := 1.0 if w[2] == "sharp" else float(w[1])
+		if absf(at_slow - want_slow) > EPS or absf(at_fast - want_fast) > EPS:
+			bad.append("%s форма × скорость %.3f / %.3f ≠ %.3f / %.3f" % [bn, at_slow, at_fast, want_slow, want_fast])
+	_check(bad.is_empty(), "kit_devil: body_mult = таблица × материал; форма отдельно (шипы 1.2, рожки 1.15, клешня 1.15 — колющие, кулак 1.1 — дробящий)", bad)
 	report["hit_mult"]["kit_devil_body_mult"] = got
 
 
@@ -835,7 +852,7 @@ func _check_rejects() -> void:
 	var cases := [
 		["kit_human", "1", "mat", "unobtainium", "неизвестный материал", "mat_unknown"],
 		["human", "1", "mat", "iron", "не красится", "mat_on_wood"],
-		["kit_horned", "D", "joint", "free", "намертво", "joint_on_deco"],
+		["kit_skull", "D", "joint", "free", "намертво", "joint_on_deco"],   # султан на голове (декор)
 		["kit_human", "T", "joint", "motor", "корня", "joint_on_root"],
 		["kit_human", "H", "joint", "weld", "голову", "weld_head"],
 		["kit_human", "9", "joint", "weld", "управляемую", "weld_control"],
@@ -928,6 +945,7 @@ func _check_doll(id: String, d: ModularDoll, bp_id: String) -> Dictionary:
 	var exp_mass := {}
 	var exp_iron := {}
 	var exp_mult := {}
+	var exp_shape := {}   # тело -> бонус формы (meta shape_mult): своя деталь или больший из слитого декора
 	var bad_node: Array = []
 	var bad_joint: Array = []
 	var bad_gain: Array = []
@@ -957,14 +975,16 @@ func _check_doll(id: String, d: ModularDoll, bp_id: String) -> Dictionary:
 		if bp.node_iron(uid):
 			exp_iron[bn] = float(exp_iron.get(bn, 0.0)) + nm
 		if fixed_n:
-			if PartDef.FIXED_KINDS.has(def.kind) and not is_equal_approx(def.body_mult, 1.0):
-				exp_mult[bn] = float(exp_mult.get(bn, 1.0)) * def.body_mult
+			# шипастый декор / броня — форма хозяина: больший из бонусов, не множитель поверх (WORKSHOP_V3.md §4)
+			if PartDef.FIXED_KINDS.has(def.kind) and def.body_mult > float(exp_shape.get(bn, 1.0)):
+				exp_shape[bn] = def.body_mult
 		else:
 			if def.base_mat != "":
 				var mdn := MaterialDef.get_def(bp.node_mat(uid))
 				if mdn != null:
 					exp_mult[bn] = float(exp_mult.get(bn, 1.0)) * mdn.body_mult
-			exp_mult[bn] = float(exp_mult.get(bn, 1.0)) * def.hit_mult   # форма своего узла (шипы, рога, клешня)
+			if not is_equal_approx(def.hit_mult, 1.0):
+				exp_shape[bn] = def.hit_mult   # форма своего узла (шипы, рога, клешня) — meta shape_mult
 		# поверхности Base_* детали — surface материала узла (слитая деталь: меш переехал в хозяина как Mesh_<uid>)
 		if def.base_mat != "":
 			var mesh := body.get_node_or_null(("Mesh_" + uid) if fixed_n else "Mesh")
@@ -1055,6 +1075,9 @@ func _check_doll(id: String, d: ModularDoll, bp_id: String) -> Dictionary:
 			bad_mult.append("%s %s ≠ %.3f (по имени %.3f)" % [bn, b.get_meta("body_mult", null), want, base])
 		if has:
 			mults[bn] = snappedf(float(b.get_meta("body_mult")), 0.001)
+		var ws := minf(float(exp_shape.get(bn, 1.0)), Tuning.SHAPE_MULT_MAX)
+		if absf(float(b.get_meta("shape_mult", 1.0)) - ws) > EPS:
+			bad_mult.append("%s shape_mult %s ≠ %.3f" % [bn, b.get_meta("shape_mult", null), ws])
 	_check(bad_node.is_empty(), id + ": тело каждого узла есть (uid_body)", bad_node)
 	_check(bad_mass.is_empty(), id + ": масса тела = Σ node_mass (§4)", bad_mass)
 	_check(absf(d.total_mass - bp.total_mass()) < 1e-3, id + ": total_mass = BodyBlueprint.total_mass()", [d.total_mass, bp.total_mass()])
@@ -1192,14 +1215,18 @@ func _mat_test(pos: Vector3) -> void:
 		and float(lr.get_meta("material", -1.0)) == 0.0 and float(ur.get_meta("material", -1.0)) == 0.0,
 		P + ": meta material — кг железа (плечо + шипы), латунь и резина 0", [ua.get_meta("material", null), iron_ua,
 		lr.get_meta("material", null)])
-	# meta body_mult: железо × шипы, резина, латунь; у дерева meta нет
-	var bm_ua := Damage.body_mult_of("UpperArm_L") * iron.body_mult * spikes.body_mult
+	# meta body_mult: железо, резина, латунь; у дерева meta нет. Шипы — форма плеча (meta shape_mult 1.2 sharp), не множитель поверх
+	# материала (WORKSHOP_V3.md §4)
+	var bm_ua := Damage.body_mult_of("UpperArm_L") * iron.body_mult
 	var bm_ll := Damage.body_mult_of("UpperLeg_L") * rubber.body_mult
 	var bm_lr := Damage.body_mult_of("UpperLeg_R") * brass.body_mult
 	_check(absf(float(ua.get_meta("body_mult", -1.0)) - bm_ua) < EPS and absf(float(ll.get_meta("body_mult", -1.0)) - bm_ll) < EPS
 		and absf(float(lr.get_meta("body_mult", -1.0)) - bm_lr) < EPS and not ur.has_meta("body_mult")
-		and is_equal_approx(spikes.body_mult, 1.25), P + ": meta body_mult (железо 1.2 × шипы 1.25, резина 0.8, латунь 1.2)",
-		[ua.get_meta("body_mult", null), bm_ua, ll.get_meta("body_mult", null), bm_ll, lr.get_meta("body_mult", null), bm_lr])
+		and is_equal_approx(spikes.body_mult, 1.2) and is_equal_approx(float(ua.get_meta("shape_mult", -1.0)), 1.2)
+		and String(ua.get_meta("shape_profile", "")) == "sharp",
+		P + ": meta body_mult (железо 1.2, резина 0.8, латунь 1.2), шипы — shape_mult 1.2 sharp",
+		[ua.get_meta("body_mult", null), bm_ua, ll.get_meta("body_mult", null), bm_ll, lr.get_meta("body_mult", null), bm_lr,
+		ua.get_meta("shape_mult", null), ua.get_meta("shape_profile", null)])
 	var sh_host := 0
 	for c in ua.get_children():
 		if c is CollisionShape3D and String(c.name).ends_with("_D"):
@@ -1221,8 +1248,13 @@ func _joint_test(pos: Vector3) -> void:
 	var ref: ModularDoll = presets.get("kit_human")
 	if not _check(ref != null, P + ": нужен пресет kit_human"):
 		return
-	_check(bp.energy_used() == ref.blueprint.energy_used() + 2 + 8, P + ": энергия + пружина 2 + мотор 8",
-		[bp.energy_used(), ref.blueprint.energy_used()])
+	# энергия по расстоянию (WORKSHOP_V3.md §2): шарнир дорожает вместе с узлом — пружина 2 на локте, мотор 8 на плече ×reach_mult
+	var reach := ref.blueprint.node_reach()
+	var want := ref.blueprint.energy_used()
+	for jj in [["2", 2], ["7", 8]]:
+		var base := BodyBlueprint.node_base_energy(ref.blueprint.find_node(jj[0]))
+		want += BodyBlueprint.reach_cost(base + int(jj[1]), float(reach[jj[0]])) - BodyBlueprint.reach_cost(base, float(reach[jj[0]]))
+	_check(bp.energy_used() == want, P + ": энергия + пружина 2 + мотор 8 (× вынос узла)", [bp.energy_used(), want])
 	var d := _spawn_bp(bp, pos, 3)
 	var r := _check_doll(P, d, bp.id)
 	_watch(P, d)

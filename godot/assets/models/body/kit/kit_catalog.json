@@ -555,7 +555,7 @@
   "base_mat": "iron",
   "material": "iron",
   "connector": false,
-  "body_mult": 1.25,
+  "body_mult": 1.2,
   "tris": 540,
   "empties": [
    "Shape_Cyl_Spikes",
@@ -581,7 +581,7 @@
   "base_mat": "iron",
   "material": "iron",
   "connector": false,
-  "body_mult": 1.25,
+  "body_mult": 1.2,
   "tris": 540,
   "empties": [
    "Shape_Cyl_Spikes",
@@ -1102,7 +1102,7 @@
   "base_mat": "iron",
   "material": "iron",
   "connector": true,
-  "hit_mult": 1.3,
+  "hit_mult": 1.2,
   "tris": 2746,
   "empties": [
    "Anchor_Top",
@@ -1821,7 +1821,7 @@
   "base_mat": "wood_dark",
   "material": "wood",
   "connector": true,
-  "hit_mult": 1.3,
+  "hit_mult": 1.2,
   "tris": 2804,
   "empties": [
    "Anchor_Deco",
@@ -1851,7 +1851,7 @@
   "base_mat": "wood_dark",
   "material": "wood",
   "connector": true,
-  "hit_mult": 1.3,
+  "hit_mult": 1.2,
   "tris": 2804,
   "empties": [
    "Anchor_Deco",

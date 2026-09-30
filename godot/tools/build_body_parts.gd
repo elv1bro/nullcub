@@ -273,15 +273,14 @@ func _build_blueprints() -> bool:
 	_leg(n, "ABC", "Anchor_Hip_R", leg_r)
 	ok = ok and _save_blueprint("human", "Человек (кукла v3)", n, ["9"])
 
-	# spider — 6 ног: бёдра, бока, плечи (CONCEPT_V2 §5). Рук нет: управляемая деталь — стопа правой «плечевой» ноги.
+	# spider — 4 ноги: бёдра и плечи (CONCEPT_V2 §5; шесть ног с боками стоили 142 при энергии по расстоянию, WORKSHOP_V3.md §2).
+	# Рук нет: управляемая деталь — стопа правой «плечевой» ноги.
 	n = [_n("T", "wood_torso"), _n("H", "wood_head", "T", "Anchor_Neck")]
 	_leg(n, "123", "Anchor_Hip_L", [], "wood", 22.0, 15.0)
 	_leg(n, "456", "Anchor_Hip_R", [], "wood", 22.0, 15.0)
-	_leg(n, "789", "Anchor_Side_L", [], "wood", NAN, 20.0)
-	_leg(n, "ABC", "Anchor_Side_R", [], "wood", NAN, 20.0)
 	_leg(n, "DEF", "Anchor_Shoulder_L", [], "wood", 110.0, 10.0)
 	_leg(n, "GIJ", "Anchor_Shoulder_R", [], "wood", 110.0, 10.0)
-	ok = ok and _save_blueprint("spider", "Паук: шесть ног", n, ["J"])
+	ok = ok and _save_blueprint("spider", "Паук: четыре ноги", n, ["J"])
 
 	# long_arm — рука на руке (CONCEPT_V2 §8 «длинная рука → длинная рука»): плечо → предплечье → плечо → предплечье → кисть справа.
 	# Средний сустав — якорь запястья (группа Wrist, k 5): вторая половина руки болтается, как кистень.
@@ -325,13 +324,14 @@ func _build_blueprints() -> bool:
 
 	# flail — детали параллельного агента (scenes/body/parts, data/body/parts: цепь chain_segment, шар булавы head_mace_ball — fixed):
 	# правое предплечье → цепь (сустав запястья) → цепь (свободный шарнир) → шар, слитый со второй цепью. Кисти справа нет —
-	# управляемая деталь (рука мышью) — предплечье: им раскручивается кистень.
+	# управляемая деталь (рука мышью) — предплечье: им раскручивается кистень. Левая рука — культя (одно плечо): энергия по
+	# расстоянию (WORKSHOP_V3.md §2) — полная левая рука и две цепи стоили 104.
 	var chain := _find_part(["chain_segment", "chain_link", "chain"])
 	var ball := _find_part(["head_mace_ball", "iron_ball_fist"])
 	if chain != "" and ball != "":
 		var end := _first_anchor(chain)
 		n = [_n("T", "wood_torso", "", "", "Torso"), _n("H", "wood_head", "T", "Anchor_Neck", "Head")]
-		_arm(n, "123", "Anchor_Shoulder_L", hum_l)
+		n.append(_n("1", "wood_upper_arm", "T", "Anchor_Shoulder_L", "UpperArm_L"))
 		_leg(n, "456", "Anchor_Hip_L", leg_l)
 		n.append(_n("7", "wood_upper_arm", "T", "Anchor_Shoulder_R", "UpperArm_R"))
 		n.append(_n("8", "wood_lower_arm", "7", "Anchor_Elbow", "LowerArm_R"))

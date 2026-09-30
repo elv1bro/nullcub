@@ -12,6 +12,7 @@ mass = 1.6
 energy = 5
 body_mult = 0.8
 hit_mult = 0.9
+hit_profile = "soft"
 name_prefix = "UpperArm"
 base_mat = "rubber"
 connector = true

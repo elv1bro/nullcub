@@ -79,6 +79,13 @@
 ## Подсказки: кольцо цвета игрока в точке цели, пока рука активна (ЛКМ / стик); подсветка (material_overlay, пульсирует) предмета,
 ## который будет схвачен по нажатию, и подпись над ним (у живого игрока): «E — взять», класс веса, «ЛКМ+E — бросок» с предметом в руке. Две руки на одном предмете делят общий реестр подсветки (_hl_registry): исходный overlay возвращается
 ## при любом порядке ухода рук.
+##
+## Тяги (WORKSHOP_V3.md §3, 30.09): у ModularDoll управляемых деталей может быть несколько — blueprint.control (≤ BodyBlueprint.MAX_PULLS),
+## каждая — своя тяга на ЛКМ или ПКМ (blueprint.control_rmb). Главная рука (этот узел, control[0]) в _setup сама вешает на куклу по
+## узлу ArmAssist-сестре на каждую следующую деталь (primary = false, control_part = имя тела): у сестры та же мягкая помощь, IK и
+## реакция в торс (сумма сил каждой тяги — ноль, 10 тяг куклу не поднимут), но без захвата, броска, возврата деталей и подсказок
+## предмета — это остаётся у главной. ЛКМ тянет все ЛКМ-тяги к курсору, ПКМ — все ПКМ-тяги; геймпад: правый стик — ЛКМ-тяги,
+## стик с зажатым LB — ПКМ-тяги.
 class_name ArmAssist
 extends Node
 
@@ -164,6 +171,10 @@ const HINT_COLOURS := {"grab": Color(1.0, 0.95, 0.8), "medium": Color(1.0, 0.72,
 @export var control_part := ""
 ## −1 авто (мышь только у p1), 0 — нет, 1 — да.
 @export var use_mouse := -1
+## Кнопка тяги: "lmb" — ЛКМ / правый стик, "rmb" — ПКМ / стик с LB. У главной руки "" — авто (control_rmb чертежа).
+@export var button := ""
+## Главная рука: захват, бросок, возврат деталей, подсказки предмета и сёстры-тяги. У сестёр false (их создаёт главная).
+@export var primary := true
 ## Реакция −F в торс. false — только для проб (контраст «без реакции рука летает»), в игре всегда true.
 @export var reaction_to_torso := true
 @export var show_hints := true
@@ -228,6 +239,8 @@ var _stiff_set: Array[String] = []
 var _grab_t := 0.0
 var _hold_angle := 0.0                 # угол предмета относительно детали при захвате (рад, вокруг Z)
 var _hint: Label3D
+var _sisters: Array[ArmAssist] = []   # тяги control[1..] (главная рука создаёт и убирает)
+var _auto_part := false               # деталь выбрана по чертежу (control_part пуст) — только такая рука заводит сестёр
 
 static var _actions_done := false
 ## Общий реестр подсветки: instance id GeometryInstance3D -> {orig: исходный material_overlay, users: [ArmAssist, …]}.
@@ -250,6 +263,10 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	for s2 in _sisters:
+		if is_instance_valid(s2) and s2.is_inside_tree():
+			s2.queue_free()
+	_sisters.clear()
 	_set_highlight(null)
 	if doll != null and is_instance_valid(doll) and doll.alive:
 		_set_flex(false)
@@ -282,12 +299,17 @@ static func ensure_input_actions() -> void:
 	for i in range(4):
 		var p := "p%d" % (i + 1)
 		var arm: Array = []
+		var arm2: Array = []
 		var grab: Array = []
 		if i == 0:
 			var mb := InputEventMouseButton.new()
 			mb.device = -1
 			mb.button_index = MOUSE_BUTTON_LEFT
 			arm.append(mb)
+			var mb2 := InputEventMouseButton.new()
+			mb2.device = -1
+			mb2.button_index = MOUSE_BUTTON_RIGHT
+			arm2.append(mb2)
 			var k := InputEventKey.new()
 			k.device = -1
 			k.physical_keycode = KEY_E
@@ -296,7 +318,12 @@ static func ensure_input_actions() -> void:
 		rb.device = i
 		rb.button_index = JOY_BUTTON_RIGHT_SHOULDER
 		grab.append(rb)
+		var lb := InputEventJoypadButton.new()
+		lb.device = i
+		lb.button_index = JOY_BUTTON_LEFT_SHOULDER
+		arm2.append(lb)
 		_add_action(p + "_arm", arm)
+		_add_action(p + "_arm2", arm2)   # ПКМ-тяги: ПКМ у p1, LB (со стиком) у геймпада
 		_add_action(p + "_grab", grab)
 		for e in [["_arm_left", JOY_AXIS_RIGHT_X, -1.0], ["_arm_right", JOY_AXIS_RIGHT_X, 1.0],
 				["_arm_up", JOY_AXIS_RIGHT_Y, -1.0], ["_arm_down", JOY_AXIS_RIGHT_Y, 1.0]]:
@@ -336,6 +363,13 @@ func _mouse_enabled() -> bool:
 	return doll.input_prefix == "p1"
 
 
+## Зажата ли мышиная кнопка тяги: ЛКМ (p1_arm) или ПКМ (p1_arm2 — в нём и LB геймпада, поэтому кнопку мыши проверяем прямо).
+func _mouse_pressed(rmb: bool) -> bool:
+	if rmb:
+		return Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and InputMap.has_action(doll.input_prefix + "_arm2")
+	return Input.is_action_pressed(doll.input_prefix + "_arm")
+
+
 ## Курсор мыши на плоскости z = 0 (луч активной камеры); null — нет камеры или луч параллелен плоскости.
 func mouse_on_plane() -> Variant:
 	var vp := get_viewport()
@@ -367,17 +401,19 @@ func _read_input() -> Array:
 		tgt = _override_target
 	elif not doll.external_input and doll.control_enabled:
 		var p := doll.input_prefix
-		if _mouse_enabled() and Input.is_action_pressed(p + "_arm"):
+		var rmb := button == "rmb"
+		if _mouse_enabled() and _mouse_pressed(rmb):
 			var mp: Variant = mouse_on_plane()
 			if mp != null:
 				active = true
 				tgt = mp
 		if not active:
+			# стик ведёт ЛКМ-тяги, со зажатым LB — ПКМ-тяги (мышиная кнопка p1_arm2 тут тоже считается: ПКМ без мыши не бывает)
 			var s := Input.get_vector(p + "_arm_left", p + "_arm_right", p + "_arm_down", p + "_arm_up")
-			if s.length() > STICK_DEADZONE:
+			if s.length() > STICK_DEADZONE and Input.is_action_pressed(p + "_arm2") == rmb:
 				active = true
 				tgt = root_point() + Vector3(s.x, s.y, 0.0).limit_length(1.0) * reach
-		if Input.is_action_just_pressed(p + "_grab"):
+		if primary and Input.is_action_just_pressed(p + "_grab"):
 			grab_now = true
 	return [active, tgt, grab_now]
 
@@ -387,6 +423,7 @@ func _read_input() -> Array:
 func _setup() -> void:
 	if _ready_done or doll == null:
 		return
+	_auto_part = control_part == ""
 	part_name = _resolve_control_part()
 	part = doll.parts.get(part_name) as RigidBody3D
 	torso = doll.parts.get("Torso") as RigidBody3D
@@ -437,8 +474,12 @@ func _setup() -> void:
 			_l2 = reach - _l1
 		_setup_ik(chain)
 	_ready_done = true
+	if button == "":
+		button = _button_of(part_name)
 	if show_hints and _marker == null:
 		_make_hints()
+	if primary and _auto_part:
+		_spawn_sisters.call_deferred()
 
 
 ## Точка сустава joint в системе тела b (его ребёнка). Узлы Generic6DOFJoint3D не двигаются с телами, а Doll._snap_to_pose
@@ -481,6 +522,82 @@ func _build_transform(node_name: String) -> Variant:
 		_scene_build_cache[path] = map
 	var m: Dictionary = _scene_build_cache[path]
 	return m.get(node_name, null)
+
+
+## Тяги control[1..] чертежа: по сестре ArmAssist на каждую (главная рука, после _setup). Сёстры — дети куклы, как главная.
+func _spawn_sisters() -> void:
+	if not primary or doll == null or not is_instance_valid(doll):
+		return
+	var bp: Variant = doll.get("blueprint")
+	if not (bp is Resource):
+		return
+	var ctrl: Variant = (bp as Resource).get("control")
+	if ctrl == null or ctrl.size() < 2:
+		return
+	var taken := {}   # детали, которые уже ведёт другой ArmAssist куклы (сцена врага: ArmL / ArmR с явным control_part)
+	for c in doll.get_children():
+		if c is ArmAssist and c != self:
+			taken[(c as ArmAssist).control_part] = true
+	for i in range(1, mini(ctrl.size(), BodyBlueprint.MAX_PULLS)):
+		var nm := _body_name_of_uid(bp as Resource, String(ctrl[i]))
+		if nm == "" or nm == part_name or taken.has(nm):
+			continue
+		var s2 := ArmAssist.new()
+		s2.name = "ArmAssist_%s" % nm
+		s2.control_part = nm
+		s2.primary = false
+		s2.use_mouse = use_mouse
+		s2.reaction_to_torso = reaction_to_torso
+		s2.show_hints = show_hints
+		s2.button = _button_of(nm)
+		doll.add_child(s2)
+		_sisters.append(s2)
+
+
+## Тяги этой куклы (главная и сёстры) — для проб и мастерской.
+func pulls() -> Array[ArmAssist]:
+	var out: Array[ArmAssist] = [self]
+	for s2 in _sisters:
+		if is_instance_valid(s2):
+			out.append(s2)
+	return out
+
+
+## Кнопка тяги детали по имени тела: "rmb", если её uid в blueprint.control_rmb, иначе "lmb".
+func _button_of(body_name: String) -> String:
+	var bp: Variant = doll.get("blueprint") if doll != null else null
+	if not (bp is Resource):
+		return "lmb"
+	var rmb: Variant = (bp as Resource).get("control_rmb")
+	if rmb == null:
+		return "lmb"
+	for uid in rmb:
+		if _body_name_of_uid(bp as Resource, String(uid)) == body_name:
+			return "rmb"
+	return "lmb"
+
+
+## Имя тела узла uid чертежа (явное name, иначе <name_prefix>_<uid>, иначе тело с суффиксом _<uid>); "" — нет тела.
+func _body_name_of_uid(bp: Resource, uid: String) -> String:
+	var nm := ""
+	var nodes: Variant = bp.get("nodes")
+	if nodes is Array:
+		for n in nodes:
+			if n is Dictionary and String((n as Dictionary).get("uid", "")) == uid:
+				nm = String((n as Dictionary).get("name", ""))
+				if nm == "":
+					var pd: Variant = null
+					if bp.has_method("part_def"):
+						pd = bp.call("part_def", String((n as Dictionary).get("part", "")))
+					if pd != null and (pd as Resource).get("name_prefix") != null:
+						nm = String((pd as Resource).get("name_prefix")) + "_" + uid
+				break
+	if nm != "" and doll.parts.has(nm):
+		return nm
+	for k in doll.parts.keys():
+		if String(k).ends_with("_" + uid):
+			return String(k)
+	return ""
 
 
 ## Имя управляемого тела: явное control_part, иначе blueprint.control[0] у ModularDoll, иначе "Hand_R".
@@ -557,7 +674,8 @@ func _physics_process(delta: float) -> void:
 	_time += delta
 	if doll == null or not _ready_done:
 		return
-	_tick_reattach()   # и без управляемой детали: её саму могли оторвать, вернуть можно касанием
+	if primary:
+		_tick_reattach()   # и без управляемой детали: её саму могли оторвать, вернуть можно касанием
 	if part == null:
 		return
 	_tick_pending_release()
@@ -587,11 +705,12 @@ func _physics_process(delta: float) -> void:
 		_apply_assist()
 	if held != null:
 		_apply_hold()
-	candidate = null if held != null else find_candidate()
+	candidate = null if held != null or not primary else find_candidate()
 	if held != null:
 		blocked_candidate = null
 	_update_hints()
-	_update_weapon_pickup_block()
+	if primary:
+		_update_weapon_pickup_block()
 
 
 ## Сгиб средних суставов цепи на время помощи (on) и возврат прежней позы (off). Направление — знак позы покоя сустава.

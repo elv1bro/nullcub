@@ -273,7 +273,8 @@ func _build() -> void:
 	var bodies: Array[RigidBody3D] = []
 	var todo: Array = []    # суставы: {name, group, type, pos, a, b, limits, mirror}
 	var iron := {}          # тело -> кг железа (meta material): свой узел + слитые, чей материал iron (BodyBlueprint.node_iron)
-	var mult := {}          # тело -> множитель удара сверх таблицы по имени: материал × форма (hit_mult) своего узла × шипастый декор/броня
+	var mult := {}          # тело -> множитель удара сверх таблицы по имени: материал своего узла
+	var shape := {}         # тело -> [бонус формы, профиль]: форма своей детали (hit_mult) или слитого декора/брони — больший (WORKSHOP_V3.md §4)
 	for n in blueprint.sorted_nodes():
 		var uid := String(n["uid"])
 		var def := BodyBlueprint.part_def(String(n["part"]))
@@ -318,8 +319,8 @@ func _build() -> void:
 			_merge_into(host, entry["body_xf"], inst, xf, node_mass, uid)
 			if node_iron:
 				iron[host] = float(iron.get(host, 0.0)) + node_mass
-			if PartDef.FIXED_KINDS.has(def.kind) and not is_equal_approx(def.body_mult, 1.0):
-				mult[host] = float(mult.get(host, 1.0)) * def.body_mult
+			if PartDef.FIXED_KINDS.has(def.kind) and def.body_mult > float((shape.get(host, [1.0, ""]) as Array)[0]):
+				shape[host] = [def.body_mult, def.hit_profile]   # шипы / рога / наруч: форма хозяина, не множитель поверх неё
 			uid_body[uid] = String(host.name)
 			if STRIKER_KINDS.has(def.kind):
 				_striker[String(host.name)] = true
@@ -330,7 +331,9 @@ func _build() -> void:
 		if repaint:   # по умолчанию у детали кита уже физматериал base_mat (builder), у kit_human — байт в байт как у wood_*
 			inst.physics_material_override = mdef.physics_material()
 		iron[inst] = node_mass if node_iron else 0.0
-		mult[inst] = (mdef.body_mult if mdef != null else 1.0) * def.hit_mult   # форма детали (шипы, рога, клешня) — BODY_KIT.md §5.4
+		mult[inst] = mdef.body_mult if mdef != null else 1.0
+		if not is_equal_approx(def.hit_mult, 1.0):
+			shape[inst] = [def.hit_mult, def.hit_profile]   # форма детали (шипы, рога, клешня) × скорость — Damage.shape_mult
 		bodies.append(inst)
 		uid_body[uid] = String(inst.name)
 		if STRIKER_KINDS.has(def.kind):
@@ -377,6 +380,9 @@ func _build() -> void:
 		var bm := bm0 * float(mult.get(b, 1.0))
 		if not is_equal_approx(bm, bm0):
 			b.set_meta("body_mult", bm)
+		if shape.has(b):
+			b.set_meta("shape_mult", minf(float(shape[b][0]), Tuning.SHAPE_MULT_MAX) if float(shape[b][0]) > 1.0 else float(shape[b][0]))
+			b.set_meta("shape_profile", String(shape[b][1]))
 		add_child(b)
 	for jd in todo:
 		jd["pos"] = (jd["pos"] as Vector3) + shift

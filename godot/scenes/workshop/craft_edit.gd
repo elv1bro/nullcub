@@ -18,7 +18,8 @@
 ##       в другую кисть.
 ##   set_root(...) — ядро (у тела) / рукоять (у оружия) в корень: пустой чертёж — новый корень, иначе замена.
 ##   detach(bp, uid) — открутить с поддеревом (корень тела не снимается; корень оружия — верстак пуст).
-##   set_control(bp, uid) — рука мышью: не больше MAX_CONTROL (сейчас 1, новая пометка заменяет старую, повторная снимает);
+##   set_control(bp, uid) — тяги (WORKSHOP_V3.md §3): клик по детали без тяги — тяга ЛКМ (если хватает энергии; первая бесплатна),
+##     по ЛКМ-тяге — переводит на ПКМ, по ПКМ-тяге — снимает; не больше BodyBlueprint.MAX_PULLS;
 ##       fixed-деталь (броня) — управляется тело-хозяин; ядро нельзя.
 ##   weapon_mount(bp) — куда вешать крафтовое оружие: кисть управляемой цепи, иначе любая кисть, иначе конец управляемой детали
 ##       (контракт §2: «оружие на указанной детали»), иначе пусто с подсказкой.
@@ -76,7 +77,7 @@ const KIND_TITLES := {
 const GROUP_TITLES := {
 	"Neck": "шея", "Shoulder": "плечо", "Elbow": "локоть", "Wrist": "запястье", "Hip": "бедро", "Knee": "колено", "Ankle": "лодыжка",
 }
-const MAX_CONTROL := 1
+const MAX_CONTROL := BodyBlueprint.MAX_PULLS   # тяг на куклу (предел — энергия, WORKSHOP_V3.md §3)
 const UID_CHARS := BodyBlueprint.UID_CHARS
 
 static var _parts_cache: Array[PartDef] = []
@@ -277,6 +278,7 @@ static func dup_body(bp: BodyBlueprint) -> BodyBlueprint:
 	out.energy_budget = bp.energy_budget
 	out.nodes = _dup_nodes(bp.nodes)
 	out.control = bp.control.duplicate()
+	out.control_rmb = bp.control_rmb.duplicate()
 	out.weapon = dup_weapon(bp.weapon as WeaponBlueprint) if bp.weapon is WeaponBlueprint else null
 	out.weapon_on = bp.weapon_on
 	return out
@@ -502,6 +504,11 @@ static func energy_used(bp: Resource) -> int:
 	return 0
 
 
+## Отказ по энергии: цена детали зависит от выноса (BodyBlueprint.reach_mult, WORKSHOP_V3.md §2), поэтому — итог после установки.
+static func energy_reason(what: String, after: int, budget: int) -> String:
+	return "Не хватает энергии на %s: будет %d / %d. Чем дальше от ядра, тем дороже" % [what, after, budget]
+
+
 static func energy_budget(bp: Resource) -> int:
 	return (bp as BodyBlueprint).energy_budget if bp is BodyBlueprint else 0
 
@@ -558,10 +565,8 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 		var after := (trial as BodyBlueprint).energy_used()
 		r["energy_after"] = after
 		if after > (bp as BodyBlueprint).energy_budget and after > energy_used(bp):
-			var free_e: int = (bp as BodyBlueprint).energy_budget - energy_used(bp)
-			var freed: int = energy_used(bp) + d.energy - after   # энергия снятого при замене
 			r["code"] = "energy"
-			r["reason"] = "Не хватает энергии: %s стоит %d, свободно %d" % [d.title, d.energy, free_e + freed]
+			r["reason"] = energy_reason(d.title, after, (bp as BodyBlueprint).energy_budget)
 			return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():
@@ -656,6 +661,7 @@ static func _replace(bp: Resource, uid: String, part_id: String) -> Dictionary:
 					if nc != "" and not ctrl.has(nc):
 						ctrl.append(nc)
 				body.control = ctrl
+				_sync_rmb(body, uid, h if h != root_uid(body) else "")
 			if body.weapon_on == uid:
 				body.weapon_on = String(weapon_mount(body)["uid"])
 	return {"ok": true, "uid": uid, "drops": drops, "face_lost": face_lost}
@@ -738,6 +744,7 @@ static func _remove_subtree(bp: Resource, uid: String) -> PackedStringArray:
 			if not gone.has(c):
 				ctrl.append(c)
 		body.control = ctrl
+		_sync_rmb(body)
 		if gone.has(body.weapon_on):
 			body.weapon_on = ""
 	return gone
@@ -795,26 +802,49 @@ static func host_uid(bp: Resource, uid: String) -> String:
 	return cur
 
 
-## Пометить деталь рукой мышью: {ok, uid, reason, cleared}. Повторная пометка той же детали снимает её.
+## Тяга на детали (WORKSHOP_V3.md §3): {ok, uid, reason, cleared, button: "lmb" | "rmb" | "", code}. Клик по детали без тяги —
+## тяга ЛКМ (первая бесплатна, дальше BodyBlueprint.PULL_ENERGY × вынос; не хватает энергии — отказ code "energy"), по ЛКМ-тяге —
+## переводит на ПКМ, по ПКМ-тяге — снимает.
 static func set_control(bp: BodyBlueprint, uid: String) -> Dictionary:
 	if find(bp, uid).is_empty():
-		return {"ok": false, "uid": "", "reason": "Нет такой детали"}
+		return {"ok": false, "uid": "", "reason": "Нет такой детали", "code": "invalid"}
 	var h := host_uid(bp, uid)
 	if h == root_uid(bp):
-		return {"ok": false, "uid": "", "reason": "Ядро — это ты сам: выбери конечность, кисть или цепь"}
+		return {"ok": false, "uid": "", "reason": "Ядро — это ты сам: выбери конечность, кисть или цепь", "code": "core"}
 	if bp.control.has(h):
+		if not bp.control_rmb.has(h):
+			var rmb: PackedStringArray = bp.control_rmb.duplicate()
+			rmb.append(h)
+			bp.control_rmb = rmb
+			return {"ok": true, "uid": h, "reason": "", "cleared": false, "button": "rmb", "code": "rmb"}
 		var ctrl: PackedStringArray = []
 		for c in bp.control:
 			if c != h:
 				ctrl.append(c)
 		bp.control = ctrl
-		return {"ok": true, "uid": h, "reason": "", "cleared": true}
-	var ctrl2: PackedStringArray = bp.control.duplicate()
+		_sync_rmb(bp, h)
+		return {"ok": true, "uid": h, "reason": "", "cleared": true, "button": "", "code": "cleared"}
+	if bp.control.size() >= MAX_CONTROL:
+		return {"ok": false, "uid": h, "reason": "Тяг уже %d — больше нельзя" % MAX_CONTROL, "code": "max"}
+	var trial := dup_body(bp)
+	var ctrl2: PackedStringArray = trial.control.duplicate()
 	ctrl2.append(h)
-	while ctrl2.size() > MAX_CONTROL:
-		ctrl2.remove_at(0)
+	trial.control = ctrl2
+	var after := trial.energy_used()
+	if after > bp.energy_budget and after > bp.energy_used():
+		return {"ok": false, "uid": h, "reason": energy_reason("тягу", after, bp.energy_budget), "code": "energy"}
 	bp.control = ctrl2
-	return {"ok": true, "uid": h, "reason": "", "cleared": false}
+	return {"ok": true, "uid": h, "reason": "", "cleared": false, "button": "lmb", "code": "lmb"}
+
+
+## control_rmb — только uid из control; gone — снятый uid, moved — куда переехала его тяга ("" — никуда).
+static func _sync_rmb(bp: BodyBlueprint, gone: String = "", moved: String = "") -> void:
+	var rmb: PackedStringArray = []
+	for u in bp.control_rmb:
+		var nu := u if u != gone else moved
+		if nu != "" and bp.control.has(nu) and not rmb.has(nu):
+			rmb.append(nu)
+	bp.control_rmb = rmb
 
 
 ## Куда повесить крафтовое оружие: {uid, kind: "hand" | "end", reason}. Порядок: управляемая кисть → кисть ниже управляемой детали →
@@ -983,8 +1013,7 @@ static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
 	r["energy_after"] = after
 	if after > body.energy_budget and after > body.energy_used():
 		r["code"] = "energy"
-		r["reason"] = "Не хватает энергии: шарнир «%s» стоит %d, свободно %d" % [joint_title(jt), KitJoint.energy_of(jt),
-			body.energy_budget - body.energy_used() + KitJoint.energy_of(String(r["joint_before"]))]
+		r["reason"] = energy_reason("шарнир «%s»" % joint_title(jt), after, body.energy_budget)
 		return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():

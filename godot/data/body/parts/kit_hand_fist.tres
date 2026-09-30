@@ -13,6 +13,7 @@ mass = 1.5
 energy = 3
 body_mult = 2.0
 hit_mult = 1.1
+hit_profile = "blunt"
 material = "iron"
 name_prefix = "Hand"
 base_mat = "rust"

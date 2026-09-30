@@ -259,7 +259,7 @@ func _contact_doll(part: RigidBody3D, other: RigidBody3D, other_doll: Doll, pos:
 		var dir := striker_v if striker_v.length_squared() > 1e-4 else (part.global_position - other.global_position)
 		_enqueue({
 			"victim_part": part, "striker": other, "attacker": other_doll, "kind": "head" if part.name.begins_with("Head") else "body",
-			"mass": other.mass, "body_mult": Damage.body_mult_of_body(other), "weapon_mult": 1.0, "weapon_id": "",
+			"mass": other.mass, "body_mult": Damage.body_mult_of_body(other) * Damage.shape_mult_of_body(other, closing), "weapon_mult": 1.0, "weapon_id": "",
 			"speed": closing, "target_mult": 1.0 if head_head else Damage.target_mult_of(part.name),
 			"pos": pos, "nrm": nrm, "dir": dir, "t": _time,
 		})
@@ -274,7 +274,7 @@ func _contact_doll(part: RigidBody3D, other: RigidBody3D, other_doll: Doll, pos:
 	var dir := striker_v if striker_v.length_squared() > 1e-4 else (other.global_position - part.global_position)
 	oc._enqueue({
 		"victim_part": other, "striker": part, "attacker": doll, "kind": "head" if other.name.begins_with("Head") else "body",
-		"mass": part.mass, "body_mult": Damage.body_mult_of_body(part), "weapon_mult": 1.0, "weapon_id": "",
+		"mass": part.mass, "body_mult": Damage.body_mult_of_body(part) * Damage.shape_mult_of_body(part, closing), "weapon_mult": 1.0, "weapon_id": "",
 		"speed": closing, "pos": pos, "nrm": nrm, "dir": dir, "t": _time,
 	})
 
@@ -397,6 +397,9 @@ func _resolve_queue() -> void:
 			continue
 		seen_pairs[pair] = true
 		if float(c["est"]) <= 0.0:
+			# касание чужой куклы / оружия ниже порога урона — площадке (мастерская: «0 · 1.2 м/с» у манекена, WORKSHOP_V3.md §5)
+			if c["kind"] != "environment" and match_ref != null and is_instance_valid(match_ref) and match_ref.has_method("on_weak_contact"):
+				match_ref.call("on_weak_contact", doll, striker, float(c["speed"]), c["pos"])
 			continue
 		if c["kind"] == "environment" and not (striker is Weapon):
 			_apply_env(c)
@@ -512,8 +515,10 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 		"dir": c["dir"], "striker_name": String((c["striker"] as Node).name) if c["striker"] is Node else "",
 	}
 	doll.take_damage(dmg, attacker, vp.name, pos, nrm, kind)
-	# knockback: направление от бьющего к жертве + апбиас; SD множит
-	var j := Damage.knockback_impulse(dmg, _knockback_mult())
+	# knockback: направление от бьющего к жертве + апбиас; SD множит. Блок кистью (TargetMult < 1, Tuning.HAND_HIT_MULT) режет урон и
+	# стан, но не отброс: удар в подставленную руку толкает тело как обычный (метла Метельщика сталкивает и через «блок»)
+	var tm := float(c.get("target_mult", Damage.target_mult_of(vp.name)))
+	var j := Damage.knockback_impulse(dmg / tm if tm > 0.0 and tm < 1.0 else dmg, _knockback_mult())
 	var dir_v: Vector3 = c["dir"]
 	var env := kind == "environment" and not (c["striker"] is Weapon)
 	if env:

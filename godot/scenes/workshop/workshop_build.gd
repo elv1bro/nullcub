@@ -88,6 +88,8 @@ var bench_weapon: CraftedWeapon
 var held_weapon: CraftedWeapon          # оружие в кисти куклы на стенде (только показ)
 var drag: Dictionary = {}                # {part, targets, index, sticky, start, pos, moved}
 var control_pick := false
+## Цвета тяг: ЛКМ — золото (как прежняя рука мышью), ПКМ — голубой.
+const PULL_COLOURS := {"lmb": Color(1.0, 0.78, 0.2), "rmb": Color(0.35, 0.8, 1.0)}
 var paint_mat := ""                      # кисть материала: id MaterialDef ("" — выключена)
 var joint_pick := ""                     # инструмент шарнира: тип KitJoint ("" — выключен)
 var paint: WorkshopPaint                 # покраска (BODY_PAINT.md §6): инструмент, кисть, наклейки, поворот стенда
@@ -103,6 +105,7 @@ var test_doll: ModularDoll
 var test_weapon: CraftedWeapon
 var dummy: Node3D                        # training_dummy.gd
 var test_cam: DynamicCamera
+var feel: TrainingFeel                     # «сок» боя на испытании (эффекты, звук, стоп-кадр, слабые касания)
 var probe_input := false                 # проба: кукла испытания на external_input
 
 var _shape_uid: Dictionary = {}          # "<тело>/<форма>" -> uid (fixed-детали, слитые в хозяина)
@@ -259,24 +262,30 @@ func detach_part(uid: String, target := "body") -> PackedStringArray:
 	return gone
 
 
-## Рука мышью: пометить деталь (или снять пометку повторным кликом).
+## Тяга (WORKSHOP_V3.md §3): клик по детали без тяги — тяга ЛКМ, по ЛКМ-тяге — на ПКМ, по ПКМ-тяге — снять. Инструмент остаётся
+## в руке: можно пометить несколько деталей подряд (Esc / ПКМ / Q — положить).
 func set_control(uid: String) -> Dictionary:
 	var trial := CraftEdit.dup_body(blueprint)
 	var r := CraftEdit.set_control(trial, uid)
 	if not bool(r["ok"]):
-		_say(String(r["reason"]), COL_WARN)
+		_say(String(r["reason"]), COL_BAD if String(r.get("code", "")) == "energy" else COL_WARN)
 		return r
 	_push_history()
 	blueprint.control = trial.control
+	blueprint.control_rmb = trial.control_rmb
 	if blueprint.weapon != null:
 		blueprint.weapon_on = String(CraftEdit.weapon_mount(blueprint)["uid"])
-	control_pick = false
 	_rebuild()
 	var d := CraftEdit.def_of(blueprint, String(r["uid"]))
-	if bool(r.get("cleared", false)):
-		_say("Рука мышью снята", COL_WARN)
-	else:
-		_say("Рука мышью: %s" % (d.title if d != null else String(r["uid"])), Color(1.0, 0.85, 0.35))
+	var t := d.title if d != null else String(r["uid"])
+	match String(r.get("code", "")):
+		"cleared":
+			_say("Тяга снята: %s" % t, COL_WARN)
+		"rmb":
+			_say("Тяга %s → ПКМ" % t, PULL_COLOURS["rmb"])
+		_:
+			var e := blueprint.pull_energy(String(r["uid"]))
+			_say("Тяга ЛКМ: %s%s" % [t, "  ·  ⚡%d" % e if e > 0 else "  ·  главная, бесплатно"], PULL_COLOURS["lmb"])
 	return r
 
 
@@ -587,6 +596,7 @@ func _rebuild_stand() -> void:
 	view_bp.energy_budget = 100000
 	view_bp.nodes = CraftEdit._dup_nodes(blueprint.nodes)
 	view_bp.control = blueprint.control.duplicate()
+	view_bp.control_rmb = blueprint.control_rmb.duplicate()
 	var d := MODULAR_DOLL.instantiate() as ModularDoll
 	d.name = "StandDoll"
 	d.blueprint = view_bp
@@ -830,7 +840,7 @@ func begin_drag(part_id: String, screen_pos: Vector2) -> void:
 		elif bool(t["accepts"]) and String(t["code"]) == "energy":
 			energy_block = true
 	if not any_ok and energy_block:
-		_say("Не хватает энергии: %s стоит %d, свободно %d" % [d.title, d.energy, energy_free()], COL_BAD)
+		_say("Не хватает энергии: %s стоит от ⚡%d (дальше от ядра дороже), свободно %d" % [d.title, d.energy, energy_free()], COL_BAD)
 	elif not any_ok:
 		_say("Некуда поставить деталь «%s»: нет свободного подходящего якоря" % d.title, COL_WARN)
 	update_drag(screen_pos)
@@ -1088,7 +1098,8 @@ func part_meshes(target: String, uid: String) -> Array:
 
 
 func _make_materials() -> void:
-	_mats["control"] = _overlay_mat(Color(1.0, 0.78, 0.2, 0.42))
+	_mats["control"] = _overlay_mat(Color(PULL_COLOURS["lmb"], 0.42))
+	_mats["control_rmb"] = _overlay_mat(Color(PULL_COLOURS["rmb"], 0.42))
 	_mats["hover"] = _overlay_mat(Color(1.0, 0.97, 0.85, 0.22))
 	_mats["remove"] = _overlay_mat(Color(1.0, 0.25, 0.18, 0.45))
 	_mats["replace"] = _overlay_mat(Color(1.0, 0.55, 0.15, 0.4))
@@ -1140,7 +1151,7 @@ func _apply_highlights() -> void:
 		return
 	for c in blueprint.control:
 		for m in part_meshes("body", c):
-			_set_overlay(m, _mats["control"])
+			_set_overlay(m, _mats["control_rmb" if blueprint.control_rmb.has(c) else "control"])
 	if not drag.is_empty():
 		var t := drag_target()
 		if not t.is_empty() and String(t["replace"]) != "":
@@ -1342,6 +1353,10 @@ func start_test() -> bool:
 	stand = null
 	_free_node(bench_weapon)
 	bench_weapon = null
+	# «сок» боя до кукол: их DollCombat находит TrainingFeel по группе "match" (WORKSHOP_V3.md §5)
+	feel = TrainingFeel.new()
+	feel.name = "TrainingFeel"
+	test_root.add_child(feel)
 	var d := MODULAR_DOLL.instantiate() as ModularDoll
 	d.name = "Player"
 	d.blueprint = CraftEdit.dup_body(blueprint)
@@ -1396,6 +1411,7 @@ func start_test() -> bool:
 	add_child(test_cam)
 	test_cam.make_current()
 	test_cam.snap()
+	feel.camera = test_cam
 	mode_changed.emit(mode)
 	changed.emit()
 	_say("Испытание! Esc / Tab — назад к сборке", COL_OK)
@@ -1429,6 +1445,8 @@ func stop_test() -> void:
 	test_doll = null
 	test_weapon = null
 	dummy = null
+	feel = null
+	Engine.time_scale = 1.0   # стоп-кадр heavy мог остаться (TrainingFeel уже в очереди на удаление)
 	if test_cam != null:
 		_free_node(test_cam)
 		test_cam = null
@@ -1461,8 +1479,10 @@ func body_stats() -> Dictionary:
 	if stand != null:
 		ref = stand.thrust_mass()
 	var ctrl := ""
-	if not blueprint.control.is_empty():
-		ctrl = uid_title("body", blueprint.control[0])
+	var pulls: PackedStringArray = []
+	for c in blueprint.control:
+		pulls.append("%s (%s)" % [uid_title("body", c), "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"])
+	ctrl = ", ".join(pulls)
 	var weapon_line := ""
 	if blueprint.weapon != null:
 		var m := _mount()
@@ -1507,13 +1527,13 @@ func weapon_stats() -> Dictionary:
 ## Подсказка внизу экрана по состоянию.
 func hint_text() -> String:
 	if mode == Mode.TEST:
-		return "WASD — лететь · Shift — рывок · Space — кувырок · ЛКМ — рука · E — схватить / бросить · R — заново · Esc — к сборке"
+		return "WASD — лететь · Shift — рывок · Space — кувырок · ЛКМ / ПКМ — тяги · E — схватить / бросить · R — заново · Esc — к сборке"
 	if paint_tool != "":
 		return paint.hint_text()
 	if paint != null and paint.tab_open and view == View.BODY:
 		return "Выбери инструмент на полке «Покраска»: баллончик, трафарет, наклейка, фото…   ·   R — повернуть стенд"
 	if control_pick:
-		return "Кликни по детали, которой будешь управлять мышью (золотая)   ·   Esc / ПКМ — отмена"
+		return "Клик по детали — тяга ЛКМ (золотая), ещё клик — ПКМ (голубая), ещё — снять   ·   первая бесплатно, дальше ⚡ × вынос   ·   Esc / ПКМ — готово"
 	if paint_mat != "":
 		var mt := CraftEdit.mat_title(paint_mat)
 		if not hover.is_empty() and String(hover["target"]) == "body":
@@ -1613,7 +1633,8 @@ func overlay_items() -> Array:
 			var ms := part_meshes("body", c)
 			if not ms.is_empty():
 				var box := _visual_aabb(ms[0])
-				out.append({"pos": cam.unproject_position(box.get_center()), "dir": Vector2.ZERO, "state": "control", "label": "РУКА"})
+				out.append({"pos": cam.unproject_position(box.get_center()), "dir": Vector2.ZERO, "state": "control",
+					"label": "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"})
 	return out
 
 

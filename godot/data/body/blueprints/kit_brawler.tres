@@ -48,7 +48,7 @@ nodes = Array[Dictionary]([{
 "anchor": "Anchor_End",
 "name": "LowerLeg_L",
 "parent": "4",
-"part": "kit_limb_piston_l",
+"part": "kit_limb_basic_l",
 "rest_deg": 5.0,
 "uid": "5"
 }, {
@@ -59,7 +59,6 @@ nodes = Array[Dictionary]([{
 "uid": "6"
 }, {
 "anchor": "Anchor_Shoulder_R",
-"joint": "motor",
 "name": "UpperArm_R",
 "parent": "T",
 "part": "kit_limb_thick_s",
@@ -88,7 +87,7 @@ nodes = Array[Dictionary]([{
 "anchor": "Anchor_End",
 "name": "LowerLeg_R",
 "parent": "A",
-"part": "kit_limb_piston_l",
+"part": "kit_limb_basic_l",
 "rest_deg": 5.0,
 "uid": "B"
 }, {
@@ -97,17 +96,5 @@ nodes = Array[Dictionary]([{
 "parent": "B",
 "part": "kit_foot_boot",
 "uid": "C"
-}, {
-"anchor": "Anchor_Deco",
-"mat": "iron",
-"parent": "1",
-"part": "kit_deco_pauldron",
-"uid": "D"
-}, {
-"anchor": "Anchor_Deco",
-"mat": "iron",
-"parent": "7",
-"part": "kit_deco_pauldron",
-"uid": "E"
 }])
 control = PackedStringArray("9")

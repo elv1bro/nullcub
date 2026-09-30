@@ -8,6 +8,7 @@
 ##         arm-throw-v1.png (2 × 2); ещё style=run|plant, dir=±1, p2x=…, plant_from=…; с --headless — тот же сценарий без картинок
 ## Кейсы и пороги:
 ##   reach     кисть приходит к цели (ошибка < ARRIVE_M) за ≤ ARRIVE_MAX_S; цель за пределами досягаемости клэмпится кругом;
+##   multi_pull  4 тяги ModularDoll (кисти ЛКМ, стопы ПКМ): главная рука вешает сестёр; гребля всеми в невесомости не двигает ЦМ;
 ##   zero_sum  мах рукой туда-сюда 5 с без тяги: ЦМ куклы в невесомости (gravity_scale 0) уходит < AIR_DRIFT_MAX_M, на полу —
 ##             < FLOOR_DRIFT_MAX_M по x и не поднимается > FLOOR_RISE_MAX_M; контраст — та же сила без реакции в торс (сдвиг ≫ порога);
 ##   throw_*   ящик 10 кг схвачен и держится, поднят, брошен — дальность/скорость (печать); throw_hit — попадание в P2: урон P1,
@@ -94,12 +95,63 @@ func _ready() -> void:
 	_run.call_deferred()
 
 
+# ------------------------------------------------------------------ multi_pull
+
+## Тяги (WORKSHOP_V3.md §3): ModularDoll human с четырьмя тягами (кисти ЛКМ, стопы ПКМ) — главная рука сама вешает сёстер;
+## все четыре «гребут» в одну сторону SWING_S в невесомости: у каждой тяги сумма сил ноль (−F в торс), ЦМ стоит на месте.
+func _case_multi_pull() -> void:
+	_new_world()
+	var bp := (load("res://data/body/blueprints/human.tres") as BodyBlueprint).duplicate(true) as BodyBlueprint
+	bp.control = PackedStringArray(["9", "3", "C", "6"])
+	bp.control_rmb = PackedStringArray(["C", "6"])
+	bp.energy_budget = 200   # здесь физика тяг, не энергия: 3 лишние тяги на human — 110 / 100
+	var d := (load("res://scenes/body/modular_doll.tscn") as PackedScene).instantiate() as ModularDoll
+	d.blueprint = bp
+	d.name = "P1"
+	d.external_input = true
+	d.input_prefix = "p1"
+	d.position = Vector3(0, 4.0, 0)
+	world.add_child(d)
+	ArmAssist.attach_to(d)
+	await _ticks(3)
+	var arms: Array = []
+	for c in d.get_children():
+		if c is ArmAssist:
+			arms.append(c)
+	var names := {}
+	for a in arms:
+		names[(a as ArmAssist).part_name] = (a as ArmAssist).button
+	_check("multi_pull_sisters", arms.size() == 4 and names.get("Hand_R") == "lmb" and names.get("Hand_L") == "lmb"
+		and names.get("Foot_R") == "rmb" and names.get("Foot_L") == "rmb", names, "4 тяги: кисти ЛКМ, стопы ПКМ")
+	for b in d.parts.values():
+		(b as RigidBody3D).gravity_scale = 0.0
+	await _ticks(50)
+	var c0 := d.centre_of_mass()
+	var max_d := 0.0
+	var fsum := 0.0
+	var n := int(SWING_S * 60)
+	for i in range(n):
+		var fwd := int(i / (SWING_PERIOD_S * 30.0)) % 2 == 0
+		for a in arms:
+			var aa := a as ArmAssist
+			aa.set_target_override(aa.root_point() + (Vector3(0.6, -0.2, 0) if fwd else Vector3(-0.6, -0.2, 0)))
+		await _ticks(1)
+		max_d = maxf(max_d, Vector2((d.centre_of_mass() - c0).x, (d.centre_of_mass() - c0).y).length())
+		for a in arms:
+			fsum += (a as ArmAssist).last_assist_force.length()
+	for a in arms:
+		(a as ArmAssist).clear_target_override()
+	info["multi_pull"] = {"arms": arms.size(), "max_d": snappedf(max_d, 0.001), "mean_force_n": snappedf(fsum / n, 0.1)}
+	_check("multi_pull_zero_sum", max_d < AIR_DRIFT_MAX_M * 2.0 and fsum / n > 40.0, snappedf(max_d, 0.001), "< %.2f m" % (AIR_DRIFT_MAX_M * 2.0),
+		"4 тяги гребут в невесомости (средняя сила %.0f Н): ЦМ не уходит" % (fsum / n))
+
+
 func _run() -> void:
 	if frames_mode:
 		await _frames()
 		get_tree().quit(0)
 		return
-	var cases := ["reach", "zero_sum", "throw_far", "throw_hit", "classes", "heavy", "toggle"]
+	var cases := ["reach", "zero_sum", "multi_pull", "throw_far", "throw_hit", "classes", "heavy", "toggle"]
 	for c in cases:
 		if case_filter != "" and case_filter != c:
 			continue

@@ -7,7 +7,7 @@
 script = ExtResource("1_bp")
 id = "enemy_sweeper"
 title = "Уборщик (Sweeper)"
-energy_budget = 120
+energy_budget = 130
 nodes = Array[Dictionary]([{
 "anchor": "",
 "name": "Torso",
