@@ -1,0 +1,8 @@
+- [Суть проекта Ragdoll Faces](project-essence.md) — жанр, стек as-built, режимы, состояние и риски на 18.09.2026
+- [Решение о смене движка](engine-switch-decision.md) — автор меняет Matter.js; итоги панели, оценки сроков, рекомендованный порядок (вариант B в TS, не Godot)
+- [Концепт v2: кооп roguelite + лор Башни](concept-v2-roguelite.md) — разворот 28.09 в PvE-забег со сборкой тела; CONCEPT_V2.md, LORE.md, решения и пробы
+- [Заставка-комикс](intro-comic.md) — главная сцена godot/ с 29.09: 13 панелей 3D-кадров Свалки, builder, звук, подводные камни
+- [Godot gates from a worktree](godot-test-workflow.md) — import first, arm64 wrapping, which probes need a window, patch hand-over
+- [Кит тела v2](body-kit-v2.md) — 29.09 новый вид модульной куклы по листу «Ragdoll Master»: BODY_KIT.md, роли материалов, кто что держит
+- [Вес пропсов, хват, бросок, взрывы](prop-heft-throw.md) — 29.09 PropHeft (якорь тяжёлых), сварка лёгкого, бросок к курсору, взрывные бочки
+- [Коммиты в общем чекауте](shared-checkout-commits.md) — несколько сессий делят git-индекс: коммитить только `git commit -- <пути>` одним скриптом
