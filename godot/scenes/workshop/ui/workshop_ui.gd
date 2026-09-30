@@ -43,6 +43,7 @@ var _hint_t := 0.0
 var _toast_tween: Tween
 var _dmg_total := 0.0
 var _dmg_hits := 0
+var _last_hit := ""   # строка сводки: последний удар (скорость, куда) или слабое касание
 var _dmg_best := 0.0
 var _preset_buttons: Array = []
 
@@ -488,6 +489,11 @@ func _on_mode(m: int) -> void:
 		_update_test_stats()
 		dummy_hp.max_hp = _dummy_max_hp()
 		dummy_hp.set_hp(dummy_hp.max_hp, false)
+		_last_hit = ""
+		# скорость удара, блок кистью и слабые касания (TrainingFeel — WORKSHOP_V3.md §5)
+		if ctl.feel != null:
+			ctl.feel.hit_fx.connect(_on_feel_hit)
+			ctl.feel.weak_contact.connect(_on_weak_contact)
 	for c in floaters.get_children():
 		c.queue_free()
 	_refresh()
@@ -506,6 +512,8 @@ func _on_dummy_hit(amount: float, pos: Vector3, part: String, kind: String) -> v
 	l.text = "%d" % roundi(amount) if amount >= 1.0 else "%.1f" % amount
 	if part.begins_with("Head"):
 		l.text += "  В ГОЛОВУ!"
+	elif part.begins_with("Hand"):
+		l.text += "  БЛОК"
 	l.theme_type_variation = &"AnnounceLabel"
 	var fs := int(clampf(34.0 + amount * 1.6, 34.0, 96.0))
 	l.add_theme_font_size_override("font_size", fs)
@@ -533,7 +541,51 @@ static func _projectable(cam: Camera3D, p: Vector3) -> bool:
 
 
 func _update_test_stats() -> void:
-	test_stats_text.text = "Урон по манекену: %d\nУдаров: %d   ·   сильнейший: %d" % [roundi(_dmg_total), _dmg_hits, roundi(_dmg_best)]
+	test_stats_text.text = "Урон по манекену: %d\nУдаров: %d   ·   сильнейший: %d%s" % [roundi(_dmg_total), _dmg_hits, roundi(_dmg_best),
+		"\n" + _last_hit if _last_hit != "" else ""]
+
+
+## Удар по манекену (TrainingFeel.hit_fx): скорость под числом урона и строка «последний» в сводке.
+func _on_feel_hit(ctx: Dictionary) -> void:
+	var v: Variant = ctx.get("victim")
+	if not (v is Doll) or not is_instance_valid(v) or (v as Doll) != ctl.dummy.get("doll"):
+		return
+	var sp := float(ctx.get("speed", 0.0))
+	var part := String(ctx.get("part_base", ""))
+	var note := "  ·  в кисть ×%.2f" % Tuning.HAND_HIT_MULT if part == "Hand" else ("  ·  в голову ×%.1f" % Tuning.HEAD_HIT_MULT if part == "Head" else "")
+	_last_hit = "Последний: %d HP  ·  %.1f м/с%s" % [roundi(float(ctx.get("damage", 0.0))), sp, note]
+	_update_test_stats()
+	_float_small(ctx.get("position", Vector3.ZERO), "%.1f м/с" % sp, Color(0.85, 0.9, 1.0), Vector2(0, 26))
+
+
+## Касание манекена ниже порога урона (Tuning.MIN_IMPACT_SPEED): серое «0 · 1.2 м/с» — видно, почему не бьёт.
+func _on_weak_contact(victim: Doll, speed: float, pos: Vector3) -> void:
+	if victim == null or not is_instance_valid(victim) or victim != ctl.dummy.get("doll"):
+		return
+	_float_small(pos, "0 · %.1f м/с" % speed, Color(0.7, 0.7, 0.72), Vector2.ZERO)
+	_last_hit = "Слабо: %.1f м/с (урон от %.1f м/с)" % [speed, Tuning.MIN_IMPACT_SPEED]
+	_update_test_stats()
+
+
+func _float_small(pos: Vector3, text: String, col: Color, offset: Vector2) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if not _projectable(cam, pos):
+		return
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", 26)
+	l.add_theme_color_override("font_color", col)
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	l.add_theme_constant_override("outline_size", 6)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	floaters.add_child(l)
+	l.reset_size()
+	l.position = cam.unproject_position(pos) - l.size * 0.5 + offset
+	var tw := l.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(l, "position:y", l.position.y - FLOAT_RISE * 0.6, FLOAT_S).set_ease(Tween.EASE_OUT)
+	tw.tween_property(l, "modulate:a", 0.0, 0.35).set_delay(FLOAT_S - 0.35)
+	tw.chain().tween_callback(l.queue_free)
 
 
 func _update_dummy_panel() -> void:

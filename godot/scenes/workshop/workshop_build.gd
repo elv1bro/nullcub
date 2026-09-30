@@ -105,6 +105,7 @@ var test_doll: ModularDoll
 var test_weapon: CraftedWeapon
 var dummy: Node3D                        # training_dummy.gd
 var test_cam: DynamicCamera
+var feel: TrainingFeel                     # «сок» боя на испытании (эффекты, звук, стоп-кадр, слабые касания)
 var probe_input := false                 # проба: кукла испытания на external_input
 
 var _shape_uid: Dictionary = {}          # "<тело>/<форма>" -> uid (fixed-детали, слитые в хозяина)
@@ -1352,6 +1353,10 @@ func start_test() -> bool:
 	stand = null
 	_free_node(bench_weapon)
 	bench_weapon = null
+	# «сок» боя до кукол: их DollCombat находит TrainingFeel по группе "match" (WORKSHOP_V3.md §5)
+	feel = TrainingFeel.new()
+	feel.name = "TrainingFeel"
+	test_root.add_child(feel)
 	var d := MODULAR_DOLL.instantiate() as ModularDoll
 	d.name = "Player"
 	d.blueprint = CraftEdit.dup_body(blueprint)
@@ -1406,6 +1411,7 @@ func start_test() -> bool:
 	add_child(test_cam)
 	test_cam.make_current()
 	test_cam.snap()
+	feel.camera = test_cam
 	mode_changed.emit(mode)
 	changed.emit()
 	_say("Испытание! Esc / Tab — назад к сборке", COL_OK)
@@ -1439,6 +1445,8 @@ func stop_test() -> void:
 	test_doll = null
 	test_weapon = null
 	dummy = null
+	feel = null
+	Engine.time_scale = 1.0   # стоп-кадр heavy мог остаться (TrainingFeel уже в очереди на удаление)
 	if test_cam != null:
 		_free_node(test_cam)
 		test_cam = null

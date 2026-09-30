@@ -586,8 +586,28 @@ func _test_hit() -> void:
 	_check("test_dummy_damaged", dmg > 0.0, "удар по манекену даёт урон", {"damage": snappedf(dmg, 0.1), "first_hit_t": snappedf(first_t, 0.01),
 		"hits": hits, "hp_left": snappedf(float(ws.dummy.call("hp")), 0.1)})
 	report["test_hits"] = hits
+	# «сок» боя на испытании (WORKSHOP_V3.md §5): TrainingFeel с режиссёрами эффектов и звука, удар по манекену — через hit_fx
+	var feel := ws.feel
+	_check("test_feel", feel != null and feel.get_node_or_null("HitFxDirector") != null and feel.get_node_or_null("SfxDirector") != null
+		and feel.hit_fx_count > 0 and d.get_node("DollCombat").get("match_ref") == feel,
+		"испытание: TrainingFeel (эффекты, звук), удары идут в hit_fx", [feel.hit_fx_count if feel else -1])
+	# медленное касание манекена рукой (ниже MIN_IMPACT_SPEED): урона 0, но сигнал weak_contact — у манекена «0 · 1.2 м/с»
+	var weak0 := feel.weak_count if feel else 0
+	var hp0 := float(ws.dummy.call("hp"))
+	dummy_doll = ws.dummy.get("doll")
+	if arm != null and dummy_doll != null and is_instance_valid(dummy_doll) and feel != null:
+		for i in range(150):
+			if feel.weak_count > weak0:
+				break
+			var tp := dummy_doll.torso().global_position
+			arm.set_target_override(arm.grip_global().move_toward(tp, 0.012))   # ~0.7 м/с к торсу манекена
+			await get_tree().physics_frame
+		arm.clear_target_override()
+	_check("test_weak_contact", feel != null and feel.weak_count > weak0, "медленное касание — weak_contact (урона нет, видно скорость)",
+		[weak0, feel.weak_count if feel else -1, snappedf(hp0 - float(ws.dummy.call("hp")), 0.1)])
 	ws.stop_test()
 	await _frames(1)
+	_check("test_time_scale_back", is_equal_approx(Engine.time_scale, 1.0), "после испытания время снова 1×", Engine.time_scale)
 	_check("test_back_same", ws.mode == WorkshopBuild.Mode.BUILD and CraftEdit.signature(ws.blueprint) == sig and ws.stand != null,
 		"Esc — назад, чертёж тот же")
 
