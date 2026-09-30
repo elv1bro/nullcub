@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "Hall_PrintWhite"
+albedo_color = Color(0.76737565, 0.76737565, 0.7611122, 1)
+roughness = 0.6
