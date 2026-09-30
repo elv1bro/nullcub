@@ -1,11 +1,11 @@
 [gd_resource type="Resource" script_class="BodyBlueprint" format=3]
 
-[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_evtj0"]
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_2466j"]
 
 [resource]
-script = ExtResource("1_evtj0")
-id = "kit_king"
-title = "Король-булава"
+script = ExtResource("1_2466j")
+id = "kit_spinner"
+title = "Вертушка"
 nodes = Array[Dictionary]([{
 "anchor": "",
 "mat": "rust",
@@ -15,29 +15,22 @@ nodes = Array[Dictionary]([{
 "uid": "T"
 }, {
 "anchor": "Anchor_Neck",
-"mat": "paint_white",
 "name": "Head",
 "parent": "T",
 "part": "kit_head_round",
 "uid": "H"
 }, {
-"anchor": "Anchor_Top",
-"parent": "H",
-"part": "kit_deco_crown",
-"uid": "D"
-}, {
 "anchor": "Anchor_Shoulder_L",
-"mat": "paint_green",
 "name": "UpperArm_L",
 "parent": "T",
-"part": "kit_limb_thick_s",
+"part": "kit_limb_basic_s",
 "uid": "1"
 }, {
 "anchor": "Anchor_End",
 "joint": "free",
 "name": "LowerArm_L",
 "parent": "1",
-"part": "kit_limb_tentacle_s",
+"part": "kit_limb_rope_s",
 "uid": "2"
 }, {
 "anchor": "Anchor_End",
@@ -45,39 +38,17 @@ nodes = Array[Dictionary]([{
 "part": "head_mace_ball",
 "uid": "3"
 }, {
-"anchor": "Anchor_Hip_L",
-"mat": "wood_dark",
-"name": "UpperLeg_L",
-"parent": "T",
-"part": "kit_limb_basic_l",
-"uid": "4"
-}, {
-"anchor": "Anchor_End",
-"mat": "wood_dark",
-"name": "LowerLeg_L",
-"parent": "4",
-"part": "kit_limb_basic_l",
-"rest_deg": 5.0,
-"uid": "5"
-}, {
-"anchor": "Anchor_End",
-"name": "Foot_L",
-"parent": "5",
-"part": "kit_foot_boot",
-"uid": "6"
-}, {
 "anchor": "Anchor_Shoulder_R",
-"mat": "paint_green",
 "name": "UpperArm_R",
 "parent": "T",
-"part": "kit_limb_thick_s",
+"part": "kit_limb_basic_s",
 "uid": "7"
 }, {
 "anchor": "Anchor_End",
-"joint": "spring",
+"joint": "free",
 "name": "LowerArm_R",
 "parent": "7",
-"part": "kit_limb_tentacle_s",
+"part": "kit_limb_rope_s",
 "uid": "8"
 }, {
 "anchor": "Anchor_End",
@@ -85,25 +56,36 @@ nodes = Array[Dictionary]([{
 "part": "head_mace_ball",
 "uid": "9"
 }, {
-"anchor": "Anchor_Hip_R",
-"mat": "wood_dark",
-"name": "UpperLeg_R",
+"anchor": "Anchor_Hip_L",
 "parent": "T",
-"part": "kit_limb_basic_l",
+"part": "kit_limb_basic_s",
+"uid": "4"
+}, {
+"anchor": "Anchor_End",
+"joint": "free",
+"parent": "4",
+"part": "kit_limb_rope_s",
+"uid": "5"
+}, {
+"anchor": "Anchor_End",
+"parent": "5",
+"part": "head_mace_ball",
+"uid": "6"
+}, {
+"anchor": "Anchor_Hip_R",
+"parent": "T",
+"part": "kit_limb_basic_s",
 "uid": "A"
 }, {
 "anchor": "Anchor_End",
-"mat": "wood_dark",
-"name": "LowerLeg_R",
+"joint": "free",
 "parent": "A",
-"part": "kit_limb_basic_l",
-"rest_deg": 5.0,
+"part": "kit_limb_rope_s",
 "uid": "B"
 }, {
 "anchor": "Anchor_End",
-"name": "Foot_R",
 "parent": "B",
-"part": "kit_foot_boot",
+"part": "head_mace_ball",
 "uid": "C"
 }])
 control = PackedStringArray("8")

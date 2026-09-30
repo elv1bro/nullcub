@@ -32,6 +32,8 @@ const PRESETS := [
 	# витрина покраски (docs/plan-demo/BODY_PAINT.md §4): узлы kit_human / kit_brawler + краска и трафареты
 	["kit_graffiti", "res://scenes/body/presets/kit_graffiti.tscn"],
 	["kit_camo", "res://scenes/body/presets/kit_camo.tscn"],
+	["kit_spinner", "res://scenes/body/presets/kit_spinner.tscn"],
+	["kit_empty", "res://scenes/body/presets/kit_empty.tscn"],
 ]
 ## Прямой выбор: клавиша → индекс PRESETS (номер F-клавиши = номер пресета). F10 пропущен — его ловит base (playground.gd:
 ## cycle_fx_preset, пресет эффектов удара); 10-й пресет и всё дальше F13 — только листанием.

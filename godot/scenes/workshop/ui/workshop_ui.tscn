@@ -138,14 +138,144 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="TopBar" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 92.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="TitlePlate" type="PanelContainer" parent="Root/TopBar"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 12.0
+offset_right = 440.0
+offset_bottom = 84.0
+theme_override_styles/panel = SubResource("side_panel")
+
+[node name="H" type="HBoxContainer" parent="Root/TopBar/TitlePlate"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Gear" type="Label" parent="Root/TopBar/TitlePlate/H"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.78, 0.42, 1)
+theme_override_font_sizes/font_size = 34
+text = "⚙"
+vertical_alignment = 1
+
+[node name="Title" type="Label" parent="Root/TopBar/TitlePlate/H"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"BrushLabel"
+theme_override_colors/font_color = Color(0.98, 0.84, 0.58, 1)
+theme_override_font_sizes/font_size = 40
+text = "МАСТЕРСКАЯ"
+vertical_alignment = 1
+
+[node name="HelpButton" type="Button" parent="Root/TopBar/TitlePlate/H"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+toggle_mode = true
+theme_override_font_sizes/font_size = 26
+text = "?"
+tooltip_text = "Что значат значки и клавиши"
+
+[node name="EnergyPlate" type="PanelContainer" parent="Root/TopBar"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -250.0
+offset_top = 12.0
+offset_right = 250.0
+offset_bottom = 88.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("side_panel")
+
+[node name="V" type="VBoxContainer" parent="Root/TopBar/EnergyPlate"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="EnergyHead" type="HBoxContainer" parent="Root/TopBar/EnergyPlate/V"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="EnergyCaption" type="Label" parent="Root/TopBar/EnergyPlate/V/EnergyHead"]
+layout_mode = 2
+theme_type_variation = &"StatLabel"
+theme_override_font_sizes/font_size = 24
+text = "⚡ Энергия ядра:"
+
+[node name="EnergyValue" type="Label" parent="Root/TopBar/EnergyPlate/V/EnergyHead"]
+layout_mode = 2
+theme_type_variation = &"StatValue"
+theme_override_font_sizes/font_size = 30
+text = "82 / 100"
+
+[node name="Energy" type="Control" parent="Root/TopBar/EnergyPlate/V"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("4_energy")
+
+[node name="Tools" type="HBoxContainer" parent="Root/TopBar"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -610.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = 80.0
+grow_horizontal = 0
+theme_override_constants/separation = 8
+alignment = 2
+
+[node name="UndoButton" type="Button" parent="Root/TopBar/Tools"]
+custom_minimum_size = Vector2(62, 0)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "↶"
+tooltip_text = "Отменить  [Ctrl+Z]"
+
+[node name="RedoButton" type="Button" parent="Root/TopBar/Tools"]
+custom_minimum_size = Vector2(62, 0)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "↷"
+tooltip_text = "Вернуть  [Ctrl+Y]"
+
+[node name="SaveButton" type="Button" parent="Root/TopBar/Tools"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "💾  СОХРАНИТЬ"
+
+[node name="LoadButton" type="Button" parent="Root/TopBar/Tools"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "☰  МОИ СБОРКИ"
+
 [node name="Left" type="PanelContainer" parent="Root"]
 layout_mode = 1
 anchors_preset = -1
 anchor_bottom = 1.0
 offset_left = 14.0
-offset_top = 14.0
-offset_right = 414.0
-offset_bottom = -14.0
+offset_top = 98.0
+offset_right = 606.0
+offset_bottom = -58.0
 grow_vertical = 2
 theme_override_styles/panel = SubResource("side_panel")
 
@@ -153,67 +283,92 @@ theme_override_styles/panel = SubResource("side_panel")
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Root/Left/VBox"]
-layout_mode = 2
-theme_type_variation = &"BrushLabel"
-theme_override_colors/font_color = Color(0.98, 0.84, 0.58, 1)
-theme_override_font_sizes/font_size = 40
-text = "МАСТЕРСКАЯ"
-horizontal_alignment = 1
-
-[node name="ViewTabs" type="HBoxContainer" parent="Root/Left/VBox"]
+[node name="TemplateRow" type="HBoxContainer" parent="Root/Left/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BodyTab" type="Button" parent="Root/Left/VBox/ViewTabs"]
-custom_minimum_size = Vector2(0, 58)
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-toggle_mode = true
-button_pressed = true
-theme_override_font_sizes/font_size = 30
-theme_override_styles/pressed = SubResource("plank_gold")
-text = "ТЕЛО"
-
-[node name="WeaponTab" type="Button" parent="Root/Left/VBox/ViewTabs"]
-custom_minimum_size = Vector2(0, 58)
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-toggle_mode = true
-theme_override_font_sizes/font_size = 30
-theme_override_styles/pressed = SubResource("plank_gold")
-text = "ОРУЖИЕ"
-
-[node name="PresetsToggle" type="Button" parent="Root/Left/VBox"]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-focus_mode = 0
-toggle_mode = true
-theme_override_font_sizes/font_size = 22
-text = "ШАБЛОНЫ  ▸"
-
-[node name="PresetsTitle" type="Label" parent="Root/Left/VBox"]
+[node name="TemplateCaption" type="Label" parent="Root/Left/VBox/TemplateRow"]
 layout_mode = 2
 theme_type_variation = &"SmallCaps"
-text = "ШАБЛОН — С ЧЕГО НАЧАТЬ"
+text = "ШАБЛОН:"
+vertical_alignment = 1
+
+[node name="PrevTemplate" type="Button" parent="Root/Left/VBox/TemplateRow"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "‹"
+
+[node name="TemplateName" type="Label" parent="Root/Left/VBox/TemplateRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(0.98, 0.84, 0.58, 1)
+theme_override_font_sizes/font_size = 26
+text = "Робот"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="NextTemplate" type="Button" parent="Root/Left/VBox/TemplateRow"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "›"
 
 [node name="Presets" type="GridContainer" parent="Root/Left/VBox"]
 layout_mode = 2
 theme_override_constants/h_separation = 6
 theme_override_constants/v_separation = 6
-columns = 3
+columns = 5
+
+[node name="PresetsTitle" type="Label" parent="Root/Left/VBox"]
+visible = false
+layout_mode = 2
+text = ""
+
+[node name="Sep" type="HSeparator" parent="Root/Left/VBox"]
+layout_mode = 2
+
+[node name="ShelfTabs" type="GridContainer" parent="Root/Left/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 5
+
+[node name="SearchRow" type="HBoxContainer" parent="Root/Left/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Search" type="LineEdit" parent="Root/Left/VBox/SearchRow"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+placeholder_text = "🔍  Поиск деталей…"
+clear_button_enabled = true
+
+[node name="FitsOnly" type="Button" parent="Root/Left/VBox/SearchRow"]
+custom_minimum_size = Vector2(52, 44)
+layout_mode = 2
+focus_mode = 0
+toggle_mode = true
+theme_override_font_sizes/font_size = 22
+text = "⚡"
+tooltip_text = "Только то, что влезает по энергии"
+
+[node name="Sort" type="OptionButton" parent="Root/Left/VBox/SearchRow"]
+custom_minimum_size = Vector2(190, 44)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
 
 [node name="ShelfTitle" type="Label" parent="Root/Left/VBox"]
+visible = false
 layout_mode = 2
-theme_type_variation = &"SmallCaps"
-text = "ПОЛКА — ТЯНИ ДЕТАЛЬ НА КУКЛУ"
-
-[node name="ShelfTabs" type="HFlowContainer" parent="Root/Left/VBox"]
-layout_mode = 2
-theme_override_constants/h_separation = 6
-theme_override_constants/v_separation = 6
+text = ""
 
 [node name="ShelfScroll" type="ScrollContainer" parent="Root/Left/VBox"]
 layout_mode = 2
@@ -226,32 +381,27 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
 [node name="ToolHint" type="Label" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
-visible = false
-custom_minimum_size = Vector2(380, 0)
+custom_minimum_size = Vector2(540, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.84, 0.72, 1)
+theme_override_colors/font_color = Color(0.86, 0.8, 0.7, 1)
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
 [node name="Tools" type="GridContainer" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
-visible = false
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 8
+theme_override_constants/h_separation = 6
 theme_override_constants/v_separation = 6
+columns = 2
 
 [node name="PartsTitle" type="Label" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
-visible = false
 layout_mode = 2
 theme_type_variation = &"SmallCaps"
-text = "ДЕТАЛИ — ТЯНИ НА КУКЛУ"
+text = "ДЕТАЛИ"
 
-[node name="Shelf" type="GridContainer" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
+[node name="Shelf" type="VBoxContainer" parent="Root/Left/VBox/ShelfScroll/ShelfBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 3
+theme_override_constants/separation = 6
 
 [node name="Right" type="PanelContainer" parent="Root"]
 layout_mode = 1
@@ -259,10 +409,10 @@ anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -334.0
-offset_top = 14.0
+offset_left = -404.0
+offset_top = 98.0
 offset_right = -14.0
-offset_bottom = -14.0
+offset_bottom = -58.0
 grow_horizontal = 0
 grow_vertical = 2
 theme_override_styles/panel = SubResource("side_panel")
@@ -273,12 +423,13 @@ theme_override_constants/separation = 10
 
 [node name="BodyBox" type="VBoxContainer" parent="Root/Right/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="Caption" type="Label" parent="Root/Right/VBox/BodyBox"]
 layout_mode = 2
 theme_type_variation = &"SmallCaps"
-text = "СБОРКА"
+theme_override_font_sizes/font_size = 22
+text = "ХАРАКТЕРИСТИКИ СБОРКИ"
 
 [node name="BuildTitle" type="Label" parent="Root/Right/VBox/BodyBox"]
 layout_mode = 2
@@ -286,49 +437,29 @@ theme_type_variation = &"DisplayLabel"
 theme_override_colors/font_color = Color(0.98, 0.9, 0.74, 1)
 theme_override_font_sizes/font_size = 26
 text = "Человек"
-autowrap_mode = 3
+clip_text = true
 
-[node name="Stats" type="GridContainer" parent="Root/Right/VBox/BodyBox"]
+[node name="Stats" type="VBoxContainer" parent="Root/Right/VBox/BodyBox"]
 layout_mode = 2
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 2
-columns = 2
+theme_override_constants/separation = 4
 
-[node name="MassL" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+[node name="Toggles" type="VBoxContainer" parent="Root/Right/VBox/BodyBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"StatLabel"
-text = "Масса"
+theme_override_constants/separation = 2
 
-[node name="MassV" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+[node name="ComToggle" type="CheckButton" parent="Root/Right/VBox/BodyBox/Toggles"]
 layout_mode = 2
-theme_type_variation = &"StatValue"
-text = "40.0 кг"
-horizontal_alignment = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+button_pressed = true
+text = "◎  Центр массы"
 
-[node name="BodiesL" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
+[node name="HintsToggle" type="CheckButton" parent="Root/Right/VBox/BodyBox/Toggles"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"StatLabel"
-text = "Тел · деталей"
-
-[node name="BodiesV" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
-layout_mode = 2
-theme_type_variation = &"StatValue"
-text = "14"
-horizontal_alignment = 2
-
-[node name="AccelL" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"StatLabel"
-text = "Разгон"
-
-[node name="AccelV" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
-layout_mode = 2
-theme_type_variation = &"StatValue"
-text = "×1.00"
-horizontal_alignment = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+button_pressed = true
+text = "✦  Физические подсказки"
 
 [node name="ControlBox" type="PanelContainer" parent="Root/Right/VBox/BodyBox"]
 layout_mode = 2
@@ -336,75 +467,136 @@ theme_override_styles/panel = SubResource("section")
 
 [node name="V" type="VBoxContainer" parent="Root/Right/VBox/BodyBox/ControlBox"]
 layout_mode = 2
-theme_override_constants/separation = 6
 
 [node name="ControlLabel" type="Label" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
 layout_mode = 2
-theme_type_variation = &"StatLabel"
+theme_override_font_sizes/font_size = 19
 text = "Тяги: —"
 autowrap_mode = 3
 
 [node name="ControlButton" type="Button" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
-clip_text = true
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
 toggle_mode = true
-theme_override_font_sizes/font_size = 24
-theme_override_styles/pressed = SubResource("plank_gold")
+theme_override_font_sizes/font_size = 20
 text = "ТЯГИ ЛКМ / ПКМ   [Q]"
+clip_text = true
 
 [node name="WeaponLine" type="Label" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
 layout_mode = 2
-theme_type_variation = &"StatLabel"
+theme_override_font_sizes/font_size = 17
 text = "Оружие: нет"
 autowrap_mode = 3
 
 [node name="Problems" type="Label" parent="Root/Right/VBox/BodyBox"]
-custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.45, 0.35, 1)
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 18
 autowrap_mode = 3
 
-[node name="Files" type="HBoxContainer" parent="Root/Right/VBox/BodyBox"]
+[node name="PartBox" type="VBoxContainer" parent="Root/Right/VBox"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SaveButton" type="Button" parent="Root/Right/VBox/BodyBox/Files"]
-clip_text = true
-custom_minimum_size = Vector2(0, 50)
+[node name="Head" type="HBoxContainer" parent="Root/Right/VBox/PartBox"]
+layout_mode = 2
+
+[node name="PartTitle" type="Label" parent="Root/Right/VBox/PartBox/Head"]
 layout_mode = 2
 size_flags_horizontal = 3
-focus_mode = 0
-theme_override_font_sizes/font_size = 16
-text = "СОХРАНИТЬ"
-
-[node name="LoadButton" type="Button" parent="Root/Right/VBox/BodyBox/Files"]
+theme_type_variation = &"DisplayLabel"
+theme_override_colors/font_color = Color(0.98, 0.9, 0.74, 1)
+theme_override_font_sizes/font_size = 28
+text = "Клешня"
 clip_text = true
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-theme_override_font_sizes/font_size = 16
-text = "ОТКРЫТЬ"
 
-[node name="LegendButton" type="Button" parent="Root/Right/VBox/BodyBox/Files"]
-custom_minimum_size = Vector2(52, 0)
-layout_mode = 2
-focus_mode = 0
-toggle_mode = true
-theme_override_font_sizes/font_size = 24
-text = "?"
-tooltip_text = "Что значат значки на кукле"
-
-[node name="UndoButton" type="Button" parent="Root/Right/VBox/BodyBox"]
-clip_text = true
-custom_minimum_size = Vector2(0, 44)
+[node name="CloseButton" type="Button" parent="Root/Right/VBox/PartBox/Head"]
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 20
-text = "ОТМЕНИТЬ   [Ctrl+Z]"
+text = "✕"
+tooltip_text = "Характеристики сборки  [Esc]"
+
+[node name="Where" type="Label" parent="Root/Right/VBox/PartBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.74, 0.64, 1)
+theme_override_font_sizes/font_size = 17
+text = "на полке"
+
+[node name="Info" type="HBoxContainer" parent="Root/Right/VBox/PartBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="Root/Right/VBox/PartBox/Info"]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Grid" type="GridContainer" parent="Root/Right/VBox/PartBox/Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="Desc" type="Label" parent="Root/Right/VBox/PartBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.76, 1)
+theme_override_font_sizes/font_size = 18
+text = ""
+autowrap_mode = 3
+
+[node name="Actions" type="GridContainer" parent="Root/Right/VBox/PartBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="InstallButton" type="Button" parent="Root/Right/VBox/PartBox/Actions"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "УСТАНОВИТЬ"
+tooltip_text = "На первый свободный подходящий разъём  [D]"
+clip_text = true
+
+[node name="DuplicateButton" type="Button" parent="Root/Right/VBox/PartBox/Actions"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "ДУБЛИКАТ"
+tooltip_text = "Такая же деталь на свободный разъём  [D]"
+clip_text = true
+
+[node name="MirrorButton" type="Button" parent="Root/Right/VBox/PartBox/Actions"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "⇋ ЗЕРКАЛО"
+tooltip_text = "Копия ветки на другую сторону  [M]"
+clip_text = true
+
+[node name="DeleteButton" type="Button" parent="Root/Right/VBox/PartBox/Actions"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("plank_red")
+theme_override_styles/hover = SubResource("plank_red_hover")
+theme_override_styles/pressed = SubResource("plank_red_pressed")
+text = "УДАЛИТЬ"
+tooltip_text = "Открутить вместе с тем, что на ней  [Del]"
+clip_text = true
 
 [node name="WeaponBox" type="VBoxContainer" parent="Root/Right/VBox"]
 visible = false
@@ -414,51 +606,59 @@ theme_override_constants/separation = 8
 [node name="Caption" type="Label" parent="Root/Right/VBox/WeaponBox"]
 layout_mode = 2
 theme_type_variation = &"SmallCaps"
-text = "ВЕРСТАК"
+theme_override_font_sizes/font_size = 22
+text = "ОРУЖИЕ НА ВЕРСТАКЕ"
 
 [node name="WeaponName" type="Label" parent="Root/Right/VBox/WeaponBox"]
 layout_mode = 2
 theme_type_variation = &"DisplayLabel"
 theme_override_colors/font_color = Color(0.98, 0.9, 0.74, 1)
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 26
 text = "Молот"
 autowrap_mode = 3
 
 [node name="WStats" type="VBoxContainer" parent="Root/Right/VBox/WeaponBox"]
 layout_mode = 2
-theme_override_constants/separation = 6
 
 [node name="WProblems" type="Label" parent="Root/Right/VBox/WeaponBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.45, 0.35, 1)
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 18
 autowrap_mode = 3
 
 [node name="EquipButton" type="Button" parent="Root/Right/VBox/WeaponBox"]
-clip_text = true
-custom_minimum_size = Vector2(0, 62)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 22
 text = "В РУКУ"
+clip_text = true
 
 [node name="EquipInfo" type="Label" parent="Root/Right/VBox/WeaponBox"]
 layout_mode = 2
-theme_type_variation = &"StatLabel"
-theme_override_font_sizes/font_size = 20
-text = "Оружие не в руке"
+theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
 [node name="ClearButton" type="Button" parent="Root/Right/VBox/WeaponBox"]
-clip_text = true
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "РАЗОБРАТЬ ВСЁ"
+clip_text = true
 
-[node name="Legend" type="RichTextLabel" parent="Root/Right/VBox"]
+[node name="HelpPanel" type="PanelContainer" parent="Root"]
 visible = false
+layout_mode = 0
+offset_left = 14.0
+offset_top = 98.0
+offset_right = 640.0
+offset_bottom = 420.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("side_panel")
+
+[node name="Legend" type="RichTextLabel" parent="Root/HelpPanel"]
+custom_minimum_size = Vector2(590, 0)
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.86, 0.82, 0.76, 1)
@@ -471,76 +671,65 @@ text = "[color=#fff0d0]●[/color]  свободный якорь
 [color=#ffd050]◯[/color] / [color=#5accff]◯[/color]  тяга ЛКМ / ПКМ (Q, клик по детали)
 [color=#8cd9ff]●[/color]  Шарниры, Материал: выбери на полке, кликни по детали
 [color=#ff6fb0]●[/color]  Покраска: баллончик, трафареты, наклейки, фото; R — повернуть стенд
-ПКМ по детали — открутить вместе с тем, что на ней"
+ПКМ по детали — открутить вместе с тем, что на ней
+Клик по детали на кукле — выбрать: справа её данные, D — дубликат, M — зеркально на другую сторону, Del — удалить
+◎ — центр массы; при протяжке пунктиром — куда он сместится с новой деталью"
 fit_content = true
 scroll_active = false
 
-[node name="Spacer" type="Control" parent="Root/Right/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-mouse_filter = 2
-
-[node name="TestButton" type="Button" parent="Root/Right/VBox"]
-clip_text = true
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 34
-theme_override_styles/normal = SubResource("plank_red")
-theme_override_styles/hover = SubResource("plank_red_hover")
-theme_override_styles/pressed = SubResource("plank_red_pressed")
-text = "ИСПЫТАТЬ   [T]"
-
-[node name="TopBar" type="PanelContainer" parent="Root"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -330.0
-offset_top = 14.0
-offset_right = 330.0
-offset_bottom = 104.0
-grow_horizontal = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("hint_panel")
-
-[node name="V" type="VBoxContainer" parent="Root/TopBar"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 4
-
-[node name="EnergyHead" type="HBoxContainer" parent="Root/TopBar/V"]
-layout_mode = 2
-
-[node name="EnergyCaption" type="Label" parent="Root/TopBar/V/EnergyHead"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"StatLabel"
-text = "⚡ ЭНЕРГИЯ ЯДРА   (дальше от ядра — дороже)"
-
-[node name="EnergyValue" type="Label" parent="Root/TopBar/V/EnergyHead"]
-layout_mode = 2
-theme_type_variation = &"StatValue"
-theme_override_font_sizes/font_size = 30
-text = "58 / 100"
-
-[node name="Energy" type="Control" parent="Root/TopBar/V"]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-mouse_filter = 2
-script = ExtResource("4_energy")
-
-[node name="HintBar" type="PanelContainer" parent="Root"]
+[node name="TestButton" type="Button" parent="Root"]
+custom_minimum_size = Vector2(0, 76)
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -490.0
-offset_top = -80.0
-offset_right = 490.0
-offset_bottom = -16.0
+offset_left = -290.0
+offset_top = -134.0
+offset_right = 290.0
+offset_bottom = -58.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 38
+theme_override_styles/normal = SubResource("plank_red")
+theme_override_styles/hover = SubResource("plank_red_hover")
+theme_override_styles/pressed = SubResource("plank_red_pressed")
+text = "▶  ИСПЫТАТЬ СБОРКУ   [T]"
+
+[node name="KeysBar" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -48.0
+offset_right = -24.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.7, 0.9)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 18
+text = "ЛКМ — перетащить деталь / выбрать   ·   ПКМ — открутить   ·   Q — тяги   ·   D — дубликат   ·   M — зеркало   ·   Del — удалить   ·   Ctrl+Z / Ctrl+Y   ·   T — испытать"
+vertical_alignment = 1
+
+[node name="HintBar" type="PanelContainer" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -330.0
+offset_top = -206.0
+offset_right = 330.0
+offset_bottom = -144.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -549,11 +738,28 @@ theme_override_styles/panel = SubResource("hint_panel")
 [node name="Hint" type="Label" parent="Root/HintBar"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.97, 0.93, 0.85, 1)
-theme_override_font_sizes/font_size = 21
-text = "Тащи деталь с полки на светящийся якорь"
+theme_override_font_sizes/font_size = 20
+text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="DragInfo" type="PanelContainer" parent="Root"]
+visible = false
+layout_mode = 0
+offset_right = 280.0
+offset_bottom = 120.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("hint_panel")
+
+[node name="Text" type="RichTextLabel" parent="Root/DragInfo"]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 18
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 
 [node name="Toast" type="Label" parent="Root"]
 modulate = Color(1, 1, 1, 0)

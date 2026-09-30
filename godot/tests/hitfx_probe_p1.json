@@ -276,8 +276,8 @@
     {
       "id": "crit_camera_restored",
       "ok": true,
-      "value": "Camera:<Camera3D#131818588683>",
-      "limit": "Camera:<Camera3D#131818588683>"
+      "value": "Camera:<Camera3D#132154133002>",
+      "limit": "Camera:<Camera3D#132154133002>"
     },
     {
       "id": "crit_no_time_tags",
@@ -468,8 +468,8 @@
     {
       "id": "final_camera_game",
       "ok": true,
-      "value": "Camera:<Camera3D#131818588683>",
-      "limit": "Camera:<Camera3D#131818588683>"
+      "value": "Camera:<Camera3D#132154133002>",
+      "limit": "Camera:<Camera3D#132154133002>"
     },
     {
       "id": "final_match_fx_children",
@@ -489,74 +489,74 @@
     "heavy_brake": {
       "stand_1.2_off": {
         "tier": "heavy",
-        "along_max": -1.98348319530487,
-        "gap_400": 1.52636897563934,
+        "along_max": -1.98347795009613,
+        "gap_400": 1.53501558303833,
         "gap_0": 1.2
       },
       "stand_1.2_on": {
         "tier": "heavy",
-        "along_max": -1.98347795009613,
-        "gap_400": 1.52273440361023,
+        "along_max": -1.98347783088684,
+        "gap_400": 1.52247977256775,
         "gap_0": 1.2
       },
       "stand_1.6_off": {
         "tier": "heavy",
-        "along_max": -1.98186993598938,
+        "along_max": -1.98187017440796,
         "gap_400": 2.20757222175598,
         "gap_0": 1.6
       },
       "stand_1.6_on": {
         "tier": "heavy",
-        "along_max": -1.98152482509613,
-        "gap_400": 1.9371532201767,
+        "along_max": -1.98153698444366,
+        "gap_400": 1.93685448169708,
         "gap_0": 1.6
       },
       "dash_1.0_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.19724655151367,
+        "gap_400": 1.19724905490875,
         "gap_0": 1.0
       },
       "dash_1.0_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.19634759426117,
+        "gap_400": 1.19634771347046,
         "gap_0": 1.0
       },
       "dash_1.1_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.44679641723633,
+        "gap_400": 1.44702422618866,
         "gap_0": 1.1
       },
       "dash_1.1_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.60788333415985,
+        "gap_400": 1.61147272586823,
         "gap_0": 1.1
       },
       "dash_1.2_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 2.09143280982971,
+        "gap_400": 0.877963244915009,
         "gap_0": 1.2
       },
       "dash_1.2_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 2.02987504005432,
+        "gap_400": 0.655546307563782,
         "gap_0": 1.2
       },
       "dash_1.3_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 2.09783554077148,
+        "gap_400": 2.36163854598999,
         "gap_0": 1.3
       },
       "dash_1.3_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.85488426685333,
+        "gap_400": 1.85410237312317,
         "gap_0": 1.3
       }
     },
@@ -566,27 +566,27 @@
     ],
     "heavy_brake_dash_along_max": 0.0,
     "heavy_brake_gap_400_dash": [
-      1.71,
-      1.67
+      1.47,
+      1.33
     ],
     "real_ko_mode": "cinematic",
-    "played": 78,
+    "played": 85,
     "stats": {
       "flashes": 23,
       "impact_frames": 1,
       "waves": 65,
       "afterimages": 35,
       "trails": 35,
-      "bursts": 162,
-      "puffs": 82,
+      "bursts": 161,
+      "puffs": 77,
       "lines": 30,
       "punches": 33,
-      "slams": 7,
+      "slams": 9,
       "cinematic": 2,
       "crit_fallback": 0,
       "time_requests": 0,
       "sparks": 31,
-      "flash_collapses": 27,
+      "flash_collapses": 22,
       "safe_holds": 2
     }
   }

@@ -1031,6 +1031,21 @@ func _build_presets() -> void:
 	n.append(_n("D", "kit_deco_chimney", "T", "Anchor_Back"))
 	_save_blueprint("kit_lantern", "Фонарщик", n, ["8"])
 
+	# spinner — вертушка (UI v0.2, шаблоны мастерской): хаб, круглая голова, ног нет — четыре руки на плечах и бёдрах, у каждой на
+	# свободном шарнире верёвка с шаром булавы: раскручивается и молотит. Рука мышью — правая верхняя верёвка (как у kit_king: деталь,
+	# несущая груз). Странная несимметричная по смыслу сборка — чтобы шаблоны не были только «человечками»
+	n = [_n("T", "kit_core_ball", "", "", "Torso", {"mat": "rust"}), _n("H", "kit_head_round", "T", "Anchor_Neck", "Head")]
+	arm = ["kit_limb_basic_s", "kit_limb_rope_s", "head_mace_ball"]
+	_chain(n, "123", "Anchor_Shoulder_L", arm, ["UpperArm_L", "LowerArm_L"], [{}, {"joint": "free"}, {}])
+	_chain(n, "789", "Anchor_Shoulder_R", arm, ["UpperArm_R", "LowerArm_R"], [{}, {"joint": "free"}, {}])
+	_chain(n, "456", "Anchor_Hip_L", arm, ["", ""], [{}, {"joint": "free"}, {}])
+	_chain(n, "ABC", "Anchor_Hip_R", arm, ["", ""], [{}, {"joint": "free"}, {}])
+	_save_blueprint("kit_spinner", "Вертушка", n, ["8"])
+
+	# empty — «пустой» шаблон (UI v0.2): ядро и голова, дальше всё — из каталога
+	n = [_n("T", "kit_core_ball", "", "", "Torso"), _n("H", "kit_head_round", "T", "Anchor_Neck", "Head")]
+	_save_blueprint("kit_empty", "Пустой", n, [])
+
 	# --- витрина покраски (docs/plan-demo/BODY_PAINT.md §1, §4): тело то же, сверху краска и трафареты ---
 	if not kit_human_nodes.is_empty():
 		_build_graffiti(kit_human_nodes.duplicate(true), Array(human.get("control")), int(human.get("energy_budget")))
