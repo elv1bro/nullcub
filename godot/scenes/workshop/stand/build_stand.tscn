@@ -1,0 +1,283 @@
+[gd_scene format=3 uid="uid://wsstand00001"]
+
+[ext_resource type="Script" path="res://scenes/workshop/stand/build_stand.gd" id="1_bs"]
+
+[sub_resource type="StandardMaterial3D" id="steel_dark"]
+albedo_color = Color(0.085, 0.088, 0.095, 1)
+metallic = 0.55
+roughness = 0.42
+metallic_specular = 0.45
+
+[sub_resource type="StandardMaterial3D" id="steel_edge"]
+albedo_color = Color(0.13, 0.135, 0.145, 1)
+metallic = 0.7
+roughness = 0.32
+metallic_specular = 0.5
+
+[sub_resource type="StandardMaterial3D" id="charcoal"]
+albedo_color = Color(0.045, 0.045, 0.05, 1)
+roughness = 0.88
+metallic_specular = 0.25
+
+[sub_resource type="StandardMaterial3D" id="slot_black"]
+albedo_color = Color(0.018, 0.018, 0.02, 1)
+roughness = 0.9
+metallic_specular = 0.1
+
+[sub_resource type="StandardMaterial3D" id="tick"]
+albedo_color = Color(0.2, 0.2, 0.205, 1)
+metallic = 0.3
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="brass_worn"]
+albedo_color = Color(0.42, 0.32, 0.16, 1)
+metallic = 0.8
+roughness = 0.48
+
+[sub_resource type="CylinderMesh" id="plate_mesh"]
+material = SubResource("steel_dark")
+top_radius = 0.41
+bottom_radius = 0.43
+height = 0.016
+radial_segments = 48
+rings = 1
+
+[sub_resource type="CylinderMesh" id="disc_mesh"]
+material = SubResource("charcoal")
+top_radius = 0.372
+bottom_radius = 0.378
+height = 0.022
+radial_segments = 48
+rings = 1
+
+[sub_resource type="TorusMesh" id="rim_mesh"]
+material = SubResource("steel_edge")
+inner_radius = 0.362
+outer_radius = 0.388
+rings = 48
+ring_segments = 8
+
+[sub_resource type="BoxMesh" id="tick_mesh"]
+material = SubResource("tick")
+size = Vector3(0.005, 0.002, 0.028)
+
+[sub_resource type="CylinderMesh" id="bolt_mesh"]
+material = SubResource("brass_worn")
+top_radius = 0.0105
+bottom_radius = 0.0115
+height = 0.007
+radial_segments = 6
+rings = 1
+
+[sub_resource type="BoxMesh" id="rail_mesh"]
+material = SubResource("steel_dark")
+size = Vector3(0.052, 1, 0.042)
+
+[sub_resource type="BoxMesh" id="slot_mesh"]
+material = SubResource("slot_black")
+size = Vector3(0.016, 0.96, 0.004)
+
+[sub_resource type="BoxMesh" id="edge_mesh"]
+material = SubResource("steel_edge")
+size = Vector3(0.006, 1, 0.044)
+
+[sub_resource type="BoxMesh" id="foot_mesh"]
+material = SubResource("steel_dark")
+size = Vector3(0.13, 0.014, 0.12)
+
+[sub_resource type="PrismMesh" id="gusset_mesh"]
+material = SubResource("steel_dark")
+left_to_right = 0.5
+size = Vector3(0.12, 0.085, 0.008)
+
+[sub_resource type="BoxMesh" id="collar_mesh"]
+material = SubResource("steel_edge")
+size = Vector3(0.074, 0.062, 0.064)
+
+[sub_resource type="CylinderMesh" id="screw_mesh"]
+material = SubResource("brass_worn")
+top_radius = 0.0065
+bottom_radius = 0.0065
+height = 0.062
+radial_segments = 10
+rings = 1
+
+[sub_resource type="CylinderMesh" id="tbar_mesh"]
+material = SubResource("steel_dark")
+top_radius = 0.0068
+bottom_radius = 0.0068
+height = 0.085
+radial_segments = 10
+rings = 1
+
+[sub_resource type="SphereMesh" id="knob_mesh"]
+material = SubResource("charcoal")
+radius = 0.012
+height = 0.024
+radial_segments = 12
+rings = 6
+
+[sub_resource type="CylinderMesh" id="pin_mesh"]
+material = SubResource("brass_worn")
+top_radius = 0.009
+bottom_radius = 0.01
+height = 0.006
+radial_segments = 12
+rings = 1
+
+[sub_resource type="BoxMesh" id="cap_mesh"]
+material = SubResource("steel_edge")
+size = Vector3(0.066, 0.022, 0.056)
+
+[sub_resource type="BoxMesh" id="arm_mesh"]
+material = SubResource("steel_dark")
+size = Vector3(0.04, 0.034, 0.13)
+
+[sub_resource type="BoxMesh" id="pad_mesh"]
+material = SubResource("charcoal")
+size = Vector3(0.13, 0.085, 0.014)
+
+[sub_resource type="BoxMesh" id="jaw_mesh"]
+material = SubResource("steel_dark")
+size = Vector3(0.014, 0.05, 0.05)
+
+[sub_resource type="BoxMesh" id="wing_mesh"]
+material = SubResource("brass_worn")
+size = Vector3(0.04, 0.012, 0.004)
+
+[sub_resource type="CylinderMesh" id="wing_stem_mesh"]
+material = SubResource("brass_worn")
+top_radius = 0.006
+bottom_radius = 0.008
+height = 0.018
+radial_segments = 8
+rings = 1
+
+[sub_resource type="MultiMesh" id="ticks_mm"]
+transform_format = 1
+instance_count = 36
+mesh = SubResource("tick_mesh")
+buffer = PackedFloat32Array(1.6, 0, 0, 0, 0, 1, 0, 0.039, 0, 0, 1.7, 0.322, 0.984808, 0, 0.173648, 0.057304, 0, 1, 0, 0.039, -0.173648, 0, 0.984808, 0.324987, 0.939693, 0, 0.34202, 0.112867, 0, 1, 0, 0.039, -0.34202, 0, 0.939693, 0.310099, 0.866025, 0, 0.5, 0.165, 0, 1, 0, 0.039, -0.5, 0, 0.866025, 0.285788, 0.766044, 0, 0.642788, 0.21212, 0, 1, 0, 0.039, -0.642788, 0, 0.766044, 0.252795, 0.642788, 0, 0.766044, 0.252795, 0, 1, 0, 0.039, -0.766044, 0, 0.642788, 0.21212, 0.5, 0, 0.866025, 0.285788, 0, 1, 0, 0.039, -0.866025, 0, 0.5, 0.165, 0.34202, 0, 0.939693, 0.310099, 0, 1, 0, 0.039, -0.939693, 0, 0.34202, 0.112867, 0.173648, 0, 0.984808, 0.324987, 0, 1, 0, 0.039, -0.984808, 0, 0.173648, 0.057304, 0, 0, 1.7, 0.322, 0, 1, 0, 0.039, -1.6, 0, 0, 0, -0.173648, 0, 0.984808, 0.324987, 0, 1, 0, 0.039, -0.984808, 0, -0.173648, -0.057304, -0.34202, 0, 0.939693, 0.310099, 0, 1, 0, 0.039, -0.939693, 0, -0.34202, -0.112867, -0.5, 0, 0.866025, 0.285788, 0, 1, 0, 0.039, -0.866025, 0, -0.5, -0.165, -0.642788, 0, 0.766044, 0.252795, 0, 1, 0, 0.039, -0.766044, 0, -0.642788, -0.21212, -0.766044, 0, 0.642788, 0.21212, 0, 1, 0, 0.039, -0.642788, 0, -0.766044, -0.252795, -0.866025, 0, 0.5, 0.165, 0, 1, 0, 0.039, -0.5, 0, -0.866025, -0.285788, -0.939693, 0, 0.34202, 0.112867, 0, 1, 0, 0.039, -0.34202, 0, -0.939693, -0.310099, -0.984808, 0, 0.173648, 0.057304, 0, 1, 0, 0.039, -0.173648, 0, -0.984808, -0.324987, -1.6, 0, 0, 0, 0, 1, 0, 0.039, 0, 0, -1.7, -0.322, -0.984808, 0, -0.173648, -0.057304, 0, 1, 0, 0.039, 0.173648, 0, -0.984808, -0.324987, -0.939693, 0, -0.34202, -0.112867, 0, 1, 0, 0.039, 0.34202, 0, -0.939693, -0.310099, -0.866025, 0, -0.5, -0.165, 0, 1, 0, 0.039, 0.5, 0, -0.866025, -0.285788, -0.766044, 0, -0.642788, -0.21212, 0, 1, 0, 0.039, 0.642788, 0, -0.766044, -0.252795, -0.642788, 0, -0.766044, -0.252795, 0, 1, 0, 0.039, 0.766044, 0, -0.642788, -0.21212, -0.5, 0, -0.866025, -0.285788, 0, 1, 0, 0.039, 0.866025, 0, -0.5, -0.165, -0.34202, 0, -0.939693, -0.310099, 0, 1, 0, 0.039, 0.939693, 0, -0.34202, -0.112867, -0.173648, 0, -0.984808, -0.324987, 0, 1, 0, 0.039, 0.984808, 0, -0.173648, -0.057304, 0, 0, -1.7, -0.322, 0, 1, 0, 0.039, 1.6, 0, 0, 0, 0.173648, 0, -0.984808, -0.324987, 0, 1, 0, 0.039, 0.984808, 0, 0.173648, 0.057304, 0.34202, 0, -0.939693, -0.310099, 0, 1, 0, 0.039, 0.939693, 0, 0.34202, 0.112867, 0.5, 0, -0.866025, -0.285788, 0, 1, 0, 0.039, 0.866025, 0, 0.5, 0.165, 0.642788, 0, -0.766044, -0.252795, 0, 1, 0, 0.039, 0.766044, 0, 0.642788, 0.21212, 0.766044, 0, -0.642788, -0.21212, 0, 1, 0, 0.039, 0.642788, 0, 0.766044, 0.252795, 0.866025, 0, -0.5, -0.165, 0, 1, 0, 0.039, 0.5, 0, 0.866025, 0.285788, 0.939693, 0, -0.34202, -0.112867, 0, 1, 0, 0.039, 0.34202, 0, 0.939693, 0.310099, 0.984808, 0, -0.173648, -0.057304, 0, 1, 0, 0.039, 0.173648, 0, 0.984808, 0.324987)
+
+[sub_resource type="MultiMesh" id="bolts_mm"]
+transform_format = 1
+instance_count = 8
+mesh = SubResource("bolt_mesh")
+buffer = PackedFloat32Array(0.989463, 0, 0.144788, 0.15116, 0, 1, 0, 0.0195, -0.144788, 0, 0.989463, 0.364932, 0.906492, 0, 0.422223, 0.364932, 0, 1, 0, 0.0195, -0.422223, 0, 0.906492, 0.15116, 0.747508, 0, 0.664252, 0.364932, 0, 1, 0, 0.0195, -0.664252, 0, 0.747508, -0.15116, 0.525843, 0, 0.850582, 0.15116, 0, 1, 0, 0.0195, -0.850582, 0, 0.525843, -0.364932, 0.260083, 0, 0.965586, -0.15116, 0, 1, 0, 0.0195, -0.965586, 0, 0.260083, -0.364932, -0.027485, 0, 0.999622, -0.364932, 0, 1, 0, 0.0195, -0.999622, 0, -0.027485, -0.15116, -0.312749, 0, 0.949836, -0.364932, 0, 1, 0, 0.0195, -0.949836, 0, -0.312749, 0.15116, -0.571788, 0, 0.820401, -0.15116, 0, 1, 0, 0.0195, -0.820401, 0, -0.571788, 0.364932)
+
+[sub_resource type="MultiMesh" id="foot_bolts_mm"]
+transform_format = 1
+instance_count = 4
+mesh = SubResource("bolt_mesh")
+buffer = PackedFloat32Array(0.955336, 0, 0.29552, -0.048, 0, 1, 0, 0.0105, -0.29552, 0, 0.955336, -0.043, 0.955336, 0, -0.29552, -0.048, 0, 1, 0, 0.0105, 0.29552, 0, 0.955336, 0.043, 0.955336, 0, -0.29552, 0.048, 0, 1, 0, 0.0105, 0.29552, 0, 0.955336, -0.043, 0.955336, 0, 0.29552, 0.048, 0, 1, 0, 0.0105, -0.29552, 0, 0.955336, 0.043)
+
+[node name="Stand" type="Node3D"]
+script = ExtResource("1_bs")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.008, 0)
+mesh = SubResource("plate_mesh")
+
+[node name="Disc" type="MeshInstance3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.019, 0)
+mesh = SubResource("disc_mesh")
+
+[node name="Rim" type="MeshInstance3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.024, 0)
+mesh = SubResource("rim_mesh")
+
+[node name="Ticks" type="MultiMeshInstance3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.008, 0)
+multimesh = SubResource("ticks_mm")
+
+[node name="Bolts" type="MultiMeshInstance3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.008, 0)
+multimesh = SubResource("bolts_mm")
+
+[node name="Pole" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1.15, 0, 0, 0, 1, 0, 0.575, -0.24)
+mesh = SubResource("rail_mesh")
+
+[node name="Slot" type="MeshInstance3D" parent="Pole"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0215)
+mesh = SubResource("slot_mesh")
+
+[node name="EdgeL" type="MeshInstance3D" parent="Pole"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.026, 0, 0)
+mesh = SubResource("edge_mesh")
+
+[node name="EdgeR" type="MeshInstance3D" parent="Pole"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.026, 0, 0)
+mesh = SubResource("edge_mesh")
+
+[node name="Foot" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, -0.24)
+mesh = SubResource("foot_mesh")
+
+[node name="GussetL" type="MeshInstance3D" parent="Foot"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -0.03, 0.0495, 0)
+mesh = SubResource("gusset_mesh")
+
+[node name="GussetR" type="MeshInstance3D" parent="Foot"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.03, 0.0495, 0)
+mesh = SubResource("gusset_mesh")
+
+[node name="Bolts" type="MultiMeshInstance3D" parent="Foot"]
+multimesh = SubResource("foot_bolts_mm")
+
+[node name="Collar" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6325, -0.24)
+
+[node name="Block" type="MeshInstance3D" parent="Collar"]
+mesh = SubResource("collar_mesh")
+
+[node name="Screw" type="MeshInstance3D" parent="Collar"]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.066, 0, 0)
+mesh = SubResource("screw_mesh")
+
+[node name="Handle" type="MeshInstance3D" parent="Collar"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0.099, 0, 0)
+mesh = SubResource("tbar_mesh")
+
+[node name="KnobA" type="MeshInstance3D" parent="Collar"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.099, 0, 0.044)
+mesh = SubResource("knob_mesh")
+
+[node name="KnobB" type="MeshInstance3D" parent="Collar"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.099, 0, -0.044)
+mesh = SubResource("knob_mesh")
+
+[node name="Pin" type="MeshInstance3D" parent="Collar"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.035)
+mesh = SubResource("pin_mesh")
+
+[node name="Saddle" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, -0.24)
+
+[node name="Cap" type="MeshInstance3D" parent="Saddle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.011, 0)
+mesh = SubResource("cap_mesh")
+
+[node name="Arm" type="MeshInstance3D" parent="Saddle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.022, 0.086)
+mesh = SubResource("arm_mesh")
+
+[node name="Pad" type="MeshInstance3D" parent="Saddle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.022, 0.158)
+mesh = SubResource("pad_mesh")
+
+[node name="JawL" type="MeshInstance3D" parent="Saddle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.058, -0.022, 0.188)
+mesh = SubResource("jaw_mesh")
+
+[node name="JawR" type="MeshInstance3D" parent="Saddle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.058, -0.022, 0.188)
+mesh = SubResource("jaw_mesh")
+
+[node name="WingStem" type="MeshInstance3D" parent="Saddle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0.075)
+mesh = SubResource("wing_stem_mesh")
+
+[node name="Wing" type="MeshInstance3D" parent="Saddle"]
+transform = Transform3D(0.939373, 0, 0.342898, 0, 1, 0, -0.342898, 0, 0.939373, 0, 0.016, 0.075)
+mesh = SubResource("wing_mesh")
