@@ -20,7 +20,10 @@ tools/build_league.gd:
     League_Crystal  энергокристалл — полупрозрачный голубой с внутренним светом
     League_Gold     гармонический металл — кольца, которые не должны перекрашиваться
     League_Flesh    живая ткань — тёмно-алая, влажный блеск
-Особых механик (гравитационное ядро, фаза, щит) пока нет — только форма, масса и энергия; hit_mult = 1.0 (таблица kit_probe).
+Удар формой (WORKSHOP_V3.md §4, ≤ ×1.2): коса ×1.2 и когти / ходуля ×1.15 — колющие (бонус на медленном тычке), клешня и
+кристальная конечность ×1.1 — дробящие (на размахе), щупальце ×0.9 — мягкое; профиль — HIT_PROFILE tools/build_body_kit.gd, число —
+META hit_mult (= HIT_MULT tests/kit_probe.gd). Особые механики (гравиядро, щит, фаза, самопочинка) — активные модули
+(kit_active.py, scripts/active/) и пассивы ядер лиги (ActiveBlocks.PASSIVE).
 """
 import math
 
@@ -688,8 +691,8 @@ def build_Deco_LeagueShield(base="Brass", r=0.058):
 
 
 META = {
-    "Head_LeagueEye": {"kind": "head", "title": "Голова-око (лига)", "mass": 4.2, "energy": 10},
-    "Head_LeagueCrystal": {"kind": "head", "title": "Кристальная голова (лига)", "mass": 5.0, "energy": 11},
+    "Head_LeagueEye": {"kind": "head", "title": "Голова-око (лига)", "mass": 4.2, "energy": 10, "hit_mult": 1.15},
+    "Head_LeagueCrystal": {"kind": "head", "title": "Кристальная голова (лига)", "mass": 5.0, "energy": 11, "hit_mult": 1.1},
     "Head_LeagueRing": {"kind": "head", "title": "Голова-портал (лига)", "mass": 4.4, "energy": 10},
     "Head_LeagueFlesh": {"kind": "head", "title": "Живая голова (лига)", "mass": 3.8, "energy": 9},
     "Core_LeagueOrb": {"kind": "core", "title": "Ядро-око (лига)", "mass": 14.0, "energy": 0},
@@ -697,13 +700,16 @@ META = {
     "Core_LeagueCrystal": {"kind": "core", "title": "Кристальное ядро (лига)", "mass": 16.0, "energy": 0},
     "Core_LeagueFlesh": {"kind": "core", "title": "Живое ядро (лига)", "mass": 12.0, "energy": 0},
     "Limb_LeagueFloat": {"kind": "limb", "title": "Парящая (лига)", "mass": {"S": 1.9, "L": 3.6}, "energy": {"S": 6, "L": 8}},
-    "Limb_LeagueCrystal": {"kind": "limb", "title": "Кристальная (лига)", "mass": {"S": 1.8, "L": 3.6}, "energy": {"S": 6, "L": 8}},
-    "Limb_LeagueScythe": {"kind": "limb", "title": "Коса (лига)", "mass": {"S": 2.4, "L": 4.6}, "energy": {"S": 7, "L": 9}},
-    "Limb_LeagueTentacle": {"kind": "limb", "title": "Щупальце (лига)", "mass": {"S": 1.6, "L": 3.2}, "energy": {"S": 6, "L": 8}},
-    "Hand_LeagueTalon": {"kind": "hand", "title": "Когти (лига)", "mass": 1.0, "energy": 4},
-    "Hand_LeaguePincer": {"kind": "hand", "title": "Клешня (лига)", "mass": 1.2, "energy": 4},
+    "Limb_LeagueCrystal": {"kind": "limb", "title": "Кристальная (лига)", "mass": {"S": 1.8, "L": 3.6},
+                           "energy": {"S": 6, "L": 8}, "hit_mult": 1.1},
+    "Limb_LeagueScythe": {"kind": "limb", "title": "Коса (лига)", "mass": {"S": 2.4, "L": 4.6},
+                          "energy": {"S": 7, "L": 9}, "hit_mult": 1.2},
+    "Limb_LeagueTentacle": {"kind": "limb", "title": "Щупальце (лига)", "mass": {"S": 1.6, "L": 3.2},
+                            "energy": {"S": 6, "L": 8}, "hit_mult": 0.9},
+    "Hand_LeagueTalon": {"kind": "hand", "title": "Когти (лига)", "mass": 1.0, "energy": 4, "hit_mult": 1.15},
+    "Hand_LeaguePincer": {"kind": "hand", "title": "Клешня (лига)", "mass": 1.2, "energy": 4, "hit_mult": 1.1},
     "Foot_LeagueHover": {"kind": "foot", "title": "Парящая стопа (лига)", "mass": 0.8, "energy": 4},
-    "Foot_LeagueSpike": {"kind": "foot", "title": "Ходуля-коготь (лига)", "mass": 0.7, "energy": 3},
+    "Foot_LeagueSpike": {"kind": "foot", "title": "Ходуля-коготь (лига)", "mass": 0.7, "energy": 3, "hit_mult": 1.15},
     "Blade_LeagueCrystal": {"kind": "weapon_head", "title": "Кристальный клинок (лига)", "mass": 1.1, "energy": 0, "weapon_mult": 1.5,
                             "name_prefix": "Blade"},
     "Mace_LeagueOrb": {"kind": "weapon_head", "title": "Шар-булава (лига)", "mass": 2.6, "energy": 0, "weapon_mult": 1.4,

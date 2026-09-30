@@ -475,12 +475,14 @@ func _build_shelf() -> void:
 		for s in shelves:
 			var found: Array = []
 			for d in CraftEdit.parts_of_kinds(s.get("kinds", [])):
+				if not CraftEdit.shelf_allows(s, d):
+					continue
 				if d.title.to_lower().contains(query) or d.id.contains(query):
 					found.append(d)
 			if not found.is_empty():
 				groups.append([String(s["title"]).to_upper(), found])
 	else:
-		var defs := CraftEdit.parts_of_kinds(kinds)
+		var defs := CraftEdit.parts_of_kinds(kinds).filter(func(d: PartDef) -> bool: return CraftEdit.shelf_allows(sh, d))
 		var gdef: Array = GROUPS.get(String(sh.get("id", "")), [])
 		if gdef.is_empty() or weapon:
 			groups.append(["", defs])
@@ -764,11 +766,53 @@ func _refresh_part() -> void:
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		part_grid.add_child(v)
 	part_desc.text = CraftEdit.part_desc(d)
+	_refresh_channel(d, on_stand, uid)
 	install_button.visible = not on_stand
 	duplicate_button.disabled = not on_stand
 	mirror_button.disabled = not on_stand or CraftEdit.mirror_place(ctl.blueprint, uid).is_empty()
 	delete_button.disabled = not on_stand or String(CraftEdit.find(ctl.blueprint, uid).get("parent", "")) == ""
 	install_button.text = "УСТАНОВИТЬ"
+
+
+## Активный блок на кукле: строка «Канал: — / Q / F / C» под описанием (docs/plan-demo/ACTIVE_BLOCKS.md). Кнопки создаются один раз.
+func _refresh_channel(d: PartDef, on_stand: bool, uid: String) -> void:
+	var row := part_box.get_node_or_null("ChannelRow") as HBoxContainer
+	var show := on_stand and ActiveBlocks.is_active(d.id)
+	if row == null:
+		if not show:
+			return
+		row = HBoxContainer.new()
+		row.name = "ChannelRow"
+		row.add_theme_constant_override("separation", 6)
+		var l := Label.new()
+		l.text = "Канал:"
+		l.theme_type_variation = &"StatLabel"
+		l.add_theme_font_size_override("font_size", 18)
+		row.add_child(l)
+		for ch in range(ActiveBlocks.CHANNELS + 1):
+			var b := Button.new()
+			b.name = "Ch%d" % ch
+			b.toggle_mode = true
+			b.focus_mode = Control.FOCUS_NONE
+			b.custom_minimum_size = Vector2(52, 34)
+			b.text = "—" if ch == 0 else "%d·%s" % [ch, ActiveBlocks.key_label("p1", ch)]
+			b.tooltip_text = "без канала: в бою молчит" if ch == 0 else \
+				"клавиша канала %d: %s (P2 — %s, геймпад — %s)" % [ch, ActiveBlocks.key_label("p1", ch), ActiveBlocks.key_label("p2", ch),
+				ActiveBlocks.PAD_LABELS[ch - 1]]
+			var c := ch
+			b.pressed.connect(func() -> void: ctl.set_channel(String(ctl.selected.get("uid", "")), c))
+			row.add_child(b)
+		part_box.add_child(row)
+		part_box.move_child(row, part_desc.get_index() + 1)
+	row.visible = show
+	if not show:
+		return
+	var cur := ActiveBlocks.channel_of(CraftEdit.find(ctl.blueprint, uid))
+	for ch in range(ActiveBlocks.CHANNELS + 1):
+		var b := row.get_node("Ch%d" % ch) as Button
+		b.set_pressed_no_signal(ch == cur)
+		# выбранный канал — цветом канала (как плашка на кукле, ActiveRig.COL_CH), остальные приглушены
+		b.modulate = (ActiveRig.COL_CH[ch - 1] if ch > 0 else Color(0.8, 0.8, 0.8)).lightened(0.35) if ch == cur else Color(1, 1, 1, 0.55)
 
 
 func _refresh_weapon() -> void:

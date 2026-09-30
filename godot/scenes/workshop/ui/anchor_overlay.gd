@@ -88,6 +88,17 @@ func _draw() -> void:
 					var tg := p + Vector2(-16.0 - font.get_string_size(gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x, -10.0)   # слева: справа всплывашка разъёма
 					draw_string_outline(font, tg, gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 6, Color(0, 0, 0, 0.9))
 					draw_string(font, tg, gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.7, 0.93, 1.0))
+			"channel":   # активный блок: плашка клавиши канала (цвет канала — ActiveRig.COL_CH; без канала — серая)
+				var ch := int(it.get("channel", 0))
+				var col: Color = ActiveRig.COL_CH[ch - 1] if ch >= 1 and ch <= 3 else Color(0.6, 0.6, 0.6)
+				var lb := String(it.get("label", ""))
+				var w := 30.0 if font == null else maxf(30.0, font.get_string_size(lb, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x + 14.0)
+				var rect := Rect2(p + Vector2(-w * 0.5, -58.0), Vector2(w, 26.0))   # выше центра: справа от детали — подпись тяги ЛКМ / ПКМ
+				draw_rect(rect.grow(2.0), Color(0, 0, 0, 0.75), true)
+				draw_rect(rect, col, false, 2.5)
+				if font != null:
+					var tpos := rect.position + Vector2((w - font.get_string_size(lb, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x) * 0.5, 20.0)
+					draw_string(font, tpos, lb, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, col)
 			"control":
 				var rc := 30.0 + 2.0 * pulse
 				draw_arc(p, rc + 1.5, 0.0, TAU, 40, Color(0, 0, 0, 0.5), 6.0, true)

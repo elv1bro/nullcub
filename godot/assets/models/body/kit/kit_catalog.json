@@ -1,4 +1,261 @@
 {
+ "Kit_Active_Booster": {
+  "glb": "Kit_Active_Booster",
+  "builder": "Active_Booster",
+  "size": "",
+  "kind": "deco",
+  "title": "Ускоритель",
+  "id": "kit_active_booster",
+  "mass": 1.0,
+  "energy": 5,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1378,
+  "empties": [
+   "Shape_Cyl_Booster",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Bone",
+   "Brass",
+   "CoreGlow",
+   "Iron"
+  ]
+ },
+ "Kit_Active_Flamer": {
+  "glb": "Kit_Active_Flamer",
+  "builder": "Active_Flamer",
+  "size": "",
+  "kind": "deco",
+  "title": "Огнемёт",
+  "id": "kit_active_flamer",
+  "mass": 1.4,
+  "energy": 7,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1084,
+  "empties": [
+   "Shape_Cyl_Flamer",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Bone",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Rust"
+  ]
+ },
+ "Kit_Active_Gun": {
+  "glb": "Kit_Active_Gun",
+  "builder": "Active_Gun",
+  "size": "",
+  "kind": "deco",
+  "title": "Пулемёт",
+  "id": "kit_active_gun",
+  "mass": 1.6,
+  "energy": 8,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1288,
+  "empties": [
+   "Shape_Box_Gun",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Active_Jetpack": {
+  "glb": "Kit_Active_Jetpack",
+  "builder": "Active_Jetpack",
+  "size": "",
+  "kind": "deco",
+  "title": "Реактивный ранец",
+  "id": "kit_active_jetpack",
+  "mass": 2.0,
+  "energy": 8,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_yellow",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1240,
+  "empties": [
+   "Shape_Box_Jetpack",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintYellow",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Active_LeagueGravity": {
+  "glb": "Kit_Active_LeagueGravity",
+  "builder": "Active_LeagueGravity",
+  "size": "",
+  "kind": "deco",
+  "title": "Гравиядро (лига)",
+  "id": "kit_active_league_gravity",
+  "mass": 1.5,
+  "energy": 9,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1470,
+  "empties": [
+   "Shape_Sphere_Gravity",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Cyan",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Active_LeaguePhase": {
+  "glb": "Kit_Active_LeaguePhase",
+  "builder": "Active_LeaguePhase",
+  "size": "",
+  "kind": "deco",
+  "title": "Фазовый модуль (лига)",
+  "id": "kit_active_league_phase",
+  "mass": 0.8,
+  "energy": 9,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1016,
+  "empties": [
+   "Shape_Cyl_Phase",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Crystal",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Active_LeagueRepair": {
+  "glb": "Kit_Active_LeagueRepair",
+  "builder": "Active_LeagueRepair",
+  "size": "",
+  "kind": "deco",
+  "title": "Ядро самопочинки (лига)",
+  "id": "kit_active_league_repair",
+  "mass": 1.0,
+  "energy": 8,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 532,
+  "empties": [
+   "Shape_Cyl_Repair",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Crystal",
+   "League_Cyan",
+   "League_Void"
+  ]
+ },
+ "Kit_Active_LeagueShield": {
+  "glb": "Kit_Active_LeagueShield",
+  "builder": "Active_LeagueShield",
+  "size": "",
+  "kind": "deco",
+  "title": "Эмиттер щита (лига)",
+  "id": "kit_active_league_shield",
+  "mass": 1.0,
+  "energy": 8,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 872,
+  "empties": [
+   "Shape_Cyl_Shield",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Crystal",
+   "League_Cyan",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Active_Magnet": {
+  "glb": "Kit_Active_Magnet",
+  "builder": "Active_Magnet",
+  "size": "",
+  "kind": "deco",
+  "title": "Магнит",
+  "id": "kit_active_magnet",
+  "mass": 1.2,
+  "energy": 5,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1252,
+  "empties": [
+   "Shape_Box_Magnet",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Brass",
+   "Iron",
+   "Steel"
+  ]
+ },
  "Kit_Anchor_Head": {
   "glb": "Kit_Anchor_Head",
   "builder": "Anchor_Head",
@@ -1015,6 +1272,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.15,
   "tris": 952,
   "empties": [
    "Shape_Box_Foot",
@@ -1210,6 +1468,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.1,
   "tris": 1260,
   "empties": [
    "Shape_Box_Hand",
@@ -1236,6 +1495,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.15,
   "tris": 1548,
   "empties": [
    "Shape_Box_Hand",
@@ -1532,6 +1792,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.1,
   "tris": 1702,
   "empties": [
    "Anchor_Top",
@@ -1562,6 +1823,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.15,
   "tris": 2954,
   "empties": [
    "Anchor_Top",
@@ -2069,6 +2331,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.1,
   "tris": 1264,
   "empties": [
    "Anchor_Deco",
@@ -2099,6 +2362,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.1,
   "tris": 1288,
   "empties": [
    "Anchor_Deco",
@@ -2185,6 +2449,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.2,
   "tris": 1446,
   "empties": [
    "Anchor_Deco",
@@ -2213,6 +2478,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
+  "hit_mult": 1.2,
   "tris": 1478,
   "empties": [
    "Anchor_Deco",
@@ -2241,6 +2507,7 @@
   "base_mat": "bone",
   "material": "wood",
   "connector": true,
+  "hit_mult": 0.9,
   "tris": 1800,
   "empties": [
    "Anchor_Deco",
@@ -2270,6 +2537,7 @@
   "base_mat": "bone",
   "material": "wood",
   "connector": true,
+  "hit_mult": 0.9,
   "tris": 1800,
   "empties": [
    "Anchor_Deco",

@@ -6,7 +6,7 @@
 script = ExtResource("1_pqhgh")
 id = "league_reaper"
 title = "Жнец Ŋmoalü"
-energy_budget = 140
+energy_budget = 150
 nodes = Array[Dictionary]([{
 "anchor": "",
 "name": "Torso",
@@ -126,6 +126,12 @@ nodes = Array[Dictionary]([{
 "part": "kit_foot_league_spike",
 "rest_deg": -20.0,
 "uid": "G"
+}, {
+"anchor": "Anchor_Back",
+"channel": 1,
+"parent": "T",
+"part": "kit_active_league_gravity",
+"uid": "I"
 }])
 control = PackedStringArray("4")
 control_rmb = PackedStringArray()

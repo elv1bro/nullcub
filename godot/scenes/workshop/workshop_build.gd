@@ -408,6 +408,28 @@ func set_material(uid: String, mat_id := "") -> Dictionary:
 ## Тип шарнира jt (по умолчанию — joint_pick) связи детали uid с родителем. История, node["joint"] ("pin" — ключ стирается),
 ## пересборка. {ok, code, reason, changed, energy_after} — CraftEdit.set_joint; отказ (корень, fixed-деталь, запреты weld, энергия)
 ## — с причиной.
+## Канал активного блока uid (0 — снять, 1…3 — клавиша канала; docs/plan-demo/ACTIVE_BLOCKS.md): история, пересборка, тост.
+func set_channel(uid: String, ch: int) -> void:
+	var n := CraftEdit.find(blueprint, uid)
+	if n.is_empty() or not ActiveBlocks.is_active(String(n.get("part", ""))) or ActiveBlocks.channel_of(n) == ch:
+		return
+	_push_history()
+	CraftEdit.set_channel(blueprint, uid, ch)
+	_name_custom_body()
+	_rebuild()
+	var d := CraftEdit.def_of(blueprint, uid)
+	var what := d.title if d != null else uid
+	if ch == 0:
+		_say("%s — без канала: в бою молчит" % what, COL_INFO)
+	else:
+		var same := 0
+		for m in blueprint.nodes:
+			if ActiveBlocks.channel_of(m) == ch:
+				same += 1
+		_say("%s → канал %d (%s)%s" % [what, ch, ActiveBlocks.key_label("p1", ch), "  · на канале блоков: %d" % same if same > 1 else ""],
+			COL_OK)
+
+
 func set_joint(uid: String, jt := "") -> Dictionary:
 	if jt == "":
 		jt = joint_pick
@@ -613,6 +635,8 @@ func duplicate_part(uid: String, target := "body") -> Dictionary:
 		var n2 := CraftEdit.find(blueprint, String(r["uid"]))
 		if n.has("mat"):
 			n2["mat"] = n["mat"]
+		if n.has(ActiveBlocks.NODE_KEY):
+			n2[ActiveBlocks.NODE_KEY] = n[ActiveBlocks.NODE_KEY]
 		_rebuild()
 		select_stand(String(r["uid"]), target)
 	return r
@@ -1890,6 +1914,17 @@ func overlay_items() -> Array:
 				var box := _visual_aabb(ms[0])
 				out.append({"pos": cam.unproject_position(box.get_center()), "dir": Vector2.ZERO, "state": "control",
 					"label": "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"})
+	# активные блоки: значок клавиши канала у каждого (docs/plan-demo/ACTIVE_BLOCKS.md)
+	if target == "body" and stand != null:
+		for n in blueprint.nodes:
+			if not ActiveBlocks.is_active(String(n.get("part", ""))):
+				continue
+			var msa := part_meshes("body", String(n.get("uid", "")))
+			if msa.is_empty():
+				continue
+			var ch := ActiveBlocks.channel_of(n)
+			out.append({"pos": cam.unproject_position(_visual_aabb(msa[0]).get_center()), "dir": Vector2.ZERO, "state": "channel",
+				"channel": ch, "label": ActiveBlocks.key_label("p1", ch) if ch > 0 else "—"})
 	if String(selected.get("source", "")) == "stand" and String(selected["target"]) == target:
 		var ms2 := part_meshes(target, String(selected["uid"]))
 		if not ms2.is_empty():

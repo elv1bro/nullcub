@@ -31,6 +31,14 @@ func _ready() -> void:
 	var d := get_parent()
 	if d == null:
 		return
+	# Match.respawn_doll пересоздаёт у новой куклы детей со скриптом (новый экземпляр), а сцена пресета уже несёт свой LeagueLook:
+	# второй ужал бы шары ещё раз — работает только первый по порядку
+	for c in d.get_children():
+		if c is LeagueLook:
+			if c != self:
+				queue_free()
+				return
+			break
 	if d.is_node_ready():
 		apply()
 	else:
