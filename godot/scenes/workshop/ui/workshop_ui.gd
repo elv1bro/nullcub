@@ -2,7 +2,7 @@
 ## поведение: bind(WorkshopBuild) → шаблоны, полка (вкладки по видам, карточки part_card.gd с иконками PartIcons; у вкладок с tool —
 ## инструмент над деталями: «Шарниры» — плашки типов joint_card.gd, «Материал» — плашки кисти material_card.gd, «Покраска» — полка
 ## paint_panel.gd (docs/plan-demo/BODY_PAINT.md §1, §6; шаблоны на ней прячутся — место под палитру и сетки), правая панель
-## (ENERGY, масса, тела, разгон, рука мышью, оружие, ошибки validate() словами, сохранить / загрузить / отменить; на вкладке ОРУЖИЕ —
+## (ENERGY, масса, тела, разгон, тяги ЛКМ / ПКМ, оружие, ошибки validate() словами, сохранить / загрузить / отменить; на вкладке ОРУЖИЕ —
 ## верстак: характеристики словами, «В руку»), подсказка внизу, всплывающие сообщения сверху, иконка детали у курсора при протяжке.
 ## В испытании — плашка ИСПЫТАНИЕ, счёт урона, табличка HP над манекеном и цифры урона в точке удара.
 ## Все размеры — в базовом вьюпорте 1920×1080 (project.godot: stretch canvas_items).
@@ -354,10 +354,10 @@ func _refresh() -> void:
 	bodies_v.text = "%d  (%d)" % [int(s["bodies"]), int(s["parts"])]
 	var acc := float(s["accel"])
 	accel_v.text = "×%.2f  %s" % [acc, "быстрый" if acc > 1.15 else ("как кукла" if acc > 0.87 else ("тяжеловат" if acc > 0.65 else "танк"))]
-	control_label.text = "Рука мышью: %s" % (String(s["control"]) if String(s["control"]) != "" else "— не выбрана")
+	control_label.text = "Тяги: %s" % (String(s["control"]) if String(s["control"]) != "" else "— нет (Q и клик по детали)")
 	control_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4) if String(s["control"]) != "" else Color(0.9, 0.6, 0.45))
 	control_button.set_pressed_no_signal(ctl.control_pick)
-	control_button.text = "КЛИКНИ ПО ДЕТАЛИ…" if ctl.control_pick else "РУКА МЫШЬЮ   [Q]"
+	control_button.text = "КЛИКАЙ ПО ДЕТАЛЯМ…" if ctl.control_pick else "ТЯГИ ЛКМ / ПКМ   [Q]"
 	weapon_line.text = "Оружие: %s" % (String(s["weapon"]) if String(s["weapon"]) != "" else "нет  (вкладка ОРУЖИЕ → «В руку»)")
 	var lines: PackedStringArray = []
 	for e in (s["errors"] as PackedStringArray):

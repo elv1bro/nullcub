@@ -19,8 +19,11 @@ const PARTS_DIR := "res://data/body/parts/"
 @export var title := ""
 @export var energy_budget := 100
 @export var nodes: Array[Dictionary] = []
-## uid деталей, которыми управляет рука мышью / правым стиком (сейчас ≤ 1, позже ≤ 2).
+## Тяги (WORKSHOP_V3.md §3): uid деталей, которые мышь / стик тянут к цели, ≤ MAX_PULLS. control[0] — главная рука (захват,
+## бросок; бесплатная — встроена в ядро), каждая следующая стоит PULL_ENERGY × вынос детали (pull_energy).
 @export var control: PackedStringArray = []
+## uid тяг из control на ПКМ (стик с LB); остальные — на ЛКМ (стик).
+@export var control_rmb: PackedStringArray = []
 ## Необязательное крафтовое оружие: вешается на деталь weapon_on (uid).
 @export var weapon: Resource
 @export var weapon_on := ""
@@ -37,6 +40,8 @@ static func part_def(part_id: String) -> PartDef:
 ## Цена узла = ceil((PartDef.energy + энергия шарнира) × reach_mult(d)), d — вынос детали от ядра по цепочке (node_reach).
 const ENERGY_REACH_FREE_M := 0.3      # ближе — без наценки (голова, плечи, бёдра)
 const ENERGY_REACH_PER_M := 1.0       # +100 % за каждый метр дальше ENERGY_REACH_FREE_M
+const MAX_PULLS := 10                 # тяг на куклу — технический потолок; настоящий предел — энергия
+const PULL_ENERGY := 5                # базовая цена тяги (вторая и дальше; первая — в ядре), × вынос детали
 const _MIRROR_X := Basis(Vector3(-1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1))
 static var _socket_cache: Dictionary = {}
 
@@ -51,13 +56,37 @@ static func reach_cost(base: int, d: float) -> int:
 	return int(ceil(base * reach_mult(d) - 0.001)) if base > 0 else 0
 
 
-## Σ цен узлов (node_energy): детали и шарниры с наценкой за расстояние от ядра.
+## Σ цен узлов (node_energy) и тяг (pull_energy): детали, шарниры и тяги с наценкой за расстояние от ядра.
 func energy_used() -> int:
 	var total := 0
 	var reach := node_reach()
 	for n in nodes:
 		total += _node_energy(n, float(reach.get(String(n.get("uid", "")), 0.0)))
+	for i in range(1, control.size()):
+		total += reach_cost(PULL_ENERGY, float(reach.get(String(control[i]), 0.0)))
 	return total
+
+
+## Цена тяги на узле uid: 0 у главной (control[0], встроена в ядро) и у узла без тяги; иначе PULL_ENERGY × вынос.
+func pull_energy(uid: String) -> int:
+	var i := control.find(uid)
+	if i <= 0:
+		return 0
+	return reach_cost(PULL_ENERGY, float(node_reach().get(uid, 0.0)))
+
+
+## Цена тяги, если поставить её на uid сейчас (первая — бесплатно).
+func next_pull_energy(uid: String) -> int:
+	if control.is_empty():
+		return 0
+	return reach_cost(PULL_ENERGY, float(node_reach().get(uid, 0.0)))
+
+
+## "rmb" — тяга uid на ПКМ, "lmb" — на ЛКМ, "" — у узла тяги нет.
+func pull_button(uid: String) -> String:
+	if not control.has(uid):
+		return ""
+	return "rmb" if control_rmb.has(uid) else "lmb"
 
 
 ## Цена узла uid с наценкой за расстояние.
@@ -551,6 +580,9 @@ func _validate_assembly() -> PackedStringArray:
 			if joint_names.has(jn):
 				errors.append("имя сустава «%s» повторяется (%s и %s)" % [jn, joint_names[jn], uid])
 			joint_names[jn] = uid
-	if control.size() > 2:
-		errors.append("управляемых деталей %d, можно не больше 2" % control.size())
+	if control.size() > MAX_PULLS:
+		errors.append("тяг %d, можно не больше %d" % [control.size(), MAX_PULLS])
+	for u in control_rmb:
+		if not control.has(u):
+			errors.append("тяга ПКМ «%s» не среди тяг (control)" % u)
 	return errors

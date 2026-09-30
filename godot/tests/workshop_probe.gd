@@ -358,19 +358,82 @@ func _joint_gap(j: Generic6DOFJoint3D, d: ModularDoll) -> float:
 func _control() -> void:
 	ws.set_preset("human")
 	await _frames(1)
-	_check("control_preset", ws.blueprint.control == PackedStringArray(["9"]), "human: рука мышью — кисть 9")
+	# тяги (WORKSHOP_V3.md §3): клик — тяга ЛКМ (вторая и дальше — ⚡ × вынос), ещё клик — ПКМ, ещё — снять
+	_check("control_preset", ws.blueprint.control == PackedStringArray(["9"]), "human: главная тяга — кисть 9")
+	var e0 := ws.blueprint.energy_used()
 	var r := ws.set_control("8")
-	_check("control_replace", bool(r["ok"]) and ws.blueprint.control == PackedStringArray(["8"]), "новая пометка заменяет (≤ 1)", ws.blueprint.control)
+	var pe := ws.blueprint.pull_energy("8")
+	_check("control_add", bool(r["ok"]) and ws.blueprint.control == PackedStringArray(["9", "8"]) and ws.blueprint.pull_button("8") == "lmb"
+		and pe > 0 and ws.blueprint.energy_used() == e0 + pe, "вторая тяга ЛКМ на предплечье: + ⚡ × вынос", [ws.blueprint.control, pe])
 	var glow := false
 	for m in ws.part_meshes("body", "8"):
 		glow = glow or _has_overlay(m)
 	_check("control_glow", glow, "помеченная деталь светится (material_overlay)")
+	var r2 := ws.set_control("8")
+	_check("control_rmb", bool(r2["ok"]) and ws.blueprint.control_rmb == PackedStringArray(["8"]) and ws.blueprint.pull_button("8") == "rmb"
+		and ws.blueprint.energy_used() == e0 + pe, "ещё клик — та же тяга на ПКМ (энергия та же)", ws.blueprint.control_rmb)
 	var rt := ws.set_control("T")
-	_check("control_core_refused", not bool(rt["ok"]) and ws.blueprint.control == PackedStringArray(["8"]), "ядро нельзя", rt.get("reason", ""))
+	_check("control_core_refused", not bool(rt["ok"]) and ws.blueprint.control == PackedStringArray(["9", "8"]), "ядро нельзя", rt.get("reason", ""))
 	var rc := ws.set_control("8")
-	_check("control_toggle_off", bool(rc["ok"]) and ws.blueprint.control.is_empty(), "повторный клик снимает")
-	_check("control_warning", CraftEdit.warnings(ws.blueprint).size() == 1, "без руки мышью — подсказка", CraftEdit.warnings(ws.blueprint))
+	_check("control_toggle_off", bool(rc["ok"]) and ws.blueprint.control == PackedStringArray(["9"]) and ws.blueprint.control_rmb.is_empty()
+		and ws.blueprint.energy_used() == e0, "третий клик снимает тягу", ws.blueprint.control)
 	ws.set_control("9")
+	ws.set_control("9")
+	_check("control_warning", ws.blueprint.control.is_empty() and CraftEdit.warnings(ws.blueprint).size() == 1, "без тяг — подсказка",
+		CraftEdit.warnings(ws.blueprint))
+	# энергия — предел: тяги на все детали human не влезают в 100
+	ws.set_preset("human")
+	await _frames(1)
+	var refused := {}
+	for u in ["3", "8", "2", "7", "6", "C", "5", "B", "H", "1", "4", "A"]:
+		var rr := ws.set_control(u)
+		if not bool(rr["ok"]):
+			refused = rr
+			break
+	_check("control_energy_refused", String(refused.get("code", "")) == "energy" and ws.blueprint.energy_used() <= ws.blueprint.energy_budget
+		and String(refused.get("reason", "")).contains("энерги"), "тяги кончаются по энергии (%d тяг)" % ws.blueprint.control.size(),
+		refused.get("reason", ""))
+	# и технический потолок MAX_PULLS
+	ws.set_preset("human")
+	await _frames(1)
+	ws.blueprint.energy_budget = 1000
+	var last := {}
+	for u in ["3", "8", "2", "7", "6", "C", "5", "B", "H", "1", "4", "A"]:
+		last = ws.set_control(u)
+	_check("control_max", ws.blueprint.control.size() == BodyBlueprint.MAX_PULLS and String(last.get("code", "")) == "max",
+		"не больше %d тяг" % BodyBlueprint.MAX_PULLS, ws.blueprint.control.size())
+	# испытание: две тяги — две руки ArmAssist, ПКМ-тяга ведёт свою деталь к цели
+	ws.set_preset("human")
+	await _frames(1)
+	ws.set_control("C")
+	ws.set_control("C")
+	var ok_t := ws.start_test()
+	await _frames(3)
+	var arms: Array = []
+	if ws.test_doll != null:
+		for c in ws.test_doll.get_children():
+			if c is ArmAssist:
+				arms.append(c)
+	var sister: ArmAssist = null
+	for a in arms:
+		if not (a as ArmAssist).primary:
+			sister = a
+	_check("pull_test_arms", ok_t and arms.size() == 2 and sister != null and sister.button == "rmb" and sister.part_name == "Foot_R",
+		"испытание: главная рука + тяга ПКМ на правой стопе", [arms.size(), sister.part_name if sister else "", sister.button if sister else ""])
+	if sister != null and sister.part != null:
+		var goal := sister.root_point() + Vector3(0.55, -0.35, 0.0)   # пинок вперёд на уровне колена (мах выше бедра сила 80 Н не тянет)
+		var d0 := sister.grip_global().distance_to(goal)
+		sister.set_target_override(goal)
+		for i in range(60):
+			await get_tree().physics_frame
+		var d1 := sister.grip_global().distance_to(sister.target)
+		sister.clear_target_override()
+		_check("pull_test_moves", d1 < 0.35 and d1 < d0 * 0.5, "тяга ПКМ дотянула стопу к цели (м; нога втрое тяжелее руки)", [snappedf(d0, 0.01), snappedf(d1, 0.01)])
+	ws.stop_test()
+	await _frames(1)
+	ws.set_preset("human")
+	ws.history.clear()   # десятки пометок тяг выше упёрлись бы в потолок истории — дальше пробы считают history.size()
+	await _frames(1)
 
 
 ## То, что делает мышь, но через экранные точки: луч по детали на стенде (и по слитой броне), протяжка → отпускание у якоря.
@@ -813,6 +876,8 @@ func _kit_joint() -> void:
 	_check("joint_esc_clears", ws.joint_pick == "" and ws.active_tool() == "", "Esc — инструмент шарнира убран")
 	# сварили кисть с оружием: оружие переезжает в другую кисть (сваренная — не держатель)
 	ws.set_preset("kit_human")
+	ws.set_control("9")   # тяга с кисти снята (ЛКМ → ПКМ → нет): приваривать можно, главная тяга — предплечье
+	ws.set_control("9")
 	ws.set_control("8")
 	var eq := ws.weapon_to_hand()
 	var on0 := ws.blueprint.weapon_on

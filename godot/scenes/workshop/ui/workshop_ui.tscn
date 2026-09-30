@@ -354,7 +354,7 @@ theme_override_constants/separation = 6
 [node name="ControlLabel" type="Label" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
 layout_mode = 2
 theme_type_variation = &"StatLabel"
-text = "Рука мышью: —"
+text = "Тяги: —"
 autowrap_mode = 3
 
 [node name="ControlButton" type="Button" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
@@ -364,7 +364,7 @@ focus_mode = 0
 toggle_mode = true
 theme_override_font_sizes/font_size = 24
 theme_override_styles/pressed = SubResource("plank_gold")
-text = "РУКА МЫШЬЮ   [Q]"
+text = "ТЯГИ ЛКМ / ПКМ   [Q]"
 
 [node name="WeaponLine" type="Label" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
 layout_mode = 2
@@ -465,7 +465,7 @@ text = "[color=#fff0d0]●[/color]  свободный якорь
 [color=#74f25f]◯[/color]  тащишь деталь — сюда встанет
 [color=#ffa040]○[/color]  занято — встанет на замену
 [color=#ff5a45]✖[/color]  не влезает по энергии
-[color=#ffd050]◯[/color]  рука мышью (Q и клик по детали)
+[color=#ffd050]◯[/color] / [color=#5accff]◯[/color]  тяга ЛКМ / ПКМ (Q, клик по детали)
 [color=#8cd9ff]●[/color]  Шарниры, Материал: выбери на полке, кликни по детали
 [color=#ff6fb0]●[/color]  Покраска: баллончик, трафареты, наклейки, фото; R — повернуть стенд
 ПКМ по детали — открутить вместе с тем, что на ней"
