@@ -3,14 +3,14 @@
 [ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_LeagueScythe_L.glb" id="1_my1mu"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_vh51i"]
-friction = 0.5
-bounce = 0.1
+friction = 0.45
+bounce = 0.15
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_siypb"]
-radius = 0.0555
-height = 0.4644
+radius = 0.05328
+height = 0.462624
 
-[node name="KitLimbLeagueScytheL" type="RigidBody3D" unique_id=64984166]
+[node name="KitLimbLeagueScytheL" type="RigidBody3D" unique_id=1869850849]
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
@@ -23,9 +23,9 @@ angular_damp = 0.6
 metadata/kind = "limb"
 metadata/part_id = "kit_limb_league_scythe_l"
 
-[node name="Socket" type="Marker3D" parent="." unique_id=2020559897]
+[node name="Socket" type="Marker3D" parent="." unique_id=903185260]
 
-[node name="Anchor_End" type="Marker3D" parent="." unique_id=1018896847]
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1067943603]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
 metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
 metadata/joint_group = "auto"
@@ -34,7 +34,7 @@ metadata/mirror = false
 metadata/rest_from_pose = false
 metadata/joint_r = 0.052
 
-[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=1403549838]
+[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=1212550464]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.035, 0)
 metadata/accepts = PackedStringArray("armor", "deco")
 metadata/joint_group = ""
@@ -42,12 +42,12 @@ metadata/rest_deg = 0.0
 metadata/mirror = false
 metadata/rest_from_pose = false
 
-[node name="Shape_Limb" type="CollisionShape3D" parent="." unique_id=715227971]
+[node name="Shape_Limb" type="CollisionShape3D" parent="." unique_id=212145095]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.21, 0)
 shape = SubResource("CapsuleShape3D_siypb")
 
-[node name="Grip" type="Marker3D" parent="." unique_id=1038882306]
+[node name="Grip" type="Marker3D" parent="." unique_id=1625468596]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
 
-[node name="Mesh" type="Node3D" parent="." unique_id=1124732799 instance=ExtResource("1_my1mu")]
+[node name="Mesh" type="Node3D" parent="." unique_id=1528801085 instance=ExtResource("1_my1mu")]
 metadata/rig_mesh = true

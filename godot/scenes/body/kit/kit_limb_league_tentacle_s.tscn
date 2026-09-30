@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_LeagueTentacle_S.glb" id="1_qrn85"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_sw1k8"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_dwlfs"]
+radius = 0.0464
+height = 0.33712
+
+[node name="KitLimbLeagueTentacleS" type="RigidBody3D" unique_id=55502569]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.6
+physics_material_override = SubResource("PhysicsMaterial_sw1k8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+metadata/part_id = "kit_limb_league_tentacle_s"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1522406966]
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=686676883]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.052
+
+[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=399112499]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.035, 0)
+metadata/accepts = PackedStringArray("armor", "deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Limb" type="CollisionShape3D" parent="." unique_id=1024823738]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+shape = SubResource("CapsuleShape3D_dwlfs")
+
+[node name="Grip" type="Marker3D" parent="." unique_id=467191222]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1812871728 instance=ExtResource("1_qrn85")]
+metadata/rig_mesh = true

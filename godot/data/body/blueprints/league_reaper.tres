@@ -1,0 +1,131 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_pqhgh"]
+
+[resource]
+script = ExtResource("1_pqhgh")
+id = "league_reaper"
+title = "Жнец Ŋmoalü"
+energy_budget = 140
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "kit_core_league_orb",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"face": "res://assets/textures/league/league_face.png",
+"name": "Head",
+"parent": "T",
+"part": "kit_head_league_eye",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "kit_limb_league_float_s",
+"rest_deg": 100.0,
+"uid": "1"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "kit_limb_league_scythe_s",
+"rest_deg": 110.0,
+"uid": "2"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "kit_limb_league_float_s",
+"rest_deg": 100.0,
+"uid": "3"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_R",
+"parent": "3",
+"part": "kit_limb_league_scythe_s",
+"rest_deg": 110.0,
+"uid": "4"
+}, {
+"anchor": "Anchor_Side_L",
+"parent": "T",
+"part": "kit_limb_league_float_s",
+"rest_deg": -10.0,
+"uid": "5"
+}, {
+"anchor": "Anchor_End",
+"parent": "5",
+"part": "kit_limb_league_float_s",
+"rest_deg": 35.0,
+"uid": "6"
+}, {
+"anchor": "Anchor_End",
+"parent": "6",
+"part": "kit_hand_league_talon",
+"rest_deg": 0.0,
+"uid": "7"
+}, {
+"anchor": "Anchor_Side_R",
+"parent": "T",
+"part": "kit_limb_league_float_s",
+"rest_deg": -10.0,
+"uid": "8"
+}, {
+"anchor": "Anchor_End",
+"parent": "8",
+"part": "kit_limb_league_float_s",
+"rest_deg": 35.0,
+"uid": "9"
+}, {
+"anchor": "Anchor_End",
+"parent": "9",
+"part": "kit_hand_league_talon",
+"rest_deg": 0.0,
+"uid": "A"
+}, {
+"anchor": "Anchor_Hip_L",
+"name": "UpperLeg_L",
+"parent": "T",
+"part": "kit_limb_league_float_l",
+"rest_deg": 40.0,
+"uid": "B"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_L",
+"parent": "B",
+"part": "kit_limb_league_float_l",
+"rest_deg": 0.0,
+"uid": "C"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_L",
+"parent": "C",
+"part": "kit_foot_league_spike",
+"rest_deg": -20.0,
+"uid": "D"
+}, {
+"anchor": "Anchor_Hip_R",
+"name": "UpperLeg_R",
+"parent": "T",
+"part": "kit_limb_league_float_l",
+"rest_deg": 40.0,
+"uid": "E"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_R",
+"parent": "E",
+"part": "kit_limb_league_float_l",
+"rest_deg": 0.0,
+"uid": "F"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_R",
+"parent": "F",
+"part": "kit_foot_league_spike",
+"rest_deg": -20.0,
+"uid": "G"
+}])
+control = PackedStringArray("4")
+control_rmb = PackedStringArray()

@@ -12,6 +12,5 @@ scene = ExtResource("1_uy42d")
 mass = 14.0
 energy = 0
 body_mult = 0.5
-material = "iron"
 name_prefix = "Torso"
-base_mat = "iron"
+base_mat = "brass"

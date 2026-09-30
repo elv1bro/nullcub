@@ -12,6 +12,5 @@ scene = ExtResource("1_hrb5q")
 mass = 0.9
 energy = 4
 attach = "fixed"
-material = "iron"
 name_prefix = "Armor"
-base_mat = "iron"
+base_mat = "brass"

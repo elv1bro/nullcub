@@ -3,13 +3,13 @@
 [ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Core_LeagueOrb.glb" id="1_l7vki"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_0673f"]
-friction = 0.5
-bounce = 0.1
+friction = 0.45
+bounce = 0.15
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_4mo4b"]
 radius = 0.2
 
-[node name="KitCoreLeagueOrb" type="RigidBody3D" unique_id=1055594322]
+[node name="KitCoreLeagueOrb" type="RigidBody3D" unique_id=995387451]
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
@@ -22,7 +22,7 @@ angular_damp = 0.6
 metadata/kind = "core"
 metadata/part_id = "kit_core_league_orb"
 
-[node name="Anchor_Neck" type="Marker3D" parent="." unique_id=457831067]
+[node name="Anchor_Neck" type="Marker3D" parent="." unique_id=76488914]
 transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0.262, 0)
 metadata/accepts = PackedStringArray("head")
 metadata/joint_group = "Neck"
@@ -31,7 +31,7 @@ metadata/mirror = false
 metadata/rest_from_pose = true
 metadata/joint_r = 0.05
 
-[node name="Anchor_Shoulder_L" type="Marker3D" parent="." unique_id=1578891624]
+[node name="Anchor_Shoulder_L" type="Marker3D" parent="." unique_id=1218525851]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.19516233, 0.20494063, 0)
 metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
 metadata/joint_group = "Shoulder"
@@ -40,7 +40,7 @@ metadata/mirror = false
 metadata/rest_from_pose = true
 metadata/joint_r = 0.064
 
-[node name="Anchor_Shoulder_R" type="Marker3D" parent="." unique_id=433365621]
+[node name="Anchor_Shoulder_R" type="Marker3D" parent="." unique_id=865598572]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19516233, 0.20494063, 0)
 metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
 metadata/joint_group = "Shoulder"
@@ -49,7 +49,7 @@ metadata/mirror = true
 metadata/rest_from_pose = true
 metadata/joint_r = 0.064
 
-[node name="Anchor_Side_L" type="Marker3D" parent="." unique_id=1905798043]
+[node name="Anchor_Side_L" type="Marker3D" parent="." unique_id=104575956]
 transform = Transform3D(0.5, -0.8660254, 0, 0.8660254, 0.5, 0, 0, 0, 1, 0.26100302, -0.022834804, 0)
 metadata/limit_deg = Vector2(-60, 80)
 metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
@@ -59,7 +59,7 @@ metadata/mirror = false
 metadata/rest_from_pose = false
 metadata/joint_r = 0.062
 
-[node name="Anchor_Side_R" type="Marker3D" parent="." unique_id=1199987837]
+[node name="Anchor_Side_R" type="Marker3D" parent="." unique_id=83466885]
 transform = Transform3D(0.5, 0.8660254, 0, -0.8660254, 0.5, 0, 0, 0, 1, -0.26100302, -0.022834804, 0)
 metadata/limit_deg = Vector2(-60, 80)
 metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
@@ -69,7 +69,7 @@ metadata/mirror = true
 metadata/rest_from_pose = false
 metadata/joint_r = 0.062
 
-[node name="Anchor_Hip_L" type="Marker3D" parent="." unique_id=2055687754]
+[node name="Anchor_Hip_L" type="Marker3D" parent="." unique_id=1348900631]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12300155, -0.23133226, 0)
 metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
 metadata/joint_group = "Hip"
@@ -78,7 +78,7 @@ metadata/mirror = false
 metadata/rest_from_pose = true
 metadata/joint_r = 0.076
 
-[node name="Anchor_Hip_R" type="Marker3D" parent="." unique_id=172234669]
+[node name="Anchor_Hip_R" type="Marker3D" parent="." unique_id=395980862]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12300155, -0.23133226, 0)
 metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
 metadata/joint_group = "Hip"
@@ -87,7 +87,7 @@ metadata/mirror = true
 metadata/rest_from_pose = true
 metadata/joint_r = 0.076
 
-[node name="Anchor_Back" type="Marker3D" parent="." unique_id=609995326]
+[node name="Anchor_Back" type="Marker3D" parent="." unique_id=639921204]
 transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0.14, -0.14)
 metadata/accepts = PackedStringArray("deco")
 metadata/joint_group = ""
@@ -95,8 +95,8 @@ metadata/rest_deg = 0.0
 metadata/mirror = false
 metadata/rest_from_pose = false
 
-[node name="Shape_Torso" type="CollisionShape3D" parent="." unique_id=897833603]
+[node name="Shape_Torso" type="CollisionShape3D" parent="." unique_id=480078624]
 shape = SubResource("SphereShape3D_4mo4b")
 
-[node name="Mesh" type="Node3D" parent="." unique_id=1423008374 instance=ExtResource("1_l7vki")]
+[node name="Mesh" type="Node3D" parent="." unique_id=616437908 instance=ExtResource("1_l7vki")]
 metadata/rig_mesh = true

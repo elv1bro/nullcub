@@ -12,5 +12,5 @@ scene = ExtResource("1_kntng")
 mass = 4.2
 body_mult = 0.35
 name_prefix = "Head"
-base_mat = "paint_white"
+base_mat = "brass"
 connector = true
