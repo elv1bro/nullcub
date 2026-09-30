@@ -73,7 +73,7 @@ const GHOST_ANG_TOL := 1.0
 const PATTERN_FRAME_MAX_MS := 20.0   # шаг очереди раскраски (бюджет 4 мс + срез) — с запасом на headless под нагрузкой
 
 ## Столько проверок проба делает целиком (меньше — какой-то раздел упал с ошибкой скрипта).
-const MIN_CHECKS := 210
+const MIN_CHECKS := 222
 var ws: WorkshopBuild
 var report := {"ok": true, "checks": []}
 var shots_dir := ""
@@ -85,6 +85,9 @@ func _ready() -> void:
 			var p := kv.split("=")
 			if p.size() == 2 and p[0] == "shots":
 				shots_dir = p[1]
+	# свои настройки мастерской (избранное, фильтры): проба не читает и не пишет файл игрока
+	WorkshopBuild.prefs_path = "user://workshop_prefs_probe.cfg"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(WorkshopBuild.prefs_path))
 	var ps := load(SCENE) as PackedScene
 	ws = ps.instantiate() as WorkshopBuild
 	ws.load_autosave = false
@@ -270,7 +273,7 @@ func _core_v03() -> void:
 	for e in ws.fx_events:
 		flash = flash or String(e["kind"]) == "flash"
 	_check("v03_magnet_snap", mag >= 0.0 and mag < 0.06 and bool(r_ok.get("ok", false)) and flash and ws.recent_parts.has("kit_hand_mitten")
-		and help_drag.begins_with("Отпусти"), "у разъёма деталь притянута к призраку, щелчок: встала, вспышка, «недавние»", [snappedf(mag, 0.001), help_drag])
+		and help_drag.begins_with("ЛКМ — установить"), "у разъёма деталь притянута к призраку, щелчок: встала, вспышка, «недавние»", [snappedf(mag, 0.001), help_drag])
 	# отказ: мимо разъёма — пульс не нужен, деталь отлетает; на занятый голову — красный пульс с причиной
 	ws.begin_drag("kit_human_head", Vector2(300, 600))
 	var th := _find_target(ws.drag["targets"], "T", "Anchor_Hip_L")
@@ -371,7 +374,7 @@ func _core_v03() -> void:
 	_key(KEY_M)
 	_key(KEY_M)
 	await _frames(1)
-	_check("v03_mirror_preview", pend and ghost_parts == 3 and same and help_m.begins_with("Зеркало") and cancelled
+	_check("v03_mirror_preview", pend and ghost_parts == 3 and same and help_m.begins_with("Enter") and cancelled
 		and CraftEdit.occupant(ws.blueprint, "T", "Anchor_Shoulder_L") != "" and ws.pending_mirror.is_empty() and ws.blueprint.validate().is_empty(),
 		"M — копия голубым на стенде (чертёж не тронут), Esc — отмена, M ещё раз — встала", [pend, ghost_parts, same, cancelled])
 	# зеркало только детали (без ветки): одна деталь
@@ -449,7 +452,8 @@ func _core_v03() -> void:
 	ws.select_stand("8")
 	var h_sel := ws.context_help()
 	ws.clear_selection()
-	_check("v03_context_help", h_idle.contains("библиотеки") and h_sel.contains("M — зеркало") and h_sel.length() < 90, "подсказка — коротко и по ситуации",
+	_check("v03_context_help", h_idle == "" and h_sel.contains("M — зеркало") and h_sel.length() < 90,
+		"подсказка по ситуации: ничего не выбрано — пусто (§36), выбрана деталь — D / M / Del",
 		[h_idle, h_sel])
 	ws.set_preset("human")
 	ws.history.clear()
@@ -574,6 +578,142 @@ func _ui_v03() -> void:
 	ws.redo_stack.clear()
 
 
+## Ревью v0.3: подтверждённые баги — регрессии.
+func _fixes_v03() -> void:
+	var ui: Node = ws.ui
+	# F1: копия в руке, Del выбранного, клик по разъёму — удалённое не возвращается
+	ws.set_preset("kit_human")
+	await _frames(2)
+	ws.detach_part("1")
+	await _frames(1)
+	ws.select_stand("8", "body", true)
+	_key(KEY_D)
+	var had := ws.dragging()
+	_key(KEY_DELETE)
+	await _frames(1)
+	var gone8 := CraftEdit.find(ws.blueprint, "8").is_empty()
+	var tl := _find_target(ws.drag["targets"], "T", "Anchor_Shoulder_L") if ws.dragging() else {}
+	if not tl.is_empty():
+		ws.end_drag(ws.target_screen_pos(tl))
+	await _frames(1)
+	_check("fix_drag_stale_trial", had and gone8 and not ws.dragging() and CraftEdit.find(ws.blueprint, "8").is_empty(),
+		"деталь в руке, Del: удалённое не воскресает, деталь положена", [had, gone8, ws.dragging()])
+	# F2: копия детали с мотором на сустав без мышцы (лодыжка) — чертёж собирается, мотор снят
+	ws.set_preset("kit_human")
+	await _frames(1)
+	ws.set_joint("5", "motor")
+	ws.detach_part("1")   # энергии хватит на копию голени (иначе отказ по энергии, а не по шарниру)
+	ws.detach_part("C")
+	await _frames(1)
+	ws.select_stand("5")
+	_key(KEY_D)
+	var ta := _find_target(ws.drag["targets"], "B", "Anchor_Ankle") if ws.dragging() else {}
+	var rc := ws.end_drag(ws.target_screen_pos(ta)) if not ta.is_empty() else {}
+	await _frames(1)
+	var nc := CraftEdit.find(ws.blueprint, String(rc.get("uid", "")))
+	_check("fix_copy_joint", bool(rc.get("ok", false)) and ws.blueprint.validate().is_empty() and ws.stand != null
+		and String(nc.get("joint", "")) != "motor", "копия голени с мотором на лодыжку: встала без мотора, боец собран",
+		[rc.get("ok", false), nc.get("joint", ""), ws.blueprint.validate()])
+	# F4: перенос на занятый разъём — свойства прежней детали (шарнир) не остаются
+	ws.set_preset("kit_human")
+	await _frames(1)
+	ws.set_joint("2", "motor")
+	var mv := CraftEdit.move_subtree(ws.blueprint, "8", "1", "Anchor_Elbow")
+	var nn := CraftEdit.find(mv.get("bp") if mv.get("bp") is BodyBlueprint else ws.blueprint, String(mv.get("uid", "")))
+	_check("fix_move_replace_props", bool(mv.get("ok", false)) and not nn.has("joint"),
+		"предплечье на занятый локоть: мотора прежнего предплечья у него нет", [mv.get("ok", false), nn.get("joint", "")])
+	# F5: зеркало одной детали — у противоположного плеча остаются предплечье и кисть
+	ws.set_preset("kit_human")
+	await _frames(1)
+	var n0 := ws.blueprint.nodes.size()
+	ws.start_mirror_preview("7", false)
+	ws.confirm_mirror()
+	await _frames(1)
+	var left := CraftEdit.occupant(ws.blueprint, "T", "Anchor_Shoulder_L")
+	_check("fix_mirror_part_keeps_children", ws.blueprint.nodes.size() == n0 and CraftEdit.subtree(ws.blueprint, left).size() == 3,
+		"зеркало одного плеча: левая рука целая (плечо заменено, предплечье и кисть на месте)", [n0, ws.blueprint.nodes.size()])
+	# F18: ветку отпустили на её же разъём — ни записи истории, ни новых uid
+	ws.set_preset("kit_human")
+	await _frames(1)
+	ws.history.clear()
+	ws.begin_drag("kit_human_upper_arm", Vector2(300, 600), {"move": "7"})
+	var own := _find_target(ws.drag["targets"], "T", "Anchor_Shoulder_R")
+	var rs := ws.end_drag(ws.target_screen_pos(own)) if not own.is_empty() else {}
+	_check("fix_move_same_place", String(rs.get("code", "")) == "same" and ws.history.is_empty() and not CraftEdit.find(ws.blueprint, "7").is_empty(),
+		"ветка брошена на своё место — ничего не случилось", rs)
+	# F7: колесо над библиотекой не приближает камеру
+	var z0 := ws.cam_zoom
+	var wev := InputEventMouseButton.new()
+	wev.button_index = MOUSE_BUTTON_WHEEL_UP
+	wev.pressed = true
+	wev.position = Vector2(200, 600)
+	ws._unhandled_input(wev)
+	_check("fix_wheel_over_panel", is_equal_approx(ws.cam_zoom, z0), "колесо над библиотекой — камера на месте", ws.cam_zoom)
+	# H2: выбор на верстаке не переезжает на бойца
+	ws.set_view(WorkshopBuild.View.WEAPON)
+	ws.select_stand("1", "weapon")
+	ws.set_view(WorkshopBuild.View.BODY)
+	_check("fix_view_clears_selection", ws.selected.is_empty(), "Tab с верстака — выбор снят", ws.selected)
+	# L3: бросил деталь обратно на библиотеку — не встала
+	var nb := ws.blueprint.nodes.size()
+	ws.detach_part("9")
+	await _frames(1)
+	nb = ws.blueprint.nodes.size()
+	ws.begin_drag("kit_hand_mitten", Vector2(700, 600))
+	ws.drag["moved"] = true
+	var up := InputEventMouseButton.new()
+	up.button_index = MOUSE_BUTTON_LEFT
+	up.pressed = false
+	up.position = Vector2(200, 600)
+	ws._input(up)
+	_check("fix_drop_on_panel", not ws.dragging() and ws.blueprint.nodes.size() == nb, "отпустил над библиотекой — деталь убрана, не поставлена")
+	# M1: протяжка из карточки — справа «было → станет» (сводка, не паспорт)
+	var tabs: Dictionary = ui.get("shelf_tab")
+	tabs["body"] = "end"
+	ui.call("_build_left")
+	var card: Control = (ui.get("_cards") as Dictionary).get("kit_hand_mitten")
+	if card != null:
+		card.emit_signal("grabbed", "kit_hand_mitten", Vector2(200, 400))
+	var tw := _find_target(ws.drag["targets"], "8", "Anchor_Wrist") if ws.dragging() else {}
+	var arrows := false
+	if not tw.is_empty():
+		ws.update_drag(ws.target_screen_pos(tw))
+		await _frames(1)
+		for l in (ui.get("summary_rows") as GridContainer).get_children():
+			arrows = arrows or (l is Label and String((l as Label).text).contains("→"))
+	var sum_vis := (ui.get("summary_box") as Control).visible
+	ws.cancel_drag()
+	_check("fix_card_drag_preview", card != null and arrows and sum_vis, "протяжка из карточки: справа сводка «было → станет»", [arrows, sum_vis])
+	# H1: поле поиска отдаёт клавиши после клика по сцене
+	var search: LineEdit = ui.get("search")
+	search.grab_focus()
+	_mouse_button(_part_screen("T"), MOUSE_BUTTON_LEFT, true)
+	var rel := InputEventMouseButton.new()
+	rel.button_index = MOUSE_BUTTON_LEFT
+	rel.pressed = false
+	rel.position = _part_screen("T")
+	ws._input(rel)
+	_check("fix_search_focus", not search.has_focus(), "клик по бойцу — поле поиска без фокуса (D, M, Del — мастерской)")
+	# M2: «Недавние» не переживают перезапуск (список недавних — на сеанс)
+	(ui.get("filters") as Dictionary)["recent"] = true
+	ui.call("_save_prefs")
+	ui.call("_load_prefs")
+	var rec := bool((ui.get("filters") as Dictionary)["recent"])
+	_check("fix_recent_not_persisted", not rec, "фильтр «Недавние» после перезапуска выключен — библиотека не пустая")
+	# L5: цена карточки — у ближайшего свободного разъёма (с выносом), не базовая
+	ws.set_preset("kit_human")
+	await _frames(1)
+	ws.detach_part("3")
+	await _frames(1)
+	var cc := ws.cheapest_cost("kit_hand_mitten")
+	var dm := CraftEdit.part("kit_hand_mitten")
+	var real := int(CraftEdit.check(ws.blueprint, "kit_hand_mitten", "2", "Anchor_Wrist")["energy_after"]) - ws.blueprint.energy_used()
+	_check("fix_card_cost_reach", cc >= dm.energy and absi(cc - real) <= 1, "цена варежки у свободного запястья ≈ настоящей (%d база)" % dm.energy, [cc, real])
+	ws.set_preset("human")
+	ws.history.clear()
+	ws.redo_stack.clear()
+
+
 func _has_ghost_override(n: Node) -> bool:
 	if n is GeometryInstance3D and (n as GeometryInstance3D).material_override == ws._mats["mirror_ghost"]:
 		return true
@@ -599,6 +739,7 @@ func _run() -> void:
 	await _ui_v02()
 	await _core_v03()
 	await _ui_v03()
+	await _fixes_v03()
 	await _kit_shelves()
 	await _kit_presets()
 	await _kit_material()
@@ -827,11 +968,11 @@ func _control() -> void:
 		glow = glow or _has_overlay(m)
 	ws.toggle_control_pick()
 	ws.select_stand("8")
-	var glow_sel := false
+	var glow_sel := false   # у выбранной — контур выбора, но не свечение тяги
 	for m in ws.part_meshes("body", "8"):
-		glow_sel = glow_sel or _has_overlay(m)
+		glow_sel = glow_sel or _has_overlay(m, ws._mats["control"]) or _has_overlay(m, ws._mats["control_rmb"])
 	ws.clear_selection()
-	_check("control_glow", not glow0 and glow and glow_sel, "тяга светится с инструментом Q и у выбранной, без них модель чистая",
+	_check("control_glow", not glow0 and glow and not glow_sel, "тяга светится только с инструментом Q (§28), у выбранной — нет",
 		[glow0, glow, glow_sel])
 	var r2 := ws.set_control("8")
 	_check("control_rmb", bool(r2["ok"]) and ws.blueprint.control_rmb == PackedStringArray(["8"]) and ws.blueprint.pull_button("8") == "rmb"
@@ -949,11 +1090,12 @@ func _mouse_path() -> void:
 	ws.set_preset("human")
 
 
-func _has_overlay(n: Node) -> bool:
-	if n is GeometryInstance3D and (n as GeometryInstance3D).material_overlay != null:
+func _has_overlay(n: Node, only: Material = null) -> bool:
+	if n is GeometryInstance3D and (n as GeometryInstance3D).material_overlay != null \
+			and (only == null or (n as GeometryInstance3D).material_overlay == only):
 		return true
 	for c in n.get_children():
-		if _has_overlay(c):
+		if _has_overlay(c, only):
 			return true
 	return false
 

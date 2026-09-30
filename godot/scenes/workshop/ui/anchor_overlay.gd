@@ -52,11 +52,13 @@ func _draw() -> void:
 				draw_circle(p, R_TARGET, Color(COL_GO, 0.28 + 0.14 * pulse))
 				draw_arc(p, R_TARGET, 0.0, TAU, 40, COL_GO.lightened(0.35), 3.0, true)
 			"ok":
+				# читается и на голубых / стальных деталях: тёмная подложка кольца, лёгкая заливка, дальние не тусклее 0.55
 				var near := float(it.get("near", 0.5))
-				var a := fade * (0.35 + 0.65 * near)
+				var a := fade * (0.55 + 0.45 * near)
 				var r := R_OK + 2.0 * near + 1.5 * pulse * near
-				draw_arc(p, r + 1.5, 0.0, TAU, 28, Color(0, 0, 0, 0.45 * a), 5.0, true)
-				draw_arc(p, r, 0.0, TAU, 28, Color(COL_OK, a), 2.5, true)
+				draw_circle(p, r, Color(COL_OK, 0.18 * a))
+				draw_arc(p, r + 1.2, 0.0, TAU, 28, Color(0, 0, 0, 0.8 * a), 4.5, true)
+				draw_arc(p, r, 0.0, TAU, 28, Color(COL_OK, a), 2.2, true)
 				draw_circle(p, 2.5, Color(COL_OK, a))
 				if dir != Vector2.ZERO and near > 0.4:
 					draw_line(p + dir * r, p + dir * (r + 10.0), Color(COL_OK, a), 2.0, true)
@@ -93,6 +95,10 @@ func _draw() -> void:
 					var col := Color(1.0, 0.72, 0.66, 1.0 - ag * ag)
 					draw_string_outline(font, tp, why, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, Color(0, 0, 0, 0.85 * col.a))
 					draw_string(font, tp, why, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+			"joint_sel":
+				draw_arc(p, 7.5, 0.0, TAU, 24, Color(0, 0, 0, 0.6), 4.0, true)
+				draw_arc(p, 7.0, 0.0, TAU, 24, COL_AMBER, 2.0, true)
+				draw_circle(p, 2.0, COL_AMBER)
 			"idle":
 				draw_circle(p, R_IDLE + 2.0, Color(0, 0, 0, 0.4))
 				draw_circle(p, R_IDLE, Color(1.0, 0.93, 0.78, 0.75))
