@@ -14,6 +14,7 @@
 - `scripts/core/` — бой: `damage.gd` (формула и калибровка), `doll_combat.gd` (детектор ударов, ребёнок куклы), `match.gd` (фазы, таймеры, KO, Sudden Death, итоги, hit feel). `scenes/ui/` — HUD по R20: `hud.tscn` (`Hud.bind(match)`), панели игроков, диктор, карточка KO, итоги; текстуры `assets/ui/` (`gen_ui_textures.py`).
 - `scenes/weapons/weapon_<id>.tscn` — оружие (hammer, mace, sword, axe, pan); `weapon_pickup.gd` — автоподбор в руку. Пересборка: `-s res://tools/build_weapon_scenes.gd`.
 - `scenes/camera/dynamic_camera.gd` — камера по правилам концепта §7. `scenes/lookdev/workshop_lookdev.tscn` — лук-дев мастерской (свет R22), `scenes/fx/` + `scripts/fx/impact_fx.gd` (+ `impact_flash.gd`) — вспышка (цвет по типу удара), щепки и пыль при ударе, `assets/environments/*.tres` — пресеты окружения.
+- `scenes/n0/n0.tscn` — дрон-ведущий N0 (лист автора, `../docs/plan-demo/ART_NULL.md`): модель `tools/blender/n0_drone.py` → `assets/models/n0/`, поведение `scripts/n0/n0_drone.gd` (`N0Drone`: 10 выражений экрана, 3 ливреи, парение). Пересборка: экспорт Blender `-- --export`, `--import`, `-s res://tools/build_n0.gd`, `--import`.
 - `scripts/tuning.gd` — все числа баланса (autoload `Tuning`). `scripts/input/input_setup.gd` — действия p1..p4.
 - `tools/blender/*.py` — исходники моделей (Blender 4.5 headless): `textures.py` (запечённые PBR в `assets/textures/pbr/`), `wooden_doll_v3.py` (кукла, `-- tone=light|dark`), `props.py`, `weapons.py`, `workshop_props.py`, `arena_void.py` (арена Void), старые `mannequin.py`/`arena_kit.py`, хелперы `common.py`. Запуск: `/Applications/Blender.app/Contents/MacOS/Blender -b --python godot/tools/blender/<script>.py`.
 - `assets/models/heroes/mannequin/`, `assets/models/arena/`, `assets/models/weapons/` — экспортированные glb.
@@ -29,6 +30,7 @@ godot --path godot --resolution 1280x720 res://tests/doll_snapshot.tscn      # �
 godot --path godot --resolution 1280x720 res://tests/arena_snapshot.tscn     # арена целиком, полёт, крупный план
 godot --path godot --resolution 1280x720 res://tests/weapons_snapshot.tscn   # оружие в ряд + молот в руке
 godot --path godot --resolution 1280x720 res://tests/playground_snapshot.tscn  # витрина площадки + перф
+godot --path godot --resolution 1600x900 res://tests/n0_snapshot.tscn -- "sheet=res://../docs/plan-demo/img/n0-godot-v1.png"   # N0: ливреи и 10 выражений + 7 проверок (tests/n0_snapshot_report.json); в облачном контейнере без экрана — через xvfb-run -a -s "-screen 0 1600x900x24" (Vulkan lavapipe)
 godot/tests/run_combat_gate.sh                  # гейт боя (128 проверок: калибровка, полосы урона, KO, SD, match_over, env-урон = 0), tests/combat_gate_report.json
 godot --headless --path godot --fixed-fps 60 res://tests/match_probe.tscn -- "scene=ruins"     # бой до KO на настоящей площадке с HUD (scene=workshop|void|scrap, sd=1, out=<путь>; info.hitfx — уровни, crits[], env_slam; без ударов 6 с — расклинивание: попеременно врозь и прыжком через станок к сопернику)
 godot --headless --path godot --fixed-fps 60 res://tests/scene_switch_probe.tscn               # клавиши 2 → 3 → 1 → R (Руины → Мастерская → Void → Руины)

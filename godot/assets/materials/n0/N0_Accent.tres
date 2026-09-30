@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/paint_marks/albedo.png" id="1_gd7c1"]
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/paint_marks/roughness.png" id="2_ljhlr"]
+
+[resource]
+resource_name = "N0_Accent"
+albedo_color = Color(1.0100111, 0.7203571, 0.14956819, 1)
+albedo_texture = ExtResource("1_gd7c1")
+roughness = 0.7
+roughness_texture = ExtResource("2_ljhlr")
