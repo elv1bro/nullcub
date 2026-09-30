@@ -240,6 +240,7 @@ var _grab_t := 0.0
 var _hold_angle := 0.0                 # угол предмета относительно детали при захвате (рад, вокруг Z)
 var _hint: Label3D
 var _sisters: Array[ArmAssist] = []   # тяги control[1..] (главная рука создаёт и убирает)
+var _auto_part := false               # деталь выбрана по чертежу (control_part пуст) — только такая рука заводит сестёр
 
 static var _actions_done := false
 ## Общий реестр подсветки: instance id GeometryInstance3D -> {orig: исходный material_overlay, users: [ArmAssist, …]}.
@@ -422,6 +423,7 @@ func _read_input() -> Array:
 func _setup() -> void:
 	if _ready_done or doll == null:
 		return
+	_auto_part = control_part == ""
 	part_name = _resolve_control_part()
 	part = doll.parts.get(part_name) as RigidBody3D
 	torso = doll.parts.get("Torso") as RigidBody3D
@@ -476,7 +478,7 @@ func _setup() -> void:
 		button = _button_of(part_name)
 	if show_hints and _marker == null:
 		_make_hints()
-	if primary:
+	if primary and _auto_part:
 		_spawn_sisters.call_deferred()
 
 
@@ -532,9 +534,13 @@ func _spawn_sisters() -> void:
 	var ctrl: Variant = (bp as Resource).get("control")
 	if ctrl == null or ctrl.size() < 2:
 		return
+	var taken := {}   # детали, которые уже ведёт другой ArmAssist куклы (сцена врага: ArmL / ArmR с явным control_part)
+	for c in doll.get_children():
+		if c is ArmAssist and c != self:
+			taken[(c as ArmAssist).control_part] = true
 	for i in range(1, mini(ctrl.size(), BodyBlueprint.MAX_PULLS)):
 		var nm := _body_name_of_uid(bp as Resource, String(ctrl[i]))
-		if nm == "" or nm == part_name:
+		if nm == "" or nm == part_name or taken.has(nm):
 			continue
 		var s2 := ArmAssist.new()
 		s2.name = "ArmAssist_%s" % nm

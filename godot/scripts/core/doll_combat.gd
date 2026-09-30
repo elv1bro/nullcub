@@ -397,6 +397,9 @@ func _resolve_queue() -> void:
 			continue
 		seen_pairs[pair] = true
 		if float(c["est"]) <= 0.0:
+			# касание чужой куклы / оружия ниже порога урона — площадке (мастерская: «0 · 1.2 м/с» у манекена, WORKSHOP_V3.md §5)
+			if c["kind"] != "environment" and match_ref != null and is_instance_valid(match_ref) and match_ref.has_method("on_weak_contact"):
+				match_ref.call("on_weak_contact", doll, striker, float(c["speed"]), c["pos"])
 			continue
 		if c["kind"] == "environment" and not (striker is Weapon):
 			_apply_env(c)
@@ -512,8 +515,10 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 		"dir": c["dir"], "striker_name": String((c["striker"] as Node).name) if c["striker"] is Node else "",
 	}
 	doll.take_damage(dmg, attacker, vp.name, pos, nrm, kind)
-	# knockback: направление от бьющего к жертве + апбиас; SD множит
-	var j := Damage.knockback_impulse(dmg, _knockback_mult())
+	# knockback: направление от бьющего к жертве + апбиас; SD множит. Блок кистью (TargetMult < 1, Tuning.HAND_HIT_MULT) режет урон и
+	# стан, но не отброс: удар в подставленную руку толкает тело как обычный (метла Метельщика сталкивает и через «блок»)
+	var tm := float(c.get("target_mult", Damage.target_mult_of(vp.name)))
+	var j := Damage.knockback_impulse(dmg / tm if tm > 0.0 and tm < 1.0 else dmg, _knockback_mult())
 	var dir_v: Vector3 = c["dir"]
 	var env := kind == "environment" and not (c["striker"] is Weapon)
 	if env:
