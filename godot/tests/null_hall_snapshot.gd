@@ -1,7 +1,8 @@
 ## Витрина и проверка арены 01 «Old NULL Hall» (docs/plan-demo/ART_NULL.md, лист 5). Нужен рендер (окно; в контейнере — xvfb-run):
 ##   godot --path godot --resolution 1600x900 res://tests/null_hall_snapshot.tscn -- "sheet=res://../docs/plan-demo/img/null-hall-v1.png"
 ## Кадры: 1 — игровая камера по листу камеры (вариант 4: часть арены, боец 8–12 % высоты кадра), 2 — весь зал,
-## 3 — удар о мембрану: кукла P2 влетает в правый бок купола (поле ↗ 0.24 G), лента прогибается и светится. Две куклы (doll.tscn, заморожены) на спавнах, N0 висит у края поля.
+## 3 — удар о мембрану: кукла P2 влетает в правый бок купола (поле ↗ 0.24 G), лента прогибается и светится,
+## 4 — трибуна крупно: зрители-спрайты (crowd= — полный кадр отдельно). Две куклы (doll.tscn, заморожены) на спавнах, N0 висит у края поля.
 ## Проверки (exit 1): модули на месте (33 секции трибун, ≥ 1000 зрителей, ≥ 8 якорей и эмиттеров, 2 ворот, экран и табло),
 ## материалы ролей пришли из assets/materials/null_hall, табло показывает гравитацию и обновляется при смене поля,
 ## рост бойца в игровом кадре 8–12 % высоты. Отчёт — tests/null_hall_snapshot_report.json.
@@ -16,6 +17,7 @@ var args := {}
 var cam: Camera3D
 var hall: NullHallArena
 var dolls: Array[Node3D] = []
+var _last_crowd: Image
 
 
 func _ready() -> void:
@@ -84,21 +86,36 @@ func _run() -> void:
 	var img3 := _grab()
 	_check("membrane_stretched_in_frame", stretch > 0.4, "stretch %.2f m" % stretch)
 	await _frames(int(Tuning.NULL_FIELD_BLEND_S * 60.0) + 5)
+	# кадр 4: трибуна крупно — зрители-спрайты (модульные существа из кита), толпа болеет
+	hall.excite(1.0)
+	cam.position = Vector3(-3.0, 7.5, -10.0)
+	cam.look_at(Vector3(-4.5, 6.0, -24.0))
+	await _frames(20)
+	var img4 := _grab()
+	_last_crowd = img4.duplicate()
 	var lbl := hall.find_children("*", "Label3D", true, false)
 	var grav_texts: Array = []
 	for l in lbl:
 		if (l as Label3D).is_in_group("null_hall_gravity"):
 			grav_texts.append((l as Label3D).text)
 	_check("gravity_board_updates", grav_texts.size() >= 2 and grav_texts.all(func(t): return t == "↗ 0.24G"), str(grav_texts))
-	# лист: 1 сверху во всю ширину, 2 и 3 снизу вполовину
+	# лист: 1 сверху во всю ширину, 2, 3 и 4 снизу по трети
 	var w := img1.get_width()
 	var h := img1.get_height()
-	img2.resize(w / 2, h / 2, Image.INTERPOLATE_LANCZOS)
-	img3.resize(w / 2, h / 2, Image.INTERPOLATE_LANCZOS)
-	var sheet := Image.create(w, h + h / 2, false, Image.FORMAT_RGB8)
+	var sw := w / 3
+	var sh := h / 3
+	for im in [img2, img3, img4]:
+		(im as Image).resize(sw, sh, Image.INTERPOLATE_LANCZOS)
+	var sheet := Image.create(w, h + sh, false, Image.FORMAT_RGB8)
 	sheet.blit_rect(img1, Rect2i(Vector2i.ZERO, img1.get_size()), Vector2i.ZERO)
-	sheet.blit_rect(img2, Rect2i(Vector2i.ZERO, img2.get_size()), Vector2i(0, h))
-	sheet.blit_rect(img3, Rect2i(Vector2i.ZERO, img3.get_size()), Vector2i(w / 2, h))
+	sheet.blit_rect(img2, Rect2i(0, 0, sw, sh), Vector2i(0, h))
+	sheet.blit_rect(img3, Rect2i(0, 0, sw, sh), Vector2i(sw, h))
+	sheet.blit_rect(img4, Rect2i(0, 0, sw, sh), Vector2i(sw * 2, h))
+	img4.resize(w, h, Image.INTERPOLATE_LANCZOS)
+	var crowd_out := String(args.get("crowd", ""))
+	if crowd_out != "":
+		var ci := _last_crowd
+		ci.save_png(crowd_out)
 	var out := String(args.get("sheet", "res://tests/null_hall_snapshot.png"))
 	var err := sheet.save_png(ProjectSettings.globalize_path(out) if out.begins_with("res://") else out)
 	_check("sheet_saved", err == OK, out)

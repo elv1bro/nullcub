@@ -1,43 +1,44 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scenes/playground.gd" id="1_yjqu4"]
-[ext_resource type="PackedScene" path="res://scenes/arena/null_hall.tscn" id="2_asysx"]
-[ext_resource type="Script" path="res://scenes/arena/null_hall.gd" id="3_r58b8"]
-[ext_resource type="PackedScene" path="res://scenes/doll/doll.tscn" id="4_fomao"]
-[ext_resource type="Script" path="res://scenes/doll/doll.gd" id="5_utkv3"]
-[ext_resource type="PackedScene" path="res://scenes/doll/doll_dark.tscn" id="6_jb2hr"]
-[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="7_0ldml"]
-[ext_resource type="Script" path="res://scripts/core/match.gd" id="8_w6hlm"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="9_hpino"]
-[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="10_ieg86"]
-[ext_resource type="Script" path="res://scenes/ui/offscreen_markers.gd" id="11_t5w1l"]
-[ext_resource type="PackedScene" path="res://scenes/n0/n0.tscn" id="12_kmd2x"]
-[ext_resource type="Script" path="res://scripts/n0/n0_drone.gd" id="13_lbcmw"]
+[ext_resource type="Script" path="res://scenes/playground.gd" id="1_asysx"]
+[ext_resource type="PackedScene" path="res://scenes/arena/null_hall.tscn" id="2_r58b8"]
+[ext_resource type="Script" path="res://scenes/arena/null_hall.gd" id="3_fomao"]
+[ext_resource type="PackedScene" path="res://scenes/doll/doll.tscn" id="4_utkv3"]
+[ext_resource type="Script" path="res://scenes/doll/doll.gd" id="5_jb2hr"]
+[ext_resource type="PackedScene" path="res://scenes/doll/doll_dark.tscn" id="6_0ldml"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="7_w6hlm"]
+[ext_resource type="Script" path="res://scripts/core/match.gd" id="8_hpino"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="9_ieg86"]
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="10_t5w1l"]
+[ext_resource type="Script" path="res://scenes/ui/offscreen_markers.gd" id="11_kmd2x"]
+[ext_resource type="PackedScene" path="res://scenes/n0/n0.tscn" id="12_lbcmw"]
+[ext_resource type="Script" path="res://scripts/n0/n0_drone.gd" id="13_sogvo"]
+[ext_resource type="Script" path="res://scripts/n0/n0_host.gd" id="14_yych7"]
 
-[node name="Playground" type="Node3D" unique_id=1510311201]
-script = ExtResource("1_yjqu4")
+[node name="Playground" type="Node3D" unique_id=443716393]
+script = ExtResource("1_asysx")
 arena_id = "null_hall"
 
-[node name="NullHall" type="Node3D" parent="." unique_id=373482706 groups=["arena"] instance=ExtResource("2_asysx")]
-script = ExtResource("3_r58b8")
+[node name="NullHall" type="Node3D" parent="." unique_id=809892284 groups=["arena"] instance=ExtResource("2_r58b8")]
+script = ExtResource("3_fomao")
 
-[node name="P1" type="Node3D" parent="." unique_id=1965540815 groups=["dolls"] instance=ExtResource("4_fomao")]
+[node name="P1" type="Node3D" parent="." unique_id=1965540815 groups=["dolls"] instance=ExtResource("4_utkv3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.05, 0)
-script = ExtResource("5_utkv3")
+script = ExtResource("5_jb2hr")
 
-[node name="P2" type="Node3D" parent="." unique_id=1219066531 groups=["dolls"] instance=ExtResource("6_jb2hr")]
+[node name="P2" type="Node3D" parent="." unique_id=1219066531 groups=["dolls"] instance=ExtResource("6_0ldml")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.05, 0)
-script = ExtResource("5_utkv3")
+script = ExtResource("5_jb2hr")
 player_index = 1
 input_prefix = "p2"
 
-[node name="Weapons" type="Node3D" parent="." unique_id=2044863326]
+[node name="Weapons" type="Node3D" parent="." unique_id=1277909074]
 
-[node name="Camera" type="Camera3D" parent="." unique_id=1728491149 groups=["camera"]]
+[node name="Camera" type="Camera3D" parent="." unique_id=726542834 groups=["camera"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 24)
 fov = 40.0
 far = 400.0
-script = ExtResource("7_0ldml")
+script = ExtResource("7_w6hlm")
 arena_path = NodePath("../NullHall")
 floor_inset = 0.0
 padding = 3.0
@@ -48,26 +49,29 @@ zoom_out_tau = 0.25
 zoom_in_tau = 1.0
 follow_tau = 0.3
 
-[node name="Match" type="Node" parent="." unique_id=1877730839]
-script = ExtResource("8_w6hlm")
+[node name="Match" type="Node" parent="." unique_id=200399433]
+script = ExtResource("8_hpino")
 camera_path = NodePath("../Camera")
 arena_path = NodePath("../NullHall")
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=1853017013 instance=ExtResource("9_hpino")]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1977873189 instance=ExtResource("9_ieg86")]
 layer = 10
-script = ExtResource("10_ieg86")
+script = ExtResource("10_t5w1l")
 
-[node name="Offscreen" type="CanvasLayer" parent="." unique_id=1355549855]
+[node name="Offscreen" type="CanvasLayer" parent="." unique_id=659241295]
 layer = 5
-script = ExtResource("11_t5w1l")
+script = ExtResource("11_kmd2x")
 
-[node name="N0" type="Node3D" parent="." unique_id=1408005722 instance=ExtResource("12_kmd2x")]
-transform = Transform3D(0.88294756, 0, 0.46947157, 0, 1, 0, -0.46947157, 0, 0.88294756, -18.6, 6.5, 1.5)
-script = ExtResource("13_lbcmw")
+[node name="N0" type="Node3D" parent="." unique_id=1408005722 instance=ExtResource("12_lbcmw")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -14, 14, 3.2)
+script = ExtResource("13_sogvo")
 
-[node name="UI" type="CanvasLayer" parent="." unique_id=472700441]
+[node name="Host" type="Node" parent="N0" unique_id=1374041037]
+script = ExtResource("14_yych7")
 
-[node name="Hint" type="Label" parent="UI" unique_id=1088188741]
+[node name="UI" type="CanvasLayer" parent="." unique_id=163322359]
+
+[node name="Hint" type="Label" parent="UI" unique_id=1239939251]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0

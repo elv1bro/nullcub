@@ -15,6 +15,22 @@
   ],
   "markers": []
  },
+ "Banner_Fighting": {
+  "tris": 1380,
+  "budget": 3000,
+  "bytes": 66560,
+  "materials": [
+   "Hall_ClothBlue",
+   "Hall_PrintWhite",
+   "Hall_Rubber",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Banner_Fighting"
+  ],
+  "markers": []
+ },
  "Banner_Red": {
   "tris": 1216,
   "budget": 3000,
@@ -74,6 +90,22 @@
   ],
   "nodes": [
    "Camera_Broadcast"
+  ],
+  "markers": []
+ },
+ "Camera_Drone": {
+  "tris": 1452,
+  "budget": 3000,
+  "bytes": 67388,
+  "materials": [
+   "Hall_Glass",
+   "Hall_LightWarm",
+   "Hall_Rubber",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Camera_Drone"
   ],
   "markers": []
  },
@@ -156,6 +188,32 @@
   ],
   "nodes": [
    "Floor_Platform"
+  ],
+  "markers": []
+ },
+ "Floor_Seam": {
+  "tris": 652,
+  "budget": 3000,
+  "bytes": 34712,
+  "materials": [
+   "Hall_NullGlow",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Floor_Seam"
+  ],
+  "markers": []
+ },
+ "Light_Beam": {
+  "tris": 288,
+  "budget": 3000,
+  "bytes": 8232,
+  "materials": [
+   "Hall_Membrane"
+  ],
+  "nodes": [
+   "Light_Beam"
   ],
   "markers": []
  },
@@ -270,30 +328,6 @@
   ],
   "nodes": [
    "Speaker"
-  ],
-  "markers": []
- },
- "Spectator_A": {
-  "tris": 178,
-  "budget": 300,
-  "bytes": 11704,
-  "materials": [
-   "Hall_Crowd"
-  ],
-  "nodes": [
-   "Spectator_A"
-  ],
-  "markers": []
- },
- "Spectator_B": {
-  "tris": 178,
-  "budget": 300,
-  "bytes": 11260,
-  "materials": [
-   "Hall_Crowd"
-  ],
-  "nodes": [
-   "Spectator_B"
   ],
   "markers": []
  },

@@ -11,7 +11,7 @@
 
 Материалы по ролям (в glb плоские, имя = роль; настоящие ставит Godot, tools/build_null_hall.gd):
   Hall_Steel (крашеная сталь конструкций), Hall_SteelDark (фермы, рамы), Hall_Plate (настил, бетон), Hall_Yellow (перила,
-  предупреждающая краска), Hall_Seat (сиденья), Hall_Crowd (зрители; цвет — у экземпляра MultiMesh), Hall_ClothRed,
+  предупреждающая краска), Hall_Seat (сиденья), Hall_ClothRed,
   Hall_ClothBlue (баннеры), Hall_PrintWhite, Hall_PrintDark (печать и надписи), Hall_LightWarm (оранжевые световые полосы),
   Hall_LightCool (прожекторы), Hall_Screen (экраны; UV 0..1 на всю поверхность — Godot кладёт туда ViewportTexture),
   Hall_NullGlow (поле NULL: кольца эмиттеров), Hall_Rubber (кабели, шины), Hall_Glass (объективы).
@@ -39,7 +39,6 @@ GODOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT = os.path.join(GODOT, "assets", "models", "arena", "null_hall")
 TRI_BUDGET = 3000
 TRI_BUDGET_BIG = {"Stand_Segment": 4000, "Fighter_Gate": 4000, "Null_Emitter": 4000, "Light_Rig": 4000}
-TRI_BUDGET_CROWD = 300
 RNG = random.Random(101)
 
 GLOW_NULL = (0.25, 0.62, 1.0)
@@ -61,7 +60,6 @@ def setup_materials(export=False):
     K.FLAT.update({
         "Hall_SteelDark": ((0.028, 0.029, 0.033, 1.0), 0.45, 0.6),
         "Hall_Seat": ((0.05, 0.07, 0.12, 1.0), 0.6, 0.0),
-        "Hall_Crowd": ((0.30, 0.26, 0.22, 1.0), 0.7, 0.0),
         "Hall_PrintWhite": ((0.80, 0.80, 0.78, 1.0), 0.6, 0.0),
         "Hall_PrintDark": ((0.035, 0.036, 0.04, 1.0), 0.7, 0.0),
         "Hall_Rubber": ((0.02, 0.02, 0.02, 1.0), 0.8, 0.0),
@@ -217,30 +215,6 @@ def build_Stand_Segment():
     return done(objs, 0.01) + done(seats), markers
 
 
-def spectator(name, cheer=False):
-    """Зритель — модульное существо (людей в мире нет): голова-шар, корпус-бочонок, руки-трубки. Сидит; origin — сиденье."""
-    objs = [revolve(name + "_Body", [(0.0, 0.0), (0.17, 0.02), (0.2, 0.25), (0.16, 0.5), (0.1, 0.56), (0.0, 0.57)], "Hall_Crowd", 7),
-            sphere(name + "_Head", 0.13, (0.0, 0.72, 0.02), "Hall_Crowd", 7, 4)]
-    for sx in (-1, 1):
-        if cheer:
-            pts = [(sx * 0.17, 0.46, 0.0), (sx * 0.3, 0.72, 0.05), (sx * 0.34, 0.98, 0.08)]
-        else:
-            pts = [(sx * 0.17, 0.46, 0.0), (sx * 0.24, 0.26, 0.12), (sx * 0.16, 0.22, 0.26)]
-        objs.append(sweep("%s_Arm%d" % (name, sx), pts, 0.045, "Hall_Crowd", sides=4))
-    for sx in (-1, 1):   # бёдра вперёд (сидит)
-        objs.append(sweep("%s_Leg%d" % (name, sx), [(sx * 0.08, 0.06, 0.0), (sx * 0.09, 0.06, 0.32), (sx * 0.09, -0.3, 0.36)],
-                          0.055, "Hall_Crowd", sides=4))
-    return objs
-
-
-def build_Spectator_A():
-    return done(spectator("SpA", False)), []
-
-
-def build_Spectator_B():
-    return done(spectator("SpB", True)), []
-
-
 def build_Catwalk():
     """Мостик 6 м вдоль X: настил, боковые швеллеры, жёлтые перила сзади, светящийся передний край, подвесы. Origin — центр
     низа настила; ширина 1.4 м (z от −1.4 до 0)."""
@@ -381,9 +355,9 @@ def build_Small_Scoreboard():
     return done(objs, 0.01), []
 
 
-def banner(cloth, name):
-    """Баннер 2 × 5 м: труба-перекладина, ткань с волной и вырезом снизу, печать: эмблема (кольцо поля с куполом) и
-    «NULL / HALL 01». Origin — центр перекладины."""
+def banner(cloth, name, texts=("NULL", "HALL 01"), scale=1.0):
+    """Баннер 2 × 5 м (× scale): труба-перекладина, ткань с волной и вырезом снизу, печать: эмблема (кольцо поля с куполом)
+    и две строки texts. Origin — центр перекладины."""
     W, H = 2.0, 5.0
     cols, rows = 8, 20
     bm = bmesh.new()
@@ -430,13 +404,18 @@ def banner(cloth, name):
             p = sweep("%s_%s" % (name, nm), [Vector((0.57 * math.cos(2 * math.pi * k / 36), cy + 0.57 * math.sin(2 * math.pi * k / 36), 0))
                                              for k in range(36)], 0.05, "Hall_PrintWhite", sides=4, closed=True)
         objs.append(p)
-    objs.append(text_obj(name + "_T1", "NULL", 0.62, "Hall_PrintWhite", T((0.0, -2.75, 0.0)), depth=0.006, bold=0.15))
-    objs.append(text_obj(name + "_T2", "HALL 01", 0.42, "Hall_PrintWhite", T((0.0, -3.35, 0.0)), depth=0.006))
+    objs.append(text_obj(name + "_T1", texts[0], 0.62, "Hall_PrintWhite", T((0.0, -2.75, 0.0)), depth=0.006, bold=0.15))
+    size2 = min(0.42, 1.75 / (0.62 * max(len(texts[1]), 1)))
+    objs.append(text_obj(name + "_T2", texts[1], size2, "Hall_PrintWhite", T((0.0, -3.35, 0.0)), depth=0.006))
     # печать повторяет волну ткани (сдвиг по z) и чуть над ней
     for p in objs[len(objs) - len(prints) - 2:]:
         for v in p.data.vertices:
             gx, gy = v.co.x, v.co.z   # Blender (x, −z, y): Godot x = x, Godot y = Blender z
             v.co.y -= wave(gx, gy) + 0.012   # Godot +z = Blender −y
+    if scale != 1.0:
+        for o in objs:
+            for v in o.data.vertices:
+                v.co *= scale
     return objs
 
 
@@ -714,6 +693,65 @@ def build_Membrane_Strip():
     return [o], []
 
 
+def build_Banner_Fighting():
+    """Большой баннер 3.6 × 9 м «NULL / FIGHTING» (синяя ткань) — под крышей по бокам от стены «01»."""
+    return done(banner("Hall_ClothBlue", "BF", ("NULL", "FIGHTING"), 1.8)), []
+
+
+def build_Camera_Drone():
+    """Дрон-камера трансляции (лор §7: «Cameras/drones follow»): корпус-капсула, 4 луча с кольцами винтов, объектив вперёд (+Z),
+    красный огонь записи сверху (Hall_LightWarm), тёплые огни на концах лучей. ~0.9 м. Origin — центр корпуса."""
+    objs = [fin(revolve("Body", [(0.0, -0.16), (0.12, -0.14), (0.17, -0.06), (0.17, 0.06), (0.12, 0.13), (0.0, 0.15)], "Hall_Steel", 16,
+                        align_y((0, 0, 1))), 0.005)]
+    lens = align_y((0, 0, 1), (0.0, -0.03, 0.14))
+    objs.append(fin(revolve("Lens", [(0.07, 0.0), (0.075, 0.08), (0.06, 0.1)], "Hall_SteelDark", 14, lens), 0.004))
+    objs.append(revolve("Glass", [(0.058, 0.098), (0.0, 0.104)], "Hall_Glass", 14, lens))
+    objs.append(revolve("Rec", [(0.025, 0.0), (0.0, 0.03)], "Hall_LightWarm", 8, align_y((0, 1, 0), (0.0, 0.12, 0.0))))
+    for k in range(4):
+        a = math.radians(45 + 90 * k)
+        tip = Vector((math.cos(a) * 0.42, 0.05, math.sin(a) * 0.42))
+        objs.append(tube("Arm_%d" % k, (math.cos(a) * 0.14, 0.02, math.sin(a) * 0.14), tip, 0.022, "Hall_SteelDark", 6))
+        objs.append(K.torus("Guard_%d" % k, tuple(tip + Vector((0, 0.03, 0))), 0.17, 0.012, "Hall_Steel", plane='XZ', segs=20, sides=5))
+        objs.append(box("Rotor_%d" % k, (0.3, 0.008, 0.03), "Hall_Rubber", tuple(tip + Vector((0, 0.05, 0)))))
+        objs.append(sphere("Nav_%d" % k, 0.018, tuple(tip + Vector((0, -0.02, 0))), "Hall_LightWarm", 6, 3))
+    return done(objs), []
+
+
+def build_Light_Beam():
+    """Луч прожектора: полый конус длиной 1 (от вершины y = 0 вниз до y = −1), радиус низа 1, UV v вдоль луча. В Godot
+    растягивается до нужной длины и ширины, вид — аддитивный шейдер light_beam.gdshader (дымка зала). Origin — вершина."""
+    seg, rows = 24, 6
+    bm = bmesh.new()
+    grid = []
+    for j in range(rows + 1):
+        t = j / rows
+        r = 0.04 + 0.96 * t
+        grid.append([bm.verts.new((r * math.cos(2 * math.pi * i / seg), -t, r * math.sin(2 * math.pi * i / seg))) for i in range(seg)])
+    for j in range(rows):
+        for i in range(seg):
+            i1 = (i + 1) % seg
+            bm.faces.new((grid[j][i], grid[j][i1], grid[j + 1][i1], grid[j + 1][i]))
+    o = K._obj("Light_Beam", bm, "Hall_Membrane")
+    uvl = o.data.uv_layers.new(name="UVMap")
+    for loop in o.data.loops:
+        co = o.data.vertices[loop.vertex_index].co      # Blender (x, −z_g, y_g): длина — по Godot y = Blender z
+        uvl.data[loop.index].uv = (math.atan2(co.y, co.x) / (2 * math.pi) + 0.5, -co.z)
+    for p in o.data.polygons:
+        p.use_smooth = True
+    return [o], []
+
+
+def build_Floor_Seam():
+    """Шов купола на полу: там, где мембрана встаёт на пол, — светящаяся полоса поперёк (вдоль z, 5.4 м) в стальном
+    профиле. Origin — центр."""
+    objs = [box("Channel", (0.5, 0.08, 5.6), "Hall_SteelDark", (0.0, 0.04, 0.0)),
+            light_strip("Glow", (0.0, 0.085, -2.7), (0.0, 0.085, 2.7), 0.18, 0.02, "Hall_NullGlow", (0, 1, 0))]
+    for k in range(6):
+        z = -2.5 + k * 1.0
+        objs.append(K.stud("Bolt_%d" % k, Vector((0.19, 0.08, z)), (0, 1, 0), "Hall_Steel", r=0.025, h=0.015, sides=6))
+    return done(objs, 0.005), []
+
+
 def build_Wall_Panel_01():
     """Панель стены зала 6 × 8 м (не с листа ассетов, а с главного кадра): вертикальные рёбра, горизонтальные пояса, крупное
     «01» тёмной краской. Лицо +Z. Origin — низ по центру. Вариант без номера — Wall_Panel."""
@@ -737,10 +775,10 @@ def wall_panel(number):
     return done(objs, 0.01)
 
 
-MODULES = ["Stand_Segment", "Spectator_A", "Spectator_B", "Catwalk", "Support_Column", "Stairs", "Railing", "Light_Rig",
+MODULES = ["Stand_Segment", "Catwalk", "Support_Column", "Stairs", "Railing", "Light_Rig",
            "Big_Screen", "Small_Scoreboard", "Banner_Red", "Banner_Blue", "Null_Emitter", "Membrane_Anchor_A", "Membrane_Anchor_B",
            "Fighter_Gate", "Camera_Broadcast", "Speaker", "Tech_Box", "Crate", "Cables_Pipes", "Debris", "Floor_Platform",
-           "Wall_Panel_01", "Wall_Panel", "Membrane_Strip"]
+           "Wall_Panel_01", "Wall_Panel", "Membrane_Strip", "Banner_Fighting", "Camera_Drone", "Light_Beam", "Floor_Seam"]
 MULTI = {"Fighter_Gate", "Debris"}   # несколько узлов в одном glb (створки ворот, 4 обломка)
 
 
@@ -775,7 +813,7 @@ def export_all(names):
         setup_materials(export=True)
         objs, empties = build(name)
         tris = tris_of(objs)
-        budget = TRI_BUDGET_CROWD if name.startswith("Spectator") else TRI_BUDGET_BIG.get(name, TRI_BUDGET)
+        budget = TRI_BUDGET_BIG.get(name, TRI_BUDGET)
         path = os.path.join(OUT, name + ".glb")
         C.export_glb(path, objs + empties)
         mats = sorted({m.name for o in objs for m in o.data.materials if m is not None})

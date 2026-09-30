@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dvhfq36hbebrl"
-path="res://.godot/imported/Spectator_A.glb-619698f55f85b442e766520ea0bcd146.scn"
+uid="uid://ctgt4oh1rmu1c"
+path="res://.godot/imported/Camera_Drone.glb-607d8a2dff710ceda25015e73c27ba5f.scn"
 
 [deps]
 
-source_file="res://assets/models/arena/null_hall/Spectator_A.glb"
-dest_files=["res://.godot/imported/Spectator_A.glb-619698f55f85b442e766520ea0bcd146.scn"]
+source_file="res://assets/models/arena/null_hall/Camera_Drone.glb"
+dest_files=["res://.godot/imported/Camera_Drone.glb-607d8a2dff710ceda25015e73c27ba5f.scn"]
 
 [params]
 

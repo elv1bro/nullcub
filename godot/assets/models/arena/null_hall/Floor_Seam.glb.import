@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bxbfr8fpmmmu5"
-path="res://.godot/imported/Spectator_B.glb-7584c3729697753e9b7c536952271695.scn"
+uid="uid://dyjsls3s81fdx"
+path="res://.godot/imported/Floor_Seam.glb-e7d46e0380e10c1c92587ab1a886e5e5.scn"
 
 [deps]
 
-source_file="res://assets/models/arena/null_hall/Spectator_B.glb"
-dest_files=["res://.godot/imported/Spectator_B.glb-7584c3729697753e9b7c536952271695.scn"]
+source_file="res://assets/models/arena/null_hall/Floor_Seam.glb"
+dest_files=["res://.godot/imported/Floor_Seam.glb-e7d46e0380e10c1c92587ab1a886e5e5.scn"]
 
 [params]
 

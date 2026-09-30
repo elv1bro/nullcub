@@ -18,18 +18,47 @@ const FIELD_PRESETS := [[0.204, Vector2(0.0, -1.0)], [0.35, Vector2(0.7, -0.7)],
 @export var arena_bounds := AABB(Vector3(-18.0, -0.6, -1.0), Vector3(36.0, 21.6, 2.0))
 @export var membrane_pct := 98
 @export var debug_keys := true
+## Толпа (спрайты crowd_sprite.gdshader): спокойный уровень «болеют» и как быстро азарт спадает (в секунду).
+@export var crowd_calm := 0.12
+@export var crowd_cool_per_s := 0.35
 
+var excitement := 0.0             # 0..1 — азарт толпы сейчас (для проб и будущего голосования)
 var _preset := 0
+var _crowd_mat: ShaderMaterial
 
 @onready var field: NullField = get_node_or_null("Field")
 
 
 func _ready() -> void:
 	_update_boards()
+	for mmi in find_children("*", "MultiMeshInstance3D", true, false):
+		if (mmi as MultiMeshInstance3D).material_override is ShaderMaterial and mmi.is_in_group("null_hall_crowd"):
+			_crowd_mat = (mmi as MultiMeshInstance3D).material_override
+	if field != null:
+		field.membrane_hit.connect(func(_p: Vector2, speed: float) -> void: excite(clampf(speed / 10.0, 0.35, 1.0)))
+	_connect_match.call_deferred()
 
 
-func _process(_delta: float) -> void:
+## Толпа болеет: азарт поднимается до amount (0..1) и спадает сам (crowd_cool_per_s).
+func excite(amount: float) -> void:
+	excitement = maxf(excitement, clampf(amount, 0.0, 1.0))
+
+
+## Матч рядом (площадка): крупные удары, KO и конец матча заводят толпу. Без матча — только мембрана.
+func _connect_match() -> void:
+	var m := get_parent().get_node_or_null("Match") if get_parent() != null else null
+	if m == null or not m.has_signal("hit"):
+		return
+	m.connect("hit", func(_v: Node, _a: Node, dmg: float, _k: String, _p: Vector3) -> void: excite(clampf(dmg / 25.0, 0.0, 0.8)))
+	m.connect("ko", func(_v: Node, _a: Node, _r: Dictionary) -> void: excite(1.0))
+	m.connect("match_over", func(_w: Node, _r: Dictionary) -> void: excite(1.0))
+
+
+func _process(delta: float) -> void:
 	_update_boards()
+	excitement = maxf(0.0, excitement - crowd_cool_per_s * delta)
+	if _crowd_mat != null:
+		_crowd_mat.set_shader_parameter("cheer", maxf(crowd_calm, excitement))
 
 
 func _unhandled_input(event: InputEvent) -> void:

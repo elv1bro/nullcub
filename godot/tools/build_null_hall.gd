@@ -45,6 +45,15 @@ const SPAWN_Y := 2.5
 const FIELD_SCRIPT := "res://scenes/arena/null_field.gd"
 const MEMBRANE_SHADER := "res://assets/shaders/null_membrane.gdshader"
 const PLAYGROUND_OUT := "res://scenes/playground_null_hall.tscn"
+const BEAM_SHADER := "res://assets/shaders/light_beam.gdshader"
+const DRONE_SCRIPT := "res://scenes/arena/drone_orbit.gd"
+const N0_HOST_SCRIPT := "res://scripts/n0/n0_host.gd"
+## толпа: спрайты модульных существ (tools/blender/crowd_sprites.py), приглушены в шейдере (brightness) — фон не спорит с бойцами
+const CROWD_ATLAS := "res://assets/textures/crowd/crowd_atlas.png"
+const CROWD_META := "res://assets/textures/crowd/crowd_atlas.json"
+const CROWD_SHADER := "res://assets/shaders/crowd_sprite.gdshader"
+const CROWD_EMPTY := 0.12                  # доля пустых мест
+const CROWD_SCALE := Vector2(0.62, 0.74)   # масштаб спрайта (кукла кита ~1.8 м → зритель 1.1–1.35 м)
 
 const MATS := {
 	"Hall_Steel": {"pbr": "paint_marks", "tint": [0.085, 0.09, 0.105], "rough": 0.75, "metal": 0.35},
@@ -54,7 +63,6 @@ const MATS := {
 	"Hall_ClothRed": {"pbr": "fabric_red", "tint": [1.0, 1.0, 1.0], "rough": 0.9},
 	"Hall_ClothBlue": {"pbr": "fabric_blue", "tint": [1.0, 1.0, 1.0], "rough": 0.9},
 	"Hall_Seat": {"flat": [0.05, 0.07, 0.12], "rough": 0.6},
-	"Hall_Crowd": {"flat": [1.0, 1.0, 1.0], "rough": 0.7, "vertex_color": true},
 	"Hall_PrintWhite": {"flat": [0.55, 0.55, 0.54], "rough": 0.6},
 	"Hall_PrintDark": {"flat": [0.035, 0.036, 0.04], "rough": 0.7},
 	"Hall_Rubber": {"flat": [0.02, 0.02, 0.02], "rough": 0.8},
@@ -64,12 +72,6 @@ const MATS := {
 	"Hall_NullGlow": {"flat": [0.1, 0.3, 0.6], "rough": 0.2, "glow": [0.25, 0.62, 1.0], "energy": 3.0},
 	"Hall_Glass": {"flat": [0.02, 0.03, 0.05], "rough": 0.05, "metal": 0.2},
 }
-
-# цвета зрителей: модульные существа — дерево, металл, краска, ткань (не люди)
-## толпа приглушена: фон не спорит с бойцами (лист камеры: «нет визуального перегруза», бойцы контрастнее фона)
-const CROWD_DIM := 0.5
-const CROWD_COLORS := [Color(0.62, 0.45, 0.28), Color(0.42, 0.3, 0.2), Color(0.55, 0.56, 0.6), Color(0.3, 0.32, 0.36),
-	Color(0.7, 0.2, 0.16), Color(0.18, 0.32, 0.62), Color(0.8, 0.62, 0.2), Color(0.25, 0.5, 0.35), Color(0.75, 0.72, 0.66)]
 
 var errors := 0
 var hall: Node3D
@@ -225,6 +227,7 @@ func _build_scene() -> void:
 	_structure()
 	_boards()
 	_decor()
+	_details()
 	_membrane()
 	_field()
 	_spawns()
@@ -330,10 +333,10 @@ func _floor() -> void:
 
 func _stands() -> void:
 	var g := _group("Stands")
-	var crowd_a: Array[Transform3D] = []
-	var crowd_b: Array[Transform3D] = []
-	var colors_a: Array[Color] = []
-	var colors_b: Array[Color] = []
+	var meta := _crowd_meta()
+	var variants := int(meta.get("variants", 16))
+	var xfs: Array[Transform3D] = []
+	var customs: Array[Color] = []
 	var step := (ARC_TO - ARC_FROM) / SEGMENTS
 	for t in range(3):
 		for s in range(SEGMENTS):
@@ -346,50 +349,60 @@ func _stands() -> void:
 			var basis := Basis(Vector3.UP, deg_to_rad(yaw))
 			for r in range(STAND_ROWS):
 				for k in range(SEATS):
-					if rng.randf() < 0.18:
+					if rng.randf() < CROWD_EMPTY:
 						continue   # свободные места
-					var local := Vector3(-3.0 + 0.3 + k * 0.6, 0.9 + r * 0.5 + 0.41, -r * 0.9 - 0.9 * 0.55)
-					var xf := Transform3D(basis.rotated(Vector3.UP, rng.randf_range(-0.25, 0.25)), p + basis * local)
-					var c: Color = CROWD_COLORS[rng.randi() % CROWD_COLORS.size()]
-					c = Color(c.r * CROWD_DIM, c.g * CROWD_DIM, c.b * CROWD_DIM).lerp(Color(0.2, 0.2, 0.24), 0.25) \
-						.lightened(rng.randf_range(-0.05, 0.06))
-					if rng.randf() < 0.22:
-						crowd_b.append(xf)
-						colors_b.append(c)
-					else:
-						crowd_a.append(xf)
-						colors_a.append(c)
+					# стоят на ступени ряда, чуть за линией сидений; поворот не нужен — спрайт сам смотрит в камеру
+					var local := Vector3(-3.0 + 0.3 + k * 0.6 + rng.randf_range(-0.08, 0.08), 0.9 + r * 0.5, -r * 0.9 - 0.9 * 0.5)
+					var sc := rng.randf_range(CROWD_SCALE.x, CROWD_SCALE.y)
+					xfs.append(Transform3D(Basis.from_scale(Vector3.ONE * sc), p + basis * local))
+					customs.append(Color(float(rng.randi() % variants), rng.randf(), rng.randf_range(0.8, 1.15), 0.0))
 	var cg := _group("Crowd")
-	_crowd(cg, "Spectator_A", crowd_a, colors_a)
-	_crowd(cg, "Spectator_B", crowd_b, colors_b)
+	_crowd_sprites(cg, xfs, customs, meta)
 
 
-func _crowd(parent: Node3D, module: String, xfs: Array[Transform3D], colors: Array[Color]) -> void:
-	var ps := _kit(module)
-	if ps == null:
+## Метаданные атласа толпы (tools/blender/crowd_sprites.py): сетка, число вариантов и поз, размер ячейки в метрах.
+func _crowd_meta() -> Dictionary:
+	if not FileAccess.file_exists(CROWD_META):
+		_err("нет %s — blender -b --python tools/blender/crowd_sprites.py -- --atlas" % CROWD_META)
+		return {}
+	var d = JSON.parse_string(FileAccess.get_file_as_string(CROWD_META))
+	return d if d is Dictionary else {}
+
+
+## Толпа — один MultiMesh квадов-спрайтов (CrowdMultiMesh + crowd_sprite.gdshader): квад размером с ячейку атласа, низ — ноги.
+func _crowd_sprites(parent: Node3D, xfs: Array[Transform3D], customs: Array[Color], meta: Dictionary) -> void:
+	if not ResourceLoader.exists(CROWD_ATLAS):
+		_err("нет %s — сначала атлас и --import" % CROWD_ATLAS)
 		return
-	var inst := ps.instantiate()
-	var mesh: Mesh = null
-	for c in inst.find_children("*", "MeshInstance3D", true, false):
-		mesh = (c as MeshInstance3D).mesh
-		break
-	inst.free()
-	if mesh == null:
-		_err("нет меша в " + module)
-		return
+	var cell: Array = meta.get("cell_m", [1.25, 2.25])
+	var quad := QuadMesh.new()
+	quad.size = Vector2(float(cell[0]), float(cell[1]))
+	quad.center_offset = Vector3(0.0, float(cell[1]) * 0.5, 0.0)
+	var mat := ShaderMaterial.new()
+	mat.shader = load(CROWD_SHADER)
+	mat.set_shader_parameter("atlas", load(CROWD_ATLAS))
+	mat.set_shader_parameter("cols", float(meta.get("cols", 8)))
+	mat.set_shader_parameter("rows", float(meta.get("rows", 6)))
+	mat.set_shader_parameter("poses", float(meta.get("poses", 3)))
 	var data := PackedFloat32Array()
+	var colors := PackedColorArray()
 	for xf in xfs:
 		data.append_array([xf.basis.x.x, xf.basis.x.y, xf.basis.x.z, xf.basis.y.x, xf.basis.y.y, xf.basis.y.z,
 			xf.basis.z.x, xf.basis.z.y, xf.basis.z.z, xf.origin.x, xf.origin.y, xf.origin.z])
+		colors.append(Color.WHITE)
 	var mmi := MultiMeshInstance3D.new()
-	mmi.name = module
+	mmi.name = "Spectators"
 	mmi.set_script(load(CROWD_SCRIPT))
-	mmi.set("mesh", mesh)
+	mmi.set("mesh", quad)
 	mmi.set("xforms", data)
-	mmi.set("colors", PackedColorArray(colors))
+	mmi.set("colors", colors)
+	mmi.set("customs", PackedColorArray(customs))
+	mmi.material_override = mat
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.add_to_group("null_hall_crowd", true)
 	parent.add_child(mmi)
 	mmi.owner = hall
-	print("build_null_hall: %s × %d" % [module, xfs.size()])
+	print("build_null_hall: зрители-спрайты × %d (вариантов %d)" % [xfs.size(), int(meta.get("variants", 0))])
 
 
 func _structure() -> void:
@@ -506,6 +519,59 @@ func _decor() -> void:
 		_place("Debris", g, Vector3([-19.5, 19.5][i], 0.0, -4.0), rng.randf_range(0.0, 360.0), "Debris_%d" % i, 0.8)
 
 
+## Детали (на мой вкус, 30.09): лучи прожекторов в дымке, дроны-камеры снаружи купола, большие баннеры под крышей,
+## светящиеся швы у ног купола. Всё — фон: не спорит с бойцами (лист камеры, правило «без визуального перегруза»).
+func _details() -> void:
+	var g := _group("Details")
+	# швы купола на полу — там, где мембрана встаёт на пол
+	for i in range(2):
+		_place("Floor_Seam", g, Vector3([-DOME_A, DOME_A][i], 0.0, 0.0), 0.0, ["Seam_L", "Seam_R"][i])
+	# большие баннеры NULL FIGHTING под крышей, по бокам от стены «01»
+	for i in range(2):
+		var p := ring(HALL_R[2] + 0.2, [252.0, 288.0][i], 27.2)
+		_place("Banner_Fighting", g, p, face_center_yaw(p), "BigBanner_%d" % i)
+	# лучи прожекторов: по два от каждой фермы (ферма y = 25, z = −6; лампы x ±0.7 и ±2.1 от центра, смотрят вниз-вперёд)
+	var beam_ps := _kit("Light_Beam")
+	if beam_ps != null:
+		var inst := beam_ps.instantiate()
+		var mesh: Mesh = null
+		for c in inst.find_children("*", "MeshInstance3D", true, false):
+			mesh = (c as MeshInstance3D).mesh
+			break
+		inst.free()
+		var mat := ShaderMaterial.new()
+		mat.shader = load(BEAM_SHADER)
+		mat.set_shader_parameter("intensity", 0.045)
+		var aim := Vector3(0.0, -0.8, 0.6).normalized()
+		for r in range(4):
+			for k in [1, 2]:
+				var lamp := Vector3(-12.0 + r * 8.0 + [-2.1, -0.7, 0.7, 2.1][k], 25.0 - 0.66, -6.0 + 0.05)
+				var mi := MeshInstance3D.new()
+				mi.name = "Beam_%d_%d" % [r, k]
+				mi.mesh = mesh
+				mi.material_override = mat
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				# локальная −Y луча → aim; длина 24 м, радиус у пола 3.2 м
+				var y_axis := -aim
+				var x_axis := y_axis.cross(Vector3.FORWARD).normalized()
+				var z_axis := x_axis.cross(y_axis).normalized()
+				mi.transform = Transform3D(Basis(x_axis * 3.2, y_axis * 24.0, z_axis * 3.2), lamp)
+				g.add_child(mi)
+				mi.owner = hall
+	# дроны-камеры: дугой снаружи купола туда-обратно
+	for i in range(3):
+		var holder := Node3D.new()
+		holder.name = "Drone_%d" % i
+		holder.set_script(load(DRONE_SCRIPT))
+		holder.set("phase", [0.0, 2.1, 4.2][i])
+		holder.set("speed", [0.16, 0.12, 0.2][i])
+		holder.set("radii", [Vector2(19.5, 22.0), Vector2(21.0, 23.5), Vector2(18.5, 21.0)][i])
+		holder.set("z_base", [1.5, -1.0, 3.0][i])
+		g.add_child(holder)
+		holder.owner = hall
+		_place("Camera_Drone", holder, Vector3.ZERO, 0.0, "Model")
+
+
 ## Якоря по дуге купола за лентой (светящимся торцом вперёд, к ленте) и эмиттеры у ног купола; лента мембраны.
 func _membrane() -> void:
 	var g := _group("Anchors")
@@ -583,7 +649,7 @@ func _err(msg: String) -> void:
 # --- площадка: зал + две куклы + камера по листу камеры + Match + HUD + стрелки за экраном + N0 ---
 ## Как playground_void.tscn (скрипт scenes/playground.gd, arena_id "null_hall"), но камера по листу камеры (ART_NULL.md, лист 1):
 ## часть арены, боец 8–12 % высоты кадра → полувысота кадра 7.5…11 м (кукла 1.8 м), без fit_bounds; стрелки за экраном —
-## scenes/ui/offscreen_markers.gd; N0 висит у левой ноги купола (снаружи, в бою не участвует).
+## scenes/ui/offscreen_markers.gd; N0-ведущий (scripts/n0/n0_host.gd) держится у верхнего края кадра со свободной стороны.
 func _build_playground() -> void:
 	var pg := Node3D.new()
 	pg.name = "Playground"
@@ -646,10 +712,15 @@ func _build_playground() -> void:
 	marks.owner = pg
 	var n0 := (load("res://scenes/n0/n0.tscn") as PackedScene).instantiate() as Node3D
 	n0.name = "N0"
-	n0.position = Vector3(-DOME_A - 2.6, 6.5, 1.5)
-	n0.rotation_degrees = Vector3(0.0, 28.0, 0.0)
+	n0.position = Vector3(-DOME_A + 2.0, 14.0, 3.2)
+	n0.scale = Vector3.ONE * 0.8
 	pg.add_child(n0)
 	n0.owner = pg
+	var host := Node.new()
+	host.name = "Host"
+	host.set_script(load(N0_HOST_SCRIPT))
+	n0.add_child(host)
+	host.owner = pg
 	var ui := CanvasLayer.new()
 	ui.name = "UI"
 	pg.add_child(ui)
