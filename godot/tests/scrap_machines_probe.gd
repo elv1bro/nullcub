@@ -9,9 +9,10 @@
 ##   cycle_<name>             — авто-цикл: за CYCLE_TIMEOUT_S каждый прошёл OFF → WARNING → ACTIVE → COOLDOWN → OFF;
 ##   warning_s_<name>         — WARNING длится ≈ 1 с (0.8…1.3);
 ##   blink_<name>             — в WARNING лампа мигает (min/max яркости различаются);
-##   magnet_pulls_iron        — маятник остановлен, железная бочка 40 кг на полу в ~3.9 м от полюса: за MAGNET_S ACTIVE
-##                              приблизилась к полюсу ≥ MAGNET_IRON_MIN_M. Бочка после авто-цикла лежит как её уронил магнит
-##                              (info.magnet_barrel_before) — проба ставит её стоя: _teleport() сбрасывает позу и обе скорости;
+##   magnet_pulls_iron        — маятник остановлен, вокруг полюса убраны свободные тела и обломки; «железная 40 кг» (связка труб,
+##                              meta material = "iron", класс PropHeft.MEDIUM — gravity_scale 2.5) на полу в ~3.5 м от полюса: за
+##                              MAGNET_S ACTIVE приблизилась к полюсу ≥ MAGNET_IRON_MIN_M. info.magnet_barrel_touching — кто касается
+##                              её перед включением (кроме пола);
 ##   magnet_ignores_wood      — деревянный ящик на том же расстоянии сдвинулся < MAGNET_WOOD_MAX_M;
 ##   magnet_releases          — через MAGNET_RELEASE_S после начала COOLDOWN бочка отпущена (сила 0) и лежит на полу;
 ##   magnet_iron_part         — ModularDoll с железным предплечьем и кулаком (metal_forearm, iron_ball_fist): магнит тянет её
@@ -30,7 +31,9 @@ extends Node3D
 const SCENE := "res://scenes/playground_scrap.tscn"
 const REPORT := "res://tests/scrap_machines_probe_report.json"
 const CRATE := "res://scenes/props/scrap/prop_wooden_crate.tscn"
-const METAL_BARREL := "res://scenes/props/scrap/prop_metal_barrel.tscn"
+## 29.09: железная бочка Свалки стала взрывной (12 кг, scenes/props/explosive_barrel.gd) — роняемая магнитом, она взрывается.
+## Магнит и пар проверяются на прежней «железной 40 кг»: связка труб 40 кг с meta material = "iron".
+const IRON_40 := "res://scenes/props/scrap/prop_pipe_bundle.tscn"
 const MODULAR := "res://scenes/body/modular_doll.tscn"
 const HUMAN_BP := "res://data/body/blueprints/human.tres"
 const HALF_W := 18.0
@@ -255,23 +258,31 @@ func _settle_off() -> void:
 		await _ticks(1)
 
 
-## Убрать свободные тела вокруг точки (кроме keep) — чистая сцена для стадии.
+## Убрать свободные тела вокруг точки (кроме keep) — чистая сцена для стадии. Обломки Breakable (группа "debris") — тоже:
+## до 29.09 они пропускались («удаляют себя сами»), и связка труб в стадии магнита спавнилась в обломки деревянной бочки Barrel
+## (x 9.35), разбитой взрывом железной MetalBarrel на авто-цикле (магнит уронил её, пресс смял — фитиль — взрыв за ~2 с до стадии).
+## Обломки ещё летели, а через debris_freeze_s после взрыва замерзали (FREEZE_MODE_STATIC) — на связке и у её правого торца:
+## статика сверху держала её намертво, сила магнита 160 Н уходила в контакт (magnet_pulls_iron 0.0 м, падала «через раз» —
+## куда лягут обломки, решает randf закрутки). Таймеры breakable.gd держат обломок через weakref — ранний queue_free безопасен.
 func _clear_around(c: Vector3, r: float, keep: Array) -> void:
 	for b in arena.loose_bodies():
-		if keep.has(b) or (b as Node).is_in_group("debris"):
-			continue   # обломки Breakable удаляют себя сами (таймеры breakable.gd держат ссылку на тело)
+		if keep.has(b):
+			continue
 		var p := (b as Node3D).global_position
 		if absf(p.x - c.x) < r and p.y < c.y + 8.0:
 			(b as Node).queue_free()
 	await _ticks(2)
 
 
+## Пропс в Props арены — как у пропсов builder-а: лут при разрушении и вес по классу (PropHeft.equip, как ScrapArena._ready:
+## связка труб 40 кг — MEDIUM, gravity_scale 2.5; ящик 10 кг — LIGHT, без изменений).
 func _spawn_prop(path: String, pos: Vector3) -> RigidBody3D:
 	var b := (load(path) as PackedScene).instantiate() as RigidBody3D
 	arena.get_node("Props").add_child(b)
 	b.global_position = pos
 	if b is Breakable:
 		arena.watch_breakable(b as Breakable)
+	PropHeft.equip(b)
 	return b
 
 
@@ -285,6 +296,32 @@ func _teleport(b: RigidBody3D, pos: Vector3) -> void:
 	b.global_transform = Transform3D(Basis.IDENTITY, pos)
 	b.linear_velocity = Vector3.ZERO
 	b.angular_velocity = Vector3.ZERO
+
+
+## Тела, чьи коллизии пересекают коллизии b (кроме пола Ground/*), с пометкой frozen — для диагностики стадии.
+func _touching(b: RigidBody3D) -> Array:
+	var space := arena.get_world_3d().direct_space_state
+	var out: Array = []
+	for c in b.get_children():
+		var cs := c as CollisionShape3D
+		if cs == null or cs.shape == null or cs.disabled:
+			continue
+		var q := PhysicsShapeQueryParameters3D.new()
+		q.shape = cs.shape
+		q.transform = cs.global_transform
+		q.exclude = [b.get_rid()]
+		for r in space.intersect_shape(q, 16):
+			var o := r.get("collider") as Node
+			if o == null:
+				continue
+			var tag := String(arena.get_path_to(o)) if arena.is_ancestor_of(o) else String(o.name)
+			if tag.begins_with("Ground/"):
+				continue
+			if o is RigidBody3D and (o as RigidBody3D).freeze:
+				tag += " (frozen)"
+			if not out.has(tag):
+				out.append(tag)
+	return out
 
 
 func _place_doll(d: Doll, pos: Vector3) -> void:
@@ -303,8 +340,9 @@ func _magnet() -> void:
 	mag.swing_deg = 0.0
 	await _ticks(2)
 	var pole := mag.pole_global()
-	var barrel := arena.get_node("Props/MetalBarrel") as RigidBody3D
-	await _clear_around(Vector3(pole.x, 0, 0), 6.0, [barrel])
+	await _clear_around(Vector3(pole.x, 0, 0), 6.0, [])
+	var barrel := _spawn_prop(IRON_40, Vector3(pole.x - 0.9, 0.02, 0.0))
+	barrel.set_meta(ScrapMachine.META_MATERIAL, "iron")
 	report["info"]["magnet_barrel_before"] = "pos %s rot %.0f°" % [barrel.global_position.snapped(Vector3.ONE * 0.01), rad_to_deg(barrel.global_rotation.z)]
 	for d in [p1, p2]:
 		_place_doll(d, Vector3(-0.3 if d == p1 else 1.8, 0.05, 0))   # куклы между паром и магнитом, вне их зон
@@ -314,6 +352,8 @@ func _magnet() -> void:
 	var b0 := ScrapMachine.com_of(barrel)
 	var c0 := crate.global_position
 	var d0 := b0.distance_to(pole)
+	report["info"]["magnet_barrel_gravity_scale"] = barrel.gravity_scale
+	report["info"]["magnet_barrel_touching"] = _touching(barrel)   # не пол: если связка не едет — кто её держит
 	report["info"]["magnet_pole"] = var_to_str(pole.snapped(Vector3.ONE * 0.01))
 	report["info"]["magnet_barrel_r0"] = snappedf(d0, 0.01)
 	report["info"]["magnet_crate_r0"] = snappedf(ScrapMachine.com_of(crate).distance_to(pole), 0.01)
@@ -330,6 +370,9 @@ func _magnet() -> void:
 	_check("magnet_pulls_iron", snappedf(d0 - d1, 0.01), MAGNET_IRON_MIN_M, "gte", "железная бочка 40 кг ближе к полюсу за %.1f с (м)" % MAGNET_S)
 	_check("magnet_ignores_wood", snappedf(crate.global_position.distance_to(c0), 0.001), MAGNET_WOOD_MAX_M, "lt",
 		"деревянный ящик сдвинулся (м), сила на него %.1f Н" % wood_f)
+	# Ящик своё отработал: связка 2 м длиной, отпущенная у полюса, правым концом падала на него (x 8.5…9.5) и оставалась
+	# лежать наискось, ЦМ 0.78 м — magnet_releases проверяет «отпустил и упала на пол», а не раскладку пропсов.
+	crate.queue_free()
 	mag.force_state(ScrapMachine.State.COOLDOWN)
 	var y_hold := ScrapMachine.com_of(barrel).y
 	await _secs(MAGNET_RELEASE_S)
@@ -338,8 +381,7 @@ func _magnet() -> void:
 	_check("magnet_releases", 1 if f_after == 0.0 and y_after < 0.7 else 0, 1, "eq",
 		"через %.1f с COOLDOWN сила %.1f Н, ЦМ бочки на %.2f м (держалась на %.2f)" % [MAGNET_RELEASE_S, f_after, y_after, y_hold])
 	await _settle_off()
-	crate.queue_free()
-	_teleport(barrel, Vector3(14.5, 0.02, 0.0))   # за радиусом магнита (≈ 7.5 м от полюса)
+	barrel.queue_free()
 
 
 ## ModularDoll с железной рукой под магнитом: сила на железные части, не на деревянные.
@@ -410,8 +452,10 @@ func _steam() -> void:
 	var vx := vent.global_position.x
 	await _clear_around(Vector3(vx, 0, 0), 3.0, [])
 	var results := {}
-	for spec in [["crate_10", CRATE], ["metal_barrel_40", METAL_BARREL]]:
+	for spec in [["crate_10", CRATE], ["metal_barrel_40", IRON_40]]:
 		var b := _spawn_prop(spec[1], Vector3(vx, 0.42, 0.0))
+		if spec[1] == IRON_40:
+			b.set_meta(ScrapMachine.META_MATERIAL, "iron")
 		await _secs(0.8)
 		var y0 := b.global_position.y
 		vent.force_state(ScrapMachine.State.ACTIVE)

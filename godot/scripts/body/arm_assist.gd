@@ -66,8 +66,18 @@
 ## Вернулась управляемая деталь (сигнал Doll.part_reattached) — цепь и IK собираются заново (_rebind), управление возобновляется.
 ## Чужую деталь (meta detached_from — другая кукла) не прикручиваем: её можно только схватить, как пропс.
 ##
-## Подсказки: кольцо цвета игрока в точке цели, пока рука активна (ЛКМ / стик); подсветка (material_overlay) предмета, который
-## будет схвачен по нажатию. Две руки на одном предмете делят общий реестр подсветки (_hl_registry): исходный overlay возвращается
+## Вес и бросок (29.09, «предметы тянутся, а не держатся»; классы — scenes/props/prop_heft.gd):
+##   лёгкие (PropHeft.LIGHT, ≤ WELD_MAX_KG, не части живых кукол) — пружина подтягивает точку хвата к кисти (≤ WELD_SNAP_MAX_S), дальше
+##     предмет приваривается жёстким Generic6DOFJoint3D, как оружие, и рука с ним жёстче (Tuning.WEAPON_ARM_MUSCLES): не висит, не
+##     болтается, не отстаёт;
+##   средние — пружина, как раньше, плюс удержание поворота (момент к углу при захвате, реакция в торс): не крутятся на шарнире;
+##   тяжёлые на якоре (замороженные) не хватаются — подсказка «слишком тяжело», last_grab_action "too_heavy".
+##   Бросок — клавиша захвата, пока рука активна (ЛКМ / стик): предмет уходит к цели руки (курсору) со скоростью √(2·THROW_ENERGY/m)
+##   (THROW_SPEED_MIN…MAX) поверх скорости торса, торс получает отдачу THROW_RECOIL; рука не активна — просто отпустить. Оружие в
+##   кисти бросается так же.
+##
+## Подсказки: кольцо цвета игрока в точке цели, пока рука активна (ЛКМ / стик); подсветка (material_overlay, пульсирует) предмета,
+## который будет схвачен по нажатию, и подпись над ним (у живого игрока): «E — взять», класс веса, «ЛКМ+E — бросок» с предметом в руке. Две руки на одном предмете делят общий реестр подсветки (_hl_registry): исходный overlay возвращается
 ## при любом порядке ухода рук.
 class_name ArmAssist
 extends Node
@@ -123,9 +133,32 @@ const REPICK_BLOCK_S := 1.0        # после броска оружия кла
 const REATTACH_TOUCH_M := 0.3      # своя оторванная деталь ближе этого к любой части куклы — прикручивается обратно
 const REATTACH_GRACE_S := 1.0      # но не раньше, чем через столько после отрыва (иначе прирастала бы в руках у вора на старте бегства)
 
+# --- жёсткий хват и бросок (29.09) ---
+const WELD_MAX_KG := PropHeft.LIGHT_MAX_KG
+const WELD_SNAP_M := 0.07          # точка хвата подтянулась ближе — приварить
+const WELD_SNAP_MAX_S := 0.25      # или через столько после захвата (остаток досняпывается)
+const HOLD_ANG_OMEGA := 12.0       # рад/с: удержание поворота среднего предмета
+const HOLD_ANG_ZETA := 0.9
+const HOLD_TORQUE_MAX := 30.0      # Н·м
+## Приваренный: момент к углу при сварке поверх сустава (реакция в торс). Ящик идёт за рукой плавно; оставшиеся ±15–20° между
+## ящиком и кистью на резком махе — это кисть: Jolt правит положение запястья (кисть 0.5 кг против ящика 10 кг), и она проворачивается
+## относительно ящика, а не ящик на шарнире. Жёстче (доводка по скорости) — хуже: спорит с позиционной поправкой сустава (проба weld).
+const WELD_ANG_OMEGA := 25.0
+const WELD_TORQUE_MAX := 60.0
+const THROW_ENERGY := 110.0        # Дж: ящик 10 кг — 4.7 м/с, бочка 15 кг — 3.8, взрывная 12 кг — 4.3, голова 2.6 кг — 9.2
+const THROW_SPEED_MIN := 2.0
+const THROW_SPEED_MAX := 12.0
+const THROW_RECOIL := 0.5          # доля импульса броска, которую получает торс назад
+const THROW_CARRY := 0.6           # доля скорости торса, которую предмет наследует (разбег помогает, но не удваивает дальность)
+const THROW_SPIN := 5.0            # рад/с закрутки лёгкого предмета
+
 # --- подсказки ---
 const MARKER_RADIUS := 0.07        # м, кольцо цели
-const HIGHLIGHT_ALPHA := 0.28
+const HIGHLIGHT_ALPHA := 0.42
+const HIGHLIGHT_PULSE_HZ := 2.2
+const HINT_UP_M := 0.35            # подпись над верхом предмета
+const HINT_COLOURS := {"grab": Color(1.0, 0.95, 0.8), "medium": Color(1.0, 0.72, 0.3), "heavy": Color(1.0, 0.35, 0.3),
+	"held": Color(0.85, 0.95, 1.0)}
 
 ## Имя управляемого тела; пусто — авто (ModularDoll: blueprint.control[0], иначе "Hand_R").
 @export var control_part := ""
@@ -134,6 +167,8 @@ const HIGHLIGHT_ALPHA := 0.28
 ## Реакция −F в торс. false — только для проб (контраст «без реакции рука летает»), в игре всегда true.
 @export var reaction_to_torso := true
 @export var show_hints := true
+## Жёсткий хват лёгких предметов. false — только для проб (контраст «как было»: пружина и свободный шарнир).
+@export var weld_light := true
 
 var doll: Doll
 var part: RigidBody3D
@@ -157,6 +192,10 @@ var last_release: Dictionary = {}
 var last_grab_action := ""
 ## Последняя возвращённая деталь: {body, name, t, how: "touch" | "grab"} (для проб).
 var last_reattach: Dictionary = {}
+## Тяжёлый предмет на якоре рядом с кистью (подсказка «слишком тяжело»).
+var blocked_candidate: RigidBody3D = null
+## Последний бросок: {body, t, dir, speed} (для проб).
+var last_throw: Dictionary = {}
 
 var _ready_done := false
 var _time := 0.0
@@ -182,6 +221,13 @@ var _hl_material: StandardMaterial3D
 var _query: PhysicsShapeQueryParameters3D
 var _bounds_cache: Dictionary = {}     # instance id -> AABB (локальные границы коллизий)
 var _detach_seen: Dictionary = {}      # instance id своей оторванной детали -> _time, когда её впервые увидели оторванной
+var _chain_joint_names: Array[String] = []   # суставы цепи деталь → торс (жёсткость руки с приваренным предметом)
+var _weld: Generic6DOFJoint3D = null
+var _weld_pending := false
+var _stiff_set: Array[String] = []
+var _grab_t := 0.0
+var _hold_angle := 0.0                 # угол предмета относительно детали при захвате (рад, вокруг Z)
+var _hint: Label3D
 
 static var _actions_done := false
 ## Общий реестр подсветки: instance id GeometryInstance3D -> {orig: исходный material_overlay, users: [ArmAssist, …]}.
@@ -210,7 +256,8 @@ func _exit_tree() -> void:
 	if held != null:
 		release("exit")
 	for e in _pending_release:
-		_remove_exceptions(e[0])
+		if is_instance_valid(e[0]):   # предмет мог разбиться (Breakable) или взорваться, пока снимались исключения
+			_remove_exceptions(e[0])
 	_pending_release.clear()
 	_restore_weapon_pickup()
 
@@ -369,6 +416,9 @@ func _setup() -> void:
 		var e: Array = parent_of[cur]
 		chain.append([cur, e[0]])
 		cur = e[1]
+	_chain_joint_names.clear()
+	for e2 in chain:
+		_chain_joint_names.append(String((e2[1] as Node).name))
 	_root_body = part
 	_root_local = grip_local
 	reach = 0.7
@@ -538,6 +588,8 @@ func _physics_process(delta: float) -> void:
 	if held != null:
 		_apply_hold()
 	candidate = null if held != null else find_candidate()
+	if held != null:
+		blocked_candidate = null
 	_update_hints()
 	_update_weapon_pickup_block()
 
@@ -664,6 +716,13 @@ func _apply_assist() -> void:
 
 ## Пружина хвата: +F предмету в его точке хвата, −F детали в её точке хвата; растяжение > HOLD_SLIP_M — срыв.
 func _apply_hold() -> void:
+	if _weld != null:
+		last_hold_force = Vector3.ZERO
+		_apply_hold_angle(WELD_ANG_OMEGA, WELD_TORQUE_MAX)
+		return
+	if _weld_pending and (hold_distance() <= WELD_SNAP_M or _time - _grab_t >= WELD_SNAP_MAX_S):
+		_make_weld()
+		return
 	var p_h := grip_global()
 	var p_i := held.to_global(anchor_local)
 	var d := p_h - p_i
@@ -689,6 +748,124 @@ func _apply_hold() -> void:
 	held.apply_force(f, p_i - held.global_position)
 	part.apply_force(-f, p_h - part.global_position)
 	last_hold_force = f
+	_apply_hold_angle()
+
+
+## Удержание поворота предмета на пружине (средние): момент к углу при захвате, реакция — в торс (у кисти 0.5 кг инерция мала,
+## момент в неё раскачал бы руку). I ≈ m·L²/12 по наибольшему размеру коллизии.
+func _apply_hold_angle(omega: float = HOLD_ANG_OMEGA, t_max: float = HOLD_TORQUE_MAX) -> void:
+	if held.get_parent() is Doll:
+		return   # части кукол (живых — вырываются, мёртвых — болтаются как тряпка) не выравниваем
+	var box := local_bounds(held)
+	var l := maxf(box.size.x, box.size.y)
+	var inertia := maxf(held.mass * l * l / 12.0, 0.02)
+	var err := wrapf(_z_angle(part) + _hold_angle - _z_angle(held), -PI, PI)
+	var w_rel := held.angular_velocity.z - part.angular_velocity.z
+	var t := inertia * (omega * omega * err - 2.0 * HOLD_ANG_ZETA * omega * w_rel)
+	t = clampf(t, -t_max, t_max)
+	held.apply_torque(Vector3(0.0, 0.0, t))
+	if reaction_to_torso:
+		torso.apply_torque(Vector3(0.0, 0.0, -t))
+
+
+static func _z_angle(b: Node3D) -> float:
+	var x := b.global_transform.basis.x
+	return atan2(x.y, x.x)
+
+
+## Приварить держимый предмет к детали: остаток растяжения досняпывается (точка хвата предмета — в точку хвата детали), жёсткий
+## сустав как у WeaponPickup, рука этой стороны — жёсткость руки с оружием.
+func _make_weld() -> void:
+	_weld_pending = false
+	if held == null or not is_instance_valid(held) or part == null:
+		return
+	var g := grip_global()
+	var gap := g - held.to_global(anchor_local)
+	gap.z = 0.0
+	held.global_position += gap
+	held.linear_velocity = _point_velocity(part, g)
+	held.angular_velocity = part.angular_velocity
+	var j := Generic6DOFJoint3D.new()
+	j.name = "Weld_" + part_name
+	add_child(j)
+	j.global_transform = Transform3D(part.global_transform.basis, g)
+	j.exclude_nodes_from_collision = true
+	j.node_a = j.get_path_to(part)
+	j.node_b = j.get_path_to(held)
+	for ax in ["x", "y", "z"]:
+		j.set("linear_limit_%s/enabled" % ax, true)
+		j.set("linear_limit_%s/upper_distance" % ax, 0.0)
+		j.set("linear_limit_%s/lower_distance" % ax, 0.0)
+		j.set("angular_limit_%s/enabled" % ax, true)
+		j.set("angular_limit_%s/upper_angle" % ax, 0.0)
+		j.set("angular_limit_%s/lower_angle" % ax, 0.0)
+	_weld = j
+	_hold_angle = wrapf(_z_angle(held) - _z_angle(part), -PI, PI)
+	_stiff_set.clear()
+	for jn in _chain_joint_names:
+		var grp := jn.split("_")[0]
+		if Tuning.WEAPON_ARM_MUSCLES.has(grp) and doll.joints.has(jn):
+			var e: Dictionary = Tuning.WEAPON_ARM_MUSCLES[grp]
+			doll.set_muscle_joint(jn, float(e["k"]), float(e.get("tmax", -1.0)), float(e.get("zeta", -1.0)))
+			_stiff_set.append(jn)
+
+
+func is_welded() -> bool:
+	return _weld != null and is_instance_valid(_weld)
+
+
+func _unweld() -> void:
+	_weld_pending = false
+	if _weld != null and is_instance_valid(_weld):
+		_weld.node_a = NodePath()
+		_weld.node_b = NodePath()
+		_weld.queue_free()
+	_weld = null
+	if doll != null and is_instance_valid(doll):
+		for jn in _stiff_set:
+			doll.clear_muscle_joint(jn)
+	_stiff_set.clear()
+
+
+## Бросок к цели руки: скорость √(2·E/m) в [THROW_SPEED_MIN, THROW_SPEED_MAX] поверх скорости торса, отдача торсу, закрутка.
+## Части живых кукол и тяжёлые не бросаются (только отпускаются).
+func _throw(b: RigidBody3D) -> void:
+	if b == null or not is_instance_valid(b) or torso == null:
+		return
+	var od := b.get_parent() as Doll
+	if (od != null and od.alive) or PropHeft.heft_of(b) == PropHeft.Heft.HEAVY:
+		return
+	var aim := target - root_point()
+	aim.z = 0.0
+	if aim.length() < 0.15:
+		aim = _point_velocity(part, grip_global())
+		aim.z = 0.0
+	if aim.length_squared() < 1e-4:
+		aim = Vector3.UP
+	var dir := aim.normalized()
+	var m := maxf(b.mass, 0.05)
+	var v := clampf(sqrt(2.0 * THROW_ENERGY / m), THROW_SPEED_MIN, THROW_SPEED_MAX)
+	var base := torso.linear_velocity * THROW_CARRY
+	base.z = 0.0
+	b.linear_velocity = base + dir * v
+	b.angular_velocity = Vector3(0.0, 0.0, -signf(dir.x if absf(dir.x) > 0.1 else 1.0) * THROW_SPIN * clampf(4.0 / m, 0.3, 1.0))
+	torso.apply_central_impulse(-dir * minf(m * v, 150.0) * THROW_RECOIL)
+	last_throw = {"body": b, "t": _time, "dir": dir, "speed": v}
+	var sfx := get_tree().get_first_node_in_group(SfxDirector.GROUP) as SfxDirector
+	if sfx != null:
+		sfx.play_layer("whoosh", 0.0, clampf(1.3 - m * 0.03, 0.7, 1.3), SfxDirector.BUS_SFX, sfx.pan_for(b.global_position))
+
+
+## Нажал захват у тяжёлого на якоре: кисть «упирается» — пыль, глухой звук, подпись мигает.
+func _too_heavy_feedback(b: RigidBody3D) -> void:
+	var p := closest_point(b, grip_global())
+	var m := get_tree().get_first_node_in_group("match")
+	ImpactFx.spawn_impact(m if m != null else doll.get_parent(), p, Vector3.UP, 3.0, "")
+	var sfx := get_tree().get_first_node_in_group(SfxDirector.GROUP) as SfxDirector
+	if sfx != null:
+		sfx.play_layer("thud", -3.0, 0.7, SfxDirector.BUS_SFX, sfx.pan_for(p))
+	if _hint != null:
+		_hint.scale = Vector3.ONE * 1.35
 
 
 ## Скорость точки p тела b (v + ω × r от центра масс).
@@ -717,13 +894,19 @@ func toggle_grab() -> void:
 		return
 	var wp := _weapon_pickup()
 	if wp != null and wp.call("weapon_in", part_name) != null:
+		var w := wp.call("weapon_in", part_name) as RigidBody3D
 		wp.call("drop", part_name)
 		_wp_block_until = _time + REPICK_BLOCK_S
 		last_grab_action = "drop_weapon"
+		if arm_active and w != null and is_instance_valid(w):
+			_throw(w)
 		return
 	var c := find_candidate()
 	if c != null and grab(c):
 		last_grab_action = "grab"
+	elif c == null and blocked_candidate != null and is_instance_valid(blocked_candidate):
+		last_grab_action = "too_heavy"
+		_too_heavy_feedback(blocked_candidate)
 	else:
 		last_grab_action = "none"
 
@@ -765,14 +948,25 @@ func find_candidate() -> RigidBody3D:
 	_query.transform = Transform3D(Basis.IDENTITY, g)
 	var best: RigidBody3D = null
 	var best_d := INF
+	var heavy: RigidBody3D = null
+	var heavy_d := INF
 	for r in space.intersect_shape(_query, 24):
 		var b := r.get("collider") as RigidBody3D
-		if b == null or not can_grab(b):
+		if b == null:
+			continue
+		var grabbable := can_grab(b)
+		if not grabbable and not (b.freeze and PropHeft.anchor_of(b) != null):
 			continue
 		var dist := g.distance_to(closest_point(b, g))
-		if dist <= GRAB_RADIUS and dist < best_d:
+		if dist > GRAB_RADIUS:
+			continue
+		if grabbable and dist < best_d:
 			best_d = dist
 			best = b
+		elif not grabbable and dist < heavy_d:
+			heavy_d = dist
+			heavy = b
+	blocked_candidate = heavy
 	return best
 
 
@@ -793,6 +987,9 @@ func grab(b: RigidBody3D) -> bool:
 	_credit = null
 	if od == null or not od.alive:
 		_credit = ThrownCredit.attach(b, doll)
+	_grab_t = _time
+	_weld_pending = weld_light and (od == null or not od.alive) and b.mass <= WELD_MAX_KG and PropHeft.heft_of(b) == PropHeft.Heft.LIGHT
+	_hold_angle = wrapf(_z_angle(b) - _z_angle(part), -PI, PI)
 	_set_highlight(null)
 	_holders[b.get_instance_id()] = self
 	grabbed.emit(b)
@@ -806,9 +1003,13 @@ func release(reason: String = "toggle") -> void:
 	var b := held
 	held = null
 	last_hold_force = Vector3.ZERO
+	_unweld()
 	_unregister_hold(b)
 	if is_instance_valid(b):
-		last_release = {"body": b, "reason": reason, "t": _time, "velocity": b.linear_velocity, "position": b.global_position}
+		if reason == "toggle" and arm_active and doll.alive:
+			_throw(b)
+		var pos := b.global_position if b.is_inside_tree() else b.position   # выход из дерева (смена арены): глобального нет
+		last_release = {"body": b, "reason": reason, "t": _time, "velocity": b.linear_velocity, "position": pos}
 		var c := credit()
 		if c != null:
 			c.release()
@@ -937,6 +1138,7 @@ func reattach_own(rb: RigidBody3D, how: String) -> bool:
 func _forget_held(reason: String) -> void:
 	var b := held
 	held = null
+	_unweld()
 	_unregister_hold(b)
 	_credit = null
 	released.emit(b, reason)
@@ -946,6 +1148,9 @@ func _tick_pending_release() -> void:
 	var i := 0
 	while i < _pending_release.size():
 		var e: Array = _pending_release[i]
+		if not is_instance_valid(e[0]):
+			_pending_release.remove_at(i)
+			continue
 		var b: RigidBody3D = e[0]
 		if not is_instance_valid(b):
 			_pending_release.remove_at(i)
@@ -1113,6 +1318,21 @@ func _make_hints() -> void:
 	_hl_material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	_hl_material.albedo_color = Color(lerpf(col.r, 1.0, 0.5), lerpf(col.g, 1.0, 0.5), lerpf(col.b, 1.0, 0.5), HIGHLIGHT_ALPHA)
 	_hl_material.set_meta(HL_META, true)
+	_hint = Label3D.new()
+	_hint.name = "GrabHint"
+	_hint.font_size = 30
+	_hint.pixel_size = 0.004
+	_hint.outline_size = 10
+	_hint.outline_modulate = Color(0.06, 0.04, 0.02, 0.9)
+	_hint.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_hint.no_depth_test = true
+	_hint.shaded = false
+	_hint.double_sided = true
+	_hint.render_priority = 5
+	_hint.outline_render_priority = 4
+	_hint.top_level = true
+	_hint.visible = false
+	add_child(_hint)
 
 
 func _update_hints() -> void:
@@ -1122,6 +1342,50 @@ func _update_hints() -> void:
 			# кольцо лицом к камере (+Z): TorusMesh лежит в XZ — поворот на 90° вокруг X
 			_marker.global_transform = Transform3D(Basis(Vector3.RIGHT, PI * 0.5), target + Vector3(0, 0, 0.3))
 	_set_highlight(candidate if show_hints and doll.alive else null)
+	if _hl_material != null:
+		var a := HIGHLIGHT_ALPHA * (0.75 + 0.25 * sin(_time * TAU * HIGHLIGHT_PULSE_HZ))
+		_hl_material.albedo_color.a = a
+	_update_label()
+
+
+## Подпись над предметом (только живой игрок: у ботов и проб — нет).
+func _update_label() -> void:
+	if _hint == null:
+		return
+	var show := show_hints and doll.alive and not doll.external_input
+	var key := "E" if _mouse_enabled() else "RB"
+	var aim := "ЛКМ" if _mouse_enabled() else "стик"
+	var b: RigidBody3D = null
+	var text := ""
+	var kind := "grab"
+	if held != null and is_instance_valid(held):
+		b = held
+		if held.get_parent() is Doll and (held.get_parent() as Doll).alive:
+			text = "%s — отпустить" % key
+		else:
+			text = "%s+%s — бросок · %s — отпустить" % [aim, key, key]
+		kind = "held"
+	elif candidate != null and is_instance_valid(candidate):
+		b = candidate
+		var h := PropHeft.heft_of(candidate)
+		if h == PropHeft.Heft.MEDIUM and not (candidate.get_parent() is Doll):
+			text = "%s — тащить (тяжёлое)" % key
+			kind = "medium"
+		else:
+			text = "%s — взять" % key
+	elif blocked_candidate != null and is_instance_valid(blocked_candidate):
+		b = blocked_candidate
+		text = "слишком тяжело"
+		kind = "heavy"
+	if not show or b == null:
+		_hint.visible = false
+		return
+	_hint.text = text
+	_hint.modulate = HINT_COLOURS[kind]
+	var box := b.global_transform * local_bounds(b)
+	_hint.global_position = Vector3(box.get_center().x, box.end.y + HINT_UP_M, 0.6)
+	_hint.scale = _hint.scale.lerp(Vector3.ONE, 0.2)
+	_hint.visible = true
 
 
 ## Подсветка предмета. Один предмет могут подсвечивать несколько рук (P1 и P2 тянутся к одному ящику): исходный overlay и

@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://sc11metalbar"]
 
+[ext_resource type="Script" path="res://scenes/props/explosive_barrel.gd" id="0_expl"]
 [ext_resource type="PackedScene" path="res://assets/models/scrap/props/Metal_Barrel.glb" id="1_h5wfd"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_tw2f5"]
@@ -14,11 +15,16 @@ radius = 0.3
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
-mass = 40.0
+mass = 12.0
 physics_material_override = SubResource("PhysicsMaterial_tw2f5")
 continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
 linear_damp = 0.2
 angular_damp = 0.5
+script = ExtResource("0_expl")
+kind = "barrel"
+hp = 20.0
 
 [node name="Shape" type="CollisionShape3D" parent="." unique_id=1914338369]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.455, 0)

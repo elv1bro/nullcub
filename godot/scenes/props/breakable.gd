@@ -11,6 +11,9 @@
 ## RigidBody3D-обломки (выпуклая оболочка меша, скорость родителя + разлёт burst_speed), сигнал destroyed, само тело
 ## исчезает. Обломки замерзают через debris_freeze_s и удаляются через debris_free_s. Всё, что меняет физику/дерево,
 ## делается deferred — контакты приходят внутри коллбэка физики.
+## Брошенный / схваченный пропс (29.09): пока на нём зачёт ThrownCredit (в руке или WINDOW_S после броска), порог скорости —
+## min(min_impact_speed, THROWN_MIN_SPEED), урон × THROWN_DAMAGE_MULT: ящик 10 кг, брошенный на 2.9 м/с и быстрее, разлетается о пол, стену
+## или соперника; ударить им с размаху в руке — тоже.
 class_name Breakable
 extends RigidBody3D
 
@@ -27,6 +30,8 @@ const HP := {"barrel": 30.0, "crate": 20.0}
 const REF_MASS := 4.0          # кг: удар этой массой = множитель 1 (голова/нога куклы)
 const HIT_COOLDOWN_S := 0.25
 const MIN_CONTACTS := 16
+const THROWN_MIN_SPEED := 2.5  # м/с: брошенный пропс колется от удара уже с этой скорости
+const THROWN_DAMAGE_MULT := 7.0   # ящик 20 HP: бросок ≥ 2.9 м/с в стену / пол / соперника — в щепки, 2.5 м/с — треснул
 
 @export_enum("barrel", "crate") var kind := "barrel"
 @export var hp := 30.0
@@ -70,6 +75,9 @@ func _integrate_forces(st: PhysicsDirectBodyState3D) -> void:
 	if by_id.is_empty():
 		return
 	var bounce := physics_material_override.bounce if physics_material_override else 0.0
+	var tc := ThrownCredit.of(self)
+	var thrown := tc != null and tc.attacker() != null
+	var min_speed := minf(min_impact_speed, THROWN_MIN_SPEED) if thrown else min_impact_speed
 	for id in by_id.keys():
 		if float(_hit_until.get(id, -1.0)) > _time:
 			continue
@@ -81,10 +89,10 @@ func _integrate_forces(st: PhysicsDirectBodyState3D) -> void:
 			inv_m += 1.0 / om
 			mf = clampf(om / REF_MASS, 0.5, 2.0)
 		var speed: float = (by_id[id]["impulse"] as Vector3).length() * inv_m / (1.0 + bounce)
-		if speed < min_impact_speed:
+		if speed < min_speed:
 			continue
 		_hit_until[id] = _time + HIT_COOLDOWN_S
-		var dmg := speed * damage_per_speed * mf
+		var dmg := speed * damage_per_speed * mf * (THROWN_DAMAGE_MULT if thrown else 1.0)
 		last_hit = {"speed": speed, "damage": dmg, "by": other}
 		hit.emit(speed, dmg, other)
 		take_damage.call_deferred(dmg)

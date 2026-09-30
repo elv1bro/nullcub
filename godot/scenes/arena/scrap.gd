@@ -54,6 +54,8 @@ func _ready() -> void:
 			_loot_scenes.append(load(LootItem.SCENE % id))
 	for b in breakables():
 		watch_breakable(b)
+	for b in loose_bodies():
+		PropHeft.equip(b)   # вес по классам (scenes/props/prop_heft.gd): тяжёлое не сдвинуть, среднее — с трудом
 
 
 ## Ключевой свет едет за камерой: точка на плоскости кукол под центром кадра освещена сильнее, чем задний план за ней.

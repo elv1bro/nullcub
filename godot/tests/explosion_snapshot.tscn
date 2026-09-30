@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://explsnapshot1"]
+
+[ext_resource type="Script" path="res://tests/explosion_snapshot.gd" id="1_exs"]
+
+[node name="ExplosionSnapshot" type="Node3D"]
+script = ExtResource("1_exs")

@@ -8,7 +8,8 @@
 ##     (не провалился сквозь коллизию) и успокоиться.
 ##   Фаза 2 «удар» (только B — у кого есть скрипт breakable.gd): свежий экземпляр отстаивается SETTLE кадров, затем в него
 ##     летит тяжёлое тело (40 кг, куб 0.4 м, CCD) со скоростью 30 м/с; до 3 попыток. Проверки: сигнал destroyed пришёл,
-##     обломков (группа "debris" на этой дорожке) ≥ 3, через 60 кадров все обломки над полом.
+##     обломков (группа "debris" на этой дорожке) ≥ 3, через 60 кадров все обломки над полом. Взрывные бочки (ExplosiveBarrel,
+##     prop_metal_barrel*, 29.09) обломков не дают — вместо них проверяется взрыв (узел Explosion на дорожке, толкнул снаряд).
 ## Печатает таблицу и JSON-отчёт (tests/scrap_props_probe_report.json); код выхода 0 — всё ок, 1 — есть провалы.
 extends Node3D
 
@@ -167,8 +168,10 @@ func _start_hits() -> void:
 		n.position = Vector3(0, 0.02, z)
 		add_child(n)
 		var h := {"name": it["name"], "node": n, "lane_z": z, "stage": "settle", "t": 0, "tries": 0, "destroyed": false,
-			"proj": null, "debris": 0, "debris_low": 0, "speeds": []}
+			"proj": null, "debris": 0, "debris_low": 0, "speeds": [], "explosive": n is ExplosiveBarrel, "exploded": false}
 		n.connect("destroyed", func() -> void: h["destroyed"] = true)
+		if n is ExplosiveBarrel:
+			n.tree_exited.connect(func() -> void: h["exploded"] = _explosion_on_lane(z))
 		n.connect("hit", func(speed: float, dmg: float, _by: Node) -> void: h["speeds"].append([snappedf(speed, 0.1), snappedf(dmg, 0.1)]))
 		hits.append(h)
 	if hits.is_empty():
@@ -203,8 +206,11 @@ func _tick_hits() -> void:
 		for h in hits:
 			var ok: bool = h["destroyed"] and h["debris"] >= 3 and h["debris_low"] == 0
 			var why := "ok" if ok else ("не разрушился" if not h["destroyed"] else "обломков %d, под полом %d" % [h["debris"], h["debris_low"]])
+			if h["explosive"]:
+				ok = h["destroyed"] and h["exploded"]
+				why = "ok (взрыв)" if ok else ("не разрушился" if not h["destroyed"] else "нет взрыва")
 			print("hit %-30s tries=%d destroyed=%s debris=%d hits=%s  %s" % [h["name"], h["tries"], str(h["destroyed"]), h["debris"], str(h["speeds"]), why])
-			_check("hit:" + h["name"], ok, {"tries": h["tries"], "destroyed": h["destroyed"], "debris": h["debris"], "debris_below_floor": h["debris_low"], "hits": h["speeds"]})
+			_check("hit:" + h["name"], ok, {"tries": h["tries"], "destroyed": h["destroyed"], "debris": h["debris"], "debris_below_floor": h["debris_low"], "hits": h["speeds"], "exploded": h["exploded"]})
 		_finish()
 
 
@@ -223,6 +229,13 @@ func _launch(h: Dictionary) -> void:
 	add_child(p)
 	p.linear_velocity = Vector3(HIT_SPEED, 0, 0)
 	h["proj"] = p
+
+
+func _explosion_on_lane(z: float) -> bool:
+	for c in get_children():
+		if c is Explosion and absf((c as Node3D).global_position.z - z) < 1.0:
+			return true
+	return false
 
 
 func _count_debris(h: Dictionary) -> void:

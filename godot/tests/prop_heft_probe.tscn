@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://propheftprb"]
+
+[ext_resource type="Script" path="res://tests/prop_heft_probe.gd" id="1_php"]
+
+[node name="PropHeftProbe" type="Node3D"]
+script = ExtResource("1_php")

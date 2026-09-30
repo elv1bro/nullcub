@@ -21,7 +21,8 @@ const DOLL_SCENE := "res://scenes/doll/doll.tscn"
 const DOLL_DARK_SCENE := "res://scenes/doll/doll_dark.tscn"
 const CRATE := "res://scenes/props/scrap/prop_wooden_crate.tscn"            # 10 кг, Breakable
 const BARREL := "res://scenes/props/scrap/prop_wooden_barrel.tscn"          # 15 кг, Breakable
-const METAL_BARREL := "res://scenes/props/scrap/prop_metal_barrel.tscn"     # 40 кг
+## 29.09: железная бочка стала взрывной 12 кг — класс «40 кг» теперь связка труб
+const METAL_BARREL := "res://scenes/props/scrap/prop_pipe_bundle.tscn"      # 40 кг
 const SHIP_CRATE := "res://scenes/props/scrap/prop_large_shipping_crate.tscn"   # 80 кг, 2.4 × 1.4
 const BIT_HEAD := "res://scenes/props/scrap/bit_doll_head_cracked.tscn"     # 2.6 кг
 const BIT_BOLT := "res://scenes/props/scrap/bit_bolt.tscn"                  # 0.3 кг
@@ -313,7 +314,8 @@ func _case_zero_sum() -> void:
 ##                   вдоль броска (> RELEASE_MIN_V и упала ниже 85 % максимума).
 ## Возвращает телеметрию и credit_hits (удары ThrownCredit по сигналу, since_release_s < 0 — удар ещё в руке); предмет летит дальше —
 ## за ним следит _track_flight.
-func _throw(p1: Doll, arm: ArmAssist, item: RigidBody3D, dir_sign: float, style: String = "run", lift_s: float = 0.8, shots: Variant = null) -> Dictionary:
+## aim_at (29.09): бросок летит к цели руки в момент нажатия — задать точку прицела (у throw_hit — торс жертвы); null — цель маха.
+func _throw(p1: Doll, arm: ArmAssist, item: RigidBody3D, dir_sign: float, style: String = "run", lift_s: float = 0.8, shots: Variant = null, aim_at: Variant = null) -> Dictionary:
 	var out := {"grabbed": false, "style": style, "credit_hits": []}
 	# 1. дотянуться: цель — ближайшая к плечу точка предмета, чуть выше
 	var t0 := 0
@@ -385,6 +387,9 @@ func _throw(p1: Doll, arm: ArmAssist, item: RigidBody3D, dir_sign: float, style:
 				break
 	out["held_before_release"] = arm.held == item
 	out["hold_stretch_max_m"] = snappedf(hold_max, 0.003)
+	if aim_at is Vector3:
+		arm.set_target_override(aim_at)
+		await _ticks(1)
 	arm.press_grab()
 	await _ticks(1)
 	p1.input_vec = Vector2.ZERO
@@ -474,7 +479,7 @@ func _case_throw_hit() -> void:
 			"t": Time.get_ticks_msec()}))
 	await _ticks(50)
 	var hp0 := p2.hp
-	var r := await _throw(p1, arm, crate, -1.0, "run")
+	var r := await _throw(p1, arm, crate, -1.0, "run", 0.8, null, p2.torso().global_position)
 	if not r["grabbed"]:
 		_check("hit_grabbed", false, false, true)
 		return
@@ -624,6 +629,8 @@ func _case_toggle() -> void:
 	arm.press_grab()
 	await _ticks(5)
 	var held1 := arm.held == crate
+	arm.clear_target_override()   # 29.09: захват при активной руке — бросок; здесь проверяем «просто отпустить»
+	await _ticks(1)
 	arm.press_grab()
 	await _ticks(1)
 	_check("toggle_grab_release", held1 and arm.held == null and arm.last_release.get("reason", "") == "toggle", [held1, arm.held == null], "[true, true]")

@@ -309,6 +309,9 @@ func _stage_crate_shove(delta: float) -> void:
 		crate_shove_t = stage_t
 		var dir := -1.0 if crate_shove_i == 0 else 1.0
 		# стоя (поза сброшена, не только позиция) и без вращения — как телепорт бочки в scrap_machines_probe
+		var anchor := PropHeft.anchor_of(crate)   # 29.09: большой ящик на якоре (PropHeft) — перенос скриптом его будит
+		if anchor != null:
+			anchor.wake()
 		crate.global_transform = Transform3D(Basis.IDENTITY, Vector3(pit.get_center().x, SHAFT_Y, 0.0))
 		crate.angular_velocity = Vector3.ZERO
 		crate.linear_velocity = Vector3(dir * SHAFT_SPEED, 0.0, 0.0)

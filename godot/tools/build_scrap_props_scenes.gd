@@ -15,6 +15,7 @@
 ##      туннелируют): визуальный лист 0.03–0.05 м стоит в середине бокса, лёжа «парит» на ~1–2.5 см.
 ##      Колёса тележек/корзины/вагонетки/тачки в этой волне — часть корпуса (цилиндры в коллизии, не вращаются); катание
 ##      (отдельные тела колёс на шарнирах, вагонетка на рельсах — M) — позже.
+##   E  как B, скрипт explosive_barrel.gd (Breakable + фитиль и взрыв Explosion), Mesh без Destroyed — обломков нет.
 ##   S  StaticBody3D с упрощённой коллизией (перевёрнутая тележка, кучи обломков, стопки/штабели для декора).
 ## Решение по 023/027 (обломки ящика и бочки): варианты A/B — лёгкие R (6 и 5/4 кг): крупные (0.6–1 м), в плоскости боя,
 ## их весело пинать; «debris» — S: плоские кучи из многих кусков как одно тело выглядели бы склеенным комком, а низкий
@@ -25,7 +26,7 @@
 ##   prop_wooden_barrel          B 15, HP 30, цилиндр r0.33 × 1.0
 ##   prop_broken_crate_a/_b      R 6, бокс 1.0 × 0.62 × 1.0             prop_broken_crate_debris S, бокс 1.1 × 0.14 × 0.9
 ##   prop_large_shipping_crate   R 80, бокс 2.4 × 1.4 × 1.4
-##   prop_metal_barrel/_dented   R 40, цилиндр r0.3 × 0.91
+##   prop_metal_barrel/_dented   E 12, HP 20, цилиндр r0.3 × 0.91 — взрывные (scenes/props/explosive_barrel.gd, 29.09: было R 40)
 ##   prop_broken_barrel_a        R 5, лежачий цилиндр r0.38 × 1.0 вдоль Z (катится в плоскости XY)
 ##   prop_broken_barrel_b        R 4, цилиндр r0.36 × 0.62              prop_broken_barrel_debris S, бокс 1.2 × 0.07 × 0.7
 ##   prop_scrap_basket/_full     R 15 / 35, бокс 1.0 × 0.8 × 0.7 (+ бокс кучи у full)
@@ -45,6 +46,7 @@ extends SceneTree
 const DIR := "res://scenes/props/scrap/"
 const GLB := "res://assets/models/scrap/props/%s.glb"
 const BREAKABLE := preload("res://scenes/props/breakable.gd")
+const EXPLOSIVE := preload("res://scenes/props/explosive_barrel.gd")
 
 ## Массы, кг. Держим здесь, а не в scripts/tuning.gd: его сейчас правит другая сессия — при сведении перенести в Tuning
 ## (раздел пропсов) и читать оттуда. Ориентиры задачи: ящик 10, бочка 15 (как props/crate, barrel), железная бочка ~40,
@@ -53,7 +55,7 @@ const MASS := {
 	"wooden_crate": 10.0, "reinforced_crate": 20.0, "wooden_barrel": 15.0,
 	"broken_crate_a": 6.0, "broken_crate_b": 6.0,
 	"large_shipping_crate": 80.0,
-	"metal_barrel": 40.0, "metal_barrel_dented": 40.0,
+	"metal_barrel": 12.0, "metal_barrel_dented": 12.0,   # взрывные: лёгкий класс (PropHeft) — схватить и бросить
 	"broken_barrel_a": 5.0, "broken_barrel_b": 4.0,
 	"scrap_basket": 15.0, "scrap_basket_full": 35.0,
 	"junk_cart": 30.0, "junk_cart_loaded": 55.0,
@@ -71,8 +73,8 @@ const MASS := {
 ## Разрушаемые: HP и порог скорости удара (breakable.gd: урон = v × damage_per_speed × mass_factor при v ≥ порога).
 ## Деревянный ящик/бочка — как props/crate, barrel (20 / 30, 6 м/с); усиленный ящик в 2.5 раза прочнее и не колется
 ## о лёгкие удары (порог 8 м/с).
-const HP := {"wooden_crate": 20.0, "reinforced_crate": 50.0, "wooden_barrel": 30.0}
-const MIN_IMPACT := {"wooden_crate": 6.0, "reinforced_crate": 8.0, "wooden_barrel": 6.0}
+const HP := {"wooden_crate": 20.0, "reinforced_crate": 50.0, "wooden_barrel": 30.0, "metal_barrel": 20.0, "metal_barrel_dented": 20.0}
+const MIN_IMPACT := {"wooden_crate": 6.0, "reinforced_crate": 8.0, "wooden_barrel": 6.0, "metal_barrel": 6.0, "metal_barrel_dented": 6.0}
 
 var _wood: PhysicsMaterial
 var _metal: PhysicsMaterial
@@ -100,8 +102,8 @@ func _init() -> void:
 	_static_prop("broken_barrel_debris", "Broken_Barrel_Debris", _wood, [_s(_box(Vector3(1.2, 0.07, 0.7)), Vector3(0, 0.035, 0))])
 	# --- R: ящик, бочки
 	_rigid_prop("large_shipping_crate", "Large_Shipping_Crate", _wood, [_s(_box(Vector3(2.4, 1.4, 1.4)), Vector3(0, 0.7, 0))])
-	_rigid_prop("metal_barrel", "Metal_Barrel", _metal, [_s(_cyl(0.3, 0.91), Vector3(0, 0.455, 0))])
-	_rigid_prop("metal_barrel_dented", "Metal_Barrel_Dented", _metal, [_s(_cyl(0.3, 0.91), Vector3(0, 0.455, 0))])
+	_breakable("metal_barrel", "Metal_Barrel", "barrel", [_s(_cyl(0.3, 0.91), Vector3(0, 0.455, 0))], EXPLOSIVE, _metal)
+	_breakable("metal_barrel_dented", "Metal_Barrel_Dented", "barrel", [_s(_cyl(0.3, 0.91), Vector3(0, 0.455, 0))], EXPLOSIVE, _metal)
 	# --- 028 корзина (колёсики — часть корпуса)
 	var basket := [_s(_box(Vector3(1.0, 0.8, 0.7)), Vector3(0, 0.4, 0))]
 	_rigid_prop("scrap_basket", "Scrap_Basket", _metal, basket)
@@ -230,9 +232,9 @@ func _rigid(key: String, glb: String, phys: PhysicsMaterial) -> RigidBody3D:
 	return b
 
 
-func _breakable(key: String, glb: String, kind: String, specs: Array) -> void:
-	var b := _rigid(key, glb, _wood)
-	b.set_script(BREAKABLE)
+func _breakable(key: String, glb: String, kind: String, specs: Array, script: Script = BREAKABLE, phys: PhysicsMaterial = null) -> void:
+	var b := _rigid(key, glb, phys if phys != null else _wood)
+	b.set_script(script)
 	b.set("kind", kind)
 	b.set("hp", HP[key])
 	b.set("min_impact_speed", MIN_IMPACT[key])
