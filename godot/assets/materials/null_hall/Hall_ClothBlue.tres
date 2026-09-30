@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/fabric_blue/albedo.png" id="1_yvs3d"]
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/fabric_blue/normal.png" id="2_bln2g"]
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/fabric_blue/roughness.png" id="3_hkwx4"]
+
+[resource]
+resource_name = "Hall_ClothBlue"
+albedo_texture = ExtResource("1_yvs3d")
+roughness = 0.9
+roughness_texture = ExtResource("3_hkwx4")
+normal_enabled = true
+normal_texture = ExtResource("2_bln2g")

@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "Hall_LightWarm"
+albedo_color = Color(0.9546871, 0.735357, 0.48452926, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(1, 0.7483791, 0.43662706, 1)
+emission_energy_multiplier = 3.0

@@ -1,0 +1,272 @@
+{
+ "cols": 8,
+ "rows": 6,
+ "variants": 16,
+ "poses": 3,
+ "cell_m": [
+  1.6,
+  2.25
+ ],
+ "px_per_m": 120,
+ "seed": 2026,
+ "pose_arms": [
+  [
+   20.0,
+   10.0
+  ],
+  [
+   100.0,
+   40.0
+  ],
+  [
+   160.0,
+   15.0
+  ]
+ ],
+ "builds": [
+  {
+   "head": "Head_Crate",
+   "core": "Core_Ball",
+   "arm": "Limb_Rope",
+   "leg": "Limb_Thick",
+   "hand": "Hand_Claw",
+   "foot": "Foot_Flipper",
+   "player": 4,
+   "bases": {
+    "core": "Brass",
+    "leg": "Bone"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Crate",
+   "core": "Core_Ball",
+   "arm": "Limb_Thick",
+   "leg": "Limb_Fantasy",
+   "hand": "Hand_Mitten",
+   "foot": "Foot_Spring",
+   "player": 3,
+   "bases": {
+    "head": "PaintBlue",
+    "core": "PaintYellow"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Lantern",
+   "core": "Core_Toy",
+   "arm": "Limb_Tentacle",
+   "leg": "Limb_Plate",
+   "hand": "Hand_Paddle",
+   "foot": "Foot_Peg",
+   "player": 3,
+   "bases": {
+    "head": "Brass",
+    "core": "PaintGreen",
+    "arm": "PaintWhite"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Can",
+   "core": "Core_Boiler",
+   "arm": "Limb_Rope",
+   "leg": "Limb_Plate",
+   "hand": "Hand_Paddle",
+   "foot": "Foot_Flipper",
+   "player": 4,
+   "bases": {
+    "head": "Bone",
+    "core": "PaintRed"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Skull",
+   "core": "Core_Boiler",
+   "arm": "Limb_Spring",
+   "leg": "Limb_Fantasy",
+   "hand": "Hand_Claw",
+   "foot": "Foot_Boot",
+   "player": 4,
+   "bases": {
+    "head": "Brass",
+    "leg": "RustRed"
+   },
+   "extras": [
+    "Deco_Wings"
+   ]
+  },
+  {
+   "head": "Head_Can",
+   "core": "Core_Cage",
+   "arm": "Limb_Curved",
+   "leg": "Limb_Robotic",
+   "hand": "Hand_Claw",
+   "foot": "Foot_Wheel",
+   "player": 3,
+   "bases": {
+    "head": "WoodDark",
+    "core": "Iron"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Can",
+   "core": "Core_Boiler",
+   "arm": "Limb_Rope",
+   "leg": "Limb_Fantasy",
+   "hand": "Hand_Paddle",
+   "foot": "Foot_Flipper",
+   "player": 1,
+   "bases": {
+    "core": "Bone",
+    "arm": "Brass"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Bot",
+   "core": "Core_Boiler",
+   "arm": "Limb_Robotic",
+   "leg": "Limb_Thick",
+   "hand": "Hand_Clamp",
+   "foot": "Foot_Spring",
+   "player": 3,
+   "bases": {
+    "head": "Brass",
+    "arm": "Wood",
+    "leg": "PaintGreen"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Horned",
+   "core": "Core_Crate",
+   "arm": "Limb_Thick",
+   "leg": "Limb_Basic",
+   "hand": "Hand_Fist",
+   "foot": "Foot_Wheel",
+   "player": 3,
+   "bases": {
+    "head": "PaintYellow",
+    "core": "Iron"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Horned",
+   "core": "Core_Boiler",
+   "arm": "Limb_Fantasy",
+   "leg": "Limb_Piston",
+   "hand": "Hand_Fist",
+   "foot": "Foot_Flipper",
+   "player": 3,
+   "bases": {
+    "head": "Rust",
+    "core": "WoodDark"
+   },
+   "extras": [
+    "Deco_Wings"
+   ]
+  },
+  {
+   "head": "Head_Horned",
+   "core": "Core_Boiler",
+   "arm": "Limb_Basic",
+   "leg": "Limb_Thick",
+   "hand": "Hand_Paddle",
+   "foot": "Foot_Boot",
+   "player": 1,
+   "bases": {
+    "core": "Bone",
+    "leg": "PaintGreen"
+   },
+   "extras": [
+    "Deco_Wings"
+   ]
+  },
+  {
+   "head": "Head_Can",
+   "core": "Core_Boiler",
+   "arm": "Limb_Fantasy",
+   "leg": "Limb_Piston",
+   "hand": "Hand_Claw",
+   "foot": "Foot_Flipper",
+   "player": 2,
+   "bases": {
+    "head": "PaintYellow",
+    "core": "PaintRed",
+    "arm": "Maple",
+    "leg": "Wood"
+   },
+   "extras": [
+    "Deco_Crown"
+   ]
+  },
+  {
+   "head": "Head_Round",
+   "core": "Core_Boiler",
+   "arm": "Limb_Bone",
+   "leg": "Limb_Fantasy",
+   "hand": "Hand_Mitten",
+   "foot": "Foot_Peg",
+   "player": 2,
+   "bases": {
+    "core": "WoodDark",
+    "arm": "Pink",
+    "leg": "PaintBlue"
+   },
+   "extras": [
+    "Deco_Wings"
+   ]
+  },
+  {
+   "head": "Head_Bot",
+   "core": "Core_Ball",
+   "arm": "Limb_Spring",
+   "leg": "Limb_Plate",
+   "hand": "Hand_Paddle",
+   "foot": "Foot_Spring",
+   "player": 4,
+   "bases": {
+    "head": "WoodDark",
+    "core": "PaintGreen",
+    "arm": "RustRed"
+   },
+   "extras": []
+  },
+  {
+   "head": "Head_Horned",
+   "core": "Core_Barrel",
+   "arm": "Limb_Thick",
+   "leg": "Limb_Fantasy",
+   "hand": "Hand_Clamp",
+   "foot": "Foot_Spring",
+   "player": 2,
+   "bases": {
+    "core": "WoodDark",
+    "arm": "Rust",
+    "leg": "RustRed"
+   },
+   "extras": [
+    "Deco_Antenna"
+   ]
+  },
+  {
+   "head": "Head_Horned",
+   "core": "Core_Toy",
+   "arm": "Limb_Tentacle",
+   "leg": "Limb_Plate",
+   "hand": "Hand_Fist",
+   "foot": "Foot_Peg",
+   "player": 1,
+   "bases": {
+    "core": "PaintWhite",
+    "arm": "Rust",
+    "leg": "PaintYellow"
+   },
+   "extras": []
+  }
+ ]
+}

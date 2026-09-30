@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/paint_marks/albedo.png" id="1_dygua"]
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/paint_marks/roughness.png" id="2_3h581"]
+
+[resource]
+resource_name = "Hall_Yellow"
+albedo_color = Color(1, 0.7483791, 0.15170372, 1)
+albedo_texture = ExtResource("1_dygua")
+roughness = 0.8
+roughness_texture = ExtResource("2_3h581")
