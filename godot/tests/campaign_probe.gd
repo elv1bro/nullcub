@@ -200,8 +200,14 @@ func _flow() -> void:
 		if not shelf.has(d.id):
 			extra.append(d.id)
 	var tr_on_shelf := CraftEdit.parts_of_kinds(CraftEdit.KIND_ORDER).any(func(d: PartDef) -> bool: return d.id == tr)
-	var presets: Control = ws.ui.get("presets_box") if ws != null and ws.ui != null else null
-	var tiles_hidden := presets != null and not presets.visible
+	# UI мастерской v0.3: шаблоны — стрелки ‹ › у имени и плитки во всплывашке имени
+	var tiles_hidden := false
+	if ws != null and ws.ui != null:
+		ws.ui.call("_fill_templates")
+		await _phys(2)
+		var grid: Control = ws.ui.get("templates_grid")
+		var prev_b: Control = ws.ui.get("prev_template")
+		tiles_hidden = grid != null and grid.get_child_count() == 0 and prev_b != null and not prev_b.visible
 	var bench_empty := ws != null and ws.weapon_bp != null and ws.weapon_bp.nodes.is_empty()
 	_check("workshop_shelf", ws != null and ws.get_parent() == c.get_node("Stage") and extra.is_empty() and tr_on_shelf
 		and CraftEdit.load_body_preset("kit_king") == null and CraftEdit.load_weapon_preset("hammer") == null and tiles_hidden
