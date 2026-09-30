@@ -1249,6 +1249,74 @@ static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 	return {"ok": true, "code": "ok", "reason": "", "uid": first, "count": count, "replaced": replaced}
 
 
+## Копия поддерева src_uid чертежа src (все свойства узлов: деталь, материал, шарнир, угол покоя, покраска, наклейки; кроме uid,
+## родителя, якоря и явного имени) в dst на якорь anchor детали parent (v0.3: перенос ветки мышью, дубликат ветки). Занятый якорь —
+## замена, как у attach. {ok, code, reason, uid (корень копии), map: {старый uid: новый}, count}.
+static func graft_subtree(dst: BodyBlueprint, src: BodyBlueprint, src_uid: String, parent: String, anchor: String) -> Dictionary:
+	var queue: Array = [[src_uid, parent, anchor_name(anchor)]]
+	var map := {}
+	var first := ""
+	while not queue.is_empty():
+		var q: Array = queue.pop_front()
+		var sn := find(src, String(q[0]))
+		var part_id := String(sn.get("part", ""))
+		var c := check(dst, part_id, String(q[1]), String(q[2]))
+		if not bool(c["ok"]):
+			var d := part(part_id)
+			return {"ok": false, "code": String(c["code"]), "map": map,
+				"reason": energy_reason("«%s»" % (d.title if d != null else part_id), int(c["energy_after"]), dst.energy_budget)
+				if String(c["code"]) == "energy" else String(c["reason"])}
+		var res := _apply_attach(dst, part_id, String(q[1]), String(q[2]))
+		var nu := String(res.get("uid", ""))
+		var dn := find(dst, nu)
+		for k in sn:
+			if not String(k) in ["uid", "parent", "anchor", "name", "part"]:
+				var v: Variant = sn[k]
+				dn[k] = v.duplicate(true) if v is Dictionary or v is Array else v
+		map[String(q[0])] = nu
+		if first == "":
+			first = nu
+		for ch in children_of(src, String(q[0])):
+			queue.append([String(ch["uid"]), nu, String(ch.get("anchor", ""))])
+	if dst.energy_used() > dst.energy_budget:
+		return {"ok": false, "code": "energy", "map": map, "reason": energy_reason("эту ветку", dst.energy_used(), dst.energy_budget)}
+	var errs := structural_errors(dst)
+	if not errs.is_empty():
+		return {"ok": false, "code": "invalid", "map": map, "reason": _friendly(errs[0])}
+	return {"ok": true, "code": "ok", "reason": "", "uid": first, "map": map, "count": map.size()}
+
+
+## Перенос ветки uid на якорь anchor детали parent (v0.3: тащишь деталь с куклы). Возвращает {ok, reason, bp (новый чертёж), uid}.
+## Тяги, ПКМ-тяги и держатель оружия переезжают вместе с деталями (uid меняются — по map).
+static func move_subtree(bp: BodyBlueprint, uid: String, parent: String, anchor: String) -> Dictionary:
+	if String(find(bp, uid).get("parent", "")) == "":
+		return {"ok": false, "code": "root", "reason": "Ядро не переносится — перетащи другое ядро поверх"}
+	if subtree(bp, uid).has(parent):
+		return {"ok": false, "code": "self", "reason": "Ветку нельзя повесить на саму себя"}
+	var trial := dup_body(bp)
+	detach(trial, uid)
+	var r := graft_subtree(trial, bp, uid, parent, anchor)
+	if not bool(r["ok"]):
+		return r
+	var m: Dictionary = r["map"]
+	var ctrl: PackedStringArray = []
+	for c in bp.control:
+		var nc := String(m.get(c, c))
+		if not find(trial, nc).is_empty() and not ctrl.has(nc):
+			ctrl.append(nc)
+	trial.control = ctrl
+	var rmb: PackedStringArray = []
+	for c in bp.control_rmb:
+		var nc := String(m.get(c, c))
+		if ctrl.has(nc):
+			rmb.append(nc)
+	trial.control_rmb = rmb
+	if bp.weapon_on != "":
+		trial.weapon_on = String(m.get(bp.weapon_on, bp.weapon_on))
+	r["bp"] = trial
+	return r
+
+
 ## Длина детали, м: наибольший размер её форм столкновения (кэш по id).
 static func part_length(d: PartDef) -> float:
 	if d == null or d.scene == null:
