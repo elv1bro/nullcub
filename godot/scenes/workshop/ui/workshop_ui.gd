@@ -283,7 +283,9 @@ func _build_top() -> void:
 	title_button.tooltip_text = "Клавиши и мышь"
 	title_button.flat = true
 	title_button.focus_mode = Control.FOCUS_NONE
-	title_button.add_theme_font_size_override("font_size", 30)
+	title_button.add_theme_font_size_override("font_size", 28)
+	for st_name in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+		title_button.add_theme_stylebox_override(st_name, StyleBoxEmpty.new())
 	title_button.add_theme_color_override("font_color", WsStyle.TEXT)
 	title_button.add_theme_color_override("font_hover_color", WsStyle.TEXT_SELECTED)
 	title_button.add_theme_color_override("font_pressed_color", WsStyle.AMBER)

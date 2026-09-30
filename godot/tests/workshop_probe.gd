@@ -73,7 +73,7 @@ const GHOST_ANG_TOL := 1.0
 const PATTERN_FRAME_MAX_MS := 20.0   # шаг очереди раскраски (бюджет 4 мс + срез) — с запасом на headless под нагрузкой
 
 ## Столько проверок проба делает целиком (меньше — какой-то раздел упал с ошибкой скрипта).
-const MIN_CHECKS := 201
+const MIN_CHECKS := 209
 var ws: WorkshopBuild
 var report := {"ok": true, "checks": []}
 var shots_dir := ""
@@ -454,6 +454,118 @@ func _core_v03() -> void:
 	ws.redo_stack.clear()
 
 
+## Экран v0.3: боец — 55–65 % ширины, верх одной строкой, шаблоны и имя во всплывашке, поиск по именам для игрока, избранное,
+## недавние, клик по карточке — выбор, паспорт детали с тягой, «было → станет» при протяжке, без строки клавиш и раздела тяг.
+func _ui_v03() -> void:
+	var ui: Node = ws.ui
+	ws.set_preset("kit_human")
+	await _frames(2)
+	ws.history.clear()
+	var fr: Rect2 = ui.call("free_rect")
+	var vp: Vector2 = (ui.get("root") as Control).size
+	var top: Control = ui.get("top_bar")
+	_check("v03_layout", fr.size.x / vp.x >= 0.55 and fr.size.x / vp.x <= 0.65 and top.size.y <= 70.0 and ui.get("keys_bar") == null
+		and ui.get("control_button") == null, "боец — 55–65 % ширины, верх одной строкой, нет строки клавиш и раздела тяг",
+		[snappedf(fr.size.x / vp.x, 0.01), top.size.y])
+	# шаблоны и имя — во всплывашке имени
+	ui.call("_toggle_popup", ui.get("templates_popup"))
+	var grid: GridContainer = ui.get("templates_grid")
+	var tiles := grid.get_child_count()
+	var open := (ui.get("templates_popup") as Control).visible
+	var spider: Button = null
+	for b in grid.get_children():
+		if (b as Button).tooltip_text == "Паук":
+			spider = b
+	if spider != null:
+		spider.pressed.emit()
+	await _frames(1)
+	_check("v03_templates", open and tiles == 5 and ws.blueprint.id == "kit_spider" and not (ui.get("templates_popup") as Control).visible,
+		"клик по имени — 5 шаблонов, «Паук» — сборка паука, всплывашка закрылась", [tiles, ws.blueprint.id])
+	(ui.get("rename_edit") as LineEdit).text_submitted.emit("Мой паук")
+	var renamed := ws.blueprint.title == "Мой паук" and String((ui.get("name_button") as Button).text).begins_with("Мой паук")
+	ws.undo()
+	_check("v03_rename", renamed and ws.blueprint.title != "Мой паук", "переименование в той же всплывашке, Ctrl+Z возвращает имя", ws.blueprint.title)
+	# поиск — по именам для игрока и тегам (PartNames.search_text)
+	var tabs: Dictionary = ui.get("shelf_tab")
+	tabs["body"] = "all"
+	ui.call("_build_left")
+	var search: LineEdit = ui.get("search")
+	search.text = "клешн"
+	ui.call("_build_shelf")
+	var found: Dictionary = (ui.get("_cards") as Dictionary).duplicate()
+	search.text = ""
+	ui.call("_build_shelf")
+	var all_n := (ui.get("_cards") as Dictionary).size()
+	_check("v03_search", found.has("kit_hand_claw") and found.size() < 6 and all_n > 60, "поиск «клешн» — клешня (из %d деталей)" % all_n, found.keys())
+	# избранное и недавние
+	var favs0: PackedStringArray = (ui.get("favorites") as PackedStringArray).duplicate()
+	var filters0: Dictionary = (ui.get("filters") as Dictionary).duplicate()
+	ui.call("_on_favorite", "kit_hand_claw", true)
+	(ui.get("filters") as Dictionary)["fav"] = true
+	ui.call("_build_shelf")
+	var fav_cards: Dictionary = (ui.get("_cards") as Dictionary).duplicate()
+	(ui.get("filters") as Dictionary)["fav"] = false
+	(ui.get("filters") as Dictionary)["recent"] = true
+	ws.recent_parts = PackedStringArray(["kit_hand_mitten", "kit_limb_spring_s"])
+	ui.call("_build_shelf")
+	var rec_cards: Dictionary = (ui.get("_cards") as Dictionary).duplicate()
+	ui.set("favorites", favs0)
+	ui.set("filters", filters0)
+	ui.call("_save_prefs")
+	ui.call("_build_shelf")
+	_check("v03_fav_recent", fav_cards.keys() == ["kit_hand_claw"] and rec_cards.size() == 2 and rec_cards.has("kit_limb_spring_s"),
+		"☆ — фильтр «Избранное» показывает её одну; «Недавние» — только поставленные", [fav_cards.keys(), rec_cards.keys()])
+	# клик по карточке — выбор (не в руку); справа паспорт
+	var card: Control = (ui.get("_cards") as Dictionary).get("kit_hand_claw")
+	if card != null:
+		card.emit_signal("picked", "kit_hand_claw")
+	await _frames(1)
+	var part_box: Control = ui.get("part_box")
+	var summary_box: Control = ui.get("summary_box")
+	_check("v03_card_click", card != null and String(ws.selected.get("part", "")) == "kit_hand_claw" and ws.drag.is_empty() and part_box.visible
+		and not summary_box.visible, "клик по карточке — выбрана (справа паспорт), в руку не взята", ws.selected)
+	ws.clear_selection()
+	await _frames(1)
+	# паспорт детали на бойце: тяга — / ЛКМ / ПКМ кнопками
+	ws.set_preset("kit_human")
+	await _frames(1)
+	ws.select_stand("8")
+	await _frames(1)
+	var pull_row: HBoxContainer = ui.get("pull_row")
+	var rmb: Button = null
+	var h0 := ws.history.size()
+	for b in pull_row.get_children():
+		if b is Button and (b as Button).text == "ПКМ":
+			rmb = b
+	var has_rmb := rmb != null
+	if has_rmb:
+		rmb.pressed.emit()   # паспорт пересоберётся — кнопка освободится
+	await _frames(1)
+	_check("v03_pull_row", pull_row.visible and has_rmb and ws.blueprint.pull_button("8") == "rmb" and ws.history.size() == h0 + 1,
+		"паспорт: «Тяга ПКМ» у предплечья — одна запись истории", [ws.blueprint.control, ws.blueprint.control_rmb])
+	ws.undo()
+	ws.clear_selection()
+	await _frames(1)
+	# при протяжке справа — «было → станет», вверху — энергия «было → станет»
+	ws.detach_part("3")
+	await _frames(1)
+	ws.begin_drag("kit_hand_mitten", Vector2(300, 600))
+	var tw := _find_target(ws.drag["targets"], "2", "Anchor_Wrist")
+	var arrows := false
+	var energy_txt := ""
+	if not tw.is_empty():
+		ws.update_drag(ws.target_screen_pos(tw))
+		await _frames(1)
+		for l in (ui.get("summary_rows") as GridContainer).get_children():
+			arrows = arrows or (l is Label and String((l as Label).text).contains("→"))
+		energy_txt = (ui.get("energy_value") as Label).text
+	ws.cancel_drag()
+	_check("v03_drag_preview", arrows and energy_txt.contains("→"), "протяжка: справа «было → станет», энергия вверху «82 → …»", energy_txt)
+	ws.set_preset("human")
+	ws.history.clear()
+	ws.redo_stack.clear()
+
+
 func _has_ghost_override(n: Node) -> bool:
 	if n is GeometryInstance3D and (n as GeometryInstance3D).material_override == ws._mats["mirror_ghost"]:
 		return true
@@ -478,6 +590,7 @@ func _run() -> void:
 	await _save_load()
 	await _ui_v02()
 	await _core_v03()
+	await _ui_v03()
 	await _kit_shelves()
 	await _kit_presets()
 	await _kit_material()
