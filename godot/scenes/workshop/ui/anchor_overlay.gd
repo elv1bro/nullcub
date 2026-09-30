@@ -1,31 +1,42 @@
-## Якоря поверх 3D (мастерская): берёт WorkshopBuild.overlay_items() каждый кадр и рисует кольца в экранных точках.
-##   target  — выбранный якорь: крупное яркое кольцо с заливкой (сюда встанет);
-##   ok      — принимает деталь: зелёное пульсирующее кольцо + чёрточка направления роста (−Y якоря);
-##   replace — занят, можно заменить: тонкое оранжевое колечко (не спорит с зелёными свободными);
-##   bad     — принимает вид, но не влезает (энергия / сборка): красный крестик, без подсветки;
-##   idle    — свободный якорь, пока ничего не тащишь: маленькая кремовая точка;
-##   control — управляемая деталь («рука мышью»): золотое кольцо и подпись;
-##   dim — разъём не принимает тащимую деталь: приглушённая точка (UI v0.2); selected — выбранная деталь: бегущее пунктирное кольцо;
-##   com / com_ghost — Physics Overlay: центр массы стенда (перекрестие и отвес до пола) и куда он сместится с тащимой деталью;
-##   joint / joint_hover — инструмент шарнира (кит v2): точка связи детали с родителем, кружок цвета типа (JointCard.COLORS) и
-##       подпись типа (у обычной оси без подписи); наведённая деталь — крупнее, с пульсом.
+## Слой поверх 3D (мастерская v0.3): берёт WorkshopBuild.overlay_items() каждый кадр и рисует в экранных точках. Цвета — смысловые
+## (WsStyle): бледно-голубой — совместимый разъём, зелёный — встанет, янтарный — замена / тяга, красный — нельзя.
+##   ok      — совместимый разъём, пока деталь в руке: проступает за FADE_S и ярче ближе к курсору (near 0…1);
+##   target  — разъём под деталью: зелёное кольцо с заливкой (встанет); bad — красный крестик (не встанет: энергия / сборка);
+##   replace — занят, можно заменить: тонкое янтарное колечко;
+##   carry   — кольцо на конце детали в руке (где она прикрутится): голубое, над годным разъёмом — зелёное;
+##   flash   — щелчок: расходящееся кольцо у разъёма (деталь встала / открутилась); refuse — красный пульс и причина;
+##   control — тяга (только с инструментом Q или у выбранной детали): янтарное / голубое кольцо и подпись;
+##   com / com_ghost — центр массы и куда он сместится (кнопка «Физика»); при ней же — слой WsPhysics (нагрузка суставов, опора);
+##   joint / joint_hover — инструмент шарнира: кружок цвета типа (JointCard) и подпись; idle / dim / selected — старые состояния.
 extends Control
 
 const JointCard := preload("res://scenes/workshop/ui/joint_card.gd")
-const R_TARGET := 22.0
-const R_OK := 14.0
+const R_TARGET := 20.0
+const R_OK := 11.0
 const R_IDLE := 5.0
+const FADE_S := 0.18
+const COL_OK := Color(0.72, 0.86, 1.0)
+const COL_GO := Color(0.5, 0.9, 0.45)
+const COL_BAD := Color(0.95, 0.34, 0.27)
+const COL_AMBER := Color(1.0, 0.74, 0.3)
+const PHYSICS := "res://scenes/workshop/ws_physics.gd"
 
 var ctl: Node = null
 var _t := 0.0
+var _drag_t := 0.0
+var _physics: Script = null
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if ResourceLoader.exists(PHYSICS):
+		_physics = load(PHYSICS)
 
 
 func _process(delta: float) -> void:
 	_t += delta
+	var dragging: bool = ctl != null and is_instance_valid(ctl) and not (ctl.get("drag") as Dictionary).is_empty()
+	_drag_t = _drag_t + delta if dragging else 0.0
 	queue_redraw()
 
 
@@ -34,84 +45,125 @@ func _draw() -> void:
 		return
 	var font := get_theme_default_font()
 	var pulse := 0.5 + 0.5 * sin(_t * 6.0)
+	var fade := clampf(_drag_t / FADE_S, 0.0, 1.0)
+	_draw_physics(font)
 	for it in ctl.call("overlay_items"):
 		var p: Vector2 = it["pos"]
 		var dir: Vector2 = it["dir"]
 		match String(it["state"]):
 			"target":
-				draw_circle(p, R_TARGET + 3.0, Color(0, 0, 0, 0.45))
-				draw_circle(p, R_TARGET, Color(0.5, 1.0, 0.45, 0.35 + 0.2 * pulse))
-				draw_arc(p, R_TARGET, 0.0, TAU, 40, Color(0.85, 1.0, 0.8), 4.0, true)
-				if dir != Vector2.ZERO:
-					draw_line(p, p + dir * (R_TARGET + 18.0), Color(0.85, 1.0, 0.8), 4.0, true)
+				draw_circle(p, R_TARGET + 3.0, Color(0, 0, 0, 0.4))
+				draw_circle(p, R_TARGET, Color(COL_GO, 0.28 + 0.14 * pulse))
+				draw_arc(p, R_TARGET, 0.0, TAU, 40, COL_GO.lightened(0.35), 3.0, true)
 			"ok":
-				var r := R_OK + 3.0 * pulse
-				draw_arc(p, r + 1.5, 0.0, TAU, 32, Color(0, 0, 0, 0.55), 6.0, true)
-				draw_arc(p, r, 0.0, TAU, 32, Color(0.45, 0.95, 0.4), 3.5, true)
-				if dir != Vector2.ZERO:
-					draw_line(p + dir * r, p + dir * (r + 14.0), Color(0.45, 0.95, 0.4), 3.0, true)
+				var near := float(it.get("near", 0.5))
+				var a := fade * (0.35 + 0.65 * near)
+				var r := R_OK + 2.0 * near + 1.5 * pulse * near
+				draw_arc(p, r + 1.5, 0.0, TAU, 28, Color(0, 0, 0, 0.45 * a), 5.0, true)
+				draw_arc(p, r, 0.0, TAU, 28, Color(COL_OK, a), 2.5, true)
+				draw_circle(p, 2.5, Color(COL_OK, a))
+				if dir != Vector2.ZERO and near > 0.4:
+					draw_line(p + dir * r, p + dir * (r + 10.0), Color(COL_OK, a), 2.0, true)
 			"replace":
-				draw_arc(p, 9.5, 0.0, TAU, 24, Color(0, 0, 0, 0.35), 4.0, true)
-				draw_arc(p, 9.0, 0.0, TAU, 24, Color(1.0, 0.62, 0.2, 0.55), 2.0, true)
+				var ar := fade * 0.8
+				draw_arc(p, 9.0, 0.0, TAU, 24, Color(0, 0, 0, 0.35 * ar), 4.0, true)
+				draw_arc(p, 8.5, 0.0, TAU, 24, Color(COL_AMBER, 0.7 * ar), 2.0, true)
 			"bad":
-				var s := 8.0
-				draw_line(p + Vector2(-s, -s), p + Vector2(s, s), Color(0, 0, 0, 0.6), 6.0, true)
-				draw_line(p + Vector2(-s, s), p + Vector2(s, -s), Color(0, 0, 0, 0.6), 6.0, true)
-				draw_line(p + Vector2(-s, -s), p + Vector2(s, s), Color(1.0, 0.32, 0.25), 3.0, true)
-				draw_line(p + Vector2(-s, s), p + Vector2(s, -s), Color(1.0, 0.32, 0.25), 3.0, true)
+				var s := 7.0
+				var ab := fade
+				for q in [[Vector2(-s, -s), Vector2(s, s)], [Vector2(-s, s), Vector2(s, -s)]]:
+					draw_line(p + q[0], p + q[1], Color(0, 0, 0, 0.55 * ab), 5.0, true)
+					draw_line(p + q[0], p + q[1], Color(COL_BAD, ab), 2.5, true)
+			"carry":
+				var good := bool(it.get("ok", false))
+				var cc := COL_GO if good else COL_OK
+				draw_arc(p, 9.0, 0.0, TAU, 24, Color(0, 0, 0, 0.5), 4.5, true)
+				draw_arc(p, 8.0, 0.0, TAU, 24, cc, 2.0, true)
+				draw_circle(p, 2.0, cc)
+			"flash":
+				var age := float(it.get("age", 0.0))
+				var rf := 10.0 + 34.0 * age
+				draw_arc(p, rf, 0.0, TAU, 36, Color(1.0, 0.95, 0.75, 0.9 * (1.0 - age)), 3.0 * (1.0 - age) + 1.0, true)
+				draw_circle(p, 6.0 * (1.0 - age), Color(1.0, 0.92, 0.6, 0.8 * (1.0 - age)))
+			"refuse":
+				var ag := float(it.get("age", 0.0))
+				var rr := 14.0 + 10.0 * sin(ag * PI * 3.0) * (1.0 - ag)
+				draw_arc(p, rr, 0.0, TAU, 32, Color(COL_BAD, 0.9 * (1.0 - ag * 0.7)), 3.0, true)
+				var why := String(it.get("label", ""))
+				if why != "" and font != null:
+					var fs := 18
+					var w := font.get_string_size(why, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+					var tp := p + Vector2(-w * 0.5, -rr - 12.0)
+					var col := Color(1.0, 0.72, 0.66, 1.0 - ag * ag)
+					draw_string_outline(font, tp, why, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, Color(0, 0, 0, 0.85 * col.a))
+					draw_string(font, tp, why, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 			"idle":
 				draw_circle(p, R_IDLE + 2.0, Color(0, 0, 0, 0.4))
 				draw_circle(p, R_IDLE, Color(1.0, 0.93, 0.78, 0.75))
-			"selected":
-				var rs := float(it.get("r", 30.0)) + 2.0 * pulse
-				var seg := 24
-				for i in seg:
-					if i % 2 == 0:
-						draw_arc(p, rs, TAU * i / seg + _t * 0.6, TAU * (i + 1) / seg + _t * 0.6, 6, Color(0, 0, 0, 0.5), 6.0, true)
-						draw_arc(p, rs, TAU * i / seg + _t * 0.6, TAU * (i + 1) / seg + _t * 0.6, 6, Color(0.6, 0.9, 1.0), 3.0, true)
 			"dim":
 				draw_circle(p, 4.0, Color(0.55, 0.52, 0.48, 0.35))
+			"selected":
+				draw_arc(p, float(it.get("r", 30.0)), 0.0, TAU, 40, Color(COL_OK, 0.5), 1.5, true)
 			"com":
 				var fl: Vector2 = it.get("floor", p)
-				_dashed(p, fl, Color(1.0, 0.92, 0.6, 0.55))
-				draw_arc(p, 11.0, 0.0, TAU, 28, Color(0, 0, 0, 0.6), 5.0, true)
-				draw_arc(p, 11.0, 0.0, TAU, 28, Color(1.0, 0.9, 0.45), 2.5, true)
-				draw_line(p + Vector2(-16, 0), p + Vector2(16, 0), Color(1.0, 0.9, 0.45), 2.0, true)
-				draw_line(p + Vector2(0, -16), p + Vector2(0, 16), Color(1.0, 0.9, 0.45), 2.0, true)
-				draw_circle(fl, 4.0, Color(1.0, 0.9, 0.45, 0.7))
+				_dashed(p, fl, Color(1.0, 0.92, 0.6, 0.45))
+				draw_circle(p, 7.0, Color(0, 0, 0, 0.5))
+				draw_circle(p, 4.5, Color(1.0, 0.86, 0.45, 0.8 + 0.2 * pulse))
+				draw_arc(p, 10.0 + 2.0 * pulse, 0.0, TAU, 28, Color(1.0, 0.86, 0.45, 0.45), 1.5, true)
+				draw_circle(fl, 3.0, Color(1.0, 0.9, 0.45, 0.6))
 			"com_ghost":
 				var fr: Vector2 = it.get("from", p)
-				_dashed(fr, p, Color(0.55, 0.9, 1.0, 0.9))
-				draw_arc(p, 9.0, 0.0, TAU, 24, Color(0.55, 0.9, 1.0, 0.95), 2.5, true)
+				_dashed(fr, p, Color(COL_OK, 0.85))
+				draw_arc(p, 7.0, 0.0, TAU, 24, Color(COL_OK, 0.95), 2.0, true)
 				var gl := String(it.get("label", ""))
 				if gl != "" and font != null:
-					var tg := p + Vector2(-16.0 - font.get_string_size(gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x, -10.0)   # слева: справа всплывашка разъёма
-					draw_string_outline(font, tg, gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 6, Color(0, 0, 0, 0.9))
-					draw_string(font, tg, gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.7, 0.93, 1.0))
+					var tg := p + Vector2(-14.0 - font.get_string_size(gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x, -10.0)
+					draw_string_outline(font, tg, gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 6, Color(0, 0, 0, 0.9))
+					draw_string(font, tg, gl, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, COL_OK)
 			"control":
-				var rc := 30.0 + 2.0 * pulse
-				draw_arc(p, rc + 1.5, 0.0, TAU, 40, Color(0, 0, 0, 0.5), 6.0, true)
-				draw_arc(p, rc, 0.0, TAU, 40, Color(1.0, 0.8, 0.25), 3.5, true)
+				var rc := 26.0 + 2.0 * pulse
 				var label := String(it.get("label", ""))
+				var cc2 := Color(0.35, 0.8, 1.0) if label == "ПКМ" else COL_AMBER
+				draw_arc(p, rc + 1.5, 0.0, TAU, 40, Color(0, 0, 0, 0.45), 5.0, true)
+				draw_arc(p, rc, 0.0, TAU, 40, cc2, 2.5, true)
 				if label != "" and font != null:
-					var fs := 20
-					var tp := p + Vector2(rc + 8.0, 7.0)
-					draw_string_outline(font, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, Color(0, 0, 0, 0.9))
-					draw_string(font, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1.0, 0.85, 0.35))
+					var fs2 := 18
+					var tp2 := p + Vector2(rc + 8.0, 6.0)
+					draw_string_outline(font, tp2, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, 6, Color(0, 0, 0, 0.9))
+					draw_string(font, tp2, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, cc2)
 			"joint", "joint_hover":
 				var hov := String(it["state"]) == "joint_hover"
-				var col: Color = JointCard.colour(String(it.get("joint", "")))
-				var rj := (13.0 + 3.0 * pulse) if hov else 7.0
+				var col2: Color = JointCard.colour(String(it.get("joint", "")))
+				var rj := (12.0 + 3.0 * pulse) if hov else 7.0
 				draw_circle(p, rj + 2.5, Color(0, 0, 0, 0.55))
-				draw_circle(p, rj, col)
+				draw_circle(p, rj, col2)
 				if hov:
-					draw_arc(p, rj + 5.0, 0.0, TAU, 32, col.lightened(0.4), 3.0, true)
+					draw_arc(p, rj + 5.0, 0.0, TAU, 32, col2.lightened(0.4), 2.5, true)
 				var jl := String(it.get("label", ""))
 				if jl != "" and font != null:
-					var fj := 20 if hov else 17
+					var fj := 19 if hov else 16
 					var tj := p + Vector2(rj + 6.0, 6.0)
 					draw_string_outline(font, tj, jl, HORIZONTAL_ALIGNMENT_LEFT, -1, fj, 6, Color(0, 0, 0, 0.9))
-					draw_string(font, tj, jl, HORIZONTAL_ALIGNMENT_LEFT, -1, fj, col.lightened(0.25))
+					draw_string(font, tj, jl, HORIZONTAL_ALIGNMENT_LEFT, -1, fj, col2.lightened(0.25))
+
+
+## «Физика» включена: нагрузка суставов (зелёный → жёлтый → красный), распределение массы, опора и куда заваливается —
+## рисует WsPhysics (если модуль есть). Выключена — модель чистая.
+func _draw_physics(font: Font) -> void:
+	if _physics == null or not bool(ctl.get("show_com")) or int(ctl.get("mode")) != 0 or int(ctl.get("view")) != 0:
+		return
+	var stand: Variant = ctl.get("stand")
+	var cam := get_viewport().get_camera_3d()
+	if stand == null or not is_instance_valid(stand) or cam == null:
+		return
+	var paint: Variant = ctl.get("paint")
+	if paint != null and bool(paint.get("tab_open")):
+		return
+	var opts := {"t": _t}
+	var g: Variant = ctl.call("drag_com")
+	if g is Vector3:
+		opts["ghost_com"] = g
+	_physics.call("draw", self, cam, stand, font, opts)
 
 
 func _dashed(a: Vector2, b: Vector2, col: Color) -> void:

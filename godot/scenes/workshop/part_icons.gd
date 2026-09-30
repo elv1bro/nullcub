@@ -20,6 +20,14 @@ var _queue: PackedStringArray = []
 var _cache: Dictionary = {}     # part id -> ImageTexture
 var _busy := false
 var _enabled := true
+## Живое превью под курсором (UI v0.3: карточка библиотеки — деталь медленно вращается): второй SubViewport, рисуется, только пока
+## карточка под мышью.
+var _live_vp: SubViewport
+var _live_cam: Camera3D
+var _live_holder: Node3D
+var _live_id := ""
+const LIVE_SIZE := 256
+const LIVE_SPEED := 0.9   # рад/с
 
 
 func _ready() -> void:
@@ -58,6 +66,20 @@ func _ready() -> void:
 	_vp.add_child(rim)
 	_holder = Node3D.new()
 	_vp.add_child(_holder)
+	_live_vp = SubViewport.new()
+	_live_vp.name = "LiveViewport"
+	_live_vp.size = Vector2i(LIVE_SIZE, LIVE_SIZE)
+	_live_vp.own_world_3d = true
+	_live_vp.transparent_bg = true
+	_live_vp.msaa_3d = Viewport.MSAA_4X
+	_live_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(_live_vp)
+	_live_cam = _cam.duplicate() as Camera3D
+	_live_vp.add_child(_live_cam)
+	_live_vp.add_child(key.duplicate())
+	_live_vp.add_child(rim.duplicate())
+	_live_holder = Node3D.new()
+	_live_vp.add_child(_live_holder)
 
 
 ## Иконка детали: из кэша, иначе null и деталь встаёт в очередь (придёт icon_ready).
@@ -69,11 +91,63 @@ func request(part_id: String) -> Texture2D:
 	return null
 
 
+## Включить живое превью детали: текстура вьюпорта (карточка показывает её вместо иконки); null — нет рендера (headless).
+func live_start(part_id: String) -> Texture2D:
+	if not _enabled:
+		return null
+	if part_id != _live_id:
+		for c in _live_holder.get_children():
+			c.free()
+		var pivot := _mesh_pivot(part_id)
+		if pivot == null:
+			_live_id = ""
+			_live_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+			return null
+		_live_holder.add_child(pivot)
+		_live_holder.rotation_degrees = Vector3(PITCH_DEG, YAW_DEG, 0)
+		var box := _visual_aabb(_live_holder, _live_holder.global_transform.affine_inverse())
+		pivot.position = -box.get_center()
+		var r := box.size.length() * 0.5   # вращается: кадр — по описанной сфере, чтобы углы не срезало
+		_live_cam.size = maxf(r * 2.0 * 1.04, 0.05)
+		_live_cam.position = Vector3(0, 0, 5.0)
+		_live_id = part_id
+	_live_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	return _live_vp.get_texture()
+
+
+func live_stop() -> void:
+	if not _enabled:
+		return
+	_live_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+
+
+## Меш детали на своём узле-опоре (узел Mesh сцены, Mesh_R — нет); null — у детали нет меша.
+func _mesh_pivot(part_id: String) -> Node3D:
+	var d := BodyBlueprint.part_def(part_id)
+	if d == null or d.scene == null:
+		return null
+	var inst := d.scene.instantiate()
+	var mesh := inst.get_node_or_null("Mesh") as Node3D
+	if mesh == null:
+		inst.free()
+		return null
+	var xf := mesh.transform
+	inst.remove_child(mesh)
+	mesh.owner = null
+	inst.free()
+	var pivot := Node3D.new()
+	pivot.add_child(mesh)
+	mesh.transform = xf
+	return pivot
+
+
 func pending() -> int:
 	return _queue.size() + (1 if _busy else 0)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _enabled and _live_id != "" and _live_vp.render_target_update_mode == SubViewport.UPDATE_ALWAYS:
+		_live_holder.rotate_y(LIVE_SPEED * delta)
 	if not _enabled or _busy or _queue.is_empty():
 		return
 	var id := _queue[0]

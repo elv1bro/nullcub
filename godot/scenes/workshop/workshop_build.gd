@@ -72,7 +72,6 @@ const FREE_W_FRAC := 0.47   # UI v0.2: каталог 606 px + правая па
 const FREE_CX_FRAC := 0.553  # середина свободной зоны по ширине (606 … 1516 px из 1920)
 const FREE_H_FRAC := 0.78    # по высоте: между верхней панелью (92 px) и кнопкой ИСПЫТАТЬ
 const CAM_TAU := 0.22
-const PART_NAMES := "res://scripts/body/part_names.gd"
 const SFX_SCRIPT := "res://scenes/workshop/ws_sfx.gd"
 const COL_OK := Color(0.55, 0.95, 0.45)
 const COL_WARN := Color(1.0, 0.72, 0.25)
@@ -338,6 +337,53 @@ func set_control(uid: String) -> Dictionary:
 			var e := blueprint.pull_energy(String(r["uid"]))
 			_say("Тяга ЛКМ: %s%s" % [t, "  ·  ⚡%d" % e if e > 0 else "  ·  главная, бесплатно"], PULL_COLOURS["lmb"])
 	return r
+
+
+## Тяга детали кнопкой (v0.3: строка «Тяга — / ЛКМ / ПКМ» в паспорте детали): want — "" | "lmb" | "rmb". Одна запись истории.
+func set_pull(uid: String, want: String) -> Dictionary:
+	var trial := CraftEdit.dup_body(blueprint)
+	var r := {"ok": true, "uid": uid, "code": "same"}
+	var h := CraftEdit.host_uid(blueprint, uid)
+	for i in range(3):
+		if trial.pull_button(h) == want:
+			break
+		r = CraftEdit.set_control(trial, uid)
+		if not bool(r["ok"]):
+			_say(String(r["reason"]), COL_BAD if String(r.get("code", "")) == "energy" else COL_WARN)
+			_play_sfx("invalid", null)
+			return r
+	if trial.control == blueprint.control and trial.control_rmb == blueprint.control_rmb:
+		return {"ok": true, "uid": h, "code": "same"}
+	_push_history()
+	blueprint.control = trial.control
+	blueprint.control_rmb = trial.control_rmb
+	if blueprint.weapon != null:
+		blueprint.weapon_on = String(CraftEdit.weapon_mount(blueprint)["uid"])
+	_rebuild()
+	var t := _pname(CraftEdit.def_of(blueprint, h))
+	match want:
+		"":
+			_say("Тяга снята: %s" % t, COL_WARN)
+		"rmb":
+			_say("Тяга ПКМ: %s" % t, PULL_COLOURS["rmb"])
+		_:
+			_say("Тяга ЛКМ: %s" % t, PULL_COLOURS["lmb"])
+	_play_sfx("button", null)
+	return {"ok": true, "uid": h, "code": want}
+
+
+## Переименовать сборку (имя в верхней строке); пустое — не меняем.
+func rename_build(title: String) -> bool:
+	var t := title.strip_edges().trim_suffix(" *").strip_edges()
+	var bp: Resource = weapon_bp if view == View.WEAPON else blueprint
+	if t == "" or t == String(bp.get("title")).trim_suffix(" *"):
+		return false
+	_push_history()
+	bp.set("title", t)
+	if view == View.WEAPON:
+		_sync_equipped()
+	changed.emit()
+	return true
 
 
 func toggle_control_pick() -> void:
@@ -1305,8 +1351,7 @@ func cancel_drag() -> void:
 func _pname(d: PartDef) -> String:
 	if d == null:
 		return ""
-	var pn: Script = load(PART_NAMES) if ResourceLoader.exists(PART_NAMES) else null
-	return String(pn.call("of", d)) if pn != null else d.title
+	return PartNames.of(d)
 
 
 # --- деталь под курсором (v0.3 §14–17) ---
@@ -2268,53 +2313,26 @@ func body_stats() -> Dictionary:
 			uid_title("body", String(m["uid"])) if String(m["uid"]) != "" else "некуда"]
 	var accel := ref / maxf(mass + wmass, 0.1)
 	return {"title": blueprint.title, "energy": blueprint.energy_used(), "budget": blueprint.energy_budget, "mass": mass,
-		"weapon_mass": wmass, "bodies": bodies, "parts": blueprint.nodes.size(), "accel": accel,
-		"handling": _handling(accel), "stability": _stability(), "durability": _durability(),
+		"weapon_mass": wmass, "bodies": bodies, "parts": blueprint.nodes.size(), "accel": accel, "ref": ref,
 		"control": ctrl, "weapon": weapon_line, "errors": CraftEdit.friendly_errors(blueprint),
 		"warnings": CraftEdit.warnings(blueprint)}
 
 
-## Управляемость 0…1 (UI v0.2): разгон × то, чем кукла правит — тяги, моторы (+), свободные шарниры (−).
-func _handling(accel: float) -> float:
-	var motors := 0
-	var free := 0
-	for n in blueprint.nodes:
-		match String(n.get("joint", "")):
-			"motor": motors += 1
-			"free": free += 1
-	return clampf(accel / 1.3 * (0.75 + 0.08 * blueprint.control.size() + 0.04 * motors - 0.04 * free), 0.0, 1.0)
-
-
-## Устойчивость 0…1 (UI v0.2): ширина опоры (нижние детали стенда) к высоте центра массы над полом.
-func _stability() -> float:
-	if stand == null or stand.parts.is_empty():
-		return 0.0
-	var com := stand_com()
-	var min_y := INF
-	for b in stand.parts.values():
-		min_y = minf(min_y, _visual_aabb(b).position.y)
-	var lo := INF
-	var hi := -INF
-	for b in stand.parts.values():
-		var bx := _visual_aabb(b)
-		if bx.position.y < min_y + 0.08:
-			lo = minf(lo, bx.position.x)
-			hi = maxf(hi, bx.end.x)
-	var span := hi - lo if hi > lo else 0.1
-	return clampf(span / maxf(com.y - min_y, 0.15) / 1.2, 0.0, 1.0)
-
-
-## Прочность 0…1 (UI v0.2): средняя CraftEdit.part_durability по массе узлов. Показатель мастерской — в бою пока не читается.
-func _durability() -> float:
-	var sm := 0.0
-	var sd := 0.0
-	for n in blueprint.nodes:
-		var uid := String(n.get("uid", ""))
-		var d := CraftEdit.part(String(n.get("part", "")))
-		var m := blueprint.node_mass(uid)
-		sm += m
-		sd += m * CraftEdit.part_durability(d, String(n.get("mat", "")))
-	return sd / sm if sm > 0.0 else 0.0
+## Что станет со сборкой, если отпустить деталь в руке (v0.3 §19: справа «было → станет»): {mass, energy, accel, parts, ok, reason};
+## {} — не над разъёмом тела.
+func drag_preview() -> Dictionary:
+	var t := drag_target()
+	if t.is_empty() or String(t["target"]) != "body":
+		return {}
+	var tr := drag_trial(t)
+	if tr.is_empty():
+		return {}
+	var s := body_stats()
+	var ref := float(s["ref"])
+	var bp: BodyBlueprint = tr.get("bp") if tr.get("bp") is BodyBlueprint else null
+	var mass := float(tr.get("mass_after", s["mass"]))
+	return {"ok": bool(tr.get("ok", false)), "reason": String(tr.get("reason", "")), "mass": mass, "energy": int(tr.get("energy_after", s["energy"])),
+		"parts": bp.nodes.size() if bp != null else int(s["parts"]), "accel": ref / maxf(mass + float(s["weapon_mass"]), 0.1)}
 
 
 ## Центр массы стенда (мир); без стенда — ноль.
@@ -2544,15 +2562,6 @@ func overlay_items() -> Array:
 				var box := _visual_aabb(ms[0])
 				out.append({"pos": cam.unproject_position(box.get_center()), "dir": Vector2.ZERO, "state": "control",
 					"label": "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"})
-	if String(selected.get("source", "")) == "stand" and String(selected["target"]) == target:
-		var ms2 := part_meshes(target, String(selected["uid"]))
-		if not ms2.is_empty():
-			var bx := _visual_aabb(ms2[0])
-			for mi in ms2:
-				bx = bx.merge(_visual_aabb(mi))
-			var c2 := cam.unproject_position(bx.get_center())
-			var r2 := cam.unproject_position(bx.get_center() + cam.global_basis.x * bx.size.length() * 0.5).distance_to(c2)
-			out.append({"pos": c2, "dir": Vector2.ZERO, "state": "selected", "r": clampf(r2, 18.0, 160.0), "label": ""})
 	_com_items(cam, out)
 	return out
 

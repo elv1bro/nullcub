@@ -72,6 +72,8 @@ const GHOST_POS_TOL := 0.01
 const GHOST_ANG_TOL := 1.0
 const PATTERN_FRAME_MAX_MS := 20.0   # шаг очереди раскраски (бюджет 4 мс + срез) — с запасом на headless под нагрузкой
 
+## Столько проверок проба делает целиком (меньше — какой-то раздел упал с ошибкой скрипта).
+const MIN_CHECKS := 201
 var ws: WorkshopBuild
 var report := {"ok": true, "checks": []}
 var shots_dir := ""
@@ -120,6 +122,10 @@ func _finish() -> void:
 	for c in report["checks"]:
 		if not bool(c["ok"]):
 			fails += 1
+	# ошибка скрипта обрывает корутину раздела молча — проверок меньше, чем должно быть, это провал, а не «ОК»
+	if report["checks"].size() < MIN_CHECKS:
+		fails += 1
+		print("  FAIL %-28s проверок %d < %d — раздел пробы оборвался (SCRIPT ERROR выше?)" % ["min_checks", report["checks"].size(), MIN_CHECKS])
 	print("WORKSHOP PROBE ", "OK (%d checks)" % report["checks"].size() if fails == 0 else "FAILED (%d of %d)" % [fails, report["checks"].size()])
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -138,12 +144,14 @@ func _sum_node_energy(bp: BodyBlueprint) -> int:
 func _ui_v02() -> void:
 	ws.set_preset("kit_human")
 	await _frames(2)
+	# v0.3 §26: маленькая сводка без выдуманных RPG-цифр — масса, детали, разгон, энергия
 	var st := ws.body_stats()
-	var in01 := true
-	for k in ["handling", "stability", "durability"]:
-		in01 = in01 and float(st[k]) >= 0.0 and float(st[k]) <= 1.0
-	_check("v02_stats", in01 and float(st["stability"]) > 0.05 and ws.stand_com().y > 0.2, "характеристики 0…1, ЦМ над полом",
-		[st["handling"], st["stability"], st["durability"], snappedf(ws.stand_com().y, 0.01)])
+	var keys_ok := true
+	for k in ["title", "mass", "parts", "accel", "energy", "budget"]:
+		keys_ok = keys_ok and st.has(k)
+	_check("v03_stats", keys_ok and not st.has("handling") and not st.has("durability") and float(st["accel"]) > 0.0 and ws.stand_com().y > 0.2,
+		"сводка: масса, детали, разгон, энергия (без «управляемости» и «прочности»), ЦМ над полом",
+		[snappedf(float(st["mass"]), 0.1), st["parts"], snappedf(float(st["accel"]), 0.01), snappedf(ws.stand_com().y, 0.01)])
 	# УСТАНОВИТЬ: левая кисть снята → из каталога ставится на свободный разъём, выбор — на неё
 	ws.detach_part("3")
 	await _frames(1)
@@ -1004,11 +1012,14 @@ func _kit_shelves() -> void:
 	tabs["body"] = "deco"
 	ws.ui.call("_build_left")
 	var deco_cards: Dictionary = (ws.ui.get("_cards") as Dictionary).duplicate()
+	tabs["body"] = "weapon"   # v0.3: навершия и моды на тело — категория «Оружие»
+	ws.ui.call("_build_left")
+	var weapon_cards: Dictionary = (ws.ui.get("_cards") as Dictionary).duplicate()
 	tabs["body"] = "armor"
 	ws.ui.call("_build_left")
 	var armor_cards: Dictionary = ws.ui.get("_cards")
 	var has_crown := deco_cards.has("kit_deco_crown") and armor_cards.has("kit_deco_pauldron")   # наплечник — вид armor
-	var armor_new := armor_cards.has("kit_drill_head") and deco_cards.has("kit_deco_wings")   # _cards чистится при пересборке
+	var armor_new := weapon_cards.has("kit_drill_head") and deco_cards.has("kit_deco_wings")   # _cards чистится при пересборке
 	var armor_human := armor_cards.has("kit_human_torso") or deco_cards.has("kit_human_torso")
 	tabs["body"] = was
 	ws.ui.call("_build_left")
@@ -1411,7 +1422,7 @@ func _paint() -> void:
 	pt.set_tool("spray")
 	await _frames(1)
 	var panel := ws.ui.find_child("PaintPanel", true, false)
-	var presets_hidden := not (ws.ui.get("presets_box") as Control).visible
+	var presets_hidden := not (ws.ui.get("presets_box") as Control).is_visible_in_tree()
 	_check("paint_tab_ui", panel != null and presets_hidden and pt.tab_open and ws.active_tool() == "paint" and ws.paint_tool == "spray"
 		and ws.overlay_items().is_empty(), "вкладка «Покраска»: полка, шаблоны спрятаны, баллончик в руке, точек якорей нет",
 		[panel != null, presets_hidden, ws.paint_tool])
