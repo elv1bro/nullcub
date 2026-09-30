@@ -78,7 +78,7 @@ theme_override_font_sizes/font_size = 24
 text = "ВРАГОВ: 2 из 2"
 horizontal_alignment = 1
 
-[node name="TowerLine" type="Label" parent="Root/WaveBox"]
+[node name="FieldLine" type="Label" parent="Root/WaveBox"]
 layout_mode = 2
 theme_type_variation = &"DisplayLabel"
 theme_override_colors/font_color = Color(1, 0.72, 0.25, 1)
@@ -150,7 +150,7 @@ layout_mode = 2
 theme_type_variation = &"DisplayLabel"
 theme_override_colors/font_color = Color(1, 0.72, 0.25, 1)
 theme_override_font_sizes/font_size = 26
-text = "FLOOR CLEAN. RETURN TO THE WORKSHOP"
+text = "FIELD CLEAR. RETURN TO THE GARAGE"
 horizontal_alignment = 1
 
 [node name="EndHint" type="Label" parent="Root/EndPanel/EndVBox"]

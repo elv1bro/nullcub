@@ -13,7 +13,7 @@
 ## Поведение — наследники (sweeper_brain.gd, scrapling_brain.gd): state + state_t, _think(delta) пишет want (желаемый ввод),
 ## телеграф через EnemyLook: поза + свет глаз + звук-заглушка + надпись над головой (HUD) не короче telegraph_s.
 ## Хуки куклы (сессия настройки куклы, 29.09): Doll.request_dash() — через has_method, без него рывка нет (наскок тягой);
-## Doll.team — ставит WaveDirector ("tower"): урон по своим × Tuning.TEAM_DAMAGE_MULT, толчки полные.
+## Doll.team — ставит WaveDirector ("arena"): урон по своим × Tuning.TEAM_DAMAGE_MULT, толчки полные.
 class_name EnemyBrain
 extends Node
 

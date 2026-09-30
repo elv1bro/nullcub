@@ -1,5 +1,6 @@
 ## Режим волн PvE (CONCEPT_V2 §3, §29, проба 2: «2 типа PvE-врагов на основе бота-наскока, волна 3–5 против одного игрока»; лор —
-## LORE.md: враги — бывшие работники Башни, выпадают из мусорного желоба вместе с хламом, Башня говорит капсом).
+## LORE_NULL.md: враги — сервисные роботы арены со сбитой программой, выпадают из мусорного желоба вместе с хламом, системы поля
+## говорят капсом).
 ## Наследник Match (scripts/core/match.gd): от него — всё ядро боя без копий: регистрация кукол (DollCombat), удар → hit / hit_fx /
 ## env_slam (HitFxDirector, SfxDirector, крит, hit stop, тряска камеры), надписи announce, request_time_scale. Своё — фазы и конец:
 ##   • PvP-логика Match выключена переопределениями: нет отсчёта до FIGHT! и таймера, нет Sudden Death, нет «последний живой
@@ -8,18 +9,18 @@
 ##     chute_warn_s из раструба по одному (spawn_interval_s) выпадают враги со скоростью вдоль spit_dir, мозг молчит spawn_drop_s
 ##     (кувырок из трубы) → бой → волна зачищена (все враги волны KO — ударами или в пропасти) → пауза wave_pause_s → следующая;
 ##     после WAVES.size() волн — победа, все игроки KO — поражение; restart() — заново (R на площадке);
-##   • строка Башни капсом (сигнал tower_line) на старте забега и каждой волны, на зачистке, победе и поражении, когда Разборщик
-##     открутил деталь игрока (PART RECOVERED…) и когда враг сам улетел в провал (CREW MEMBER DISPOSED…); «правило гашения»
-##     (LORE.md): после FLOOR CLEAN сверху прилетает запоздавшая бочка;
+##   • строка систем поля капсом (сигнал field_line) на старте забега и каждой волны, на зачистке, победе и поражении, когда Разборщик
+##     открутил деталь игрока (PART CONFISCATED…) и когда враг сам улетел в провал (CREW MEMBER DISPOSED…); «правило гашения»
+##     (LORE.md): после FIELD CLEAR сверху прилетает запоздавшая бочка;
 ##   • команды (хук Doll.team): игрокам player_team ("players": друг по другу × Tuning.TEAM_DAMAGE_MULT, толчки полные — CONCEPT_V2 §22
-##     «дружеский хаос»), врагам enemy_team ("tower", team_damage_mult 0 — свои не ранят); запас HP — Doll.max_hp (враги 25 / 50 — в своих сценах). Match.respawn_doll
+##     «дружеский хаос»), врагам enemy_team ("arena", team_damage_mult 0 — свои не ранят); запас HP — Doll.max_hp (враги 25 / 50 — в своих сценах). Match.respawn_doll
 ##     переносит team и max_hp;
 ##   • KO врага: как у Match, но замедление и тряска слабее (enemy_ko_slowmo_s); тело лежит corpse_s и убирается (6 кукол по 14 тел);
 ##     метла Уборщика остаётся — её можно подобрать;
 ##   • мёртвые игроки в коопе встают на своих спавнах в начале следующей волны (пока нет «Ядра товарища» из CONCEPT_V2);
-##   • игрок вернул себе отобранную деталь (Doll.reattach_part — касание / захват, scripts/body/arm_assist.gd) — строка Башни;
+##   • игрок вернул себе отобранную деталь (Doll.reattach_part — касание / захват, scripts/body/arm_assist.gd) — строка систем поля;
 ##   • страховка: враг вне границ арены (ниже дна, за стенами) — KO, считается как пропасть.
-## Сигналы для HUD (scenes/pve/pve_hud.gd): wave_started, wave_cleared, enemies_changed, tower_line, run_over, enemy_spawned,
+## Сигналы для HUD (scenes/pve/pve_hud.gd): wave_started, wave_cleared, enemies_changed, field_line, run_over, enemy_spawned,
 ## enemy_down + унаследованные announce, hp_changed, ko, hit. Пробы: auto_waves = false и begin_manual() — враги только через
 ## spawn_enemy(); events — журнал забега.
 class_name WaveDirector
@@ -28,7 +29,7 @@ extends Match
 signal wave_started(index: int, total: int, line: String)
 signal wave_cleared(index: int, total: int)
 signal enemies_changed(left: int, total: int)
-signal tower_line(text: String)
+signal field_line(text: String)
 signal run_over(victory: bool, line: String)
 signal enemy_spawned(enemy: Doll)
 signal enemy_down(enemy: Doll, cause: String)
@@ -37,18 +38,18 @@ const ENEMY_SCENES := {
 	"scrapling": "res://scenes/enemies/enemy_scrapling.tscn",
 	"sweeper": "res://scenes/enemies/enemy_sweeper.tscn",
 }
-## Волны: кто выпадает из желоба (по порядку) и строка Башни.
+## Волны: кто выпадает из желоба (по порядку) и строка систем поля.
 const WAVES := [
-	{"enemies": ["scrapling", "scrapling"], "line": "PARTS RECOVERY CREW DISPATCHED"},
-	{"enemies": ["sweeper", "scrapling", "scrapling"], "line": "OBJECT REQUIRES SWEEPING"},
-	{"enemies": ["sweeper", "scrapling", "scrapling", "sweeper", "scrapling"], "line": "DISPOSAL REQUIRED. ALL CREWS TO THE FLOOR"},
+	{"enemies": ["scrapling", "scrapling"], "line": "SERVICE CREW DISPATCHED: DEBRIS RECOVERY"},
+	{"enemies": ["sweeper", "scrapling", "scrapling"], "line": "FIGHTER RECLASSIFIED AS DEBRIS"},
+	{"enemies": ["sweeper", "scrapling", "scrapling", "sweeper", "scrapling"], "line": "FIELD CLEARANCE PRIORITY 1. ALL CREWS TO THE FLOOR"},
 ]
-const INTRO_LINE := "UNKNOWN CORE DETECTED"
-const CLEAR_LINES := ["CREW OFFLINE. SENDING REPLACEMENT", "DEBRIS PERSISTS. ESCALATING"]
-const VICTORY_LINE := "FLOOR CLEAN. RETURN TO THE WORKSHOP"
-const DEFEAT_LINE := "CORE OFFLINE. DISPOSAL COMPLETE"
+const INTRO_LINE := "FIGHTER ON FIELD. NO MATCH SCHEDULED"
+const CLEAR_LINES := ["CREW OFFLINE. SENDING REPLACEMENT", "DEBRIS STILL FIGHTING. ESCALATING"]
+const VICTORY_LINE := "FIELD CLEAR. RETURN TO THE GARAGE"
+const DEFEAT_LINE := "FIGHTER DOWN. DEBRIS RECOVERED"
 const WAVE_COLOUR := Color(1.0, 0.72, 0.25)
-const PART_LINE := "PART RECOVERED. RETURNING TO STORAGE"
+const PART_LINE := "PART CONFISCATED. TROPHY RULE APPLIED"
 const PIT_ENEMY_LINE := "CREW MEMBER DISPOSED. CORRECTLY"
 const PART_LINE_GAP_S := 6.0
 const REATTACH_LINE := "UNAUTHORIZED REPAIR DETECTED"
@@ -83,7 +84,7 @@ var _last_crit_ms := -1000000
 @export var players_group := "players"
 @export var enemies_group := "enemies"
 @export var player_team := "players"
-@export var enemy_team := "tower"
+@export var enemy_team := "arena"
 ## Урон и стан врага от своих (Doll.team_damage_mult): 0 — Уборщик, сметая Разборщика, толкает его, но не ранит.
 @export var enemy_team_damage := 0.0
 
@@ -172,7 +173,7 @@ func is_enemy(d: Node) -> bool:
 	return d != null and d.is_in_group(enemies_group)
 
 
-## Игрок в забеге: команда (только куклам со сцены — респавн Match переносит её сам), группа, DollCombat, строки Башни про детали.
+## Игрок в забеге: команда (только куклам со сцены — респавн Match переносит её сам), группа, DollCombat, строки систем поля про детали.
 func _setup_player(p: Doll, set_team := false) -> void:
 	if set_team and player_team != "":
 		p.team = player_team
@@ -191,7 +192,7 @@ func _on_player_part_reattached(part_name: String, p: Doll) -> void:
 		_say(REATTACH_LINE)
 
 
-## Разборщик открутил деталь игрока — Башня комментирует (строка раз в PART_LINE_GAP_S, не спамит в куче).
+## Разборщик открутил деталь игрока — системы поля комментируют (строка раз в PART_LINE_GAP_S, не спамит в куче).
 func _on_player_part_detached(part_name: String, by: Node, p: Doll) -> void:
 	_log("part_detached", {"player": String(p.name), "part": part_name, "by": String(by.name) if by != null else ""})
 	if run_t - _part_line_t >= PART_LINE_GAP_S and wave_state not in ["victory", "defeat"]:
@@ -322,7 +323,7 @@ func _finish_run(victory: bool) -> void:
 	spawn_queue.clear()
 	var line := VICTORY_LINE if victory else DEFEAT_LINE
 	_say(line)
-	announce.emit("FLOOR CLEAN!" if victory else "DISPOSED", Color(1.0, 0.85, 0.3) if victory else Color(0.95, 0.2, 0.15), "fight" if victory else "ko")
+	announce.emit("FIELD CLEAR!" if victory else "FIGHTER DOWN", Color(1.0, 0.85, 0.3) if victory else Color(0.95, 0.2, 0.15), "fight" if victory else "ko")
 	_log("run_over", {"victory": victory, "run_t": snappedf(run_t, 0.01)})
 	_set_phase(Phase.OVER)
 	run_over.emit(victory, line)
@@ -449,7 +450,7 @@ func _on_enemy_ko(_attacker: Node, record: Dictionary, d: Doll) -> void:
 	kills[cause] = int(kills[cause]) + 1
 	if cause == "pit" and run_t - _pit_line_t >= PART_LINE_GAP_S and wave_state in ["spawning", "fight"]:
 		_pit_line_t = run_t
-		_say(PIT_ENEMY_LINE)   # свой же уборщик в провале — Башня довольна: мусор к мусору
+		_say(PIT_ENEMY_LINE)   # свой же уборщик в провале — системы довольны: мусор к мусору
 	if wave_enemies.has(d):
 		wave_down += 1
 	_corpses.append([d, run_t + corpse_s])
@@ -540,7 +541,7 @@ func _tick_corpses() -> void:
 			i += 1
 
 
-## «Правило гашения» (LORE.md): после FLOOR CLEAN сверху прилетает запоздавшая бочка — на голову первого живого игрока.
+## «Правило гашения» (LORE.md): после FIELD CLEAR сверху прилетает запоздавшая бочка — на голову первого живого игрока.
 func _tick_barrel() -> void:
 	if _barrel_at < 0.0 or run_t < _barrel_at:
 		return
@@ -602,8 +603,8 @@ func time_left_s() -> float:
 # --- строки и журнал ---
 
 func _say(text: String) -> void:
-	tower_line.emit(text)
-	_log("tower", {"line": text})
+	field_line.emit(text)
+	_log("field", {"line": text})
 
 
 func _log(what: String, extra: Dictionary = {}) -> void:
