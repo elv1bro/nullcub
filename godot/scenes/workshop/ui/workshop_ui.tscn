@@ -144,7 +144,7 @@ anchors_preset = -1
 anchor_bottom = 1.0
 offset_left = 14.0
 offset_top = 14.0
-offset_right = 454.0
+offset_right = 414.0
 offset_bottom = -14.0
 grow_vertical = 2
 theme_override_styles/panel = SubResource("side_panel")
@@ -157,7 +157,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 theme_type_variation = &"BrushLabel"
 theme_override_colors/font_color = Color(0.98, 0.84, 0.58, 1)
-theme_override_font_sizes/font_size = 58
+theme_override_font_sizes/font_size = 40
 text = "МАСТЕРСКАЯ"
 horizontal_alignment = 1
 
@@ -185,6 +185,14 @@ toggle_mode = true
 theme_override_font_sizes/font_size = 30
 theme_override_styles/pressed = SubResource("plank_gold")
 text = "ОРУЖИЕ"
+
+[node name="PresetsToggle" type="Button" parent="Root/Left/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+focus_mode = 0
+toggle_mode = true
+theme_override_font_sizes/font_size = 22
+text = "ШАБЛОНЫ  ▸"
 
 [node name="PresetsTitle" type="Label" parent="Root/Left/VBox"]
 layout_mode = 2
@@ -251,7 +259,7 @@ anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -454.0
+offset_left = -334.0
 offset_top = 14.0
 offset_right = -14.0
 offset_bottom = -14.0
@@ -276,30 +284,9 @@ text = "СБОРКА"
 layout_mode = 2
 theme_type_variation = &"DisplayLabel"
 theme_override_colors/font_color = Color(0.98, 0.9, 0.74, 1)
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 26
 text = "Человек"
 autowrap_mode = 3
-
-[node name="EnergyHead" type="HBoxContainer" parent="Root/Right/VBox/BodyBox"]
-layout_mode = 2
-
-[node name="EnergyCaption" type="Label" parent="Root/Right/VBox/BodyBox/EnergyHead"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"StatLabel"
-text = "⚡ ENERGY ядра"
-
-[node name="EnergyValue" type="Label" parent="Root/Right/VBox/BodyBox/EnergyHead"]
-layout_mode = 2
-theme_type_variation = &"StatValue"
-theme_override_font_sizes/font_size = 30
-text = "58 / 100"
-
-[node name="Energy" type="Control" parent="Root/Right/VBox/BodyBox"]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-mouse_filter = 2
-script = ExtResource("4_energy")
 
 [node name="Stats" type="GridContainer" parent="Root/Right/VBox/BodyBox"]
 layout_mode = 2
@@ -323,7 +310,7 @@ horizontal_alignment = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"StatLabel"
-text = "Тел (деталей)"
+text = "Тел · деталей"
 
 [node name="BodiesV" type="Label" parent="Root/Right/VBox/BodyBox/Stats"]
 layout_mode = 2
@@ -358,6 +345,7 @@ text = "Тяги: —"
 autowrap_mode = 3
 
 [node name="ControlButton" type="Button" parent="Root/Right/VBox/BodyBox/ControlBox/V"]
+clip_text = true
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 focus_mode = 0
@@ -384,22 +372,34 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="SaveButton" type="Button" parent="Root/Right/VBox/BodyBox/Files"]
+clip_text = true
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 16
 text = "СОХРАНИТЬ"
 
 [node name="LoadButton" type="Button" parent="Root/Right/VBox/BodyBox/Files"]
+clip_text = true
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
-theme_override_font_sizes/font_size = 22
-text = "ЗАГРУЗИТЬ"
+theme_override_font_sizes/font_size = 16
+text = "ОТКРЫТЬ"
+
+[node name="LegendButton" type="Button" parent="Root/Right/VBox/BodyBox/Files"]
+custom_minimum_size = Vector2(52, 0)
+layout_mode = 2
+focus_mode = 0
+toggle_mode = true
+theme_override_font_sizes/font_size = 24
+text = "?"
+tooltip_text = "Что значат значки на кукле"
 
 [node name="UndoButton" type="Button" parent="Root/Right/VBox/BodyBox"]
+clip_text = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
@@ -435,6 +435,7 @@ theme_override_font_sizes/font_size = 21
 autowrap_mode = 3
 
 [node name="EquipButton" type="Button" parent="Root/Right/VBox/WeaponBox"]
+clip_text = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
 focus_mode = 0
@@ -449,6 +450,7 @@ text = "Оружие не в руке"
 autowrap_mode = 3
 
 [node name="ClearButton" type="Button" parent="Root/Right/VBox/WeaponBox"]
+clip_text = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
@@ -456,6 +458,7 @@ theme_override_font_sizes/font_size = 20
 text = "РАЗОБРАТЬ ВСЁ"
 
 [node name="Legend" type="RichTextLabel" parent="Root/Right/VBox"]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.86, 0.82, 0.76, 1)
@@ -478,14 +481,54 @@ size_flags_vertical = 3
 mouse_filter = 2
 
 [node name="TestButton" type="Button" parent="Root/Right/VBox"]
-custom_minimum_size = Vector2(0, 86)
+clip_text = true
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 34
 theme_override_styles/normal = SubResource("plank_red")
 theme_override_styles/hover = SubResource("plank_red_hover")
 theme_override_styles/pressed = SubResource("plank_red_pressed")
 text = "ИСПЫТАТЬ   [T]"
+
+[node name="TopBar" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -330.0
+offset_top = 14.0
+offset_right = 330.0
+offset_bottom = 104.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("hint_panel")
+
+[node name="V" type="VBoxContainer" parent="Root/TopBar"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="EnergyHead" type="HBoxContainer" parent="Root/TopBar/V"]
+layout_mode = 2
+
+[node name="EnergyCaption" type="Label" parent="Root/TopBar/V/EnergyHead"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatLabel"
+text = "⚡ ЭНЕРГИЯ ЯДРА   (дальше от ядра — дороже)"
+
+[node name="EnergyValue" type="Label" parent="Root/TopBar/V/EnergyHead"]
+layout_mode = 2
+theme_type_variation = &"StatValue"
+theme_override_font_sizes/font_size = 30
+text = "58 / 100"
+
+[node name="Energy" type="Control" parent="Root/TopBar/V"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("4_energy")
 
 [node name="HintBar" type="PanelContainer" parent="Root"]
 layout_mode = 1

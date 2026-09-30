@@ -11,7 +11,7 @@
 extends VBoxContainer
 
 ## Ширина полки: левая панель 440 − поля 2 × 16 − полоса прокрутки ≈ 380.
-const W := 376.0
+const W := 350.0   # левая колонка 400 px (компактный экран, WORKSHOP_V3.md §6)
 const GOLD := Color(1.0, 0.8, 0.3)
 const INK := Color(0.96, 0.92, 0.84)
 const DIM := Color(0.8, 0.76, 0.7)

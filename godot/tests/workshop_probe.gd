@@ -1095,7 +1095,10 @@ func _paint() -> void:
 		sum0 += live.data[i]
 	pt.set_tool("erase")
 	pt.pressure = 1.0
-	await _stroke(pt, p1, 20, Vector2.ZERO)
+	var erase_cm0 := pt.size_cm
+	pt.set_size_cm(erase_cm0 * 2.0)
+	await _stroke(pt, p1, 20)   # по тому же штриху, что баллончик, ластиком вдвое шире (точкой — доля стёртого зависит от кадра стенда)
+	pt.set_size_cm(erase_cm0)
 	var live2: PaintLayer = ws.stand.paint_handle("1").get("layer")
 	var sum1 := 0
 	for i in range(3, live2.data.size(), 4):
