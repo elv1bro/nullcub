@@ -13,6 +13,12 @@
 ## Match.on_hit с тестовым переключателем Match.hit_tiers.force_next; жертвы чередуются, hp возвращается к 100 — без KO). Время и FPS в
 ## этом режиме и всегда — по реальным часам (Time.get_ticks_usec), не по delta: slow-mo крита иначе завышал бы FPS. min_sec_fps_hitfx=N —
 ## exit 1, если худшее секундное окно ниже N. Пишет load average; при load > числа ядер — WARN (чужая нагрузка), не провал.
+## Покраска (BODY_PAINT.md §8, 30.09): paint=1 — сразу после сборки кукол каждая ModularDoll площадки красится целиком публичным API
+## (как «full» замера §8): на каждой красимой детали ensure_paint → fill + раскраска PaintLayer.KINDS по кругу (seed 1000 + k),
+## stickers=N наклеек на деталь (по умолчанию 3: первая — фикстура tests/fixtures/paint/sticker_fixture.png через KitImages,
+## остальные — «stencil:star»), фото фикстуры на плашку лица головы. Обычные куклы doll.tscn (Doll, не ModularDoll) не красятся —
+## на ruins/workshop/void обе такие (painted=0/2). Строка «PAINT {…}» и поле «paint=1 painted=N/M» в PERF — только при paint=1:
+## без него вывод прежний байт в байт.
 ## Godot запускать нативно (arm64 → Metal): x86_64-обёртки (например /usr/local/bin/timeout) тянут Rosetta → MoltenVK.
 extends Node3D
 var t := 0.0
@@ -41,6 +47,10 @@ var min_sec_fps_req := 0.0
 var _last_us := 0
 var match_node: Match
 var hits_done := {"heavy": 0, "crit": 0}
+const PAINT_FIXTURE := "res://tests/fixtures/paint/sticker_fixture.png"
+var paint := false
+var paint_stickers := 3
+var paint_info := {}
 func _ready() -> void:
 	var scale := 1.0
 	var msaa := -1
@@ -90,6 +100,8 @@ func _ready() -> void:
 				"min_fps": min_fps = float(p[1])
 				"hitfx": hitfx = p[1] != "0"
 				"min_sec_fps_hitfx": min_sec_fps_req = float(p[1])
+				"paint": paint = p[1] != "0"
+				"stickers": paint_stickers = int(p[1])
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	get_viewport().scaling_3d_scale = scale
@@ -103,6 +115,9 @@ func _ready() -> void:
 	_last_us = Time.get_ticks_usec()
 	pg.get_node("P1").external_input = true
 	pg.get_node("P2").external_input = true
+	if paint:   # куклы уже собраны (add_child); время покраски уходит в кадры прогрева
+		paint_info = paint_dolls(pg, paint_stickers)
+		print("PAINT ", JSON.stringify(paint_info))
 	var arena: Node = pg.get("arena")
 	var we: WorldEnvironment = arena.get_node("Environment")
 	var env: Environment = we.environment.duplicate()
@@ -195,5 +210,105 @@ func _process(_delta: float) -> void:
 			if busy and avg_fps < min_fps:
 				print("WARN hitfx: avg_fps %.1f < %.1f under foreign load — not a failure" % [avg_fps, min_fps])
 				ok = true
-		print("PERF scene=%s hitfx=%s hits=%s avg_fps=%.1f min_sec_fps=%.1f min_fps=%.1f load=[%s] cores=%d %s" % [scene_id, str(hitfx), str(hits_done), avg_fps, min_sec_fps, min_fps, load_s, OS.get_processor_count(), "OK" if ok else "FAIL"])
+		var paint_s: String = " paint=1 painted=%d/%d" % [int(paint_info.get("painted", 0)), int(paint_info.get("dolls", 0))] if paint else ""
+		print("PERF scene=%s%s hitfx=%s hits=%s avg_fps=%.1f min_sec_fps=%.1f min_fps=%.1f load=[%s] cores=%d %s" % [scene_id, paint_s, str(hitfx), str(hits_done), avg_fps, min_sec_fps, min_fps, load_s, OS.get_processor_count(), "OK" if ok else "FAIL"])
 		get_tree().quit(0 if ok else 1)
+
+
+## paint=1: все ModularDoll под root — краска на каждой красимой детали (fill + раскраска), n_stickers наклеек на деталь, фото на
+## плашку лица. Только публичный API (ModularDoll.ensure_paint / add_sticker, BodyPaint.set_face, KitImages); детерминировано.
+## {dolls, painted, layers, stickers, sticker_misses, faces, ms, skipped: [имена кукол Doll без чертежа — не красятся]}.
+static func paint_dolls(root: Node, n_stickers: int) -> Dictionary:
+	var t0 := Time.get_ticks_usec()
+	var fixture := KitImages.import_file(ProjectSettings.globalize_path(PAINT_FIXTURE))
+	var face_tex := KitImages.texture(fixture)
+	var info := {"dolls": 0, "painted": 0, "layers": 0, "stickers": 0, "sticker_misses": 0, "faces": 0, "ms": 0.0, "skipped": [],
+		"fixture": fixture}
+	var k := 0
+	for n in root.find_children("*", "", true, false):
+		if not n is Doll:
+			continue
+		info["dolls"] += 1
+		var d := n as ModularDoll
+		if d == null or d.blueprint == null:
+			(info["skipped"] as Array).append(String(n.name))
+			continue
+		info["painted"] += 1
+		for node in d.blueprint.nodes:
+			var uid := String(node.get("uid", ""))
+			var mroot := BodyPaint.mesh_root_of(d, uid)
+			if mroot == null:
+				continue
+			if face_tex != null and BodyPaint.set_face(mroot, face_tex):
+				info["faces"] += 1
+			if not _paintable(mroot):
+				continue
+			var h := d.ensure_paint(uid)
+			if h.is_empty():
+				continue
+			var layer: PaintLayer = h["layer"]
+			layer.fill(Color.from_hsv(fmod(0.13 * k, 1.0), 0.6, 0.85))
+			layer.pattern(PaintLayer.KINDS[k % PaintLayer.KINDS.size()], [], 1000 + k)
+			layer.update_texture(h["tex"])
+			info["layers"] += 1
+			for j in n_stickers:
+				var xf: Variant = _sticker_xf(mroot, (j + 1.0) / (n_stickers + 1.0))
+				if xf == null:
+					info["sticker_misses"] += 1
+					continue
+				var st := {"img": fixture if j == 0 else "stencil:star", "xf": xf,
+					"size": Vector2(0.09, 0.06) if j == 0 else Vector2(0.07, 0.07),
+					"color": Color.WHITE if j == 0 else Color.from_hsv(fmod(0.29 * (k + j), 1.0), 0.8, 1.0)}
+				if d.add_sticker(uid, st) != null:
+					info["stickers"] += 1
+			k += 1
+	info["ms"] = snappedf((Time.get_ticks_usec() - t0) / 1000.0, 0.1)
+	return info
+
+
+## Есть поверхность, которую красит attach_layer (не Shirt* / Face*).
+static func _paintable(mroot: Node3D) -> bool:
+	for mi in BodyPaint.meshes(mroot):
+		var m := mi as MeshInstance3D
+		for s in m.mesh.get_surface_count():
+			if not BodyPaint.is_protected(BodyPaint.surface_material(m, s)):
+				return true
+	return false
+
+
+## Кадр наклейки в кадре корня меша: луч −Z (к кукле спереди) в точку доли u вдоль длинной оси (X / Y) лицевой грани габарита;
+## Y кадра — нормаль наружу, −Z — верх картинки (+Y корня). null — луч не попал в меш.
+static func _sticker_xf(mroot: Node3D, u: float) -> Variant:
+	var box := BodyPaint.mesh_aabb(mroot)
+	var p := box.get_center()
+	if box.size.y >= box.size.x:
+		p.y = box.position.y + box.size.y * u
+	else:
+		p.x = box.position.x + box.size.x * u
+	var from := Vector3(p.x, p.y, box.end.z + 0.05)
+	var best_d := INF
+	var best: Array = []
+	var inv_root := mroot.global_transform.affine_inverse()
+	for mi in BodyPaint.meshes(mroot):
+		var m := mi as MeshInstance3D
+		var tm := m.mesh.generate_triangle_mesh()
+		if tm == null:
+			continue
+		var rel := inv_root * m.global_transform   # кадр меша → кадр корня
+		var inv := rel.affine_inverse()
+		var hit := tm.intersect_ray(inv * from, (inv.basis * Vector3.FORWARD).normalized())
+		if hit.is_empty():
+			continue
+		var hp: Vector3 = rel * (hit["position"] as Vector3)
+		if from.z - hp.z < best_d:
+			best_d = from.z - hp.z
+			var nrm := (rel.basis.inverse().transposed() * (hit["normal"] as Vector3)).normalized()
+			best = [hp, nrm if nrm.z >= 0.0 else -nrm]
+	if best.is_empty():
+		return null
+	var y: Vector3 = best[1]
+	var up := Vector3.UP - y * Vector3.UP.dot(y)
+	if up.length() < 1e-3:
+		up = Vector3.BACK - y * Vector3.BACK.dot(y)
+	var z := -up.normalized()
+	return Transform3D(Basis(y.cross(z).normalized(), y, z), best[0])
