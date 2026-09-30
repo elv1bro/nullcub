@@ -3,7 +3,7 @@
 ##   godot --path godot --resolution 1600x900 res://tests/league_parts_snapshot.tscn -- "sheet=/abs/league-parts.png"
 ## Все сцены деталей с «league» в имени — в ряд (заморожены) в тёмном окружении с тёплым ключом и холодным контровым.
 ## Проверки (exit 1): деталей ≥ 12, у каждой корень RigidBody3D, все поверхности — материалы assets/materials/kit (роли League_*
-## — из build_league_mats.gd), у голов есть Face. Отчёт — tests/league_parts_snapshot_report.json.
+## — из build_league.gd), у голов есть Face. Отчёт — tests/league_parts_snapshot_report.json.
 extends Node3D
 
 const DIR := "res://scenes/body/kit/"
@@ -28,7 +28,7 @@ func _ready() -> void:
 	var bad_root: Array = []
 	var bad_mat: Array = []
 	var heads_without_face: Array = []
-	var cols := 8
+	var cols := 9
 	for i in range(files.size()):
 		var n := (load(DIR + files[i]) as PackedScene).instantiate() as Node3D
 		add_child(n)
@@ -54,7 +54,7 @@ func _ready() -> void:
 					has_face = true
 		if files[i].contains("_head_") and not has_face:
 			heads_without_face.append(files[i])
-	_check("parts_12", files.size() >= 12, "%d scenes" % files.size())
+	_check("parts_20", files.size() >= 25, "%d scenes (20 деталей, у конечностей и щита — S / L)" % files.size())
 	_check("rigid_roots", bad_root.is_empty(), str(bad_root))
 	_check("kit_materials", bad_mat.is_empty(), str(bad_mat.slice(0, 6)))
 	_check("heads_have_face", heads_without_face.is_empty(), str(heads_without_face))
@@ -62,8 +62,8 @@ func _ready() -> void:
 	cam.fov = 32.0
 	add_child(cam)
 	cam.current = true
-	cam.position = Vector3(0.0, 0.2, 6.6)
-	cam.look_at(Vector3(0.0, 0.2, 0.0))
+	cam.position = Vector3(0.0, -0.15, 7.4)
+	cam.look_at(Vector3(0.0, -0.15, 0.0))
 	for i in range(8):
 		await get_tree().process_frame
 	var img := get_viewport().get_texture().get_image()

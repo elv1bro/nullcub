@@ -1,0 +1,93 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_c6aif"]
+
+[resource]
+script = ExtResource("1_c6aif")
+id = "league_portal"
+title = "Страж портала"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "kit_core_league_gyro",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"face": "res://assets/textures/league/league_face.png",
+"name": "Head",
+"parent": "T",
+"part": "kit_head_league_ring",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "kit_limb_league_float_l",
+"rest_deg": 70.0,
+"uid": "1"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "kit_limb_league_float_l",
+"rest_deg": 60.0,
+"uid": "2"
+}, {
+"anchor": "Anchor_End",
+"name": "Hand_L",
+"parent": "2",
+"part": "kit_hand_league_pincer",
+"rest_deg": 0.0,
+"uid": "3"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "kit_limb_league_float_l",
+"rest_deg": 60.0,
+"uid": "4"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_R",
+"parent": "4",
+"part": "kit_limb_league_float_l",
+"rest_deg": 20.0,
+"uid": "5"
+}, {
+"anchor": "Anchor_End",
+"parent": "5",
+"part": "kit_mace_league_orb",
+"rest_deg": 0.0,
+"uid": "6"
+}, {
+"anchor": "Anchor_Hip_L",
+"name": "UpperLeg_L",
+"parent": "T",
+"part": "kit_limb_league_float_s",
+"rest_deg": 22.0,
+"uid": "7"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_L",
+"parent": "7",
+"part": "kit_foot_league_hover",
+"rest_deg": 0.0,
+"uid": "8"
+}, {
+"anchor": "Anchor_Hip_R",
+"name": "UpperLeg_R",
+"parent": "T",
+"part": "kit_limb_league_float_s",
+"rest_deg": 22.0,
+"uid": "9"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_R",
+"parent": "9",
+"part": "kit_foot_league_hover",
+"rest_deg": 0.0,
+"uid": "A"
+}])
+control = PackedStringArray("5")
+control_rmb = PackedStringArray()

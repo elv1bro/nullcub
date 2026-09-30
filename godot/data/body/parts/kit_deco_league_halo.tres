@@ -12,6 +12,5 @@ scene = ExtResource("1_guwtg")
 mass = 0.4
 energy = 2
 attach = "fixed"
-material = "iron"
 name_prefix = "Deco"
-base_mat = "iron"
+base_mat = "brass"

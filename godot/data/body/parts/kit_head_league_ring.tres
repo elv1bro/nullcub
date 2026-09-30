@@ -6,11 +6,11 @@
 [resource]
 script = ExtResource("2_4h02l")
 id = "kit_head_league_ring"
-title = "Голова с гало (лига)"
+title = "Голова-портал (лига)"
 kind = "head"
 scene = ExtResource("1_p6d83")
 mass = 4.4
 body_mult = 0.35
 name_prefix = "Head"
-base_mat = "paint_white"
+base_mat = "brass"
 connector = true

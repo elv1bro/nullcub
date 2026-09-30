@@ -46,11 +46,11 @@
   "attach": "fixed",
   "weapon_mult": 1.5,
   "name_prefix": "Blade",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": false,
   "body_mult": 1.0,
-  "tris": 986,
+  "tris": 1150,
   "empties": [
    "Shape_Box_Blade",
    "Shape_Box_Collar",
@@ -58,11 +58,12 @@
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "Iron",
    "League_Crystal",
    "League_Cyan",
-   "League_Gold",
+   "League_Glow",
+   "League_Void",
    "Shirt_Kit",
    "Steel"
   ]
@@ -286,6 +287,77 @@
    "Steel"
   ]
  },
+ "Kit_Core_LeagueCrystal": {
+  "glb": "Kit_Core_LeagueCrystal",
+  "builder": "Core_LeagueCrystal",
+  "size": "",
+  "kind": "core",
+  "title": "Кристальное ядро (лига)",
+  "id": "kit_core_league_crystal",
+  "mass": 16.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "tris": 3930,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Torso"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Crystal",
+   "League_Cyan",
+   "League_Glow",
+   "League_Void",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Core_LeagueFlesh": {
+  "glb": "Kit_Core_LeagueFlesh",
+  "builder": "Core_LeagueFlesh",
+  "size": "",
+  "kind": "core",
+  "title": "Живое ядро (лига)",
+  "id": "kit_core_league_flesh",
+  "mass": 12.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": false,
+  "tris": 4426,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Sphere_Torso"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void",
+   "Shirt_Kit"
+  ]
+ },
  "Kit_Core_LeagueGyro": {
   "glb": "Kit_Core_LeagueGyro",
   "builder": "Core_LeagueGyro",
@@ -301,7 +373,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": false,
-  "tris": 5884,
+  "tris": 4900,
   "empties": [
    "Anchor_Back",
    "Anchor_Hip_L",
@@ -317,7 +389,6 @@
    "Base_Brass",
    "League_Cyan",
    "League_Glow",
-   "League_Gold",
    "League_Void",
    "Shirt_Kit"
   ]
@@ -334,10 +405,10 @@
   "attach": "joint",
   "weapon_mult": 1.0,
   "name_prefix": "Torso",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": false,
-  "tris": 5274,
+  "tris": 4746,
   "empties": [
    "Anchor_Back",
    "Anchor_Hip_L",
@@ -350,7 +421,7 @@
    "Shape_Sphere_Torso"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "League_Cyan",
    "League_Glow",
    "League_Gold",
@@ -600,17 +671,17 @@
   "attach": "fixed",
   "weapon_mult": 1.0,
   "name_prefix": "Deco",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": false,
   "body_mult": 1.0,
-  "tris": 906,
+  "tris": 1226,
   "empties": [
    "Shape_Cyl_Halo",
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "League_Cyan",
    "League_Glow",
    "League_Void"
@@ -628,8 +699,8 @@
   "attach": "fixed",
   "weapon_mult": 1.0,
   "name_prefix": "Armor",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": false,
   "body_mult": 1.0,
   "tris": 800,
@@ -638,10 +709,9 @@
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "League_Crystal",
    "League_Glow",
-   "League_Gold",
    "League_Void",
    "Shirt_Kit"
   ]
@@ -658,8 +728,8 @@
   "attach": "fixed",
   "weapon_mult": 1.0,
   "name_prefix": "Armor",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": false,
   "body_mult": 1.0,
   "tris": 800,
@@ -668,10 +738,9 @@
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "League_Crystal",
    "League_Glow",
-   "League_Gold",
    "League_Void",
    "Shirt_Kit"
   ]
@@ -904,6 +973,59 @@
    "Steel"
   ]
  },
+ "Kit_Foot_LeagueHover": {
+  "glb": "Kit_Foot_LeagueHover",
+  "builder": "Foot_LeagueHover",
+  "size": "",
+  "kind": "foot",
+  "title": "Парящая стопа (лига)",
+  "id": "kit_foot_league_hover",
+  "mass": 0.8,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": true,
+  "tris": 1286,
+  "empties": [
+   "Shape_Cyl_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Crystal",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Foot_LeagueSpike": {
+  "glb": "Kit_Foot_LeagueSpike",
+  "builder": "Foot_LeagueSpike",
+  "size": "",
+  "kind": "foot",
+  "title": "Ходуля-коготь (лига)",
+  "id": "kit_foot_league_spike",
+  "mass": 0.7,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": true,
+  "tris": 952,
+  "empties": [
+   "Shape_Box_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
  "Kit_Foot_Peg": {
   "glb": "Kit_Foot_Peg",
   "builder": "Foot_Peg",
@@ -1073,6 +1195,32 @@
    "Steel"
   ]
  },
+ "Kit_Hand_LeaguePincer": {
+  "glb": "Kit_Hand_LeaguePincer",
+  "builder": "Hand_LeaguePincer",
+  "size": "",
+  "kind": "hand",
+  "title": "Клешня (лига)",
+  "id": "kit_hand_league_pincer",
+  "mass": 1.2,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": true,
+  "tris": 1260,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
  "Kit_Hand_LeagueTalon": {
   "glb": "Kit_Hand_LeagueTalon",
   "builder": "Hand_LeagueTalon",
@@ -1088,7 +1236,7 @@
   "base_mat": "brass",
   "material": "wood",
   "connector": true,
-  "tris": 1754,
+  "tris": 1548,
   "empties": [
    "Shape_Box_Hand",
    "Socket"
@@ -1096,10 +1244,7 @@
   "materials": [
    "Base_Brass",
    "League_Glow",
-   "League_Gold",
-   "League_Void",
-   "Shirt_Kit",
-   "Steel"
+   "League_Void"
   ]
  },
  "Kit_Hand_Mitten": {
@@ -1384,22 +1529,22 @@
   "attach": "joint",
   "weapon_mult": 1.0,
   "name_prefix": "Head",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": true,
-  "tris": 1634,
+  "tris": 1702,
   "empties": [
    "Anchor_Top",
    "Shape_Box_Head",
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "Face",
-   "Iron",
    "League_Crystal",
    "League_Cyan",
-   "League_Gold"
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Head_LeagueEye": {
@@ -1414,20 +1559,49 @@
   "attach": "joint",
   "weapon_mult": 1.0,
   "name_prefix": "Head",
-  "base_mat": "paint_white",
+  "base_mat": "brass",
   "material": "wood",
   "connector": true,
-  "tris": 2782,
+  "tris": 2954,
   "empties": [
    "Anchor_Top",
    "Shape_Sphere_Head",
    "Socket"
   ],
   "materials": [
-   "Base_PaintWhite",
+   "Base_Brass",
    "Face",
-   "Iron",
    "League_Cyan",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Head_LeagueFlesh": {
+  "glb": "Kit_Head_LeagueFlesh",
+  "builder": "Head_LeagueFlesh",
+  "size": "",
+  "kind": "head",
+  "title": "Живая голова (лига)",
+  "id": "kit_head_league_flesh",
+  "mass": 3.8,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 2336,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Sphere_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "Face",
+   "League_Flesh",
+   "League_Glow",
    "League_Void"
   ]
  },
@@ -1436,26 +1610,26 @@
   "builder": "Head_LeagueRing",
   "size": "",
   "kind": "head",
-  "title": "Голова с гало (лига)",
+  "title": "Голова-портал (лига)",
   "id": "kit_head_league_ring",
   "mass": 4.4,
   "energy": 10,
   "attach": "joint",
   "weapon_mult": 1.0,
   "name_prefix": "Head",
-  "base_mat": "paint_white",
+  "base_mat": "brass",
   "material": "wood",
   "connector": true,
-  "tris": 2846,
+  "tris": 2952,
   "empties": [
    "Anchor_Top",
    "Shape_Sphere_Head",
    "Socket"
   ],
   "materials": [
-   "Base_PaintWhite",
+   "Base_Brass",
    "Face",
-   "Iron",
+   "League_Cyan",
    "League_Glow",
    "League_Void"
   ]
@@ -1892,10 +2066,10 @@
   "attach": "joint",
   "weapon_mult": 1.0,
   "name_prefix": "UpperLeg",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": true,
-  "tris": 968,
+  "tris": 1264,
   "empties": [
    "Anchor_Deco",
    "Anchor_End",
@@ -1903,10 +2077,11 @@
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "League_Crystal",
    "League_Cyan",
-   "Shirt_Kit"
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Limb_LeagueCrystal_S": {
@@ -1921,10 +2096,10 @@
   "attach": "joint",
   "weapon_mult": 1.0,
   "name_prefix": "UpperArm",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": true,
-  "tris": 968,
+  "tris": 1288,
   "empties": [
    "Anchor_Deco",
    "Anchor_End",
@@ -1932,10 +2107,67 @@
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "League_Crystal",
    "League_Cyan",
-   "Shirt_Kit"
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_LeagueFloat_L": {
+  "glb": "Kit_Limb_LeagueFloat_L",
+  "builder": "Limb_LeagueFloat",
+  "size": "L",
+  "kind": "limb",
+  "title": "Парящая (лига) (нога)",
+  "id": "kit_limb_league_float_l",
+  "mass": 3.6,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": true,
+  "tris": 934,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_LeagueFloat_S": {
+  "glb": "Kit_Limb_LeagueFloat_S",
+  "builder": "Limb_LeagueFloat",
+  "size": "S",
+  "kind": "limb",
+  "title": "Парящая (лига) (рука)",
+  "id": "kit_limb_league_float_s",
+  "mass": 1.9,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": true,
+  "tris": 966,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Limb_LeagueScythe_L": {
@@ -1950,10 +2182,10 @@
   "attach": "joint",
   "weapon_mult": 1.0,
   "name_prefix": "UpperLeg",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": true,
-  "tris": 2114,
+  "tris": 1446,
   "empties": [
    "Anchor_Deco",
    "Anchor_End",
@@ -1961,10 +2193,9 @@
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "League_Glow",
-   "League_Void",
-   "Shirt_Kit"
+   "League_Void"
   ]
  },
  "Kit_Limb_LeagueScythe_S": {
@@ -1979,10 +2210,10 @@
   "attach": "joint",
   "weapon_mult": 1.0,
   "name_prefix": "UpperArm",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": true,
-  "tris": 2114,
+  "tris": 1478,
   "empties": [
    "Anchor_Deco",
    "Anchor_End",
@@ -1990,10 +2221,67 @@
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "League_Glow",
-   "League_Void",
-   "Shirt_Kit"
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_LeagueTentacle_L": {
+  "glb": "Kit_Limb_LeagueTentacle_L",
+  "builder": "Limb_LeagueTentacle",
+  "size": "L",
+  "kind": "limb",
+  "title": "Щупальце (лига) (нога)",
+  "id": "kit_limb_league_tentacle_l",
+  "mass": 3.2,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 1800,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_LeagueTentacle_S": {
+  "glb": "Kit_Limb_LeagueTentacle_S",
+  "builder": "Limb_LeagueTentacle",
+  "size": "S",
+  "kind": "limb",
+  "title": "Щупальце (лига) (рука)",
+  "id": "kit_limb_league_tentacle_s",
+  "mass": 1.6,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 1800,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Limb_Piston_L": {
@@ -2538,8 +2826,8 @@
   "attach": "fixed",
   "weapon_mult": 1.4,
   "name_prefix": "Mace",
-  "base_mat": "iron",
-  "material": "iron",
+  "base_mat": "brass",
+  "material": "wood",
   "connector": false,
   "body_mult": 1.0,
   "tris": 1912,
@@ -2549,11 +2837,11 @@
    "Socket"
   ],
   "materials": [
-   "Base_Iron",
+   "Base_Brass",
    "Iron",
    "League_Crystal",
    "League_Glow",
-   "League_Gold",
+   "League_Void",
    "Shirt_Kit",
    "Steel"
   ]

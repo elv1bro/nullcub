@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/body/modular_doll.gd" id="1_amowv"]
+[ext_resource type="Resource" path="res://data/body/blueprints/league_deep.tres" id="2_xhood"]
+[ext_resource type="Script" path="res://scripts/league/league_look.gd" id="3_f0hmi"]
+
+[node name="ModularDoll" type="Node3D" unique_id=963378662]
+script = ExtResource("1_amowv")
+blueprint = ExtResource("2_xhood")
+
+[node name="LeagueLook" type="Node" parent="." unique_id=1792760693]
+script = ExtResource("3_f0hmi")
