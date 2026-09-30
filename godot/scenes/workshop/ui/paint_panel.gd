@@ -69,7 +69,7 @@ func setup(c: WorkshopBuild) -> void:
 	custom_minimum_size = Vector2(W, 0)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 7)
-	add_child(_caption("ИНСТРУМЕНТ"))
+	add_child(_caption("Инструмент"))
 	var tools := GridContainer.new()
 	tools.columns = 4
 	tools.add_theme_constant_override("h_separation", 6)
@@ -82,7 +82,7 @@ func setup(c: WorkshopBuild) -> void:
 		tools.add_child(b)
 		_tool_buttons[t] = b
 	# цвет
-	add_child(_caption("ЦВЕТ   ·   ЛКМ — цвет, ПКМ — второй"))
+	add_child(_caption("Цвет   ·   ЛКМ — цвет, ПКМ — второй"))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	add_child(row)
@@ -97,7 +97,7 @@ func setup(c: WorkshopBuild) -> void:
 	_sec.tooltip_text = "Второй цвет (раскраски «своими цветами») — клик: поменять местами  [X]"
 	_sec.chosen.connect(func(_c: Color, _b: int) -> void: paint.swap_colors())
 	row.add_child(_sec)
-	var own_pick := _button("СВОЙ ЦВЕТ…", 17, 42)
+	var own_pick := _button("Свой цвет…", 17, 40)
 	own_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	own_pick.pressed.connect(_open_picker)
 	row.add_child(own_pick)
@@ -139,7 +139,7 @@ func setup(c: WorkshopBuild) -> void:
 	var trow := HBoxContainer.new()
 	trow.add_theme_constant_override("separation", 8)
 	add_child(trow)
-	_sym = _button("СИММЕТРИЯ: ВКЛ", 16, 42)
+	_sym = _button("Симметрия: вкл", 16, 40)
 	_sym.clip_text = true
 	_sym.toggle_mode = true
 	_sym.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -147,7 +147,7 @@ func setup(c: WorkshopBuild) -> void:
 	_sym.add_theme_stylebox_override("pressed", _gold())
 	_sym.toggled.connect(func(on: bool) -> void: paint.set_symmetry(on))
 	trow.add_child(_sym)
-	_turn = _button("СТЕНД 0°  [R]", 16, 42)
+	_turn = _button("Стенд 0°   R", 16, 40)
 	_turn.clip_text = true
 	_turn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_turn.tooltip_text = "Повернуть стенд на 90° — красить бока и спину (R, Shift+R — назад)"
@@ -156,12 +156,12 @@ func setup(c: WorkshopBuild) -> void:
 	var crow := HBoxContainer.new()
 	crow.add_theme_constant_override("separation", 8)
 	add_child(crow)
-	_clear_part = _button("ОЧИСТИТЬ ДЕТАЛЬ", 15, 40)
+	_clear_part = _button("Очистить деталь", 15, 38)
 	_clear_part.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_clear_part.clip_text = true
 	_clear_part.pressed.connect(func() -> void: paint.clear_part())
 	crow.add_child(_clear_part)
-	_clear_all = _button("ОЧИСТИТЬ ВСЁ", 15, 40)
+	_clear_all = _button("Очистить всё", 15, 38)
 	_clear_all.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_clear_all.tooltip_text = "Снять всю краску, наклейки и фото (Ctrl+Z вернёт)"
 	_clear_all.pressed.connect(func() -> void: paint.clear_all())
@@ -217,12 +217,12 @@ func refresh() -> void:
 	else:
 		_update_options()
 	_sym.set_pressed_no_signal(paint.symmetry)
-	_sym.text = "СИММЕТРИЯ: ВКЛ" if paint.symmetry else "СИММЕТРИЯ: ВЫКЛ"
-	_turn.text = "СТЕНД %d°  [R]" % paint.turn_degrees()
+	_sym.text = "Симметрия: вкл" if paint.symmetry else "Симметрия: выкл"
+	_turn.text = "Стенд %d°   R" % paint.turn_degrees()
 	var fu := paint.focus_uid
 	var has_focus := fu != "" and not CraftEdit.find(ctl.blueprint, fu).is_empty() and paint.has_paint(fu)
 	_clear_part.disabled = not has_focus
-	_clear_part.text = ("ОЧИСТИТЬ: %s" % ctl.uid_title("body", fu).get_slice(" (", 0).to_upper()) if has_focus else "ОЧИСТИТЬ ДЕТАЛЬ"
+	_clear_part.text = ("Очистить: %s" % PartNames.of(CraftEdit.def_of(ctl.blueprint, fu))) if has_focus and CraftEdit.def_of(ctl.blueprint, fu) != null else "Очистить деталь"
 	_clear_part.tooltip_text = "Снять краску, наклейки и фото с последней детали, которую красил (и с её пары при симметрии)"
 	_clear_all.disabled = not paint.has_paint()
 
@@ -248,7 +248,7 @@ func _build_options() -> void:
 		"":
 			_options.add_child(_note("Выбери инструмент. Краска — только вид: масса и удар — у материала. Цвет игрока (пояса, шары суставов) не закрашивается."))
 		"spray":
-			_options.add_child(_caption("БАЛЛОНЧИК"))
+			_options.add_child(_caption("Баллончик"))
 			_add_size_slider()
 			_add_slider("pressure", "Нажим", 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
 				func(v: float) -> void: paint.set_pressure(v / 100.0))
@@ -257,18 +257,18 @@ func _build_options() -> void:
 				func(v: float) -> void: paint.set_hardness(v / 100.0))
 			_options.add_child(_note("Зажми ЛКМ и веди по кукле. Колесо / [ ] — размер, Alt+клик — пипетка, X — второй цвет."))
 		"erase":
-			_options.add_child(_caption("ЛАСТИК"))
+			_options.add_child(_caption("Ластик"))
 			_add_size_slider()
 			_add_slider("pressure", "Сила", 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
 				func(v: float) -> void: paint.set_pressure(v / 100.0))
 			_options.add_child(_note("Стирает краску баллончика и раскрасок. Наклейки снимает ПКМ трафаретом или наклейкой."))
 		"fill":
-			_options.add_child(_caption("ЗАЛИВКА"))
+			_options.add_child(_caption("Заливка"))
 			_add_slider("pressure", "Плотность", 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
 				func(v: float) -> void: paint.set_pressure(v / 100.0))
 			_options.add_child(_note("Клик по детали — вся деталь в цвет (с симметрией — и парная). Неполная плотность — тонировка поверх."))
 		"pattern":
-			_options.add_child(_caption("РАСКРАСКИ   ·   SHIFT+КЛИК — ВСЯ КУКЛА"))
+			_options.add_child(_caption("Раскраски   ·   Shift+клик — вся кукла"))
 			var g := GridContainer.new()
 			g.columns = 3
 			g.add_theme_constant_override("h_separation", 6)
@@ -281,7 +281,7 @@ func _build_options() -> void:
 				t.chosen.connect(func(key: String, _b: int) -> void: paint.set_pattern_kind(key))
 				g.add_child(t)
 				_tiles[String(k)] = t
-			_own = _button("СВОИМИ ЦВЕТАМИ", 17, 38)
+			_own = _button("Своими цветами", 17, 38)
 			_own.toggle_mode = true
 			_own.add_theme_stylebox_override("pressed", _gold())
 			_own.tooltip_text = "Раскраска цветом и вторым цветом вместо родной палитры узора"
@@ -291,10 +291,10 @@ func _build_options() -> void:
 			_pattern_key = ""
 			_update_pattern_previews()
 		"pick":
-			_options.add_child(_caption("ПИПЕТКА"))
+			_options.add_child(_caption("Пипетка"))
 			_options.add_child(_note("Клик по детали — её цвет в кисть (краска, а где её нет — цвет материала). Потом — снова прежний инструмент. Alt+клик баллончиком — то же самое."))
 		"stencil":
-			_options.add_child(_caption("ТРАФАРЕТ — ЦВЕТОМ КРАСКИ"))
+			_options.add_child(_caption("Трафарет — цветом краски"))
 			_add_sticker_slider()
 			var g2 := GridContainer.new()
 			g2.columns = 5
@@ -311,7 +311,7 @@ func _build_options() -> void:
 			_info = _note("")
 			_options.add_child(_info)
 		"sticker", "face":
-			_options.add_child(_caption("МОИ КАРТИНКИ   ·   ПКМ — УДАЛИТЬ" if paint.tool == "sticker" else "ФОТО НА ГОЛОВУ — ВЫБЕРИ КАРТИНКУ"))
+			_options.add_child(_caption("Мои картинки   ·   ПКМ — удалить" if paint.tool == "sticker" else "Фото на голову — выбери картинку"))
 			if paint.tool == "sticker":
 				_add_sticker_slider()
 			var ib := HBoxContainer.new()
@@ -577,7 +577,7 @@ func _open_picker() -> void:
 static func _caption(t: String) -> Label:
 	var l := Label.new()
 	l.text = t
-	l.theme_type_variation = &"SmallCaps"
+	WsStyle.label(l, WsStyle.SIZE_XS, true)   # v0.3: подписи секций — мелко и без капса
 	l.clip_text = true
 	return l
 
@@ -598,18 +598,13 @@ static func _button(t: String, fs: int, h: float) -> Button:
 	b.text = t
 	b.focus_mode = Control.FOCUS_NONE
 	b.custom_minimum_size = Vector2(0, h)
-	b.add_theme_font_size_override("font_size", fs)
+	b.add_theme_font_size_override("font_size", mini(fs, WsStyle.SIZE_S))
+	WsStyle.apply_button(b)
 	return b
 
 
 func _gold() -> StyleBox:
-	var ui := ctl.ui
-	var cb: Variant = ui.get("control_button") if ui != null else null
-	if cb is Button:
-		return (cb as Button).get_theme_stylebox("pressed")
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = BG_SEL
-	return sb
+	return WsStyle.button("selected")
 
 
 static func _style_slider(s: HSlider) -> void:
