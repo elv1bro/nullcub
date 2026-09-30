@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://wslights0001"]
+
+[ext_resource type="Script" path="res://scenes/workshop/stand/stand_lights.gd" id="1_sl"]
+
+[node name="BuildLights" type="Node3D"]
+script = ExtResource("1_sl")
+
+[node name="Stand" type="Node3D" parent="."]
+
+[node name="Key" type="SpotLight3D" parent="Stand"]
+transform = Transform3D(0.957826, 0.260309, -0.121688, 0, 0.423488, 0.905902, 0.287348, -0.867697, 0.405628, -0.35, 4.1, 1.5)
+light_color = Color(1, 0.83, 0.6, 1)
+light_energy = 1.8
+light_indirect_energy = 0.3
+light_volumetric_fog_energy = 0.4
+light_specular = 0.7
+shadow_enabled = true
+shadow_bias = 0.04
+shadow_normal_bias = 1.2
+shadow_blur = 1.6
+spot_range = 5.8
+spot_attenuation = 0.9
+spot_angle = 19
+spot_angle_attenuation = 1.2
+
+[node name="Fill" type="OmniLight3D" parent="Stand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9, 1.3, 1.9)
+light_color = Color(0.56, 0.72, 1, 1)
+light_energy = 0.6
+light_indirect_energy = 0
+light_volumetric_fog_energy = 0
+light_specular = 0.9
+omni_range = 3.2
+omni_attenuation = 1.3
+
+[node name="Rim" type="SpotLight3D" parent="Stand"]
+transform = Transform3D(-0.964764, -0.186849, 0.185252, 0, 0.704067, 0.710134, -0.263117, 0.685111, -0.679258, 0.3, 2.5, -1.05)
+light_color = Color(1, 0.9, 0.76, 1)
+light_energy = 5
+light_indirect_energy = 0
+light_volumetric_fog_energy = 0
+light_specular = 1
+spot_range = 2.8
+spot_attenuation = 0.6
+spot_angle = 35
+spot_angle_attenuation = 0.8
+
+[node name="Bench" type="Node3D" parent="."]
+
+[node name="Key" type="SpotLight3D" parent="Bench"]
+transform = Transform3D(0.776114, 0.554278, -0.300704, 0, 0.476859, 0.87898, 0.630593, -0.682189, 0.370097, -0.4, 1.9, 0.8)
+light_color = Color(1, 0.84, 0.62, 1)
+light_energy = 1.6
+light_indirect_energy = 0.3
+light_volumetric_fog_energy = 0
+light_specular = 0.7
+shadow_enabled = true
+shadow_bias = 0.03
+shadow_blur = 1.4
+spot_range = 3.2
+spot_attenuation = 0.9
+spot_angle = 24
+spot_angle_attenuation = 1.6
