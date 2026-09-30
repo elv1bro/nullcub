@@ -276,8 +276,8 @@
     {
       "id": "crit_camera_restored",
       "ok": true,
-      "value": "Camera:<Camera3D#131885697547>",
-      "limit": "Camera:<Camera3D#131885697547>"
+      "value": "Camera:<Camera3D#131818588683>",
+      "limit": "Camera:<Camera3D#131818588683>"
     },
     {
       "id": "crit_no_time_tags",
@@ -468,8 +468,8 @@
     {
       "id": "final_camera_game",
       "ok": true,
-      "value": "Camera:<Camera3D#131885697547>",
-      "limit": "Camera:<Camera3D#131885697547>"
+      "value": "Camera:<Camera3D#131818588683>",
+      "limit": "Camera:<Camera3D#131818588683>"
     },
     {
       "id": "final_match_fx_children",
@@ -577,8 +577,8 @@
       "waves": 65,
       "afterimages": 35,
       "trails": 35,
-      "bursts": 161,
-      "puffs": 81,
+      "bursts": 162,
+      "puffs": 82,
       "lines": 30,
       "punches": 33,
       "slams": 7,
