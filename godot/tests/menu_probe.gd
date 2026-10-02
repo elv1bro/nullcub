@@ -34,7 +34,7 @@ func _run() -> void:
 	var menu := get_tree().current_scene
 	var items: Node = menu.get_node("%Items")
 	var first := items.get_child(0) as Button
-	_check("menu_items", missing.is_empty() and items.get_child_count() == M.ITEMS.size() + 1 and first.has_focus(),
+	_check("menu_items", missing.is_empty() and items.get_child_count() == M.ITEMS.size() + 2 and first.has_focus(),
 		"пунктов %d (+ выход), нет сцен %s, фокус на первом %s" % [M.ITEMS.size(), missing, first.has_focus()])
 	var v := String(ProjectSettings.get_setting("application/config/version", ""))
 	_check("menu_version", v == "0.0.1" and String(menu.get_node("%Version").text).contains(v)
