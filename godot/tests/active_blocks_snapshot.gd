@@ -25,6 +25,8 @@ func _ready() -> void:
 				args[p[0]] = p[1]
 	if String(args.get("mode", "fight")) == "workshop":
 		_workshop.call_deferred()
+	elif String(args.get("mode", "")) == "fight2":
+		_fight2()
 	else:
 		_fight()
 
@@ -72,18 +74,38 @@ func _fight() -> void:
 	cam.look_at(Vector3(1.7, 1.25, 0.0))
 
 
+## Вторая волна: крюк-кошка тянет бойца, прожектор светит (и дымит шашкой), разрядник бьёт соседа током, сапоги поднимают.
+func _fight2() -> void:
+	_environment()
+	_floor()
+	dolls["grapple"] = _spawn(_bp([["kit_active_grapple", "8", "Anchor_Deco", 1]]), 0.0)
+	dolls["hooked"] = _spawn(_bp([]), -2.8)
+	dolls["light"] = _spawn(_bp([["kit_active_searchlight", "2", "Anchor_Deco", 1], ["kit_active_smoke", "T", "Anchor_Back", 2]]), 2.6)
+	dolls["shock"] = _spawn(_bp([["kit_active_shock", "T", "Anchor_Back", 1]]), 5.6)
+	dolls["shocked"] = _spawn(_bp([]), 7.1)
+	dolls["boots"] = _spawn(_bp([["kit_active_jet_boots", "5", "Anchor_Deco", 1], ["kit_active_jet_boots", "B", "Anchor_Deco", 1]]), 9.8)
+	var cam := Camera3D.new()
+	cam.fov = 38.0
+	add_child(cam)
+	cam.current = true
+	cam.position = Vector3(3.5, 2.1, 12.5)
+	cam.look_at(Vector3(3.5, 1.3, 0.0))
+
+
 func _physics_process(dt: float) -> void:
 	if ws != null or done or dolls.is_empty():
 		return
 	t += dt
 	if t > 1.0:
-		for k in ["gunner", "crystal", "jet"]:
+		for k in ["gunner", "crystal", "jet", "grapple", "light", "shock", "boots"]:
+			if not dolls.has(k):
+				continue
 			var r := (dolls[k] as ModularDoll).active_rig
 			if r == null:
 				continue
 			for ch in range(3):
 				r.held[ch] = true
-	if t > 1.55:
+	if t > (1.95 if String(args.get("mode", "")) == "fight2" else 1.55):
 		done = true
 		_save()
 

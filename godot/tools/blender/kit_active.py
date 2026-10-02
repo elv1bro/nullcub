@@ -126,9 +126,8 @@ def build_Active_Jetpack(base="PaintYellow"):
         objs.append(fin(revolve("AJ_Nozzle", [(0.03, -0.14), (0.034, -0.16), (0.05, -0.2), (0.046, -0.204), (0.03, -0.17)], "Iron", 16,
                                 T((x, 0.0, -0.05)), closed=True), 0.0, angle=40, uv="cyl"))
         objs.append(revolve("AJ_Glow", [(0.0, -0.15), (0.034, -0.196), (0.0, -0.19)], "CoreGlow", 12, T((x, 0.0, -0.05))))
-        objs.append(band("AJ_Strap", -0.02, 0.052, 0.02, "Shirt_Kit") if False else
-                    fin(revolve("AJ_Strap", [(0.052, -0.03), (0.053, -0.02), (0.052, -0.01)], "Shirt_Kit", 16, T((x, 0.0, -0.05)), closed=True),
-                        angle=60))
+        objs.append(fin(revolve("AJ_Strap", [(0.052, -0.03), (0.053, -0.02), (0.052, -0.01)], "Shirt_Kit", 16, T((x, 0.0, -0.05)),
+                                closed=True), angle=60))
         objs.append(fin(sphere("AJ_Gauge", 0.016, (x - sx * 0.035, 0.07, -0.012), "Brass", 10, 5), angle=60))
     return objs, [socket(rot_z=180.0), shape_box("Jetpack", (0.0, -0.01, -0.05), (0.46, 0.3, 0.1))]
 
@@ -202,6 +201,138 @@ def build_Active_LeagueRepair(base="Brass"):
     return objs, [socket(rot_z=180.0), shape_cyl("Repair", tuple(c), 0.055, 0.24)]
 
 
+# ---------------------------------------------------------------------------------------------------------------------------------
+# кит, вторая волна (ACTIVE_BLOCKS.md v2): сапоги-ускорители, крюк-кошка, пружина, дымовая шашка, разрядник, мина, прожектор, якорь
+# ---------------------------------------------------------------------------------------------------------------------------------
+def build_Active_JetBoots(base="PaintYellow"):
+    """Ранец для ног: короткий крашеный баллон на бедре / голени, сопло вниз — к стопе (+Y), тянет конечность к бедру: на ногах —
+    подскок и полёт вверх, на руке — «рука назад». Латунный хомут, чёрно-жёлтая полоса."""
+    objs = _strap("AJB", 0.02, 0.078)
+    objs.append(_can("AJB_Body", 0.03, 0.16, 0.036, "Base_" + base, z=0.1))
+    objs.append(fin(revolve("AJB_Nozzle", [(0.022, 0.16), (0.026, 0.17), (0.04, 0.205), (0.036, 0.21), (0.024, 0.18)], "Iron", 16,
+                            T((0.0, 0.0, 0.1)), closed=True), 0.0, angle=40, uv="cyl"))
+    objs.append(revolve("AJB_Glow", [(0.0, 0.2), (0.028, 0.2), (0.0, 0.175)], "CoreGlow", 12, T((0.0, 0.0, 0.1))))
+    objs.append(band("AJB_Hazard", 0.09, 0.0375, 0.016, "RustDark"))
+    objs.append(fin(revolve("AJB_Cap", [(0.03, 0.03), (0.02, 0.012), (0.0, 0.008)], "Brass", 14, T((0.0, 0.0, 0.1))), 0.0, angle=40, uv="cyl"))
+    return objs, [socket(rot_z=180.0), shape_cyl("JetBoots", (0.0, 0.11, 0.1), 0.04, 0.2)]
+
+
+def build_Active_Grapple(base="Iron"):
+    """Крюк-кошка: железная труба-пускатель вдоль конечности, на дульном срезе — трёхлапая кошка, сбоку — барабан с тросом
+    (Base_ — корпус). Выстрел по нажатию, пока канал зажат — трос тянет к точке зацепа (и зацепленного — к себе)."""
+    objs = _strap("AGR", 0.02)
+    objs.append(_can("AGR_Tube", 0.03, 0.24, 0.022, "Base_" + base))
+    objs.append(fin(revolve("AGR_Muzzle", [(0.024, 0.235), (0.028, 0.245), (0.028, 0.26), (0.022, 0.262)], "Brass", 14,
+                            T((0.0, 0.0, Z_LIMB)), closed=True), angle=60))
+    tip = Vector((0.0, 0.3, Z_LIMB))
+    objs.append(fin(revolve("AGR_Shank", [(0.0, 0.25), (0.007, 0.25), (0.007, 0.3), (0.0, 0.305)], "Steel", 8, T((0.0, 0.0, Z_LIMB))),
+                    angle=50))
+    for k in range(3):
+        a = math.pi / 2 + k * 2 * math.pi / 3
+        d = Vector((math.cos(a), 0.0, math.sin(a)))
+        pts = [tip + Vector((0.0, -0.004, 0.0)), tip + d * 0.025 + Vector((0.0, 0.01, 0.0)), tip + d * 0.04 + Vector((0.0, -0.01, 0.0)),
+               tip + d * 0.036 + Vector((0.0, -0.03, 0.0))]
+        objs.append(fin(sweep("AGR_Fluke", pts, [0.006, 0.006, 0.005, 0.002], "Steel", sides=6), angle=50))
+    drum = Vector((0.04, 0.09, Z_LIMB - 0.005))
+    objs.append(fin(revolve("AGR_Drum", [(0.0, -0.016), (0.028, -0.016), (0.03, -0.012), (0.03, 0.012), (0.028, 0.016), (0.0, 0.016)],
+                            "Brass", 18, T(drum) @ Matrix.Rotation(math.radians(90.0), 4, 'Z')), 0.0, angle=40, uv="cyl"))
+    objs.append(fin(torus("AGR_Rope", tuple(drum), 0.026, 0.006, "Rope", 'YZ', 18, 5), angle=60))
+    return objs, [socket(rot_z=180.0), shape_cyl("Grapple", (0.0, 0.14, Z_LIMB), 0.03, 0.28)]
+
+
+def build_Active_Spring(base="PaintBlue"):
+    """Пружина-катапульта: стальная витая пружина вдоль конечности в крашеном стакане (Base_), на конце — латунная ударная тарелка
+    (+Y). По нажатию — разовый толчок: тарелка бьёт вперёд (кто перед ней — отлетает), бойца отдачей толкает назад."""
+    objs = _strap("ASP", 0.02)
+    objs.append(fin(revolve("ASP_Cup", [(0.0, 0.03), (0.032, 0.03), (0.036, 0.04), (0.036, 0.09), (0.03, 0.095), (0.0, 0.095)],
+                            "Base_" + base, 18, T((0.0, 0.0, Z_LIMB))), 0.0, angle=40, uv="cyl"))
+    coil = []
+    for i in range(49):
+        t = i / 48
+        a = t * math.pi * 2 * 6
+        coil.append(Vector((0.024 * math.cos(a), 0.095 + 0.12 * t, Z_LIMB + 0.024 * math.sin(a))))
+    objs.append(fin(sweep("ASP_Coil", coil, 0.0045, "Steel", sides=6), angle=60))
+    objs.append(fin(revolve("ASP_Rod", [(0.0, 0.09), (0.008, 0.09), (0.008, 0.22), (0.0, 0.22)], "Iron", 8, T((0.0, 0.0, Z_LIMB))), angle=50))
+    objs.append(fin(revolve("ASP_Plate", [(0.0, 0.215), (0.045, 0.215), (0.05, 0.222), (0.045, 0.232), (0.0, 0.234)], "Brass", 22,
+                            T((0.0, 0.0, Z_LIMB))), 0.0, angle=40, uv="cyl"))
+    return objs, [socket(rot_z=180.0), shape_cyl("Spring", (0.0, 0.13, Z_LIMB), 0.045, 0.21)]
+
+
+def build_Active_Smoke(base="PaintGreen"):
+    """Дымовая шашка (спина): два крашеных баллона за плечами на хомуте (Base_), железные вентили с раструбами вверх, по трафарету —
+    светлые полосы. Пока канал зажат — дым облаками: боец в дыму невидим для ботов."""
+    objs = [fin(rbox("ASM_Frame", (0.16, 0.04, 0.03), "Iron", (0.0, 0.0, -0.02), 0.008, 2), angle=40)]
+    for sx in (-1, 1):
+        x = sx * 0.12
+        objs.append(_can("ASM_Can", -0.1, 0.1, 0.042, "Base_" + base, z=-0.06, x=x))
+        objs.append(fin(revolve("ASM_Stripe", [(0.043, -0.01), (0.044, 0.0), (0.043, 0.01)], "Bone", 16, T((x, 0.0, -0.06)), closed=True),
+                        angle=60))
+        objs.append(fin(revolve("ASM_Vent", [(0.012, 0.1), (0.012, 0.13), (0.024, 0.16), (0.02, 0.162), (0.009, 0.135)], "Iron", 12,
+                                T((x, 0.0, -0.06)), closed=True), 0.0, angle=40, uv="cyl"))
+        objs.append(fin(torus("ASM_Valve", (x, 0.115, -0.06), 0.016, 0.003, "Brass", 'XZ', 12, 4), angle=60))
+    return objs, [socket(rot_z=180.0), shape_box("Smoke", (0.0, 0.0, -0.06), (0.34, 0.24, 0.09))]
+
+
+def build_Active_Shock(base="Brass"):
+    """Разрядник (спина / макушка): катушка Теслы — обмотка из медной проволоки на крашеном стакане (Base_), сверху латунный тор и
+    шар-разрядник. Пока канал зажат — бьёт током всех, кто рядом (урон и короткий стан)."""
+    objs = [fin(revolve("ASH_Base", [(0.0, 0.0), (0.045, 0.0), (0.05, 0.012), (0.034, 0.03), (0.0, 0.03)], "Base_" + base, 18,
+                        T((0.0, 0.0, -0.05))), 0.0, angle=40, uv="cyl")]
+    objs.append(fin(revolve("ASH_Core", [(0.0, 0.03), (0.022, 0.03), (0.022, 0.2), (0.0, 0.2)], "Rubber", 14, T((0.0, 0.0, -0.05))), angle=40))
+    for k in range(18):
+        objs.append(fin(torus("ASH_Wire", (0.0, 0.04 + k * 0.0085, -0.05), 0.025, 0.0035, "Brass", 'XZ', 14, 4), angle=60))
+    objs.append(fin(torus("ASH_Toroid", (0.0, 0.215, -0.05), 0.045, 0.016, "Brass", 'XZ', 24, 8), angle=60))
+    objs.append(sphere("ASH_Ball", 0.018, (0.0, 0.245, -0.05), "CoreGlow", 12, 6))
+    return objs, [socket(rot_z=180.0), shape_cyl("Shock", (0.0, 0.12, -0.05), 0.05, 0.24)]
+
+
+def build_Active_Mine(base="RustRed"):
+    """Минный лоток: крашеная кассета вдоль конечности (Base_) с тремя плоскими минами (красный глазок), подпружиненный лоток на
+    конце (+Y). По нажатию — мина падает и через миг взводится; кто наступит — взрыв (и свой тоже)."""
+    objs = _strap("AMN", 0.02)
+    objs.append(fin(rbox("AMN_Case", (0.07, 0.2, 0.04), "Base_" + base, (0.0, 0.12, Z_LIMB), 0.008, 2), angle=40))
+    for k in range(3):
+        c = Vector((0.0, 0.07 + k * 0.055, Z_LIMB + 0.028))
+        objs.append(fin(revolve("AMN_Disc", [(0.0, -0.008), (0.026, -0.008), (0.03, -0.002), (0.026, 0.008), (0.0, 0.01)], "Iron", 16,
+                                T(c) @ Rx(90.0)), 0.0, angle=40, uv="cyl"))
+        objs.append(sphere("AMN_Eye", 0.006, tuple(c + Vector((0.0, 0.0, 0.01))), "Gem", 8, 4))
+    objs.append(fin(box("AMN_Lip", (0.07, 0.012, 0.03), "Brass", (0.0, 0.225, Z_LIMB + 0.012)), 0.002, 1))
+    return objs, [socket(rot_z=180.0), shape_box("Mine", (0.0, 0.12, Z_LIMB), (0.08, 0.21, 0.06))]
+
+
+def build_Active_Searchlight(base="PaintWhite"):
+    """Прожектор: крашеный барабан-фара вдоль конечности (Base_) с латунной оправой, стеклом и козырьком; луч — вдоль конечности (+Y).
+    Пока канал зажат — луч слепит ботов в конусе (целятся мимо)."""
+    objs = _strap("ASL", 0.02)
+    objs.append(fin(revolve("ASL_Body", [(0.0, 0.05), (0.03, 0.05), (0.04, 0.08), (0.042, 0.17), (0.0, 0.17)], "Base_" + base, 20,
+                            T((0.0, 0.0, Z_LIMB + 0.005))), 0.0, angle=40, uv="cyl"))
+    objs.append(fin(revolve("ASL_Rim", [(0.036, 0.165), (0.046, 0.168), (0.046, 0.182), (0.036, 0.184)], "Brass", 20,
+                            T((0.0, 0.0, Z_LIMB + 0.005)), closed=True), angle=60))
+    objs.append(revolve("ASL_Lens", [(0.0, 0.176), (0.037, 0.176), (0.0, 0.182)], "Glass", 20, T((0.0, 0.0, Z_LIMB + 0.005))))
+    objs.append(revolve("ASL_Bulb", [(0.0, 0.15), (0.016, 0.155), (0.0, 0.172)], "CoreGlow", 12, T((0.0, 0.0, Z_LIMB + 0.005))))
+    visor = [(-0.05, 0.0), (0.05, 0.0), (0.04, 0.04), (-0.04, 0.04)]
+    objs.append(fin(extrude2d("ASL_Visor", visor, -0.001, 0.001, "Iron", xf=T((0.0, 0.185, Z_LIMB + 0.05)) @ Rx(-100.0)), 0.001, 1))
+    return objs, [socket(rot_z=180.0), shape_cyl("Searchlight", (0.0, 0.12, Z_LIMB), 0.045, 0.14)]
+
+
+def build_Active_Anchor(base="Iron"):
+    """Тормоз-якорь: тяжёлый кованый якорь вдоль конечности (Base_) — кольцо у крепления, веретено, лапы на конце (+Y). Пока канал
+    зажат — деталь-хозяин стоит намертво там, где была (остальное тело качается вокруг)."""
+    objs = _strap("AAN", 0.02)
+    c = Vector((0.0, 0.0, Z_LIMB))
+    objs.append(fin(torus("AAN_Ring", tuple(c + Vector((0.0, 0.045, 0.0))), 0.018, 0.005, "Rust", 'XY', 16, 5), angle=60))
+    objs.append(fin(revolve("AAN_Shank", [(0.0, 0.06), (0.011, 0.06), (0.013, 0.2), (0.0, 0.215)], "Base_" + base, 10, T(c)), 0.002, 1,
+                    angle=40, uv="cyl"))
+    objs.append(fin(box("AAN_Stock", (0.1, 0.012, 0.012), "Rust", tuple(c + Vector((0.0, 0.08, 0.0)))), 0.002, 1))
+    for sx in (-1, 1):
+        pts = [c + Vector((0.0, 0.21, 0.0)), c + Vector((sx * 0.04, 0.215, 0.0)), c + Vector((sx * 0.065, 0.19, 0.0)),
+               c + Vector((sx * 0.07, 0.165, 0.0))]
+        objs.append(fin(sweep("AAN_Arm", pts, [0.012, 0.011, 0.009, 0.006], "Base_" + base, sides=7), angle=50))
+        objs.append(fin(extrude2d("AAN_Fluke", [(sx * 0.055, 0.17), (sx * 0.085, 0.15), (sx * 0.075, 0.185)], Z_LIMB - 0.006, Z_LIMB + 0.006,
+                                  "Base_" + base), 0.002, 1, angle=40))
+    return objs, [socket(rot_z=180.0), shape_box("Anchor", (0.0, 0.14, Z_LIMB), (0.16, 0.2, 0.04))]
+
+
 META = {
     "Active_Booster": {"kind": "deco", "title": "Ускоритель", "mass": 1.0, "energy": 5},
     "Active_Flamer": {"kind": "deco", "title": "Огнемёт", "mass": 1.4, "energy": 7},
@@ -212,4 +343,12 @@ META = {
     "Active_LeagueShield": {"kind": "deco", "title": "Эмиттер щита (лига)", "mass": 1.0, "energy": 8},
     "Active_LeaguePhase": {"kind": "deco", "title": "Фазовый модуль (лига)", "mass": 0.8, "energy": 9},
     "Active_LeagueRepair": {"kind": "deco", "title": "Ядро самопочинки (лига)", "mass": 1.0, "energy": 8},
+    "Active_JetBoots": {"kind": "deco", "title": "Ранец для ног", "mass": 1.0, "energy": 5},
+    "Active_Grapple": {"kind": "deco", "title": "Крюк-кошка", "mass": 1.2, "energy": 6},
+    "Active_Spring": {"kind": "deco", "title": "Пружина-катапульта", "mass": 1.1, "energy": 5},
+    "Active_Smoke": {"kind": "deco", "title": "Дымовая шашка", "mass": 1.2, "energy": 4},
+    "Active_Shock": {"kind": "deco", "title": "Разрядник", "mass": 1.3, "energy": 7},
+    "Active_Mine": {"kind": "deco", "title": "Минный лоток", "mass": 1.5, "energy": 7},
+    "Active_Searchlight": {"kind": "deco", "title": "Прожектор", "mass": 0.9, "energy": 3},
+    "Active_Anchor": {"kind": "deco", "title": "Тормоз-якорь", "mass": 2.2, "energy": 4},
 }

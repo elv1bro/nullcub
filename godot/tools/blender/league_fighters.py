@@ -62,10 +62,15 @@ def fighter(f, idx):
                 "joint": None if fixed else "Joint_Pin"}
 
     kids = [dict(node(f["head"], "Neck", 0.0, "Neck"))]
-    for anchor, parts, rots, deco, _names in f["chains"]:
+    named = {"T": None, "H": kids[0]}
+    for anchor, parts, rots, deco, names in f["chains"]:
         base = anchor[:-2] if anchor.endswith(("_L", "_R")) else anchor
         groups = [base] + NEXT[base]
         chain = [node(p, "End" if i else base + "_L", rots[i], groups[min(i, 2)]) for i, p in enumerate(parts)]
+        side = "_R" if anchor.endswith("_R") else "_L"
+        for i, nm in enumerate(names):
+            if nm and i < len(chain):
+                named[nm + side] = chain[i]
         if deco:
             host = chain[-2] if len(chain) > 2 else chain[-1]
             host["kids"].append(dict(node(deco, "Deco", 0.0, base), joint=None))
@@ -77,6 +82,10 @@ def fighter(f, idx):
         else:
             top["sym"] = not anchor.endswith("_L")
         kids.append(top)
+    for part, parent, anchor, _ch in f.get("actives", []):   # особые модули домов (активные блоки)
+        nd = dict(node(part, anchor.replace("Anchor_", ""), 0.0, "Neck"), joint=None)
+        host = named.get(parent)
+        (kids if host is None else host["kids"]).append(nd)
     root = {"part": idx[f["core"]][0], "kids": kids}
     bl = BK.Build(1)
     bl.place(root, T((0.0, 1.17, 0.0)))

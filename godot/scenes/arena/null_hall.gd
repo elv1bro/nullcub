@@ -3,7 +3,8 @@
 ## Только поведение: сцену null_hall.tscn собирает tools/build_null_hall.gd из кита tools/blender/arena_null_hall.py.
 ## API как у VoidArena: spawn_points(), bounds(), сигнал body_fell, breakables(). Поле и мембрана — узел Field (NullField):
 ## гравитация (сила в G и направление) и упругая граница-полуэллипс; табло показывают текущее поле, пока оно меняется —
-## «FIELD: SHIFTING». Отладка: клавиша G (debug_keys) — следующее поле из FIELD_PRESETS (позже поле сменит голосование зрителей).
+## «FIELD: SHIFTING». Отладка: клавиша G (debug_keys) — следующее поле из FIELD_PRESETS (позже поле сменит голосование зрителей);
+## клавиша L — вызов чемпиона лиги (бот LeagueBrain с особым модулем дома, по кругу LEAGUE_CHAMPIONS; прежний уходит).
 class_name NullHallArena
 extends Node3D
 
@@ -13,6 +14,9 @@ signal body_fell(body: Node3D)
 ## Поля для отладочной клавиши G: [сила в G, направление в плоскости экрана]. Первое — проектная гравитация (0.20 G вниз).
 const FIELD_PRESETS := [[0.204, Vector2(0.0, -1.0)], [0.35, Vector2(0.7, -0.7)], [0.24, Vector2(-1.0, 0.0)],
 	[0.1, Vector2(0.0, 1.0)], [0.0, Vector2(0.0, -1.0)], [0.5, Vector2(0.0, -1.0)]]
+
+## Чемпионы лиги для клавиши L (scenes/body/presets/league_*.tscn, tools/build_league.gd).
+const LEAGUE_CHAMPIONS := ["league_reaper", "league_crystal", "league_deep", "league_portal"]
 
 ## Границы для камеры и боя: купол (полуширина 16, высота 19) с запасом, снизу — плита пола.
 @export var arena_bounds := AABB(Vector3(-18.0, -0.6, -1.0), Vector3(36.0, 21.6, 2.0))
@@ -66,6 +70,28 @@ func _unhandled_input(event: InputEvent) -> void:
 		_preset = (_preset + 1) % FIELD_PRESETS.size()
 		var p: Array = FIELD_PRESETS[_preset]
 		set_field(float(p[0]), p[1])
+	if debug_keys and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_L:
+		call_champion()
+
+
+var _champion: Doll
+var _champion_i := -1
+
+
+## Вызов на бой (правило лиги: вызывает сильный): следующий чемпион лиги — бот LeagueBrain у правой точки спавна; прежний уходит.
+func call_champion() -> Doll:
+	if _champion != null and is_instance_valid(_champion):
+		_champion.queue_free()
+	_champion_i = (_champion_i + 1) % LEAGUE_CHAMPIONS.size()
+	var parent := get_parent()
+	var dolls := get_tree().get_nodes_in_group("dolls")
+	if not dolls.is_empty():
+		parent = (dolls[0] as Node).get_parent()
+	var sp := spawn_points()
+	var pos := sp[sp.size() - 1] + Vector3(0.0, 0.5, 0.0) if not sp.is_empty() else Vector3(6.0, 2.0, 0.0)
+	_champion = LeagueBrain.spawn(parent, String(LEAGUE_CHAMPIONS[_champion_i]), pos)
+	excite(1.0)
+	return _champion
 
 
 ## Сменить поле: сила в G и направление (плавно, Tuning.NULL_FIELD_BLEND_S).

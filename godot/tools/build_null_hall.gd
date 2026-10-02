@@ -737,7 +737,7 @@ func _build_playground() -> void:
 	hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	hint.add_theme_constant_override("outline_size", 7)
 	hint.add_theme_font_size_override("font_size", 22)
-	hint.text = "P1: WASD + Shift + Space    P2: стрелки + правый Ctrl + Enter    G: сменить поле NULL    R: заново    1–8: площадки    Esc: выход"
+	hint.text = "P1: WASD + Shift + Space, каналы I O P    P2: стрелки + правый Ctrl + Enter    G: поле NULL    L: чемпион лиги    R: заново    1–8: площадки    Esc: выход"
 	ui.add_child(hint)
 	hint.owner = pg
 	var ps := PackedScene.new()

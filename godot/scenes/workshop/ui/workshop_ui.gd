@@ -26,6 +26,7 @@ const PRESET_SHORT := {
 	"flail": "Кистень", "kit_human": "Кукла-кит", "kit_brawler": "Громила", "kit_bot": "Робот", "kit_horned": "Рогатый",
 	"kit_king": "Король", "kit_spider": "Паук", "kit_devil": "Чёртик", "kit_skull": "Скелет", "kit_wheels": "Каталка",
 	"kit_lantern": "Фонарщик", "kit_graffiti": "Граффити", "kit_camo": "Камуфляж", "kit_spinner": "Вертушка", "kit_empty": "Пустой",
+	"league_reaper": "Жнец Аоэлюн", "league_crystal": "Кристаллид", "league_deep": "Глубинный", "league_portal": "Страж портала",
 	"mallet": "Киянка", "hammer": "Молот", "spiked_hammer": "С гвоздями", "heavy_hammer": "Тяжёлый молот",
 	"long_hammer": "Длинный молот", "sword": "Меч", "axe": "Топор", "concept_hammer": "Концепт",
 }
