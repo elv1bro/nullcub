@@ -94,14 +94,14 @@ func _run() -> void:
 	_check("tv_screen_bound", _tv_bound(), null)
 	_check("title_state", menu.state == "title", menu.state)
 	# живой эфир: две куклы в своём мире телевизора двигаются (разлёт меняется), а не стоят
-	var b := menu.bout
+	var bt := menu.bout
 	var d0 := -1.0
 	var d1 := -1.0
-	if b != null and b.dolls.size() == 2:
-		d0 = (b.dolls[0] as Doll).centre_of_mass().distance_to((b.dolls[1] as Doll).centre_of_mass())
+	if bt != null and bt.dolls.size() == 2:
+		d0 = (bt.dolls[0] as Doll).centre_of_mass().distance_to((bt.dolls[1] as Doll).centre_of_mass())
 		await get_tree().create_timer(2.5).timeout
-		d1 = (b.dolls[0] as Doll).centre_of_mass().distance_to((b.dolls[1] as Doll).centre_of_mass())
-	_check("tv_live_bout", b != null and absf(d1 - d0) > 0.3 and b.get_viewport() == menu.tv_vp, [snappedf(d0, 0.01), snappedf(d1, 0.01)])
+		d1 = (bt.dolls[0] as Doll).centre_of_mass().distance_to((bt.dolls[1] as Doll).centre_of_mass())
+	_check("tv_live_bout", bt != null and absf(d1 - d0) > 0.3 and bt.get_viewport() == menu.tv_vp, [snappedf(d0, 0.01), snappedf(d1, 0.01)])
 	# кукла игрока: собрана, все тела заморожены, бёдра на сиденье
 	var pd := menu.player_doll
 	var frozen := pd != null and pd.doll != null and not pd.doll.parts.is_empty()
