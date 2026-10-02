@@ -104,6 +104,10 @@ func _ready() -> void:
 	keys_panel.lines_fn = keys_lines
 	add_child(keys_panel)
 	keys_panel.set_open(help_open)
+	if DisplayServer.get_name() != "headless":   # панель управления (ControlFeel): в headless-пробах не нужна и не читает user://
+		var cfp := ControlFeelPanel.new()
+		cfp.toast_fn = show_toast
+		add_child(cfp)
 	if _match != null:
 		if _match.has_signal("hit_fx"):
 			_match.connect("hit_fx", _on_hit_fx)
@@ -221,8 +225,10 @@ func keys_lines() -> Array:
 	var rows: Array = [
 		["", "Бой", ""],
 		["WASD", "лететь", ""],
-		["Shift", "рывок", ""],
-		["Space", "переворот", ""],
+		["Shift", "ускорение (держать, Заряд)", ""],
+		["Space + A/D", "раскрутка (держать)", ""],
+		["Tab", "панель управления", ControlFeel.label()],
+		["V  /  T", "вариант / темп управления", ""],
 		["ЛКМ / ПКМ", "тяги рук", ""],
 		["I  O  P", "активные блоки", ""],
 		["R", "бой заново", ""],

@@ -167,6 +167,7 @@ var last_ko_record: Dictionary = {}
 var _broken := false
 var _self_exceptions := false
 var _flight_damp := false
+var _cf_rev := 0   # ControlFeel.rev, с которым посчитан дамп частей (темп из панели меняет инерцию на ходу)
 var _flight_damp_until := 0.0
 var _brake_on := false                ## торс с +Tuning.IDLE_BRAKE_DAMP (ввод 0, не в полёте)
 ## Ослабление мышц на удар (Tuning.HIT_MUSCLE_SOFT): множитель k/tmax держится до _soft_hold_until, затем линейно к 1 за _soft_recover_s.
@@ -1051,9 +1052,9 @@ func _part_linear_damp(part: String, flight: bool) -> float:
 	var key := ("flight_" if flight else "") + ("core" if core else "limb")
 	if damp_override.has(key):
 		return float(damp_override[key])
-	if core:
-		return Tuning.FLIGHT_LINEAR_DAMP if flight else Tuning.DOLL_LINEAR_DAMP
-	return Tuning.FLIGHT_LIMB_LINEAR_DAMP if flight else Tuning.DOLL_LIMB_LINEAR_DAMP
+	if flight:   # полёт после удара — прежние числа: ControlFeel меняет только инерцию управляемого хода
+		return Tuning.FLIGHT_LINEAR_DAMP if core else Tuning.FLIGHT_LIMB_LINEAR_DAMP
+	return (Tuning.DOLL_LINEAR_DAMP if core else Tuning.DOLL_LIMB_LINEAR_DAMP) * ControlFeel.damp_mult()
 
 
 func _part_angular_damp(part: String) -> float:
@@ -1273,9 +1274,49 @@ func torso() -> RigidBody3D:
 	return parts["Torso"]
 
 
+## Доля тяги на голову (0 — торс, 1 — голова, как в JS): явный control_target куклы (пробы) главнее ControlFeel (варианты управления).
+func _head_share() -> float:
+	if control_target != "":
+		return 1.0 if control_target == "head" else 0.0
+	return ControlFeel.head_share()
+
+
 func _control_body() -> RigidBody3D:
-	var t: String = control_target if control_target != "" else Tuning.CONTROL_TARGET
-	return head() if t == "head" else torso()
+	return head() if _head_share() >= 0.5 else torso()
+
+
+## Тяга: делится между головой и торсом по доле головы. Через голову — сила не в ЦМ, кукла получает момент и «тянется» за головой.
+func _push(f: Vector3, share: float) -> void:
+	if share > 0.0:
+		head().apply_central_force(f * share)
+	if share < 1.0:
+		torso().apply_central_force(f * (1.0 - share))
+
+
+## Потолок скорости: части, на которые идёт тяга, — не быстрее max_speed (после удара полёт не режется, §5).
+func _cap_control_speed(max_speed: float, share: float) -> void:
+	for b in [head() if share > 0.0 else null, torso() if share < 1.0 else null]:
+		if b != null and b.linear_velocity.length() > max_speed:
+			b.linear_velocity = b.linear_velocity.normalized() * max_speed
+
+
+## Осанка торса (ControlFeel upright / lean): PD-момент к вертикали или к наклону в сторону хода («нырок» головой вперёд).
+## Не работает в раскрутке, в полёте после удара и в стане (control < 0.3) — ragdoll живёт как обычно.
+func _tick_posture(v: Vector2, control: float) -> void:
+	var up := ControlFeel.upright()
+	var lean := ControlFeel.lean()
+	if (up <= 0.0 and lean <= 0.0) or _spinning or _time < knockback_until or control < 0.3:
+		return
+	var t := torso()
+	var target := 0.0
+	var gain := up
+	if lean > 0.0:
+		gain = maxf(gain, ControlFeel.LEAN_GAIN_MIN)
+		target = -clampf(v.x, -1.0, 1.0) * lean * ControlFeel.LEAN_MAX_RAD
+	var angle := atan2(t.global_basis.x.y, t.global_basis.x.x)   # 0 — вертикально, + против часовой (взгляд с +Z)
+	var err := clampf(wrapf(angle - target, -PI, PI), -1.5, 1.5)
+	var tau := -gain * (ControlFeel.UPRIGHT_K * err + ControlFeel.UPRIGHT_D * t.angular_velocity.z) * thrust_mass() * control
+	t.apply_torque(Vector3(0, 0, tau))
 
 
 func _physics_process(delta: float) -> void:
@@ -1324,8 +1365,13 @@ func _physics_process(delta: float) -> void:
 		v = Vector2.ZERO   # отдача после удара: тяги нет (RM: бьющий не дожимает жертву)
 	_set_idle_brake(v.length_squared() <= 0.0001 and _time >= knockback_until)
 	var control := 1.0 - Tuning.STUN_CONTROL_LOSS if is_stunned() else 1.0
+	var share := _head_share()
 	var body := _control_body()
-	var mode: String = control_mode if control_mode != "" else Tuning.CONTROL_MODE
+	var mode: String = control_mode if control_mode != "" else ("rotate" if ControlFeel.is_rotate() else Tuning.CONTROL_MODE)
+	if _cf_rev != ControlFeel.rev:   # темп изменили в панели: инерция (дамп частей) пересчитывается на ходу
+		_cf_rev = ControlFeel.rev
+		if not _flight_damp:
+			_apply_base_damp(false)
 	# Заряд (COMBAT_CHARGE.md): ускорение — пока держится Shift и есть Заряд; раскрутка — Space + A/D. Выдохся с зажатой клавишей —
 	# сначала отпустить (иначе ускорение мерцало бы на пороге CHARGE_RESTART). В отдаче после удара тяги и расхода нет.
 	if not boost_held:
@@ -1341,7 +1387,8 @@ func _physics_process(delta: float) -> void:
 		dashed.emit()                   # звук (DollAudio): ускорение включилось
 	if _spinning and not was_spinning:
 		flipped.emit(signf(v.x))        # звук: раскрутка пошла
-	var mult: float = (Tuning.DASH_MULT if is_dashing() else 1.0) * control
+	var thrust_n: float = ControlFeel.thrust() * thrust_mass()
+	var mult: float = (ControlFeel.dash_mult() if is_dashing() else 1.0) * control
 	if _spinning:
 		# вправо — по часовой (кувырок вперёд по ходу), как режим rotate; выше SPIN_MAX_W момент не прикладывается
 		var s := -signf(v.x)
@@ -1352,19 +1399,27 @@ func _physics_process(delta: float) -> void:
 		if abs(v.x) > 0.01:
 			torso().apply_torque(Vector3(0, 0, -v.x * Tuning.ROTATE_TORQUE * mult))
 		if abs(v.y) > 0.01:
-			body.apply_central_force(Vector3(0, v.y, 0) * Tuning.MOVE_FORCE_PER_KG * thrust_mass() * mult)
-	var max_speed: float = Tuning.MAX_MOVE_SPEED * (Tuning.DASH_MULT if is_dashing() else 1.0)
+			_push(Vector3(0, v.y, 0) * thrust_n * mult, share)
+	var max_speed: float = ControlFeel.max_speed() * (ControlFeel.dash_mult() if is_dashing() else 1.0)
 	if mode != "rotate" and v.length_squared() > 0.0001:
-		var f := Vector3(v.x, v.y, 0.0).limit_length(1.0) * Tuning.MOVE_FORCE_PER_KG * thrust_mass() * mult
+		var f := Vector3(v.x, v.y, 0.0).limit_length(1.0) * thrust_n * mult
+		var tb := ControlFeel.turn_boost()
+		if tb > 0.0:   # разворот против хода: тяга сильнее (резкие манёвры, как в вебе); стоя и по ходу — обычная
+			var cv := torso().linear_velocity
+			if cv.length() > ControlFeel.TURN_BOOST_MIN_SPEED:
+				var against := -f.normalized().dot(cv.normalized())
+				if against > 0.0:
+					f *= 1.0 + tb * against
 		if _time < knockback_until and body.linear_velocity.length() > max_speed:
 			# в полёте после удара тяга не разгоняет дальше, только рулит/тормозит
 			var vdir := body.linear_velocity.normalized()
 			var along := f.dot(vdir)
 			if along > 0.0:
 				f -= vdir * along
-		body.apply_central_force(f)
-	if _time >= knockback_until and body.linear_velocity.length() > max_speed:   # после удара клэмп не режет полёт (§5)
-		body.linear_velocity = body.linear_velocity.normalized() * max_speed
+		_push(f, share)
+	if _time >= knockback_until:   # после удара клэмп не режет полёт (§5)
+		_cap_control_speed(max_speed, share)
+	_tick_posture(v, control)
 	if req_flip and not is_stunned():
 		torso().apply_torque_impulse(Vector3(0, 0, Tuning.FLIP_IMPULSE * (1.0 if v.x >= 0.0 else -1.0)))
 		flipped.emit(1.0 if v.x >= 0.0 else -1.0)
