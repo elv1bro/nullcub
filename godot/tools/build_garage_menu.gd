@@ -175,6 +175,19 @@ func _props(g: Node3D) -> void:
 	put(g, "Cup_B", Vector3(1.22, 1.64, -2.74), -10.0, "CupTV")
 	put(g, "Books", Vector3(2.22, 1.64, -2.74), 8.0)
 	put(g, "Plant", Vector3(2.6, 1.64, -2.76), 120.0, "PlantTV")
+	# кукла игрока (текущая сборка из мастерской) сидит на ящике слева от телевизора, лицом к экрану (scenes/menu/garage_doll.gd)
+	var seat := Vector3(0.85, 0, -1.35)
+	var to_tv := Vector3(1.62, 0, -2.26) - seat
+	var yaw := rad_to_deg(atan2(to_tv.x, to_tv.z))
+	put(g, "Crate", seat, yaw + 8.0, "CrateSeat")
+	var pd := Node3D.new()
+	pd.name = "PlayerDoll"
+	pd.set_script(load("res://scenes/menu/garage_doll.gd"))
+	pd.position = seat
+	pd.rotation_degrees = Vector3(0, yaw, 0)
+	pd.set("seat_height", 0.5)
+	g.add_child(pd)
+	pd.owner = scene_root
 	# МАСТЕРСКАЯ: верстак, перфопанель, чертёж, стенд на разметке, табурет, лампа
 	put(g, "Workbench", Vector3(-0.6, 0, -2.62))
 	put(g, "Pegboard", Vector3(-0.6, 0.97, BACK))

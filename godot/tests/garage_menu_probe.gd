@@ -93,6 +93,13 @@ func _run() -> void:
 	_check("targets_exist", bad_go.is_empty(), bad_go)
 	_check("tv_screen_bound", _tv_bound(), null)
 	_check("title_state", menu.state == "title", menu.state)
+	# кукла игрока: собрана, все тела заморожены, бёдра на сиденье
+	var pd := menu.player_doll
+	var frozen := pd != null and pd.doll != null and not pd.doll.parts.is_empty()
+	if frozen:
+		for b in pd.doll.parts.values():
+			frozen = frozen and (b as RigidBody3D).freeze
+	_check("doll_seated", frozen, [pd.blueprint_source if pd != null else "нет", pd.doll.parts.size() if frozen else 0])
 	# 2. любая клавиша → меню, фокус на «Истории»
 	await _key(KEY_SPACE)
 	_check("any_key_enters_menu", menu.state == "menu" and menu.focus == 0, [menu.state, menu.focus])
@@ -128,6 +135,15 @@ func _run() -> void:
 	await _key(KEY_ESCAPE)
 	await _settle()
 	_check("settings_back", menu.state == "menu" and menu.focus == 4 and not menu.settings_ui.visible, [menu.state, menu.focus])
+	# голова куклы поворачивается к месту пункта: на «Быстром бое» (ворота слева) и «Настройках» (справа) — в разные стороны
+	if pd != null and not pd._neck_bodies.is_empty():
+		await _key(KEY_2)
+		await get_tree().create_timer(1.5).timeout
+		var yaw_q := pd._look_yaw
+		await _key(KEY_5)
+		await get_tree().create_timer(1.5).timeout
+		var yaw_s := pd._look_yaw
+		_check("doll_looks", yaw_q * yaw_s < 0.0 and absf(yaw_q - yaw_s) > 30.0, [snappedf(yaw_q, 0.1), snappedf(yaw_s, 0.1)])
 	# 4. цифра 3 → «Мастерская», Esc → «Выход»
 	await _key(KEY_3)
 	_check("digit_jump", menu.focus == 2, menu.focus, 2)

@@ -37,6 +37,9 @@ const SOON := {"trophies": "Полку я пока протираю. Скоро 
 const LIVE_LINES := ["…и Клёпа улетает в мембрану! Мембрана — один, Клёпа — ноль!", "Гравитация 0.20G — летаем, друзья, летаем!",
 	"Зрители голосуют: ПЕРЕВОРОТ ГРАВИТАЦИИ. Держите обед."]
 const ACCENT := Color(1.0, 0.55, 0.2)
+## Куда смотрит кукла игрока на каждом пункте (точки мира гаража).
+const LOOK := {"story": Vector3(1.62, 1.15, -2.26), "quick": Vector3(-3.5, 1.4, -1.8), "workshop": Vector3(-0.75, 1.0, -1.2),
+	"trophies": Vector3(1.8, 2.5, -2.85), "settings": Vector3(4.4, 1.0, 1.25), "exit": Vector3(1.62, 1.15, -2.26)}
 const SCREEN := Vector2i(768, 576)
 const TV_DIR := "res://assets/textures/garage/tv/"
 
@@ -78,6 +81,7 @@ var sub_panel: PanelContainer
 var fade: ColorRect
 var press_label: Label
 var settings_ui: GarageSettings
+var player_doll: GarageDoll
 var _live_line := 0
 var _live_timer := 0.0
 
@@ -100,6 +104,7 @@ func _ready() -> void:
 		zone_lights[z].append(l)
 		l.set_meta("base", (l as Light3D).light_energy)
 	_setup_tv()
+	player_doll = get_node_or_null("Props/PlayerDoll") as GarageDoll
 	_build_ui()
 	cam.global_transform = spots["Title"]
 	cam.fov = spot_fov["Title"]
@@ -138,6 +143,8 @@ func set_focus(i: int, instant := false) -> void:
 	_apply_tv(String(it["tv"]))
 	_set_zone_mult(String(it["zone"]), 0.0 if instant else move_time)
 	_update_items()
+	if player_doll != null:
+		player_doll.look_toward(LOOK.get(String(it["id"]), LOOK["story"]))
 	_say(String(it["n0"]))
 	focus_changed.emit(focus)
 
