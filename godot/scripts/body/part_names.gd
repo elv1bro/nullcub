@@ -178,6 +178,14 @@ const NAMES := {
 	"kit_active_league_shield": "Эмиттер щита",
 	"kit_active_league_phase": "Фазовый модуль",
 	"kit_active_league_repair": "Ядро самопочинки",
+	"kit_active_jet_boots": "Ранец для ног",
+	"kit_active_grapple": "Крюк-кошка",
+	"kit_active_spring": "Пружина-катапульта",
+	"kit_active_smoke": "Дымовая шашка",
+	"kit_active_shock": "Разрядник",
+	"kit_active_mine": "Минный лоток",
+	"kit_active_searchlight": "Прожектор",
+	"kit_active_anchor": "Тормоз-якорь",
 }
 ## PartDef.material (физика старых деталей: вес, звук, магнит) словами — для поиска у деталей без base_mat.
 const MATERIAL_WORDS := {"wood": "дерево", "iron": "железо", "cloth": "ткань"}

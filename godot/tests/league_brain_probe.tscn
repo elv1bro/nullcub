@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/league_brain_probe.gd" id="1_lbp"]
+
+[node name="LeagueBrainProbe" type="Node"]
+script = ExtResource("1_lbp")

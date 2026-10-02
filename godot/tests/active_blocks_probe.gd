@@ -52,6 +52,31 @@ func _ready() -> void:
 		"deep": _preset(i + 1, "league_deep", 0.0), "reaper": _preset(i + 1, "league_reaper", 3.0)}
 	i += 2
 	s["plain"] = {"a": _doll(i, [])}
+	# вторая волна (ACTIVE_BLOCKS.md v2)
+	i += 1
+	s["boots"] = {"a": _doll(i, [["kit_active_jet_boots", "5", "Anchor_Deco"], ["kit_active_jet_boots", "B", "Anchor_Deco"]]),
+		"b": _doll(i, [], 2.0)}
+	i += 1
+	s["grapple"] = {"a": _doll(i, [["kit_active_grapple", "8", "Anchor_Deco"]]), "b": _doll(i, [], -3.0)}
+	i += 1
+	s["spring"] = {"a": _doll(i, [["kit_active_spring", "8", "Anchor_Deco"]]), "b": _doll(i, [], -1.4)}
+	i += 1
+	s["smoke"] = {"a": _doll(i, [["kit_active_smoke", "T", "Anchor_Back"]])}
+	i += 1
+	s["shock"] = {"a": _doll(i, [["kit_active_shock", "T", "Anchor_Back"]]), "b": _doll(i, [], -1.5)}
+	i += 1
+	s["mine"] = {"a": _doll(i, [["kit_active_mine", "8", "Anchor_Deco"]]), "b": _doll(i, [], -1.4)}
+	i += 1
+	s["light"] = {"a": _doll(i, [["kit_active_searchlight", "8", "Anchor_Deco"]]), "b": _doll(i, [], -3.0)}
+	i += 1
+	s["anchor"] = {"a": _doll(i, [["kit_active_anchor", "2", "Anchor_Deco"]]), "b": _doll(i, [], 3.0)}
+	i += 1
+	s["auto"] = {"a": _doll(i, [["kit_active_gun", "8", "Anchor_Deco", 1], ["kit_active_league_repair", "T", "Anchor_Back", 2]]),
+		"b": _doll(i, [], -3.0)}
+	i += 1
+	# далеко от остальных: автопилот иначе выбрал бы цель соседнего сценария (в бою их нет)
+	s["auto_smoke"] = {"a": _doll(i + 8, [["kit_active_gun", "8", "Anchor_Deco"]]),
+		"b": _doll(i + 8, [["kit_active_smoke", "T", "Anchor_Back"]], -3.0)}
 
 
 func _doll(i: int, actives: Array, dx: float = 0.0) -> ModularDoll:
@@ -62,7 +87,8 @@ func _doll(i: int, actives: Array, dx: float = 0.0) -> ModularDoll:
 	var uids := "DEFGIJKLMN"
 	for k in range(actives.size()):
 		var a: Array = actives[k]
-		nodes.append({"uid": uids[k], "part": String(a[0]), "parent": String(a[1]), "anchor": String(a[2]), "channel": 1})
+		nodes.append({"uid": uids[k], "part": String(a[0]), "parent": String(a[1]), "anchor": String(a[2]),
+			"channel": int(a[3]) if a.size() > 3 else 1})
 	bp.nodes = nodes
 	bp.energy_budget = 1000
 	bp.id = "probe_%d_%d" % [i, int(dx * 10)]
@@ -70,6 +96,7 @@ func _doll(i: int, actives: Array, dx: float = 0.0) -> ModularDoll:
 	d.blueprint = bp
 	d.external_input = true
 	d.position = Vector3(i * SPACING + dx, 0.0, 0.0)
+	d.add_to_group("dolls")   # как в матче (Match.register): взрыв мины и цели бота ищут кукол в группе
 	add_child(d)
 	return d
 
@@ -108,9 +135,19 @@ func _physics_process(dt: float) -> void:
 		_end()
 
 
+const HOLD := ["jet", "flame", "gun", "shield", "phase", "repair", "empty", "stand", "gravity", "magnet", "boots", "grapple", "spring",
+	"smoke", "shock", "mine", "light", "anchor"]
+
+
 func _start() -> void:
-	for n in ["jet", "flame", "gun", "shield", "phase", "repair", "empty", "stand", "gravity", "magnet"]:
+	for n in HOLD:
 		_hold(n, true)
+	marks["grap_d0"] = (s["grapple"]["a"] as Doll).centre_of_mass().distance_to((s["grapple"]["b"] as Doll).centre_of_mass())
+	marks["spring_b0"] = (s["spring"]["b"] as Doll).centre_of_mass()
+	var au := s["auto"]["a"] as ModularDoll
+	au.hp = 40.0
+	_rig(au).auto = true
+	_rig(s["auto_smoke"]["b"]).held[0] = true
 	marks["jet_spent0"] = _rig(s["jet"]["a"]).spent
 	var rep := s["repair"]["a"] as ModularDoll
 	rep.hp = 50.0
@@ -131,6 +168,21 @@ func _start() -> void:
 
 
 func _mid() -> void:
+	var sm := s["smoke"]["a"] as ModularDoll
+	_check("smoke_hides", ActiveBlocks.is_hidden(sm) and not ActiveBlocks.is_hidden(s["plain"]["a"]), "в дыму: %s (зон %d), без дыма: %s"
+		% [ActiveBlocks.is_hidden(sm), ActiveBlocks.smoke_zones.size(), ActiveBlocks.is_hidden(s["plain"]["a"])])
+	_check("light_blinds", ActiveBlocks.is_blinded(s["light"]["b"]) and not ActiveBlocks.is_blinded(s["plain"]["a"]),
+		"в луче ослеплён: %s" % ActiveBlocks.is_blinded(s["light"]["b"]))
+	_check("mine_dropped", _rig(s["mine"]["a"]).mines.size() == 1, "мин %d (одно нажатие — одна мина)" % _rig(s["mine"]["a"]).mines.size())
+	_check("grapple_hooked", not (_rig(s["grapple"]["a"]).blocks[0]["hook"] as Dictionary).is_empty(), "трос зацепился")
+	# якорь: одинаковый толчок торсу — у якоря предплечье стоит, у двойника улетает
+	for k in ["a", "b"]:
+		var d := s["anchor"][k] as ModularDoll
+		d.torso().apply_central_impulse(Vector3(45.0, 20.0, 0.0))
+		marks["anchor_" + k] = (d.parts["LowerArm_L"] as RigidBody3D).global_position
+	var ag := s["auto_smoke"]["a"] as ModularDoll
+	_rig(ag).auto = true
+	marks["auto_smoke_shots0"] = _rig(ag).shots
 	# щит: зажат у a, не зажат у b — одинаковый удар 20 HP
 	var a := s["shield"]["a"] as ModularDoll
 	var b := s["shield"]["b"] as ModularDoll
@@ -154,8 +206,27 @@ func _mid() -> void:
 
 
 func _release() -> void:
-	for n in ["jet", "flame", "gun", "shield", "phase", "repair", "empty", "stand", "gravity", "magnet"]:
+	for n in HOLD:
 		_hold(n, false)
+	var bdy := (s["boots"]["a"] as Doll).centre_of_mass().y - (s["boots"]["b"] as Doll).centre_of_mass().y
+	_check("jet_boots_lift", bdy > 0.2, "ЦМ выше двойника на %.2f м (сапоги: выхлоп к стопе)" % bdy)
+	var gd := (s["grapple"]["a"] as Doll).centre_of_mass().distance_to((s["grapple"]["b"] as Doll).centre_of_mass())
+	_check("grapple_pulls", gd < float(marks["grap_d0"]) - 0.3, "дистанция %.2f → %.2f м" % [marks["grap_d0"], gd])
+	var sb := s["spring"]["b"] as Doll
+	var sa := _rig(s["spring"]["a"])
+	_check("spring_once", is_equal_approx(sa.spent, 15.0) and (sb.hp < sb.max_hp or sb.centre_of_mass().x < (marks["spring_b0"] as Vector3).x - 0.1),
+		"потрачено %.1f (одно нажатие — 15), жертва %.1f HP, сдвиг %.2f м" % [sa.spent, sb.hp, sb.centre_of_mass().x - (marks["spring_b0"] as Vector3).x])
+	var shb := s["shock"]["b"] as Doll
+	_check("shock_hurts", shb.hp < shb.max_hp, "жертва вплотную %.1f HP" % shb.hp)
+	var ma := ((s["anchor"]["a"] as ModularDoll).parts["LowerArm_L"] as RigidBody3D).global_position.distance_to(marks["anchor_a"])
+	var mb := ((s["anchor"]["b"] as ModularDoll).parts["LowerArm_L"] as RigidBody3D).global_position.distance_to(marks["anchor_b"])
+	_check("anchor_holds", ma < 0.25 and mb > ma * 2.0, "предплечье с якорем сдвинулось на %.2f м, у двойника — на %.2f м" % [ma, mb])
+	var au := _rig(s["auto"]["a"])
+	var auh := (s["auto"]["a"] as ModularDoll).hp
+	_check("autopilot", au.shots > 0 and auh > 43.0, "бот сам стреляет (%d выстрелов) и чинится при 40 HP (→ %.1f)" % [au.shots, auh])
+	var ag := _rig(s["auto_smoke"]["a"])
+	_check("autopilot_smoke", ag.shots - int(marks["auto_smoke_shots0"]) == 0, "по цели в дыму выстрелов %d"
+		% (ag.shots - int(marks["auto_smoke_shots0"])))
 	var j := _rig(s["jet"]["a"])
 	var dy := (s["jet"]["a"] as Doll).centre_of_mass().y - (s["jet"]["b"] as Doll).centre_of_mass().y
 	var spent := j.spent - float(marks["jet_spent0"])
@@ -181,6 +252,10 @@ func _release() -> void:
 
 
 func _end() -> void:
+	var mn := _rig(s["mine"]["a"])
+	var mv := s["mine"]["b"] as Doll
+	_check("mine_blows", mn.mines.is_empty() and (mv.hp < mv.max_hp or (s["mine"]["a"] as Doll).hp < 100.0),
+		"мина рванула (живых %d), жертва %.1f HP" % [mn.mines.size(), mv.hp])
 	var p := _rig(s["phase"]["a"])
 	var transparent := 0
 	for mi in (s["phase"]["a"] as Node).find_children("*", "GeometryInstance3D", true, false):
@@ -207,7 +282,7 @@ func _end() -> void:
 		for ch in range(1, 4):
 			if InputMap.has_action(ActiveBlocks.action_name("p%d" % pi, ch)):
 				acts += 1
-	_check("input_actions", acts == 12 and ActiveBlocks.key_label("p1", 1) == "Q", "экшенов %d / 12, P1: %s %s %s" % [acts,
+	_check("input_actions", acts == 12 and ActiveBlocks.key_label("p1", 1) == "I", "экшенов %d / 12, P1: %s %s %s" % [acts,
 		ActiveBlocks.key_label("p1", 1), ActiveBlocks.key_label("p1", 2), ActiveBlocks.key_label("p1", 3)])
 	_workshop_checks()
 	# второй экземпляр (как Match.respawn_doll: новый объект того же скрипта) освобождается сам
@@ -282,10 +357,10 @@ func _floor() -> void:
 	var body := StaticBody3D.new()
 	var cs := CollisionShape3D.new()
 	var bs := BoxShape3D.new()
-	bs.size = Vector3(200.0, 1.0, 20.0)
+	bs.size = Vector3(420.0, 1.0, 20.0)
 	cs.shape = bs
 	body.add_child(cs)
-	body.position = Vector3(60.0, -0.5, 0.0)
+	body.position = Vector3(150.0, -0.5, 0.0)
 	add_child(body)
 
 

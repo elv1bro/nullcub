@@ -182,6 +182,8 @@ func _physics_process(delta: float) -> void:
 	if _noise_t <= 0.0:
 		_noise_t = AIM_NOISE_S
 		_noise = Vector2(_rng.randf_range(-1.0, 1.0), _rng.randf_range(-1.0, 1.0)).limit_length(1.0) * aim_error_m
+		if ActiveBlocks.is_blinded(doll):   # прожектор (ActiveBlocks): ослеплённый целится мимо
+			_noise *= 4.0
 	want = Vector2.ZERO
 	_think(delta)
 	want += separation() * _separation_weight()
@@ -279,6 +281,9 @@ func players() -> Array:
 	var out: Array = []
 	for n in get_tree().get_nodes_in_group(players_group):
 		if n is Doll and (n as Doll).alive and n.is_inside_tree():
+			# дымовая шашка (ActiveBlocks, docs/plan-demo/ACTIVE_BLOCKS.md): в дыму цель видна только вплотную
+			if ActiveBlocks.is_hidden(n) and doll != null and my_pos().distance_to(com2(n)) > 1.5:
+				continue
 			out.append(n)
 	return out
 

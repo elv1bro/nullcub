@@ -43,7 +43,9 @@ const SAVE_DIR := "user://blueprints/"
 const AUTOSAVE := "_autosave"
 const BODY_PRESETS := ["human", "spider", "long_arm", "big_arm", "legless", "junk", "flail",
 	"kit_human", "kit_brawler", "kit_bot", "kit_horned", "kit_king", "kit_spider", "kit_devil", "kit_skull", "kit_wheels", "kit_lantern",
-	"kit_graffiti", "kit_camo", "kit_spinner", "kit_empty"]
+	"kit_graffiti", "kit_camo", "kit_spinner", "kit_empty",
+	# бойцы NULL League (tools/build_league.gd): открытая категория — бюджет чертежа выше регламента 100 (LORE_NULL.md)
+	"league_reaper", "league_crystal", "league_deep", "league_portal"]
 ## Детали, которых нет на полках: kit_human_* — дубли wood_* под риг v3 (BODY_KIT.md §3.2) для пресета kit_human; на полке
 ## их не отличить от kit_limb_basic_* / kit_core_barrel. Чертежи с ними грузятся как обычно (BodyBlueprint.part_def).
 const SHELF_HIDDEN_PREFIXES := ["kit_human_"]

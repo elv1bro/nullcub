@@ -1,4 +1,32 @@
 {
+ "Kit_Active_Anchor": {
+  "glb": "Kit_Active_Anchor",
+  "builder": "Active_Anchor",
+  "size": "",
+  "kind": "deco",
+  "title": "Тормоз-якорь",
+  "id": "kit_active_anchor",
+  "mass": 2.2,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 800,
+  "empties": [
+   "Shape_Box_Anchor",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Rust"
+  ]
+ },
  "Kit_Active_Booster": {
   "glb": "Kit_Active_Booster",
   "builder": "Active_Booster",
@@ -58,6 +86,35 @@
    "Rust"
   ]
  },
+ "Kit_Active_Grapple": {
+  "glb": "Kit_Active_Grapple",
+  "builder": "Active_Grapple",
+  "size": "",
+  "kind": "deco",
+  "title": "Крюк-кошка",
+  "id": "kit_active_grapple",
+  "mass": 1.2,
+  "energy": 6,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1052,
+  "empties": [
+   "Shape_Cyl_Grapple",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Brass",
+   "Iron",
+   "Rope",
+   "Steel"
+  ]
+ },
  "Kit_Active_Gun": {
   "glb": "Kit_Active_Gun",
   "builder": "Active_Gun",
@@ -84,6 +141,35 @@
    "Brass",
    "Iron",
    "Steel"
+  ]
+ },
+ "Kit_Active_JetBoots": {
+  "glb": "Kit_Active_JetBoots",
+  "builder": "Active_JetBoots",
+  "size": "",
+  "kind": "deco",
+  "title": "Ранец для ног",
+  "id": "kit_active_jet_boots",
+  "mass": 1.0,
+  "energy": 5,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_yellow",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 954,
+  "empties": [
+   "Shape_Cyl_JetBoots",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintYellow",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "RustDark"
   ]
  },
  "Kit_Active_Jetpack": {
@@ -251,6 +337,147 @@
   ],
   "materials": [
    "Base_PaintRed",
+   "Brass",
+   "Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Active_Mine": {
+  "glb": "Kit_Active_Mine",
+  "builder": "Active_Mine",
+  "size": "",
+  "kind": "deco",
+  "title": "Минный лоток",
+  "id": "kit_active_mine",
+  "mass": 1.5,
+  "energy": 7,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "rust_red",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 892,
+  "empties": [
+   "Shape_Box_Mine",
+   "Socket"
+  ],
+  "materials": [
+   "Base_RustRed",
+   "Brass",
+   "Gem",
+   "Iron"
+  ]
+ },
+ "Kit_Active_Searchlight": {
+  "glb": "Kit_Active_Searchlight",
+  "builder": "Active_Searchlight",
+  "size": "",
+  "kind": "deco",
+  "title": "Прожектор",
+  "id": "kit_active_searchlight",
+  "mass": 0.9,
+  "energy": 3,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 696,
+  "empties": [
+   "Shape_Cyl_Searchlight",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "CoreGlow",
+   "Glass",
+   "Iron"
+  ]
+ },
+ "Kit_Active_Shock": {
+  "glb": "Kit_Active_Shock",
+  "builder": "Active_Shock",
+  "size": "",
+  "kind": "deco",
+  "title": "Разрядник",
+  "id": "kit_active_shock",
+  "mass": 1.3,
+  "energy": 7,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2684,
+  "empties": [
+   "Shape_Cyl_Shock",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "Brass",
+   "CoreGlow",
+   "Rubber"
+  ]
+ },
+ "Kit_Active_Smoke": {
+  "glb": "Kit_Active_Smoke",
+  "builder": "Active_Smoke",
+  "size": "",
+  "kind": "deco",
+  "title": "Дымовая шашка",
+  "id": "kit_active_smoke",
+  "mass": 1.2,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_green",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1020,
+  "empties": [
+   "Shape_Box_Smoke",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintGreen",
+   "Bone",
+   "Brass",
+   "Iron"
+  ]
+ },
+ "Kit_Active_Spring": {
+  "glb": "Kit_Active_Spring",
+  "builder": "Active_Spring",
+  "size": "",
+  "kind": "deco",
+  "title": "Пружина-катапульта",
+  "id": "kit_active_spring",
+  "mass": 1.1,
+  "energy": 5,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_blue",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1200,
+  "empties": [
+   "Shape_Cyl_Spring",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintBlue",
    "Brass",
    "Iron",
    "Steel"
