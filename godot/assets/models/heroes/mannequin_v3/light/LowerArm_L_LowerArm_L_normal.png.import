@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://w7vpu5mumllh"
-path="res://.godot/imported/LowerArm_L_LowerArm_L_normal.png-4bb8dd774223d18731f818bc505dda5a.ctex"
+path.s3tc="res://.godot/imported/LowerArm_L_LowerArm_L_normal.png-4bb8dd774223d18731f818bc505dda5a.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "3fb932902f552485547e46a78bbfb6be"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/light/LowerArm_L_LowerArm_L_normal.png"
-dest_files=["res://.godot/imported/LowerArm_L_LowerArm_L_normal.png-4bb8dd774223d18731f818bc505dda5a.ctex"]
+dest_files=["res://.godot/imported/LowerArm_L_LowerArm_L_normal.png-4bb8dd774223d18731f818bc505dda5a.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

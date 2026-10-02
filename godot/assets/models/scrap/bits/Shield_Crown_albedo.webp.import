@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://h4b8o7mrduh2"
-path="res://.godot/imported/Shield_Crown_albedo.webp-2caef9589480670a9a3d9ba1a705bed3.ctex"
+path.s3tc="res://.godot/imported/Shield_Crown_albedo.webp-2caef9589480670a9a3d9ba1a705bed3.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "3252204b1a2f91ad7bf6c4bfc16097e6"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Shield_Crown_albedo.webp"
-dest_files=["res://.godot/imported/Shield_Crown_albedo.webp-2caef9589480670a9a3d9ba1a705bed3.ctex"]
+dest_files=["res://.godot/imported/Shield_Crown_albedo.webp-2caef9589480670a9a3d9ba1a705bed3.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

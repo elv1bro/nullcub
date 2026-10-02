@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cpujpafb57y4y"
-path="res://.godot/imported/Banner_normal.webp-a9593033d2a6e4a00946f92f2c87961c.ctex"
+path.s3tc="res://.godot/imported/Banner_normal.webp-a9593033d2a6e4a00946f92f2c87961c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "51b6bcc159fd51f5693c83671e73e863"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Banner_normal.webp"
-dest_files=["res://.godot/imported/Banner_normal.webp-a9593033d2a6e4a00946f92f2c87961c.ctex"]
+dest_files=["res://.godot/imported/Banner_normal.webp-a9593033d2a6e4a00946f92f2c87961c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

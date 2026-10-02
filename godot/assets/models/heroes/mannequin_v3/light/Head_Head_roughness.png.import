@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ctqk1wg4tky10"
-path="res://.godot/imported/Head_Head_roughness.png-3620095ef32f7426cac9a6191c5e6dab.ctex"
+path.s3tc="res://.godot/imported/Head_Head_roughness.png-3620095ef32f7426cac9a6191c5e6dab.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "efd45c2699b9912991e6ccb8219c4e58"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/light/Head_Head_roughness.png"
-dest_files=["res://.godot/imported/Head_Head_roughness.png-3620095ef32f7426cac9a6191c5e6dab.ctex"]
+dest_files=["res://.godot/imported/Head_Head_roughness.png-3620095ef32f7426cac9a6191c5e6dab.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

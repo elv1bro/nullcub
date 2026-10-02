@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnpgahk0xt4ds"
-path="res://.godot/imported/Shavings_Wide_shavings_wide.webp-656b8319fa143df7bfaca44e1650e2f3.ctex"
+path.s3tc="res://.godot/imported/Shavings_Wide_shavings_wide.webp-656b8319fa143df7bfaca44e1650e2f3.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "c1701d90725ff0f5b7fde4b016e00b09"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Shavings_Wide_shavings_wide.webp"
-dest_files=["res://.godot/imported/Shavings_Wide_shavings_wide.webp-656b8319fa143df7bfaca44e1650e2f3.ctex"]
+dest_files=["res://.godot/imported/Shavings_Wide_shavings_wide.webp-656b8319fa143df7bfaca44e1650e2f3.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

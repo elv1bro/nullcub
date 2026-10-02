@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cjuqswu2ooaxs"
-path="res://.godot/imported/LowerArm_R_LowerArm_R_albedo.png-f47a83668fa618e7418eea4f4ed701a0.ctex"
+path.s3tc="res://.godot/imported/LowerArm_R_LowerArm_R_albedo.png-f47a83668fa618e7418eea4f4ed701a0.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "e8e0edf645b05a27e3bb49addfcf3229"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/dark/LowerArm_R_LowerArm_R_albedo.png"
-dest_files=["res://.godot/imported/LowerArm_R_LowerArm_R_albedo.png-f47a83668fa618e7418eea4f4ed701a0.ctex"]
+dest_files=["res://.godot/imported/LowerArm_R_LowerArm_R_albedo.png-f47a83668fa618e7418eea4f4ed701a0.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

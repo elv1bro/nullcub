@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cblukep35iex6"
-path="res://.godot/imported/Slope_30_normal.webp-8c213ea35ff29ac95f9f449aac029e8e.ctex"
+path.s3tc="res://.godot/imported/Slope_30_normal.webp-8c213ea35ff29ac95f9f449aac029e8e.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "69b019d27da77d6d2d22da10b5d9c45d"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/kit/Slope_30_normal.webp"
-dest_files=["res://.godot/imported/Slope_30_normal.webp-8c213ea35ff29ac95f9f449aac029e8e.ctex"]
+dest_files=["res://.godot/imported/Slope_30_normal.webp-8c213ea35ff29ac95f9f449aac029e8e.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

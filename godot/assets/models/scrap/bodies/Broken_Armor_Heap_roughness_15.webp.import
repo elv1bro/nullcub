@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dhefw30y625oc"
-path="res://.godot/imported/Broken_Armor_Heap_roughness_15.webp-2b5283bb794fe2ec2228636609c423dd.ctex"
+path.s3tc="res://.godot/imported/Broken_Armor_Heap_roughness_15.webp-2b5283bb794fe2ec2228636609c423dd.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "7fc0ef6b96185e8c5fbac95015fd009c"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Broken_Armor_Heap_roughness_15.webp"
-dest_files=["res://.godot/imported/Broken_Armor_Heap_roughness_15.webp-2b5283bb794fe2ec2228636609c423dd.ctex"]
+dest_files=["res://.godot/imported/Broken_Armor_Heap_roughness_15.webp-2b5283bb794fe2ec2228636609c423dd.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

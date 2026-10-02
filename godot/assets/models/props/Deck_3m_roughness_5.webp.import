@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bh16dwb67ppup"
-path="res://.godot/imported/Deck_3m_roughness_5.webp-eb948e01462503736abd3a049528a1f6.ctex"
+path.s3tc="res://.godot/imported/Deck_3m_roughness_5.webp-eb948e01462503736abd3a049528a1f6.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "b78af2cae162d8eb187567b1f8951913"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Deck_3m_roughness_5.webp"
-dest_files=["res://.godot/imported/Deck_3m_roughness_5.webp-eb948e01462503736abd3a049528a1f6.ctex"]
+dest_files=["res://.godot/imported/Deck_3m_roughness_5.webp-eb948e01462503736abd3a049528a1f6.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

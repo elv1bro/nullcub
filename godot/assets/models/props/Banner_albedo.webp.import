@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqyf5boj748e7"
-path="res://.godot/imported/Banner_albedo.webp-b4382026961bbc32aca9008943033938.ctex"
+path.s3tc="res://.godot/imported/Banner_albedo.webp-b4382026961bbc32aca9008943033938.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "b6f7902635279babf6b82cc5b2a2c973"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Banner_albedo.webp"
-dest_files=["res://.godot/imported/Banner_albedo.webp-b4382026961bbc32aca9008943033938.ctex"]
+dest_files=["res://.godot/imported/Banner_albedo.webp-b4382026961bbc32aca9008943033938.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

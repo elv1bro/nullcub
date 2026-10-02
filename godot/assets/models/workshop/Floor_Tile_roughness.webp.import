@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dqb0f2q01t1bb"
-path="res://.godot/imported/Floor_Tile_roughness.webp-05e56e137cea2313af2b930defc56a94.ctex"
+path.s3tc="res://.godot/imported/Floor_Tile_roughness.webp-05e56e137cea2313af2b930defc56a94.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "794819b144d48574a645bf0ac262563f"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Floor_Tile_roughness.webp"
-dest_files=["res://.godot/imported/Floor_Tile_roughness.webp-05e56e137cea2313af2b930defc56a94.ctex"]
+dest_files=["res://.godot/imported/Floor_Tile_roughness.webp-05e56e137cea2313af2b930defc56a94.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

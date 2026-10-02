@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://8lm5gcwvp0vq"
-path="res://.godot/imported/Cloth_Scrap_Heap_roughness_17.webp-31a0dc2b2be2d267800bc6c7b97f6639.ctex"
+path.s3tc="res://.godot/imported/Cloth_Scrap_Heap_roughness_17.webp-31a0dc2b2be2d267800bc6c7b97f6639.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "0aa92231be59b9d559b21dd9fa590476"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Cloth_Scrap_Heap_roughness_17.webp"
-dest_files=["res://.godot/imported/Cloth_Scrap_Heap_roughness_17.webp-31a0dc2b2be2d267800bc6c7b97f6639.ctex"]
+dest_files=["res://.godot/imported/Cloth_Scrap_Heap_roughness_17.webp-31a0dc2b2be2d267800bc6c7b97f6639.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

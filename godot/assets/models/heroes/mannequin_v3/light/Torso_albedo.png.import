@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqlmhj571mn72"
-path="res://.godot/imported/Torso_albedo.png-885e0ca406ec153c7a1fa97169917094.ctex"
+path.s3tc="res://.godot/imported/Torso_albedo.png-885e0ca406ec153c7a1fa97169917094.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "a76c339c8178d61f560444777b783861"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/light/Torso_albedo.png"
-dest_files=["res://.godot/imported/Torso_albedo.png-885e0ca406ec153c7a1fa97169917094.ctex"]
+dest_files=["res://.godot/imported/Torso_albedo.png-885e0ca406ec153c7a1fa97169917094.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

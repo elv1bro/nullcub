@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cp83gw0yoj86"
-path="res://.godot/imported/Broken_Puppet_albedo_7.webp-bd8e300c04eaa634b683ed7e4884c9cf.ctex"
+path.s3tc="res://.godot/imported/Broken_Puppet_albedo_7.webp-bd8e300c04eaa634b683ed7e4884c9cf.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "8ea57410caff29de17a4ac77873e163d"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Broken_Puppet_albedo_7.webp"
-dest_files=["res://.godot/imported/Broken_Puppet_albedo_7.webp-bd8e300c04eaa634b683ed7e4884c9cf.ctex"]
+dest_files=["res://.godot/imported/Broken_Puppet_albedo_7.webp-bd8e300c04eaa634b683ed7e4884c9cf.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

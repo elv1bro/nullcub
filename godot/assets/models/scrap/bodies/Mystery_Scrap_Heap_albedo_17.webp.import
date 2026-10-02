@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddvtnulqndu36"
-path="res://.godot/imported/Mystery_Scrap_Heap_albedo_17.webp-6c1ebde0aea60196dfdb0f9de62a5b67.ctex"
+path.s3tc="res://.godot/imported/Mystery_Scrap_Heap_albedo_17.webp-6c1ebde0aea60196dfdb0f9de62a5b67.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "225d5f479ba27fb79762e929836256b9"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Mystery_Scrap_Heap_albedo_17.webp"
-dest_files=["res://.godot/imported/Mystery_Scrap_Heap_albedo_17.webp-6c1ebde0aea60196dfdb0f9de62a5b67.ctex"]
+dest_files=["res://.godot/imported/Mystery_Scrap_Heap_albedo_17.webp-6c1ebde0aea60196dfdb0f9de62a5b67.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

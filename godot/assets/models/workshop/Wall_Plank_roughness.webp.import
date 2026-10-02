@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qtd4ny315pnf"
-path="res://.godot/imported/Wall_Plank_roughness.webp-756e1f530dad38b6841cc8c8a4ce75e6.ctex"
+path.s3tc="res://.godot/imported/Wall_Plank_roughness.webp-756e1f530dad38b6841cc8c8a4ce75e6.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "98d8e8594588b237f213f1f137c02d06"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Wall_Plank_roughness.webp"
-dest_files=["res://.godot/imported/Wall_Plank_roughness.webp-756e1f530dad38b6841cc8c8a4ce75e6.ctex"]
+dest_files=["res://.godot/imported/Wall_Plank_roughness.webp-756e1f530dad38b6841cc8c8a4ce75e6.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

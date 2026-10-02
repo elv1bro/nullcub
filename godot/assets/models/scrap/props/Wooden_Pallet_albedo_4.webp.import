@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dtrmowvyc82nd"
-path="res://.godot/imported/Wooden_Pallet_albedo_4.webp-67b2435afcd64a2cd394b07a726f4d6c.ctex"
+path.s3tc="res://.godot/imported/Wooden_Pallet_albedo_4.webp-67b2435afcd64a2cd394b07a726f4d6c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "225d5f479ba27fb79762e929836256b9"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Wooden_Pallet_albedo_4.webp"
-dest_files=["res://.godot/imported/Wooden_Pallet_albedo_4.webp-67b2435afcd64a2cd394b07a726f4d6c.ctex"]
+dest_files=["res://.godot/imported/Wooden_Pallet_albedo_4.webp-67b2435afcd64a2cd394b07a726f4d6c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

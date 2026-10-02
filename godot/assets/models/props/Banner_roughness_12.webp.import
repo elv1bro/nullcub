@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://drxun4vytuj3t"
-path="res://.godot/imported/Banner_roughness_12.webp-4c149322f4341744cd94bad9c6262335.ctex"
+path.s3tc="res://.godot/imported/Banner_roughness_12.webp-4c149322f4341744cd94bad9c6262335.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "98d8e8594588b237f213f1f137c02d06"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Banner_roughness_12.webp"
-dest_files=["res://.godot/imported/Banner_roughness_12.webp-4c149322f4341744cd94bad9c6262335.ctex"]
+dest_files=["res://.godot/imported/Banner_roughness_12.webp-4c149322f4341744cd94bad9c6262335.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

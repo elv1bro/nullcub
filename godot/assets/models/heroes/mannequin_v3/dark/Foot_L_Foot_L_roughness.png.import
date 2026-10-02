@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbv4lpsjlthv"
-path="res://.godot/imported/Foot_L_Foot_L_roughness.png-809058c81ad52fe96d33065635536e23.ctex"
+path.s3tc="res://.godot/imported/Foot_L_Foot_L_roughness.png-809058c81ad52fe96d33065635536e23.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "1d34572a677abffb06826dac5bbc53bd"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/dark/Foot_L_Foot_L_roughness.png"
-dest_files=["res://.godot/imported/Foot_L_Foot_L_roughness.png-809058c81ad52fe96d33065635536e23.ctex"]
+dest_files=["res://.godot/imported/Foot_L_Foot_L_roughness.png-809058c81ad52fe96d33065635536e23.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dviwpn5b40pu1"
-path="res://.godot/imported/Gear_Heap_metallic.png-roughness_8.webp-b4d86b85e4cedbfe56ab213734fad795.ctex"
+path.s3tc="res://.godot/imported/Gear_Heap_metallic.png-roughness_8.webp-b4d86b85e4cedbfe56ab213734fad795.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "1934d1d426f8b69313d323433993d619"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Gear_Heap_metallic.png-roughness_8.webp"
-dest_files=["res://.godot/imported/Gear_Heap_metallic.png-roughness_8.webp-b4d86b85e4cedbfe56ab213734fad795.ctex"]
+dest_files=["res://.godot/imported/Gear_Heap_metallic.png-roughness_8.webp-b4d86b85e4cedbfe56ab213734fad795.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -3,19 +3,20 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dsryiiy8cdlgx"
-path="res://.godot/imported/albedo.webp-35cc47ac942ff202551741cd4cfe3c70.ctex"
+path.s3tc="res://.godot/imported/albedo.webp-35cc47ac942ff202551741cd4cfe3c70.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/materials/kit/tex/rope/albedo.webp"
-dest_files=["res://.godot/imported/albedo.webp-35cc47ac942ff202551741cd4cfe3c70.ctex"]
+dest_files=["res://.godot/imported/albedo.webp-35cc47ac942ff202551741cd4cfe3c70.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

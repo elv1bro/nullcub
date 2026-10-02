@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5q77s48bfrxk"
-path="res://.godot/imported/Tool_Board_roughness_5.webp-75426b10fa305f9aecd583bb897c0be8.ctex"
+path.s3tc="res://.godot/imported/Tool_Board_roughness_5.webp-75426b10fa305f9aecd583bb897c0be8.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "b78af2cae162d8eb187567b1f8951913"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Tool_Board_roughness_5.webp"
-dest_files=["res://.godot/imported/Tool_Board_roughness_5.webp-75426b10fa305f9aecd583bb897c0be8.ctex"]
+dest_files=["res://.godot/imported/Tool_Board_roughness_5.webp-75426b10fa305f9aecd583bb897c0be8.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b3g74r7dmj1uk"
-path="res://.godot/imported/Corrugated_Sheet_Stack_albedo_4.webp-6c6bcef6b22c30a48ea0fb7570f874ba.ctex"
+path.s3tc="res://.godot/imported/Corrugated_Sheet_Stack_albedo_4.webp-6c6bcef6b22c30a48ea0fb7570f874ba.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "9c42b57b6881bec5612cf517a130058f"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Corrugated_Sheet_Stack_albedo_4.webp"
-dest_files=["res://.godot/imported/Corrugated_Sheet_Stack_albedo_4.webp-6c6bcef6b22c30a48ea0fb7570f874ba.ctex"]
+dest_files=["res://.godot/imported/Corrugated_Sheet_Stack_albedo_4.webp-6c6bcef6b22c30a48ea0fb7570f874ba.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

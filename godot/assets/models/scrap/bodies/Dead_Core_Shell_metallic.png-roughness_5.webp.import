@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bxadmlwkn8k5h"
-path="res://.godot/imported/Dead_Core_Shell_metallic.png-roughness_5.webp-e80ef1b471ac43ec5733cef69631ab70.ctex"
+path.s3tc="res://.godot/imported/Dead_Core_Shell_metallic.png-roughness_5.webp-e80ef1b471ac43ec5733cef69631ab70.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "a2f8def1501f7ecde218b2bd3dc33a5a"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Dead_Core_Shell_metallic.png-roughness_5.webp"
-dest_files=["res://.godot/imported/Dead_Core_Shell_metallic.png-roughness_5.webp-e80ef1b471ac43ec5733cef69631ab70.ctex"]
+dest_files=["res://.godot/imported/Dead_Core_Shell_metallic.png-roughness_5.webp-e80ef1b471ac43ec5733cef69631ab70.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

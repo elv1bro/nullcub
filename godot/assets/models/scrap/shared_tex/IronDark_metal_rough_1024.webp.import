@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bhey5hchfwk3r"
-path.bptc="res://.godot/imported/IronDark_metal_rough_1024.webp-1330c0e432956fac72eb153c380e5f9e.bptc.ctex"
+path.s3tc="res://.godot/imported/IronDark_metal_rough_1024.webp-1330c0e432956fac72eb153c380e5f9e.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -12,12 +12,12 @@ metadata={
 [deps]
 
 source_file="res://assets/models/scrap/shared_tex/IronDark_metal_rough_1024.webp"
-dest_files=["res://.godot/imported/IronDark_metal_rough_1024.webp-1330c0e432956fac72eb153c380e5f9e.bptc.ctex"]
+dest_files=["res://.godot/imported/IronDark_metal_rough_1024.webp-1330c0e432956fac72eb153c380e5f9e.s3tc.ctex"]
 
 [params]
 
 compress/mode=2
-compress/high_quality=true
+compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0

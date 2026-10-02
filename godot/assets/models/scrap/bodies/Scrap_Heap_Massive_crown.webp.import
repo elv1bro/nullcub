@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://vea1kdygoo63"
-path="res://.godot/imported/Scrap_Heap_Massive_crown.webp-9efa893b1fd324b91ed0f73707266785.ctex"
+path.s3tc="res://.godot/imported/Scrap_Heap_Massive_crown.webp-9efa893b1fd324b91ed0f73707266785.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "8a318b3f2f0a9d93a9777247cb58999e"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Scrap_Heap_Massive_crown.webp"
-dest_files=["res://.godot/imported/Scrap_Heap_Massive_crown.webp-9efa893b1fd324b91ed0f73707266785.ctex"]
+dest_files=["res://.godot/imported/Scrap_Heap_Massive_crown.webp-9efa893b1fd324b91ed0f73707266785.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

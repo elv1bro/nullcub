@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bss5d2d3vrf4l"
-path="res://.godot/imported/Junk_Cart_Loaded_albedo_4.webp-ab9511fc94eb0bdacb6bfc01eb606572.ctex"
+path.s3tc="res://.godot/imported/Junk_Cart_Loaded_albedo_4.webp-ab9511fc94eb0bdacb6bfc01eb606572.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "225d5f479ba27fb79762e929836256b9"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Junk_Cart_Loaded_albedo_4.webp"
-dest_files=["res://.godot/imported/Junk_Cart_Loaded_albedo_4.webp-ab9511fc94eb0bdacb6bfc01eb606572.ctex"]
+dest_files=["res://.godot/imported/Junk_Cart_Loaded_albedo_4.webp-ab9511fc94eb0bdacb6bfc01eb606572.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b7fehwnbwixel"
-path="res://.godot/imported/Stone_Slab_2m_kit_stone.jpg-0897b81983bdadb289f6d9f7f5aee3e6.ctex"
+path.s3tc="res://.godot/imported/Stone_Slab_2m_kit_stone.jpg-0897b81983bdadb289f6d9f7f5aee3e6.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "ba1f396b3c8417b1f2a750d627e091c9"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/arena/Stone_Slab_2m_kit_stone.jpg"
-dest_files=["res://.godot/imported/Stone_Slab_2m_kit_stone.jpg-0897b81983bdadb289f6d9f7f5aee3e6.ctex"]
+dest_files=["res://.godot/imported/Stone_Slab_2m_kit_stone.jpg-0897b81983bdadb289f6d9f7f5aee3e6.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

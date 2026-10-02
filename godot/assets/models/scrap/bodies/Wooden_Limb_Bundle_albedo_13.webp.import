@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b1emv0f3at7j2"
-path="res://.godot/imported/Wooden_Limb_Bundle_albedo_13.webp-7d0dabee2778321ea7351715def50d91.ctex"
+path.s3tc="res://.godot/imported/Wooden_Limb_Bundle_albedo_13.webp-7d0dabee2778321ea7351715def50d91.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "e8cb02c6e3434f36d41bdeed0d59bdaf"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Wooden_Limb_Bundle_albedo_13.webp"
-dest_files=["res://.godot/imported/Wooden_Limb_Bundle_albedo_13.webp-7d0dabee2778321ea7351715def50d91.ctex"]
+dest_files=["res://.godot/imported/Wooden_Limb_Bundle_albedo_13.webp-7d0dabee2778321ea7351715def50d91.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

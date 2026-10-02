@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmumk8lnxoaqf"
-path="res://.godot/imported/Gear_Small_normal.webp-06b5aea7a209e9a9f92523e105098683.ctex"
+path.s3tc="res://.godot/imported/Gear_Small_normal.webp-06b5aea7a209e9a9f92523e105098683.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "b271dabdc3b7f3b25a13e88d88673e93"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Gear_Small_normal.webp"
-dest_files=["res://.godot/imported/Gear_Small_normal.webp-06b5aea7a209e9a9f92523e105098683.ctex"]
+dest_files=["res://.godot/imported/Gear_Small_normal.webp-06b5aea7a209e9a9f92523e105098683.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

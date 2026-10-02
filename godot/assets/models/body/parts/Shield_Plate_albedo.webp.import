@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://iuu0yvt3eijm"
-path="res://.godot/imported/Shield_Plate_albedo.webp-3521ae08d740af33d4edc950998d4070.ctex"
+path.s3tc="res://.godot/imported/Shield_Plate_albedo.webp-3521ae08d740af33d4edc950998d4070.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "3252204b1a2f91ad7bf6c4bfc16097e6"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Shield_Plate_albedo.webp"
-dest_files=["res://.godot/imported/Shield_Plate_albedo.webp-3521ae08d740af33d4edc950998d4070.ctex"]
+dest_files=["res://.godot/imported/Shield_Plate_albedo.webp-3521ae08d740af33d4edc950998d4070.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

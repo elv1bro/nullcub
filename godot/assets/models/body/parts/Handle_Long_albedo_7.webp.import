@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cl8i75kmmompl"
-path="res://.godot/imported/Handle_Long_albedo_7.webp-d20eb551fb31e0779c1be57b4b5a277a.ctex"
+path.s3tc="res://.godot/imported/Handle_Long_albedo_7.webp-d20eb551fb31e0779c1be57b4b5a277a.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "9c56efc843830c9156a2b7e651af4ccf"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Handle_Long_albedo_7.webp"
-dest_files=["res://.godot/imported/Handle_Long_albedo_7.webp-d20eb551fb31e0779c1be57b4b5a277a.ctex"]
+dest_files=["res://.godot/imported/Handle_Long_albedo_7.webp-d20eb551fb31e0779c1be57b4b5a277a.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

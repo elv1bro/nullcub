@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bny15sb7hb6h1"
-path="res://.godot/imported/Wall_Side_void_wall_noise.png-8a1922c81359dd45949a441629973667.ctex"
+path.s3tc="res://.godot/imported/Wall_Side_void_wall_noise.png-8a1922c81359dd45949a441629973667.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "df5ec54b3995e2437c2e527f6a471c89"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/arena/void/Wall_Side_void_wall_noise.png"
-dest_files=["res://.godot/imported/Wall_Side_void_wall_noise.png-8a1922c81359dd45949a441629973667.ctex"]
+dest_files=["res://.godot/imported/Wall_Side_void_wall_noise.png-8a1922c81359dd45949a441629973667.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

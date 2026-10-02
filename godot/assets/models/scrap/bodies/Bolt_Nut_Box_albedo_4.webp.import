@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ciclnlcnbqi63"
-path="res://.godot/imported/Bolt_Nut_Box_albedo_4.webp-17cda726c6c64bcd8e466add7aea4568.ctex"
+path.s3tc="res://.godot/imported/Bolt_Nut_Box_albedo_4.webp-17cda726c6c64bcd8e466add7aea4568.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "8ea57410caff29de17a4ac77873e163d"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Bolt_Nut_Box_albedo_4.webp"
-dest_files=["res://.godot/imported/Bolt_Nut_Box_albedo_4.webp-17cda726c6c64bcd8e466add7aea4568.ctex"]
+dest_files=["res://.godot/imported/Bolt_Nut_Box_albedo_4.webp-17cda726c6c64bcd8e466add7aea4568.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

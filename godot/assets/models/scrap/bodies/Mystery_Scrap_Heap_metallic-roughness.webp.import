@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bq1egvyai136a"
-path="res://.godot/imported/Mystery_Scrap_Heap_metallic-roughness.webp-f67cc175d3147cdb24bfc28fea4b30a4.ctex"
+path.s3tc="res://.godot/imported/Mystery_Scrap_Heap_metallic-roughness.webp-f67cc175d3147cdb24bfc28fea4b30a4.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "60860102ddb371a2af2a891e822e43ec"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Mystery_Scrap_Heap_metallic-roughness.webp"
-dest_files=["res://.godot/imported/Mystery_Scrap_Heap_metallic-roughness.webp-f67cc175d3147cdb24bfc28fea4b30a4.ctex"]
+dest_files=["res://.godot/imported/Mystery_Scrap_Heap_metallic-roughness.webp-f67cc175d3147cdb24bfc28fea4b30a4.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
