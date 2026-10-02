@@ -5,8 +5,9 @@
 ##   • обломки по материалу спавнит не он, а DollCombat → ImpactFx (FxMaterial);
 ##   • поводы N0 — сигнал juice_event(event, args): digit_big (большая цифра), metal (сильный удар по железу), worn (деталь вся
 ##     в сколах), digits_pile (цифр на полу много). N0Host слушает и решает, говорить ли (мелкие поводы — N0Lines).
-## Замедление — варианты Tuning.JUICE_TIME_VARIANTS: статический time_variant читает Match._juice_time. F9 — следующий вариант,
-## F8 — цифры вкл/выкл (тост внизу экрана, как F10 у площадки; на площадке «Тело» F1…F9 — её пресеты, там не перехватываются).
+## Замедление — варианты Tuning.JUICE_TIME_VARIANTS: статический time_variant читает Match._juice_time. Клавиши (автор 02.10: без F1–F12,
+## на обычных цифрах; 1–9 уже меняют площадку): 0 — следующий вариант замедления, «−» (минус рядом с нулём) — цифры вкл/выкл.
+## Физические клавиши — работают в любой раскладке. Тост внизу экрана; на первом FIGHT! сессии — подсказка с клавишами.
 ## Говорят только N0 и табло (LORE_NULL.md «Голоса и тон»).
 class_name HitJuice
 extends Node
@@ -14,12 +15,15 @@ extends Node
 signal juice_event(event: String, args: Array)
 
 const TOAST_S := 1.6
+const HINT_S := 4.0
+const KEY_VARIANT := KEY_0
+const KEY_DIGITS := KEY_MINUS
 const PILE_N := 8
 const PILE_GAP_S := 20.0
 
 ## Вариант замедления (ключ Tuning.JUICE_TIME_VARIANTS) — общий на все площадки, переживает смену арены.
 static var time_variant: String = Tuning.JUICE_TIME_DEFAULT
-## Цифры-обломки включены (F8) — общий флаг.
+## Цифры-обломки включены (клавиша «−») — общий флаг.
 static var digits_on: bool = Tuning.JUICE_DIGITS
 
 var marks_enabled: bool = Tuning.JUICE_MARKS
@@ -33,6 +37,7 @@ var _worn: Dictionary = {}       # instance_id тела -> true (повод worn
 var _pile_t := -INF
 var _clock := 0.0
 var _toast: Label = null
+static var _hinted := false     # подсказка клавиш показана в этой сессии
 var _toast_tw: Tween = null
 
 
@@ -40,7 +45,7 @@ static func variant() -> Dictionary:
 	return Tuning.JUICE_TIME_VARIANTS.get(time_variant, Tuning.JUICE_TIME_VARIANTS[Tuning.JUICE_TIME_DEFAULT])
 
 
-## Следующий вариант замедления по кругу (F9). Возвращает ключ.
+## Следующий вариант замедления по кругу (клавиша 0). Возвращает ключ.
 static func cycle_time_variant() -> String:
 	var order: Array = Tuning.JUICE_TIME_ORDER
 	var i := order.find(time_variant)
@@ -94,6 +99,14 @@ func _on_phase_changed(p: int) -> void:
 	if p == Match.Phase.COUNTDOWN:
 		digits.clear()
 		_worn.clear()
+	elif p == Match.Phase.FIGHT and not _hinted:
+		_hinted = true
+		show_toast(hint_text(), HINT_S)
+
+
+## Подсказка клавиш сока удара (первый FIGHT! сессии).
+static func hint_text() -> String:
+	return "0 — замедление: %s    −  — цифры урона: %s" % [String(variant().get("title", time_variant)), "вкл" if digits_on else "выкл"]
 
 
 func _on_hit_fx(ctx: Dictionary) -> void:
@@ -144,25 +157,21 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
-	var scene := get_tree().current_scene
-	var scr: Script = scene.get_script() if scene != null else null
-	if scr != null and scr.get_script_constant_map().has("PRESET_KEYS"):
-		return   # площадка «Тело» (playground_body.gd): F1…F9 — её пресеты кукол, клавиши не перехватываем
-	match (event as InputEventKey).keycode:
-		KEY_F9:
+	match (event as InputEventKey).physical_keycode:
+		KEY_VARIANT:
 			cycle_time_variant()
-			show_toast("Замедление: %s" % String(variant().get("title", time_variant)))
+			show_toast("Замедление: %s   (0 — следующее)" % String(variant().get("title", time_variant)))
 			get_viewport().set_input_as_handled()
-		KEY_F8:
+		KEY_DIGITS:
 			digits_on = not digits_on
 			if not digits_on:
 				digits.clear()
-			show_toast("Цифры урона: %s" % ("вкл" if digits_on else "выкл"))
+			show_toast("Цифры урона: %s   (− — переключить)" % ("вкл" if digits_on else "выкл"))
 			get_viewport().set_input_as_handled()
 
 
 ## Тост внизу экрана (как F10 площадки), поверх HUD; живёт в реальном времени.
-func show_toast(text: String) -> void:
+func show_toast(text: String, secs: float = TOAST_S) -> void:
 	if _toast == null or not is_instance_valid(_toast):
 		var layer := CanvasLayer.new()
 		layer.name = "JuiceToast"
@@ -172,8 +181,8 @@ func show_toast(text: String) -> void:
 		_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_toast.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-		_toast.offset_left = -260.0
-		_toast.offset_right = 260.0
+		_toast.offset_left = -420.0
+		_toast.offset_right = 420.0
 		_toast.offset_top = -170.0
 		_toast.offset_bottom = -130.0
 		_toast.add_theme_font_size_override("font_size", 26)
@@ -187,6 +196,6 @@ func show_toast(text: String) -> void:
 	if _toast_tw != null and _toast_tw.is_valid():
 		_toast_tw.kill()
 	_toast_tw = _toast.create_tween().set_ignore_time_scale(true)
-	_toast_tw.tween_interval(TOAST_S)
+	_toast_tw.tween_interval(secs)
 	_toast_tw.tween_property(_toast, "modulate:a", 0.0, 0.3)
 	_toast_tw.tween_callback(func() -> void: _toast.visible = false)

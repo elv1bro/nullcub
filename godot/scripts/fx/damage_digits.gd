@@ -4,7 +4,7 @@
 ## Tuning.JUICE_DIGIT_REST_S, потом уходит в пол. Большая цифра (≥ JUICE_DIGIT_BIG) светится.
 ## Не физика Jolt: тела на слое 1 толкали бы кукол и считались бы DollCombat ударом. Свой полёт: луч до статики (StaticBody3D, CSG)
 ## под цифрой, иначе пол — низ bounds() арены; стены — края bounds по X. Время — шаг физики (замирает на стоп-кадре вместе с боем).
-## Пул: JUICE_DIGIT_MAX кусков, по 3 MeshInstance3D (TextMesh на символ, кэш), старый кусок переиспользуется — узлы не плодятся.
+## Клавиша «−» (HitJuice.digits_on) — вкл/выкл. Пул: JUICE_DIGIT_MAX кусков, по 3 MeshInstance3D (TextMesh на символ, кэш), старый кусок переиспользуется — узлы не плодятся.
 class_name DamageDigits
 extends Node3D
 

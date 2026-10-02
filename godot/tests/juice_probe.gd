@@ -10,8 +10,8 @@
 ##   marks_*   — HitMarks: след на всех мешах ударенной детали (overlay ShaderMaterial), повтор в то же место — глубже, не новый; в другое
 ##               место — новый; не больше JUICE_MARKS_PER_MESH; слабее JUICE_MARK_MIN_DAMAGE — без следа; повод worn один раз;
 ##   digits_*  — DamageDigits: < JUICE_DIGIT_MIN_DAMAGE — без цифры; 12 HP — «12», ложится на пол Void у жертвы, лежит и уходит; пул
-##               ≤ JUICE_DIGIT_MAX (старые переиспользуются); F8 (digits_on = false) — без цифр; большая — повод digit_big;
-##   time_*    — варианты F9 (stop / cinema / web / off): теги и масштаб на light 7 HP и heavy 12 HP, длина «кино», порядок цикла;
+##               ≤ JUICE_DIGIT_MAX (старые переиспользуются); «−» (digits_on = false) — без цифр; большая — повод digit_big;
+##   time_*    — варианты (клавиша 0: stop / cinema / web / off): теги и масштаб на light 7 HP и heavy 12 HP, длина «кино», порядок цикла;
 ##               пресет FX off — без тегов сока;
 ##   caption_* — табло: HitJuice.impact_caption, настоящий крит — подпись CritOverlay «IMPACT …G»;
 ##   n0_*      — N0Lines: строки поводов digit_big / metal / worn / digits_pile (ru и en), подстановка %d;
@@ -337,7 +337,7 @@ func _digit_checks(p1: Doll, p2: Doll) -> void:
 	var s0 := int(dg.stats["spawned"])
 	await _strike(p1, p2, 12.0)
 	HitJuice.digits_on = true
-	_check("digits_toggle", int(dg.stats["spawned"]) == s0, int(dg.stats["spawned"]) - s0, 0, "HitJuice.digits_on = false")
+	_check("digits_toggle", int(dg.stats["spawned"]) == s0, int(dg.stats["spawned"]) - s0, 0, "key minus: HitJuice.digits_on = false")
 	_heal([p1, p2])
 	await _wait_time_clear()
 	# большая цифра — повод N0
@@ -352,11 +352,28 @@ func _digit_checks(p1: Doll, p2: Doll) -> void:
 # ------------------------------------------------------------------ время
 
 func _time_checks(p1: Doll, p2: Doll) -> void:
+	# клавиши (автор 02.10: без F1–F12): физические 0 — следующий вариант, «−» — цифры
+	HitJuice.time_variant = Tuning.JUICE_TIME_DEFAULT
+	var k0 := InputEventKey.new()
+	k0.physical_keycode = KEY_0
+	k0.pressed = true
+	juice._unhandled_input(k0)
+	var v_after := HitJuice.time_variant
+	var km := InputEventKey.new()
+	km.physical_keycode = KEY_MINUS
+	km.pressed = true
+	var d0 := HitJuice.digits_on
+	juice._unhandled_input(km)
+	var d1 := HitJuice.digits_on
+	juice._unhandled_input(km)
+	_check("keys_digits", v_after == "cinema" and d1 == not d0 and HitJuice.digits_on == d0, [v_after, d0, d1, HitJuice.digits_on],
+		["cinema", "toggled", "back"], "key 0 → next variant, key minus → digits on/off")
+	HitJuice.time_variant = Tuning.JUICE_TIME_DEFAULT
 	var order: Array = []
 	HitJuice.time_variant = Tuning.JUICE_TIME_DEFAULT
 	for i in range(Tuning.JUICE_TIME_ORDER.size()):
 		order.append(HitJuice.cycle_time_variant())
-	_check("time_cycle", order == ["cinema", "web", "off", "stop"], order, ["cinema", "web", "off", "stop"], "F9 order from stop")
+	_check("time_cycle", order == ["cinema", "web", "off", "stop"], order, ["cinema", "web", "off", "stop"], "key 0 order from stop")
 	var want := {
 		"stop": {"light": ["light_stop", "light_slow"], "heavy": ["heavy_slow"], "heavy_scale": 0.4},
 		"cinema": {"light": [], "heavy": ["heavy_slow"], "heavy_scale": 0.25},

@@ -17,7 +17,7 @@
 ## hit_feel(strength, position): тряска и zoom impulse DynamicCamera (camera_path | группа "camera" | текущая камера) и hit stop
 ## через Engine.time_scale (80 мс от 20 HP, 120 мс от 35 HP), KO — slow-mo 0.25× на 1.2 с; таймеры в реальном времени.
 ## Сок удара (HIT_FX.md §13, 02.10): ребёнок HitJuice (сколы на деталях, цифры-обломки, поводы N0), _juice_time — замедление
-## варианта HitJuice.time_variant (F9), плавный выход (request_time_scale ramp_s); ctx.mat — материал ударенной детали.
+## варианта HitJuice.time_variant (клавиша 0), плавный выход (request_time_scale ramp_s); ctx.mat — материал ударенной детали.
 ## restart(): все куклы инстанцируются заново на точках спавна арены (arena_path | группа "arena" | сосед с spawn_points()),
 ## respawn_doll(old) доступен площадке (пропасть и R).
 class_name Match
@@ -714,7 +714,7 @@ func _emit_hit_fx(victim: Doll, attacker: Node, damage: float, kind: String, pos
 	hit_fx.emit(ctx)
 
 
-## Замедление сока удара (HIT_FX.md §13): вариант HitJuice.variant() (F9: А микростоп / Б кино на сильных / В как в вебе / выкл).
+## Замедление сока удара (HIT_FX.md §13): вариант HitJuice.variant() (клавиша 0: А микростоп / Б кино на сильных / В как в вебе / выкл).
 ## light с light_dmg — стоп «light_stop» (если есть) и замедление «light_slow» (не чаще light_gap реального времени); heavy — свой стоп
 ## «heavy_stop2» (вариант В) и замедление «heavy_slow» сразу за стоп-кадром (heavy_stop 83 мс или hit stop 80 / 120 мс). Выход плавный
 ## (ramp). Пресет FX off и feel_enabled = false их не пускают (request_time_scale).
