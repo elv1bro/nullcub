@@ -65,7 +65,29 @@
 
 ## Проверки сборки (headless, Godot 4.7.2, Linux)
 
-РЕЗУЛЬТАТЫ
+Импорт проекта чистый: 0 ошибок скриптов. 18 проб, 17 зелёных с первого раза:
+
+| Проба | Что проверяет | Итог |
+|---|---|---|
+| `doll_gate`, `feel_probe strict=1` | кукла: поведение и feel по целям FEEL_TARGET | OK |
+| `combat_gate` | урон, полосы, KO, Sudden Death, ничья | OK |
+| `match_probe` Void | бой ботов до KO с HUD | OK |
+| `match_probe` Руины | то же на Руинах | 1-й прогон — нет KO за 120 с (21 удар); 2-й и 3-й — OK (32 удара, KO) |
+| `scene_switch_probe` | смена площадок | OK |
+| `null_field_probe` | поле NULL и мембрана | 9 / 9 |
+| `arena_events_probe` | голосование зрителей и выход бойца | 8 / 8 |
+| `campaign_probe fight=1` | кампания с боем ботов до KO | 15 / 15 |
+| `menu_probe` | тестовое меню | 4 / 4 |
+| `workshop_probe` | мастерская | 226 OK |
+| `kit_probe` | кит тела | 3497 OK |
+| `body_probe` | модульная кукла | OK |
+| `active_blocks_probe` | активные блоки | 34 / 34 |
+| `league_brain_probe` | бот-чемпион лиги | 7 / 7 |
+| `pve_probe mode=full` | PvE-волны на Свалке | OK |
+| `hit_tier_probe` | уровни ударов | 101 / 101 |
+| `intro_probe` | площадка заставки | OK |
+
+Окна и производительность на Mac этот прогон не проверяет: он headless, на Linux.
 
 ## Известные проблемы
 
