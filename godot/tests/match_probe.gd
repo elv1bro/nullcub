@@ -232,6 +232,8 @@ func _ready() -> void:
 				"out": out_path = p[1]
 				"retreat": rush_retreat_s = float(p[1])
 				"legacy": legacy_dash = p[1] != "0"
+				"variant": ControlFeel.set_variant(p[1])   # вариант управления (ControlFeel): боты и игроки ведут куклу так же
+				"tempo": ControlFeel.set_tempo(p[1])       # темп: now | brisk | action | ram
 				"perf": perf = p[1] != "0"
 				"pipes": pipes = p[1] != "0"
 				"spikes": spikes = p[1] != "0"

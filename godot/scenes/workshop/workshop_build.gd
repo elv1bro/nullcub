@@ -103,6 +103,8 @@ class _PreviewBlueprint extends BodyBlueprint:
 ## а не сменой сцены. Пока мастерская не активна (set_active(false)), она спит: ввод, процессы, UI и 3D скрыты.
 var embedded := false
 var active := true
+## Мастерская кампании: Esc без инструмента и выбора выходит сразу (в обычной — двойной Esc).
+var single_esc_exit := false
 
 var blueprint: BodyBlueprint
 var weapon_bp: WeaponBlueprint
@@ -2352,7 +2354,10 @@ func _unhandled_input(event: InputEvent) -> void:
 					reset_camera()
 			KEY_ESCAPE:
 				if not cancel_mirror() and not clear_tools() and not clear_selection():   # иначе двойной Esc — в гараж (Flow)
-					if _time < _esc_armed_until:
+					if single_esc_exit and embedded:
+						_flush_autosave(true)
+						exit_requested.emit()
+					elif _time < _esc_armed_until:
 						_flush_autosave(true)
 						if embedded:
 							exit_requested.emit()
