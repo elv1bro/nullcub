@@ -43,7 +43,7 @@ static func spawn_impact(parent: Node, position: Vector3, normal: Vector3, stren
 	var k := clampf(strength / STRENGTH_REF, 0.25, 2.0)
 	var root := Node3D.new()
 	root.name = "ImpactFx"
-	parent.add_child(root)
+	parent.add_child(root, true)   # читаемое имя ImpactFx2… (не «@Node3D@N»): пробы и директоры узнают корни по префиксу
 	var n := normal
 	if n.length_squared() < 1e-6:
 		n = Vector3.UP

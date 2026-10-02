@@ -13,7 +13,8 @@
 ##              (формула и физика: оба молота брошены в голову манекена на 8 м/с), Damage.calibration_ok();
 ##   ts_* / cam_* — Match.request_time_scale / cancel_time_scale / time_scale_tags (heavy_stop HITFX_HEAVY_STOP_S в целых кадрах ± 1 кадр, минимум записей, no-op при
 ##              feel_enabled = false) и захват камеры (capture/release, restart возвращает игровую камеру и time_scale 1);
-##   hit_*    — настоящий удар через Match.on_hit на Void: полный ctx сигнала hit_fx, light без hit stop, heavy с heavy_stop, crit —
+##   hit_*    — настоящий удар через Match.on_hit на Void: полный ctx сигнала hit_fx, light без hit stop, heavy с heavy_stop (за ним —
+##              heavy_slow сока удара, §13), crit —
 ##              отлёт ЦМ в [5.5, 7.5] × sd, клэмп 7.5 в окне CRIT_FLIGHT_S, потом снова FLIGHT_MAX_SPEED; тот же отлёт при
 ##              feel_enabled = false; атакующий в рывке (6 м/с) бьёт крит в упор — ЦМ вдоль kb_dir ≤ CRIT_ATTACKER_STOP_SPEED всё окно
 ##              0.5 с, через 0.5 с между ЦМ ≥ 2 м (hit_crit_attacker_*); ko_crit — части +3 м/с; после KO time_scale 1 и тегов нет;
@@ -618,8 +619,17 @@ func _match_checks() -> void:
 	_check("hit_heavy_stop", String(c_heavy.get("tier", "")) == "heavy" and tags_heavy.has("heavy_stop") and is_equal_approx(ts_heavy, Tuning.HIT_STOP_TIME_SCALE),
 		[c_heavy.get("tier", ""), tags_heavy, ts_heavy], ["heavy", ["heavy_stop"], Tuning.HIT_STOP_TIME_SCALE])
 	await _frames(8)
-	_check("hit_heavy_stop_gone", not match_node.time_scale_tags().has("heavy_stop") and is_equal_approx(Engine.time_scale, 1.0),
-		match_node.time_scale_tags(), [])
+	# сок удара (HIT_FX.md §13): за стоп-кадром heavy — замедление heavy_slow варианта HitJuice (по умолчанию А: 0.4× 0.3 с), потом 1×
+	var slow_tags := match_node.time_scale_tags().duplicate()
+	var ts_slow := Engine.time_scale
+	var want_slow := float(HitJuice.variant()["heavy_scale"]) if Tuning.JUICE_ENABLED else 1.0
+	var nf := 0
+	while (Engine.time_scale < 1.0 or not match_node.time_scale_tags().is_empty()) and nf < 90:
+		await _frames(1)
+		nf += 1
+	_check("hit_heavy_stop_gone", not slow_tags.has("heavy_stop") and (want_slow >= 1.0 or (slow_tags.has("heavy_slow")
+		and absf(ts_slow - want_slow) < 0.01)) and is_equal_approx(Engine.time_scale, 1.0) and match_node.time_scale_tags().is_empty(),
+		[slow_tags, ts_slow, nf], [["heavy_slow"], want_slow, "then 1.0 within 90 frames"])
 	await _ticks(30)
 	_check("hit_normal_flight_cap", _com_velocity(p2).length() <= Tuning.FLIGHT_MAX_SPEED + 0.01 and not p2.flight_cap_active(),
 		_com_velocity(p2).length(), "<= %.1f" % Tuning.FLIGHT_MAX_SPEED)

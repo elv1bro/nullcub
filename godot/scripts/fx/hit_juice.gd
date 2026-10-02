@@ -6,7 +6,8 @@
 ##   • поводы N0 — сигнал juice_event(event, args): digit_big (большая цифра), metal (сильный удар по железу), worn (деталь вся
 ##     в сколах), digits_pile (цифр на полу много). N0Host слушает и решает, говорить ли (мелкие поводы — N0Lines).
 ## Замедление — варианты Tuning.JUICE_TIME_VARIANTS: статический time_variant читает Match._juice_time. F9 — следующий вариант,
-## F8 — цифры вкл/выкл (тост внизу экрана, как F10 у площадки). Говорят только N0 и табло (LORE_NULL.md «Голоса и тон»).
+## F8 — цифры вкл/выкл (тост внизу экрана, как F10 у площадки; на площадке «Тело» F1…F9 — её пресеты, там не перехватываются).
+## Говорят только N0 и табло (LORE_NULL.md «Голоса и тон»).
 class_name HitJuice
 extends Node
 
@@ -143,6 +144,10 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
+	var scene := get_tree().current_scene
+	var scr: Script = scene.get_script() if scene != null else null
+	if scr != null and scr.get_script_constant_map().has("PRESET_KEYS"):
+		return   # площадка «Тело» (playground_body.gd): F1…F9 — её пресеты кукол, клавиши не перехватываем
 	match (event as InputEventKey).keycode:
 		KEY_F9:
 			cycle_time_variant()

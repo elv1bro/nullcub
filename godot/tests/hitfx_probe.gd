@@ -130,7 +130,11 @@ func overlays(v: Doll) -> Array:
 	var out: Array = []
 	for mi in v.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
-		out.append([m.get_path(), m.material_overlay, m.material_override])
+		# следы ударов (HitMarks, HIT_FX.md §13) — задуманы постоянными, это не «забытый» оверлей эффекта
+		var ov: Material = m.material_overlay
+		if ov is ShaderMaterial and (ov as ShaderMaterial).shader == HitMarks.SHADER:
+			ov = null
+		out.append([m.get_path(), ov, m.material_override])
 	return out
 
 
@@ -357,10 +361,14 @@ func _run() -> void:
 		var vv := v
 		await physics_call(func() -> void: match_node.on_hit(vv, attacker(), 12.0, "body", vv.torso().global_position, 1, false, "", 6.0))
 		t0 = director.clock_ms()
+		var slow_frames := 0
 		while director.clock_ms() - t0 < 300.0:
 			await get_tree().process_frame
-			if Engine.time_scale < 0.99:
+			# стоп-кадр — только кадры HIT_STOP_TIME_SCALE; за ним замедление heavy_slow сока удара (HIT_FX.md §13)
+			if Engine.time_scale <= Tuning.HIT_STOP_TIME_SCALE + 1e-3:
 				stop_frames += 1
+			elif Engine.time_scale < 0.99:
+				slow_frames += 1
 			if OS.has_environment("HITFX_DEBUG"):
 				print("dbg t=%.1f ts=%.3f eff=%s" % [director.clock_ms() - t0, Engine.time_scale, str(match_node.get("_time_effects"))])
 		stop_ms = stop_frames * FRAME_MS
@@ -368,6 +376,8 @@ func _run() -> void:
 		check("heavy_core_tier", tr == "heavy", tr, "heavy")
 		var want_ms := Tuning.HITFX_HEAVY_STOP_S * 1000.0
 		check("heavy_hitstop_ms", absf(stop_ms - want_ms) <= 17.0, snappedf(stop_ms, 0.1), "%.0f±17 (Match._emit_hit_fx, Tuning.HITFX_HEAVY_STOP_S)" % want_ms)
+		if Tuning.JUICE_ENABLED and float(HitJuice.variant()["heavy_s"]) > 0.0:
+			check("heavy_slow_after_stop", slow_frames >= 6, slow_frames, ">=6 frames of heavy_slow (HIT_FX.md §13)")
 	await wait_quiet()
 	check("heavy_freed_3s", director.fx_node_count() == base, director.fx_node_count(), base)
 	check("heavy_time_scale_1", is_equal_approx(Engine.time_scale, 1.0), Engine.time_scale, 1.0)
@@ -459,7 +469,7 @@ func _run() -> void:
 	if mode == "crit_fallback":
 		var cap := false
 		for a in announces:
-			cap = cap or String(a[0]) == HitFxDirector.CRIT_CAPTION
+			cap = cap or String(a[0]) == HitFxDirector.CRIT_CAPTION or String(a[0]).begins_with("IMPACT ")   # табло §13
 		check("crit_fallback_caption", cap, announces, HitFxDirector.CRIT_CAPTION)
 		check("crit_fallback_time_requests", int(director.stats["time_requests"]) - int(st["time_requests"]) == 2, int(director.stats["time_requests"]) - int(st["time_requests"]), 2)
 		check("crit_fallback_afterimages", int(director.stats["afterimages"]) > int(st["afterimages"]), director.stats["afterimages"], ">%d" % int(st["afterimages"]))
