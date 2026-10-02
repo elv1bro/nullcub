@@ -193,22 +193,22 @@ func start_fight() -> bool:
 	_free_fight()
 	_set_screen(Screen.FIGHT)
 	var r := state.current_rival()
-	ui.show_connecting("ПЕРЕКЛЮЧАЕМ НА ПЛОЩАДКУ", "КУПОЛ OLD NULL HALL  ·  %s" % CampaignLeague.rival_title(r).to_upper())
+	Loading.begin("ПЕРЕКЛЮЧАЕМ НА ПЛОЩАДКУ", "купол Old NULL Hall · %s" % CampaignLeague.rival_title(r).to_upper())
 	_launch_fight.call_deferred()
 	return true
 
 
 func _launch_fight() -> void:
-	await get_tree().process_frame
-	await get_tree().process_frame
+	await Loading.present()
 	if screen != Screen.FIGHT:
+		Loading.finish()
 		return     # пока рисовалась заставка, вышли
-	_request_fight_scene()
 	var t0 := Time.get_ticks_msec()
-	var ps := ResourceLoader.load_threaded_get(FIGHT_SCENE) as PackedScene
+	var ps := await Loading.load_async(FIGHT_SCENE, "ПЕРЕКЛЮЧАЕМ НА ПЛОЩАДКУ") as PackedScene
 	if ps == null:
 		ps = load(FIGHT_SCENE) as PackedScene
 	fight_load_ms = Time.get_ticks_msec() - t0
+	await Loading.present()
 	var r := state.current_rival()
 	fight = ps.instantiate()
 	fight.call("setup", state.blueprint, CampaignLeague.rival_blueprint(state.tier, r), r, CampaignLeague.rival_title(r), {
@@ -225,6 +225,7 @@ func _launch_fight() -> void:
 	ui.clear_screens()
 	ui.set_visible_all(false, true, FIGHT_OVERLAY)
 	ui.burst(0.9, 0.5)
+	Loading.finish()
 
 
 ## Итог боя (сигнал сцены боя; проба зовёт напрямую): запись в кампанию, сохранение, экран итогов.

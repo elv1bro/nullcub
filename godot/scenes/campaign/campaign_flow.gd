@@ -66,7 +66,7 @@ func _ready() -> void:
 		if flow != null:
 			flow.to_menu()
 		else:
-			get_tree().change_scene_to_file(EXIT_SCENE))
+			Loading.change_scene(EXIT_SCENE, "БОКС 07", "возвращаемся в гараж…"))
 	%OutcomeNext.pressed.connect(func() -> void: start_fight())
 	%OutcomeWorkshop.pressed.connect(func() -> void: open_workshop())
 	%OutcomeLadder.pressed.connect(func() -> void: show_ladder())

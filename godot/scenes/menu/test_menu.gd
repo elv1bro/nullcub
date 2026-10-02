@@ -41,7 +41,7 @@ func _ready() -> void:
 		b.add_theme_font_size_override("font_size", 26)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		var path := String(it[1])
-		b.pressed.connect(func() -> void: get_tree().change_scene_to_file(path))
+		b.pressed.connect(func() -> void: Loading.change_scene(path, "ПОДКЛЮЧЕНИЕ", path.get_file().get_basename()))
 		b.focus_entered.connect(func() -> void: %Hint.text = String(it[2]))
 		b.mouse_entered.connect(func() -> void: %Hint.text = String(it[2]))
 		list.add_child(b)

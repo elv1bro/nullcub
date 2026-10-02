@@ -130,6 +130,9 @@ func _ready() -> void:
 	workshop.name = "GarageWorkshop"
 	add_child(workshop)
 	workshop.preload_scene()
+	if not dry_run:       # пробы лоадер не показывают; в игре он держится, пока в фоне ставится мастерская
+		Loading.hold("garage", "БОКС 07", "ставим мастерскую…")
+		workshop.instantiated.connect(func() -> void: Loading.release("garage"))
 	campaign = GarageCampaign.new(self)
 	campaign.name = "GarageCampaign"
 	add_child(campaign)
@@ -329,13 +332,21 @@ func refresh_story() -> void:
 		_build_tv("opponent")
 
 
+func _scene_label(path: String) -> String:
+	if path.contains("null_hall"):
+		return "купол Old NULL Hall"
+	if path.contains("test_menu"):
+		return "тестовая сборка: все режимы"
+	return path.get_file().get_basename()
+
+
 func _go(target: String) -> void:
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null:
 		flow.last_item = focus
 	navigated.emit(target)
 	if not dry_run:
-		get_tree().change_scene_to_file(target)
+		Loading.change_scene(target, "ПОДКЛЮЧЕНИЕ", _scene_label(target))
 
 
 func _exit_sequence() -> void:
@@ -358,6 +369,8 @@ func _exit_sequence() -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
+	if Loading.showing:
+		return
 	if state == "leaving" or state == "workshop" or state == "campaign":   # в мастерской и в эфире ввод — их собственный
 		return
 	if state == "settings":

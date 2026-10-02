@@ -451,3 +451,21 @@ const JUICE_IMPACT_CAPTION := true
 const JUICE_IMPACT_STYLE_DEFAULT := "serious"
 # обводка бойцов цветом игрока (автор 02.10: «сложно прочитать тело на фоне»), клавиша B — DollOutline
 const JUICE_OUTLINE_DEFAULT := true
+
+# --- тренировочный зал за воротами мастерской (docs/plan-demo/MENU_GARAGE.md, «Тренировочный зал»; автор 02.10) ---
+# груша: шар на цепи с пружинной «связью» (цепь натягивается, но не толкает) — масса, радиус и длина цепи
+const HEAVY_BAG_MASS := 45.0              # кг
+const HEAVY_BAG_RADIUS := 0.55            # м
+const HEAVY_BAG_CHAIN_LEN := 4.1          # м: от ушка шара до проушины балки
+const HEAVY_BAG_CHAIN_K := 3200.0         # Н/м: жёсткость натянутой цепи
+const HEAVY_BAG_CHAIN_C := 95.0           # Н·с/м: гашение вдоль цепи
+const HEAVY_BAG_LIN_DAMP := 0.05
+const HEAVY_BAG_ANG_DAMP := 1.4
+## удар по груше считается, когда сила превысила порог (Н); пока касание не кончилось, запоминается пик
+const HEAVY_BAG_HIT_MIN_N := 120.0
+const HEAVY_BAG_HIT_GAP_S := 0.18         # пауза без касаний, после которой следующий контакт — новый удар
+## экран «сила удара»: шкала до этого значения (кН), слова по порогам (кН): лёгкий < 1.5 ≤ средний < 4 ≤ тяжёлый < 8 ≤ нокаут
+const HALL_FORCE_SCALE_KN := 12.0
+const HALL_FORCE_WORDS := [[1.5, "ЛЁГКИЙ"], [4.0, "СРЕДНИЙ"], [8.0, "ТЯЖЁЛЫЙ"], [1.0e9, "НОКАУТ"]]
+## экран «скорость»: шкала до этого значения (м/с)
+const HALL_SPEED_SCALE_MS := 24.0

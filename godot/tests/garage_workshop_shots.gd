@@ -34,6 +34,11 @@ func _wait(n: int) -> void:
 		await RenderingServer.frame_post_draw
 
 
+func _secs(t: float) -> void:
+	await get_tree().create_timer(t).timeout
+	await _wait(2)
+
+
 func _save(name: String) -> void:
 	get_viewport().get_texture().get_image().save_png(out.path_join("gw-%s.png" % name))
 	print("shot ", name)
@@ -77,11 +82,48 @@ func _run() -> void:
 	_save("weapon")
 	w.ws.set_view(WorkshopBuild.View.BODY)
 	await get_tree().create_timer(0.8).timeout
-	if w.ws.start_test():
-		await get_tree().create_timer(1.5).timeout
-		await _wait(3)
-		_save("test")
-		w.ws.stop_test()
+	# испытание: первый старт — лоадер «ПОДГОТОВКА ЗАЛА», потом ворота открываются
+	w.ws.start_test()
+	await _secs(0.25)
+	_save("loader")
+	var t_hall := Time.get_ticks_msec()
+	while w.ws.mode != WorkshopBuild.Mode.TEST:
+		await get_tree().process_frame
+	print("MEASURE hall prepare ms=", Time.get_ticks_msec() - t_hall, " inst ms=", w.hall_inst_ms)
+	await _secs(0.5)
+	_save("test_gate_opening")
+	await _secs(1.4)
+	_save("test_gate_open")
+	# ворота крупным планом (камера гаража на пару кадров)
+	menu.cam.global_transform = Transform3D(Basis.looking_at(Vector3(-4.7, 1.5, 1.2) - Vector3(-1.2, 1.6, 4.2), Vector3.UP), Vector3(-1.2, 1.6, 4.2))
+	menu.cam.fov = 60.0
+	menu.cam.make_current()
+	await _secs(0.3)
+	_save("gate_close")
+	w.ws.test_cam.make_current()
+	var doll := w.ws.test_doll
+	for bd in doll.parts.values():
+		(bd as RigidBody3D).linear_velocity = Vector3(-20.0, 3.0, 0.0)
+	await _secs(2.0)
+	_save("test_in_hall")
+	var dx := -24.0 - (doll.parts["Torso"] as Node3D).global_position.x
+	for bd in doll.parts.values():
+		(bd as RigidBody3D).global_position += Vector3(dx, 0.9, 0.0)
+		(bd as RigidBody3D).linear_velocity = Vector3(-15.0, 0.0, 0.0)
+	await _secs(0.9)
+	_save("test_bag_hit")
+	await _secs(1.5)
+	_save("test_bag_after")
+	# манекен: подлететь к нему на скорости
+	var dx2 := -14.0 - (doll.parts["Torso"] as Node3D).global_position.x
+	for bd in doll.parts.values():
+		(bd as RigidBody3D).global_position += Vector3(dx2, 0.9, 0.0)
+		(bd as RigidBody3D).linear_velocity = Vector3(-14.0, 0.0, 0.0)
+	await _secs(0.35)
+	_save("test_dummy_hit")
+	await _secs(1.2)
+	_save("test_dummy_after")
+	w.ws.stop_test()
 	await get_tree().create_timer(0.6).timeout
 	await _key(KEY_ESCAPE)
 	await _key(KEY_ESCAPE)

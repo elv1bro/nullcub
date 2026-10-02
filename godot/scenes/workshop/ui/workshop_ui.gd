@@ -2097,8 +2097,9 @@ func _on_mode(m: int) -> void:
 	test_button.visible = not test
 	drag_info.visible = false
 	test_bar.visible = test
-	test_stats.visible = test
-	dummy_panel.visible = test
+	var world_hud: bool = ctl.embedded     # в гараже счёт и HP манекена — экраны на стенах зала (HallScreen), а не плашки
+	test_stats.visible = test and not world_hud
+	dummy_panel.visible = test and not world_hud
 	toast_label.offset_top = 88.0 if test else 84.0
 	toast_label.offset_bottom = toast_label.offset_top + 56.0
 	if test:
@@ -2226,6 +2227,9 @@ func _float_small(pos: Vector3, text: String, col: Color, offset: Vector2) -> vo
 
 
 func _update_dummy_panel() -> void:
+	if ctl.embedded:        # во встроенной мастерской HP манекена — экран на стене зала (HallScreen), не плашка над головой
+		dummy_panel.visible = false
+		return
 	var d: Node3D = ctl.dummy
 	var cam := get_viewport().get_camera_3d()
 	if d == null or not is_instance_valid(d) or cam == null:

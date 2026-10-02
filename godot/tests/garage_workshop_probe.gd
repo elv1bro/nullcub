@@ -100,9 +100,13 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check("blueprint_changed", ws.blueprint.title != title_before or ws.blueprint.id == "kit_brawler", [ws.blueprint.id, ws.blueprint.title])
 	var parts_after := ws.blueprint.nodes.size()
-	# 4. испытание на полу гаража
-	var started := ws.start_test()
+	# 4. испытание: зал за воротами готовится под лоадером (первый старт — false), потом испытание стартует само
+	var first := ws.start_test()
+	_check("first_test_waits_for_hall", not first and Loading.showing, [first, Loading.showing])
+	var started := await _wait(func() -> bool: return ws.mode == WorkshopBuild.Mode.TEST, 60.0)
 	_check("start_test", started, null)
+	var hall: TrainingHall = w.hall
+	_check("hall_in_world", hall != null and hall.get_parent() == menu and hall.awake, [w.hall_inst_ms])
 	if started:
 		for i in 150:
 			await get_tree().physics_frame
@@ -111,17 +115,45 @@ func _run() -> void:
 		var z := torso.global_position.z
 		_check("test_doll_on_floor", y > 0.25 and y < 2.2, snappedf(y, 0.01), [0.25, 2.2])
 		_check("test_doll_on_plane_z0", absf(z) < 0.25, snappedf(z, 0.01), 0.25)
-		_check("test_dummy_exists", ws.dummy != null and is_instance_valid(ws.dummy), null)
+		_check("test_dummy_in_hall", ws.dummy != null and is_instance_valid(ws.dummy) and ws.dummy.global_position.x < -10.0,
+			ws.dummy.global_position.x if ws.dummy != null else null)
 		_check("test_camera_current", ws.test_cam != null and ws.test_cam.is_current(), null)
 		var b := ws.test_cam.bounds()
-		_check("test_bounds_from_stage", b.size.x > 8.0 and b.size.y > 3.0, [b.size.x, b.size.y])
+		_check("test_bounds_from_stage", b.size.x > 40.0 and b.size.y > 8.0, [b.size.x, b.size.y])
 		var lit := true
 		for l in menu.zone_lights.get("tv", []):
 			lit = lit and (l as Light3D).light_energy > 0.0
 		_check("test_zone_lights_even", lit, null)
+		# ворота в зал: створки открылись, заглушка проёма снята
+		var gate := menu.get_node("Room/HallGate") as GarageHallGate
+		_check("gate_opened", gate.is_open, null)
+		var block := ws.get_node("Stage/Bounds/WallL") as CollisionShape3D
+		_check("door_block_off_when_open", block.disabled, null)
+		# вылет в зал: сильный толчок влево и вверх через ворота (кукла гасит скорость трением, меряем дальность)
+		for bd in ws.test_doll.parts.values():
+			(bd as RigidBody3D).linear_velocity = Vector3(-20.0, 3.0, 0.0)
+		var x_out := 0.0
+		for i in 120:
+			await get_tree().physics_frame
+			x_out = minf(x_out, (ws.test_doll.parts["Torso"] as Node3D).global_position.x)
+		_check("doll_flew_into_hall", x_out < -7.0, snappedf(x_out, 0.1), -7.0)
+		_check("speed_screen_got_data", float(hall.screens["speed"]._data.get("vmax", 0.0)) > 2.0, hall.screens["speed"]._data.get("vmax", 0.0))
+		# груша: подвести куклу к груше (x = −30) и ударить на скорости
+		var dx := -26.5 - (ws.test_doll.parts["Torso"] as Node3D).global_position.x
+		for bd in ws.test_doll.parts.values():
+			(bd as RigidBody3D).global_position += Vector3(dx, 0.4, 0.0)
+			(bd as RigidBody3D).linear_velocity = Vector3(-14.0, 0.0, 0.0)
+		var hit := await _wait(func() -> bool: return hall.bag.hits > 0, 6.0)
+		_check("bag_registered_hit", hit, [hall.bag.hits, snappedf(hall.bag.best_force_n, 1.0)])
+		await get_tree().create_timer(0.5).timeout
+		var imp: Dictionary = hall.screens["impact"]._data
+		_check("impact_screen_shows_force", float(imp.get("f_n", 0.0)) > 100.0 and int(imp.get("hits", 0)) > 0, imp.get("f_n", 0.0))
 		ws.stop_test()
 		await get_tree().process_frame
 		_check("stop_test_back_to_build", ws.mode == WorkshopBuild.Mode.BUILD and ws.build_cam.is_current(), ws.mode)
+		_check("hall_asleep_after_test", not hall.awake and not hall.visible, null)
+		await get_tree().create_timer(0.1).timeout
+		_check("gate_closed_after_test", not gate.is_open and not block.disabled, [gate.is_open, block.disabled])
 	# 5. двойной Esc → обратно в меню
 	await _key(KEY_ESCAPE)
 	await _key(KEY_ESCAPE)
