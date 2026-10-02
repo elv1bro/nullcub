@@ -4,7 +4,8 @@
 ## а время разложено по файлам скриптов. Печатает таблицу «скрипт: вызовов, мкс/тик (сумма по узлам), макс мкс», сумму и долю бюджета 16.7 мс.
 ## Запуск: godot --headless --path . --fixed-fps 60 res://tests/pve_cpu_probe.tscn -- "secs=12,warm=2"
 ## Отчёт — stdout + tests/pve_cpu_probe_report.json; exit 0 — это замер, не гейт.
-## Параметр budget_us=N — если задан, суммарный скриптовый мкс/тик > N → exit 1 (страж от возврата тяжёлого кода).
+## Параметры-стражи (exit 1, если превышены): budget_us=N — суммарные мкс скриптов за тик; budget_ratio=N — то же в единицах «один расчёт ЦМ без кэша»
+## (не зависит от скорости машины; гейт использует его).
 extends Node3D
 
 const PG_SCENE := "res://scenes/playground_pve.tscn"
@@ -12,6 +13,7 @@ const PG_SCENE := "res://scenes/playground_pve.tscn"
 var secs := 12.0
 var warm := 2.0
 var budget_us := 0.0
+var budget_ratio := 0.0
 var pg: Node
 var director: Node
 var p1: Doll
@@ -35,6 +37,7 @@ func _ready() -> void:
 					"secs": secs = float(p[1])
 					"warm": warm = float(p[1])
 					"budget_us": budget_us = float(p[1])
+					"budget_ratio": budget_ratio = float(p[1])
 	await _run()
 
 
@@ -99,14 +102,15 @@ func _tick(delta: float, measure: bool) -> void:
 		_pick_new()
 
 
-## Микро-замер Doll.centre_of_mass(): сколько мкс стоит один вызов (сумма по ~12 частям: global_transform из физсервера × масса).
+## Микро-замер Doll._compute_com(false) без кэша: сколько мкс стоит один расчёт ЦМ (≈ 14 частей: global_transform из физсервера × масса).
+## Служит «линейкой» скорости машины — абсолютные мкс скриптов плавают в 1,5–2 раза (нагрузка, частота ядер), а их отношение к этой линейке — нет.
 func _bench_com() -> void:
 	var n := 2000
 	var t0 := Time.get_ticks_usec()
 	for i in range(n):
-		p1.centre_of_mass()
+		p1._compute_com(false)   # без кэша — «линейка» скорости машины: тот же класс работы, что скрипты боя (вызовы физсервера × части)
 	var us := float(Time.get_ticks_usec() - t0) / float(n)
-	print("COM bench: %.1f us per Doll.centre_of_mass() (%d parts)" % [us, p1.parts.size()])
+	print("COM bench: %.1f us per uncached Doll centre_of_mass (%d parts)" % [us, p1.parts.size()])
 	COM_US = us
 
 
@@ -174,12 +178,16 @@ func _report() -> void:
 					frozen += 1 if (b as RigidBody3D).freeze else 0
 					inside += 1 if (b as Node).is_inside_tree() else 0
 			print("IMPACT bodies=%d inside=%d asleep=%d frozen=%d" % [ia.bodies.size(), inside, asleep, frozen])
-	print("TOTAL scripts us/tick = %.0f  (%.1f%% of 16.7 ms tick)" % [total, total / 167.0])
+	var ratio := total / maxf(COM_US, 0.01)
+	print("TOTAL scripts us/tick = %.0f  (%.1f%% of 16.7 ms tick); в «ЦМ без кэша»: %.0f (кэш ЦМ + правки: ≈ 150–165, до них ≈ 235)" % [total, total / 167.0, ratio])
 	var f := FileAccess.open("res://tests/pve_cpu_probe_report.json", FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify({"ticks": _ticks, "total_us_per_tick": total, "rows": json_rows}, "\t"))
 	if budget_us > 0.0 and total > budget_us:
 		print("FAIL budget %.0f us > %.0f us" % [total, budget_us])
+		_exit_code = 1
+	elif budget_ratio > 0.0 and ratio > budget_ratio:
+		print("FAIL budget %.0f (в «ЦМ без кэша») > %.0f" % [ratio, budget_ratio])
 		_exit_code = 1
 	else:
 		print("=== OK ===")
