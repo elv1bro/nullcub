@@ -2332,13 +2332,13 @@ func _unhandled_input(event: InputEvent) -> void:
 				else:
 					reset_camera()
 			KEY_ESCAPE:
-				if not cancel_mirror() and not clear_tools() and not clear_selection():   # иначе двойной Esc — выход
+				if not cancel_mirror() and not clear_tools() and not clear_selection():   # иначе двойной Esc — в гараж (Flow)
 					if _time < _esc_armed_until:
 						_flush_autosave(true)
-						get_tree().quit()
+						Flow.to_menu()
 					else:
 						_esc_armed_until = _time + 1.5
-						_say("Esc ещё раз — выход", COL_INFO)
+						_say("Esc ещё раз — в гараж", COL_INFO)
 			_:
 				return
 		get_viewport().set_input_as_handled()
