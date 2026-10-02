@@ -20,6 +20,10 @@ var load_ms := -1                   # сколько мастерская гру
 var inst_ms := -1                   # сколько ставилась в мир (instantiate + _ready), мс
 ## Свойства мастерской, выставляемые до её _ready (проба: свой файл автосейва, чтобы не трогать сборку игрока).
 var ws_overrides := {}
+## Режим кампании (open_campaign): состояние кампании и что вызвать вместо «в меню» (двойной Esc / кнопки мастерской).
+var campaign: CampaignState = null
+var on_exit := Callable()
+var _free_autosave := ""            # имя автосейва свободной мастерской (пока она в режиме кампании)
 var _t_load := 0
 var _tw: Tween
 
@@ -81,11 +85,62 @@ func is_open() -> bool:
 
 ## Войти в мастерскую. Камера гаража плавно доезжает до кадра мастерской и отдаёт управление.
 func open() -> void:
+	_ensure()
+	if campaign != null:
+		_leave_campaign_mode()
+	_dive()
+
+
+## Мастерская кампании «История» (garage_campaign.gd): та же встроенная сцена, но полка — стартовый кит и трофеи, шаблоны закрыты,
+## сборка — из чертежа кампании, автосейв — в него же, выход одним Esc. exit — что вызвать вместо возврата в меню гаража.
+func open_campaign(st: CampaignState, exit: Callable) -> void:
+	_ensure()
+	campaign = st
+	on_exit = exit
+	if _free_autosave == "":
+		_free_autosave = ws.autosave_name
+	CraftEdit.campaign_shelf = st.shelf_parts()
+	CraftEdit.campaign_templates_locked = false   # загрузка чертежа — до блокировки шаблонов
+	ws.autosave_name = st.bp_name
+	ws.start_preset = CampaignLeague.START_PRESET
+	CraftEdit.campaign_templates_locked = true
+	ws.load_path(CraftEdit.save_path(st.bp_name))
+	if ws.blueprint.weapon == null:
+		ws.clear_weapon()   # верстак стартует с молотом-шаблоном — в кампании оружие собирается только из деталей полки
+	ws.history.clear()
+	ws.redo_stack.clear()
+	ws.single_esc_exit = true
+	ws.view_changed.emit(ws.view)   # UI перестраивает левую панель — плитки шаблонов прячутся
+	_dive()
+
+
+func _ensure() -> void:
 	if ws == null:
 		if not loading:
 			preload_scene()
 		ResourceLoader.load_threaded_get_status(SCENE)   # дождаться, если ещё грузится
 		_instantiate_blocking()
+
+
+## Вернуть свободной мастерской её полку, шаблоны и автосейв игрока (после кампании).
+func _leave_campaign_mode() -> void:
+	CraftEdit.campaign_shelf = PackedStringArray()
+	CraftEdit.campaign_templates_locked = false
+	ws.single_esc_exit = false
+	if _free_autosave != "":
+		ws.autosave_name = _free_autosave
+		_free_autosave = ""
+	campaign = null
+	on_exit = Callable()
+	var free_path := CraftEdit.save_path(ws.autosave_name)
+	if FileAccess.file_exists(free_path):
+		ws.load_path(free_path)
+	ws.history.clear()
+	ws.redo_stack.clear()
+	ws.view_changed.emit(ws.view)
+
+
+func _dive() -> void:
 	garage.set("state", "workshop")
 	var cam := garage.get("cam") as Camera3D
 	var ui_root := garage.get("ui") as Control
@@ -133,6 +188,10 @@ func _ui_root() -> Control:
 func close() -> void:
 	if not is_open():
 		return
+	if on_exit.is_valid():      # кампания: она заберёт сборку и сама закроет нас (on_exit очищается перед вторым вызовом)
+		on_exit.call()
+		return
+	var in_campaign := campaign != null
 	var cam := garage.get("cam") as Camera3D
 	cam.global_transform = ws.build_cam.global_transform
 	cam.fov = ws.build_cam.fov
@@ -141,10 +200,14 @@ func close() -> void:
 	var layer_root := _ui_root()
 	if layer_root != null:
 		layer_root.modulate.a = 1.0
+	_set_props(true)
+	if in_campaign:         # возвращает управление кампании (она ведёт камеру к телевизору и показывает сетку)
+		_leave_campaign_mode()
+		closed.emit()
+		return
 	var ui_root := garage.get("ui") as Control
 	ui_root.visible = true
 	ui_root.modulate.a = 1.0
-	_set_props(true)
 	var pd = garage.get("player_doll")
 	if pd != null:
 		pd.call("rebuild")

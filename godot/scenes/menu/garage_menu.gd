@@ -57,7 +57,7 @@ const OPPONENT_PIC_PRESET := "kit_horned"           # tv/tv_opponent.png — к�
 @export var live_tv := true
 @export var move_time := 0.75
 
-var state := "title"            # title | menu | settings | trophies | workshop | leaving
+var state := "title"            # title | menu | settings | trophies | workshop | campaign | leaving
 var _campaign: CampaignState = null
 var _campaign_read := false
 var focus := 0
@@ -99,6 +99,7 @@ var trophies_ui: GarageTrophies
 var _tw_exhibit: Tween
 var player_doll: GarageDoll
 var workshop: GarageWorkshop           # мастерская внутри гаража (scenes/menu/garage_workshop.gd)
+var campaign: GarageCampaign           # кампания в эфире телевизора (scenes/menu/garage_campaign.gd)
 var _live_line := 0
 var _live_timer := 0.0
 
@@ -129,6 +130,9 @@ func _ready() -> void:
 	workshop.name = "GarageWorkshop"
 	add_child(workshop)
 	workshop.preload_scene()
+	campaign = GarageCampaign.new(self)
+	campaign.name = "GarageCampaign"
+	add_child(campaign)
 	cam.global_transform = spots["Title"]
 	cam.fov = spot_fov["Title"]
 	_to = cam.global_transform
@@ -168,7 +172,11 @@ func set_focus(i: int, instant := false) -> void:
 	_update_items()
 	if player_doll != null:
 		player_doll.look_toward(LOOK.get(String(it["id"]), LOOK["story"]))
-	_say(String(it["n0"]) % story_rival()["title"] if String(it["id"]) == "story" else String(it["n0"]))
+	if String(it["id"]) == "story":
+		var rv := story_rival()
+		_say("Лига пройдена, чемпион. Табло пишет что-то ещё. Наверное, сбой." if bool(rv["done"]) else String(it["n0"]) % rv["title"])
+	else:
+		_say(String(it["n0"]))
 	focus_changed.emit(focus)
 
 
@@ -188,6 +196,9 @@ func activate() -> void:
 		return
 	if id == "workshop":
 		workshop.open()
+		return
+	if id == "story":
+		campaign.open()
 		return
 	var go := String(it["go"])
 	if go == "":
@@ -288,6 +299,36 @@ func spot_transform(name: String) -> Transform3D:
 	return spots.get(name, Transform3D())
 
 
+## Комнату гаража на время боя кампании прячем целиком (бой ставится в этот же мир): мебель, лампы, окружение, эфир на ТВ.
+func set_world_visible(on: bool) -> void:
+	for n in ["Room", "Props", "Lights"]:
+		var node := get_node_or_null(n) as Node3D
+		if node != null:
+			node.visible = on
+	var we := get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if we != null:
+		if not on and we.environment != null:
+			set_meta("garage_env", we.environment)
+			we.environment = null
+		elif on and we.environment == null and has_meta("garage_env"):
+			we.environment = get_meta("garage_env") as Environment
+	if tv_vp != null:
+		tv_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS if on else SubViewport.UPDATE_DISABLED
+	if bout != null:
+		bout.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
+
+
+## Кампания сдвинулась (бой, новая игра): строки пункта «История» и карточка «Следующий бой» на ТВ.
+func refresh_story() -> void:
+	if item_nodes.is_empty():
+		return
+	var lines := item_lines(0)
+	((item_nodes[0] as Dictionary)["d1"] as Label).text = lines[0]
+	((item_nodes[0] as Dictionary)["d2"] as Label).text = lines[1]
+	if tv_mode == "opponent":
+		_build_tv("opponent")
+
+
 func _go(target: String) -> void:
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null:
@@ -317,7 +358,7 @@ func _exit_sequence() -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
-	if state == "leaving" or state == "workshop":   # в мастерской ввод — её собственный (workshop_build.gd)
+	if state == "leaving" or state == "workshop" or state == "campaign":   # в мастерской и в эфире ввод — их собственный
 		return
 	if state == "settings":
 		if settings_ui.handle_input(e):
