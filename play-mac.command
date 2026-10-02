@@ -12,8 +12,15 @@ if [ -z "${GODOT_BIN:-}" ]; then
 	read -r -p "Enter — закрыть"; exit 1
 fi
 echo "Godot: $GODOT_BIN ($("$GODOT_BIN" --version 2>/dev/null))"
+# Импорт — при первом запуске и каждый раз, когда поменялся код (git pull): новые скрипты с class_name попадают в кэш классов
+# Godot только при импорте, без него свежая версия не запускается («… not declared in the current scope»).
+STAMP=godot/.godot/last_import_head
+HEAD_NOW="$(git rev-parse HEAD 2>/dev/null || echo none)"
 if [ ! -d godot/.godot/imported ]; then
 	echo "Первый запуск: Godot импортирует модели и текстуры — это несколько минут, окно игры откроется само."
-	"$GODOT_BIN" --headless --path godot --import
+	"$GODOT_BIN" --headless --path godot --import && echo "$HEAD_NOW" > "$STAMP"
+elif [ "$(cat "$STAMP" 2>/dev/null)" != "$HEAD_NOW" ]; then
+	echo "Код обновился — Godot обновляет импорт (обычно меньше минуты)."
+	"$GODOT_BIN" --headless --path godot --import && echo "$HEAD_NOW" > "$STAMP"
 fi
 exec "$GODOT_BIN" --path godot
