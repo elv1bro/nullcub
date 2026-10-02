@@ -1,7 +1,8 @@
 ## Стрелки за экраном (лист камеры автора, правило 4, docs/plan-demo/ART_NULL.md): если боец вне кадра, у края экрана
-## рисуется стрелка его цвета с подписью «P2 · 37 м» — расстояние в плоскости боя от главной куклы кадра (P1,
+## рисуется стрелка его цвета, под ней подпись «P2 · 37 м» — расстояние в плоскости боя от главной куклы кадра (P1,
 ## DynamicCamera.primary_doll(); автор 02.10: «стрелкой и написать количество метров до него»). Стрелка самой главной куклы
-## (её увела кинематография крита) и камера без primary_doll() — от центра кадра.
+## (её увела кинематография крита) и камера без primary_doll() — от центра кадра. Где соперник — подсказка только этого HUD,
+## N0 о направлении и метрах не говорит (автор 02.10).
 ## Узел — CanvasLayer в сцене площадки; бойцы — группа dolls (Doll: player_index, centre_of_mass()), камера — текущая.
 extends CanvasLayer
 
@@ -84,7 +85,9 @@ func _draw_markers() -> void:
 		_canvas.draw_colored_polygon(inner, col)
 		var label := "P%d · %d м" % [idx + 1, int(round(float(m["dist"])))]
 		var ls := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
-		var lp := p - d * 40.0 - ls * 0.5 + Vector2(0.0, ls.y * 0.35)
+		# метры под стрелкой; стрелка у нижнего края (смотрит вниз) — над ней
+		var below := d.y < 0.6 and p.y + 48.0 < _canvas.size.y
+		var lp := Vector2(p.x - ls.x * 0.5, p.y + 44.0 if below else p.y - 26.0)
 		lp.x = clampf(lp.x, 6.0, _canvas.size.x - ls.x - 6.0)
 		_canvas.draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 7, Color(0, 0, 0, 0.85))
 		_canvas.draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, col.lightened(0.35))

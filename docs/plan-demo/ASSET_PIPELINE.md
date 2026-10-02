@@ -21,7 +21,13 @@ godot/tools/build_doll_scene.gd         → scenes/doll/doll.tscn
 godot/tools/build_arena_ruins.gd        → scenes/arena/ruins.tscn
 godot/tools/build_weapon_scenes.gd      → scenes/weapons/weapon_<id>.tscn
 godot/scenes/playground.tscn            площадка: арена + куклы + камера + окружение (собрана как сцена)
+godot/tools/blender/garage_kit.py       → assets/models/garage/Garage_<Имя>.glb (гараж главного меню, MENU_GARAGE.md)
+godot/tools/build_garage_menu.gd        → scenes/menu/garage_menu.tscn
 ```
+
+Гараж меню (02.10.2026): материалы в glb плоские, имя материала = роль (Wood, Iron, PaintNavy, Hazard, Screen…), настоящий
+материал ставит пост-импорт `tools/garage_import.gd` по таблице `scripts/menu/garage_materials.gd` (текстуры — общие `kit/tex`
+и `assets/textures/garage` от `tools/gen_garage_textures.py`), поэтому glb не тащат копий текстур.
 
 ## Текстуры Свалки: общая библиотека (29.09.2026)
 

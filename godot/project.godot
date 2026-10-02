@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Ragdoll Master Demo"
-run/main_scene="res://scenes/menu/test_menu.tscn"
+run/main_scene="res://scenes/menu/garage_menu.tscn"
 config/version="0.0.1"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
@@ -22,6 +22,7 @@ Tuning="*res://scripts/tuning.gd"
 InputSetup="*res://scripts/input/input_setup.gd"
 GameAudio="*res://scripts/audio/game_audio.gd"
 Gfx="*res://scripts/gfx/gfx.gd"
+Flow="*res://scripts/menu/flow.gd"
 
 [display]
 

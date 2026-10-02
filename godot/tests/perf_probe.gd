@@ -28,7 +28,7 @@ var sec_t := 0.0
 var secs := 6.0
 var pg: Node3D
 var scene_id := "ruins"
-const SCENES := {"ruins": "res://scenes/playground.tscn", "workshop": "res://scenes/playground_workshop.tscn", "void": "res://scenes/playground_void.tscn"}
+const SCENES := {"ruins": "res://scenes/playground.tscn", "workshop": "res://scenes/playground_workshop.tscn", "void": "res://scenes/playground_void.tscn", "null_hall": "res://scenes/playground_null_hall.tscn"}
 var rows: Array = []
 var tp_sum := 0.0
 var tp_n := 0

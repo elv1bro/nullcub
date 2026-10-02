@@ -6,7 +6,7 @@
 ##   листанием: ] / PageDown — следующий пресет, [ / PageUp — предыдущий (по кругу, все пресеты, в том числе дальше F12).
 ##   Кукла пересоздаётся Match.respawn_doll с другим scene_file_path (scenes/body/presets/<id>.tscn), поэтому пресет переживает
 ##   R и KO. Пресеты, сцены которых ещё нет на диске, пропускаются.
-##   Остальное — как scenes/playground.gd: R заново, 1 / 2 / 3 — обычные площадки (Руины / Мастерская / Void), Esc — выход.
+##   Остальное — как scenes/playground.gd: R заново, 1 / 2 / 3 — обычные площадки (Руины / Мастерская / Void), Esc — пауза (Flow).
 ## Подсказка снизу: пресет (номер / всего), энергия / бюджет, масса, число тел, разгон тяги относительно куклы v3
 ## (фиксированная тяга Ядра), клавиши выбора пресета.
 extends "res://scenes/playground.gd"
@@ -42,7 +42,7 @@ const PRESET_KEYS := {KEY_F1: 0, KEY_F2: 1, KEY_F3: 2, KEY_F4: 3, KEY_F5: 4, KEY
 ## Листание пресетов по кругу: +1 / −1.
 const CYCLE_KEYS := {KEY_BRACKETRIGHT: 1, KEY_PAGEDOWN: 1, KEY_BRACKETLEFT: -1, KEY_PAGEUP: -1}
 const PRESET_HELP := "F1–F9, F11, F12, [ / ], PgUp / PgDn"
-const CONTROLS := "P1: WASD + Shift + Space    P2: стрелки + правый Ctrl + Enter    R: заново    1 / 2 / 3: другие площадки    Esc: выход"
+const CONTROLS := "P1: WASD + Shift + Space    P2: стрелки + правый Ctrl + Enter    R: заново    1 / 2 / 3: другие площадки    Esc: пауза"
 
 var preset_index := 0
 

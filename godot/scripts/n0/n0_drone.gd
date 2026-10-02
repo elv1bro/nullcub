@@ -13,7 +13,7 @@
 ##   за правой рукой;
 ##   talking — микрофон к экрану, левая жестикулирует;
 ##   жест на выражение (flash_expression → GESTURE_OF): excited — ликует, happy — машет, shocked — вздрагивает, worried / sad — сник,
-##   curious / confused — задумался, angry — трясёт кулаками, glitch — дёргается; point_at(pos, secs) — показывает рукой.
+##   curious / confused — задумался, angry — трясёт кулаками, glitch — дёргается.
 ## Жест входит за 0.15 с и выходит за 0.3 с (огибающая), поверх покоя.
 class_name N0Drone
 extends Node3D
@@ -32,7 +32,7 @@ const PAINT_ALBEDO := 0.82
 ## Выражение → жест тела.
 const GESTURE_OF := {"excited": "cheer", "happy": "wave", "shocked": "flinch", "worried": "droop", "sad": "droop",
 	"curious": "tilt", "confused": "tilt", "angry": "shake", "glitch": "glitch"}
-const GESTURES: Array[String] = ["cheer", "wave", "flinch", "droop", "tilt", "shake", "glitch", "point"]
+const GESTURES: Array[String] = ["cheer", "wave", "flinch", "droop", "tilt", "shake", "glitch"]
 const GESTURE_IN_S := 0.15
 const GESTURE_OUT_S := 0.3
 
@@ -66,7 +66,6 @@ var _ready_done := false
 var gesture := ""
 var _g_t := 0.0
 var _g_dur := 0.0
-var _point_at := Vector3.ZERO
 var _vel := Vector3.ZERO
 var _acc := Vector3.ZERO
 var _flap := 0.0
@@ -123,12 +122,6 @@ func play_gesture(name: String, secs: float) -> void:
 		_g_t = 0.0
 	gesture = name
 	_g_dur = secs
-
-
-## Показать рукой на точку мира: правой (с микрофоном), если точка правее, иначе левой.
-func point_at(world_pos: Vector3, secs: float) -> void:
-	_point_at = world_pos
-	play_gesture("point", secs)
 
 
 ## Скорость и ускорение полёта (м/с, м/с²) от n0_host.gd: крылья машут чаще, ножки отстают, двигатель ярче.
@@ -272,18 +265,6 @@ func _animate(delta: float) -> void:
 				body.z += (_hash(k, 6) - 0.5) * 0.4 * e
 				reach_l = _hash(k, 7) * 0.15 * e
 				reach_r = _hash(k, 8) * 0.15 * e
-			"point":    # показывает рукой на точку: правой (с микрофоном), если точка правее, иначе левой
-				var lp := model.to_local(_point_at)
-				var right := lp.x >= 0.0
-				var v := lp - (_rest.get("N0_Arm_R" if right else "N0_Arm_L", Transform3D()) as Transform3D).origin
-				if v.length() > 1e-3:
-					if right:
-						arm_r = arm_r.lerp(v.normalized(), e)
-						reach_r = lerpf(reach_r, 0.2, e)
-					else:
-						arm_l = arm_l.lerp(v.normalized(), e)
-						reach_l = lerpf(reach_l, 0.2, e)
-					body.z -= signf(v.x) * 0.12 * e
 	model.position = Vector3(0.0, bob, 0.0)
 	model.rotation = body
 	var flap := sin(_flap) * flap_amp

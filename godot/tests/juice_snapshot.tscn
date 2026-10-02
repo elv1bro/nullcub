@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://juicesnap0001"]
+
+[ext_resource type="Script" path="res://tests/juice_snapshot.gd" id="1_js"]
+
+[node name="JuiceSnapshot" type="Node3D"]
+script = ExtResource("1_js")

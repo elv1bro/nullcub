@@ -18,7 +18,7 @@ signal screen_changed(screen: int)
 
 const FIGHT_SCENE := preload("res://scenes/campaign/campaign_fight.tscn")
 const WORKSHOP_SCENE := "res://scenes/workshop/workshop_build.tscn"
-const EXIT_SCENE := "res://scenes/menu/test_menu.tscn"   # «Выход» — в тестовое меню сборки
+const EXIT_SCENE := "res://scenes/menu/garage_menu.tscn"   # «Выход» — в гараж (Flow.to_menu: на пункт ИСТОРИЯ, без титула)
 const COL_DONE := Color(0.55, 0.9, 0.5)
 const COL_NEXT := Color(1.0, 0.82, 0.3)
 const COL_LATER := Color(0.75, 0.75, 0.78)
@@ -61,7 +61,12 @@ func _ready() -> void:
 	%FightButton.pressed.connect(func() -> void: start_fight())
 	%WorkshopButton.pressed.connect(func() -> void: open_workshop())
 	%NewButton.pressed.connect(_on_new_pressed)
-	%ExitButton.pressed.connect(func() -> void: get_tree().change_scene_to_file(EXIT_SCENE))
+	%ExitButton.pressed.connect(func() -> void:
+		var flow := get_node_or_null("/root/Flow")
+		if flow != null:
+			flow.to_menu()
+		else:
+			get_tree().change_scene_to_file(EXIT_SCENE))
 	%OutcomeNext.pressed.connect(func() -> void: start_fight())
 	%OutcomeWorkshop.pressed.connect(func() -> void: open_workshop())
 	%OutcomeLadder.pressed.connect(func() -> void: show_ladder())

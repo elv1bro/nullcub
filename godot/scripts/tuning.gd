@@ -398,3 +398,56 @@ const ENTRANCE_CARRY_S := 3.0            # с: от ворот сквозь ме
 const ENTRANCE_HOLD_S := 0.9             # с: кадр на бойце после мембраны (конечности всплывают)
 const ENTRANCE_RELEASE_SPEED := 2.5      # м/с: боец влетает внутрь поля после мембраны
 const ENTRANCE_FAST := 3.0               # первая кнопка — выход быстрее во столько раз, вторая — пропуск
+
+# --- сок удара на языке игры (docs/plan-demo/HIT_FX.md §13, 02.10): обломки по материалу, сколы на детали, цифры-обломки, замедление ---
+# Автор 02.10: «не хватает спецэффектов в бою — в прошлом проекте брызги каждый удар, замедление, фразы, цифры»; буквальный порт веба
+# (цветные шарики, «-25» в 2D, фразы бойцов) — «ерунда, не подходит игре». Поэтому принцип веба (отклик на каждый удар) — формой игры:
+# удар ломает МАТЕРИАЛ ударенной детали (щепки, хлопья краски, искры, сколы кости), след остаётся на детали, урон выпадает 3D-цифрой
+# как обломок, говорят только N0 и табло (LORE_NULL.md «Голоса и тон»). Узел HitJuice — ребёнок Match.
+const JUICE_ENABLED := true             # Match создаёт HitJuice (сколы, цифры, поводы N0) и ставит замедления варианта; false — как до 02.10
+# сколы на детали: оверлей-шейдер на мешах ударенной детали (assets/shaders/doll_marks.gdshader), до JUICE_MARKS_PER_MESH на меш
+const JUICE_MARKS := true
+const JUICE_MARK_MIN_DAMAGE := 2.0      # HP: слабее — без следа (только обломки)
+const JUICE_MARK_R0 := 0.045            # м: радиус следа от 2 HP ...
+const JUICE_MARK_R_PER_HP := 0.004      # ... + на 1 HP ...
+const JUICE_MARK_R_MAX := 0.13          # ... не больше (следы видно с игровой камеры: кукла — четверть кадра)
+const JUICE_MARK_FULL_HP := 14.0        # HP: глубина следа 1 (скол + трещины); слабее — пропорционально, не меньше 0.3
+const JUICE_MARK_MERGE := 0.7           # новый удар ближе радиус × это к старому следу — след растёт (× 1.15, глубина +)
+const JUICE_MARKS_PER_MESH := 8
+const JUICE_WORN_POWER := 2.5           # сумма глубин следов на детали — «вся в сколах» (повод N0 worn)
+# цифры-обломки: 3D-цифра урона (цвет краски жертвы) вылетает из точки удара, падает, отскакивает и лежит
+const JUICE_DIGITS := true
+const JUICE_DIGIT_MIN_DAMAGE := 3.0     # HP: слабее — цифры нет (64 % ударов ботов < 5 HP — иначе россыпь «1» и «2»)
+const JUICE_DIGIT_H0 := 0.22            # м: высота цифры при 3 HP ...
+const JUICE_DIGIT_H_PER_HP := 0.014     # ... + на 1 HP ...
+const JUICE_DIGIT_H_MAX := 0.62         # ... не больше
+const JUICE_DIGIT_GRAVITY := 9.0        # м/с²: тяжелее поля NULL (2.0), чтобы ложились, а не парили
+const JUICE_DIGIT_BOUNCE := 0.35
+const JUICE_DIGIT_REST_S := 4.0         # с лежит, потом уходит в пол
+const JUICE_DIGIT_MAX := 14             # кусков на арене (пул; старый уходит)
+const JUICE_DIGIT_BIG := 15.0           # HP: «большая цифра» — повод N0 digit_big и свечение
+# замедление: варианты на выбор автора (клавиша 0 в бою, HitJuice.time_variant; «−» — цифры). Числа — реальные секунды.
+#   stop   — А «микростоп»: light с 6 HP — стоп 35 мс + 0.55× 0.12 с (не чаще 0.25 с); heavy — 0.4× 0.3 с за стоп-кадром;
+#   cinema — Б «кино на сильных»: light — ничего; heavy — глубокое 0.25× на 0.6 с с долгим выходом 0.35 с (bullet time);
+#   web    — В «как в вебе» (src/lib/hitEffects/dispatch.ts): каждый удар с 4 HP — 0.5× 0.15 с без стопа; heavy — стоп 55 мс + 0.38× 0.3 с;
+#   off    — как до 02.10: только hit stop 80/120 мс, heavy_stop 83 мс, крит и KO.
+const JUICE_TIME_VARIANTS := {
+	"stop": {"title": "А · микростоп", "light_dmg": 6.0, "light_stop": 0.035, "light_scale": 0.55, "light_s": 0.12, "light_ramp": 0.08,
+		"light_gap": 0.25, "heavy_scale": 0.4, "heavy_s": 0.3, "heavy_ramp": 0.15, "heavy_stop": 0.0},
+	"cinema": {"title": "Б · кино на сильных", "light_dmg": INF, "light_stop": 0.0, "light_scale": 1.0, "light_s": 0.0, "light_ramp": 0.0,
+		"light_gap": 0.0, "heavy_scale": 0.25, "heavy_s": 0.6, "heavy_ramp": 0.35, "heavy_stop": 0.0},
+	"web": {"title": "В · как в вебе", "light_dmg": 4.0, "light_stop": 0.0, "light_scale": 0.5, "light_s": 0.15, "light_ramp": 0.05,
+		"light_gap": 0.0, "heavy_scale": 0.38, "heavy_s": 0.3, "heavy_ramp": 0.05, "heavy_stop": 0.055},
+	"off": {"title": "выкл (как было)", "light_dmg": INF, "light_stop": 0.0, "light_scale": 1.0, "light_s": 0.0, "light_ramp": 0.0,
+		"light_gap": 0.0, "heavy_scale": 1.0, "heavy_s": 0.0, "heavy_ramp": 0.0, "heavy_stop": 0.0},
+}
+const JUICE_TIME_ORDER := ["stop", "cinema", "web", "off"]
+const JUICE_TIME_DEFAULT := "stop"
+# табло (N0_VOICE.md п. 3, решение автора 30.09): крит пишет силу удара — «IMPACT 18.4G» (score крита) вместо CRUSHING BLOW!
+const JUICE_IMPACT_CAPTION := true
+# стиль вспышки удара (автор 02.10: «вспышка — детская ерунда, надо серьёзнее»): "serious" — горячее пятно 2–3 кадра, короткий свет
+# в точке удара, на heavy/ko волна воздуха (искажение) и плотная пыль, без белого кадра, цветных колец, искр цвета атакующего, инверсии,
+# послеобразов и линий скорости; "cartoon" — прежний стиль RM (звезда-блик, кольца). Клавиша «=» в бою (HitJuice.impact_style).
+const JUICE_IMPACT_STYLE_DEFAULT := "serious"
+# обводка бойцов цветом игрока (автор 02.10: «сложно прочитать тело на фоне»), клавиша B — DollOutline
+const JUICE_OUTLINE_DEFAULT := true
