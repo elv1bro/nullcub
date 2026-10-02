@@ -6,6 +6,7 @@ extends Node3D
 ## Запуск (из этой папки; нужно окно, headless не рендерит):
 ##   godot --path . --resolution 1600x900 -- shots=all out=/abs/dir       кадры garage-<имя>.png
 ##   godot --path . --resolution 1280x720 -- video=1 out=/abs/frames      кадры перелётов f0000.png… → ffmpeg
+##   doll=0 — без куклы (ящик остаётся пустым)
 
 const ROOM_W := 9.0
 const ROOM_D := 7.0
@@ -63,9 +64,15 @@ var f_body: Font
 var f_mono: Font
 var ceiling_nodes: Array = []
 var plan_nodes: Array = []
+var show_doll := true         # doll=0 — без куклы (пустой ящик)
 
 
 func _ready() -> void:
+	var args := {}
+	for a in OS.get_cmdline_user_args():
+		var kv := a.split("=", true, 1)
+		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
+	show_doll = args.get("doll", "1") != "0"
 	_load_fonts()
 	_build_env()
 	_build_room()
@@ -80,10 +87,6 @@ func _ready() -> void:
 	cam = Camera3D.new()
 	add_child(cam)
 	cam.current = true
-	var args := {}
-	for a in OS.get_cmdline_user_args():
-		var kv := a.split("=", true, 1)
-		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	var out: String = args.get("out", ProjectSettings.globalize_path("res://out"))
 	DirAccess.make_dir_recursive_absolute(out)
 	if args.has("video"):
@@ -543,6 +546,8 @@ func _build_doll() -> void:
 		for sz in [-1, 1]:
 			box(Vector3(0.07, 0.43, 0.07), cp + Vector3(sx * 0.33, 0, sz * 0.33), m(C_WOOD_DARK, 0.85))
 	box(Vector3(0.72, 0.05, 0.08), cp + Vector3(0, 0.0, 0.355), m(C_WOOD_DARK, 0.85), Vector3(0, 0, 38))
+	if not show_doll:
+		return
 	var d := Node3D.new()
 	d.position = Vector3(-1.05, 0.42, -1.3)
 	d.rotation_degrees = Vector3(0, -30, 0)

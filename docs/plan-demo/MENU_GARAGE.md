@@ -84,6 +84,7 @@
 | `garage-into_tv.png` | вход в бой: камера в экране |
 | `garage-plan.png` | план сверху: зоны и точки камер |
 | `garage-moves.mp4` | ролик: перелёты камеры по пунктам и нырок в телевизор |
+| `no-doll/garage-{title,story,workshop}.png` | те же кадры без куклы (ящик пустой) — по просьбе автора 02.10; в остальных кадрах куклы и так не видно |
 
 Перерисовать (нужно окно; на сервере — `xvfb-run`):
 
@@ -91,6 +92,7 @@
 cd docs/plan-demo/menu-garage-blockout
 godot --path . --resolution 1600x900 -- shots=all out=/абс/папка
 godot --path . --resolution 1280x720 -- video=1 out=/абс/кадры   # потом ffmpeg -framerate 24 -i f%04d.png …
+godot --path . --resolution 1600x900 -- shots=all doll=0 out=/абс/папка   # без куклы
 ```
 
 Точки камер и зоны — в таблице `SHOTS` в `garage.gd`. В настоящей сцене меню они переедут как есть.
