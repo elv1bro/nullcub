@@ -78,10 +78,6 @@ const LINES := {
 	"ouch": [
 		{"ru": "Ох. Даже смотреть было больно.", "en": "Oof. That hurt to watch."},
 	],
-	"far": [
-		{"ru": "Соперник в %d метрах. Сам он не прилетит.", "en": "Your opponent is %d metres out. They won't fly over by themselves."},
-		{"ru": "Стрелка у края экрана — это туда. Я бы полетел туда.", "en": "See the arrow at the edge? That way. I'd go that way."},
-	],
 	"quiet": [
 		{"ru": "Это бой или медитация? Спрашиваю для трансляции.", "en": "Is this a fight or a meditation? Asking for the broadcast."},
 		{"ru": "Зрители скучают. Я тоже.", "en": "The crowd's getting bored. So am I."},

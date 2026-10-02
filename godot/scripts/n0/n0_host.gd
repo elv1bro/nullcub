@@ -6,9 +6,10 @@
 ## на сильный удар — на точку удара, на KO — на поверженного; крит отбрасывает и крутит его. Соперник ближе dodge_r —
 ## уворачивается. Точка — внутри bounds() арены. Время игровое: в стоп-кадре удара он замирает вместе с миром.
 ## Реплики: поводы Match (отсчёт, крит, KO, голова, комбо, Sudden Death, ничья, победа по таймеру), удар о мембрану, голосование
-## зрителей (AudienceVote), отлетевшая деталь, долгая тишина, соперник далеко → N0Lines (частота по N0_VOICE.md) → облачко N0Speech.
+## зрителей (AudienceVote), отлетевшая деталь, долгая тишина → N0Lines (частота по N0_VOICE.md) → облачко N0Speech.
 ## Выражение экрана — flash_expression на тех же поводах, к нему — жест тела (N0Drone.GESTURE_OF); скорость и ускорение полёта
-## уходят в N0Drone.set_motion (крылья, ножки), соперник далеко — N0 показывает на него рукой. В бою не участвует: коллизий нет.
+## уходят в N0Drone.set_motion (крылья, ножки). Где соперник и сколько до него — не его дело: это стрелка HUD (offscreen_markers.gd;
+## автор 02.10: «ведущий не может так подсказывать»). В бою не участвует: коллизий нет.
 extends Node
 
 ## Дуга над плечом: радиус (м) и угол от вертикали (градусы) на своей стороне.
@@ -28,9 +29,7 @@ extends Node
 @export var dodge_r := 1.6
 @export var dolls_group := "dolls"
 @export var hit_shocked_dmg := 12.0
-## Мелкие поводы: соперник дальше far_m дольше far_s; без ударов quiet_s.
-@export var far_m := 14.0
-@export var far_s := 5.0
+## Мелкий повод «тишина»: без ударов quiet_s.
 @export var quiet_s := 10.0
 @export var membrane_line_speed := 5.0
 
@@ -46,7 +45,6 @@ var _vel := Vector3.ZERO
 var _theta := 0.0
 var _placed := false
 var _quiet := 0.0
-var _far_t := 0.0
 var _look_pos := Vector3.ZERO
 var _look_t := 0.0
 var _spin_t := -1.0
@@ -108,7 +106,6 @@ func _react(expr: String, secs: float) -> void:
 func _on_phase(p: int) -> void:
 	if p == Match.Phase.COUNTDOWN:
 		_quiet = 0.0
-		_far_t = 0.0
 		_react("happy", 2.0)
 		say("fight")
 
@@ -214,7 +211,7 @@ func _process(delta: float) -> void:
 	_orient(delta, com)
 	_drone.set_motion(_vel, (_vel - prev_vel) / maxf(delta, 1e-4))
 	_drone.talking = speech.typing()
-	_tick_lines(delta, com, opp)
+	_tick_lines(delta)
 
 
 ## Главная кукла: DynamicCamera.primary_doll(); без неё — кукла группы с наименьшим player_index.
@@ -307,23 +304,16 @@ func _orient(delta: float, com: Vector3) -> void:
 
 # --- мелкие поводы по времени ---
 
-func _tick_lines(delta: float, com: Vector3, opp: Node3D) -> void:
+func _tick_lines(delta: float) -> void:
 	var fighting := _match != null and (int(_match.get("phase")) == Match.Phase.FIGHT or int(_match.get("phase")) == Match.Phase.SUDDEN_DEATH)
 	if not fighting:
 		_quiet = 0.0
-		_far_t = 0.0
 		return
 	_quiet += delta
 	if _quiet >= quiet_s:
 		_quiet = 0.0
 		_react("curious", 1.5)
 		say("quiet")
-	var dist := com.distance_to(opp.call("centre_of_mass") as Vector3) if opp != null else 0.0
-	_far_t = _far_t + delta if dist > far_m else 0.0
-	if _far_t >= far_s:
-		_far_t = -far_s   # следующий раз — не раньше чем через 2 × far_s
-		_drone.point_at(opp.call("centre_of_mass"), 2.5)
-		say("far", [int(round(dist))])
 
 
 ## Отлетевшие детали: подписка на Doll.part_detached у каждой куклы (новые куклы после рестарта — тоже).
