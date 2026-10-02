@@ -275,11 +275,24 @@ func _collect_voices() -> void:
 
 
 ## Слои из папок — запасной путь, если скрипт создан без сцены.
+## Слои, собранные из каталогов, — один раз на процесс: директор создаётся на каждый матч и каждое испытание мастерской, а make_layer читает
+## сотни ogg (≈ 64 мс, кэш ресурсов Godot слабый — без владельца потоки перечитываются). AudioStreamRandomizer делится между директорами.
+static var _layer_cache: Dictionary = {}   # слой -> AudioStreamRandomizer (null — каталога нет)
+
+
 func _load_layers_from_dirs() -> void:
 	for layer in LAYER_ORDER:
-		var rs := make_layer(layer)
-		if rs.streams_count > 0:
+		warm_layer(layer)
+		var rs: AudioStreamRandomizer = _layer_cache[layer]
+		if rs != null:
 			layers[layer] = rs
+
+
+## Собрать слой заранее (мастерская греет их по одному за кадр, пока игрок собирает куклу).
+static func warm_layer(layer: String) -> void:
+	if not _layer_cache.has(layer):
+		var made := make_layer(layer)
+		_layer_cache[layer] = made if made.streams_count > 0 else null
 
 
 static func layer_dir(layer: String) -> String:
@@ -500,6 +513,11 @@ func _find_match() -> Node:
 	if p != null and p.is_in_group("match"):
 		return p
 	return get_tree().get_first_node_in_group("match") if is_inside_tree() else null
+
+
+## Повторная привязка к Match / куклам: директор пережил смену кукол (испытание мастерской держит его между запусками).
+func rebind() -> void:
+	_bind()
 
 
 func _bind() -> void:

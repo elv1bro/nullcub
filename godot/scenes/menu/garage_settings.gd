@@ -16,6 +16,7 @@ const ROWS := [
 	{"key": "lang", "title": "ЯЗЫК", "kind": "choice", "values": [], "labels": []},   # значения — найденные файлы locale/*.json (_choices)
 	{"key": "volume", "title": "ГРОМКОСТЬ", "kind": "slider"},
 	{"key": "gfx", "title": "ГРАФИКА", "kind": "choice", "values": ["low", "medium", "high", "ultra"], "labels": ["НИЗКАЯ", "СРЕДНЯЯ", "ВЫСОКАЯ", "УЛЬТРА"]},
+	{"key": "auto_scale", "title": "АВТО-МАСШТАБ", "kind": "bool"},
 	{"key": "fx", "title": "ЭФФЕКТЫ УДАРОВ", "kind": "choice", "values": ["full", "reduced", "off"], "labels": ["ПОЛНЫЕ", "СПОКОЙНЕЕ", "ВЫКЛ"]},
 	{"key": "hud_skin", "title": "ИНТЕРФЕЙС БОЯ", "kind": "choice", "values": ["broadcast", "neon", "led"], "labels": ["ТРАНСЛЯЦИЯ", "НЕОН", "LED-ТАБЛО"]},
 	{"key": "fullscreen", "title": "ПОЛНЫЙ ЭКРАН", "kind": "bool"},
@@ -139,6 +140,8 @@ func get_value(key: String) -> Variant:
 	var gfx := get_node_or_null("/root/Gfx")
 	if key == "gfx" and gfx != null:
 		return gfx.preset
+	if key == "auto_scale" and gfx != null:
+		return gfx.auto_scale   # Gfx.DynRes: снижает разрешение 3D, когда игра не держит ~60 fps (Shift+F9)
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null:
 		return flow.get_setting(key)
@@ -150,6 +153,9 @@ func _set_value(key: String, v: Variant) -> void:
 	var gfx := get_node_or_null("/root/Gfx")
 	if key == "gfx" and gfx != null:
 		gfx.set_preset(String(v))
+		return
+	if key == "auto_scale" and gfx != null:
+		gfx.set_auto_scale(bool(v))
 		return
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null:

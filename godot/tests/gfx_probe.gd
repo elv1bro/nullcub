@@ -61,6 +61,50 @@ func _ready() -> void:
 	g.set_preset("ultra", false)
 	await get_tree().process_frame
 	_check("never_forces_on", not env2.glow_enabled, "пресет не включает то, что арена выключила", env2.glow_enabled)
+	# --- DynRes на синтетических потоках кадров ---
+	var d := DynRes.new()
+	d.target_ms = 1000.0 / 60.0
+	for i in range(60 * 30):
+		d.feed(16.6, true)
+	_check("dyn_steady", is_equal_approx(d.mult, 1.0), "ровные 60 fps 30 с — масштаб не трогается", d.mult)
+	for i in range(60 * 10):
+		d.feed(16.6 if i != 300 else 400.0, true)
+	_check("dyn_spike_ignored", is_equal_approx(d.mult, 1.0), "единичный рывок 400 мс окно не портит", d.mult)
+	var d2 := DynRes.new()
+	var drops := 0
+	for i in range(33 * 12):   # 12 с по 30 мс
+		if d2.feed(30.0, true):
+			drops += 1
+	_check("dyn_drops", d2.mult < 0.8 and d2.mult >= d2.floor_mult and drops >= 3, "устойчивые 33 fps: масштаб снижается шагами (по 2 окна)", [snappedf(d2.mult, 0.001), drops])
+	for i in range(33 * 60):
+		d2.feed(30.0, true)
+	_check("dyn_floor", is_equal_approx(d2.mult, d2.floor_mult), "и не ниже пола", d2.mult)
+	var d3 := DynRes.new()
+	d3.mult = 0.7
+	var up := 0
+	for i in range(60 * 25):   # 25 с хороших кадров
+		if d3.feed(16.0, true):
+			up += 1
+	_check("dyn_recovers", d3.mult > 0.7 and up >= 1, "запас появился — масштаб возвращается (раз в 10 хороших окон)", [snappedf(d3.mult, 0.001), up])
+	var d4 := DynRes.new()
+	d4.mult = 0.7
+	for i in range(60 * 11):   # поднялись
+		d4.feed(16.0, true)
+	var raised := d4.mult
+	for i in range(33 * 3):    # и сразу плохо
+		d4.feed(30.0, true)
+	var after_bad := d4.mult
+	for i in range(60 * 40):   # 40 с хороших кадров — подъёмы заблокированы на 60 с
+		d4.feed(16.0, true)
+	_check("dyn_no_seesaw", raised > 0.7 and after_bad < raised and is_equal_approx(d4.mult, after_bad), "после неудачного возврата подъёмы блокируются (без качелей)", [raised, after_bad, d4.mult])
+	var d5 := DynRes.new()
+	for i in range(33 * 20):
+		d5.feed(30.0, false)
+	_check("dyn_inactive", is_equal_approx(d5.mult, 1.0), "загрузка / хит-стоп (active=false) — окно не копится", d5.mult)
+	_check("suggest_apple", GfxScript.suggested_preset("Apple M2") == "high" and GfxScript.suggested_preset("") == "high", "Apple и неизвестная — high")
+	_check("suggest_intel", GfxScript.suggested_preset("Intel(R) HD Graphics 630") == "low" and GfxScript.suggested_preset("Intel(R) UHD Graphics 630") == "medium"
+		and GfxScript.suggested_preset("Intel(R) Iris(TM) Plus Graphics") == "medium", "Intel HD — low, UHD / Iris — medium")
+	_check("suggest_discrete", GfxScript.suggested_preset("AMD Radeon Pro 5500M") == "high" and GfxScript.suggested_preset("NVIDIA GeForce RTX 3060") == "high", "дискретные — high")
 	# --- cycle идёт по кругу ---
 	g.set_preset("ultra", false)
 	var after: String = g.cycle()

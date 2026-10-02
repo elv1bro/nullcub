@@ -89,6 +89,7 @@
 | `campaign_probe fight=1` | кампания с боем ботов до KO | 15 / 15 |
 | `menu_probe` | тестовое меню (после слияния гаража — 5 / 5) | 4 / 4 |
 | `workshop_probe` | мастерская | 226 OK |
+| `run_perf_gate.sh` | производительность: текстуры, жесты мастерской, рывки боя (docs/plan-demo/PERF_PASS.md) | OK, с `--window` — окно и холодный старт мастерской |
 | `kit_probe` | кит тела | 3497 OK |
 | `body_probe` | модульная кукла | OK |
 | `active_blocks_probe` | активные блоки | 34 / 34 |

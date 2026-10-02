@@ -2096,7 +2096,7 @@ func _update_drag_info(dragging: bool) -> void:
 func _on_mode(m: int) -> void:
 	var test := m == WorkshopBuild.Mode.TEST
 	_close_popups()
-	left.visible = not test
+	_park_left(test)
 	right.visible = not test
 	top_bar.visible = not test
 	test_button.visible = not test
@@ -2125,6 +2125,20 @@ func _on_mode(m: int) -> void:
 	for c in floaters.get_children():
 		c.queue_free()
 	_refresh()
+
+
+## Левая панель (библиотека: ~100 карточек, 2100 узлов) в испытании уводится за край экрана и отключается, а не прячется: повторный
+## показ скрытой панели стоил ~140 мс в кадре «назад к сборке» (перекладка и перерисовка всех карточек), вне экрана рендерер её не рисует.
+const LEFT_PARK_X := -3000.0
+
+
+func _park_left(parked: bool) -> void:
+	var x0 := LEFT_PARK_X if parked else PAD
+	left.offset_left = x0
+	left.offset_right = x0 + LEFT_W
+	left.process_mode = Node.PROCESS_MODE_DISABLED if parked else Node.PROCESS_MODE_INHERIT
+	if parked:
+		get_viewport().gui_release_focus()   # поле поиска не должно ловить клавиши испытания
 
 
 func _on_dummy_hit(amount: float, pos: Vector3, part: String, kind: String) -> void:

@@ -46,6 +46,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	DynamicCamera.user_zoom = 1.0   # проба про автокадрирование, не про масштаб игрока (по умолчанию 1.5×)
 	_lines_rules()
 	await _anim()
 	await _campaign()

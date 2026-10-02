@@ -41,6 +41,7 @@ var _phase_seen: Dictionary = {}
 
 func _ready() -> void:
 	HitJuice.impact_style = "cartoon"   # проба проверяет стиль «мульт» (звезда, кольца, послеобразы); «серьёзный» — juice_probe (§13)
+	DynamicCamera.user_zoom = 1.0   # проба проверяет кадр кинематографа (safe-area), не масштаб игрока (по умолчанию 1.5×)
 	HitJuice.outline_on = false   # обводка бойцов (B) — свои узлы на мешах кукол; проба считает узлы и оверлеи частей
 	pg = (load(SCENE) as PackedScene).instantiate()
 	add_child(pg)

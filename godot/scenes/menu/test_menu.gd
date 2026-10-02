@@ -26,7 +26,7 @@ const ITEMS := [
 const CONTROLS := [
 	"P1 — WASD летать · Shift рывок · Space переворот · мышь: ЛКМ / ПКМ — тяги рук · I / O / P — активные блоки",
 	"P2 — стрелки · правый Ctrl рывок · Enter переворот · Num 1 / 2 / 3 — активные блоки",
-	"Esc — пауза (в гараж) · R — бой заново · 1–9 — сменить площадку · F10 — эффекты ударов full / reduced / off · F9 — качество графики",
+	"Esc — пауза (в гараж) · R — бой заново · 1–9 — сменить площадку · F10 — эффекты ударов full / reduced / off · F9 — качество графики · Shift+F9 — авто-масштаб",
 	"L — панель всех клавиш · = стиль удара · 0 замедление · − цифры урона · B обводка · колесо мыши — масштаб камеры",
 ]
 
@@ -52,7 +52,7 @@ func _ready() -> void:
 	gfx.custom_minimum_size = Vector2(0, 48)
 	gfx.add_theme_font_size_override("font_size", 22)
 	gfx.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	gfx.tooltip_text = tr("Бюджет пикселей 3D, глубина резкости, свечение, мягкость теней. F9 — то же в любой сцене")
+	gfx.tooltip_text = tr("Бюджет пикселей 3D, глубина резкости, свечение, мягкость теней. F9 — то же в любой сцене; Shift+F9 — авто-масштаб (снижает разрешение, если игра не держит 60 fps)")
 	var gfx_text := func() -> void:
 		gfx.text = tr("Качество графики: %s   ▸") % Gfx.label().trim_prefix(tr("Графика: "))
 	gfx.pressed.connect(func() -> void:
