@@ -1473,28 +1473,28 @@ func _update_label() -> void:
 		return
 	var show := show_hints and doll.alive and not doll.external_input
 	var key := "E" if _mouse_enabled() else "RB"
-	var aim := "ЛКМ" if _mouse_enabled() else "стик"
+	var aim := tr("ЛКМ") if _mouse_enabled() else tr("стик")
 	var b: RigidBody3D = null
 	var text := ""
 	var kind := "grab"
 	if held != null and is_instance_valid(held):
 		b = held
 		if held.get_parent() is Doll and (held.get_parent() as Doll).alive:
-			text = "%s — отпустить" % key
+			text = tr("%s — отпустить") % key
 		else:
-			text = "%s+%s — бросок · %s — отпустить" % [aim, key, key]
+			text = tr("%s+%s — бросок · %s — отпустить") % [aim, key, key]
 		kind = "held"
 	elif candidate != null and is_instance_valid(candidate):
 		b = candidate
 		var h := PropHeft.heft_of(candidate)
 		if h == PropHeft.Heft.MEDIUM and not (candidate.get_parent() is Doll):
-			text = "%s — тащить (тяжёлое)" % key
+			text = tr("%s — тащить (тяжёлое)") % key
 			kind = "medium"
 		else:
-			text = "%s — взять" % key
+			text = tr("%s — взять") % key
 	elif blocked_candidate != null and is_instance_valid(blocked_candidate):
 		b = blocked_candidate
-		text = "слишком тяжело"
+		text = tr("слишком тяжело")
 		kind = "heavy"
 	if not show or b == null:
 		_hint.visible = false

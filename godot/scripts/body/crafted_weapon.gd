@@ -205,7 +205,7 @@ func summary() -> Dictionary:
 func _build() -> void:
 	_built = true
 	if blueprint == null:
-		build_errors.append("нет чертежа")
+		build_errors.append(tr("нет чертежа"))
 		return
 	build_errors = blueprint.validate()
 	if not build_errors.is_empty():
@@ -226,7 +226,7 @@ func _build() -> void:
 		var parent_uid := String(n.get("parent", ""))
 		var def := BodyBlueprint.part_def(String(n.get("part", "")))
 		if def == null or def.scene == null:
-			build_errors.append("деталь «%s» не загружена" % n.get("part", ""))
+			build_errors.append(tr("деталь «%s» не загружена") % n.get("part", ""))
 			continue
 		var inst: Node3D = def.scene.instantiate()
 		var sock := inst.get_node_or_null("Socket") as Node3D
@@ -237,19 +237,19 @@ func _build() -> void:
 			rest = GRIP_FRAME * sock_xf.affine_inverse()
 		else:
 			if not parts_info.has(parent_uid):
-				build_errors.append("у «%s» родитель «%s» не собран" % [uid, parent_uid])
+				build_errors.append(tr("у «%s» родитель «%s» не собран") % [uid, parent_uid])
 				inst.free()
 				continue
 			var pinfo: Dictionary = parts_info[parent_uid]
 			var an := _anchor_name(String(n.get("anchor", "")))
 			if not (pinfo["anchors"] as Dictionary).has(an):
-				build_errors.append("у «%s» нет якоря %s" % [pinfo["def"].id, an])
+				build_errors.append(tr("у «%s» нет якоря %s") % [pinfo["def"].id, an])
 				inst.free()
 				continue
 			anchor_meta = (pinfo["anchor_meta"] as Dictionary)[an]
 			var accepts: PackedStringArray = anchor_meta.get("accepts", PackedStringArray())
 			if not accepts.is_empty() and not accepts.has(def.kind):
-				build_errors.append("%s.%s не принимает вид %s" % [pinfo["def"].id, an, def.kind])
+				build_errors.append(tr("%s.%s не принимает вид %s") % [pinfo["def"].id, an, def.kind])
 			var rest_deg := float(n.get("rest_deg", anchor_meta.get("rest_deg", 0.0)))
 			rest = (pinfo["rest"] as Transform3D) * (pinfo["anchors"][an] as Transform3D) \
 				* Transform3D(Basis(Vector3(0, 0, 1), deg_to_rad(rest_deg)), Vector3.ZERO) * sock_xf.affine_inverse()
@@ -359,7 +359,7 @@ func _ordered_nodes() -> Array:
 			else:
 				rest.append(n)
 		if rest.size() == pending.size():
-			build_errors.append("цикл или потерянный родитель в чертеже")
+			build_errors.append(tr("цикл или потерянный родитель в чертеже"))
 			break
 		pending = rest
 	return out

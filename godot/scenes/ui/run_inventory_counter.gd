@@ -53,5 +53,5 @@ func _refresh() -> void:
 		var n := inv.count(id)
 		if n > 0:
 			parts.append("%s %d" % [RunInventory.title(id), n])
-	_text.text = "материалы: " + " · ".join(parts) if not parts.is_empty() else ""
+	_text.text = tr("материалы: %s") % " · ".join(parts) if not parts.is_empty() else ""
 	_text.visible = not parts.is_empty()

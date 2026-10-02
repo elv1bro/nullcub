@@ -38,21 +38,14 @@ const ENEMY_SCENES := {
 	"scrapling": "res://scenes/enemies/enemy_scrapling.tscn",
 	"sweeper": "res://scenes/enemies/enemy_sweeper.tscn",
 }
-## Волны: кто выпадает из желоба (по порядку) и строка систем поля.
+## Волны: кто выпадает из желоба (по порядку); строка систем поля — wave_line(i).
 const WAVES := [
-	{"enemies": ["scrapling", "scrapling"], "line": "SERVICE CREW DISPATCHED: DEBRIS RECOVERY"},
-	{"enemies": ["sweeper", "scrapling", "scrapling"], "line": "FIGHTER RECLASSIFIED AS DEBRIS"},
-	{"enemies": ["sweeper", "scrapling", "scrapling", "sweeper", "scrapling"], "line": "FIELD CLEARANCE PRIORITY 1. ALL CREWS TO THE FLOOR"},
+	{"enemies": ["scrapling", "scrapling"]},
+	{"enemies": ["sweeper", "scrapling", "scrapling"]},
+	{"enemies": ["sweeper", "scrapling", "scrapling", "sweeper", "scrapling"]},
 ]
-const INTRO_LINE := "FIGHTER ON FIELD. NO MATCH SCHEDULED"
-const CLEAR_LINES := ["CREW OFFLINE. SENDING REPLACEMENT", "DEBRIS STILL FIGHTING. ESCALATING"]
-const VICTORY_LINE := "FIELD CLEAR. RETURN TO THE GARAGE"
-const DEFEAT_LINE := "FIGHTER DOWN. DEBRIS RECOVERED"
 const WAVE_COLOUR := Color(1.0, 0.72, 0.25)
-const PART_LINE := "PART CONFISCATED. TROPHY RULE APPLIED"
-const PIT_ENEMY_LINE := "CREW MEMBER DISPOSED. CORRECTLY"
 const PART_LINE_GAP_S := 6.0
-const REATTACH_LINE := "UNAUTHORIZED REPAIR DETECTED"
 const LATE_BARREL := "res://scenes/props/scrap/prop_wooden_barrel.tscn"
 const LATE_BARREL_S := 1.6
 const BOUNDS_CHECK_S := 0.25
@@ -189,7 +182,7 @@ func _setup_player(p: Doll, set_team := false) -> void:
 func _on_player_part_reattached(part_name: String, p: Doll) -> void:
 	_log("part_reattached", {"player": String(p.name), "part": part_name})
 	if wave_state not in ["victory", "defeat"]:
-		_say(REATTACH_LINE)
+		_say(tr("UNAUTHORIZED REPAIR DETECTED"))
 
 
 ## Разборщик открутил деталь игрока — системы поля комментируют (строка раз в PART_LINE_GAP_S, не спамит в куче).
@@ -197,7 +190,7 @@ func _on_player_part_detached(part_name: String, by: Node, p: Doll) -> void:
 	_log("part_detached", {"player": String(p.name), "part": part_name, "by": String(by.name) if by != null else ""})
 	if run_t - _part_line_t >= PART_LINE_GAP_S and wave_state not in ["victory", "defeat"]:
 		_part_line_t = run_t
-		_say(PART_LINE)
+		_say(tr("PART CONFISCATED. TROPHY RULE APPLIED"))
 
 
 func _enemies_parent() -> Node:
@@ -258,7 +251,7 @@ func start_run() -> void:
 	_set_phase(Phase.COUNTDOWN)
 	wave_state = "intro"
 	_log("run_start")
-	_say(INTRO_LINE)
+	_say(tr("FIGHTER ON FIELD. NO MATCH SCHEDULED"))
 	for p in players():
 		hp_changed.emit(p, (p as Doll).hp, (p as Doll).max_hp)
 	enemies_changed.emit(0, 0)
@@ -291,9 +284,9 @@ func start_wave(i: int) -> void:
 	var ch := _chute()
 	if ch != null:
 		ch.force_state(ScrapMachine.State.WARNING)
-	var line := String(w["line"])
+	var line := wave_line(i)
 	_say(line)
-	announce.emit("WAVE %d" % (i + 1), WAVE_COLOUR, "fight")
+	announce.emit(tr("WAVE %d") % (i + 1), WAVE_COLOUR, "fight")
 	wave_started.emit(i, WAVES.size(), line)
 	enemies_changed.emit(enemies_left(), wave_total)
 	_log("wave_start", {"wave": i + 1, "enemies": kinds.duplicate()})
@@ -312,8 +305,8 @@ func _wave_done() -> void:
 			var d := p as Doll
 			d.hp = minf(d.hp + heal_between_waves, d.max_hp)
 			hp_changed.emit(d, d.hp, d.max_hp)
-	_say(CLEAR_LINES[wave_index % CLEAR_LINES.size()])
-	announce.emit("CLEAR!", Color(0.55, 0.95, 0.45), "body")
+	_say(clear_line(wave_index))
+	announce.emit(tr("CLEAR!"), Color(0.55, 0.95, 0.45), "body")
 
 
 func _finish_run(victory: bool) -> void:
@@ -322,9 +315,9 @@ func _finish_run(victory: bool) -> void:
 	wave_state = "victory" if victory else "defeat"
 	result = wave_state
 	spawn_queue.clear()
-	var line := VICTORY_LINE if victory else DEFEAT_LINE
+	var line := tr("FIELD CLEAR. RETURN TO THE GARAGE") if victory else tr("FIGHTER DOWN. DEBRIS RECOVERED")
 	_say(line)
-	announce.emit("FIELD CLEAR!" if victory else "FIGHTER DOWN", Color(1.0, 0.85, 0.3) if victory else Color(0.95, 0.2, 0.15), "fight" if victory else "ko")
+	announce.emit(tr("FIELD CLEAR!") if victory else tr("FIGHTER DOWN"), Color(1.0, 0.85, 0.3) if victory else Color(0.95, 0.2, 0.15), "fight" if victory else "ko")
 	_log("run_over", {"victory": victory, "run_t": snappedf(run_t, 0.01)})
 	_set_phase(Phase.OVER)
 	run_over.emit(victory, line)
@@ -451,7 +444,7 @@ func _on_enemy_ko(_attacker: Node, record: Dictionary, d: Doll) -> void:
 	kills[cause] = int(kills[cause]) + 1
 	if cause == "pit" and run_t - _pit_line_t >= PART_LINE_GAP_S and wave_state in ["spawning", "fight"]:
 		_pit_line_t = run_t
-		_say(PIT_ENEMY_LINE)   # свой же уборщик в провале — системы довольны: мусор к мусору
+		_say(tr("CREW MEMBER DISPOSED. CORRECTLY"))   # свой же уборщик в провале — системы довольны: мусор к мусору
 	if wave_enemies.has(d):
 		wave_down += 1
 	_corpses.append([d, run_t + corpse_s])
@@ -602,6 +595,19 @@ func time_left_s() -> float:
 
 
 # --- строки и журнал ---
+
+## Строка систем поля на старте волны i.
+func wave_line(i: int) -> String:
+	match i:
+		0: return tr("SERVICE CREW DISPATCHED: DEBRIS RECOVERY")
+		1: return tr("FIGHTER RECLASSIFIED AS DEBRIS")
+	return tr("FIELD CLEARANCE PRIORITY 1. ALL CREWS TO THE FLOOR")
+
+
+## Строка в паузе после зачищенной волны (по кругу из двух).
+func clear_line(i: int) -> String:
+	return tr("CREW OFFLINE. SENDING REPLACEMENT") if i % 2 == 0 else tr("DEBRIS STILL FIGHTING. ESCALATING")
+
 
 func _say(text: String) -> void:
 	field_line.emit(text)

@@ -228,7 +228,7 @@ static func draw(ci: CanvasItem, cam: Camera3D, doll: Node, font: Font, opts := 
 				_free_mark(ci, p, down.normalized() if down.length() > 0.5 else Vector2.DOWN, t, k)
 				if labels and not free_tagged:
 					free_tagged = true
-					tags.append([p + Vector2(9.0 * k, 12.0 * k), "болтается" if float(s["load"]) >= 1.0 else "свободно", COL_NEUTRAL, 4])
+					tags.append([p + Vector2(9.0 * k, 12.0 * k), TranslationServer.translate("болтается") if float(s["load"]) >= 1.0 else TranslationServer.translate("свободно"), COL_NEUTRAL, 4])
 				continue
 			var ld := float(s["load"])
 			_stress_dot(ci, p, ld, t, k)
@@ -243,11 +243,11 @@ static func draw(ci: CanvasItem, cam: Camera3D, doll: Node, font: Font, opts := 
 			var sgn := signf(float(tp["dir"])) * (1.0 if side >= 0.0 else -1.0)
 			var end := _tip_arrow(ci, c2, sgn, absf(float(tp["dir"])), inside, t, k)
 			if labels:
-				var word := "крен" if inside else "опрокинется"
+				var word := TranslationServer.translate("крен") if inside else TranslationServer.translate("опрокинется")
 				var w := font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(int(round(LABEL_SIZE * k)), 9)).x + 16.0 * k
 				tags.append([end + Vector2(6.0 * k if sgn > 0.0 else -6.0 * k - w, 2.0 * k), word, COL_WARN if inside else COL_BAD, 1])
 		if labels:
-			tags.append([c2 + Vector2(11.0 * k, 4.0 * k), "ЦМ", COL_AMBER, 0])
+			tags.append([c2 + Vector2(11.0 * k, 4.0 * k), TranslationServer.translate("ЦМ"), COL_AMBER, 0])
 
 	var gh: Variant = opts.get("ghost_com")
 	if gh is Vector3 and not cam.is_position_behind(gh) and not cam.is_position_behind(c):
@@ -267,7 +267,7 @@ static func draw(ci: CanvasItem, cam: Camera3D, doll: Node, font: Font, opts := 
 			var txt := "%s%d" % ["→" if g2.x >= c2.x else "←", dx]
 			if dy != 0:
 				txt += " %s%d" % ["↑" if dy > 0 else "↓", absi(dy)]
-			tags.append([g2 + Vector2(9.0 * k, 14.0 * k), txt + " см", COL_NEUTRAL, 2])
+			tags.append([g2 + Vector2(9.0 * k, 14.0 * k), txt + TranslationServer.translate(" см"), COL_NEUTRAL, 2])
 
 	# бирки по важности (ЦМ, крен, призрак, нагрузка, свободные): следующая, если налезает, съезжает вниз / вверх на строку
 	tags.sort_custom(func(x: Array, y: Array) -> bool: return int(x[3]) < int(y[3]))

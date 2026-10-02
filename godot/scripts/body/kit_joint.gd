@@ -27,8 +27,19 @@ static func is_type(t: String) -> bool:
 	return TYPES.has(t)
 
 
+## Запись типа: title / hint тут русские ключи перевода — игроку их показывают через title_of / hint_of (или tr в месте показа).
 static func info(t: String) -> Dictionary:
 	return TYPES.get(t if t != "" else DEFAULT, TYPES[DEFAULT])
+
+
+## Название типа шарнира на языке игрока.
+static func title_of(t: String) -> String:
+	return String(TranslationServer.translate(String(info(t).get("title", t))))
+
+
+## Подсказка к типу шарнира на языке игрока.
+static func hint_of(t: String) -> String:
+	return String(TranslationServer.translate(String(info(t).get("hint", ""))))
 
 
 static func is_weld(t: String) -> bool:

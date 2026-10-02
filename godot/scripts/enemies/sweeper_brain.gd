@@ -330,6 +330,6 @@ func _near_edge(tp: Vector2) -> bool:
 func _start_telegraph() -> void:
 	_telegraph_t0 = _time
 	go("telegraph")
-	telegraph("SWEEP!", telegraph_s + 0.25, "warn_sweep", Color(1.0, 0.62, 0.18))
+	telegraph(tr("SWEEP!"), telegraph_s + 0.25, "warn_sweep", Color(1.0, 0.62, 0.18))
 	if broom_hand != "":
 		_pose_arm(broom_hand, "windup", 0.2)

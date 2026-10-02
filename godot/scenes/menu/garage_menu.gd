@@ -137,9 +137,12 @@ func _ready() -> void:
 		state = "menu"
 		_show_title(false)
 		set_focus(int(flow.last_item), true)
-		_say("С возвращением в бокс 07! Повтор покажу потом, когда его смонтируют.")
+		_say(tr("С возвращением в бокс 07! Повтор покажу потом, когда его смонтируют."))
 		fade.color.a = 1.0
 		create_tween().tween_property(fade, "color:a", 0.0, 0.5)
+		if bool(flow.reopen_settings):   # перезагрузка после смены языка — снова в настройки, на строку «ЯЗЫК»
+			flow.reopen_settings = false
+			_open_settings()
 
 
 # ---------------------------------------------------------------- состояние и ввод
@@ -162,7 +165,8 @@ func set_focus(i: int, instant := false) -> void:
 	_update_items()
 	if player_doll != null:
 		player_doll.look_toward(LOOK.get(String(it["id"]), LOOK["story"]))
-	_say(String(it["n0"]) % story_rival()["title"] if String(it["id"]) == "story" else String(it["n0"]))
+	var n0 := tr(String(it["n0"]))
+	_say(n0 % story_rival()["title"] if String(it["id"]) == "story" else n0)
 	focus_changed.emit(focus)
 
 
@@ -182,7 +186,7 @@ func activate() -> void:
 		return
 	var go := String(it["go"])
 	if go == "":
-		_say(String(SOON.get(id, "Скоро.")))
+		_say(tr(String(SOON.get(id, "Скоро."))))
 		return
 	state = "leaving"
 	var tw := create_tween()
@@ -201,13 +205,24 @@ func _open_settings() -> void:
 	menu_box.visible = false
 	settings_ui.open()
 	_move_to("SettingsClose", 0.6, 0.03)
-	_say("Крути ручку. Громче — ярче шкала. Я всегда так делаю, когда никто не смотрит.")
+	_say(tr("Крути ручку. Громче — ярче шкала. Я всегда так делаю, когда никто не смотрит."))
 
 
 func _close_settings() -> void:
 	state = "menu"
 	menu_box.visible = true
 	set_focus(focus)
+
+
+## Смена языка: все подписи гаража построены заранее — перезагружаем сцену на том же пункте и открываем настройки.
+func _on_language(_code: String) -> void:
+	var flow := get_node_or_null("/root/Flow")
+	if flow == null:
+		return
+	flow.returning = true
+	flow.reopen_settings = true
+	flow.last_item = focus
+	get_tree().call_deferred("reload_current_scene")
 
 
 ## Громкость из настроек: шкала радио светится ярче (сюжет и интерфейс — одна вещь).
@@ -248,9 +263,9 @@ func _frame_exhibit(i: int) -> void:
 	for l in zone_lights.get("shelf", []):
 		var target := float(l.get_meta("base")) * (2.4 if l == best else 0.7)
 		_tw_exhibit.tween_property(l, "light_energy", target, 0.4)
-	_say(String(["Шлем как новый. Не волнуйся, это ненадолго.", "Не крути шкалу до конца. Просто… не крути.",
-		"Пустое место — самое ценное на полке.", "Прошлый хозяин бокса был хорош. Где он теперь — не знаю.",
-		"Малый кубок. Большие надежды."][i]))
+	_say(String([tr("Шлем как новый. Не волнуйся, это ненадолго."), tr("Не крути шкалу до конца. Просто… не крути."),
+		tr("Пустое место — самое ценное на полке."), tr("Прошлый хозяин бокса был хорош. Где он теперь — не знаю."),
+		tr("Малый кубок. Большие надежды.")][i]))
 
 
 ## Кадр камеры у предмета витрины i: спереди-справа (EXHIBIT_CAM от предмета), предмет на трети кадра слева.
@@ -381,7 +396,7 @@ func _process(delta: float) -> void:
 		if _live_timer > 6.0:
 			_live_timer = 0.0
 			_live_line = (_live_line + 1) % LIVE_LINES.size()
-			_say(LIVE_LINES[_live_line])
+			_say(tr(LIVE_LINES[_live_line]))
 
 
 func _zone_mult(z: String, focus_zone: String) -> float:
@@ -474,9 +489,9 @@ func _build_tv(mode: String) -> void:
 				_tv_anim["slides"] = [a, b]
 				_tv_anim["pics"] = ["tv_live_a.png", "tv_live_d.png", "tv_live_c.png", "tv_live_b.png"]
 				_tv_anim["pic"] = 0
-			_tv_bar("● LIVE", "NULL FIGHTING · МЕСТНАЯ ЛИГА")
-			_tv_score("КЛЁПА", "2 : 1", "ТУМБА", "NULL FIELD 0.20G ↓")
-			_tv_ticker("ОТКРЫТ НАБОР НОВИЧКОВ · БОКСЫ 01–12 · ГРАВИТАЦИЮ ВЫБИРАЮТ ЗРИТЕЛИ · ")
+			_tv_bar(tr("● LIVE"), tr("NULL FIGHTING · МЕСТНАЯ ЛИГА"))
+			_tv_score(tr("КЛЁПА"), "2 : 1", tr("ТУМБА"), tr("NULL FIELD 0.20G ↓"))
+			_tv_ticker(tr("ОТКРЫТ НАБОР НОВИЧКОВ · БОКСЫ 01–12 · ГРАВИТАЦИЮ ВЫБИРАЮТ ЗРИТЕЛИ · "))
 			if not live3d:
 				_tv_n0()      # в живом эфире N0 — 3D-модель в углу кадра (TvBout)
 		"opponent":     # соперник — из кампании (story_rival); картинка есть только у первого (Рогатый, кадр кита)
@@ -486,29 +501,29 @@ func _build_tv(mode: String) -> void:
 			_tv_grad(Color(0.12, 0.04, 0.07), Color(0.42, 0.1, 0.12))
 			if tx > 100.0:
 				_tv_pic(TV_DIR + "tv_opponent.png", Rect2(40, 92, 300, 394))
-			_tv_bar("● LIVE", "МЕСТНАЯ ЛИГА ПРОЙДЕНА" if bool(rv["done"]) else "СЛЕДУЮЩИЙ БОЙ")
+			_tv_bar(tr("● LIVE"), tr("МЕСТНАЯ ЛИГА ПРОЙДЕНА") if bool(rv["done"]) else tr("СЛЕДУЮЩИЙ БОЙ"))
 			_tv_text(rname, Vector2(tx - 6, 140), 104 if rname.length() <= 5 else (84 if rname.length() <= 8 else 60), Color(1.0, 0.85, 0.4), f_head)
-			_tv_text("%s   ·   МЕСТНАЯ ЛИГА" % rv["record"], Vector2(tx, 268), 30, Color(1, 1, 1), f_body)
-			_tv_text("НА КОНУ:", Vector2(tx, 332), 26, Color(0.82, 0.82, 0.82), f_mono)
-			_tv_text("ДЕТАЛЬ" if not bool(rv["done"]) else "ТРОФЕИ", Vector2(tx, 362), 46, Color(0.6, 1.0, 0.95), f_head)
-			_tv_text("VS  БОКС 07", Vector2(tx, 436), 36, Color(1, 1, 1), f_head)
-			_tv_ticker("СЕГОДНЯ В 21:00 · %s ПРОТИВ НОВИЧКА ИЗ БОКСА 07 · ПОБЕДИТЕЛЬ ЗАБИРАЕТ ДЕТАЛЬ · " % rname)
+			_tv_text(tr("%s   ·   МЕСТНАЯ ЛИГА") % rv["record"], Vector2(tx, 268), 30, Color(1, 1, 1), f_body)
+			_tv_text(tr("НА КОНУ:"), Vector2(tx, 332), 26, Color(0.82, 0.82, 0.82), f_mono)
+			_tv_text(tr("ДЕТАЛЬ") if not bool(rv["done"]) else tr("ТРОФЕИ"), Vector2(tx, 362), 46, Color(0.6, 1.0, 0.95), f_head)
+			_tv_text(tr("VS  БОКС 07"), Vector2(tx, 436), 36, Color(1, 1, 1), f_head)
+			_tv_ticker(tr("СЕГОДНЯ В 21:00 · %s ПРОТИВ НОВИЧКА ИЗ БОКСА 07 · ПОБЕДИТЕЛЬ ЗАБИРАЕТ ДЕТАЛЬ · ") % rname)
 		"quick":
 			if not live3d:
 				_tv_img(TV_DIR + "tv_live_c.png")
-			_tv_bar("ВЫСТАВОЧНЫЙ", "ПРЯМОЙ ЭФИР · ПОЛЕ VOID")
-			_tv_score("P1", "VS", "P2", "1–2 ИГРОКА · БОТЫ")
+			_tv_bar(tr("ВЫСТАВОЧНЫЙ"), tr("ПРЯМОЙ ЭФИР · ПОЛЕ VOID"))
+			_tv_score("P1", tr("VS"), "P2", tr("1–2 ИГРОКА · БОТЫ"))
 		"build":
 			_tv_grad(Color(0.04, 0.1, 0.2), Color(0.1, 0.24, 0.4))
 			_tv_grid()
 			_tv_pic(TV_DIR + "tv_build.png", Rect2(40, 92, 300, 394))
-			_tv_bar("КАРТОЧКА БОЙЦА", "БОКС 07")
-			_tv_text("ГРОМИЛА", Vector2(360, 140), 90, Color(1, 1, 1), f_head)
-			_tv_text("МАССА      57 КГ\nДЕТАЛЕЙ    14\nENERGY     91 / 100", Vector2(366, 268), 30, Color(0.75, 0.9, 1.0), f_mono)
+			_tv_bar(tr("КАРТОЧКА БОЙЦА"), tr("БОКС 07"))
+			_tv_text(tr("ГРОМИЛА"), Vector2(360, 140), 90, Color(1, 1, 1), f_head)
+			_tv_text(tr("МАССА      57 КГ\nДЕТАЛЕЙ    14\nENERGY     91 / 100"), Vector2(366, 268), 30, Color(0.75, 0.9, 1.0), f_mono)
 		"replay":
 			_tv_img(TV_DIR + "tv_replay.png")
-			_tv_bar("▶ ПОВТОР", "ТЫ vs ПОЛЕНО · KO 0:47")
-			_tv_text("ТРОФЕЙ: ГОЛОВА-ЯЩИК", Vector2(30, 500), 34, Color(1.0, 0.85, 0.4), f_head, true)
+			_tv_bar(tr("▶ ПОВТОР"), tr("ТЫ vs ПОЛЕНО · KO 0:47"))
+			_tv_text(tr("ТРОФЕЙ: ГОЛОВА-ЯЩИК"), Vector2(30, 500), 34, Color(1.0, 0.85, 0.4), f_head, true)
 		"testcard":
 			var cols := [Color(0.75, 0.75, 0.75), Color(0.75, 0.75, 0), Color(0, 0.75, 0.75), Color(0, 0.75, 0), Color(0.75, 0, 0.75), Color(0.75, 0, 0), Color(0, 0, 0.75)]
 			for i in cols.size():
@@ -516,8 +531,8 @@ func _build_tv(mode: String) -> void:
 			_tv_rect(Vector2(0, 380), Vector2(SCREEN.x, 120), Color(0.05, 0.05, 0.05))
 			for i in 6:
 				_tv_rect(Vector2(84 + i * 100, 400), Vector2(100, 80), Color(i / 5.0, i / 5.0, i / 5.0))
-			_tv_text("НАСТРОЙКА ПРИЁМНИКА", Vector2(140, 150), 56, Color(1, 1, 1), f_head, true)
-			_tv_text("ЯРКОСТЬ: ВИДНЫ ВСЕ 6 КЛЕТОК?", Vector2(120, 520), 28, Color(1, 1, 1), f_mono)
+			_tv_text(tr("НАСТРОЙКА ПРИЁМНИКА"), Vector2(140, 150), 56, Color(1, 1, 1), f_head, true)
+			_tv_text(tr("ЯРКОСТЬ: ВИДНЫ ВСЕ 6 КЛЕТОК?"), Vector2(120, 520), 28, Color(1, 1, 1), f_mono)
 
 
 func _tv_process(delta: float) -> void:
@@ -709,17 +724,17 @@ func _build_ui() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(shade)
 	var x0 := 1920 * 0.655
-	_label(ui, "NULL FIGHTING  ·  BAY 07", Vector2(x0, 80), 18, Color(1.0, 0.7, 0.35, 0.9), f_mono)
+	_label(ui, tr("NULL FIGHTING  ·  BAY 07"), Vector2(x0, 80), 18, Color(1.0, 0.7, 0.35, 0.9), f_mono)
 	_label(ui, "RAGDOLL", Vector2(x0 - 4, 104), 82, Color(1, 1, 1), f_head)
 	_label(ui, "MASTER", Vector2(x0 - 4, 184), 82, ACCENT, f_head)
 	title_box = Control.new()
 	title_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(title_box)
-	_label(title_box, "build · fly · smash", Vector2(x0, 290), 28, Color(0.86, 0.86, 0.86), f_body)
+	_label(title_box, tr("build · fly · smash"), Vector2(x0, 290), 28, Color(0.86, 0.86, 0.86), f_body)
 	_rect(title_box, Vector2(x0, 400), Vector2(470, 2), Color(1, 1, 1, 0.15))
-	press_label = _label(title_box, "НАЖМИ ЛЮБУЮ КНОПКУ", Vector2(x0, 424), 42, Color(1, 1, 1), f_head)
-	_label(title_box, "клавиатура · геймпад · мышь", Vector2(x0, 480), 21, Color(0.7, 0.7, 0.7), f_body)
-	_label(title_box, "МЕСТНАЯ ЛИГА  ·  NULL FIELD 0.20G  ·  demo", Vector2(x0, 1080 - 76), 16, Color(0.6, 0.6, 0.65), f_mono)
+	press_label = _label(title_box, tr("НАЖМИ ЛЮБУЮ КНОПКУ"), Vector2(x0, 424), 42, Color(1, 1, 1), f_head)
+	_label(title_box, tr("клавиатура · геймпад · мышь"), Vector2(x0, 480), 21, Color(0.7, 0.7, 0.7), f_body)
+	_label(title_box, tr("МЕСТНАЯ ЛИГА  ·  NULL FIELD 0.20G  ·  demo"), Vector2(x0, 1080 - 76), 16, Color(0.6, 0.6, 0.65), f_mono)
 	menu_box = Control.new()
 	menu_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(menu_box)
@@ -729,7 +744,7 @@ func _build_ui() -> void:
 		b.flat = true
 		b.focus_mode = Control.FOCUS_NONE
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.text = ITEMS[i]["title"]
+		b.text = tr(String(ITEMS[i]["title"]))
 		b.add_theme_font_override("font", f_head)
 		b.mouse_entered.connect(func() -> void:
 			if state == "menu" and focus != i:
@@ -745,7 +760,7 @@ func _build_ui() -> void:
 		var d2 := _label(menu_box, lines[1], Vector2.ZERO, 19, Color(0.68, 0.68, 0.7), f_body)
 		var bg := _rect(menu_box, Vector2.ZERO, Vector2(560, 150), Color(1.0, 0.55, 0.2, 0.13))
 		var bar := _rect(menu_box, Vector2.ZERO, Vector2(6, 150), ACCENT)
-		var en := _label(menu_box, "ENTER ▸", Vector2.ZERO, 20, ACCENT, f_mono)
+		var en := _label(menu_box, tr("ENTER ▸"), Vector2.ZERO, 20, ACCENT, f_mono)
 		menu_box.move_child(bg, 1)
 		menu_box.move_child(bar, 2)
 		item_nodes.append({"btn": b, "d1": d1, "d2": d2, "bg": bg, "bar": bar, "en": en})
@@ -754,13 +769,14 @@ func _build_ui() -> void:
 	settings_ui.setup(f_head, f_body, f_mono)
 	settings_ui.closed.connect(_close_settings)
 	settings_ui.volume_changed.connect(_on_volume)
+	settings_ui.language_changed.connect(_on_language)
 	trophies_ui = GarageTrophies.new()
 	ui.add_child(trophies_ui)
 	trophies_ui.setup(f_head, f_body, f_mono)
 	trophies_ui.closed.connect(_close_trophies)
 	trophies_ui.selected.connect(_frame_exhibit)
 	_rect(menu_box, Vector2(x0, 1080 - 90), Vector2(500, 1), Color(1, 1, 1, 0.12))
-	_label(menu_box, "↑↓  ВЫБОР     ENTER  ВОЙТИ     ESC  ВЫХОД", Vector2(x0, 1080 - 76), 17, Color(0.65, 0.65, 0.7), f_mono)
+	_label(menu_box, tr("↑↓  ВЫБОР     ENTER  ВОЙТИ     ESC  ВЫХОД"), Vector2(x0, 1080 - 76), 17, Color(0.65, 0.65, 0.7), f_mono)
 	# субтитр эфира
 	sub_panel = PanelContainer.new()
 	var sb := StyleBoxFlat.new()
@@ -792,7 +808,7 @@ func _build_ui() -> void:
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cl.add_child(fade)
-	_say(LIVE_LINES[0])
+	_say(tr(LIVE_LINES[0]))
 
 
 ## Две строки под пунктом: у ИСТОРИИ — прогресс сохранённой кампании (шаг лестницы, соперник, счёт, трофеи), у остальных — ITEMS.
@@ -800,12 +816,12 @@ func item_lines(i: int) -> Array:
 	var it: Dictionary = ITEMS[i]
 	var st := _campaign_state()
 	if String(it["id"]) != "story" or st == null:
-		return [String(it["l1"]), String(it["l2"])]
+		return [tr(String(it["l1"])), tr(String(it["l2"]))]
 	var tier := CampaignLeague.tier_title(st.tier)
 	if st.finished():
-		return ["%s пройдена · %d–%d" % [tier, st.wins, st.losses], "Трофеев на полке: %d" % st.trophies.size()]
-	return ["Продолжить · %s, бой %d из %d" % [tier, st.step + 1, st.ladder().size()],
-		"Соперник: %s · %d–%d · трофеев %d" % [CampaignLeague.rival_title(st.current_rival()).to_upper(), st.wins, st.losses,
+		return [tr("%s пройдена · %d–%d") % [tier, st.wins, st.losses], tr("Трофеев на полке: %d") % st.trophies.size()]
+	return [tr("Продолжить · %s, бой %d из %d") % [tier, st.step + 1, st.ladder().size()],
+		tr("Соперник: %s · %d–%d · трофеев %d") % [CampaignLeague.rival_title(st.current_rival()).to_upper(), st.wins, st.losses,
 			st.trophies.size()]]
 
 
@@ -823,7 +839,7 @@ func story_rival() -> Dictionary:
 	var st := _campaign_state()
 	var r := st.current_rival() if st != null else CampaignLeague.rival(CampaignLeague.LOCAL, 0)
 	if st != null and st.finished():
-		return {"title": "Чемпион", "record": "%d – %d" % [st.wins, st.losses], "preset": "", "done": true}
+		return {"title": tr("Чемпион"), "record": "%d – %d" % [st.wins, st.losses], "preset": "", "done": true}
 	return {"title": CampaignLeague.rival_title(r), "record": "%d – %d" % [st.wins, st.losses] if st != null else "0 – 0",
 		"preset": String(r.get("preset", "")), "done": false}
 

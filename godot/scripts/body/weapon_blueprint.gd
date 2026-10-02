@@ -5,7 +5,10 @@ class_name WeaponBlueprint
 extends Resource
 
 @export var id := ""
-@export var title := ""
+@export var title := "":
+	get:
+		# в .tres лежит русский ключ перевода; " *" — пометка «не сохранено» мастерской (CraftEdit), её не переводим
+		return tr(title.trim_suffix(" *")) + (" *" if title.ends_with(" *") else "")
 @export var nodes: Array[Dictionary] = []
 
 
@@ -20,18 +23,18 @@ func validate() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var root := root_node()
 	if root.is_empty():
-		errors.append("нет корня (рукояти)")
+		errors.append(tr("нет корня (рукояти)"))
 	else:
 		var d := BodyBlueprint.part_def(String(root.get("part", "")))
 		if d == null or d.kind != "handle":
-			errors.append("корень оружия должен быть рукоятью")
+			errors.append(tr("корень оружия должен быть рукоятью"))
 	var uids := {}
 	for n in nodes:
 		uids[String(n.get("uid", ""))] = true
 		if BodyBlueprint.part_def(String(n.get("part", ""))) == null:
-			errors.append("нет детали «%s»" % n.get("part", ""))
+			errors.append(tr("нет детали «%s»") % n.get("part", ""))
 	for n in nodes:
 		var p := String(n.get("parent", ""))
 		if p != "" and not uids.has(p):
-			errors.append("у «%s» нет родителя «%s»" % [n.get("uid", ""), p])
+			errors.append(tr("у «%s» нет родителя «%s»") % [n.get("uid", ""), p])
 	return errors

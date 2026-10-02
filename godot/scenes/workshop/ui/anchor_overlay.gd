@@ -140,7 +140,7 @@ func _draw() -> void:
 			"control":
 				var rc := 26.0 + 2.0 * pulse
 				var label := String(it.get("label", ""))
-				var cc2 := Color(0.35, 0.8, 1.0) if label == "ПКМ" else COL_AMBER
+				var cc2 := Color(0.35, 0.8, 1.0) if bool(it.get("rmb", false)) else COL_AMBER
 				draw_arc(p, rc + 1.5, 0.0, TAU, 40, Color(0, 0, 0, 0.45), 5.0, true)
 				draw_arc(p, rc, 0.0, TAU, 40, cc2, 2.5, true)
 				if label != "" and font != null:

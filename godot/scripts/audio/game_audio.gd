@@ -302,13 +302,13 @@ func set_crowd_on(on: bool, save := true) -> void:
 ## M: музыка вкл/выкл. Возвращает подпись для тоста.
 func toggle_music() -> String:
 	set_music_on(not music_on)
-	return "Музыка: %s" % ("вкл" if music_on else "выкл")
+	return tr("Музыка: %s") % (tr("вкл") if music_on else tr("выкл"))
 
 
 ## N: толпа вкл/выкл.
 func toggle_crowd() -> String:
 	set_crowd_on(not crowd_on)
-	return "Толпа: %s" % ("вкл" if crowd_on else "выкл")
+	return tr("Толпа: %s") % (tr("вкл") if crowd_on else tr("выкл"))
 
 
 func set_volume_db(bus: String, db: float, save := true) -> void:

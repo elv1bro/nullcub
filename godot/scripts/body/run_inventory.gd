@@ -39,8 +39,10 @@ static func shared() -> RunInventory:
 	return _shared
 
 
+## Подпись материала на языке игрока (в MATERIALS — русский ключ перевода).
 static func title(id: String) -> String:
-	return String((MATERIALS.get(id, {}) as Dictionary).get("title", id))
+	var t := String((MATERIALS.get(id, {}) as Dictionary).get("title", id))
+	return String(TranslationServer.translate(t))
 
 
 static func part_of(id: String) -> String:

@@ -83,4 +83,9 @@ static func apply_all(tree: SceneTree) -> void:
 
 ## Подпись для тоста: «FX: FULL».
 static func label() -> String:
-	return "FX: " + current.to_upper()
+	return TranslationServer.translate("FX: ") + title()
+
+
+## Название пресета без «FX: » (панель клавиш).
+static func title() -> String:
+	return current.to_upper()

@@ -66,13 +66,13 @@ func setup(m: MaterialDef) -> void:
 	var dens := HBoxContainer.new()
 	dens.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(dens)
-	var dl := _small("плотность ×%s" % _n(m.density), Color(1.0, 0.8, 0.4) if m.density > 1.05 else (Color(0.65, 0.9, 0.6) if m.density < 0.95 else Color(0.8, 0.76, 0.7)))
+	var dl := _small(tr("плотность ×%s") % _n(m.density), Color(1.0, 0.8, 0.4) if m.density > 1.05 else (Color(0.65, 0.9, 0.6) if m.density < 0.95 else Color(0.8, 0.76, 0.7)))
 	dl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dens.add_child(dl)
 	if m.iron:
-		dens.add_child(_small("магнит", Color(0.62, 0.78, 1.0), false))
-	v.add_child(_small("трение %s · упруг. %s" % [_n(m.friction), _n(m.bounce)], Color(0.74, 0.7, 0.64)))
-	tooltip_text = "%s\n%s\n(дерево = 1; масса детали меняется как новая плотность / прежняя)" % [m.title, CraftEdit.mat_line(m.id)]
+		dens.add_child(_small(tr("магнит"), Color(0.62, 0.78, 1.0), false))
+	v.add_child(_small(tr("трение %s · упруг. %s") % [_n(m.friction), _n(m.bounce)], Color(0.74, 0.7, 0.64)))
+	tooltip_text = tr("%s\n%s\n(дерево = 1; масса детали меняется как новая плотность / прежняя)") % [m.title, CraftEdit.mat_line(m.id)]
 	mouse_entered.connect(func() -> void:
 		_hovered = true
 		_restyle())

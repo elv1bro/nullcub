@@ -388,7 +388,7 @@ func _think(_delta: float) -> void:
 			# издалека — полной тягой, последние 3 м — с ограничением скорости (не таранить жертву и её оружие)
 			want = steer(stand, approach_input) if me.distance_to(stand) > 3.0 else steer_speed(stand, close_speed, approach_input)
 			if (me.distance_to(gp) < 1.9 or me.distance_to(stand) < 0.5) and state_t > 0.25:
-				_start_telegraph("PARTS!" if mode == "part" else "MINE!")
+				_start_telegraph(tr("PARTS!") if mode == "part" else tr("MINE!"), mode != "part")
 		"telegraph":
 			set_alert(1.0)
 			want = steer(me, 0.5)
@@ -420,7 +420,7 @@ func _think(_delta: float) -> void:
 			_lunge_best = minf(_lunge_best, dist)
 			if mode == "part" and dist <= grab_reach_m:
 				if arm.grab(goal_body):
-					telegraph("UNSCREW!", unscrew_s + 0.2, "ratchet", Color(1.0, 0.35, 0.15))
+					telegraph(tr("UNSCREW!"), unscrew_s + 0.2, "ratchet", Color(1.0, 0.35, 0.15))
 					go("unscrew")
 					return
 			elif mode == "weapon" and dist <= steal_reach_m:
@@ -506,11 +506,12 @@ func _nibble_approach(me: Vector2) -> void:
 		_start_telegraph("!")
 
 
-func _start_telegraph(text: String) -> void:
+## mine — надпись про мину (другой цвет): флаг, а не сравнение текста, потому что надпись переводится.
+func _start_telegraph(text: String, mine := false) -> void:
 	_telegraph_t0 = _time
 	go("telegraph")
 	_arms_up(true)
-	telegraph(text, telegraph_s + 0.2, "warn_grab", Color(1.0, 0.42, 0.2) if text != "MINE!" else Color(1.0, 0.8, 0.25))
+	telegraph(text, telegraph_s + 0.2, "warn_grab", Color(1.0, 0.8, 0.25) if mine else Color(1.0, 0.42, 0.2))
 
 
 ## Отбросить украденное оружие в сторону от ближайшего игрока (вверх-вбок): лежит на арене — его можно забрать обратно.

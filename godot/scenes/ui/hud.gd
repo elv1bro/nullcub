@@ -59,6 +59,7 @@ func _ready() -> void:
 	add_to_group("hud")   # HIT_FX §4.1: CritCinematic находит HUD по группе
 	_apply_skin()
 	HudSkin.events.changed.connect(func(_id: String) -> void: _apply_skin())
+	sudden_death_label.text = tr("SUDDEN DEATH")
 	sudden_death_label.visible = false
 	if ko_splatter_alpha >= 0.0:
 		ko_card.set_splatter_alpha(ko_splatter_alpha)

@@ -50,7 +50,7 @@ static func id() -> String:
 
 
 static func label() -> String:
-	return String(LABELS.get(id(), id()))
+	return TranslationServer.translate(String(LABELS.get(id(), id())))
 
 
 ## Сменить скин (сразу во всём HUD); save — записать в user://settings.cfg (чужие ключи файла сохраняются).

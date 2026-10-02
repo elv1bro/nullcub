@@ -100,7 +100,7 @@ func cycle() -> String:
 
 func label() -> String:
 	var info := "%s · %d×%d" % [preset.to_upper(), render_size.x, render_size.y] if render_size != Vector2i.ZERO else preset.to_upper()
-	return "Графика: " + info
+	return tr("Графика: ") + info
 
 
 ## Что сейчас: для проб и отчётов.

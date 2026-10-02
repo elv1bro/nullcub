@@ -258,7 +258,7 @@ func set_weapon_preset(id: String) -> bool:
 	weapon_bp = w
 	_sync_equipped()
 	_rebuild()
-	_say("Верстак: %s" % w.title, COL_INFO)
+	_say(tr("Верстак: %s") % w.title, COL_INFO)
 	return true
 
 
@@ -266,7 +266,7 @@ func clear_weapon() -> void:
 	_push_history()
 	weapon_bp = WeaponBlueprint.new()
 	weapon_bp.id = "custom"
-	weapon_bp.title = "Своё оружие"
+	weapon_bp.title = tr("Своё оружие")
 	blueprint.weapon = null
 	blueprint.weapon_on = ""
 	_rebuild()
@@ -293,13 +293,13 @@ func attach_part(part_id: String, parent_uid: String, anchor: String, target := 
 		_name_custom_body()
 	_rebuild()
 	var d := CraftEdit.part(part_id)
-	var what := "Заменено" if String(r.get("replace", "")) != "" else "Прикручено"
-	var extra := "" if (r.get("drops", PackedStringArray()) as PackedStringArray).is_empty() else " (снято лишнее: %d)" % (r["drops"] as PackedStringArray).size()
+	var what := tr("Заменено") if String(r.get("replace", "")) != "" else tr("Прикручено")
+	var extra := "" if (r.get("drops", PackedStringArray()) as PackedStringArray).is_empty() else tr(" (снято лишнее: %d)") % (r["drops"] as PackedStringArray).size()
 	# фото со старой головы: у новой плашка утоплена / её нет (BodyPaint.face_plate_ok) — фото наклейкой на лицо, та же запись истории
 	var lost := String(r.get("face_lost", ""))
 	if target == "body" and lost != "" and paint != null:
 		var rf := paint.set_face_image(lost, false)
-		extra += " — фото на лице наклейкой" if bool(rf.get("ok", false)) else " — фото снято (у этой головы нет лица)"
+		extra += tr(" — фото на лице наклейкой") if bool(rf.get("ok", false)) else tr(" — фото снято (у этой головы нет лица)")
 	_say("%s: %s%s" % [what, _pname(d) if d != null else part_id, extra], COL_OK)
 	return r
 
@@ -311,7 +311,7 @@ func detach_part(uid: String, target := "body") -> PackedStringArray:
 	if n.is_empty():
 		return PackedStringArray()
 	if target == "body" and String(n.get("parent", "")) == "":
-		_say("Ядро не откручивается — перетащи другое ядро поверх, чтобы заменить", COL_WARN)
+		_say(tr("Ядро не откручивается — перетащи другое ядро поверх, чтобы заменить"), COL_WARN)
 		return PackedStringArray()
 	_push_history()
 	var d := CraftEdit.part(String(n.get("part", "")))
@@ -322,8 +322,8 @@ func detach_part(uid: String, target := "body") -> PackedStringArray:
 	else:
 		_name_custom_body()
 	_rebuild()
-	var tail := "" if gone.size() <= 1 else " и ещё %d" % (gone.size() - 1)
-	_say("Откручено: %s%s" % [_pname(d) if d != null else uid, tail], COL_WARN)
+	var tail := "" if gone.size() <= 1 else tr(" и ещё %d") % (gone.size() - 1)
+	_say(tr("Откручено: %s%s") % [_pname(d) if d != null else uid, tail], COL_WARN)
 	return gone
 
 
@@ -345,12 +345,12 @@ func set_control(uid: String) -> Dictionary:
 	var t := d.title if d != null else String(r["uid"])
 	match String(r.get("code", "")):
 		"cleared":
-			_say("Тяга снята: %s" % t, COL_WARN)
+			_say(tr("Тяга снята: %s") % t, COL_WARN)
 		"rmb":
-			_say("Тяга %s → ПКМ" % t, PULL_COLOURS["rmb"])
+			_say(tr("Тяга %s → ПКМ") % t, PULL_COLOURS["rmb"])
 		_:
 			var e := blueprint.pull_energy(String(r["uid"]))
-			_say("Тяга ЛКМ: %s%s" % [t, "  ·  ⚡%d" % e if e > 0 else "  ·  главная, бесплатно"], PULL_COLOURS["lmb"])
+			_say(tr("Тяга ЛКМ: %s%s") % [t, "  ·  ⚡%d" % e if e > 0 else tr("  ·  главная, бесплатно")], PULL_COLOURS["lmb"])
 	return r
 
 
@@ -378,11 +378,11 @@ func set_pull(uid: String, want: String) -> Dictionary:
 	var t := _pname(CraftEdit.def_of(blueprint, h))
 	match want:
 		"":
-			_say("Тяга снята: %s" % t, COL_WARN)
+			_say(tr("Тяга снята: %s") % t, COL_WARN)
 		"rmb":
-			_say("Тяга ПКМ: %s" % t, PULL_COLOURS["rmb"])
+			_say(tr("Тяга ПКМ: %s") % t, PULL_COLOURS["rmb"])
 		_:
-			_say("Тяга ЛКМ: %s" % t, PULL_COLOURS["lmb"])
+			_say(tr("Тяга ЛКМ: %s") % t, PULL_COLOURS["lmb"])
 	_play_sfx("button", null)
 	return {"ok": true, "uid": h, "code": want}
 
@@ -429,7 +429,7 @@ func set_paint_mat(mat_id: String) -> void:
 		set_paint_tool("")
 		cancel_drag()
 		set_view(View.BODY)
-		_say("Кисть: %s — кликни по детали куклы" % CraftEdit.mat_title(paint_mat), MaterialDef.get_def(paint_mat).swatch.lightened(0.35))
+		_say(tr("Кисть: %s — кликни по детали куклы") % CraftEdit.mat_title(paint_mat), MaterialDef.get_def(paint_mat).swatch.lightened(0.35))
 	_apply_highlights()
 	changed.emit()
 
@@ -446,7 +446,7 @@ func set_joint_pick(jt: String) -> void:
 		set_paint_tool("")
 		cancel_drag()
 		set_view(View.BODY)
-		_say("Шарнир «%s» — кликни по детали куклы" % CraftEdit.joint_title(joint_pick), JointCard.colour(joint_pick))
+		_say(tr("Шарнир «%s» — кликни по детали куклы") % CraftEdit.joint_title(joint_pick), JointCard.colour(joint_pick))
 	_apply_highlights()
 	changed.emit()
 
@@ -498,7 +498,7 @@ func set_material(uid: String, mat_id := "") -> Dictionary:
 		return r
 	if not bool(r["changed"]):
 		last_result = r
-		_say("%s — уже %s" % [what, CraftEdit.mat_title(mat_id)], COL_INFO)
+		_say(tr("%s — уже %s") % [what, CraftEdit.mat_title(mat_id)], COL_INFO)
 		return r
 	_push_history()
 	r = CraftEdit.set_material(blueprint, uid, mat_id)
@@ -507,7 +507,7 @@ func set_material(uid: String, mat_id := "") -> Dictionary:
 	_rebuild()
 	var dm := float(r["mass_after"]) - float(r["mass_before"])
 	var m := MaterialDef.get_def(mat_id)
-	_say("%s: %s → %s  (%.1f → %.1f кг%s)" % [what, CraftEdit.mat_title(String(r["mat_before"])), m.title, float(r["mass_before"]),
+	_say(tr("%s: %s → %s  (%.1f → %.1f кг%s)") % [what, CraftEdit.mat_title(String(r["mat_before"])), m.title, float(r["mass_before"]),
 		float(r["mass_after"]), "" if absf(dm) < 0.05 else ", %+.1f" % dm], m.swatch.lightened(0.35))
 	return r
 
@@ -527,13 +527,13 @@ func set_channel(uid: String, ch: int) -> void:
 	var d := CraftEdit.def_of(blueprint, uid)
 	var what := d.title if d != null else uid
 	if ch == 0:
-		_say("%s — без канала: в бою молчит" % what, COL_INFO)
+		_say(tr("%s — без канала: в бою молчит") % what, COL_INFO)
 	else:
 		var same := 0
 		for m in blueprint.nodes:
 			if ActiveBlocks.channel_of(m) == ch:
 				same += 1
-		_say("%s → канал %d (%s)%s" % [what, ch, ActiveBlocks.key_label("p1", ch), "  · на канале блоков: %d" % same if same > 1 else ""],
+		_say(tr("%s → канал %d (%s)%s") % [what, ch, ActiveBlocks.key_label("p1", ch), tr("  · на канале блоков: %d") % same if same > 1 else ""],
 			COL_OK)
 
 
@@ -549,7 +549,7 @@ func set_joint(uid: String, jt := "") -> Dictionary:
 		return r
 	if not bool(r["changed"]):
 		last_result = r
-		_say("%s — уже «%s»" % [what, CraftEdit.joint_title(jt)], COL_INFO)
+		_say(tr("%s — уже «%s»") % [what, CraftEdit.joint_title(jt)], COL_INFO)
 		return r
 	_push_history()
 	r = CraftEdit.set_joint(blueprint, uid, jt)
@@ -562,9 +562,9 @@ func set_joint(uid: String, jt := "") -> Dictionary:
 	var tail := "" if e == 0 else "  (⚡%+d)" % e
 	if KitJoint.is_weld(jt):
 		var host := CraftEdit.def_of(blueprint, CraftEdit.host_uid(blueprint, uid))
-		_say("Сварка: %s — теперь часть «%s»%s" % [what, host.title if host != null else "", tail], COL_OK)
+		_say(tr("Сварка: %s — теперь часть «%s»%s") % [what, host.title if host != null else "", tail], COL_OK)
 	else:
-		_say("Шарнир «%s» → «%s»: %s%s" % [CraftEdit.joint_title(String(r["joint_before"])), CraftEdit.joint_title(jt), what, tail], COL_OK)
+		_say(tr("Шарнир «%s» → «%s»: %s%s") % [CraftEdit.joint_title(String(r["joint_before"])), CraftEdit.joint_title(jt), what, tail], COL_OK)
 	return r
 
 
@@ -575,11 +575,11 @@ func weapon_to_hand() -> Dictionary:
 		blueprint.weapon = null
 		blueprint.weapon_on = ""
 		_rebuild()
-		_say("Оружие снято с руки", COL_WARN)
+		_say(tr("Оружие снято с руки"), COL_WARN)
 		return {"ok": true, "uid": "", "kind": "", "reason": "", "removed": true}
 	if weapon_bp == null or weapon_bp.nodes.is_empty():
-		_say("Верстак пуст: положи рукоять", COL_WARN)
-		return {"ok": false, "uid": "", "kind": "", "reason": "Верстак пуст"}
+		_say(tr("Верстак пуст: положи рукоять"), COL_WARN)
+		return {"ok": false, "uid": "", "kind": "", "reason": tr("Верстак пуст")}
 	var werr := CraftEdit.structural_errors(weapon_bp)
 	if not werr.is_empty():
 		_say(CraftEdit._capital(werr[0]), COL_BAD)
@@ -594,7 +594,7 @@ func weapon_to_hand() -> Dictionary:
 	_rebuild()
 	var d := CraftEdit.def_of(blueprint, blueprint.weapon_on)
 	var where := d.title if d != null else blueprint.weapon_on
-	_say("%s — в руку: %s%s" % [weapon_bp.title, where, "" if m["kind"] == "hand" else " (на конце детали)"], COL_OK)
+	_say(tr("%s — в руку: %s%s") % [weapon_bp.title, where, "" if m["kind"] == "hand" else tr(" (на конце детали)")], COL_OK)
 	var r := m.duplicate()
 	r["ok"] = true
 	return r
@@ -613,12 +613,12 @@ func _sync_equipped() -> void:
 
 func _name_custom_body() -> void:
 	if not blueprint.title.ends_with("*"):
-		blueprint.title = (blueprint.title if blueprint.title != "" else "Сборка") + " *"
+		blueprint.title = (blueprint.title if blueprint.title != "" else tr("Сборка")) + " *"
 
 
 func _name_custom_weapon() -> void:
 	if not weapon_bp.title.ends_with("*"):
-		weapon_bp.title = (weapon_bp.title if weapon_bp.title != "" else "Оружие") + " *"
+		weapon_bp.title = (weapon_bp.title if weapon_bp.title != "" else tr("Оружие")) + " *"
 
 
 # --- история ---
@@ -646,7 +646,7 @@ func undo() -> bool:
 	_rebuild()
 	mark_dirty()
 	_play_sfx("undo", null)
-	_say("Отменено", COL_INFO)
+	_say(tr("Отменено"), COL_INFO)
 	return true
 
 
@@ -664,7 +664,7 @@ func redo() -> bool:
 	_rebuild()
 	mark_dirty()
 	_play_sfx("redo", null)
-	_say("Возвращено", COL_INFO)
+	_say(tr("Возвращено"), COL_INFO)
 	return true
 
 
@@ -730,7 +730,7 @@ func install_part(part_id: String) -> Dictionary:
 		for t in targets:
 			energy = energy or (bool(t["accepts"]) and String(t["code"]) == "energy")
 		var d := CraftEdit.part(part_id)
-		var why := "не хватает энергии" if energy else "нет свободного подходящего разъёма"
+		var why := tr("не хватает энергии") if energy else tr("нет свободного подходящего разъёма")
 		_say("«%s»: %s" % [d.title if d != null else part_id, why], COL_BAD if energy else COL_WARN)
 		return {"ok": false, "code": "energy" if energy else "no_socket"}
 	var r := attach_part(part_id, "" if bool(best.get("root", false)) else String(best["uid"]), String(best["anchor"]), String(best["target"]))
@@ -744,7 +744,7 @@ func duplicate_part(uid: String, target := "body") -> Dictionary:
 	var bp: Resource = weapon_bp if target == "weapon" else blueprint
 	var n := CraftEdit.find(bp, uid)
 	if n.is_empty() or String(n.get("parent", "")) == "":
-		_say("Ядро не дублируется", COL_WARN)
+		_say(tr("Ядро не дублируется"), COL_WARN)
 		return {"ok": false, "code": "root"}
 	var part_id := String(n["part"])
 	var want := CraftEdit.mirror_anchor(String(n.get("anchor", "")))
@@ -758,7 +758,7 @@ func duplicate_part(uid: String, target := "body") -> Dictionary:
 			best = t
 			break
 	if best.is_empty():
-		_say("Дубликат некуда поставить: нет свободного разъёма (или энергии)", COL_WARN)
+		_say(tr("Дубликат некуда поставить: нет свободного разъёма (или энергии)"), COL_WARN)
 		return {"ok": false, "code": "no_socket"}
 	var r := attach_part(part_id, String(best["uid"]), String(best["anchor"]), target)
 	if bool(r.get("ok", false)) and target == "body":
@@ -784,7 +784,7 @@ func mirror_part(uid: String) -> Dictionary:
 	blueprint = trial
 	_name_custom_body()
 	_rebuild()
-	_say("Зеркально: %d дет.%s" % [int(r["count"]), " (замена)" if String(r.get("replaced", "")) != "" else ""], COL_OK)
+	_say(tr("Зеркально: %d дет.%s") % [int(r["count"]), tr(" (замена)") if String(r.get("replaced", "")) != "" else ""], COL_OK)
 	select_stand(String(r["uid"]))
 	return r
 
@@ -813,7 +813,7 @@ func start_mirror_preview(uid: String, branch := true) -> Dictionary:
 func _mirror_one(trial: BodyBlueprint, uid: String) -> Dictionary:
 	var place := CraftEdit.mirror_place(trial, uid)
 	if place.is_empty():
-		return {"ok": false, "code": "center", "reason": "Деталь по центру — зеркалить некуда (выбери деталь сбоку)"}
+		return {"ok": false, "code": "center", "reason": tr("Деталь по центру — зеркалить некуда (выбери деталь сбоку)")}
 	var src := CraftEdit.find(trial, uid)
 	var part_id := String(src.get("part", ""))
 	var occ := CraftEdit.occupant(trial, String(place[0]), String(place[1]))
@@ -835,7 +835,7 @@ func _mirror_one(trial: BodyBlueprint, uid: String) -> Dictionary:
 	if not errs.is_empty():
 		return {"ok": false, "code": "invalid", "reason": CraftEdit._friendly(errs[0])}
 	if trial.energy_used() > trial.energy_budget:
-		return {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason("зеркальную копию", trial.energy_used(), trial.energy_budget)}
+		return {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason(tr("зеркальную копию"), trial.energy_used(), trial.energy_budget)}
 	return {"ok": true, "code": "ok", "reason": "", "uid": nu, "count": 1, "replaced": occ}
 
 
@@ -854,7 +854,7 @@ func confirm_mirror() -> bool:
 	for m in part_meshes("body", root):
 		fx_events.append({"kind": "flash", "pos": _visual_aabb(m).get_center(), "t0": _time, "text": ""})
 	_play_sfx("mirror", CraftEdit.def_of(blueprint, root))
-	_say("Зеркально: %d дет.%s" % [cnt, " (замена)" if rep_uid != "" else ""], COL_OK)
+	_say(tr("Зеркально: %d дет.%s") % [cnt, tr(" (замена)") if rep_uid != "" else ""], COL_OK)
 	select_stand(root)
 	return true
 
@@ -907,7 +907,7 @@ func confirm_big(uid: String, target: String, key: String) -> bool:
 		_delete_armed = {}
 		return true
 	_delete_armed = {"uid": uid, "until": _time + 3.0}
-	_say("Снять %s и ещё %d дет.? %s ещё раз — да" % [_pname(CraftEdit.def_of(bp, uid)), n - 1, key], COL_WARN)
+	_say(tr("Снять %s и ещё %d дет.? %s ещё раз — да") % [_pname(CraftEdit.def_of(bp, uid)), n - 1, key], COL_WARN)
 	return false
 
 
@@ -955,9 +955,9 @@ func save_as(title: String) -> String:
 	blueprint.title = blueprint.title.trim_suffix(" *")
 	var path := CraftEdit.save(blueprint, CraftEdit.slug(blueprint.title))
 	if path == "":
-		_say("Не удалось сохранить", COL_BAD)
+		_say(tr("Не удалось сохранить"), COL_BAD)
 	else:
-		_say("Сохранено: %s" % blueprint.title, COL_OK)
+		_say(tr("Сохранено: %s") % blueprint.title, COL_OK)
 	changed.emit()
 	return path
 
@@ -965,14 +965,14 @@ func save_as(title: String) -> String:
 func load_path(path: String) -> bool:
 	var bp := CraftEdit.load_saved(path)
 	if bp == null or not CraftEdit.structural_errors(bp).is_empty():
-		_say("Чертёж не читается", COL_BAD)
+		_say(tr("Чертёж не читается"), COL_BAD)
 		return false
 	_push_history()
 	_adopt(bp)
 	clear_selection()
 	_rebuild()
 	_frame_h = 0.0
-	_say("Загружено: %s" % bp.title.trim_suffix(" *"), COL_OK)
+	_say(tr("Загружено: %s") % bp.title.trim_suffix(" *"), COL_OK)
 	return true
 
 
@@ -1330,17 +1330,17 @@ func _say_drag_dead_end() -> void:
 		elif bool(t["accepts"]) and String(t["code"]) == "energy":
 			energy_block = true
 	if not any_ok and energy_block:
-		_say("Не хватает энергии — дальше от ядра дороже, свободно ⚡%d" % energy_free(), COL_BAD)
+		_say(tr("Не хватает энергии — дальше от ядра дороже, свободно ⚡%d") % energy_free(), COL_BAD)
 	elif not any_ok:
-		_say("Некуда поставить: нет свободного подходящего разъёма", COL_WARN)
+		_say(tr("Некуда поставить: нет свободного подходящего разъёма"), COL_WARN)
 
 
 ## Посчитать пробу разъёма t и записать итог в его флаги (ok / code / reason).
 func _apply_trial(t: Dictionary) -> void:
-	var tr := drag_trial(t)
-	t["ok"] = bool(tr.get("ok", false))
-	t["code"] = String(tr.get("code", ""))
-	t["reason"] = String(tr.get("reason", ""))
+	var dt := drag_trial(t)
+	t["ok"] = bool(dt.get("ok", false))
+	t["code"] = String(dt.get("code", ""))
+	t["reason"] = String(dt.get("reason", ""))
 
 
 ## Порция очереди проб в бюджет budget_ms. Очередь кончилась — подсветка пересчитывается и (если просили) говорим, что некуда ставить.
@@ -1427,7 +1427,7 @@ func drag_trial(t: Dictionary = {}) -> Dictionary:
 	var part_id := String(drag["part"])
 	var r := {}
 	if not bool(t["accepts"]):
-		r = {"ok": false, "code": "kind", "reason": "Сюда эта деталь не встанет"}
+		r = {"ok": false, "code": "kind", "reason": tr("Сюда эта деталь не встанет")}
 	elif String(drag["move"]) != "":
 		r = CraftEdit.move_subtree(blueprint, String(drag["move"]), String(t["uid"]), String(t["anchor"]))
 	elif String(drag["copy_of"]) != "" and bool(drag["branch"]):
@@ -1453,7 +1453,7 @@ func drag_trial(t: Dictionary = {}) -> Dictionary:
 			if not errs.is_empty():
 				r = {"ok": false, "code": "invalid", "reason": CraftEdit._friendly(errs[0])}
 			elif tb2.energy_used() > tb2.energy_budget:
-				r = {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason("копию", tb2.energy_used(), tb2.energy_budget)}
+				r = {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason(tr("копию"), tb2.energy_used(), tb2.energy_budget)}
 		r["bp"] = tb2
 	if r.get("bp") is BodyBlueprint:
 		var tbp := r["bp"] as BodyBlueprint
@@ -1478,7 +1478,7 @@ func end_drag(screen_pos: Vector2) -> Dictionary:
 	if i < 0:
 		_refuse({}, "")
 		cancel_drag()
-		return {"ok": false, "reason": "мимо разъёма"}
+		return {"ok": false, "reason": tr("мимо разъёма")}
 	var t: Dictionary = targets[i]
 	if String(t["target"]) == "weapon":
 		cancel_drag()
@@ -1488,7 +1488,7 @@ func end_drag(screen_pos: Vector2) -> Dictionary:
 		return rw
 	if int(drag.get("rev", _rev)) != _rev:   # чертёж поменялся, пока деталь была в руке — пробы устарели
 		cancel_drag()
-		return {"ok": false, "reason": "чертёж изменился"}
+		return {"ok": false, "reason": tr("чертёж изменился")}
 	var move0 := String(drag["move"])
 	if move0 != "":   # отпустил ветку на её же разъём — ничего не делаем (без записи истории и новых uid)
 		var src_n := CraftEdit.find(blueprint, move0)
@@ -1496,18 +1496,18 @@ func end_drag(screen_pos: Vector2) -> Dictionary:
 			cancel_drag()
 			select_stand(move0)
 			return {"ok": false, "code": "same"}
-	var tr := drag_trial(t)
-	if not bool(tr.get("ok", false)):
-		var why := String(tr.get("reason", t.get("reason", "")))
-		_refuse(t, why)
+	var dt := drag_trial(t)
+	if not bool(dt.get("ok", false)):
+		var why := String(dt.get("reason", t.get("reason", "")))
+		_refuse(t, why, String(dt.get("code", t.get("code", ""))))
 		cancel_drag()
 		return {"ok": false, "reason": why}
 	var move := String(drag["move"])
 	cancel_drag()
 	_push_history()
-	blueprint = tr["bp"]
+	blueprint = dt["bp"]
 	_name_custom_body()
-	var nu := String(tr.get("uid", ""))
+	var nu := String(dt.get("uid", ""))
 	_rebuild()
 	if not recent_parts.has(part_id):
 		recent_parts.insert(0, part_id)
@@ -1521,7 +1521,7 @@ func end_drag(screen_pos: Vector2) -> Dictionary:
 		select_stand(nu)
 	# v0.3 §56: встала — экран чистый (щелчок, вспышка и энергия говорят сами); сообщение — только о замене
 	if String(t["replace"]) != "" and move == "":
-		_say("Заменено: %s" % _pname(d), COL_INFO)
+		_say(tr("Заменено: %s") % _pname(d), COL_INFO)
 	return {"ok": true, "uid": nu, "replace": t["replace"]}
 
 
@@ -1710,13 +1710,14 @@ func _snap_fx(target: String, uid: String, t: Dictionary, d: PartDef) -> void:
 
 
 ## Не встала: красный пульс у разъёма и короткая причина, деталь мягко отскакивает.
-func _refuse(t: Dictionary, why: String) -> void:
+## code — код отказа (CraftEdit: "energy" — не влезает в бюджет); по тексту причины отказ не опознаётся (он переведён).
+func _refuse(t: Dictionary, why: String, code: String = "") -> void:
 	if not t.is_empty():
 		var short := why
-		if why.contains("энерги"):
-			short = "Не хватает энергии"
+		if code == "energy":
+			short = tr("Не хватает энергии")
 		elif why == "" or why.length() > 34:
-			short = "Сюда не встанет" if not bool(t.get("accepts", true)) else "Соединение занято"
+			short = tr("Сюда не встанет") if not bool(t.get("accepts", true)) else tr("Соединение занято")
 		fx_events.append({"kind": "refuse", "pos": (t["xf"] as Transform3D).origin, "t0": _time, "text": short})
 	if _carry != null and is_instance_valid(_carry):
 		var c := _carry
@@ -1954,10 +1955,10 @@ func part_info(target: String, uid: String) -> String:
 		return s
 	var mid := blueprint.node_mat(uid)
 	if mid != "":
-		s += " · %s, %.1f кг" % [CraftEdit.mat_title(mid), blueprint.node_mass(uid)]
+		s += tr(" · %s, %.1f кг") % [CraftEdit.mat_title(mid), blueprint.node_mass(uid)]
 	var jt := blueprint.joint_type_of(uid)
 	if jt != "" and jt != KitJoint.DEFAULT:
-		s += " · шарнир «%s»" % CraftEdit.joint_title(jt)
+		s += tr(" · шарнир «%s»") % CraftEdit.joint_title(jt)
 	return s
 
 
@@ -2269,17 +2270,17 @@ func _unhandled_input(event: InputEvent) -> void:
 				if on_body:
 					set_control(String(h["uid"]))
 				else:
-					_say("Кликни по детали бойца (Esc — отмена)", COL_WARN)
+					_say(tr("Кликни по детали бойца (Esc — отмена)"), COL_WARN)
 			elif paint_mat != "":
 				if on_body:
 					set_material(String(h["uid"]))
 				else:
-					_say("Кисть: кликни по детали бойца (Esc / ПКМ — убрать кисть)", COL_WARN)
+					_say(tr("Кисть: кликни по детали бойца (Esc / ПКМ — убрать кисть)"), COL_WARN)
 			elif joint_pick != "":
 				if on_body:
 					set_joint(String(h["uid"]))
 				else:
-					_say("Шарнир: кликни по детали бойца (Esc / ПКМ — отмена)", COL_WARN)
+					_say(tr("Шарнир: кликни по детали бойца (Esc / ПКМ — отмена)"), COL_WARN)
 			elif not h.is_empty() and drag.is_empty():
 				_lmb = {"pos": mb.position, "uid": String(h["uid"]), "target": String(h["target"])}   # клик — выбор, сдвиг — перенос
 			else:
@@ -2338,7 +2339,7 @@ func _unhandled_input(event: InputEvent) -> void:
 						Flow.to_menu()
 					else:
 						_esc_armed_until = _time + 1.5
-						_say("Esc ещё раз — в гараж", COL_INFO)
+						_say(tr("Esc ещё раз — в гараж"), COL_INFO)
 			_:
 				return
 		get_viewport().set_input_as_handled()
@@ -2355,7 +2356,7 @@ func _right_click(r: Dictionary) -> void:
 	if h.is_empty():
 		return
 	hover = {}
-	if confirm_big(String(h["uid"]), String(h["target"]), "ПКМ"):
+	if confirm_big(String(h["uid"]), String(h["target"]), tr("ПКМ")):
 		unscrew(String(h["uid"]), String(h["target"]))
 
 
@@ -2377,7 +2378,7 @@ func _start_move(l: Dictionary, pos: Vector2) -> void:
 	var n := CraftEdit.find(blueprint, uid)
 	if n.is_empty() or String(n.get("parent", "")) == "":
 		select_stand(uid)
-		_say("Ядро не переносится — перетащи другое ядро поверх", COL_WARN)
+		_say(tr("Ядро не переносится — перетащи другое ядро поверх"), COL_WARN)
 		return
 	clear_selection()
 	begin_drag(String(n["part"]), pos, {"move": uid, "start": l["pos"]})
@@ -2389,7 +2390,7 @@ func duplicate_to_hand(uid: String, target := "body", branch := false) -> bool:
 		return bool(duplicate_part(uid, target).get("ok", false))
 	var n := CraftEdit.find(blueprint, uid)
 	if n.is_empty() or String(n.get("parent", "")) == "":
-		_say("Ядро не дублируется", COL_WARN)
+		_say(tr("Ядро не дублируется"), COL_WARN)
 		return false
 	branch = branch and CraftEdit.subtree(blueprint, uid).size() > 1
 	begin_drag(String(n["part"]), get_viewport().get_mouse_position(), {"copy_of": uid, "branch": branch, "sticky": true})
@@ -2508,7 +2509,7 @@ func start_test() -> bool:
 	feel.camera = test_cam
 	mode_changed.emit(mode)
 	changed.emit()
-	_say("Испытание! Esc / Tab — назад к сборке", COL_OK)
+	_say(tr("Испытание! Esc / Tab — назад к сборке"), COL_OK)
 	return true
 
 
@@ -2549,7 +2550,7 @@ func stop_test() -> void:
 	mode = Mode.BUILD
 	_rebuild()
 	mode_changed.emit(mode)
-	_say("Назад к сборке", COL_INFO)
+	_say(tr("Назад к сборке"), COL_INFO)
 
 
 # =================================================================== сводки для UI
@@ -2575,13 +2576,13 @@ func body_stats() -> Dictionary:
 	var ctrl := ""
 	var pulls: PackedStringArray = []
 	for c in blueprint.control:
-		pulls.append("%s (%s)" % [uid_title("body", c), "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"])
+		pulls.append("%s (%s)" % [uid_title("body", c), tr("ПКМ") if blueprint.control_rmb.has(c) else tr("ЛКМ")])
 	ctrl = ", ".join(pulls)
 	var weapon_line := ""
 	if blueprint.weapon != null:
 		var m := _mount()
 		weapon_line = "%s → %s" % [(blueprint.weapon as WeaponBlueprint).title.trim_suffix(" *"),
-			uid_title("body", String(m["uid"])) if String(m["uid"]) != "" else "некуда"]
+			uid_title("body", String(m["uid"])) if String(m["uid"]) != "" else tr("некуда")]
 	var accel := ref / maxf(mass + wmass, 0.1)
 	return {"title": blueprint.title, "energy": blueprint.energy_used(), "budget": blueprint.energy_budget, "mass": mass,
 		"weapon_mass": wmass, "bodies": bodies, "parts": blueprint.nodes.size(), "accel": accel, "ref": ref,
@@ -2589,20 +2590,20 @@ func body_stats() -> Dictionary:
 		"warnings": CraftEdit.warnings(blueprint)}
 
 
-## Что станет со сборкой, если отпустить деталь в руке (v0.3 §19: справа «было → станет»): {mass, energy, accel, parts, ok, reason};
+## Что станет со сборкой, если отпустить деталь в руке (v0.3 §19: справа «было → станет»): {mass, energy, accel, parts, ok, code, reason};
 ## {} — не над разъёмом тела.
 func drag_preview() -> Dictionary:
 	var t := drag_target()
 	if t.is_empty() or String(t["target"]) != "body":
 		return {}
-	var tr := drag_trial(t)
-	if tr.is_empty():
+	var dt := drag_trial(t)
+	if dt.is_empty():
 		return {}
 	var s := body_stats()
 	var ref := float(s["ref"])
-	var bp: BodyBlueprint = tr.get("bp") if tr.get("bp") is BodyBlueprint else null
-	var mass := float(tr.get("mass_after", s["mass"]))
-	return {"ok": bool(tr.get("ok", false)), "reason": String(tr.get("reason", "")), "mass": mass, "energy": int(tr.get("energy_after", s["energy"])),
+	var bp: BodyBlueprint = dt.get("bp") if dt.get("bp") is BodyBlueprint else null
+	var mass := float(dt.get("mass_after", s["mass"]))
+	return {"ok": bool(dt.get("ok", false)), "code": String(dt.get("code", "")), "reason": String(dt.get("reason", "")), "mass": mass, "energy": int(dt.get("energy_after", s["energy"])),
 		"parts": bp.nodes.size() if bp != null else int(s["parts"]), "accel": ref / maxf(mass + float(s["weapon_mass"]), 0.1)}
 
 
@@ -2645,10 +2646,10 @@ func drag_com() -> Variant:
 		sm += rb.mass
 	# что встанет: деталь, копия ветки или вся переносимая ветка — масса по пробному чертежу, в точке призрака (приближённо)
 	var add := 0.0
-	var tr := drag_trial(t)
-	var tbp: BodyBlueprint = tr.get("bp") if tr.get("bp") is BodyBlueprint else null
-	if tbp != null and String(tr.get("uid", "")) != "":
-		for u in CraftEdit.subtree(tbp, String(tr["uid"])):
+	var dt := drag_trial(t)
+	var tbp: BodyBlueprint = dt.get("bp") if dt.get("bp") is BodyBlueprint else null
+	if tbp != null and String(dt.get("uid", "")) != "":
+		for u in CraftEdit.subtree(tbp, String(dt["uid"])):
 			add += tbp.node_mass(u)
 	else:
 		var d := CraftEdit.part(String(drag["part"]))
@@ -2658,7 +2659,7 @@ func drag_com() -> Variant:
 	return acc / sm if sm > 0.0 else null
 
 
-## Оружие верстака: цифры CraftedWeapon.summary() и слова. [{label, value, word, frac}] + ошибки.
+## Оружие верстака: цифры CraftedWeapon.summary() и слова. [{id (mass / com / length / spin / damage — для иконок), label, value, value_short (без «от хвата»), word, frac}] + ошибки.
 func weapon_stats() -> Dictionary:
 	var out := {"title": weapon_bp.title if weapon_bp != null else "", "rows": [], "errors": CraftEdit.friendly_errors(weapon_bp),
 		"empty": weapon_bp == null or weapon_bp.nodes.is_empty(), "equipped": blueprint.weapon != null}
@@ -2672,16 +2673,16 @@ func weapon_stats() -> Dictionary:
 	var mult := float(s["damage_mult"])
 	var bal := com / maxf(ln, 0.01)
 	out["rows"] = [
-		{"label": "Масса", "value": "%.1f кг" % mass, "frac": mass / 8.0,
-			"word": "пёрышко" if mass < 1.5 else ("в самый раз" if mass < 3.0 else ("тяжёлое" if mass < 5.0 else ("очень тяжёлое" if mass < 7.5 else "неподъёмное")))},
-		{"label": "Центр масс", "value": "%.2f м от хвата" % com, "frac": bal,
-			"word": "у руки: послушное" if bal < 0.35 else ("посередине" if bal < 0.62 else "в головке: тянет в замах")},
-		{"label": "Длина", "value": "%.2f м" % ln, "frac": ln / 2.0,
-			"word": "короткое" if ln < 0.5 else ("среднее" if ln < 0.95 else "длинное: большой рычаг")},
-		{"label": "Раскрутка", "value": "%.2f кг·м²" % inertia, "frac": inertia / 3.0,
-			"word": "вертится легко" if inertia < 0.15 else ("надо раскрутить" if inertia < 0.6 else ("туго, зато не остановить" if inertia < 1.6 else "мельница"))},
-		{"label": "Урон", "value": "×%.2f" % mult, "frac": (mult - 1.0) / 1.5,
-			"word": "тупое — бьёт массой" if mult < 1.05 else ("шипы / крюк" if mult < 1.3 else "лезвие: режет")},
+		{"id": "mass", "label": tr("Масса"), "value": tr("%.1f кг") % mass, "value_short": tr("%.1f кг") % mass, "frac": mass / 8.0,
+			"word": tr("пёрышко") if mass < 1.5 else (tr("в самый раз") if mass < 3.0 else (tr("тяжёлое") if mass < 5.0 else (tr("очень тяжёлое") if mass < 7.5 else tr("неподъёмное"))))},
+		{"id": "com", "label": tr("Центр масс"), "value": tr("%.2f м от хвата") % com, "value_short": tr("%.2f м") % com, "frac": bal,
+			"word": tr("у руки: послушное") if bal < 0.35 else (tr("посередине") if bal < 0.62 else tr("в головке: тянет в замах"))},
+		{"id": "length", "label": tr("Длина"), "value": tr("%.2f м") % ln, "value_short": tr("%.2f м") % ln, "frac": ln / 2.0,
+			"word": tr("короткое") if ln < 0.5 else (tr("среднее") if ln < 0.95 else tr("длинное: большой рычаг"))},
+		{"id": "spin", "label": tr("Раскрутка"), "value": tr("%.2f кг·м²") % inertia, "value_short": tr("%.2f кг·м²") % inertia, "frac": inertia / 3.0,
+			"word": tr("вертится легко") if inertia < 0.15 else (tr("надо раскрутить") if inertia < 0.6 else (tr("туго, зато не остановить") if inertia < 1.6 else tr("мельница")))},
+		{"id": "damage", "label": tr("Урон"), "value": "×%.2f" % mult, "value_short": "×%.2f" % mult, "frac": (mult - 1.0) / 1.5,
+			"word": tr("тупое — бьёт массой") if mult < 1.05 else (tr("шипы / крюк") if mult < 1.3 else tr("лезвие: режет"))},
 	]
 	out["bodies"] = int(s["bodies"])
 	out["summary"] = s
@@ -2691,13 +2692,13 @@ func weapon_stats() -> Dictionary:
 ## Подсказка внизу экрана по состоянию.
 func hint_text() -> String:
 	if mode == Mode.TEST:
-		return "WASD — лететь · Shift — ускорение · Space + A/D — раскрутка · ЛКМ / ПКМ — тяги · E — схватить / бросить · R — заново · Esc — к сборке"
+		return tr("WASD — лететь · Shift — ускорение · Space + A/D — раскрутка · ЛКМ / ПКМ — тяги · E — схватить / бросить · R — заново · Esc — к сборке")
 	if paint_tool != "":
 		return paint.hint_text()
 	if paint != null and paint.tab_open and view == View.BODY:
-		return "Выбери инструмент на полке «Покраска»: баллончик, трафарет, наклейка, фото…   ·   R — повернуть стенд"
+		return tr("Выбери инструмент на полке «Покраска»: баллончик, трафарет, наклейка, фото…   ·   R — повернуть стенд")
 	if control_pick:
-		return "Клик по детали — тяга ЛКМ (золотая), ещё клик — ПКМ (голубая), ещё — снять   ·   первая бесплатно, дальше ⚡ × вынос   ·   Esc / ПКМ — готово"
+		return tr("Клик по детали — тяга ЛКМ (золотая), ещё клик — ПКМ (голубая), ещё — снять   ·   первая бесплатно, дальше ⚡ × вынос   ·   Esc / ПКМ — готово")
 	if paint_mat != "":
 		var mt := CraftEdit.mat_title(paint_mat)
 		if not hover.is_empty() and String(hover["target"]) == "body":
@@ -2706,10 +2707,10 @@ func hint_text() -> String:
 			if not bool(c["ok"]):
 				return String(c["reason"])
 			if not bool(c["changed"]):
-				return "%s — уже %s   ·   Esc / ПКМ — убрать кисть" % [uid_title("body", hu), mt]
-			return "Клик — %s: %s → %s, %.1f → %.1f кг   ·   Esc / ПКМ — убрать кисть" % [uid_title("body", hu),
+				return tr("%s — уже %s   ·   Esc / ПКМ — убрать кисть") % [uid_title("body", hu), mt]
+			return tr("Клик — %s: %s → %s, %.1f → %.1f кг   ·   Esc / ПКМ — убрать кисть") % [uid_title("body", hu),
 				CraftEdit.mat_title(String(c["mat_before"])), mt, float(c["mass_before"]), float(c["mass_after"])]
-		return "Кисть «%s»: кликни по детали куклы — перекрасить (масса × новая плотность / прежняя)   ·   Esc / ПКМ — убрать кисть" % mt
+		return tr("Кисть «%s»: кликни по детали куклы — перекрасить (масса × новая плотность / прежняя)   ·   Esc / ПКМ — убрать кисть") % mt
 	if joint_pick != "":
 		var jt := CraftEdit.joint_title(joint_pick)
 		if not hover.is_empty() and String(hover["target"]) == "body":
@@ -2718,38 +2719,38 @@ func hint_text() -> String:
 			if not bool(cj["ok"]):
 				return String(cj["reason"])
 			if not bool(cj["changed"]):
-				return "%s — уже «%s»   ·   Esc / ПКМ — отмена" % [uid_title("body", hu2), jt]
-			return "Клик — %s: «%s» → «%s»   ·   Esc / ПКМ — отмена" % [uid_title("body", hu2),
+				return tr("%s — уже «%s»   ·   Esc / ПКМ — отмена") % [uid_title("body", hu2), jt]
+			return tr("Клик — %s: «%s» → «%s»   ·   Esc / ПКМ — отмена") % [uid_title("body", hu2),
 				CraftEdit.joint_title(String(cj["joint_before"])), jt]
-		return "Шарнир «%s»: кликни по детали — так она будет держаться за родителя   ·   Esc / ПКМ — отмена" % jt
+		return tr("Шарнир «%s»: кликни по детали — так она будет держаться за родителя   ·   Esc / ПКМ — отмена") % jt
 	if not drag.is_empty():
 		var t := drag_target()
 		if not t.is_empty() and not bool(t["ok"]):
 			return String(t["reason"])
 		if not t.is_empty() and String(t["replace"]) != "":
-			return "Отпусти — заменить «%s»   ·   ПКМ / Esc — отмена" % uid_title(String(t["target"]), String(t["replace"]))
+			return tr("Отпусти — заменить «%s»   ·   ПКМ / Esc — отмена") % uid_title(String(t["target"]), String(t["replace"]))
 		if bool(drag["sticky"]):
-			return "Кликни у зелёного якоря — поставить   ·   ПКМ / Esc — убрать деталь"
-		return "Поднеси к зелёному якорю и отпусти   ·   ПКМ / Esc — отмена"
+			return tr("Кликни у зелёного якоря — поставить   ·   ПКМ / Esc — убрать деталь")
+		return tr("Поднеси к зелёному якорю и отпусти   ·   ПКМ / Esc — отмена")
 	if not hover.is_empty():
 		var bp: Resource = weapon_bp if String(hover["target"]) == "weapon" else blueprint
 		var n := CraftEdit.subtree(bp, String(hover["uid"])).size()
 		var more := "" if n <= 1 else " (+%d)" % (n - 1)
-		return "%s   ·   ПКМ — открутить%s   ·   Q — тяги" % [part_info(String(hover["target"]), String(hover["uid"])), more]
+		return tr("%s   ·   ПКМ — открутить%s   ·   Q — тяги") % [part_info(String(hover["target"]), String(hover["uid"])), more]
 	if view == View.WEAPON:
-		return "Тащи рукоять, навершие или мод на верстак   ·   ПКМ по детали — снять   ·   «В руку» — дать кукле   ·   Tab — к телу"
-	return "Тащи деталь с полки на светящийся якорь   ·   ПКМ — открутить   ·   Q — тяги   ·   Ctrl+Z — отмена   ·   T — испытать"
+		return tr("Тащи рукоять, навершие или мод на верстак   ·   ПКМ по детали — снять   ·   «В руку» — дать кукле   ·   Tab — к телу")
+	return tr("Тащи деталь с полки на светящийся якорь   ·   ПКМ — открутить   ·   Q — тяги   ·   Ctrl+Z — отмена   ·   T — испытать")
 
 
 ## Короткая подсказка по ситуации (v0.3 §36: вместо постоянной строки клавиш) — одна строка, «клавиша — действие»; ничего не
 ## выбрано и ничего в руке — пусто (подсказку для первого раза показывает UI, пока игрок не поставил первую деталь).
 func context_help() -> String:
 	if mode == Mode.TEST:
-		return "WASD — движение  ·  ЛКМ / ПКМ — тяги  ·  R — заново  ·  Esc — к сборке"
+		return tr("WASD — движение  ·  ЛКМ / ПКМ — тяги  ·  R — заново  ·  Esc — к сборке")
 	if paint_tool != "" or (paint != null and paint.tab_open and view == View.BODY):
 		return paint.hint_text() if paint_tool != "" else ""
 	if control_pick:
-		return "Клик по детали — тяга ЛКМ → ПКМ → снять  ·  Esc — готово"
+		return tr("Клик по детали — тяга ЛКМ → ПКМ → снять  ·  Esc — готово")
 	if paint_mat != "":
 		return _tool_help(CraftEdit.check_material(blueprint, String(hover.get("uid", "")), paint_mat) if _hover_body() else {},
 			"mat", CraftEdit.mat_title(paint_mat))
@@ -2757,7 +2758,7 @@ func context_help() -> String:
 		return _tool_help(CraftEdit.check_joint(blueprint, String(hover.get("uid", "")), joint_pick) if _hover_body() else {},
 			"joint", CraftEdit.joint_title(joint_pick))
 	if not pending_mirror.is_empty():
-		return "Enter или клик по копии — поставить  ·  Esc — отмена"
+		return tr("Enter или клик по копии — поставить  ·  Esc — отмена")
 	if not drag.is_empty():
 		var t := drag_target()
 		if not t.is_empty():
@@ -2765,15 +2766,15 @@ func context_help() -> String:
 			if bad != "":
 				return bad
 			if String(t["replace"]) != "":
-				return "ЛКМ — заменить: %s  ·  ПКМ — отменить" % _pname(CraftEdit.def_of(weapon_bp if String(t["target"]) == "weapon" else blueprint,
+				return tr("ЛКМ — заменить: %s  ·  ПКМ — отменить") % _pname(CraftEdit.def_of(weapon_bp if String(t["target"]) == "weapon" else blueprint,
 					String(t["replace"])))
-		return "ЛКМ — установить  ·  ПКМ — отменить"
+		return tr("ЛКМ — установить  ·  ПКМ — отменить")
 	if String(selected.get("source", "")) == "stand":
 		if String(selected["target"]) == "weapon":
-			return "D — копия  ·  Del — снять  ·  Tab — к бойцу"
-		return "D — копия  ·  M — зеркало  ·  Del — снять  ·  тащи — перенести"
+			return tr("D — копия  ·  Del — снять  ·  Tab — к бойцу")
+		return tr("D — копия  ·  M — зеркало  ·  Del — снять  ·  тащи — перенести")
 	if String(selected.get("source", "")) == "shelf":
-		return "Тащи на бойца  ·  D — в руку"
+		return tr("Тащи на бойца  ·  D — в руку")
 	return ""
 
 
@@ -2787,16 +2788,17 @@ func context_help_bad() -> bool:
 
 ## Причина отказа коротко: энергия — «Не хватает энергии: будет 104 / 100», иначе первая фраза причины.
 func _drag_refusal(t: Dictionary) -> String:
-	var tr := drag_trial(t) if String(t["target"]) == "body" else {}
-	var ok := bool(t["ok"]) and (tr.is_empty() or bool(tr.get("ok", false)))
+	var dt := drag_trial(t) if String(t["target"]) == "body" else {}
+	var ok := bool(t["ok"]) and (dt.is_empty() or bool(dt.get("ok", false)))
 	if ok:
 		return ""
-	var why := String(tr.get("reason", t.get("reason", ""))) if not tr.is_empty() else String(t.get("reason", ""))
-	if why.contains("энерги"):
-		var e := int(tr.get("energy_after", 0)) if not tr.is_empty() else 0
-		return "Не хватает энергии: будет %d / %d" % [e, blueprint.energy_budget] if e > 0 else "Не хватает энергии"
+	var why := String(dt.get("reason", t.get("reason", ""))) if not dt.is_empty() else String(t.get("reason", ""))
+	var code := String(dt.get("code", t.get("code", ""))) if not dt.is_empty() else String(t.get("code", ""))
+	if code == "energy":
+		var e := int(dt.get("energy_after", 0)) if not dt.is_empty() else 0
+		return tr("Не хватает энергии: будет %d / %d") % [e, blueprint.energy_budget] if e > 0 else tr("Не хватает энергии")
 	if why == "":
-		return "Сюда не встанет"
+		return tr("Сюда не встанет")
 	var dot := why.find(". ")
 	return why.substr(0, dot) if dot > 0 else why
 
@@ -2808,16 +2810,16 @@ func _hover_body() -> bool:
 ## Кисть материала / шарнир: над деталью — «Плечо: дерево → железо, 2.0 → 4.4 кг» или отказ; иначе — что делать.
 func _tool_help(c: Dictionary, kind: String, what: String) -> String:
 	if c.is_empty():
-		return "Кликай по деталям бойца — «%s»  ·  Esc — положить" % what
+		return tr("Кликай по деталям бойца — «%s»  ·  Esc — положить") % what
 	var hu := String(hover.get("uid", ""))
 	if not bool(c.get("ok", false)):
 		var why := String(c.get("reason", ""))
 		var dot := why.find(". ")
 		return why.substr(0, dot) if dot > 0 else why
 	if not bool(c.get("changed", true)):
-		return "%s — уже «%s»" % [uid_title("body", hu), what]
+		return tr("%s — уже «%s»") % [uid_title("body", hu), what]
 	if kind == "mat":
-		return "%s: %s → %s, %.1f → %.1f кг" % [uid_title("body", hu), CraftEdit.mat_title(String(c["mat_before"])).to_lower(),
+		return tr("%s: %s → %s, %.1f → %.1f кг") % [uid_title("body", hu), CraftEdit.mat_title(String(c["mat_before"])).to_lower(),
 			what.to_lower(), float(c["mass_before"]), float(c["mass_after"])]
 	return "%s: «%s» → «%s»" % [uid_title("body", hu), CraftEdit.joint_title(String(c["joint_before"])), what]
 
@@ -2890,7 +2892,7 @@ func overlay_items() -> Array:
 			if not ms.is_empty():
 				var box := _visual_aabb(ms[0])
 				out.append({"pos": cam.unproject_position(box.get_center()), "dir": Vector2.ZERO, "state": "control",
-					"label": "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"})
+					"rmb": blueprint.control_rmb.has(c), "label": tr("ПКМ") if blueprint.control_rmb.has(c) else tr("ЛКМ")})
 	# активные блоки: значок клавиши канала у каждого (docs/plan-demo/ACTIVE_BLOCKS.md) — когда видны (channels_visible)
 	if target == "body" and stand != null and channels_visible():
 		for n in blueprint.nodes:
@@ -2934,7 +2936,7 @@ func _com_items(cam: Camera3D, out: Array) -> void:
 			var dx := ((g as Vector3).x - c0.x) * 100.0
 			var dy := ((g as Vector3).y - c0.y) * 100.0
 			out.append({"pos": cam.unproject_position(g), "from": cam.unproject_position(c0), "dir": Vector2.ZERO, "state": "com_ghost",
-				"label": "ЦМ %s%.0f / %s%.0f см" % ["→" if dx >= 0 else "←", absf(dx), "↑" if dy >= 0 else "↓", absf(dy)]})
+				"label": tr("ЦМ %s%.0f / %s%.0f см") % ["→" if dx >= 0 else "←", absf(dx), "↑" if dy >= 0 else "↓", absf(dy)]})
 
 
 func _overlay_item(cam: Camera3D, xf: Transform3D, state: String, label: String) -> Dictionary:

@@ -10,7 +10,10 @@ const FIXED_KINDS := ["deco", "armor"]
 
 @export var id := ""
 ## Подпись в мастерской.
-@export var title := ""
+@export var title := "":
+	get:
+		# в .tres лежит русский ключ перевода; " *" — пометка «не сохранено» мастерской (CraftEdit), её не переводим
+		return tr(title.trim_suffix(" *")) + (" *" if title.ends_with(" *") else "")
 ## Вид детали — одно из KINDS; якоря принимают детей по виду (Anchor.meta accepts).
 @export var kind := "limb"
 @export var scene: PackedScene

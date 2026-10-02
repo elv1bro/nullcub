@@ -135,6 +135,7 @@ func _run() -> void:
 	var flow := get_node_or_null("/root/Flow")
 	var at_s := _at_spot("SettingsClose")
 	_check("settings_open", menu.state == "settings" and menu.settings_ui.visible and at_s[0] < 0.01, [menu.state, snappedf(at_s[0], 0.001)])
+	await _key(KEY_DOWN)   # строка 0 — «ЯЗЫК» (смена языка перезагружает гараж), громкость — строка 1
 	var v0: float = float(flow.get_setting("volume")) if flow != null else 0.8
 	await _key(KEY_RIGHT)
 	var v1: float = float(flow.get_setting("volume")) if flow != null else 0.0
@@ -149,7 +150,7 @@ func _run() -> void:
 	var g1: String = String(gfx.preset) if gfx != null else ""
 	await _key(KEY_LEFT)
 	var g2: String = String(gfx.preset) if gfx != null else ""
-	_check("settings_gfx", gfx != null and menu.settings_ui.row == 1 and g1 != g0 and g2 == g0, [g0, g1, g2])
+	_check("settings_gfx", gfx != null and menu.settings_ui.row == 2 and g1 != g0 and g2 == g0, [g0, g1, g2])
 	await _key(KEY_ESCAPE)
 	await _settle()
 	_check("settings_back", menu.state == "menu" and menu.focus == 4 and not menu.settings_ui.visible, [menu.state, menu.focus])

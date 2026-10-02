@@ -14,21 +14,20 @@ signal rematch
 signal main_menu
 
 const PortraitScene: PackedScene = preload("res://scenes/ui/portrait.tscn")
-## [подпись, ключ stats, формат, меньше = лучше]
+## [ключ stats, формат, меньше = лучше]; подпись — stat_title(ключ)
 const STAT_ROWS := [
-	["KO", "kos", "%d", false],
-	["DAMAGE DEALT", "damage_dealt", "%.0f", false],
-	["DAMAGE TAKEN", "damage_taken", "%.0f", true],
-	["HARDEST HIT", "hardest_hit", "%.1f", false],
-	["AIR TIME", "air_time", "%.1f s", false],
-	["MAX COMBO", "combo_max", "%d", false],
-	["COMBO SCORE", "combo_score", "%d", false],
+	["kos", "%d", false],
+	["damage_dealt", "%.0f", false],
+	["damage_taken", "%.0f", true],
+	["hardest_hit", "%.1f", false],
+	["air_time", "%.1f s", false],
+	["combo_max", "%d", false],
+	["combo_score", "%d", false],
 ]
 const MEDAL_ICONS := {
 	"Winner": "👑", "Hardest Hit": "💥", "Frequent Flyer": "✈️", "Showman": "😂", "Wall Inspector": "🧱",
 	"Weapon Master": "🔨", "Survivor": "🪳", "Self Destruction": "💀", "Acrobat": "🤸",
 }
-const PLACE_NAMES := ["1ST", "2ND", "3RD", "4TH"]
 const GOLD := Color(1.0, 0.85, 0.4, 1.0)
 
 @onready var winner_name: Label = $Left/WinnerRow/WinnerName
@@ -46,6 +45,10 @@ const GOLD := Color(1.0, 0.85, 0.4, 1.0)
 
 func _ready() -> void:
 	visible = false
+	rematch_btn.text = tr("REMATCH")
+	menu_btn.text = tr("MAIN MENU")
+	medals_title.text = tr("MEDALS")
+	($Frame/Body/Title as Label).text = tr("MATCH RESULTS")
 	_apply_skin()
 	HudSkin.events.changed.connect(func(_id: String) -> void: _apply_skin())
 	rematch_btn.pressed.connect(func() -> void: rematch.emit())
@@ -80,6 +83,42 @@ func _apply_skin() -> void:
 	rematch_btn.add_theme_stylebox_override("pressed", normal)
 	for c in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color"]:
 		rematch_btn.add_theme_color_override(c, ink)
+
+
+## Подписи таблицы — ключи tr() литералами (чтобы i18n.py их видел).
+static func stat_title(key: String) -> String:
+	match key:
+		"kos": return TranslationServer.translate("KO")
+		"damage_dealt": return TranslationServer.translate("DAMAGE DEALT")
+		"damage_taken": return TranslationServer.translate("DAMAGE TAKEN")
+		"hardest_hit": return TranslationServer.translate("HARDEST HIT")
+		"air_time": return TranslationServer.translate("AIR TIME")
+		"combo_max": return TranslationServer.translate("MAX COMBO")
+		"combo_score": return TranslationServer.translate("COMBO SCORE")
+	return key
+
+
+## Название медали (код — ключ results.medals, его же ищут Match и пробы).
+static func medal_title(medal: String) -> String:
+	match medal:
+		"Hardest Hit": return TranslationServer.translate("Hardest Hit")
+		"Frequent Flyer": return TranslationServer.translate("Frequent Flyer")
+		"Wall Inspector": return TranslationServer.translate("Wall Inspector")
+		"Weapon Master": return TranslationServer.translate("Weapon Master")
+		"Self Destruction": return TranslationServer.translate("Self Destruction")
+		"Winner": return TranslationServer.translate("Winner")
+		"Showman": return TranslationServer.translate("Showman")
+		"Survivor": return TranslationServer.translate("Survivor")
+		"Acrobat": return TranslationServer.translate("Acrobat")
+	return medal
+
+
+static func place_name(rank: int) -> String:
+	match clampi(rank, 0, 3):
+		0: return TranslationServer.translate("1ST")
+		1: return TranslationServer.translate("2ND")
+		2: return TranslationServer.translate("3RD")
+	return TranslationServer.translate("4TH")
 
 
 static func player_of(doll: Object) -> int:
@@ -136,10 +175,10 @@ func show_results(winner: Object, results: Dictionary) -> void:
 	if winner != null:
 		winner_name.text = label_of(winner)
 		winner_name.add_theme_color_override("font_color", colour_of(winner).lightened(0.25))
-		wins_text.text = "WINS!"
+		wins_text.text = tr("WINS!")
 		crown.visible = true
 	else:
-		winner_name.text = "DRAW!"
+		winner_name.text = tr("DRAW!")
 		winner_name.add_theme_color_override("font_color", Color(0.95, 0.93, 0.9))
 		wins_text.text = ""
 		crown.visible = false
@@ -159,7 +198,7 @@ func show_results(winner: Object, results: Dictionary) -> void:
 		var place := Label.new()
 		place.theme_type_variation = &"DisplayLabel"
 		place.add_theme_font_size_override("font_size", 22)
-		place.text = PLACE_NAMES[mini(rank, PLACE_NAMES.size() - 1)]
+		place.text = place_name(rank)
 		place.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		if rank == 0:
 			place.add_theme_color_override("font_color", GOLD)
@@ -182,8 +221,8 @@ func show_results(winner: Object, results: Dictionary) -> void:
 		h.custom_minimum_size = Vector2(150, 0)
 		stats_grid.add_child(h)
 	for row in STAT_ROWS:
-		var key: String = row[1]
-		var lower_better: bool = row[3]
+		var key: String = row[0]
+		var lower_better: bool = row[2]
 		var best: float = INF if lower_better else -INF
 		var vals: Array = []
 		for d in places:
@@ -194,13 +233,13 @@ func show_results(winner: Object, results: Dictionary) -> void:
 				best = minf(best, float(v)) if lower_better else maxf(best, float(v))
 		var l := Label.new()
 		l.theme_type_variation = &"StatLabel"
-		l.text = row[0]
+		l.text = stat_title(key)
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stats_grid.add_child(l)
 		for v in vals:
 			var c := Label.new()
 			c.theme_type_variation = &"StatValue"
-			c.text = _fmt(row[2], v)
+			c.text = _fmt(row[1], v)
 			c.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			c.custom_minimum_size = Vector2(150, 0)
 			if v != null and places.size() > 1 and is_equal_approx(float(v), best) and float(v) != 0.0:
@@ -216,7 +255,7 @@ func show_results(winner: Object, results: Dictionary) -> void:
 		h.add_theme_constant_override("separation", 10)
 		var t := Label.new()
 		t.theme_type_variation = &"StatLabel"
-		t.text = "%s %s" % [MEDAL_ICONS.get(medal_name, "🏅"), String(medal_name).to_upper()]
+		t.text = "%s %s" % [MEDAL_ICONS.get(medal_name, "🏅"), medal_title(String(medal_name)).to_upper()]
 		h.add_child(t)
 		var who := Label.new()
 		who.theme_type_variation = &"StatValue"

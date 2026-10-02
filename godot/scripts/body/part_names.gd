@@ -199,12 +199,12 @@ const WEAPON_HEAD_WORDS := {"Blade": "лезвие", "Hammer": "молот", "Ma
 const WEAPON_KINDS := ["weapon_head", "mod", "handle", "chain"]
 
 
-## Имя детали для игрока: NAMES, иначе title без скобок и хвоста « · …» (новая деталь до записи в NAMES), иначе id (title пуст).
+## Имя детали для игрока (NAMES — русские ключи перевода, на выходе переводятся): NAMES, иначе title без скобок и хвоста « · …» (новая деталь до записи в NAMES), иначе id (title пуст).
 static func of(d: PartDef) -> String:
 	if d == null:
 		return ""
 	if NAMES.has(d.id):
-		return String(NAMES[d.id])
+		return String(TranslationServer.translate(String(NAMES[d.id])))
 	var clean := clean_title(d.title)
 	return clean if clean != "" else d.id
 
@@ -212,7 +212,7 @@ static func of(d: PartDef) -> String:
 ## То же по id; детали нет в data/body/parts — сам id (чертёж со ссылкой на удалённую деталь: validate() всё равно откажет).
 static func of_id(part_id: String) -> String:
 	if NAMES.has(part_id):
-		return String(NAMES[part_id])
+		return String(TranslationServer.translate(String(NAMES[part_id])))
 	var d := BodyBlueprint.part_def(part_id) if part_id != "" else null
 	return of(d) if d != null else part_id
 
@@ -235,41 +235,53 @@ static func clean_title(title: String) -> String:
 
 ## Строка поиска каталога (нижний регистр, слова через пробел): имя, исходный title, вид, материал и теги — рука / нога по размеру,
 ## колющая / дробящая по форме, шипы, оружие. По ней фильтр находит «Пружинная нога» и по «пружина», и по «нога», и по «железо».
+## Слова берутся и на языке игрока (в английском — «spring leg», «iron», «junk»), и русские исходники: игрок с английским
+## интерфейсом, набравший «хлам», тоже найдёт деталь.
 static func search_text(d: PartDef) -> String:
 	if d == null:
 		return ""
 	var words: PackedStringArray = [of(d), d.title]
-	words.append(String(CraftEdit.KIND_TITLES.get(d.kind, "")))
+	if NAMES.has(d.id):
+		_add_word(words, String(NAMES[d.id]))
+	_add_word(words, String(CraftEdit.KIND_TITLES.get(d.kind, "")))
 	var md := MaterialDef.get_def(d.base_mat) if d.base_mat != "" else null
 	if md != null:
 		words.append(md.title)
 		if d.material == "iron":
-			words.append(String(MATERIAL_WORDS["iron"]))   # ржавчина, крашеный лист — всё равно железо (магнит Свалки)
+			_add_word(words, String(MATERIAL_WORDS["iron"]))   # ржавчина, крашеный лист — всё равно железо (магнит Свалки)
 	else:
-		words.append(String(MATERIAL_WORDS.get(d.material, "")))
+		_add_word(words, String(MATERIAL_WORDS.get(d.material, "")))
 	match d.kind:
 		"core":
-			words.append("тело торс")
+			_add_word(words, "тело торс")
 		"limb":
-			words.append(String(LIMB_WORDS.get(d.name_prefix, "")))
+			_add_word(words, String(LIMB_WORDS.get(d.name_prefix, "")))
 		"hand":
-			words.append("рука")
+			_add_word(words, "рука")
 		"foot":
-			words.append("нога")
+			_add_word(words, "нога")
 		"joint", "chain":
-			words.append("шарнир")
+			_add_word(words, "шарнир")
 		"weapon_head":
-			words.append(String(WEAPON_HEAD_WORDS.get(d.name_prefix, "")))
+			_add_word(words, String(WEAPON_HEAD_WORDS.get(d.name_prefix, "")))
 	if WEAPON_KINDS.has(d.kind):
-		words.append("оружие")
-	words.append(String(PROFILE_WORDS.get(d.hit_profile, "")))
+		_add_word(words, "оружие")
+	_add_word(words, String(PROFILE_WORDS.get(d.hit_profile, "")))
 	if d.id.contains("spike") or d.id.contains("nails"):
-		words.append("шипы")
+		_add_word(words, "шипы")
 	if d.id.begins_with("junk_"):
-		words.append("хлам")
+		_add_word(words, "хлам")
 	var out: PackedStringArray = []
 	for w in words:
 		var s := w.strip_edges().to_lower()
 		if s != "" and not out.has(s):
 			out.append(s)
 	return " ".join(out)
+
+
+## Слово поиска: перевод на язык игрока и русский исходник (если они разные).
+static func _add_word(words: PackedStringArray, ru: String) -> void:
+	if ru == "":
+		return
+	words.append(String(TranslationServer.translate(ru)))
+	words.append(ru)

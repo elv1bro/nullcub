@@ -299,7 +299,7 @@ func _lines_rules() -> void:
 	var all_ru := true
 	for k in N0Lines.LINES:
 		for v in N0Lines.LINES[k]:
-			all_ru = all_ru and String(v.get("ru", "")) != "" and String(v.get("en", "")) != ""
+			all_ru = all_ru and String(v) != "" and String(Loc.table("en").get(v, "")) != ""   # ru в коде, en в locale/en.json
 	var no_hint := not N0Lines.LINES.has("far")
 	_check("lines_rules", a and b and c and d and e and g and all_ru and no_hint, "%s" % [[a, b, c, d, e, g, all_ru, no_hint]])
 

@@ -9,8 +9,11 @@ extends Control
 
 signal closed
 signal volume_changed(v: float)
+## Язык сменился: тексты гаража уже построены на старом языке — гараж перезагружает сцену (GarageMenu._on_language).
+signal language_changed(code: String)
 
 const ROWS := [
+	{"key": "lang", "title": "ЯЗЫК", "kind": "choice", "values": [], "labels": []},   # значения — найденные файлы locale/*.json (_choices)
 	{"key": "volume", "title": "ГРОМКОСТЬ", "kind": "slider"},
 	{"key": "gfx", "title": "ГРАФИКА", "kind": "choice", "values": ["low", "medium", "high", "ultra"], "labels": ["НИЗКАЯ", "СРЕДНЯЯ", "ВЫСОКАЯ", "УЛЬТРА"]},
 	{"key": "fx", "title": "ЭФФЕКТЫ УДАРОВ", "kind": "choice", "values": ["full", "reduced", "off"], "labels": ["ПОЛНЫЕ", "СПОКОЙНЕЕ", "ВЫКЛ"]},
@@ -28,7 +31,7 @@ const CONTROLS := [
 	"В бою   R — заново · Esc — пауза · F9 — графика · F10 — эффекты",
 ]
 const ACCENT := Color(1.0, 0.55, 0.2)
-const ROW_H := 56.0
+const ROW_H := 50.0   # было 56: строка «ЯЗЫК» добавила ряд, нижняя подсказка управления иначе уходит за кадр
 
 var row := 0
 var _x0 := 1920.0 * 0.655
@@ -46,7 +49,7 @@ func setup(f_head: Font, f_body: Font, f_mono: Font) -> void:
 	_f_mono = f_mono
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_lbl("НАСТРОЙКИ", Vector2(_x0, _y0 - 22), 50, Color(1, 1, 1), _f_head)
+	_lbl(tr("НАСТРОЙКИ"), Vector2(_x0, _y0 - 22), 50, Color(1, 1, 1), _f_head)
 	for i in ROWS.size():
 		var y := _y0 + 60 + i * ROW_H
 		var bg := ColorRect.new()
@@ -73,7 +76,7 @@ func setup(f_head: Font, f_body: Font, f_mono: Font) -> void:
 			row = i
 			change(1))
 		add_child(hit)
-		var t := _lbl(ROWS[i]["title"], Vector2(_x0, y - 2), 30, Color(0.85, 0.83, 0.8), _f_head)
+		var t := _lbl(tr(String(ROWS[i]["title"])), Vector2(_x0, y - 2), 30, Color(0.85, 0.83, 0.8), _f_head)
 		var v := _lbl("", Vector2(_x0 + 300, y + 4), 22, Color(1, 1, 1), _f_mono)
 		var arrows: Array = []
 		for d in [-1, 1]:
@@ -92,9 +95,9 @@ func setup(f_head: Font, f_body: Font, f_mono: Font) -> void:
 			arrows.append(a)
 		_rows.append({"bg": bg, "bar": bar, "title": t, "value": v, "arrows": arrows})
 	var cy := _y0 + 60 + ROWS.size() * ROW_H + 24
-	_lbl("УПРАВЛЕНИЕ", Vector2(_x0, cy), 24, ACCENT, _f_head)
+	_lbl(tr("УПРАВЛЕНИЕ"), Vector2(_x0, cy), 24, ACCENT, _f_head)
 	for k in CONTROLS.size():
-		_lbl(CONTROLS[k], Vector2(_x0, cy + 40 + k * 30), 18, Color(0.78, 0.78, 0.8), _f_body)
+		_lbl(tr(CONTROLS[k]), Vector2(_x0, cy + 40 + k * 30), 18, Color(0.78, 0.78, 0.8), _f_body)
 	visible = false
 
 
@@ -140,7 +143,7 @@ func get_value(key: String) -> Variant:
 	if flow != null:
 		return flow.get_setting(key)
 	return _local.get(key, {"volume": 0.8, "gfx": "high", "fx": "full", "fullscreen": false, "vsync": true, "subtitles": true,
-		"hud_skin": "broadcast"}.get(key))
+		"hud_skin": "broadcast", "lang": "ru"}.get(key))
 
 
 func _set_value(key: String, v: Variant) -> void:
@@ -153,6 +156,9 @@ func _set_value(key: String, v: Variant) -> void:
 		flow.set_setting(key, v)
 	else:
 		_local[key] = v
+		var loc := get_node_or_null("/root/Loc")
+		if key == "lang" and loc != null:
+			loc.set_language(String(v))
 
 
 ## Изменить текущую строку: dir = +1 / −1 (громкость шагом 10 %, выбор по кругу, флажок — переключить, НАЗАД — закрыть).
@@ -165,9 +171,12 @@ func change(dir: int) -> void:
 			_set_value(key, v)
 			volume_changed.emit(v)
 		"choice":
-			var vals: Array = r["values"]
+			var vals: Array = _choices(r)["values"]
 			var k := vals.find(String(get_value(key)))
 			_set_value(key, vals[(k + dir + vals.size()) % vals.size()])
+			if key == "lang":
+				language_changed.emit(String(get_value(key)))
+				return
 		"bool":
 			_set_value(key, not bool(get_value(key)))
 		"action":
@@ -192,13 +201,28 @@ func _refresh() -> void:
 				var cells := int(round(v * 10.0))
 				txt = "▮".repeat(cells) + "▯".repeat(10 - cells) + "  %d%%" % int(round(v * 100.0))
 			"choice":
-				var k: int = (r["values"] as Array).find(String(get_value(key)))
-				txt = String(r["labels"][max(k, 0)])
+				var ch := _choices(r)
+				var k: int = (ch["values"] as Array).find(String(get_value(key)))
+				txt = String(ch["labels"][max(k, 0)])
+				if key != "lang":
+					txt = tr(txt)
 			"bool":
-				txt = "ВКЛ" if bool(get_value(key)) else "ВЫКЛ"
+				txt = tr("ВКЛ") if bool(get_value(key)) else tr("ВЫКЛ")
 		(n["value"] as Label).text = txt
 		for a in n["arrows"]:
 			(a as Button).visible = String(r["kind"]) != "action"
+
+
+## Варианты строки-выбора: для языка — найденные файлы locale/*.json с родными названиями (Русский, English, …), иначе из ROWS.
+func _choices(r: Dictionary) -> Dictionary:
+	if String(r["key"]) == "lang":
+		var loc := get_node_or_null("/root/Loc")
+		var codes: Array = loc.codes if loc != null else ["ru", "en"]
+		var labels: Array = []
+		for c in codes:
+			labels.append(loc.language_name(c) if loc != null else c)
+		return {"values": codes, "labels": labels}
+	return r
 
 
 func _lbl(s: String, pos: Vector2, px: int, c: Color, font: Font) -> Label:

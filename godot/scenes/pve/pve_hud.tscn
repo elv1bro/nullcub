@@ -173,5 +173,4 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.75)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
 theme_override_constants/outline_size = 7
 theme_override_font_sizes/font_size = 22
-text = "P1: WASD + Shift (рывок) + Space (переворот), ЛКМ — рука к курсору, E — схватить / бросить
-R — заново    F2 — кооп (P2: стрелки + правый Ctrl + Enter)    F10 — эффекты    Esc — пауза    своя оторванная деталь — коснись её"
+text = "P1: WASD + Shift (рывок) + Space (переворот), ЛКМ — рука к курсору, E — схватить / бросить\nR — заново    F2 — кооп (P2: стрелки + правый Ctrl + Enter)    F10 — эффекты    Esc — пауза    своя оторванная деталь — коснись её"

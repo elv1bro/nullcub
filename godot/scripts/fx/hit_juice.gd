@@ -74,14 +74,23 @@ static func cycle_time_variant() -> String:
 	return time_variant
 
 
+## Название выбранного варианта замедления для экрана (в Tuning лежит русский ключ).
+static func variant_title() -> String:
+	return TranslationServer.translate(String(variant().get("title", time_variant)))
+
+
+static func style_title() -> String:
+	return TranslationServer.translate(String(STYLE_TITLES.get(impact_style, impact_style)))
+
+
 ## Надпись табло для крита (N0_VOICE.md п. 3): «IMPACT 18.4G» — score удара.
 static func impact_caption(ctx: Dictionary, fallback: String) -> String:
 	if not Tuning.JUICE_IMPACT_CAPTION:
-		return fallback
+		return TranslationServer.translate(fallback)
 	var sc := float(ctx.get("score", 0.0))
 	if sc <= 0.0:
 		sc = float(ctx.get("damage", 0.0))
-	return "IMPACT %.1fG" % sc if sc > 0.0 else fallback
+	return TranslationServer.translate("IMPACT %.1fG") % sc if sc > 0.0 else TranslationServer.translate(fallback)
 
 
 ## Цвет краски куклы — цвет цифры-обломка: цвет игрока (обмотки и мазки), у врагов PvE — ржавая ткань EnemyLook.
@@ -131,8 +140,8 @@ func _on_phase_changed(p: int) -> void:
 
 ## Подсказка клавиш сока удара (первый FIGHT! сессии).
 static func hint_text() -> String:
-	return "L — все клавиши    =  — удар: %s    0 — замедление: %s    −  — цифры: %s" % [
-		"серьёзный" if impact_style == "serious" else "мульт", String(variant().get("title", time_variant)), "вкл" if digits_on else "выкл"]
+	return TranslationServer.translate("L — все клавиши    =  — удар: %s    0 — замедление: %s    −  — цифры: %s") % [
+		TranslationServer.translate("серьёзный") if impact_style == "serious" else TranslationServer.translate("мульт"), variant_title(), TranslationServer.translate("вкл") if digits_on else TranslationServer.translate("выкл")]
 
 
 func _on_hit_fx(ctx: Dictionary) -> void:
@@ -217,40 +226,40 @@ static func set_zoom_level(level: float) -> void:
 
 ## Строки панели клавиш (KeysPanel): [клавиша, что делает, текущее значение]; пустая клавиша — заголовок.
 func keys_lines() -> Array:
-	var on := func(b: bool) -> String: return "вкл" if b else "выкл"
+	var on := func(b: bool) -> String: return tr("вкл") if b else tr("выкл")
 	var rows: Array = [
-		["", "Бой", ""],
-		["WASD", "лететь", ""],
-		["Shift", "рывок", ""],
-		["Space", "переворот", ""],
-		["ЛКМ / ПКМ", "тяги рук", ""],
-		["I  O  P", "активные блоки", ""],
-		["R", "бой заново", ""],
-		["1–9", "сменить площадку", ""],
-		["Esc", "в меню", ""],
-		["", "Эффекты удара", ""],
-		["=", "стиль удара", "серьёзный" if impact_style == "serious" else "мульт"],
-		["0", "замедление", String(variant().get("title", time_variant))],
-		["−", "цифры урона", on.call(digits_on)],
-		["B", "обводка бойцов", on.call(outline_on)],
-		["колесо  ,  .", "масштаб камеры", "%.2f×" % zoom_level()],
-		["F10", "яркость эффектов", FxPreset.label().replace("FX: ", "")],
+		["", tr("Бой"), ""],
+		["WASD", tr("лететь"), ""],
+		["Shift", tr("рывок"), ""],
+		["Space", tr("переворот"), ""],
+		[tr("ЛКМ / ПКМ"), tr("тяги рук"), ""],
+		["I  O  P", tr("активные блоки"), ""],
+		["R", tr("бой заново"), ""],
+		["1–9", tr("сменить площадку"), ""],
+		["Esc", tr("в меню"), ""],
+		["", tr("Эффекты удара"), ""],
+		["=", tr("стиль удара"), tr("серьёзный") if impact_style == "serious" else tr("мульт")],
+		["0", tr("замедление"), variant_title()],
+		["−", tr("цифры урона"), on.call(digits_on)],
+		["B", tr("обводка бойцов"), on.call(outline_on)],
+		[tr("колесо  ,  ."), tr("масштаб камеры"), "%.2f×" % zoom_level()],
+		["F10", tr("яркость эффектов"), FxPreset.title()],
 	]
 	var gfx := get_node_or_null("/root/Gfx") if is_inside_tree() else null
 	if gfx != null and gfx.has_method("label"):
-		rows.append(["F9", "качество графики", String(gfx.call("label"))])
+		rows.append(["F9", tr("качество графики"), String(gfx.call("label"))])
 	var arena := get_tree().get_first_node_in_group("arena") if is_inside_tree() else null
 	if arena != null and arena.has_method("call_champion"):
-		rows.append(["", "Купол", ""])
-		rows.append(["K", "вызвать чемпиона лиги", ""])
-		rows.append(["G", "поле NULL", ""])
-	rows.append(["L", "скрыть эту панель", ""])
+		rows.append(["", tr("Купол"), ""])
+		rows.append(["K", tr("вызвать чемпиона лиги"), ""])
+		rows.append(["G", tr("поле NULL"), ""])
+	rows.append(["L", tr("скрыть эту панель"), ""])
 	return rows
 
 
 func _zoom(step: float) -> void:
 	set_zoom_level(zoom_level() * step)
-	show_toast("Масштаб камеры: %.2f×   (колесо мыши или «,» «.»)" % zoom_level())
+	show_toast(tr("Масштаб камеры: %.2f×   (колесо мыши или «,» «.»)") % zoom_level())
 	if keys_panel != null:
 		keys_panel.refresh()
 
@@ -272,7 +281,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_OUTLINE:
 			outline_on = not outline_on
 			_tick_outlines()
-			show_toast("Обводка бойцов: %s   (B — переключить)" % ("вкл" if outline_on else "выкл"))
+			show_toast(tr("Обводка бойцов: %s   (B — переключить)") % (tr("вкл") if outline_on else tr("выкл")))
 			get_viewport().set_input_as_handled()
 		KEY_ZOOM_IN:
 			_zoom(ZOOM_STEP)
@@ -282,19 +291,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		KEY_VARIANT:
 			cycle_time_variant()
-			show_toast("Замедление: %s   (0 — следующее)" % String(variant().get("title", time_variant)))
+			show_toast(tr("Замедление: %s   (0 — следующее)") % variant_title())
 			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_STYLE:
 			impact_style = "cartoon" if impact_style == "serious" else "serious"
-			show_toast("Удар: %s   (= — переключить)" % String(STYLE_TITLES.get(impact_style, impact_style)))
+			show_toast(tr("Удар: %s   (= — переключить)") % style_title())
 			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_DIGITS:
 			digits_on = not digits_on
 			if not digits_on:
 				digits.clear()
-			show_toast("Цифры урона: %s   (− — переключить)" % ("вкл" if digits_on else "выкл"))
+			show_toast(tr("Цифры урона: %s   (− — переключить)") % (tr("вкл") if digits_on else tr("выкл")))
 			get_viewport().set_input_as_handled()
 
 
