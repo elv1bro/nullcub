@@ -248,6 +248,7 @@ func _ready() -> void:
 	for b in parts.values():
 		total_mass += b.mass
 	_apply_base_damp(false)
+	_apply_gravity_scale()
 
 	# SDFGI (assets/environments/*_env.tres): движущиеся части не должны запекаться в статичный GI (иначе «шлейфы» за куклой)
 	for m in _find_meshes(self):
@@ -1010,7 +1011,8 @@ func apply_knockback(impulse: Vector3, part: RigidBody3D = null, stun_s: float =
 	if part == null or part == t or not is_instance_valid(part) or part.get_parent() != self:
 		t.linear_velocity += impulse / t.mass
 	else:
-		var to_part := impulse * (1.0 - Tuning.KNOCKBACK_TORSO_SHARE)
+		var share := Drive.kb_torso_share()
+		var to_part := impulse * (1.0 - share)
 		var extra := Vector3.ZERO
 		var max_j := part.mass * Tuning.KNOCKBACK_PART_MAX_DV
 		if to_part.length() > max_j:
@@ -1018,7 +1020,7 @@ func apply_knockback(impulse: Vector3, part: RigidBody3D = null, stun_s: float =
 			extra = to_part - capped
 			to_part = capped
 		part.linear_velocity += to_part / part.mass
-		t.linear_velocity += (impulse * Tuning.KNOCKBACK_TORSO_SHARE + extra) / t.mass
+		t.linear_velocity += (impulse * share + extra) / t.mass
 	knockback_until = _time + maxf(Tuning.KNOCKBACK_FREE_S, stun_s)
 	soften_muscles(float(soft_override.get("mult", Tuning.HIT_MUSCLE_SOFT)), float(soft_override.get("hold", Tuning.HIT_MUSCLE_SOFT_S)),
 		float(soft_override.get("recover", Tuning.HIT_MUSCLE_RECOVER_S)))
@@ -1045,6 +1047,13 @@ func _apply_base_damp(flight: bool) -> void:
 		rb.angular_damp = _part_angular_damp(String(rb.name))
 
 
+## ДРАЙВ (Drive): гравитация на частях куклы × Drive.gravity_scale() — только куклы, оружие и пропсы падают как раньше.
+func _apply_gravity_scale() -> void:
+	var g := Drive.gravity_scale()
+	for b in parts.values():
+		(b as RigidBody3D).gravity_scale = g
+
+
 ## Та же логика, что Tuning.doll_linear_damp / doll_angular_damp (их зовёт builder), но на константах: методы автолоада недоступны,
 ## когда builder (-s) грузит этот скрипт — вызов Tuning.func() там не компилируется и сцена сохраняется без скрипта.
 func _part_linear_damp(part: String, flight: bool) -> float:
@@ -1052,9 +1061,9 @@ func _part_linear_damp(part: String, flight: bool) -> float:
 	var key := ("flight_" if flight else "") + ("core" if core else "limb")
 	if damp_override.has(key):
 		return float(damp_override[key])
-	if flight:   # полёт после удара — прежние числа: ControlFeel меняет только инерцию управляемого хода
-		return Tuning.FLIGHT_LINEAR_DAMP if core else Tuning.FLIGHT_LIMB_LINEAR_DAMP
-	return (Tuning.DOLL_LINEAR_DAMP if core else Tuning.DOLL_LIMB_LINEAR_DAMP) * ControlFeel.damp_mult()
+	if flight:   # полёт после удара: ControlFeel меняет только инерцию управляемого хода; ДРАЙВ — лёгкий дамп полёта (Drive)
+		return Drive.flight_damp(core)
+	return (Tuning.DOLL_LINEAR_DAMP if core else Tuning.DOLL_LIMB_LINEAR_DAMP) * ControlFeel.damp_mult() * Drive.move_damp_mult()
 
 
 func _part_angular_damp(part: String) -> float:
@@ -1064,7 +1073,7 @@ func _part_angular_damp(part: String) -> float:
 
 
 func _brake_damp() -> float:
-	return float(damp_override.get("brake", Tuning.IDLE_BRAKE_DAMP))
+	return float(damp_override.get("brake", Drive.brake_damp()))
 
 
 ## Торможение без ввода: торс +Tuning.IDLE_BRAKE_DAMP, пока ввод 0, кукла жива и не в полёте (RM: скорость гаснет за ~1 с).
@@ -1132,7 +1141,7 @@ func _cap_flight_speed() -> void:
 		p += (b as RigidBody3D).linear_velocity * (b as RigidBody3D).mass
 	var v := p / total_mass
 	var sp := v.length()
-	var cap := _flight_cap if _time < _flight_cap_until else Tuning.FLIGHT_MAX_SPEED
+	var cap := _flight_cap if _time < _flight_cap_until else Drive.flight_max_speed()
 	if sp <= cap:
 		return
 	var excess := v * (1.0 - cap / sp)
@@ -1321,6 +1330,12 @@ func _tick_posture(v: Vector2, control: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	_time += delta
+	if _cf_rev != ControlFeel.rev and not _broken:   # темп или ДРАЙВ изменили в панели: инерция (дамп частей) и гравитация — на ходу
+		_cf_rev = ControlFeel.rev
+		_brake_on = false
+		if not _flight_damp:
+			_apply_base_damp(false)
+		_apply_gravity_scale()
 	var req_dash := _req_dash   # одноразовые запросы ботов: живут один тик (стан/нет управления — пропадают)
 	var req_spin := _req_spin
 	var req_flip := _req_flip
@@ -1368,10 +1383,6 @@ func _physics_process(delta: float) -> void:
 	var share := _head_share()
 	var body := _control_body()
 	var mode: String = control_mode if control_mode != "" else ("rotate" if ControlFeel.is_rotate() else Tuning.CONTROL_MODE)
-	if _cf_rev != ControlFeel.rev:   # темп изменили в панели: инерция (дамп частей) пересчитывается на ходу
-		_cf_rev = ControlFeel.rev
-		if not _flight_damp:
-			_apply_base_damp(false)
 	# Заряд (COMBAT_CHARGE.md): ускорение — пока держится Shift и есть Заряд; раскрутка — Space + A/D. Выдохся с зажатой клавишей —
 	# сначала отпустить (иначе ускорение мерцало бы на пороге CHARGE_RESTART). В отдаче после удара тяги и расхода нет.
 	if not boost_held:

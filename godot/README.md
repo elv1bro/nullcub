@@ -24,7 +24,8 @@
 
 ```bash
 godot --headless --path godot --fixed-fps 60 res://tests/control_feel_probe.tscn -- "variants=body|head,tempos=now|action,out=<json>"   # варианты управления × темп числами (CONTROL_FEEL.md §3); match_probe принимает variant= и tempo=
-godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/control_feel_panel_snapshot.tscn -- "out=/abs/panel.png"   # Быстрый бой с открытой панелью: Tab, V, ползунок (5 проверок)
+godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/control_feel_panel_snapshot.tscn -- "out=/abs/panel.png"   # Быстрый бой с открытой панелью: Tab, V, ползунок, J — ДРАЙВ (8 проверок); user://control_feel.cfg не трогает
+godot --headless --path godot --fixed-fps 60 res://tests/drive_probe.tscn -- "modes=off,on,seeds=29,7,13,5,41,max_s=85,out=<json>"   # ДРАЙВ (клавиша J, ../docs/plan-demo/DRIVE.md): купол, P1 «человек» против RivalBrain, выкл против вкл — отклик, отлёт по силе удара, размены, в воздухе, кадр; strict=1 — цели ДРАЙВА; в окне + --write-movie — A/B-клип
 godot --headless --path godot --import          # импорт и проверка скриптов
 godot/tests/run_gate.sh                         # гейт куклы: doll_gate (9 проверок) + feel_probe strict=1 (99 целей / 73 проверки, FEEL_TARGET §7 и §9–9.3), отчёты tests/doll_gate_report.json, tests/feel_probe_report.json
 gtimeout 3000 /usr/bin/arch -arm64 /bin/bash godot/tests/run_gate.sh   # то же из-под x86_64-обёртки gtimeout: arch -arm64 обязателен (иначе Godot идёт через Rosetta); так же run_combat_gate.sh и `gtimeout N /usr/bin/arch -arm64 /usr/local/bin/godot …` для любой сцены ниже

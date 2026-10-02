@@ -1,5 +1,5 @@
 ## Панель «Управление» (ControlFeel): кнопки вариантов и темпа, ползунки разгона / скорости / инерции / доли тяги на голову, живая скорость
-## бойца. Tab — открыть/скрыть, V / T — следующий вариант / темп без панели (тост). Мышь работает, пока панель открыта; кнопки без фокуса,
+## бойца. Tab — открыть/скрыть, V / T — следующий вариант / темп без панели (тост), J — ДРАЙВ вкл/выкл (Drive, DRIVE.md). Мышь работает, пока панель открыта; кнопки без фокуса,
 ## чтобы Space / Enter (раскрутка P1 / P2) не «нажимали» их. Создаёт HitJuice (не в headless). Сохраняет в user://control_feel.cfg.
 ## Запрос автора 02.10: «управление было больше головой… сделать разные варианты и дать попробовать… общий разгон и скорость настраивать».
 class_name ControlFeelPanel
@@ -9,6 +9,7 @@ const LAYER := 21
 const KEY_PANEL := KEY_TAB
 const KEY_VARIANT := KEY_V
 const KEY_TEMPO := KEY_T
+const KEY_DRIVE := KEY_J            # ДРАЙВ (Drive): J свободна во всех боях (Ж в русской раскладке — physical_keycode)
 const FONT := 15
 const SPEED_WINDOW_S := 3.0
 
@@ -25,6 +26,8 @@ var _tempo_note: Label
 var _sliders: Dictionary = {}
 var _slider_vals: Dictionary = {}
 var _speed: Label
+var _drive_btn: Button
+var _drive_note: Label
 var _t := 0.0
 var _peak := 0.0
 var _peak_t := 0.0
@@ -74,6 +77,11 @@ func _build() -> void:
 	box.add_theme_constant_override("separation", 3)
 	_panel.add_child(box)
 	box.add_child(_label(tr("УПРАВЛЕНИЕ    Tab — скрыть    V / T — вариант / темп"), Color(1.0, 0.82, 0.4)))
+	_drive_btn = _button(tr("ДРАЙВ (J) — импульс живёт"))
+	_drive_btn.pressed.connect(func() -> void: Drive.toggle(); _sync())
+	box.add_child(_drive_btn)
+	_drive_note = _label("", Color(0.6, 0.95, 0.7))
+	box.add_child(_drive_note)
 	box.add_child(_label(tr("ВАРИАНТ — куда приложена тяга"), Color(0.75, 0.8, 0.9)))
 	var vf := HFlowContainer.new()
 	box.add_child(vf)
@@ -123,7 +131,7 @@ func _build() -> void:
 	var foot := HBoxContainer.new()
 	foot.add_theme_constant_override("separation", 12)
 	box.add_child(foot)
-	var reset := _button(tr("Сбросить: ТЕЛО · СЕЙЧАС"))
+	var reset := _button(tr("Сбросить: ТЕЛО · СЕЙЧАС"))   # и ДРАЙВ выкл (ControlFeel.reset)
 	reset.pressed.connect(func() -> void: ControlFeel.reset(); _sync())
 	foot.add_child(reset)
 	_speed = _label("", Color(1, 1, 1), false)
@@ -160,6 +168,8 @@ func _sync() -> void:
 		_mark(_variant_btns[id] as Button, ControlFeel.variant == id)
 	for id in _tempo_btns:
 		_mark(_tempo_btns[id] as Button, ControlFeel.tempo == id)
+	_mark(_drive_btn, Drive.on)
+	_drive_note.text = tr("ДРАЙВ вкл: гравитация ниже, полёт после удара живёт, отлёт по силе удара, размен решает сила, отклик на каждый удар, камера держит обоих вблизи, бот давит") if Drive.on else tr("ДРАЙВ выкл: бой как раньше")
 	_variant_note.text = "%s: %s" % [ControlFeel.variant_title(), ControlFeel.variant_note()]
 	_tempo_note.text = "%s: %s" % [ControlFeel.tempo_title(), ControlFeel.tempo_note()]
 	for key in _sliders:
@@ -210,6 +220,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			ControlFeel.cycle_tempo(1)
 			_sync()
 			_toast(tr("Темп: %s   (T — следующий, Tab — ручки)") % ControlFeel.tempo_title())
+			get_viewport().set_input_as_handled()
+		KEY_DRIVE:
+			Drive.toggle()
+			_sync()
+			_toast(tr("%s   (J — переключить; управление: %s)") % [Drive.title(), ControlFeel.variant_title()])
 			get_viewport().set_input_as_handled()
 
 
