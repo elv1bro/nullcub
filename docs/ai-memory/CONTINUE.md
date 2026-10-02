@@ -35,6 +35,7 @@
    - API арены как у `VoidArena` (`spawn_points()`, `bounds()`, сигнал `body_fell`); проверки — по `godot/README.md`.
 4. Дальше: голосование зрителей → N0 вместо диктора (`godot/scenes/ui/announcer.gd`) → выход бойца на арену как интро.
 5. **Этап 17 (карьера и трофеи) — v1 готов 30.09** в ветке `claude/modest-brahmagupta-kocf6h` (в неё влит купол из `claude/continue-from-docs-4b3odj` и свежий main): клавиша 9, `godot/scenes/campaign/`, `godot/scripts/campaign/`, проба `tests/campaign_probe.tscn` 14/14. Итог и открытое — `docs/plan-demo/17-career-trophy.md`.
+6. **Этапы 15 (голосование зрителей с аномалией) и 16 (выход бойца) — v1 готовы 02.10** в той же ветке: `godot/scenes/arena/audience_vote*.{gd,tscn}`, `fighter_entrance.gd`, `fighter_card.*`, проба `tests/arena_events_probe.tscn` 8/8. Следующий свободный этап — 18 (первое вторжение).
 
 ## Прочее открытое
 
