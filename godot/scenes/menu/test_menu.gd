@@ -1,6 +1,7 @@
 ## Тестовое меню сборки (docs/plan-demo/RELEASE_0.0.1.md): все режимы демо в одном месте — кампания, Быстрый бой в куполе,
-## мастерская, PvE-волны, площадки арен — и памятка по управлению. Главная сцена проекта, пока нет настоящего меню (этап 11).
-## Из площадок Esc возвращает сюда (playground.gd, playground_pve.gd); из мастерской — двойной Esc закрывает игру.
+## мастерская, PvE-волны, площадки арен — и памятка по управлению. Открывается из гаража (главная сцена, scenes/menu/garage_menu.tscn,
+## пункт ВСЕ РЕЖИМЫ); Esc здесь — обратно в гараж. В бою Esc — пауза Flow (продолжить / заново / в гараж), из мастерской —
+## двойной Esc в гараж.
 ## Номер сборки — ProjectSettings application/config/version.
 extends Control
 
@@ -23,7 +24,7 @@ const ITEMS := [
 ]
 const CONTROLS := """P1 — WASD летать · Shift рывок · Space переворот · мышь: ЛКМ / ПКМ — тяги рук · I / O / P — активные блоки
 P2 — стрелки · правый Ctrl рывок · Enter переворот · Num 1 / 2 / 3 — активные блоки
-Esc — назад в это меню · R — бой заново · 1–9 — сменить площадку · F10 — эффекты ударов full / reduced / off · F9 — качество графики
+Esc — пауза (в гараж) · R — бой заново · 1–9 — сменить площадку · F10 — эффекты ударов full / reduced / off · F9 — качество графики
 L — панель всех клавиш · = стиль удара · 0 замедление · − цифры урона · B обводка · колесо мыши — масштаб камеры"""
 
 
@@ -57,10 +58,10 @@ func _ready() -> void:
 	gfx_text.call()
 	list.add_child(gfx)
 	var quit := Button.new()
-	quit.text = "Выход"
+	quit.text = "← В гараж"
 	quit.custom_minimum_size = Vector2(0, 48)
 	quit.add_theme_font_size_override("font_size", 22)
-	quit.pressed.connect(func() -> void: get_tree().quit())
+	quit.pressed.connect(func() -> void: back_to_menu(get_tree()))
 	list.add_child(quit)
 	(list.get_child(0) as Button).grab_focus()
 	%Hint.text = String(ITEMS[0][2])
@@ -68,12 +69,14 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
-		get_tree().quit()
+		get_viewport().set_input_as_handled()
+		back_to_menu(get_tree())
 
 
-## Площадки: Esc — сюда, если меню есть в проекте; иначе выход (как раньше).
+## В главное меню — гараж (Flow.to_menu: на пункт, с которого ушли); без автозагрузки Flow — выход, как раньше.
 static func back_to_menu(tree: SceneTree) -> void:
-	if ResourceLoader.exists(MENU_SCENE):
-		tree.change_scene_to_file(MENU_SCENE)
+	var flow := tree.root.get_node_or_null("Flow")
+	if flow != null:
+		flow.to_menu()
 	else:
 		tree.quit()

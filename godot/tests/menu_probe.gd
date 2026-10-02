@@ -1,12 +1,15 @@
 ## Проба тестового меню сборки (docs/plan-demo/RELEASE_0.0.1.md):
 ##   godot --headless --path godot --fixed-fps 60 res://tests/menu_probe.tscn
-##   menu_items    — пункты меню ведут к существующим сценам, есть «Выход», первый пункт в фокусе
-##   menu_version  — строка версии = application/config/version (0.0.1), главная сцена проекта — меню
+##   menu_items    — пункты меню ведут к существующим сценам, есть «В гараж», первый пункт в фокусе
+##   menu_version  — строка версии = application/config/version (0.0.1); главная сцена проекта — гараж
+##                   (scenes/menu/garage_menu.tscn), в нём есть пункт, ведущий сюда (ВСЕ РЕЖИМЫ)
 ##   menu_open     — каждый пункт открывается (сцена грузится и живёт 1 с без ошибок скрипта)
-##   menu_back     — Esc на площадке купола возвращает в меню
+##   menu_back     — Esc на площадке купола ставит паузу Flow, «В ГАРАЖ» в ней — в гараж
+##   menu_esc      — Esc в этом меню — тоже в гараж
 extends Node
 
 const MENU := "res://scenes/menu/test_menu.tscn"
+const GARAGE := "res://scenes/menu/garage_menu.tscn"
 var checks: Array = []
 
 
@@ -37,9 +40,10 @@ func _run() -> void:
 	_check("menu_items", missing.is_empty() and items.get_child_count() == M.ITEMS.size() + 2 and first.has_focus(),
 		"пунктов %d (+ выход), нет сцен %s, фокус на первом %s" % [M.ITEMS.size(), missing, first.has_focus()])
 	var v := String(ProjectSettings.get_setting("application/config/version", ""))
-	_check("menu_version", v == "0.0.1" and String(menu.get_node("%Version").text).contains(v)
-		and String(ProjectSettings.get_setting("application/run/main_scene", "")) == MENU, "версия «%s», главная сцена %s" % [v,
-		ProjectSettings.get_setting("application/run/main_scene", "")])
+	var from_garage := GarageMenu.ITEMS.any(func(it: Dictionary) -> bool: return String(it["go"]) == MENU)
+	_check("menu_version", v == "0.0.1" and String(menu.get_node("%Version").text).contains(v) and from_garage
+		and String(ProjectSettings.get_setting("application/run/main_scene", "")) == GARAGE, "версия «%s», главная сцена %s, пункт гаража сюда %s" % [v,
+		ProjectSettings.get_setting("application/run/main_scene", ""), from_garage])
 	var bad: Array = []
 	for it in M.ITEMS:
 		get_tree().change_scene_to_file(String(it[1]))
@@ -56,8 +60,25 @@ func _run() -> void:
 	e.pressed = true
 	get_viewport().push_input(e)
 	await _frames(10)
+	var flow := get_node("/root/Flow")
+	var paused: bool = flow.is_paused() and get_tree().paused
+	var to_garage: Button = null
+	for b in flow.find_children("*", "Button", true, false):
+		if (b as Button).text == "В ГАРАЖ":
+			to_garage = b
+	var found := to_garage != null      # до нажатия: кнопка освобождается вместе с паузой
+	if found:
+		to_garage.pressed.emit()
+	await _frames(20)
 	var cs2 := get_tree().current_scene
-	_check("menu_back", cs2 != null and cs2.scene_file_path == MENU, "после Esc: %s" % (cs2.scene_file_path if cs2 else "null"))
+	_check("menu_back", paused and found and cs2 != null and cs2.scene_file_path == GARAGE and not get_tree().paused,
+		"пауза %s, кнопка %s, после «В гараж»: %s" % [paused, found, cs2.scene_file_path if cs2 else "null"])
+	get_tree().change_scene_to_file(MENU)
+	await _frames(10)
+	get_viewport().push_input(e)
+	await _frames(20)
+	var cs3 := get_tree().current_scene
+	_check("menu_esc", cs3 != null and cs3.scene_file_path == GARAGE, "после Esc в меню: %s" % (cs3.scene_file_path if cs3 else "null"))
 	var ok := true
 	for c in checks:
 		ok = ok and bool(c["ok"])

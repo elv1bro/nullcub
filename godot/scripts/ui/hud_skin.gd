@@ -3,8 +3,8 @@
 ##   broadcast — «Трансляция Лиги» (B): косые плашки BcStyle, плотные цвета, янтарь зала, узкий жирный шрифт;
 ##   neon      — «Неон NULL» (A): тёмное стекло с неоновым краем и свечением, светящийся текст, голубой цвет поля;
 ##   led       — «LED-табло» (C): чёрные панели табло, янтарные надписи, крупные строки — точками светодиодов (led_dots.gdshader).
-## Выбор хранится в user://settings.cfg, [player] hud_skin — тот же файл и раздел, что у Flow (scripts/menu/flow.gd в ветке
-## меню-гаража; строка экрана настроек — в HUD_SKINS.md). Меняется set_skin() или H в бою (cycle(); F9 занята качеством графики Gfx); элементы HUD слушают
+## Выбор хранится в user://settings.cfg, [player] hud_skin — тот же файл и раздел, что у Flow (scripts/menu/flow.gd: ключ в DEFAULTS,
+## применяется в apply_settings); на экране «Настройки» гаража — строка «ИНТЕРФЕЙС БОЯ» (scenes/menu/garage_settings.gd). Меняется set_skin() или H в бою (cycle(); F9 занята качеством графики Gfx); элементы HUD слушают
 ## events.changed и перекрашиваются на лету. Элементы берут у скина font(role), panel(role, …), style_label(…), theme(), цвета;
 ## рисованные (полоса HP, портрет, стрелки за экраном) смотрят id() сами.
 class_name HudSkin
@@ -60,6 +60,11 @@ static func set_skin(new_id: String, save: bool = true) -> void:
 	var was := id()
 	_id = new_id
 	if save:
+		# настройки гаража (Flow) держат свою копию и пишут файл целиком — обновить и её, иначе следующее сохранение затрёт выбор
+		var tree := Engine.get_main_loop() as SceneTree
+		var flow: Node = tree.root.get_node_or_null("Flow") if tree != null else null
+		if flow != null and flow.get("settings") is Dictionary:
+			(flow.get("settings") as Dictionary)[SETTINGS_KEY] = new_id
 		var cf := ConfigFile.new()
 		cf.load(SETTINGS_PATH)
 		cf.set_value(SETTINGS_SECTION, SETTINGS_KEY, new_id)

@@ -63,6 +63,7 @@ func _ready() -> void:
 	if ko_splatter_alpha >= 0.0:
 		ko_card.set_splatter_alpha(ko_splatter_alpha)
 	results.rematch.connect(_on_rematch)
+	results.main_menu.connect(func() -> void: Flow.to_menu())   # MAIN MENU в итогах → гараж (scripts/menu/flow.gd)
 	results.visibility_changed.connect(_on_results_visibility)
 	_last_ms = Time.get_ticks_msec()
 

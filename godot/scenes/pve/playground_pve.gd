@@ -4,7 +4,7 @@
 ## P2 (орех, стрелки) — кооп: в сцене есть, по умолчанию убирается; F2 — включить/выключить и начать заново.
 ## Эффекты удара (HitFxDirector, SfxDirector, крит) создаёт сам Match — WaveDirector его наследник; F10 — пресет FX по кругу
 ## (FxPreset: full / reduced / off, как на PvP-площадке), подпись — дикторской надписью HUD.
-## Здесь только поведение: R — заново (WaveDirector.restart), F2 — кооп, F10 — FX, H — скин HUD, Esc — выход; пропасть (ScrapArena.body_fell) — KO куклы,
+## Здесь только поведение: R — заново (WaveDirector.restart), F2 — кооп, F10 — FX, H — скин HUD, Esc — пауза (Flow); пропасть (ScrapArena.body_fell) — KO куклы,
 ## чья часть упала (игрока или врага; оторванные детали и оружие падают дальше, их хозяин не страдает).
 class_name PvePlayground
 extends Node3D
@@ -55,7 +55,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_H:   # скин HUD (HudSkin): в PvE перекрашивает диктора
 				hud.announcer.announce("HUD: " + HudSkin.cycle(), Color(0.9, 0.9, 0.95), "")
 			KEY_ESCAPE:
-				preload("res://scenes/menu/test_menu.gd").back_to_menu(get_tree())   # тестовое меню сборки (или выход)
+				Flow.toggle_pause(director.restart)   # пауза: продолжить / заново / в гараж (scripts/menu/flow.gd)
 			_:
 				# 1–7 — площадки хаба (таблица ARENA_KEYS в scenes/playground.gd: одна строка там — клавиша работает везде)
 				var path: String = preload("res://scenes/playground.gd").scene_for_key(event.physical_keycode)
