@@ -145,6 +145,7 @@ func register(d: Doll) -> void:
 		d.add_child(c)
 	else:
 		c.match_ref = self
+	BoostFx.attach(d)   # эффекты ускорения / раскрутки (COMBAT_CHARGE.md), пресет — F11
 	d.knocked_out.connect(_on_doll_ko.bind(d))
 	d.damaged.connect(_on_doll_damaged.bind(d))
 	d.tree_exiting.connect(_unregister.bind(d))
