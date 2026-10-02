@@ -17,6 +17,11 @@
 ##   line_countdown     на отсчёте N0 сказал реплику «fight», облачко видно и не залезает на полосу HUD
 ##   line_events        KO соперника, Sudden Death и голосование зрителей — реплики N0; субтитра N0 в панели голосования нет
 ##   hotseat_join       Быстрый бой: P2-человек не в кадре, пока не нажал клавиш; нажал стрелку — кадр держит обоих
+## Тело N0 (n0_drone.gd, «Тело»; отдельный дрон без боя):
+##   anim_wings         крылья машут в плоскости экрана: размах за 1 с в полёте 8 м/с ≥ 0.4 рад и в 1.5 раза больше, чем в покое
+##   anim_legs          разгон вправо 40 м/с² — кончики ножек отстают влево (≥ 0.4 рад) и возвращаются после остановки
+##   anim_gestures      каждое выражение с жестом даёт свой жест, поза уходит от покоя ≥ 0.35 рад (рука или крыло)
+##   anim_point_mic     показ вправо — правая рука смотрит вправо (x ≥ 0.7); микрофон всё время у кисти (±1 мм)
 extends Node
 
 const FIGHT := preload("res://scenes/campaign/campaign_fight.tscn")
@@ -38,6 +43,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	_lines_rules()
+	await _anim()
 	await _campaign()
 	await _hotseat()
 	_finish()
@@ -203,6 +209,77 @@ func _campaign() -> void:
 
 func _last_event(lines: N0Lines) -> String:
 	return String(lines.said[lines.said.size() - 1]["event"]) if not lines.said.is_empty() else ""
+
+
+# ------------------------------------------------------------------ тело N0
+
+func _anim() -> void:
+	var d := (load("res://scenes/n0/n0.tscn") as PackedScene).instantiate() as N0Drone
+	add_child(d)
+	await get_tree().process_frame
+	var ear := d.part("N0_Ear_L")
+	var arm_r := d.part("N0_Arm_R")
+	var mic := d.part("N0_Mic")
+	var mic_rel := arm_r.transform.affine_inverse() * mic.transform.origin
+	var mic_err := 0.0
+	# крылья: размах за секунду в покое и в полёте
+	var spans: Array[float] = []
+	for v in [Vector3.ZERO, Vector3(8.0, 0.0, 0.0)]:
+		var lo := INF
+		var hi := -INF
+		for i in 60:
+			d.set_motion(v, Vector3.ZERO)
+			await get_tree().process_frame
+			var z := ear.transform.basis.get_euler().z
+			lo = minf(lo, z)
+			hi = maxf(hi, z)
+		spans.append(hi - lo)
+	info["anim_wings"] = {"idle": snappedf(spans[0], 0.01), "flight": snappedf(spans[1], 0.01)}
+	_check("anim_wings", spans[1] >= 0.4 and spans[1] >= spans[0] * 1.5, str(info["anim_wings"]))
+	# ножки: разгон вправо — отстают влево, после остановки — назад
+	var legs := d.part("N0_Legs_L")
+	var lag := 0.0
+	for i in 30:
+		d.set_motion(Vector3(4.0, 0.0, 0.0), Vector3(40.0, 0.0, 0.0))
+		await get_tree().process_frame
+		lag = minf(lag, legs.transform.basis.get_euler().z)
+	for i in 120:
+		d.set_motion(Vector3.ZERO, Vector3.ZERO)
+		await get_tree().process_frame
+	var back := legs.transform.basis.get_euler().z
+	info["anim_legs"] = {"lag": snappedf(lag, 0.01), "back": snappedf(back, 0.01)}
+	_check("anim_legs", lag <= -0.4 and absf(back) <= 0.2, str(info["anim_legs"]))
+	# жесты по выражениям: поза уходит от покоя
+	var idle_l := d.arm_direction("N0_Arm_L")
+	var idle_r := d.arm_direction("N0_Arm_R")
+	var idle_ear := ear.transform.basis.get_euler().z
+	var gest := {}
+	var ok_all := true
+	for ex in ["excited", "happy", "shocked", "sad", "curious", "angry"]:
+		d.flash_expression(ex, 1.0)
+		var dev := 0.0
+		for i in 24:
+			await get_tree().process_frame
+			mic_err = maxf(mic_err, ((arm_r.transform.affine_inverse() * mic.transform.origin) - mic_rel).length())
+			dev = maxf(dev, maxf(d.arm_direction("N0_Arm_L").angle_to(idle_l), d.arm_direction("N0_Arm_R").angle_to(idle_r)))
+			dev = maxf(dev, absf(ear.transform.basis.get_euler().z - idle_ear))
+		gest[ex] = [d.gesture, snappedf(dev, 0.01)]
+		ok_all = ok_all and d.gesture == String(N0Drone.GESTURE_OF[ex]) and dev >= 0.35
+		for i in 70:
+			await get_tree().process_frame
+	info["anim_gestures"] = gest
+	_check("anim_gestures", ok_all, str(gest))
+	# показ рукой вправо
+	d.point_at(d.global_position + Vector3(6.0, 0.5, 1.4), 1.5)
+	for i in 30:
+		await get_tree().process_frame
+		mic_err = maxf(mic_err, ((arm_r.transform.affine_inverse() * mic.transform.origin) - mic_rel).length())
+	var pdir := d.arm_direction("N0_Arm_R")
+	info["anim_point_mic"] = {"dir": [snappedf(pdir.x, 0.01), snappedf(pdir.y, 0.01), snappedf(pdir.z, 0.01)],
+		"mic_err_mm": snappedf(mic_err * 1000.0, 0.01)}
+	_check("anim_point_mic", pdir.x >= 0.7 and mic_err <= 0.001, str(info["anim_point_mic"]))
+	d.queue_free()
+	await get_tree().process_frame
 
 
 # ------------------------------------------------------------------ правила частоты

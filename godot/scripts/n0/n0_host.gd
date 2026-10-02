@@ -7,7 +7,8 @@
 ## уворачивается. Точка — внутри bounds() арены. Время игровое: в стоп-кадре удара он замирает вместе с миром.
 ## Реплики: поводы Match (отсчёт, крит, KO, голова, комбо, Sudden Death, ничья, победа по таймеру), удар о мембрану, голосование
 ## зрителей (AudienceVote), отлетевшая деталь, долгая тишина, соперник далеко → N0Lines (частота по N0_VOICE.md) → облачко N0Speech.
-## Выражение экрана — flash_expression на тех же поводах. В бою не участвует: коллизий нет.
+## Выражение экрана — flash_expression на тех же поводах, к нему — жест тела (N0Drone.GESTURE_OF); скорость и ускорение полёта
+## уходят в N0Drone.set_motion (крылья, ножки), соперник далеко — N0 показывает на него рукой. В бою не участвует: коллизий нет.
 extends Node
 
 ## Дуга над плечом: радиус (м) и угол от вертикали (градусы) на своей стороне.
@@ -143,14 +144,15 @@ func _on_hit_fx(ctx: Dictionary) -> void:
 
 
 func _on_ko(victim: Node, _a: Node, _r: Dictionary) -> void:
-	_react("excited", 2.5)
+	_react("sad" if victim == player else "excited", 2.5)
 	if victim is Node3D and victim.has_method("centre_of_mass"):
 		_look(victim.call("centre_of_mass"), 2.0)
 	say("ko_player" if victim == player else "ko")
 
 
-func _on_match_over(_w: Node, results: Dictionary) -> void:
-	_react("happy", 4.0)
+func _on_match_over(w: Node, results: Dictionary) -> void:
+	if w == player or bool(results.get("draw", false)):
+		_react("happy", 4.0)
 	if bool(results.get("draw", false)):
 		say("draw")
 	elif String(results.get("reason", "")) == "timeout":
@@ -202,10 +204,12 @@ func _process(delta: float) -> void:
 		_placed = true
 		pos = _drone.global_position
 	var acc := (target - pos) * spring_w * spring_w - _vel * 2.0 * spring_w
+	var prev_vel := _vel
 	_vel += acc * delta
 	_vel = _vel.limit_length(max_speed * (1.0 + pos.distance_to(target) / 6.0))
 	_drone.global_position = pos + _vel * delta
 	_orient(delta, com)
+	_drone.set_motion(_vel, (_vel - prev_vel) / maxf(delta, 1e-4))
 	_drone.talking = speech.typing()
 	_tick_lines(delta, com, opp)
 
@@ -315,6 +319,7 @@ func _tick_lines(delta: float, com: Vector3, opp: Node3D) -> void:
 	_far_t = _far_t + delta if dist > far_m else 0.0
 	if _far_t >= far_s:
 		_far_t = -far_s   # следующий раз — не раньше чем через 2 × far_s
+		_drone.point_at(opp.call("centre_of_mass"), 2.5)
 		say("far", [int(round(dist))])
 
 
