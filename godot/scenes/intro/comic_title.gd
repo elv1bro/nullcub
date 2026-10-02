@@ -6,7 +6,7 @@ extends Node2D
 
 @export var line1 := "RAGDOLL"
 @export var line2 := "MASTER"
-@export var tagline := "THE TOWER CANNOT CHANGE.  YOU CANNOT STOP."
+@export var tagline := "GRAVITY IS OPTIONAL.  WINNING IS NOT."
 @export var size1 := 290.0
 @export var size2 := 360.0
 @export var gold := Color(1.0, 0.76, 0.26)

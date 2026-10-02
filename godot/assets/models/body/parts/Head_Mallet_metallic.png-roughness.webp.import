@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://doqt5ygbnf0c1"
-path="res://.godot/imported/Head_Mallet_metallic.png-roughness.webp-0de1813e2912c5d6e7d12709980d9bd5.ctex"
+path.s3tc="res://.godot/imported/Head_Mallet_metallic.png-roughness.webp-0de1813e2912c5d6e7d12709980d9bd5.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "214ab0b39cb9639b24b7fc58e9b97050"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Head_Mallet_metallic.png-roughness.webp"
-dest_files=["res://.godot/imported/Head_Mallet_metallic.png-roughness.webp-0de1813e2912c5d6e7d12709980d9bd5.ctex"]
+dest_files=["res://.godot/imported/Head_Mallet_metallic.png-roughness.webp-0de1813e2912c5d6e7d12709980d9bd5.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

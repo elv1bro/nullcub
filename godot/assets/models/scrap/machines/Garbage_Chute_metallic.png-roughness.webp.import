@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmw0aa3juvlor"
-path="res://.godot/imported/Garbage_Chute_metallic.png-roughness.webp-eca789c1921a5eed2a5ebd4ab5d25c8b.ctex"
+path.s3tc="res://.godot/imported/Garbage_Chute_metallic.png-roughness.webp-eca789c1921a5eed2a5ebd4ab5d25c8b.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "d6deab6549307a79e877ec36be0f1898"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/machines/Garbage_Chute_metallic.png-roughness.webp"
-dest_files=["res://.godot/imported/Garbage_Chute_metallic.png-roughness.webp-eca789c1921a5eed2a5ebd4ab5d25c8b.ctex"]
+dest_files=["res://.godot/imported/Garbage_Chute_metallic.png-roughness.webp-eca789c1921a5eed2a5ebd4ab5d25c8b.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

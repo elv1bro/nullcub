@@ -63,7 +63,7 @@ func _exit_tree() -> void:
 
 func _process(_delta: float) -> void:
 	if _label != null and is_instance_valid(_label) and _label.is_inside_tree():
-		_label.global_position = global_position + Vector3(0.0, LABEL_Y, 0.25)
+		_label.global_position = get_global_transform_interpolated().origin + Vector3(0.0, LABEL_Y, 0.25)   # по ВИДИМОМУ положению предмета
 
 
 func _physics_process(delta: float) -> void:
@@ -125,6 +125,7 @@ func _popup(text: String) -> void:
 static func _make_label(text: String, size: int, col: Color) -> Label3D:
 	var l := Label3D.new()
 	l.name = "LootLabel"
+	l.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # едет за предметом в _process
 	l.text = text
 	l.font_size = size
 	l.pixel_size = 0.004

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_mace_league_orb.tscn" id="1_yq5de"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_tt28v"]
+
+[resource]
+script = ExtResource("2_tt28v")
+id = "kit_mace_league_orb"
+title = "Шар-булава (лига)"
+kind = "weapon_head"
+scene = ExtResource("1_yq5de")
+mass = 2.6
+energy = 0
+attach = "fixed"
+name_prefix = "Mace"
+weapon_mult = 1.4
+base_mat = "brass"

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b1smn0hn12hu"
-path="res://.godot/imported/Lamp_metallic-roughness.webp-5512cccc2f40911f19591093d9edd0e1.ctex"
+path.s3tc="res://.godot/imported/Lamp_metallic-roughness.webp-5512cccc2f40911f19591093d9edd0e1.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "1934d1d426f8b69313d323433993d619"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Lamp_metallic-roughness.webp"
-dest_files=["res://.godot/imported/Lamp_metallic-roughness.webp-5512cccc2f40911f19591093d9edd0e1.ctex"]
+dest_files=["res://.godot/imported/Lamp_metallic-roughness.webp-5512cccc2f40911f19591093d9edd0e1.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

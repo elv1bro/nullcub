@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dy2aaldje5nbr"
-path="res://.godot/imported/Mace_Old_roughness.webp-ccf1d7454e083105b34ac80b444ccf94.ctex"
+path.s3tc="res://.godot/imported/Mace_Old_roughness.webp-ccf1d7454e083105b34ac80b444ccf94.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "00574509583a2ac1c0a320cc15e41282"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Mace_Old_roughness.webp"
-dest_files=["res://.godot/imported/Mace_Old_roughness.webp-ccf1d7454e083105b34ac80b444ccf94.ctex"]
+dest_files=["res://.godot/imported/Mace_Old_roughness.webp-ccf1d7454e083105b34ac80b444ccf94.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

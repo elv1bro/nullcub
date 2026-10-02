@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_active_jet_boots.tscn" id="1_82wa7"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_63sk3"]
+
+[resource]
+script = ExtResource("2_63sk3")
+id = "kit_active_jet_boots"
+title = "Ранец для ног"
+kind = "deco"
+scene = ExtResource("1_82wa7")
+energy = 5
+attach = "fixed"
+name_prefix = "Deco"
+base_mat = "paint_yellow"

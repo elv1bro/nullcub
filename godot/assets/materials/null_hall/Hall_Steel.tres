@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/paint_marks/albedo.png" id="1_hjglq"]
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/paint_marks/roughness.png" id="2_amhyq"]
+
+[resource]
+resource_name = "Hall_Steel"
+albedo_color = Color(0.32272613, 0.33183005, 0.3574912, 1)
+albedo_texture = ExtResource("1_hjglq")
+metallic = 0.35
+roughness = 0.75
+roughness_texture = ExtResource("2_amhyq")

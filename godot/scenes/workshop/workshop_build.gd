@@ -102,6 +102,13 @@ var stand: ModularDoll
 var bench_weapon: CraftedWeapon
 var held_weapon: CraftedWeapon          # оружие в кисти куклы на стенде (только показ)
 var drag: Dictionary = {}                # {part, targets, index, sticky, start, pos, moved}
+## Пробные сборки по разъёмам (ветка / копия: решает сборка целиком, ~3–5 мс на разъём) считаются порциями: первые TRIAL_FIRST_MS — в кадре
+## захвата, остальное по TRIAL_FRAME_MS за кадр (раньше все разом: 60–130 мс на захват ветки). Пока не досчитано, разъём показывается
+## по проверке одной детали; под курсором пробу считаем сразу (_ensure_trial). В пробах (probe_input) — синхронно.
+const TRIAL_FIRST_MS := 6.0
+const TRIAL_FRAME_MS := 3.0
+var _trial_queue: Array = []             # индексы drag["targets"], чья проба впереди
+var _trial_hint := false                 # после очереди пересказать «некуда поставить / не хватает энергии»
 var control_pick := false
 ## Цвета тяг: ЛКМ — золото (как прежняя рука мышью), ПКМ — голубой.
 const PULL_COLOURS := {"lmb": Color(1.0, 0.78, 0.2), "rmb": Color(0.35, 0.8, 1.0)}
@@ -191,6 +198,7 @@ const CLEAR_ARENA_PROPS := ["Props/Barrel_2", "Props/Sawhorse_1"]
 
 
 func _ready() -> void:
+	build_cam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # ездит в _process
 	for p in CLEAR_ARENA_PROPS:
 		var n := arena.get_node_or_null(p)
 		if n != null:
@@ -507,6 +515,28 @@ func set_material(uid: String, mat_id := "") -> Dictionary:
 ## Тип шарнира jt (по умолчанию — joint_pick) связи детали uid с родителем. История, node["joint"] ("pin" — ключ стирается),
 ## пересборка. {ok, code, reason, changed, energy_after} — CraftEdit.set_joint; отказ (корень, fixed-деталь, запреты weld, энергия)
 ## — с причиной.
+## Канал активного блока uid (0 — снять, 1…3 — клавиша канала; docs/plan-demo/ACTIVE_BLOCKS.md): история, пересборка, тост.
+func set_channel(uid: String, ch: int) -> void:
+	var n := CraftEdit.find(blueprint, uid)
+	if n.is_empty() or not ActiveBlocks.is_active(String(n.get("part", ""))) or ActiveBlocks.channel_of(n) == ch:
+		return
+	_push_history()
+	CraftEdit.set_channel(blueprint, uid, ch)
+	_name_custom_body()
+	_rebuild()
+	var d := CraftEdit.def_of(blueprint, uid)
+	var what := d.title if d != null else uid
+	if ch == 0:
+		_say("%s — без канала: в бою молчит" % what, COL_INFO)
+	else:
+		var same := 0
+		for m in blueprint.nodes:
+			if ActiveBlocks.channel_of(m) == ch:
+				same += 1
+		_say("%s → канал %d (%s)%s" % [what, ch, ActiveBlocks.key_label("p1", ch), "  · на канале блоков: %d" % same if same > 1 else ""],
+			COL_OK)
+
+
 func set_joint(uid: String, jt := "") -> Dictionary:
 	if jt == "":
 		jt = joint_pick
@@ -735,6 +765,8 @@ func duplicate_part(uid: String, target := "body") -> Dictionary:
 		var n2 := CraftEdit.find(blueprint, String(r["uid"]))
 		if n.has("mat"):
 			n2["mat"] = n["mat"]
+		if n.has(ActiveBlocks.NODE_KEY):
+			n2[ActiveBlocks.NODE_KEY] = n[ActiveBlocks.NODE_KEY]
 		_rebuild()
 		select_stand(String(r["uid"]), target)
 	return r
@@ -1264,13 +1296,12 @@ func begin_drag(part_id: String, screen_pos: Vector2, opts := {}) -> void:
 	drag = {"part": part_id, "targets": targets, "index": -1, "sticky": bool(opts.get("sticky", false)), "start": opts.get("start", screen_pos),
 		"pos": screen_pos, "moved": false, "copy_of": String(opts.get("copy_of", "")), "branch": bool(opts.get("branch", false)),
 		"move": move, "trials": {}, "rev": _rev}
+	_trial_queue.clear()
 	if move != "" or bool(drag["branch"]) or String(drag["copy_of"]) != "":   # ветка / копия: решает пробная сборка целиком
-		for t in targets:
-			if bool(t["accepts"]):
-				var tr := drag_trial(t)
-				t["ok"] = bool(tr.get("ok", false))
-				t["code"] = String(tr.get("code", ""))
-				t["reason"] = String(tr.get("reason", ""))
+		for i in range(targets.size()):
+			if bool((targets[i] as Dictionary)["accepts"]):
+				_trial_queue.append(i)
+		_run_trials(1e9 if probe_input else TRIAL_FIRST_MS, false)
 	for u in _hidden_uids:
 		for m in part_meshes("body", u):
 			(m as Node3D).visible = false
@@ -1278,9 +1309,22 @@ func begin_drag(part_id: String, screen_pos: Vector2, opts := {}) -> void:
 		held_weapon.visible = false
 	_make_carry(part_id)
 	_apply_highlights()
+	_trial_hint = true
+	if _trial_queue.is_empty():
+		_say_drag_dead_end()
+	_play_sfx("grab", d)
+	update_drag(screen_pos)
+	changed.emit()
+
+
+## «Некуда поставить» / «не хватает энергии» — когда ни один разъём не принимает деталь в руке.
+func _say_drag_dead_end() -> void:
+	_trial_hint = false
+	if drag.is_empty():
+		return
 	var any_ok := false
 	var energy_block := false
-	for t in targets:
+	for t in (drag["targets"] as Array):
 		if bool(t["accepts"]) and bool(t["ok"]):
 			any_ok = true
 		elif bool(t["accepts"]) and String(t["code"]) == "energy":
@@ -1289,9 +1333,50 @@ func begin_drag(part_id: String, screen_pos: Vector2, opts := {}) -> void:
 		_say("Не хватает энергии — дальше от ядра дороже, свободно ⚡%d" % energy_free(), COL_BAD)
 	elif not any_ok:
 		_say("Некуда поставить: нет свободного подходящего разъёма", COL_WARN)
-	_play_sfx("grab", d)
-	update_drag(screen_pos)
-	changed.emit()
+
+
+## Посчитать пробу разъёма t и записать итог в его флаги (ok / code / reason).
+func _apply_trial(t: Dictionary) -> void:
+	var tr := drag_trial(t)
+	t["ok"] = bool(tr.get("ok", false))
+	t["code"] = String(tr.get("code", ""))
+	t["reason"] = String(tr.get("reason", ""))
+
+
+## Порция очереди проб в бюджет budget_ms. Очередь кончилась — подсветка пересчитывается и (если просили) говорим, что некуда ставить.
+func _run_trials(budget_ms: float, notify := true) -> void:
+	if drag.is_empty():
+		_trial_queue.clear()
+		return
+	var t0 := Time.get_ticks_usec()
+	var targets: Array = drag["targets"]
+	var did := false
+	while not _trial_queue.is_empty() and float(Time.get_ticks_usec() - t0) / 1000.0 < budget_ms:
+		var i := int(_trial_queue.pop_front())
+		if i < targets.size():
+			_apply_trial(targets[i])
+			did = true
+	if did and notify:
+		_apply_highlights()
+		changed.emit()   # UI: энергия «станет» и подсказка — по досчитанным разъёмам
+	if _trial_queue.is_empty() and _trial_hint and notify:
+		_say_drag_dead_end()
+
+
+## Проба под курсором — сразу, не дожидаясь очереди (иначе деталь встала бы по неточной проверке одной детали).
+func _ensure_trial(t: Dictionary) -> void:
+	if _trial_queue.is_empty() or drag.is_empty() or not bool(t["accepts"]):
+		return
+	var targets: Array = drag["targets"]
+	var i := targets.find(t)
+	if i >= 0 and _trial_queue.has(i):
+		_trial_queue.erase(i)
+		_apply_trial(t)
+
+
+## Доделать все пробы разом (пробы, откат на старую семантику).
+func flush_trials() -> void:
+	_run_trials(1e9)
 
 
 func update_drag(screen_pos: Vector2) -> void:
@@ -1319,6 +1404,8 @@ func update_drag(screen_pos: Vector2) -> void:
 		best = -1   # над панелью разъёмы не ловятся (деталь не встанет «сквозь» библиотеку)
 	if best != int(drag["index"]):
 		drag["index"] = best
+		if best >= 0:
+			_ensure_trial(targets[best])
 		_update_ghost()
 		_apply_highlights()
 		changed.emit()   # UI: энергия «станет» и подсказка
@@ -1353,7 +1440,7 @@ func drag_trial(t: Dictionary = {}) -> Dictionary:
 		if bool(r.get("ok", false)) and String(drag["copy_of"]) != "":
 			var src := CraftEdit.find(blueprint, String(drag["copy_of"]))
 			var dn := CraftEdit.find(tb2, String(r.get("uid", "")))
-			for k in ["mat", "joint", "rest_deg"]:
+			for k in ["mat", "joint", "rest_deg", ActiveBlocks.NODE_KEY]:
 				if src.has(k):
 					dn[k] = src[k]
 			var nu2 := String(r.get("uid", ""))
@@ -1442,6 +1529,8 @@ func cancel_drag() -> void:
 	if drag.is_empty():
 		return
 	drag = {}
+	_trial_queue.clear()
+	_trial_hint = false
 	for u in _hidden_uids:
 		for m in part_meshes("body", u):
 			(m as Node3D).visible = true
@@ -1485,6 +1574,7 @@ func _make_carry(part_id: String, mirror := false) -> void:
 		_set_overlay_recursive(mesh, _mats["carry_rim"])
 	add_child(root)
 	_carry = root
+	_carry.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # едет за курсором в _process
 	_carry_mirror = mirror
 	_carry_see = false
 	_carry_xf = Transform3D.IDENTITY
@@ -2019,6 +2109,18 @@ func _apply_highlights() -> void:
 		for u in uids:
 			for m in part_meshes(tg, u):
 				_set_overlay(m, mat)
+
+
+## Плашки каналов активных блоков на стенде (v0.3 §44: лишнего на кукле не видно): выбран активный блок или открыта категория
+## «Активные блоки».
+func channels_visible() -> bool:
+	if String(selected.get("source", "")) == "stand":
+		var n := CraftEdit.find(blueprint, String(selected.get("uid", "")))
+		if not n.is_empty() and ActiveBlocks.is_active(String(n.get("part", ""))):
+			return true
+	var tabs: Variant = ui.get("shelf_tab") if ui != null else null
+	return tabs is Dictionary and String((tabs as Dictionary).get("body", "")) == "active"
+
 
 
 ## Тяги видны не всегда (v0.3 §28: на модели без настроек управления): только с инструментом «Тяги» (Q).
@@ -2789,6 +2891,17 @@ func overlay_items() -> Array:
 				var box := _visual_aabb(ms[0])
 				out.append({"pos": cam.unproject_position(box.get_center()), "dir": Vector2.ZERO, "state": "control",
 					"label": "ПКМ" if blueprint.control_rmb.has(c) else "ЛКМ"})
+	# активные блоки: значок клавиши канала у каждого (docs/plan-demo/ACTIVE_BLOCKS.md) — когда видны (channels_visible)
+	if target == "body" and stand != null and channels_visible():
+		for n in blueprint.nodes:
+			if not ActiveBlocks.is_active(String(n.get("part", ""))):
+				continue
+			var msa := part_meshes("body", String(n.get("uid", "")))
+			if msa.is_empty():
+				continue
+			var ch := ActiveBlocks.channel_of(n)
+			out.append({"pos": cam.unproject_position(_visual_aabb(msa[0]).get_center()), "dir": Vector2.ZERO, "state": "channel",
+				"channel": ch, "label": ActiveBlocks.key_label("p1", ch) if ch > 0 else "—"})
 	_com_items(cam, out)
 	return out
 
@@ -2855,6 +2968,8 @@ func _process(delta: float) -> void:
 	if _autosave_dirty and _time >= _autosave_at:
 		_flush_autosave()
 	_prune_fx()
+	if not _trial_queue.is_empty():
+		_run_trials(TRIAL_FRAME_MS)
 	_edge_pan(delta)
 	_update_carry(delta)
 	var g := _camera_goal()

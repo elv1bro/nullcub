@@ -20,7 +20,21 @@ signal body_fell(body: Node3D)
 @export var lamp_linear_damp := 0.12
 
 
+## Mobile / Compatibility (perf-pass): нет SSIL и объёмного тумана — тёплую подсветку стен (отражённый свет) даёт ambient, а лучи из окон —
+## плоские аддитивные квады вдоль солнца (light_shaft.gdshader). В Forward+ ничего не меняется.
+const LIGHT_SHAFT := preload("res://scenes/arena/light_shaft.gdshader")
+@export var cheap_ambient_energy := 1.0
+@export var cheap_ambient_color := Color(0.46, 0.36, 0.30)
+## Центры верхних окон (x, y) и сила луча из каждого.
+@export var shaft_windows: Array[Vector3] = [Vector3(-8.0, 7.2, 1.0), Vector3(0.0, 7.2, 0.3)]
+@export var shaft_length := 13.0
+@export var shaft_width := 6.0
+@export var shaft_z := -0.9
+
+
 func _ready() -> void:
+	if RenderingServer.get_current_rendering_method() in ["mobile", "gl_compatibility"]:
+		_cheap_look()
 	for lamp in lamps():
 		var body := lamp.get_node_or_null("Body") as RigidBody3D
 		if body != null:
@@ -30,6 +44,40 @@ func _ready() -> void:
 		var holder := get_node_or_null(g)
 		if holder != null:
 			_gi_dynamic_under_rigid(holder, false)
+
+
+func _cheap_look() -> void:
+	var we := get_node_or_null("Environment") as WorldEnvironment
+	if we != null and we.environment != null:
+		we.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		we.environment.ambient_light_color = cheap_ambient_color
+		we.environment.ambient_light_energy = cheap_ambient_energy
+	var sun := get_node_or_null("Sun") as DirectionalLight3D
+	if sun == null:
+		return
+	var dir := Vector2(-sun.global_basis.z.x, -sun.global_basis.z.y)   # куда идёт свет на экране (XY)
+	if dir.length() < 0.05:
+		return
+	dir = dir.normalized()
+	var holder := Node3D.new()
+	holder.name = "LightShafts"
+	add_child(holder)
+	for w in shaft_windows:
+		var q := QuadMesh.new()
+		q.size = Vector2(shaft_length, shaft_width)
+		var mat := ShaderMaterial.new()
+		mat.shader = LIGHT_SHAFT
+		mat.set_shader_parameter("intensity", 0.22 * w.z)
+		mat.set_shader_parameter("edge", 0.5)
+		var mi := MeshInstance3D.new()
+		mi.mesh = q
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.name = "Shaft"
+		holder.add_child(mi)
+		var origin := Vector2(w.x, w.y) + dir * shaft_length * 0.5
+		mi.position = Vector3(origin.x, origin.y, shaft_z)
+		mi.rotation.z = dir.angle()
 
 
 func _gi_dynamic_under_rigid(n: Node, under_rigid: bool) -> void:

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://w56qjxemvovt"
-path="res://.godot/imported/Foot_R_Foot_R_normal.png-1bc9345399d099bb6533828db381d04b.ctex"
+path.s3tc="res://.godot/imported/Foot_R_Foot_R_normal.png-1bc9345399d099bb6533828db381d04b.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "66fd42fcee30c0be82f6987f9a5dc49b"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/dark/Foot_R_Foot_R_normal.png"
-dest_files=["res://.godot/imported/Foot_R_Foot_R_normal.png-1bc9345399d099bb6533828db381d04b.ctex"]
+dest_files=["res://.godot/imported/Foot_R_Foot_R_normal.png-1bc9345399d099bb6533828db381d04b.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

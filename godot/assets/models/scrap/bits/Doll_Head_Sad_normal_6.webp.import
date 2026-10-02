@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ccbmrwxu1lbl5"
-path="res://.godot/imported/Doll_Head_Sad_normal_6.webp-d1ac81dfe62413b1fbfca0eb14a96716.ctex"
+path.s3tc="res://.godot/imported/Doll_Head_Sad_normal_6.webp-d1ac81dfe62413b1fbfca0eb14a96716.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "b9d58eff0bbd5e9d56357f25ae1e5fa8"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Doll_Head_Sad_normal_6.webp"
-dest_files=["res://.godot/imported/Doll_Head_Sad_normal_6.webp-d1ac81dfe62413b1fbfca0eb14a96716.ctex"]
+dest_files=["res://.godot/imported/Doll_Head_Sad_normal_6.webp-d1ac81dfe62413b1fbfca0eb14a96716.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://yfbm6g8o2qtu"
-path="res://.godot/imported/Doll_Limb_Lower_albedo_4.webp-b333145c75ea680285688f7415908249.ctex"
+path.s3tc="res://.godot/imported/Doll_Limb_Lower_albedo_4.webp-b333145c75ea680285688f7415908249.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "8d8f35913eaba43cb890073190a0d9b3"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Doll_Limb_Lower_albedo_4.webp"
-dest_files=["res://.godot/imported/Doll_Limb_Lower_albedo_4.webp-b333145c75ea680285688f7415908249.ctex"]
+dest_files=["res://.godot/imported/Doll_Limb_Lower_albedo_4.webp-b333145c75ea680285688f7415908249.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

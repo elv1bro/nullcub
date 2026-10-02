@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bboohbnmo0ptw"
-path="res://.godot/imported/UpperLeg_L_UpperLeg_L_normal.png-5d96ccb4829664d9e6821ad071aa33c1.ctex"
+path.s3tc="res://.godot/imported/UpperLeg_L_UpperLeg_L_normal.png-5d96ccb4829664d9e6821ad071aa33c1.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "71568b8ee58d060059145e4688171195"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/dark/UpperLeg_L_UpperLeg_L_normal.png"
-dest_files=["res://.godot/imported/UpperLeg_L_UpperLeg_L_normal.png-5d96ccb4829664d9e6821ad071aa33c1.ctex"]
+dest_files=["res://.godot/imported/UpperLeg_L_UpperLeg_L_normal.png-5d96ccb4829664d9e6821ad071aa33c1.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

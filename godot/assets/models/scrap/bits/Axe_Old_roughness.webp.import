@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3scdnsj2y3li"
-path="res://.godot/imported/Axe_Old_roughness.webp-6e2517942d9696af065041d03223f433.ctex"
+path.s3tc="res://.godot/imported/Axe_Old_roughness.webp-6e2517942d9696af065041d03223f433.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "fef7301dce889cd0e3409742a841d031"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Axe_Old_roughness.webp"
-dest_files=["res://.godot/imported/Axe_Old_roughness.webp-6e2517942d9696af065041d03223f433.ctex"]
+dest_files=["res://.godot/imported/Axe_Old_roughness.webp-6e2517942d9696af065041d03223f433.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

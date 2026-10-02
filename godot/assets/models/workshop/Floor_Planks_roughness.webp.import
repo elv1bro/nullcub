@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://lwrr8qxghpkj"
-path="res://.godot/imported/Floor_Planks_roughness.webp-441e03ecd1392be273719e9d3620fc77.ctex"
+path.s3tc="res://.godot/imported/Floor_Planks_roughness.webp-441e03ecd1392be273719e9d3620fc77.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "b78af2cae162d8eb187567b1f8951913"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Floor_Planks_roughness.webp"
-dest_files=["res://.godot/imported/Floor_Planks_roughness.webp-441e03ecd1392be273719e9d3620fc77.ctex"]
+dest_files=["res://.godot/imported/Floor_Planks_roughness.webp-441e03ecd1392be273719e9d3620fc77.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

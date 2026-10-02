@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bf64o13ui83xg"
-path="res://.godot/imported/Hand_R_Hand_R_albedo.png-bc83d758e3a4c93b2cf93f3d4f3cf693.ctex"
+path.s3tc="res://.godot/imported/Hand_R_Hand_R_albedo.png-bc83d758e3a4c93b2cf93f3d4f3cf693.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "d5764173646873d1971654537f19f5fb"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/light/Hand_R_Hand_R_albedo.png"
-dest_files=["res://.godot/imported/Hand_R_Hand_R_albedo.png-bc83d758e3a4c93b2cf93f3d4f3cf693.ctex"]
+dest_files=["res://.godot/imported/Hand_R_Hand_R_albedo.png-bc83d758e3a4c93b2cf93f3d4f3cf693.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

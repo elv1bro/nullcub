@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_blade_league_crystal.tscn" id="1_sj8js"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_ltix1"]
+
+[resource]
+script = ExtResource("2_ltix1")
+id = "kit_blade_league_crystal"
+title = "Кристальный клинок (лига)"
+kind = "weapon_head"
+scene = ExtResource("1_sj8js")
+mass = 1.1
+energy = 0
+attach = "fixed"
+name_prefix = "Blade"
+weapon_mult = 1.5
+base_mat = "brass"

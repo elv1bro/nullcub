@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cq8ayqse1rdl1"
-path="res://.godot/imported/Doll_Head_Cracked_roughness_5.webp-f37491f9626789512f2d9ff4234f7afc.ctex"
+path.s3tc="res://.godot/imported/Doll_Head_Cracked_roughness_5.webp-f37491f9626789512f2d9ff4234f7afc.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "9927ccc59e736dbdec5dd2b211eea242"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Doll_Head_Cracked_roughness_5.webp"
-dest_files=["res://.godot/imported/Doll_Head_Cracked_roughness_5.webp-f37491f9626789512f2d9ff4234f7afc.ctex"]
+dest_files=["res://.godot/imported/Doll_Head_Cracked_roughness_5.webp-f37491f9626789512f2d9ff4234f7afc.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

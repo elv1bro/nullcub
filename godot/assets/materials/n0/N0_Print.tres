@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "N0_Print"
+albedo_color = Color(0.17184411, 0.16007765, 0.15170372, 1)
+roughness = 0.6

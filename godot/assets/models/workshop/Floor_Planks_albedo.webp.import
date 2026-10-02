@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cpc1jg1nfeqe7"
-path="res://.godot/imported/Floor_Planks_albedo.webp-c8f8b0afebae10a8ca9aac16ff8d9c36.ctex"
+path.s3tc="res://.godot/imported/Floor_Planks_albedo.webp-c8f8b0afebae10a8ca9aac16ff8d9c36.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "665508357eb243f0732791ff5e50b130"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Floor_Planks_albedo.webp"
-dest_files=["res://.godot/imported/Floor_Planks_albedo.webp-c8f8b0afebae10a8ca9aac16ff8d9c36.ctex"]
+dest_files=["res://.godot/imported/Floor_Planks_albedo.webp-c8f8b0afebae10a8ca9aac16ff8d9c36.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://da1a3esf370f8"
-path="res://.godot/imported/LowerArm_L_roughness.png-69a12d4032ab1f637b8295fe07b905ee.ctex"
+path.s3tc="res://.godot/imported/LowerArm_L_roughness.png-69a12d4032ab1f637b8295fe07b905ee.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "a3b1136c63e3f9535c189c7ffff44edb"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/dark/LowerArm_L_roughness.png"
-dest_files=["res://.godot/imported/LowerArm_L_roughness.png-69a12d4032ab1f637b8295fe07b905ee.ctex"]
+dest_files=["res://.godot/imported/LowerArm_L_roughness.png-69a12d4032ab1f637b8295fe07b905ee.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

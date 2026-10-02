@@ -27,13 +27,23 @@ const PARTS_DIR := "res://data/body/parts/"
 ## Необязательное крафтовое оружие: вешается на деталь weapon_on (uid).
 @export var weapon: Resource
 @export var weapon_on := ""
+## Энергия за кг оружия в руке по регламенту лиги (weapon_energy); 0 — оружие энергию не ест.
+@export var weapon_energy_per_kg := 0.0
 
 
+static var _part_def_cache: Dictionary = {}   # id -> PartDef (null — файла нет)
+
+
+## PartDef по id. Кэш ресурсов Godot слабый: PartDef без владельца освобождался вместе со сценой детали и перечитывался с диска на
+## каждый вызов (≈ 0.3 мс), а validate / energy_used / total_mass / cheapest_cost зовут его сотнями за одну правку в мастерской.
+## Файлы деталей пишут только builder-ы (tools/), в игре они не меняются.
 static func part_def(part_id: String) -> PartDef:
+	if _part_def_cache.has(part_id):
+		return _part_def_cache[part_id]
 	var path := PARTS_DIR + part_id + ".tres"
-	if not ResourceLoader.exists(path):
-		return null
-	return load(path) as PartDef
+	var d: PartDef = load(path) as PartDef if ResourceLoader.exists(path) else null
+	_part_def_cache[part_id] = d
+	return d
 
 
 ## Энергия по расстоянию (docs/plan-demo/WORKSHOP_V3.md §2): чем дальше деталь от ядра, тем дороже — дефицит без смены бюджета.
@@ -56,7 +66,8 @@ static func reach_cost(base: int, d: float) -> int:
 	return int(ceil(base * reach_mult(d) - 0.001)) if base > 0 else 0
 
 
-## Σ цен узлов (node_energy) и тяг (pull_energy): детали, шарниры и тяги с наценкой за расстояние от ядра.
+## Σ цен узлов (node_energy) и тяг (pull_energy): детали, шарниры и тяги с наценкой за расстояние от ядра; по регламенту лиги —
+## ещё оружие в руке (weapon_energy).
 func energy_used() -> int:
 	var total := 0
 	var reach := node_reach()
@@ -64,7 +75,24 @@ func energy_used() -> int:
 		total += _node_energy(n, float(reach.get(String(n.get("uid", "")), 0.0)))
 	for i in range(1, control.size()):
 		total += reach_cost(PULL_ENERGY, float(reach.get(String(control[i]), 0.0)))
-	return total
+	return total + weapon_energy()
+
+
+## Регламент лиги (кампания, docs/plan-demo/17-career-trophy.md): оружие в руке ест энергию ядра — ceil(масса оружия ×
+## weapon_energy_per_kg). 0 — оружие энергию не ест (Быстрый бой, свободная мастерская — как раньше).
+func weapon_energy() -> int:
+	if weapon_energy_per_kg <= 0.0 or not (weapon is WeaponBlueprint):
+		return 0
+	return int(ceil(weapon_mass() * weapon_energy_per_kg - 0.001))
+
+
+## Масса оружия в руке: Σ масс его деталей (как CraftedWeapon.total_mass, с цепью).
+func weapon_mass() -> float:
+	var m := 0.0
+	if weapon is WeaponBlueprint:
+		for n in (weapon as WeaponBlueprint).nodes:
+			m += _node_mass(n)
+	return m
 
 
 ## Цена тяги на узле uid: 0 у главной (control[0], встроена в ядро) и у узла без тяги; иначе PULL_ENERGY × вынос.

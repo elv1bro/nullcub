@@ -1,0 +1,429 @@
+{
+ "Banner_Blue": {
+  "tris": 1216,
+  "budget": 3000,
+  "bytes": 58308,
+  "materials": [
+   "Hall_ClothBlue",
+   "Hall_PrintWhite",
+   "Hall_Rubber",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Banner_Blue"
+  ],
+  "markers": []
+ },
+ "Banner_Fighting": {
+  "tris": 1380,
+  "budget": 3000,
+  "bytes": 66560,
+  "materials": [
+   "Hall_ClothBlue",
+   "Hall_PrintWhite",
+   "Hall_Rubber",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Banner_Fighting"
+  ],
+  "markers": []
+ },
+ "Banner_Red": {
+  "tris": 1216,
+  "budget": 3000,
+  "bytes": 58304,
+  "materials": [
+   "Hall_ClothRed",
+   "Hall_PrintWhite",
+   "Hall_Rubber",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Banner_Red"
+  ],
+  "markers": []
+ },
+ "Big_Screen": {
+  "tris": 2566,
+  "budget": 3000,
+  "bytes": 159376,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_Rubber",
+   "Hall_Screen",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Big_Screen"
+  ],
+  "markers": []
+ },
+ "Cables_Pipes": {
+  "tris": 1852,
+  "budget": 3000,
+  "bytes": 68712,
+  "materials": [
+   "Hall_Rubber",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Cables_Pipes"
+  ],
+  "markers": []
+ },
+ "Camera_Broadcast": {
+  "tris": 1292,
+  "budget": 3000,
+  "bytes": 56272,
+  "materials": [
+   "Hall_Glass",
+   "Hall_LightWarm",
+   "Hall_Rubber",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Camera_Broadcast"
+  ],
+  "markers": []
+ },
+ "Camera_Drone": {
+  "tris": 1452,
+  "budget": 3000,
+  "bytes": 67388,
+  "materials": [
+   "Hall_Glass",
+   "Hall_LightWarm",
+   "Hall_Rubber",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Camera_Drone"
+  ],
+  "markers": []
+ },
+ "Catwalk": {
+  "tris": 1996,
+  "budget": 3000,
+  "bytes": 103824,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_Plate",
+   "Hall_Steel",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Catwalk"
+  ],
+  "markers": []
+ },
+ "Crate": {
+  "tris": 1056,
+  "budget": 3000,
+  "bytes": 63440,
+  "materials": [
+   "Hall_PrintDark",
+   "Hall_Steel",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Crate"
+  ],
+  "markers": []
+ },
+ "Debris": {
+  "tris": 268,
+  "budget": 3000,
+  "bytes": 21924,
+  "materials": [
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Debris_A",
+   "Debris_B",
+   "Debris_C",
+   "Debris_D"
+  ],
+  "markers": []
+ },
+ "Fighter_Gate": {
+  "tris": 2336,
+  "budget": 4000,
+  "bytes": 135372,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_PrintWhite",
+   "Hall_Steel",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Gate_Frame",
+   "Gate_Door_L",
+   "Gate_Door_R"
+  ],
+  "markers": []
+ },
+ "Floor_Platform": {
+  "tris": 1012,
+  "budget": 3000,
+  "bytes": 57852,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_Plate",
+   "Hall_PrintWhite",
+   "Hall_Steel",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Floor_Platform"
+  ],
+  "markers": []
+ },
+ "Floor_Seam": {
+  "tris": 652,
+  "budget": 3000,
+  "bytes": 34712,
+  "materials": [
+   "Hall_NullGlow",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Floor_Seam"
+  ],
+  "markers": []
+ },
+ "Light_Beam": {
+  "tris": 288,
+  "budget": 3000,
+  "bytes": 8232,
+  "materials": [
+   "Hall_Membrane"
+  ],
+  "nodes": [
+   "Light_Beam"
+  ],
+  "markers": []
+ },
+ "Light_Rig": {
+  "tris": 1728,
+  "budget": 4000,
+  "bytes": 94440,
+  "materials": [
+   "Hall_LightCool",
+   "Hall_Rubber",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Light_Rig"
+  ],
+  "markers": []
+ },
+ "Membrane_Anchor_A": {
+  "tris": 2740,
+  "budget": 3000,
+  "bytes": 111356,
+  "materials": [
+   "Hall_Glass",
+   "Hall_NullGlow",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Membrane_Anchor_A"
+  ],
+  "markers": []
+ },
+ "Membrane_Anchor_B": {
+  "tris": 1860,
+  "budget": 3000,
+  "bytes": 69728,
+  "materials": [
+   "Hall_NullGlow",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Membrane_Anchor_B"
+  ],
+  "markers": []
+ },
+ "Membrane_Strip": {
+  "tris": 1920,
+  "budget": 3000,
+  "bytes": 48732,
+  "materials": [
+   "Hall_Membrane"
+  ],
+  "nodes": [
+   "Membrane_Strip"
+  ],
+  "markers": []
+ },
+ "Null_Emitter": {
+  "tris": 3160,
+  "budget": 4000,
+  "bytes": 131504,
+  "materials": [
+   "Hall_Glass",
+   "Hall_NullGlow",
+   "Hall_Rubber",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Null_Emitter"
+  ],
+  "markers": []
+ },
+ "Railing": {
+  "tris": 640,
+  "budget": 3000,
+  "bytes": 33744,
+  "materials": [
+   "Hall_Steel",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Railing"
+  ],
+  "markers": []
+ },
+ "Small_Scoreboard": {
+  "tris": 298,
+  "budget": 3000,
+  "bytes": 18272,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_Screen",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Small_Scoreboard"
+  ],
+  "markers": []
+ },
+ "Speaker": {
+  "tris": 1972,
+  "budget": 3000,
+  "bytes": 70672,
+  "materials": [
+   "Hall_Rubber",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Speaker"
+  ],
+  "markers": []
+ },
+ "Stairs": {
+  "tris": 2248,
+  "budget": 3000,
+  "bytes": 113952,
+  "materials": [
+   "Hall_Plate",
+   "Hall_Steel",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Stairs"
+  ],
+  "markers": []
+ },
+ "Stand_Segment": {
+  "tris": 2724,
+  "budget": 4000,
+  "bytes": 165212,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_Plate",
+   "Hall_Seat",
+   "Hall_Steel",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Stand_Segment"
+  ],
+  "markers": [
+   "Row_0",
+   "Row_1",
+   "Row_2",
+   "Row_3",
+   "Row_4"
+  ]
+ },
+ "Support_Column": {
+  "tris": 2604,
+  "budget": 3000,
+  "bytes": 149072,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Support_Column"
+  ],
+  "markers": []
+ },
+ "Tech_Box": {
+  "tris": 886,
+  "budget": 3000,
+  "bytes": 49204,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_PrintDark",
+   "Hall_Rubber",
+   "Hall_Steel",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Tech_Box"
+  ],
+  "markers": []
+ },
+ "Wall_Panel": {
+  "tris": 484,
+  "budget": 3000,
+  "bytes": 27468,
+  "materials": [
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Wall_Panel"
+  ],
+  "markers": []
+ },
+ "Wall_Panel_01": {
+  "tris": 768,
+  "budget": 3000,
+  "bytes": 41856,
+  "materials": [
+   "Hall_PrintDark",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Wall_Panel_01"
+  ],
+  "markers": []
+ }
+}

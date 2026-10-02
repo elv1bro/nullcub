@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/active_blocks_snapshot.gd" id="1_abs"]
+
+[node name="ActiveBlocksSnapshot" type="Node3D"]
+script = ExtResource("1_abs")

@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/playground.gd" id="1_asysx"]
+[ext_resource type="PackedScene" path="res://scenes/arena/null_hall.tscn" id="2_r58b8"]
+[ext_resource type="Script" path="res://scenes/arena/null_hall.gd" id="3_fomao"]
+[ext_resource type="PackedScene" path="res://scenes/doll/doll.tscn" id="4_utkv3"]
+[ext_resource type="Script" path="res://scenes/doll/doll.gd" id="5_jb2hr"]
+[ext_resource type="PackedScene" path="res://scenes/doll/doll_dark.tscn" id="6_0ldml"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="7_w6hlm"]
+[ext_resource type="Script" path="res://scripts/core/match.gd" id="8_hpino"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="9_ieg86"]
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="10_t5w1l"]
+[ext_resource type="Script" path="res://scenes/ui/offscreen_markers.gd" id="11_kmd2x"]
+[ext_resource type="PackedScene" path="res://scenes/n0/n0.tscn" id="12_lbcmw"]
+[ext_resource type="Script" path="res://scripts/n0/n0_drone.gd" id="13_sogvo"]
+[ext_resource type="Script" path="res://scripts/n0/n0_host.gd" id="14_yych7"]
+
+[node name="Playground" type="Node3D" unique_id=443716393]
+script = ExtResource("1_asysx")
+arena_id = "null_hall"
+
+[node name="NullHall" type="Node3D" parent="." unique_id=809892284 groups=["arena"] instance=ExtResource("2_r58b8")]
+script = ExtResource("3_fomao")
+
+[node name="P1" type="Node3D" parent="." unique_id=1965540815 groups=["dolls"] instance=ExtResource("4_utkv3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.05, 0)
+script = ExtResource("5_jb2hr")
+
+[node name="P2" type="Node3D" parent="." unique_id=1219066531 groups=["dolls"] instance=ExtResource("6_0ldml")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.05, 0)
+script = ExtResource("5_jb2hr")
+player_index = 1
+input_prefix = "p2"
+
+[node name="Weapons" type="Node3D" parent="." unique_id=1277909074]
+
+[node name="Camera" type="Camera3D" parent="." unique_id=726542834 groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 24)
+fov = 40.0
+far = 400.0
+script = ExtResource("7_w6hlm")
+arena_path = NodePath("../NullHall")
+floor_inset = 0.0
+padding = 3.0
+padding_y = 2.0
+follow_mode = "humans"
+min_half_height = 3.6
+max_half_height = 11.0
+zoom_out_tau = 0.25
+zoom_in_tau = 1.0
+follow_tau = 0.3
+
+[node name="Match" type="Node" parent="." unique_id=200399433]
+script = ExtResource("8_hpino")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../NullHall")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1977873189 instance=ExtResource("9_ieg86")]
+layer = 10
+script = ExtResource("10_t5w1l")
+
+[node name="Offscreen" type="CanvasLayer" parent="." unique_id=659241295]
+layer = 5
+script = ExtResource("11_kmd2x")
+
+[node name="N0" type="Node3D" parent="." unique_id=1408005722 instance=ExtResource("12_lbcmw")]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, -7, 4, -1.4)
+script = ExtResource("13_sogvo")
+
+[node name="Host" type="Node" parent="N0" unique_id=1374041037]
+script = ExtResource("14_yych7")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=163322359]
+
+[node name="Hint" type="Label" parent="UI" unique_id=1239939251]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -46.0
+offset_right = 1800.0
+offset_bottom = -12.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 7
+text = "P1: WASD + Shift + Space, каналы I O P    P2: стрелки + правый Ctrl + Enter    G: поле NULL    L: чемпион лиги    R: заново    1–8: площадки    Esc: выход"

@@ -17,6 +17,9 @@
 ##   HIT_FX (29.09): fx_directors — Match создал HitFxDirector и SfxDirector; hitfx_env_kind — ударов kind environment с уровнем 0;
 ##   info.hitfx — гистограмма уровней Match.hit_fx, crits[] (t, tier, score, damage), env_slam, fight_s_per_crit.
 ## Запуск: godot --headless --path . --fixed-fps 60 res://tests/match_probe.tscn -- "scene=ruins,max_s=120" (scene=ruins|workshop|void|scrap)
+##   perf=1 (perf-pass, docs/plan-demo/PERF_PASS.md) — детектор рывков: реальные часы между кадрами (в headless --fixed-fps 60 это цена кадра
+##   на CPU), узлы, добавленные в кадр (ADDED{класс:имя×N}), события удара рядом; проверки perf_frame_p99_ms / perf_frame_max_ms /
+##   perf_nodes_per_frame (limits p99_ms= max_ms= max_nodes=), info.perf; spikes=1 — то же, но только печать рывков > spike_ms (окно).
 ##   retreat=<с> — отход наскока вместо RUSH_RETREAT_S (retreat=1.0 в Void — клинч голова-о-голову, двойной KO → ничья).
 ## Отчёт tests/match_probe_report.json (или out=res://…), exit 0/1.
 extends Node3D
@@ -84,6 +87,101 @@ var unstick_until := -1.0
 var unstick_n := 0                     # номер попытки расклинивания (чередование врозь / через препятствие)
 var fight_seen := false               # фаза FIGHT наступала (до неё Match.phase == OVER — начальное значение)
 var report := {"ok": true, "checks": [], "info": {}}
+# --- perf=1 / spikes=1: рывки кадра по реальным часам и узлы, добавленные в кадр ---
+var perf := false
+var spikes := false
+var spike_ms := 28.0
+var limit_p99_ms := 60.0
+var limit_max_ms := 500.0
+var limit_nodes := 250
+var _last_us := 0
+var _frame_ms: Array = []
+var _ctx: Array = []   # [{us, text}]
+var _spike_lines: Array = []
+var _added: Dictionary = {}
+var _added_n := 0
+var _max_added := 0
+var _max_added_top := ""
+
+
+func _ctx_add(txt: String) -> void:
+	_ctx.append({"us": Time.get_ticks_usec(), "text": txt})
+	if _ctx.size() > 60:
+		_ctx.pop_front()
+
+
+func _on_node_added(n: Node) -> void:
+	_added_n += 1
+	var nm := String(n.name)
+	var i := nm.length()
+	while i > 0 and (nm[i - 1] >= "0" and nm[i - 1] <= "9" or nm[i - 1] == "@"):
+		i -= 1
+	var key := "%s:%s" % [n.get_class(), nm.substr(0, i)]
+	_added[key] = int(_added.get(key, 0)) + 1
+
+
+func _top_added() -> String:
+	var ks: Array = _added.keys()
+	ks.sort_custom(func(a: Variant, b: Variant) -> bool: return int(_added[a]) > int(_added[b]))
+	var parts: PackedStringArray = []
+	for k in ks.slice(0, 6):
+		parts.append("%s×%d" % [k, int(_added[k])])
+	return ", ".join(parts)
+
+
+func _process(_d: float) -> void:
+	if not (perf or spikes):
+		return
+	var now := Time.get_ticks_usec()
+	if _last_us == 0:
+		_last_us = now
+		return
+	var ms := float(now - _last_us) / 1000.0
+	_last_us = now
+	# мерим только активный бой до KO: отсчёт, рестарт кукол и панель итогов — штатные всплески (одноразовые построения)
+	var in_fight := stage == 0 and fight_seen and not ko_fired and match_node.combat_active()
+	if in_fight and _added_n > _max_added:
+		_max_added = _added_n
+		_max_added_top = _top_added()
+	var top := _top_added() if (ms > spike_ms and not _added.is_empty()) else ""
+	_added.clear()
+	_added_n = 0
+	if not in_fight or t < 1.0:   # прогрев: компиляция пайплайнов, загрузка — отдельная история
+		return
+	_frame_ms.append(ms)
+	if ms > spike_ms:
+		var near: PackedStringArray = []
+		for c in _ctx:
+			if now - int(c["us"]) < 400000:
+				near.append("%s(-%dms)" % [c["text"], (now - int(c["us"])) / 1000])
+		_spike_lines.append("SPIKE t=%.2f fight=%.2f dt=%.1f ms [%s%s]" % [t, match_node.fight_time, ms, ", ".join(near), (" ADDED{" + top + "}") if top != "" else ""])
+
+
+func _perf_summary() -> void:
+	if _frame_ms.is_empty():
+		return
+	var a: Array = _frame_ms.duplicate()
+	a.sort()
+	var sum := 0.0
+	for v in a:
+		sum += float(v)
+	var over := 0
+	for v in a:
+		if float(v) > spike_ms:
+			over += 1
+	var p99: float = a[int(a.size() * 0.99)]
+	var mx: float = a[a.size() - 1]
+	report["info"]["perf"] = {"frames": a.size(), "avg_ms": snappedf(sum / a.size(), 0.01), "p50_ms": snappedf(a[a.size() / 2], 0.01),
+		"p95_ms": snappedf(a[int(a.size() * 0.95)], 0.01), "p99_ms": snappedf(p99, 0.01), "max_ms": snappedf(mx, 0.01), "over_ms": spike_ms, "over_n": over,
+		"max_nodes_added_frame": _max_added, "max_nodes_added_top": _max_added_top, "spikes": _spike_lines.slice(0, 12)}
+	print("PERF scene=%s frames=%d avg=%.1f p50=%.1f p95=%.1f p99=%.1f max=%.1f over_%dms=%d max_nodes_frame=%d {%s}" % [scene_id, a.size(), sum / a.size(),
+		a[a.size() / 2], a[int(a.size() * 0.95)], p99, mx, int(spike_ms), over, _max_added, _max_added_top])
+	for l in _spike_lines:
+		print("  ", l)
+	if perf:
+		_check("perf_frame_p99_ms", p99, limit_p99_ms, "lte", "p99 времени кадра (реальные часы)")
+		_check("perf_frame_max_ms", mx, limit_max_ms, "lte", "худший кадр")
+		_check("perf_nodes_per_frame", float(_max_added), float(limit_nodes), "lte", "узлов, добавленных в один кадр: %s" % _max_added_top)
 
 
 func _ready() -> void:
@@ -99,6 +197,12 @@ func _ready() -> void:
 				"out": out_path = p[1]
 				"retreat": rush_retreat_s = float(p[1])
 				"legacy": legacy_dash = p[1] != "0"
+				"perf": perf = p[1] != "0"
+				"spikes": spikes = p[1] != "0"
+				"spike_ms": spike_ms = float(p[1])
+				"p99_ms": limit_p99_ms = float(p[1])
+				"max_ms": limit_max_ms = float(p[1])
+				"max_nodes": limit_nodes = int(p[1])
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
 	add_child(pg)
 	p1 = pg.get_node("P1")
@@ -119,9 +223,13 @@ func _ready() -> void:
 					plank_y_at_break[rb] = ys)
 	else:
 		p2.position = p1.position + P2_OFFSET
+	if perf or spikes:
+		get_tree().node_added.connect(_on_node_added)
 	match_node.announce.connect(func(text: String, _c: Color, kind: String) -> void:
+		_ctx_add("announce:" + kind)
 		events.append({"announce": text, "kind": kind, "t": snappedf(t, 0.01)}))
 	match_node.phase_changed.connect(func(p: int) -> void:
+		_ctx_add("phase:%d" % p)
 		if p == Match.Phase.FIGHT:
 			fight_seen = true
 			last_hit_t = t
@@ -135,11 +243,13 @@ func _ready() -> void:
 		if panel == null or not is_equal_approx(panel.hp_bar.hp, victim.hp):
 			hp_synced = false)
 	match_node.ko.connect(func(victim: Doll, _a: Node, _r: Dictionary) -> void:
+		_ctx_add("KO")
 		ko_fired = true
 		ko_t = t
 		ko_victim = victim
 		ko_card_seen = ko_card_seen or hud.ko_card.visible)
 	match_node.match_over.connect(func(winner: Doll, results: Dictionary) -> void:
+		_ctx_add("match_over")
 		over_fired = true
 		over_winner = winner
 		over_results = results
@@ -149,6 +259,7 @@ func _ready() -> void:
 			if stage != 0:
 				return
 			var tier := String(ctx.get("tier", ""))
+			_ctx_add("hit:%s/%s" % [tier, String(ctx.get("kind", ""))])
 			hitfx_tiers[tier] = int(hitfx_tiers.get(tier, 0)) + 1
 			if String(ctx.get("kind", "")) == "environment":
 				hitfx_env_kind += 1
@@ -459,6 +570,7 @@ func _record_summary(r: Dictionary) -> Dictionary:
 
 
 func _finish() -> void:
+	_perf_summary()
 	report["info"]["godot"] = Engine.get_version_info()["string"]
 	var js := JSON.stringify(report, "  ")
 	print("=== MATCH PROBE ===")

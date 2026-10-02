@@ -349,3 +349,52 @@ const HITFX_PRESETS := {
 }
 const HITFX_PRESET_ORDER := ["full", "reduced", "off"]
 const HITFX_PRESET_DEFAULT := "full"
+
+# --- Поле NULL и мембрана купола (арена 01 «Old NULL Hall», scenes/arena/null_field.gd; docs/plan-demo/ART_NULL.md) ---
+# Гравитация поля — Area3D с заменой гравитации; табло показывает её в G (1 G = G_EARTH м/с²). По умолчанию — та же, что в проекте
+# (GRAVITY 2.0 = «NULL FIELD: 0.20G», LORE_NULL.md). Смена поля (голосование, отладочная клавиша G) идёт плавно за NULL_FIELD_BLEND_S.
+const G_EARTH := 9.81
+const NULL_FIELD_BLEND_S := 1.2          # с: переход силы и направления гравитации поля
+# Мембрана — упругая граница купола (полуэллипс над полом): за контуром на каждое тело действует ускорение пружины по нормали
+# a = K·растяжение (одинаково для лёгких и тяжёлых частей — поле, а не резина), при уходе наружу — ещё демпфер; при возврате
+# пружина сильнее в MEMBRANE_RETURN_GAIN раз: мембрана «выстреливает» бойца обратно (§4 лора: отскок от мембраны — приём).
+const MEMBRANE_K := 44.0                 # 1/с²: на 8 м/с растяжение ≈ 1.2 м
+const MEMBRANE_DAMP_OUT := 0.3           # 1/с: гашение скорости наружу, пока растянута
+const MEMBRANE_RETURN_GAIN := 1.25       # пружина на возврате сильнее: шар без дампа отскакивает ≈ с той же скоростью, кукла (дамп 2.25) — медленнее
+const MEMBRANE_MAX_STRETCH := 2.5        # м: дальше — жёсткий упор (K × MEMBRANE_HARD_MULT)
+const MEMBRANE_HARD_MULT := 8.0
+const MEMBRANE_NEAR_M := 2.5             # м: ближе к мембране — она начинает светиться у бойца (лист камеры: «видна только вблизи»)
+
+# --- Кампания «История», карьера (docs/plan-demo/17-career-trophy.md; решения автора 30.09) ---
+# Энергия — регламент лиги: бюджет сборки задаёт ступень лиги и растёт с ней. В демо одна ступень — местная лига.
+const LEAGUE_ENERGY := {"local": 100}
+# Оружие в руке ест ту же энергию: ceil(масса оружия, кг × это). Киянка 2.1 кг → 11, молот 4.1 → 21, кистень 6.5 → 33.
+const LEAGUE_WEAPON_ENERGY_PER_KG := {"local": 5.0}
+# Уровни бота-соперника (scripts/campaign/rival_brain.gd): реакция (с), ошибка прицела (м), упреждение (с), отход после наскока (с),
+# рывок с разбега. 1 — первый соперник лестницы, 4 — финал местной лиги.
+const RIVAL_LEVELS := {
+	1: {"reaction_s": 0.36, "aim_error_m": 0.55, "lead_s": 0.15, "retreat_s": 1.5, "dash": false},
+	2: {"reaction_s": 0.30, "aim_error_m": 0.45, "lead_s": 0.2, "retreat_s": 1.35, "dash": true},
+	3: {"reaction_s": 0.24, "aim_error_m": 0.35, "lead_s": 0.25, "retreat_s": 1.2, "dash": true},
+	4: {"reaction_s": 0.2, "aim_error_m": 0.25, "lead_s": 0.3, "retreat_s": 1.1, "dash": true},
+}
+const CAMPAIGN_RESULT_DELAY_S := 3.5     # с реального времени: после конца боя — итоги HUD, потом экран исхода кампании
+
+# --- Голосование зрителей купола (docs/plan-demo/15-audience-vote.md; лор §8, §14) ---
+const VOTE_FIRST_S := 30.0               # с боя: первое голосование (второе — на Sudden Death)
+const VOTE_DURATION_S := 6.0             # с: проценты растут на табло
+const VOTE_EFFECT_S := 20.0              # с: выбранное поле держится, потом — регламент
+const VOTE_RESULT_SHOW_S := 2.5          # с реального времени: «… WINS» на панели
+const VOTE_MAX_PER_MATCH := 2
+const VOTE_DEBRIS_COUNT := 5             # DEBRIS DROP: ящиков сверху купола
+const VOTE_CHAOS_PER_CRIT := 0.25        # крит сдвигает голоса к хаосу (0..1 копится до голосования)
+const VOTE_CHAOS_PER_COMBO := 0.1        # комбо 3+
+
+# --- Выход бойца (docs/plan-demo/16-fighter-entrance.md; лор §7) ---
+const ENTRANCE_DIM_S := 0.4              # с: свет зала гаснет / возвращается
+const ENTRANCE_DIM_ENERGY := 0.3         # доля энергии ламп зала во время выхода
+const ENTRANCE_GATE_S := 0.6             # с: створки ворот
+const ENTRANCE_CARRY_S := 3.0            # с: от ворот сквозь мембрану внутрь поля
+const ENTRANCE_HOLD_S := 0.9             # с: кадр на бойце после мембраны (конечности всплывают)
+const ENTRANCE_RELEASE_SPEED := 2.5      # м/с: боец влетает внутрь поля после мембраны
+const ENTRANCE_FAST := 3.0               # первая кнопка — выход быстрее во столько раз, вторая — пропуск

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_league_crystal_s.tscn" id="1_y0ix2"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_sqaqs"]
+
+[resource]
+script = ExtResource("2_sqaqs")
+id = "kit_limb_league_crystal_s"
+title = "Кристальная (лига) (рука)"
+scene = ExtResource("1_y0ix2")
+mass = 1.8
+energy = 6
+body_mult = 0.8
+hit_mult = 1.1
+hit_profile = "blunt"
+name_prefix = "UpperArm"
+base_mat = "brass"
+connector = true

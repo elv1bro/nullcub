@@ -53,7 +53,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_N:
 				hud.announcer.announce(get_node("/root/GameAudio").toggle_crowd(), Color(0.9, 0.9, 0.95), "")
 			KEY_ESCAPE:
-				get_tree().quit()
+				preload("res://scenes/menu/test_menu.gd").back_to_menu(get_tree())   # тестовое меню сборки (или выход)
 			_:
 				# 1–7 — площадки хаба (таблица ARENA_KEYS в scenes/playground.gd: одна строка там — клавиша работает везде)
 				var path: String = preload("res://scenes/playground.gd").scene_for_key(event.physical_keycode)

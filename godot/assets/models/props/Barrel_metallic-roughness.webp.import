@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bsd6latj1hgxw"
-path="res://.godot/imported/Barrel_metallic-roughness.webp-b48698b443bbc5be6c09bd047db09270.ctex"
+path.s3tc="res://.godot/imported/Barrel_metallic-roughness.webp-b48698b443bbc5be6c09bd047db09270.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "1934d1d426f8b69313d323433993d619"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Barrel_metallic-roughness.webp"
-dest_files=["res://.godot/imported/Barrel_metallic-roughness.webp-b48698b443bbc5be6c09bd047db09270.ctex"]
+dest_files=["res://.godot/imported/Barrel_metallic-roughness.webp-b48698b443bbc5be6c09bd047db09270.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

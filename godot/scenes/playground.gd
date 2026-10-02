@@ -3,7 +3,8 @@
 ## Дерево (арена, P1/P2 с WeaponPickup, Weapons, Camera, Match, HUD, UI/Hint) живёт в сцене: scenes/playground.tscn — «Руины»,
 ## scenes/playground_workshop.tscn — «Мастерская», scenes/playground_void.tscn — «Void» (пустое чёрное поле RM, без оружия;
 ## Weapons там пустой — только молот Sudden Death) (ASSET_PIPELINE.md, правило 2). Здесь только поведение:
-##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — выход, 1–7 — сменить площадку
+##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — в тестовое меню (scenes/menu/), 1–9 — сменить площадку
+##   (9 — кампания)
 ##   (Руины / Мастерская / Void / Свалка / Тело / Сборка — последние две из сессии сборки тела, BODY_CRAFT.md);
 ##   пропасть (сигнал body_fell арены): во время боя — Doll.knock_out() (KO kind "self", Match сам заканчивает матч), иначе —
 ##   респавн через RESPAWN_DELAY_S через Match.respawn_doll (той же породы дерева);
@@ -23,9 +24,12 @@ const SCENES := {
 	"body": "res://scenes/playground_body.tscn",            # площадка сборки тела: пресеты F1–F12, [ ] / PgUp PgDn (BODY_CRAFT.md)
 	"build": "res://scenes/workshop/workshop_build.tscn",   # мастерская: сборка тела и оружия (BODY_CRAFT.md)
 	"pve": "res://scenes/playground_pve.tscn",              # PvE-волны на Свалке (сессия «Определение игры и планы»)
+	"null_hall": "res://scenes/playground_null_hall.tscn",  # арена 01 «Old NULL Hall»: купол с мембраной, поле NULL (ART_NULL.md)
+	"campaign": "res://scenes/campaign/campaign.tscn",      # кампания «История»: лестница местной лиги (17-career-trophy.md)
 }
 ## Клавиши площадок: одна таблица на все сцены (площадки, не наследующие этот скрипт, зовут scene_for_key).
-const ARENA_KEYS := {KEY_1: "ruins", KEY_2: "workshop", KEY_3: "void", KEY_4: "scrap", KEY_5: "body", KEY_6: "build", KEY_7: "pve"}
+const ARENA_KEYS := {KEY_1: "ruins", KEY_2: "workshop", KEY_3: "void", KEY_4: "scrap", KEY_5: "body", KEY_6: "build", KEY_7: "pve",
+	KEY_8: "null_hall", KEY_9: "campaign"}
 
 
 ## Путь сцены площадки для клавиши 1–7 (physical_keycode) или "" — для площадок со своим скриптом:
@@ -59,10 +63,24 @@ func _ready() -> void:
 	if arena != null and arena.has_signal("body_fell"):
 		arena.connect("body_fell", _on_body_fell)
 	hud.bind(match_node)
+	if arena is NullHallArena and get_node_or_null("AudienceVote") == null:
+		_add_audience_vote()
 	match_node.phase_changed.connect(_on_phase_changed)
 	match_node.sudden_death_step.connect(_on_sudden_death_step)
 	match_node.hit.connect(func(_v: Doll, _a: Node, _d: float, _k: String, _p: Vector3) -> void: hits += 1)
 	_set_gi_dynamic(weapons_root)
+
+
+## Купол (Быстрый бой в Old NULL Hall): голосование зрителей за поле (docs/plan-demo/15-audience-vote.md). Площадку купола собирает
+## builder сессии купола, поэтому узел добавляется здесь, если его нет в сцене (в сцене боя кампании он есть).
+func _add_audience_vote() -> void:
+	var v := AudienceVote.new()
+	v.name = "AudienceVote"
+	v.arena_path = NodePath("../" + String(arena.name))
+	var panel := (load("res://scenes/arena/audience_vote_panel.tscn") as PackedScene).instantiate()
+	panel.name = "Panel"
+	v.add_child(panel)
+	add_child(v)
 
 
 ## Арена — первый ребёнок с spawn_points() (Ruins / Workshop / Void).
@@ -87,7 +105,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_R:
 				match_node.restart()
 			KEY_ESCAPE:
-				get_tree().quit()
+				preload("res://scenes/menu/test_menu.gd").back_to_menu(get_tree())   # тестовое меню сборки (или выход)
 			KEY_1:
 				switch_arena("ruins")
 			KEY_2:
@@ -102,6 +120,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				switch_arena("build")
 			KEY_7:
 				switch_arena("pve")
+			KEY_8:
+				switch_arena("null_hall")
+			KEY_9:
+				switch_arena("campaign")
 			KEY_F10:
 				cycle_fx_preset()
 			KEY_M:

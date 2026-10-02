@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Blade_LeagueCrystal.glb" id="1_utg5f"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_7sr2v"]
+friction = 0.45
+bounce = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hf1jc"]
+size = Vector3(0.072, 0.09, 0.072)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kmy4h"]
+size = Vector3(0.22, 0.04, 0.04)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0ealj"]
+size = Vector3(0.07, 0.55, 0.03)
+
+[node name="KitBladeLeagueCrystal" type="RigidBody3D" unique_id=2025537244]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.1
+physics_material_override = SubResource("PhysicsMaterial_7sr2v")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "weapon_head"
+metadata/part_id = "kit_blade_league_crystal"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=905569571]
+
+[node name="Shape_Collar" type="CollisionShape3D" parent="." unique_id=55718486]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04, 0)
+shape = SubResource("BoxShape3D_hf1jc")
+
+[node name="Shape_Guard" type="CollisionShape3D" parent="." unique_id=1758991927]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.105, 0)
+shape = SubResource("BoxShape3D_kmy4h")
+
+[node name="Shape_Blade" type="CollisionShape3D" parent="." unique_id=291903003]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.39, 0)
+shape = SubResource("BoxShape3D_0ealj")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1750479071 instance=ExtResource("1_utg5f")]
+metadata/rig_mesh = true

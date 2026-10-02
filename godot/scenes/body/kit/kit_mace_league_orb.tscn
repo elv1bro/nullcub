@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Mace_LeagueOrb.glb" id="1_0eej4"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_8ljmo"]
+friction = 0.45
+bounce = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bmjsx"]
+size = Vector3(0.072, 0.09, 0.072)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_kxl6g"]
+radius = 0.115
+
+[node name="KitMaceLeagueOrb" type="RigidBody3D" unique_id=440370831]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.6
+physics_material_override = SubResource("PhysicsMaterial_8ljmo")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "weapon_head"
+metadata/part_id = "kit_mace_league_orb"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=222868385]
+
+[node name="Shape_Collar" type="CollisionShape3D" parent="." unique_id=920097340]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04, 0)
+shape = SubResource("BoxShape3D_bmjsx")
+
+[node name="Shape_Ball" type="CollisionShape3D" parent="." unique_id=1533442967]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+shape = SubResource("SphereShape3D_kxl6g")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=48022880 instance=ExtResource("1_0eej4")]
+metadata/rig_mesh = true

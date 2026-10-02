@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_league_float_l.tscn" id="1_1ryx2"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_lufvi"]
+
+[resource]
+script = ExtResource("2_lufvi")
+id = "kit_limb_league_float_l"
+title = "Парящая (лига) (нога)"
+scene = ExtResource("1_1ryx2")
+mass = 3.6
+energy = 8
+body_mult = 0.6
+name_prefix = "UpperLeg"
+base_mat = "brass"
+connector = true

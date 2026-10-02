@@ -90,6 +90,8 @@ var _striker: Dictionary = {}          # имя тела -> true: бьющая �
 var _joint_type: Dictionary = {}       # имя сустава -> тип шарнира KitJoint ("pin", "free", "spring", "motor"), для _update_pair_gains
 var _paint: Dictionary = {}            # uid -> ручка слоя краски BodyPaint.attach_layer {layer, tex, materials, mesh_root}
 var _stickers: Dictionary = {}         # uid -> Array[MeshInstance3D] наклеек узла (BodyPaint.add_sticker)
+## Активные блоки и пассивы деталей (scripts/active/active_rig.gd, docs/plan-demo/ACTIVE_BLOCKS.md): заряд, каналы 1–3; null — нет.
+var active_rig: ActiveRig
 
 
 func _ready() -> void:
@@ -99,6 +101,7 @@ func _ready() -> void:
 	super._ready()
 	spawn_in_pose = snap
 	_apply_paint()
+	active_rig = ActiveRig.attach_if_needed(self)
 	set_pose(_bp_pose)
 	if snap:
 		_snap_pose(SPAWN_POSE_GROUPS)
@@ -106,6 +109,13 @@ func _ready() -> void:
 	for c in get_children():
 		if c is DollCombat:
 			_hook_combat(c)
+
+
+## Множитель входящего урона и стана (Doll.take_damage, DollCombat._deliver): команда (Doll) × активные блоки — энергощит гасит
+## урон, фаза не берёт его совсем (ActiveRig.incoming_mult).
+func team_mult_for(attacker: Node) -> float:
+	var m := super.team_mult_for(attacker)
+	return m * active_rig.incoming_mult() if active_rig != null and is_instance_valid(active_rig) else m
 
 
 ## Поза покоя чертежа (а не Tuning.POSE).
@@ -526,11 +536,16 @@ func _swap_base_surfaces(n: Node, surface: Material) -> void:
 ## сустава (local — кадр якоря родителя в осях тела: у зеркальной детали точка уже зеркальная, сам шар симметричен и не отражается),
 ## масштаб — meta joint_r якоря, иначе KitJoint.RADIUS группы. Без коллизий, meta rig_mesh; ставится до Doll._ready (_recolor
 ## красит Shirt_Kit в цвет игрока). Сцены пишет tools/build_body_kit.gd — пока файла нет, шара нет.
+static var _connector_scenes: Dictionary = {}   # путь -> PackedScene (null — файла нет): сцену не перечитывать с диска на каждый сустав
+
+
 func _add_connector(body: RigidBody3D, uid: String, jt: String, local: Transform3D, a: Dictionary, group: String) -> void:
 	var path := KitJoint.connector_scene(jt)
-	if path == "" or not ResourceLoader.exists(path):
+	if path == "":
 		return
-	var ps := load(path) as PackedScene
+	if not _connector_scenes.has(path):
+		_connector_scenes[path] = load(path) as PackedScene if ResourceLoader.exists(path) else null
+	var ps: PackedScene = _connector_scenes[path]
 	if ps == null:
 		return
 	var c := ps.instantiate()

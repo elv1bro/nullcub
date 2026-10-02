@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "Hall_NullGlow"
+albedo_color = Color(0.3491902, 0.58383155, 0.7977378, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.5370987, 0.80946815, 1, 1)
+emission_energy_multiplier = 3.0

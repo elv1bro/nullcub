@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_foot_league_spike.tscn" id="1_etnjt"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_tls6e"]
+
+[resource]
+script = ExtResource("2_tls6e")
+id = "kit_foot_league_spike"
+title = "Ходуля-коготь (лига)"
+kind = "foot"
+scene = ExtResource("1_etnjt")
+mass = 0.7
+energy = 3
+body_mult = 1.2
+hit_mult = 1.15
+hit_profile = "sharp"
+name_prefix = "Foot"
+base_mat = "brass"
+connector = true

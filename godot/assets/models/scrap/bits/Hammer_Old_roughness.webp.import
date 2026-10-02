@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bbexp1taa3o7f"
-path="res://.godot/imported/Hammer_Old_roughness.webp-478837c8e7e69133a7616787fbddb502.ctex"
+path.s3tc="res://.godot/imported/Hammer_Old_roughness.webp-478837c8e7e69133a7616787fbddb502.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "fef7301dce889cd0e3409742a841d031"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Hammer_Old_roughness.webp"
-dest_files=["res://.godot/imported/Hammer_Old_roughness.webp-478837c8e7e69133a7616787fbddb502.ctex"]
+dest_files=["res://.godot/imported/Hammer_Old_roughness.webp-478837c8e7e69133a7616787fbddb502.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

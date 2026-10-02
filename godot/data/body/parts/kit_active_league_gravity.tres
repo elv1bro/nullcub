@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_active_league_gravity.tscn" id="1_mgkgt"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_32cbd"]
+
+[resource]
+script = ExtResource("2_32cbd")
+id = "kit_active_league_gravity"
+title = "Гравиядро (лига)"
+kind = "deco"
+scene = ExtResource("1_mgkgt")
+mass = 1.5
+energy = 9
+attach = "fixed"
+name_prefix = "Deco"
+base_mat = "brass"

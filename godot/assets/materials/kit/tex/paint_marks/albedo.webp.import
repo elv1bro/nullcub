@@ -3,19 +3,20 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1ogybdm3tbhd"
-path="res://.godot/imported/albedo.webp-cade028f3cd3db4d1e483f3ff3e8b098.ctex"
+path.s3tc="res://.godot/imported/albedo.webp-cade028f3cd3db4d1e483f3ff3e8b098.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/materials/kit/tex/paint_marks/albedo.webp"
-dest_files=["res://.godot/imported/albedo.webp-cade028f3cd3db4d1e483f3ff3e8b098.ctex"]
+dest_files=["res://.godot/imported/albedo.webp-cade028f3cd3db4d1e483f3ff3e8b098.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

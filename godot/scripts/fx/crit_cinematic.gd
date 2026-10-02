@@ -208,6 +208,7 @@ var caption_overlap := -1.0          # пробы: перекрытие надп
 
 
 func _ready() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	process_priority = 1000   # после Match._process: время, которое мы ставим, действует с delta следующего кадра
 	add_to_group("crit_cinematic")

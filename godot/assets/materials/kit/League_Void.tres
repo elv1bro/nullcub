@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "League_Void"
+albedo_color = Color(0.2347951, 0.20906562, 0.29337206, 1)
+metallic = 0.5
+roughness = 0.25
+rim_enabled = true
+rim = 0.45
+rim_tint = 0.6

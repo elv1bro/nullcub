@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c2q65yapueb7o"
-path="res://.godot/imported/Gate_Door_L_roughness.webp-fa59f1ec57f8c2a7d1a477c7cdbd0acb.ctex"
+path.s3tc="res://.godot/imported/Gate_Door_L_roughness.webp-fa59f1ec57f8c2a7d1a477c7cdbd0acb.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "98d8e8594588b237f213f1f137c02d06"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Gate_Door_L_roughness.webp"
-dest_files=["res://.godot/imported/Gate_Door_L_roughness.webp-fa59f1ec57f8c2a7d1a477c7cdbd0acb.ctex"]
+dest_files=["res://.godot/imported/Gate_Door_L_roughness.webp-fa59f1ec57f8c2a7d1a477c7cdbd0acb.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

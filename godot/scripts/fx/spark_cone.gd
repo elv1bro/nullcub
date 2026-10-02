@@ -5,6 +5,10 @@
 class_name SparkCone
 extends Node3D
 
+
+func _init() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
+
 const SHADER: Shader = preload("res://scenes/fx/shaders/spark.gdshader")
 const Z_OFFSET := 0.22
 const CONE_LEN := 1.5          # м при k = 1

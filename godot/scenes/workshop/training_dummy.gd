@@ -37,6 +37,7 @@ var _rope: MeshInstance3D
 
 func _ready() -> void:
 	_rope = MeshInstance3D.new()
+	_rope.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # натягивается в _process
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = ROPE_RADIUS
 	cyl.bottom_radius = ROPE_RADIUS

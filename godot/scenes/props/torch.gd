@@ -12,6 +12,7 @@ var _t := 0.0
 
 
 func _ready() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
 	_t = randf() * 100.0
 	_light = get_node_or_null("Light") as OmniLight3D
 	var m := get_node_or_null("Mesh")

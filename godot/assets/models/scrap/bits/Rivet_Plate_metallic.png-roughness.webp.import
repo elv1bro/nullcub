@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dfcdey4dqmovh"
-path="res://.godot/imported/Rivet_Plate_metallic.png-roughness.webp-adc34223cb6669a24463e2bf432b5c8e.ctex"
+path.s3tc="res://.godot/imported/Rivet_Plate_metallic.png-roughness.webp-adc34223cb6669a24463e2bf432b5c8e.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "214ab0b39cb9639b24b7fc58e9b97050"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Rivet_Plate_metallic.png-roughness.webp"
-dest_files=["res://.godot/imported/Rivet_Plate_metallic.png-roughness.webp-adc34223cb6669a24463e2bf432b5c8e.ctex"]
+dest_files=["res://.godot/imported/Rivet_Plate_metallic.png-roughness.webp-adc34223cb6669a24463e2bf432b5c8e.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bhfgwdvisonl3"
-path="res://.godot/imported/Stone_Platform_2m_albedo.webp-0b5f495c3e5f38dd2dcf6badf9f36716.ctex"
+path.s3tc="res://.godot/imported/Stone_Platform_2m_albedo.webp-0b5f495c3e5f38dd2dcf6badf9f36716.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "2ccbfbe411a42444718cc0101e387919"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Stone_Platform_2m_albedo.webp"
-dest_files=["res://.godot/imported/Stone_Platform_2m_albedo.webp-0b5f495c3e5f38dd2dcf6badf9f36716.ctex"]
+dest_files=["res://.godot/imported/Stone_Platform_2m_albedo.webp-0b5f495c3e5f38dd2dcf6badf9f36716.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

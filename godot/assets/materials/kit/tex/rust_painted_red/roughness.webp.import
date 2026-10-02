@@ -3,19 +3,20 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c5g7uwxyqrcof"
-path="res://.godot/imported/roughness.webp-e1c52fd99fcfd82774fbe8173cf9cbd6.ctex"
+path.s3tc="res://.godot/imported/roughness.webp-e1c52fd99fcfd82774fbe8173cf9cbd6.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/materials/kit/tex/rust_painted_red/roughness.webp"
-dest_files=["res://.godot/imported/roughness.webp-e1c52fd99fcfd82774fbe8173cf9cbd6.ctex"]
+dest_files=["res://.godot/imported/roughness.webp-e1c52fd99fcfd82774fbe8173cf9cbd6.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

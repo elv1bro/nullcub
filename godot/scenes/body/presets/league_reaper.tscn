@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/body/modular_doll.gd" id="1_pcalu"]
+[ext_resource type="Resource" path="res://data/body/blueprints/league_reaper.tres" id="2_xmehf"]
+[ext_resource type="Script" path="res://scripts/league/league_look.gd" id="3_2xqqq"]
+
+[node name="ModularDoll" type="Node3D" unique_id=1760540623]
+script = ExtResource("1_pcalu")
+blueprint = ExtResource("2_xmehf")
+
+[node name="LeagueLook" type="Node" parent="." unique_id=1343367230]
+script = ExtResource("3_2xqqq")

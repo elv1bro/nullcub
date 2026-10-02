@@ -8,6 +8,10 @@
 class_name AfterimageTrail
 extends Node3D
 
+
+func _init() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
+
 const GHOST_SHADER: Shader = preload("res://scenes/fx/shaders/ghost.gdshader")
 const MAX_SNAPSHOTS := 40          # v3: крит-полёт — снимки на всё окно (живых одновременно ≤ fade / interval + 1)
 const FORCE_AFTER_INTERVALS := 3.0   # снимок и без сдвига ЦМ, если ждали столько интервалов
@@ -119,7 +123,7 @@ func _process(delta: float) -> void:
 	_t += FxClock.real_delta(delta) * 1000.0
 	var d := _doll_ref()
 	if d != null and (endless or snapshots < _count) and _t <= _window_ms and _t - _last_ms >= _interval_ms:
-		var com := d.centre_of_mass()
+		var com := d.centre_of_mass(true)
 		if snapshots == 0 or com.distance_to(_last_com) >= _min_step or _t - _last_ms >= _interval_ms * FORCE_AFTER_INTERVALS:
 			_snapshot()
 			_last_ms = _t

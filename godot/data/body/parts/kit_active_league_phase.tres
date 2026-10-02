@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_active_league_phase.tscn" id="1_g6wwm"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_2hrh8"]
+
+[resource]
+script = ExtResource("2_2hrh8")
+id = "kit_active_league_phase"
+title = "Фазовый модуль (лига)"
+kind = "deco"
+scene = ExtResource("1_g6wwm")
+mass = 0.8
+energy = 9
+attach = "fixed"
+name_prefix = "Deco"
+base_mat = "brass"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_active_anchor.tscn" id="1_ciei4"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_hu8pd"]
+
+[resource]
+script = ExtResource("2_hu8pd")
+id = "kit_active_anchor"
+title = "Тормоз-якорь"
+kind = "deco"
+scene = ExtResource("1_ciei4")
+mass = 2.2
+energy = 4
+attach = "fixed"
+material = "iron"
+name_prefix = "Deco"
+base_mat = "iron"

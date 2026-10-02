@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Deco_LeagueShield_L.glb" id="1_ad25k"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_qmird"]
+friction = 0.45
+bounce = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7l2lm"]
+size = Vector3(0.2664, 0.3108, 0.03)
+
+[node name="KitDecoLeagueShieldL" type="RigidBody3D" unique_id=1624649146]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.4
+physics_material_override = SubResource("PhysicsMaterial_qmird")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "armor"
+metadata/part_id = "kit_deco_league_shield_l"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1189526459]
+
+[node name="Shape_Shield" type="CollisionShape3D" parent="." unique_id=287801461]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.194, 0.1225)
+shape = SubResource("BoxShape3D_7l2lm")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=185132288 instance=ExtResource("1_ad25k")]
+metadata/rig_mesh = true

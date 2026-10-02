@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_hand_league_talon.tscn" id="1_s48fk"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_pww3e"]
+
+[resource]
+script = ExtResource("2_pww3e")
+id = "kit_hand_league_talon"
+title = "Когти (лига)"
+kind = "hand"
+scene = ExtResource("1_s48fk")
+energy = 4
+body_mult = 2.0
+hit_mult = 1.15
+hit_profile = "sharp"
+name_prefix = "Hand"
+base_mat = "brass"
+connector = true

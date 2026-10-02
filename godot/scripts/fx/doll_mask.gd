@@ -47,6 +47,7 @@ func _ready() -> void:
 	add_child(_vp)
 	_cam = Camera3D.new()
 	_cam.name = "MaskCam"
+	_cam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # копирует камеру игры в _process
 	_cam.cull_mask = MASK_BIT
 	var env := Environment.new()
 	env.background_mode = Environment.BG_CLEAR_COLOR
@@ -200,7 +201,7 @@ func _sync() -> void:
 	_cam.h_offset = src.h_offset
 	_cam.v_offset = src.v_offset
 	_cam.frustum_offset = src.frustum_offset
-	_cam.global_transform = src.global_transform
+	_cam.global_transform = src.global_transform   # (_cam двигается в _process → интерполяция выкл, см. создание)
 
 
 ## Маска у директора (его ребёнок) или любая в дереве; нет — null.

@@ -181,6 +181,7 @@ func attach(hand_name: String, weapon: Weapon) -> bool:
 	weapon.global_transform = Transform3D(basis, grip_g - basis * weapon.grip_local)
 	weapon.linear_velocity = h.linear_velocity
 	weapon.angular_velocity = h.angular_velocity
+	weapon.reset_physics_interpolation()   # снап в кисть — телепорт, не полёт за тик
 	var j := Generic6DOFJoint3D.new()
 	j.name = "Grip_" + hand_name
 	add_child(j)

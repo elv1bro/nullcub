@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dlyb56gdrsxa"
-path="res://.godot/imported/Barrel_albedo_7.webp-8c3c73ef4b8a68fb23d6640229fcf22d.ctex"
+path.s3tc="res://.godot/imported/Barrel_albedo_7.webp-8c3c73ef4b8a68fb23d6640229fcf22d.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "225d5f479ba27fb79762e929836256b9"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Barrel_albedo_7.webp"
-dest_files=["res://.godot/imported/Barrel_albedo_7.webp-8c3c73ef4b8a68fb23d6640229fcf22d.ctex"]
+dest_files=["res://.godot/imported/Barrel_albedo_7.webp-8c3c73ef4b8a68fb23d6640229fcf22d.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

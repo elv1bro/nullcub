@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "N0_Flag"
+albedo_color = Color(0.9063318, 0.8962439, 0.8756056, 1)
+roughness = 0.5

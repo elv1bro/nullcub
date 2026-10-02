@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dyup5wwap1vvg"
-path="res://.godot/imported/Loot_Plate_normal_3.webp-2c226b0c8229e305fef3571a9e252ee0.ctex"
+path.s3tc="res://.godot/imported/Loot_Plate_normal_3.webp-2c226b0c8229e305fef3571a9e252ee0.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "31769ef83df73ad3ed1017a23a056f10"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/machines/Loot_Plate_normal_3.webp"
-dest_files=["res://.godot/imported/Loot_Plate_normal_3.webp-2c226b0c8229e305fef3571a9e252ee0.ctex"]
+dest_files=["res://.godot/imported/Loot_Plate_normal_3.webp-2c226b0c8229e305fef3571a9e252ee0.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

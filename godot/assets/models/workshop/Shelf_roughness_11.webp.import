@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cy8nm703u7w8"
-path="res://.godot/imported/Shelf_roughness_11.webp-d443f373fd79618ebe1f9a04373151f0.ctex"
+path.s3tc="res://.godot/imported/Shelf_roughness_11.webp-d443f373fd79618ebe1f9a04373151f0.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "761bab3ad231eafb6254c9ea9fe8b521"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Shelf_roughness_11.webp"
-dest_files=["res://.godot/imported/Shelf_roughness_11.webp-d443f373fd79618ebe1f9a04373151f0.ctex"]
+dest_files=["res://.godot/imported/Shelf_roughness_11.webp-d443f373fd79618ebe1f9a04373151f0.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

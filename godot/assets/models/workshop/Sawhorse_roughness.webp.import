@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmj6jfwt5mvle"
-path="res://.godot/imported/Sawhorse_roughness.webp-7e8a97139c61cc0aa3e2c5909b80cde1.ctex"
+path.s3tc="res://.godot/imported/Sawhorse_roughness.webp-7e8a97139c61cc0aa3e2c5909b80cde1.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "b78af2cae162d8eb187567b1f8951913"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Sawhorse_roughness.webp"
-dest_files=["res://.godot/imported/Sawhorse_roughness.webp-7e8a97139c61cc0aa3e2c5909b80cde1.ctex"]
+dest_files=["res://.godot/imported/Sawhorse_roughness.webp-7e8a97139c61cc0aa3e2c5909b80cde1.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

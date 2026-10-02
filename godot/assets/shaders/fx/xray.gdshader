@@ -1,5 +1,6 @@
 // «Рентген» крупного плана сокрушительного удара (HIT_FX.md §3.2): полноэкранный квад — ребёнок CritCam, рисуется в прозрачном
-// проходе 3D поверх всей сцены (HUD и CanvasLayer не затрагивает). Читает экран, глубину и нормали (Forward+):
+// проходе 3D поверх всей сцены (HUD и CanvasLayer не затрагивает). Читает экран, глубину и нормали (Forward+; в Mobile буфера
+// нормалей нет — внутренние контуры берутся из кривизны глубины, perf-pass):
 // обесцвечивание → яркость по рампе #0b1630 → #2d7fd6 → #bfe9ff, контуры Собелем по линейной глубине и нормалям (#e8f6ff),
 // виньетка. Ударенная деталь (оверлей xray_wood, render_priority выше) рисуется после и остаётся тёплой.
 // v2 (HIT_FX.md §11.4): use_mask — фон вне маски кукол (DollMask, альфа) плоский тёмно-синий (bg_colour, мягкий радиальный
@@ -9,7 +10,9 @@ render_mode unshaded, depth_draw_never, depth_test_disabled, cull_disabled, fog_
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear, repeat_disable;
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable;
+#if CURRENT_RENDERER == RENDERER_FORWARD_PLUS
 uniform sampler2D normal_tex : hint_normal_roughness_texture, filter_nearest, repeat_disable;
+#endif
 uniform float intensity : hint_range(0.0, 1.0) = 1.0;
 uniform vec3 ramp_dark : source_color = vec3(0.043, 0.086, 0.188);
 uniform vec3 ramp_mid : source_color = vec3(0.176, 0.498, 0.839);
@@ -18,6 +21,7 @@ uniform vec3 edge_colour : source_color = vec3(0.91, 0.965, 1.0);
 uniform float edge_px = 1.5;
 uniform float depth_edge = 0.06;     // относительный скачок линейной глубины → контур
 uniform float normal_edge = 1.2;     // выше — меньше внутренних контуров (резьба/стыки деталей)
+uniform float curv_edge = 0.045;     // Mobile: то же по кривизне глубины (Лапласиан / глубина)
 uniform float vignette = 0.35;
 uniform float flash = 0.0;           // вспышка «перелома» на 400 мс: осветление рампы
 uniform sampler2D mask_tex : filter_linear, repeat_disable;
@@ -35,9 +39,11 @@ float lin_depth(vec2 uv, mat4 inv_proj) {
 	return -v.z / v.w;
 }
 
+#if CURRENT_RENDERER == RENDERER_FORWARD_PLUS
 vec3 nrm(vec2 uv) {
 	return texture(normal_tex, uv).xyz * 2.0 - 1.0;
 }
+#endif
 
 void fragment() {
 	vec2 uv = SCREEN_UV;
@@ -52,21 +58,30 @@ void fragment() {
 	float gy = 0.0;
 	vec3 ngx = vec3(0.0);
 	vec3 ngy = vec3(0.0);
+	float lap = 0.0;
 	for (int i = -1; i <= 1; i++) {
 		for (int j = -1; j <= 1; j++) {
 			if (i == 0 && j == 0) continue;
 			vec2 o = vec2(float(i), float(j)) * px;
 			float w = (i == 0 || j == 0) ? 2.0 : 1.0;
 			float d = lin_depth(uv + o, INV_PROJECTION_MATRIX);
+#if CURRENT_RENDERER == RENDERER_FORWARD_PLUS
 			vec3 n = nrm(uv + o);
-			gx += float(i) * w * d;
-			gy += float(j) * w * d;
 			ngx += float(i) * w * n;
 			ngy += float(j) * w * n;
+#else
+			if (i == 0 || j == 0) lap += d - dc;   // 4 соседа: Σ(d − d0) = Лапласиан глубины
+#endif
+			gx += float(i) * w * d;
+			gy += float(j) * w * d;
 		}
 	}
 	float e_depth = smoothstep(depth_edge, depth_edge * 2.5, length(vec2(gx, gy)) / max(dc, 0.05));
+#if CURRENT_RENDERER == RENDERER_FORWARD_PLUS
 	float e_norm = smoothstep(normal_edge, normal_edge * 2.0, length(ngx) + length(ngy)) * step(dc, 60.0);
+#else
+	float e_norm = smoothstep(curv_edge, curv_edge * 2.0, abs(lap) / max(dc, 0.05)) * step(dc, 60.0);
+#endif
 	float edge = clamp(max(e_depth, e_norm), 0.0, 1.0);
 	vec3 col = mix(ramp, edge_colour, edge * 0.85);
 	vec2 q = uv - 0.5;
