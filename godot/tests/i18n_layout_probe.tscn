@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/i18n_layout_probe.gd" id="1"]
+
+[node name="I18nLayoutProbe" type="Node"]
+script = ExtResource("1")

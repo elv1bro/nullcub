@@ -94,6 +94,7 @@ var _pipe_last: Array = [0, 0, 0, 0, 0]
 var _pipe_fight: Array = [0, 0, 0, 0, 0]   # сумма за активный бой
 var _pipe_lines: Array = []
 var spikes := false
+var spikes_all := false      # all=1: рывки логируются и вне активного боя (отсчёт, KO, итоги, рестарт)
 var spike_ms := 28.0
 var limit_p99_ms := 60.0
 var limit_max_ms := 500.0
@@ -177,6 +178,12 @@ func _process(_d: float) -> void:
 	_added.clear()
 	_added_n = 0
 	if not in_fight or t < 1.0:   # прогрев: компиляция пайплайнов, загрузка — отдельная история
+		if spikes_all and t >= 1.0 and ms > spike_ms:
+			var near2: PackedStringArray = []
+			for c in _ctx:
+				if now - int(c["us"]) < 400000:
+					near2.append("%s(-%dms)" % [c["text"], (now - int(c["us"])) / 1000])
+			_spike_lines.append("SPIKE(вне боя) t=%.2f dt=%.1f ms [%s%s]" % [t, ms, ", ".join(near2), (" ADDED{" + top + "}") if top != "" else ""])
 		return
 	_frame_ms.append(ms)
 	if ms > spike_ms:
@@ -237,6 +244,7 @@ func _ready() -> void:
 				"perf": perf = p[1] != "0"
 				"pipes": pipes = p[1] != "0"
 				"spikes": spikes = p[1] != "0"
+				"all": spikes_all = p[1] != "0"
 				"spike_ms": spike_ms = float(p[1])
 				"p99_ms": limit_p99_ms = float(p[1])
 				"max_ms": limit_max_ms = float(p[1])

@@ -269,11 +269,45 @@ func show_results(winner: Object, results: Dictionary) -> void:
 	left.scale = Vector2(0.9, 0.9)
 	left.pivot_offset = left.size * 0.5
 	var tw := create_tween().set_ignore_time_scale(true)
+	_show_tween = tw
 	tw.set_parallel(true)
 	tw.tween_property(self, "modulate:a", 1.0, 0.25)
 	tw.tween_property(left, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	rematch_btn.grab_focus()
+	if not warming:
+		rematch_btn.grab_focus()
 
 
 func hide_panel() -> void:
 	visible = false
+
+
+## Первый показ панели стоил ~40 мс вызова и ~50 мс кадра (растеризация шрифтов, темы, раскладка — один раз за процесс; повторные 2 мс).
+## HUD отыгрывает его заранее, пока идёт обратный отсчёт: строит строки на пробных данных, три кадра держит панель невидимой (alpha 0) и
+## убирает. warming = true — HUD не прячет боевые панели по visibility_changed, фокус на REMATCH не берётся.
+var warming := false
+var _show_tween: Tween
+
+
+class _WarmDoll extends RefCounted:
+	var player_index := 0
+
+
+func prewarm() -> void:
+	if warming or visible or not is_inside_tree():
+		return
+	warming = true
+	var a := _WarmDoll.new()
+	var b := _WarmDoll.new()
+	b.player_index = 1
+	var st := {"ko": 1, "dmg_out": 55.5, "dmg_in": 20.0, "best_hit": 12.0, "combo_score": 140}
+	show_results(a, {"places": [a, b], "stats": {a: st, b: st}, "medals": {"Warm": a}, "ranks": [0, 1], "ko_records": [{"victim": b}]})
+	if _show_tween != null and _show_tween.is_valid():
+		_show_tween.kill()
+	modulate = Color(1, 1, 1, 0)
+	for i in range(3):
+		await get_tree().process_frame
+	hide_panel()
+	_clear(places_row)
+	_clear(stats_grid)
+	_clear(medals_row)
+	warming = false

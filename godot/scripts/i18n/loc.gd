@@ -14,16 +14,26 @@ signal language_changed(code: String)
 const DIR := "res://locale/"
 const SOURCE := "ru"
 const REFERENCE := "en"
+## Служебный «растянутый» язык для проверки вёрстки без носителей: все строки из en.json с удвоенными гласными (≈ +35 % длины), акцентами
+## и целыми подстановками (%s, %d, [bbcode]). В меню его нет; включается set_language(PSEUDO) или аргументом пробы/снимка `-- lang=qps`.
+const PSEUDO := "qps"
 const BUILTIN := ["ru", "en"]     # если файлы языков не попали в экспорт (нужен include_filter="*.json") — меню всё равно живёт
 
 var codes: Array[String] = []    # ru, en, дальше остальные по алфавиту
 var names := {}                  # код → родное название («Русский», «English», «Deutsch»)
 var current := SOURCE
 var _loaded := {}                # код → Translation, уже отданный TranslationServer
+var _forced := ""                # язык из аргумента запуска `lang=xx` (пробы и снимки): настройки игрока его не перебивают
 
 
 func _ready() -> void:
+	for a in OS.get_cmdline_user_args():
+		for part in a.split(","):
+			if part.begins_with("lang="):
+				_forced = part.substr(5)
 	scan()
+	if _forced == PSEUDO:
+		_ensure_pseudo()
 	set_language(current)
 
 
@@ -67,13 +77,55 @@ func scan() -> void:
 
 
 func set_language(code: String) -> void:
-	if not codes.has(code):
+	if _forced != "":
+		code = _forced
+	if code == PSEUDO:
+		_ensure_pseudo()
+	elif not codes.has(code):
 		code = SOURCE
 	var changed := code != current or TranslationServer.get_locale() != code
 	current = code
 	TranslationServer.set_locale(code)
 	if changed:
 		language_changed.emit(code)
+
+
+func _ensure_pseudo() -> void:
+	if _loaded.has(PSEUDO):
+		return
+	var t := Translation.new()
+	t.locale = PSEUDO
+	for k in _read(REFERENCE):
+		if not String(k).begins_with("@"):
+			t.add_message(k, pseudo(String(_read(REFERENCE)[k])))
+	TranslationServer.add_translation(t)
+	_loaded[PSEUDO] = t
+	names[PSEUDO] = "Pseudo (+35%)"
+
+
+## Растянуть строку: гласные удваиваются и получают акцент; %-подстановки, \n и [bbcode] остаются как есть.
+static func pseudo(s: String) -> String:
+	const MAP := {"a": "åå", "e": "éé", "i": "ïï", "o": "öö", "u": "üü", "y": "ÿÿ", "A": "ÅÅ", "E": "ÉÉ", "I": "ÏÏ", "O": "ÖÖ", "U": "ÜÜ"}
+	var out := ""
+	var i := 0
+	while i < s.length():
+		var c := s[i]
+		if c == "[":
+			var j := s.find("]", i)
+			if j > i:
+				out += s.substr(i, j - i + 1)
+				i = j + 1
+				continue
+		if c == "%" and i + 1 < s.length():
+			var j := i + 1
+			while j < s.length() and "-+ 0#.123456789".contains(s[j]):
+				j += 1
+			out += s.substr(i, mini(j, s.length() - 1) - i + 1)
+			i = j + 1
+			continue
+		out += MAP.get(c, c)
+		i += 1
+	return out
 
 
 ## Родное название языка для меню.

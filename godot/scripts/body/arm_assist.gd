@@ -705,7 +705,8 @@ func _physics_process(delta: float) -> void:
 		_apply_assist()
 	if held != null:
 		_apply_hold()
-	candidate = null if held != null or not primary else find_candidate()
+	# Кандидат на хват нужен только подсветке и подписи (toggle_grab ищет свежий сам): у ботов (show_hints = false) запрос формы каждый тик ≈ 8 мкс зря
+	candidate = null if held != null or not primary or not show_hints else find_candidate()
 	if held != null:
 		blocked_candidate = null
 	_update_hints()
