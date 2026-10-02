@@ -30,7 +30,7 @@ const METAL_IDS := ["iron", "brass", "rust", "rust_red", "steel", "metal"]
 const RATE := 44100
 const VOICES := 8
 const BUS := "UI"
-const SFX_DIR := "res://assets/audio/sfx/"
+const SFX_DIR := "res://assets/audio/ws/"
 const TOKS := ["tok/wood_tok_01.ogg", "tok/wood_tok_02.ogg", "tok/wood_tok_03.ogg", "tok/wood_tok_04.ogg", "tok/wood_tok_05.ogg",
 	"tok/wood_tok_06.ogg", "tok/wood_tok_07.ogg", "tok/wood_tok_08.ogg"]
 const CREAKS := ["creak/fiber_creak_01.ogg", "creak/fiber_creak_02.ogg"]
