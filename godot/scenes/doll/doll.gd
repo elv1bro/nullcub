@@ -719,6 +719,7 @@ func reattach_part(body: RigidBody3D) -> bool:
 	for s in rec["sub"]:
 		var rb := s as RigidBody3D
 		rb.global_transform = delta * rb.global_transform
+		rb.reset_physics_interpolation()   # возврат части на место — телепорт
 		rb.linear_velocity = a.linear_velocity
 		rb.angular_velocity = a.angular_velocity
 		rb.remove_meta("detached_from")
@@ -1119,11 +1120,18 @@ static func part_base_name(part_name: String) -> String:
 	return part_name
 
 
-func centre_of_mass() -> Vector3:
+## Центр масс куклы. interpolated = true — по ВИДИМОМУ положению частей (physics_interpolation: между двумя физическими тиками), для камеры,
+## следящих эффектов и HUD, что считаются в _process; логика боя и физика читают настоящее (false).
+func centre_of_mass(interpolated := false) -> Vector3:
 	var acc := Vector3.ZERO
 	for b in parts.values():
-		acc += part_centre(b as RigidBody3D) * (b as RigidBody3D).mass
+		var rb := b as RigidBody3D
+		acc += (part_centre_interpolated(rb) if interpolated else part_centre(rb)) * rb.mass
 	return acc / total_mass
+
+
+func part_centre_interpolated(b: RigidBody3D) -> Vector3:
+	return b.get_global_transform_interpolated() * _part_com_local(b)
 
 
 ## Центр масс части в мире. У частей doll.tscn origin в центре формы (совпадает), у деталей кита ModularDoll origin = Socket

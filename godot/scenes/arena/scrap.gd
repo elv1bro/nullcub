@@ -48,6 +48,8 @@ func _ready() -> void:
 	if dz is Area3D:
 		(dz as Area3D).body_entered.connect(func(b: Node3D) -> void: body_fell.emit(b))
 	_key = get_node_or_null("CameraKey") as SpotLight3D
+	if _key != null:
+		_key.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # ездит за камерой в _process
 	_loot_rng.seed = loot_seed
 	for id in RunInventory.MATERIALS:
 		if ResourceLoader.exists(LootItem.SCENE % id):

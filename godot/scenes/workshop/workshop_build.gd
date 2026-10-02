@@ -198,6 +198,7 @@ const CLEAR_ARENA_PROPS := ["Props/Barrel_2", "Props/Sawhorse_1"]
 
 
 func _ready() -> void:
+	build_cam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # ездит в _process
 	for p in CLEAR_ARENA_PROPS:
 		var n := arena.get_node_or_null(p)
 		if n != null:
@@ -1573,6 +1574,7 @@ func _make_carry(part_id: String, mirror := false) -> void:
 		_set_overlay_recursive(mesh, _mats["carry_rim"])
 	add_child(root)
 	_carry = root
+	_carry.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # едет за курсором в _process
 	_carry_mirror = mirror
 	_carry_see = false
 	_carry_xf = Transform3D.IDENTITY

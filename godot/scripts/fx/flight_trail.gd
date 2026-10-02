@@ -6,6 +6,10 @@
 class_name FlightTrail
 extends Node3D
 
+
+func _init() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
+
 const POINTS := 12
 const POINT_LIFE_MS := 240.0
 const MIN_STEP_M := 0.025
@@ -123,7 +127,7 @@ func _process(delta: float) -> void:
 			var pos := Vector3.ZERO
 			var wr = tr["body"]
 			if wr == null:
-				pos = d.centre_of_mass()
+				pos = d.centre_of_mass(true)
 			else:
 				var b := (wr as WeakRef).get_ref() as Node3D
 				if b == null or not is_instance_valid(b):
@@ -136,7 +140,7 @@ func _process(delta: float) -> void:
 	if d != null and _smoke_ms > 0.0 and _t < _smoke_ms and _t >= _next_smoke and smoke_puffs < smoke_max:
 		var v := com_velocity(d)
 		if v.length() > SMOKE_MIN_SPEED and _director != null and is_instance_valid(_director):
-			var com := d.centre_of_mass()
+			var com := d.centre_of_mass(true)
 			_director.call("puff", com - v.normalized() * 0.25, -v.normalized(), clampf(v.length() / 6.0, 0.4, 1.2))
 			smoke_puffs += 1
 			_next_smoke = _t + SMOKE_INTERVAL_MS

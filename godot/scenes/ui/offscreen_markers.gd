@@ -42,11 +42,11 @@ func _process(_delta: float) -> void:
 		main = cam.call("primary_doll")
 	var main_pos: Vector3 = world_centre
 	if main != null:
-		main_pos = main.call("centre_of_mass")
+		main_pos = main.call("centre_of_mass", true)
 	for d in get_tree().get_nodes_in_group(dolls_group):
 		if not (d is Node3D) or not d.has_method("centre_of_mass"):
 			continue
-		var com: Vector3 = d.call("centre_of_mass")
+		var com: Vector3 = d.call("centre_of_mass", true)
 		var behind := cam.is_position_behind(com)
 		var sp := cam.unproject_position(com)
 		if not behind and inner.has_point(sp):

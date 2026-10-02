@@ -15,6 +15,10 @@
 class_name Explosion
 extends Node3D
 
+
+func _init() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
+
 const RADIUS := 3.2
 const DOLL_DAMAGE_MAX := 42.0        # HP в эпицентре (кукла 100 HP: бочка под ногами — почти половина)
 const DOLL_DAMAGE_MIN := 3.0         # меньше — не засчитываем

@@ -35,6 +35,7 @@ var _origin_set := false
 
 
 func _ready() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
 	for n in LAYER_NAMES:
 		var l := get_node_or_null(n) as MeshInstance3D
 		if l == null:

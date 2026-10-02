@@ -2,6 +2,10 @@
 ## чуть покачивается. Только поведение: узел и модель (Camera_Drone.glb) ставит tools/build_null_hall.gd.
 extends Node3D
 
+
+func _init() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
+
 @export var centre := Vector3(0.0, 8.0, 0.0)     # куда смотрит
 @export var radii := Vector2(19.5, 22.0)         # полуоси дуги полёта (за куполом 16 × 19)
 @export var sweep_deg := 62.0                    # размах от вертикали туда-обратно

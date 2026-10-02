@@ -146,7 +146,7 @@ func _on_hit_fx(ctx: Dictionary) -> void:
 func _on_ko(victim: Node, _a: Node, _r: Dictionary) -> void:
 	_react("sad" if victim == player else "excited", 2.5)
 	if victim is Node3D and victim.has_method("centre_of_mass"):
-		_look(victim.call("centre_of_mass"), 2.0)
+		_look(victim.call("centre_of_mass", true), 2.0)
 	say("ko_player" if victim == player else "ko")
 
 
@@ -186,10 +186,10 @@ func _process(delta: float) -> void:
 	_hook_parts()
 	if player == null:
 		return
-	var com: Vector3 = player.call("centre_of_mass")
+	var com: Vector3 = player.call("centre_of_mass", true)
 	var opp := _nearest_opponent(com)
 	if opp != null:
-		var dx: float = (opp.call("centre_of_mass") as Vector3).x - com.x
+		var dx: float = (opp.call("centre_of_mass", true) as Vector3).x - com.x
 		if absf(dx) > side_switch_m:
 			side = -signf(dx)
 	_theta = move_toward(_theta, side * deg_to_rad(orbit_deg), arc_speed * delta)
@@ -235,7 +235,7 @@ func _nearest_opponent(com: Vector3) -> Node3D:
 	for d in _drone.get_tree().get_nodes_in_group(dolls_group):
 		if d == player or not (d is Node3D) or not d.has_method("centre_of_mass") or d.get("alive") == false:
 			continue
-		var dd := com.distance_to(d.call("centre_of_mass") as Vector3)
+		var dd := com.distance_to(d.call("centre_of_mass", true) as Vector3)
 		if dd < best_d:
 			best_d = dd
 			best = d
@@ -247,7 +247,7 @@ func _dodge(p: Vector3) -> Vector3:
 	for d in _drone.get_tree().get_nodes_in_group(dolls_group):
 		if d == player or not (d is Node3D) or not d.has_method("centre_of_mass"):
 			continue
-		var c: Vector3 = d.call("centre_of_mass")
+		var c: Vector3 = d.call("centre_of_mass", true)
 		var v := Vector2(p.x - c.x, p.y - c.y)
 		var l := v.length()
 		if l < dodge_r:
@@ -315,11 +315,11 @@ func _tick_lines(delta: float, com: Vector3, opp: Node3D) -> void:
 		_quiet = 0.0
 		_react("curious", 1.5)
 		say("quiet")
-	var dist := com.distance_to(opp.call("centre_of_mass") as Vector3) if opp != null else 0.0
+	var dist := com.distance_to(opp.call("centre_of_mass", true) as Vector3) if opp != null else 0.0
 	_far_t = _far_t + delta if dist > far_m else 0.0
 	if _far_t >= far_s:
 		_far_t = -far_s   # следующий раз — не раньше чем через 2 × far_s
-		_drone.point_at(opp.call("centre_of_mass"), 2.5)
+		_drone.point_at(opp.call("centre_of_mass", true), 2.5)
 		say("far", [int(round(dist))])
 
 

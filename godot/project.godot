@@ -32,6 +32,8 @@ window/stretch/mode="canvas_items"
 
 3d/physics_engine="Jolt Physics"
 3d/default_gravity=2.0
+common/physics_interpolation=true
+common/physics_jitter_fix=0.0
 
 [rendering]
 
