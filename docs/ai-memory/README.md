@@ -6,7 +6,7 @@
 
 С чего начинать:
 - **Продолжение работы после 30.09:** `CONTINUE.md` — что решено последним и следующие задачи.
-- **Что это за игра сейчас:** `lore-null.md` → `docs/plan-demo/LORE_NULL.md` (с 30.09: Башня убрана, мир NULL, главный режим — кампания «История» + Быстрый бой). Механики тела и крафта — `concept-v2-roguelite.md` → `docs/plan-demo/CONCEPT_V2.md` (сверху файла — что в силе).
+- **Что это за игра сейчас:** `lore-null.md` → `docs/plan-demo/LORE_V2.md` (канон «НЕ ОДНИ» от 02.10: NULL — четвёртое измерение, мёртвая лига, Основатель, N0, финал) и `docs/plan-demo/LORE_NULL.md` (источник: документ автора v0.1, решения 30.09, имя Аоэлюн). С 30.09 Башня убрана, главный режим — кампания «История» + Быстрый бой. Механики тела и крафта — `concept-v2-roguelite.md` → `docs/plan-demo/CONCEPT_V2.md` (сверху файла — что в силе).
 - **Вид куклы, детали, крафт, мастерская:** `body-kit-v2.md` → `docs/plan-demo/BODY_KIT.md`, покраска → `docs/plan-demo/BODY_PAINT.md`.
 - **Как гонять Godot и пробы:** `godot-test-workflow.md`, `godot/README.md`, `AGENTS.md` (веб-часть).
 - **Бой и эффекты:** `docs/plan-demo/HIT_FX.md`, производительность — `docs/plan-demo/PERF_AUDIT.md`.
