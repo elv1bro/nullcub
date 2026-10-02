@@ -11,7 +11,10 @@ const ORDER := ["wood", "maple", "wood_dark", "planks", "paint_red", "paint_blue
 	"rust_red", "iron", "rust", "brass", "bone", "rubber"]
 
 @export var id := ""
-@export var title := ""
+@export var title := "":
+	get:
+		# в .tres лежит русский ключ перевода; " *" — пометка «не сохранено» мастерской (CraftEdit), её не переводим
+		return tr(title.trim_suffix(" *")) + (" *" if title.ends_with(" *") else "")
 ## Материал поверхностей Base_* (assets/materials/kit/Base_<Mat>.tres, resource_name начинается на "Base_").
 @export var surface: Material
 ## Цвет плашки в мастерской.

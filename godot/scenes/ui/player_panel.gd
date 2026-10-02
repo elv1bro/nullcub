@@ -67,7 +67,7 @@ func set_player(index: int) -> void:
 
 ## Имя на плашке без своего: «ИГРОК 1» (в блоке-портрете и так «P1»).
 static func default_name(index: int) -> String:
-	return "ИГРОК %d" % (index + 1)
+	return TranslationServer.translate("ИГРОК %d") % (index + 1)
 
 
 ## Имя на плашке (кампания: имя игрока и титул соперника); "" — снова «ИГРОК N».

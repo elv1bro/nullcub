@@ -165,41 +165,41 @@ static func blueprint_key(prefix: String, bp: BodyBlueprint) -> String:
 
 
 func _portrait(parent: Control, key: String, bp: BodyBlueprint, rect: Rect2, shade := false) -> TextureRect:
-	var tr := TextureRect.new()
-	tr.position = rect.position
-	tr.size = rect.size
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var pic := TextureRect.new()
+	pic.position = rect.position
+	pic.size = rect.size
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if shade:
-		tr.modulate = Color(0.55, 0.55, 0.6)
+		pic.modulate = Color(0.55, 0.55, 0.6)
 	var tex := portraits.request(key, bp)
 	if tex != null:
-		tr.texture = tex
+		pic.texture = tex
 	else:
-		var ph := _text(tr, "?", Vector2(0, rect.size.y * 0.18), int(rect.size.y * 0.5), Color(1, 1, 1, 0.12), f_head)
+		var ph := _text(pic, "?", Vector2(0, rect.size.y * 0.18), int(rect.size.y * 0.5), Color(1, 1, 1, 0.12), f_head)
 		ph.size = Vector2(rect.size.x, rect.size.y * 0.7)
 		ph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		if not _pics.has(key):
 			_pics[key] = []
-		(_pics[key] as Array).append(tr)
-	parent.add_child(tr)
-	return tr
+		(_pics[key] as Array).append(pic)
+	parent.add_child(pic)
+	return pic
 
 
 func _on_portrait(key: String, tex: Texture2D) -> void:
-	for tr in _pics.get(key, []):
-		if is_instance_valid(tr):
-			(tr as TextureRect).texture = tex
-			for c in (tr as TextureRect).get_children():
+	for pic in _pics.get(key, []):
+		if is_instance_valid(pic):
+			(pic as TextureRect).texture = tex
+			for c in (pic as TextureRect).get_children():
 				c.queue_free()
 	_pics.erase(key)
 
 
 func _on_icon(id: String, tex: Texture2D) -> void:
-	var tr: TextureRect = _icon_rects.get(id)
-	if tr != null and is_instance_valid(tr):
-		tr.texture = tex
+	var pic: TextureRect = _icon_rects.get(id)
+	if pic != null and is_instance_valid(pic):
+		pic.texture = tex
 
 
 # ---------------------------------------------------------------- кирпичики
@@ -265,14 +265,14 @@ func _gradient(parent: Control, a: Color, b: Color, horizontal := true) -> Textu
 	gt.gradient = g
 	gt.fill_from = Vector2(0, 0)
 	gt.fill_to = Vector2(1, 0) if horizontal else Vector2(0, 1)
-	var tr := TextureRect.new()
-	tr.texture = gt
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tr.position = Vector2.ZERO
-	tr.size = Vector2(W, H)
-	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(tr)
-	return tr
+	var pic := TextureRect.new()
+	pic.texture = gt
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.position = Vector2.ZERO
+	pic.size = Vector2(W, H)
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(pic)
+	return pic
 
 
 func _make_stripes() -> ImageTexture:
@@ -388,38 +388,38 @@ func show_ladder(state: CampaignState, message := "") -> void:
 	screen_id = "ladder"
 	_backdrop(Color(0.12, 0.04, 0.07), Color(0.34, 0.08, 0.13))
 	var tier := CampaignLeague.tier_title(state.tier)
-	_header("● LIVE", "%s  ·  ТУРНИРНАЯ СЕТКА" % tier.to_upper(),
-		"РЕГЛАМЕНТ · ЭНЕРГИЯ %d" % CampaignLeague.energy_budget(state.tier))
+	_header(tr("● LIVE"), tr("%s  ·  ТУРНИРНАЯ СЕТКА") % tier.to_upper(),
+		tr("РЕГЛАМЕНТ · ЭНЕРГИЯ %d") % CampaignLeague.energy_budget(state.tier))
 	var rival := state.current_rival()
 	# --- карточка «Следующий бой»
-	_text(_root, "МЕСТНАЯ ЛИГА ПРОЙДЕНА" if state.finished() else "СЛЕДУЮЩИЙ БОЙ", Vector2(60, 122), 38, CYAN, f_head)
+	_text(_root, tr("МЕСТНАЯ ЛИГА ПРОЙДЕНА") if state.finished() else tr("СЛЕДУЮЩИЙ БОЙ"), Vector2(60, 122), 38, CYAN, f_head)
 	_plate(_root, Rect2(48, 176, 1010, 614), Color(0.03, 0.03, 0.05, 0.55), Color(0.8, 0.1, 0.1), 0.0, 8.0)
 	var pl_bp := state.blueprint
 	var pk := blueprint_key("player", pl_bp)
 	_plate(_root, Rect2(92, 200, 340, 520), Color(0.16, 0.3, 0.55, 0.28), Color(0.3, 0.6, 1.0), 0.0, 5.0)
 	_portrait(_root, pk, pl_bp, Rect2(96, 204, 332, 512))
-	_text(_root, "ТЫ", Vector2(112, 206), 34, Color(0.6, 0.8, 1.0), f_mono)
+	_text(_root, tr("ТЫ"), Vector2(112, 206), 34, Color(0.6, 0.8, 1.0), f_mono)
 	_text(_root, pl_bp.title.to_upper() if pl_bp != null else "", Vector2(92, 724), 40, Color.WHITE, f_head)
 	if state.finished():
-		var champ := _text(_root, "ЧЕМПИОН", Vector2(480, 330), 92, CREAM, f_head)
+		var champ := _text(_root, tr("ЧЕМПИОН"), Vector2(480, 330), 92, CREAM, f_head)
 		champ.size = Vector2(540, 120)
 		champ.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_text(_root, "%d – %d" % [state.wins, state.losses], Vector2(520, 460), 72, Color.WHITE, f_head).size = Vector2(460, 90)
-		_text(_root, "Трофеев на полке: %d" % state.trophies.size(), Vector2(500, 560), 30, MUTED, f_body)
+		_text(_root, tr("Трофеев на полке: %d") % state.trophies.size(), Vector2(500, 560), 30, MUTED, f_body)
 	else:
-		_vs = _text(_root, "VS", Vector2(486, 380), 96, CREAM, f_head, true)
+		_vs = _text(_root, tr("VS"), Vector2(486, 380), 96, CREAM, f_head, true)
 		_vs.pivot_offset = Vector2(60, 60)
 		var rbp := CampaignLeague.rival_blueprint(state.tier, rival)
 		var rk := blueprint_key("rival", rbp)
 		_plate(_root, Rect2(660, 200, 340, 520), Color(0.55, 0.12, 0.14, 0.3), Color(1.0, 0.35, 0.3), 0.0, 5.0)
 		_portrait(_root, rk, rbp, Rect2(664, 204, 332, 512))
-		_text(_root, "УРОВЕНЬ %d" % int(rival.get("level", 1)), Vector2(680, 206), 30, Color(1.0, 0.7, 0.6), f_mono)
+		_text(_root, tr("УРОВЕНЬ %d") % int(rival.get("level", 1)), Vector2(680, 206), 30, Color(1.0, 0.7, 0.6), f_mono)
 		_text(_root, CampaignLeague.rival_title(rival).to_upper(), Vector2(660, 724), 48, CREAM, f_head)
 		if bool(rival.get("final", false)):
 			_plate(_root, Rect2(850, 214, 140, 44), AMBER, Color(0, 0, 0, 0), 0.2)
-			_text(_root, "ФИНАЛ", Vector2(868, 214), 34, INK, f_head)
+			_text(_root, tr("ФИНАЛ"), Vector2(868, 214), 34, INK, f_head)
 	# --- турнирная сетка
-	_text(_root, "СЕТКА ЛИГИ", Vector2(1110, 122), 38, CYAN, f_head)
+	_text(_root, tr("СЕТКА ЛИГИ"), Vector2(1110, 122), 38, CYAN, f_head)
 	var ladder := state.ladder()
 	for i in ladder.size():
 		var r: Dictionary = ladder[i]
@@ -437,61 +437,61 @@ func show_ladder(state: CampaignState, message := "") -> void:
 		var status := ""
 		var scol := MUTED
 		if done:
-			var tr := _trophy_of_step(state, i)
-			status = "✓ ПОБЕЖДЁН" + ((" · ТРОФЕЙ: %s" % CampaignLeague.part_title(tr).to_upper()) if tr != "" else "")
+			var tid := _trophy_of_step(state, i)
+			status = tr("✓ ПОБЕЖДЁН · ТРОФЕЙ: %s") % CampaignLeague.part_title(tid).to_upper() if tid != "" else tr("✓ ПОБЕЖДЁН")
 			scol = GREEN
 		elif cur:
-			status = "▶ СЛЕДУЮЩИЙ СОПЕРНИК"
+			status = tr("▶ СЛЕДУЮЩИЙ СОПЕРНИК")
 			scol = AMBER
 		else:
-			status = "ЕЩЁ ВПЕРЕДИ"
+			status = tr("ЕЩЁ ВПЕРЕДИ")
 		var sl := _text(_root, status, Vector2(1292, y + 70), 24, scol, f_mono)
 		sl.size = Vector2(560, 32)
 		sl.clip_text = true
 		sl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		if bool(r.get("final", false)):
 			_plate(_root, Rect2(1730, y + 14, 120, 40), AMBER, Color(0, 0, 0, 0), 0.2)
-			_text(_root, "ФИНАЛ", Vector2(1746, y + 14), 30, INK, f_head)
+			_text(_root, tr("ФИНАЛ"), Vector2(1746, y + 14), 30, INK, f_head)
 	var trophies: PackedStringArray = []
 	for id in state.trophies:
 		trophies.append(CampaignLeague.part_title(id))
 	_plate(_root, Rect2(1100, 712, 770, 78), Color(0.03, 0.03, 0.05, 0.55), Color(1, 1, 1, 0.25), 0.0, 4.0)
-	_text(_root, "ПОБЕД %d  ·  ПОРАЖЕНИЙ %d" % [state.wins, state.losses], Vector2(1124, 716), 34, Color.WHITE, f_head)
-	var tl := _text(_root, "ТРОФЕИ: " + (", ".join(trophies).to_upper() if not trophies.is_empty() else "ПОКА НЕТ"), Vector2(1124, 756), 22, MUTED, f_mono)
+	_text(_root, tr("ПОБЕД %d  ·  ПОРАЖЕНИЙ %d") % [state.wins, state.losses], Vector2(1124, 716), 34, Color.WHITE, f_head)
+	var tl := _text(_root, tr("ТРОФЕИ: %s") % (", ".join(trophies).to_upper() if not trophies.is_empty() else tr("ПОКА НЕТ")), Vector2(1124, 756), 22, MUTED, f_mono)
 	tl.size = Vector2(730, 30)
 	tl.clip_text = true
 	# --- N0 и кнопки
-	var n0 := String(N0_LINES_SRC.N0_LINES[mini(state.step, N0_LINES_SRC.N0_LINES.size() - 1)])
+	var n0 := tr(String(N0_LINES_SRC.N0_LINES[mini(state.step, N0_LINES_SRC.N0_LINES.size() - 1)]))
 	var errs := CraftEdit.friendly_errors(state.blueprint)
 	var msg := message
 	if msg == "" and not errs.is_empty():
-		msg = "Сборка не готова к бою: %s — открой мастерскую." % errs[0]
+		msg = tr("Сборка не готова к бою: %s — открой мастерскую.") % errs[0]
 	if msg != "":
 		_plate(_root, Rect2(48, 806, 1822, 58), Color(0.35, 0.06, 0.05, 0.9), BAD, 0.0, 6.0)
 		_text(_root, "!", Vector2(72, 806), 40, BAD, f_head)
 		_text(_root, msg, Vector2(120, 816), 28, Color.WHITE, f_body)
 	else:
 		_n0_plate(n0, 806)
-	var fb := _button("ЛИГА ПРОЙДЕНА" if state.finished() else "В БОЙ  ▶", Rect2(48, 890, 420, 84), true)
+	var fb := _button(tr("ЛИГА ПРОЙДЕНА") if state.finished() else tr("В БОЙ  ▶"), Rect2(48, 890, 420, 84), true)
 	fb.disabled = state.finished()
 	fb.pressed.connect(func() -> void: fight_pressed.emit())
-	var wb := _button("МАСТЕРСКАЯ", Rect2(496, 890, 400, 84))
+	var wb := _button(tr("МАСТЕРСКАЯ"), Rect2(496, 890, 400, 84))
 	wb.pressed.connect(func() -> void: workshop_pressed.emit())
-	var nb := _button("НОВАЯ КАМПАНИЯ", Rect2(924, 890, 470, 84))
+	var nb := _button(tr("НОВАЯ КАМПАНИЯ"), Rect2(924, 890, 470, 84))
 	nb.pressed.connect(func() -> void:
 		var now := Time.get_ticks_msec() / 1000.0
 		if now > _new_armed_until:
 			_new_armed_until = now + NEW_CONFIRM_S
-			nb.text = "ЕЩЁ РАЗ — СТЁРТСЯ"
+			nb.text = tr("ЕЩЁ РАЗ — СТЁРТСЯ")
 		else:
 			_new_armed_until = -1.0
 			new_pressed.emit())
-	var xb := _button("ВЫХОД", Rect2(1422, 890, 448, 84))
+	var xb := _button(tr("ВЫХОД"), Rect2(1422, 890, 448, 84))
 	xb.pressed.connect(func() -> void: exit_pressed.emit())
 	_new_armed_until = -1.0
 	(fb if not fb.disabled else wb).grab_focus()
-	_ticker_bar("СЕГОДНЯ В 21:00 · %s · ПОБЕДИТЕЛЬ ЗАБИРАЕТ ДЕТАЛЬ СОПЕРНИКА" % (
-		"ЛИГА ПРОЙДЕНА" if state.finished() else "%s ПРОТИВ НОВИЧКА ИЗ БОКСА 07" % CampaignLeague.rival_title(rival).to_upper()))
+	_ticker_bar(tr("СЕГОДНЯ В 21:00 · %s · ПОБЕДИТЕЛЬ ЗАБИРАЕТ ДЕТАЛЬ СОПЕРНИКА") % (
+		tr("ЛИГА ПРОЙДЕНА") if state.finished() else tr("%s ПРОТИВ НОВИЧКА ИЗ БОКСА 07") % CampaignLeague.rival_title(rival).to_upper()))
 	_enter()
 
 
@@ -514,16 +514,16 @@ func show_outcome(state: CampaignState, info: Dictionary, trophy: String, rival:
 		_backdrop(Color(0.04, 0.12, 0.08), Color(0.1, 0.3, 0.18))
 	else:
 		_backdrop(Color(0.14, 0.04, 0.05), Color(0.32, 0.07, 0.08))
-	_header("ИТОГ", "МЕСТНАЯ ЛИГА  ·  ИТОГИ БОЯ", "БОЙ %d ИЗ %d" % [mini(state.step + (0 if won else 1), state.ladder().size()), state.ladder().size()])
+	_header(tr("ИТОГ"), tr("МЕСТНАЯ ЛИГА  ·  ИТОГИ БОЯ"), tr("БОЙ %d ИЗ %d") % [mini(state.step + (0 if won else 1), state.ladder().size()), state.ladder().size()])
 	var col := GREEN if won else (AMBER if draw else BAD)
-	var head := _text(_root, "ПОБЕДА" if won else ("НИЧЬЯ" if draw else "ПОРАЖЕНИЕ"), Vector2(70, 150), 190, col, f_head, true)
+	var head := _text(_root, tr("ПОБЕДА") if won else (tr("НИЧЬЯ") if draw else tr("ПОРАЖЕНИЕ")), Vector2(70, 150), 190, col, f_head, true)
 	head.rotation_degrees = -2.0
 	var secs := int(float(info.get("duration_s", 0.0)))
 	var sub := "%s  ·  %d:%02d" % [CampaignLeague.rival_title(rival).to_upper(), secs / 60, secs % 60]
 	_text(_root, sub, Vector2(84, 372), 42, Color.WHITE, f_head)
 	if won:
 		_plate(_root, Rect2(70, 450, 1060, 250), Color(0.03, 0.03, 0.05, 0.7), AMBER, 0.0, 8.0)
-		_text(_root, "TROPHY RIGHTS", Vector2(110, 466), 30, AMBER, f_mono)
+		_text(_root, tr("TROPHY RIGHTS"), Vector2(110, 466), 30, AMBER, f_mono)
 		if trophy != "":
 			_plate(_root, Rect2(110, 520, 150, 150), Color(0.1, 0.1, 0.14, 0.9), Color(1, 1, 1, 0.2), 0.0, 3.0)
 			var ir := TextureRect.new()
@@ -539,41 +539,41 @@ func show_outcome(state: CampaignState, info: Dictionary, trophy: String, rival:
 				_icon_rects[trophy] = ir
 			_root.add_child(ir)
 			_text(_root, CampaignLeague.part_title(trophy).to_upper(), Vector2(290, 530), 76, CREAM, f_head)
-			_text(_root, "Деталь соперника теперь на полке мастерской.", Vector2(292, 622), 28, Color(0.9, 0.9, 0.95), f_body)
+			_text(_root, tr("Деталь соперника теперь на полке мастерской."), Vector2(292, 622), 28, Color(0.9, 0.9, 0.95), f_body)
 		else:
-			_text(_root, "ТРОФЕЯ НЕТ", Vector2(110, 540), 76, CREAM, f_head)
-			_text(_root, "У соперника не нашлось детали, которая может выпасть.", Vector2(112, 632), 28, Color(0.9, 0.9, 0.95), f_body)
+			_text(_root, tr("ТРОФЕЯ НЕТ"), Vector2(110, 540), 76, CREAM, f_head)
+			_text(_root, tr("У соперника не нашлось детали, которая может выпасть."), Vector2(112, 632), 28, Color(0.9, 0.9, 0.95), f_body)
 		if state.finished():
-			_text(_root, "%s ПРОЙДЕНА. ПРОДОЛЖЕНИЕ СЛЕДУЕТ." % CampaignLeague.tier_title(state.tier).to_upper(), Vector2(84, 726), 34, CYAN, f_head)
+			_text(_root, tr("%s ПРОЙДЕНА. ПРОДОЛЖЕНИЕ СЛЕДУЕТ.") % CampaignLeague.tier_title(state.tier).to_upper(), Vector2(84, 726), 34, CYAN, f_head)
 	else:
 		_plate(_root, Rect2(70, 450, 1060, 160), Color(0.03, 0.03, 0.05, 0.7), BAD, 0.0, 8.0)
-		_text(_root, "БОЙ ПЕРЕИГРЫВАЕТСЯ", Vector2(110, 470), 60, Color.WHITE, f_head)
-		_text(_root, "Лестница стоит, штрафа нет. Загляни в мастерскую — или просто ещё раз.", Vector2(112, 548), 28, Color(0.9, 0.9, 0.95), f_body)
+		_text(_root, tr("БОЙ ПЕРЕИГРЫВАЕТСЯ"), Vector2(110, 470), 60, Color.WHITE, f_head)
+		_text(_root, tr("Лестница стоит, штрафа нет. Загляни в мастерскую — или просто ещё раз."), Vector2(112, 548), 28, Color(0.9, 0.9, 0.95), f_body)
 	# портреты справа
 	var rbp := CampaignLeague.rival_blueprint(state.tier, rival)
 	_plate(_root, Rect2(1200, 150, 300, 480), Color(0.16, 0.3, 0.55, 0.25), Color(0.3, 0.6, 1.0), 0.0, 5.0)
 	_portrait(_root, blueprint_key("player", state.blueprint), state.blueprint, Rect2(1204, 154, 292, 450), not won and not draw)
 	_plate(_root, Rect2(1560, 150, 300, 480), Color(0.55, 0.12, 0.14, 0.25), Color(1.0, 0.35, 0.3), 0.0, 5.0)
 	_portrait(_root, blueprint_key("rival", rbp), rbp, Rect2(1564, 154, 292, 450), won)
-	_text(_root, "ТЫ", Vector2(1220, 156), 30, Color(0.6, 0.8, 1.0), f_mono)
+	_text(_root, tr("ТЫ"), Vector2(1220, 156), 30, Color(0.6, 0.8, 1.0), f_mono)
 	_text(_root, "%d – %d" % [state.wins, state.losses], Vector2(1200, 636), 56, Color.WHITE, f_head)
 	_league_strip(state, 70.0, 740.0)
-	var nb := _button(("СЛЕДУЮЩИЙ БОЙ  ▶" if won else "ЕЩЁ РАЗ  ▶"), Rect2(48, 890, 560, 84), true)
+	var nb := _button((tr("СЛЕДУЮЩИЙ БОЙ  ▶") if won else tr("ЕЩЁ РАЗ  ▶")), Rect2(48, 890, 560, 84), true)
 	nb.visible = not state.finished()
 	nb.pressed.connect(func() -> void: fight_pressed.emit())
-	var wb := _button("МАСТЕРСКАЯ", Rect2(636, 890, 460, 84))
+	var wb := _button(tr("МАСТЕРСКАЯ"), Rect2(636, 890, 460, 84))
 	wb.pressed.connect(func() -> void: workshop_pressed.emit())
-	var lb := _button("К СЕТКЕ ЛИГИ", Rect2(1124, 890, 746, 84))
+	var lb := _button(tr("К СЕТКЕ ЛИГИ"), Rect2(1124, 890, 746, 84))
 	lb.pressed.connect(func() -> void: ladder_pressed.emit())
 	(nb if nb.visible else lb).grab_focus()
-	_ticker_bar("ИТОГИ БОЯ · %s · %s" % [CampaignLeague.rival_title(rival).to_upper(),
-		"ПОБЕДА ЗАЧТЕНА, ДЕТАЛЬ ВЫДАНА" if won else "БОЙ НЕ ЗАЧТЁН, ПЕРЕИГРОВКА БЕЗ ШТРАФА"])
+	_ticker_bar(tr("ИТОГИ БОЯ · %s · %s") % [CampaignLeague.rival_title(rival).to_upper(),
+		tr("ПОБЕДА ЗАЧТЕНА, ДЕТАЛЬ ВЫДАНА") if won else tr("БОЙ НЕ ЗАЧТЁН, ПЕРЕИГРОВКА БЕЗ ШТРАФА")])
 	_enter(1.0)
 
 
 ## Полоска прогресса лиги: по плашке на соперника — пройден (✓), следующий (▶), впереди.
 func _league_strip(state: CampaignState, x: float, y: float) -> void:
-	_text(_root, "ПРОГРЕСС ЛИГИ", Vector2(x + 4, y - 38), 26, CYAN, f_mono)
+	_text(_root, tr("ПРОГРЕСС ЛИГИ"), Vector2(x + 4, y - 38), 26, CYAN, f_mono)
 	var ladder := state.ladder()
 	var w := (1060.0 - 12.0 * (ladder.size() - 1)) / ladder.size()
 	for i in ladder.size():
@@ -601,7 +601,7 @@ func show_connecting(title: String, sub: String) -> void:
 	_plate(_root, Rect2(380, 250, 1160, 250), Color(0.03, 0.03, 0.05, 0.92), RED, 0.0, 10.0)
 	_text(_root, title, Vector2(430, 270), 96, Color.WHITE, f_head)
 	_text(_root, sub, Vector2(434, 396), 36, CREAM, f_mono)
-	_dot = _text(_root, "● LIVE", Vector2(430, 452), 36, RED, f_head)
+	_dot = _text(_root, tr("● LIVE"), Vector2(430, 452), 36, RED, f_head)
 	_enter(0.7)
 
 
@@ -617,13 +617,13 @@ func show_workshop_bar(state: CampaignState) -> void:
 	var r := state.current_rival()
 	# между библиотекой слева (до x≈460) и панелью справа (с x≈1600): плашка с подписью слева и кнопками справа
 	_plate(_root, Rect2(488, 86, 1090, 106), Color(0.04, 0.04, 0.06, 0.92), RED, 0.0, 8.0)
-	_text(_root, "● КАМПАНИЯ" + ("  ·  ПРОТИВ: %s" % CampaignLeague.rival_title(r).to_upper() if not r.is_empty() else ""), Vector2(524, 88), 36, CREAM, f_head)
-	_text(_root, "ЭНЕРГИЯ %d  ·  ОРУЖИЕ %d/КГ  ·  ТРОФЕЕВ %d" % [CampaignLeague.energy_budget(state.tier),
+	_text(_root, tr("● КАМПАНИЯ  ·  ПРОТИВ: %s") % CampaignLeague.rival_title(r).to_upper() if not r.is_empty() else tr("● КАМПАНИЯ"), Vector2(524, 88), 36, CREAM, f_head)
+	_text(_root, tr("ЭНЕРГИЯ %d  ·  ОРУЖИЕ %d/КГ  ·  ТРОФЕЕВ %d") % [CampaignLeague.energy_budget(state.tier),
 		int(CampaignLeague.weapon_energy_per_kg(state.tier)), state.trophies.size()], Vector2(526, 140), 22, MUTED, f_mono)
-	var fb := _button("В БОЙ ▶", Rect2(1170, 98, 190, 80), true)
+	var fb := _button(tr("В БОЙ ▶"), Rect2(1170, 98, 190, 80), true)
 	fb.visible = not state.finished()
 	fb.pressed.connect(func() -> void: fight_pressed.emit())
-	var lb := _button("К СЕТКЕ", Rect2(1376, 98, 190, 80))
+	var lb := _button(tr("К СЕТКЕ"), Rect2(1376, 98, 190, 80))
 	lb.pressed.connect(func() -> void: ladder_pressed.emit())
 	for b in buttons:
 		(b as Button).focus_mode = Control.FOCUS_NONE

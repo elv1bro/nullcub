@@ -34,12 +34,12 @@ func setup(player_bp: BodyBlueprint, rival_bp: BodyBlueprint, r: Dictionary, riv
 	($P2 as ModularDoll).blueprint = rival_bp
 	($P2/Brain as RivalBrain).level = int(r.get("level", 1))
 	($AudienceVote as AudienceVote).anomaly = String(r.get("anomaly", ""))
-	($UI/Hint as Label).text = "Кампания · %s · WASD + Shift + Space, мышь — тяги · Esc — сдаться и к лестнице" % rival_title
+	($UI/Hint as Label).text = tr("Кампания · %s · WASD + Shift + Space, мышь — тяги · Esc — сдаться и к лестнице") % rival_title
 
 
 func _ready() -> void:
 	super._ready()
-	hud.set_player_name(0, String(info.get("player_name", "Игрок")))
+	hud.set_player_name(0, String(info.get("player_name", tr("Игрок"))))
 	hud.set_player_name(1, String(info.get("rival_title", "")))
 	ArmAssist.attach_to(p1)
 	for d in [p1, p2]:
@@ -56,7 +56,7 @@ func _start() -> void:
 		return
 	ent.finished.connect(func(_skipped: bool) -> void: match_node.begin(), CONNECT_ONE_SHOT)
 	ent.play([
-		{"doll": p1, "name": String(info.get("player_name", "Игрок")), "build": String(info.get("player_build", p1.blueprint.title)),
+		{"doll": p1, "name": String(info.get("player_name", tr("Игрок"))), "build": String(info.get("player_build", p1.blueprint.title)),
 			"mass": p1.blueprint.total_mass(), "parts": p1.blueprint.nodes.size(), "record": String(info.get("player_record", ""))},
 		{"doll": p2, "name": String(info.get("rival_title", p2.blueprint.title)), "build": String(info.get("rival_build", "")),
 			"mass": p2.blueprint.total_mass(), "parts": p2.blueprint.nodes.size(), "record": String(info.get("rival_record", ""))},

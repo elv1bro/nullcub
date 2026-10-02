@@ -62,10 +62,10 @@ static func is_heavy(b: Node) -> bool:
 static func title(h: int) -> String:
 	match h:
 		Heft.HEAVY:
-			return "слишком тяжело"
+			return TranslationServer.translate("слишком тяжело")
 		Heft.MEDIUM:
-			return "тяжёлое — тащить"
-	return "лёгкое"
+			return TranslationServer.translate("тяжёлое — тащить")
+	return TranslationServer.translate("лёгкое")
 
 
 ## Выдать телу вес по классу; HEAVY — ещё и якорь (узел-ребёнок PropHeft). Повторный вызов ничего не дублирует.

@@ -187,13 +187,13 @@ func start_fight() -> bool:
 		return false
 	var errs := CraftEdit.friendly_errors(state.blueprint)
 	if not errs.is_empty():
-		ladder_message = "Сборка не готова к бою: %s — открой мастерскую." % errs[0]
+		ladder_message = tr("Сборка не готова к бою: %s — открой мастерскую.") % errs[0]
 		show_ladder()
 		return false
 	_free_fight()
 	_set_screen(Screen.FIGHT)
 	var r := state.current_rival()
-	Loading.begin("ПЕРЕКЛЮЧАЕМ НА ПЛОЩАДКУ", "купол Old NULL Hall · %s" % CampaignLeague.rival_title(r).to_upper())
+	Loading.begin(tr("ПЕРЕКЛЮЧАЕМ НА ПЛОЩАДКУ"), tr("купол Old NULL Hall · %s") % CampaignLeague.rival_title(r).to_upper())
 	_launch_fight.call_deferred()
 	return true
 
@@ -212,10 +212,10 @@ func _launch_fight() -> void:
 	var r := state.current_rival()
 	fight = ps.instantiate()
 	fight.call("setup", state.blueprint, CampaignLeague.rival_blueprint(state.tier, r), r, CampaignLeague.rival_title(r), {
-		"entrance": entrance_enabled, "player_name": "Игрок", "player_build": state.blueprint.title,
-		"player_record": "побед %d · поражений %d · трофеев %d" % [state.wins, state.losses, state.trophies.size()],
-		"rival_build": "%s · уровень %d" % [CampaignLeague.tier_title(state.tier), int(r.get("level", 1))],
-		"rival_record": "ФИНАЛ ЛИГИ" if bool(r.get("final", false)) else "соперник %d из %d" % [state.step + 1, state.ladder().size()]})
+		"entrance": entrance_enabled, "player_name": tr("Игрок"), "player_build": state.blueprint.title,
+		"player_record": tr("побед %d · поражений %d · трофеев %d") % [state.wins, state.losses, state.trophies.size()],
+		"rival_build": tr("%s · уровень %d") % [CampaignLeague.tier_title(state.tier), int(r.get("level", 1))],
+		"rival_record": tr("ФИНАЛ ЛИГИ") if bool(r.get("final", false)) else tr("соперник %d из %d") % [state.step + 1, state.ladder().size()]})
 	fight.connect("fight_finished", finish_fight)
 	fight.connect("fight_abandoned", func() -> void:
 		_free_fight()

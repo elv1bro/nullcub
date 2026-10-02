@@ -118,6 +118,21 @@ static func def_of(part_id: String) -> Dictionary:
 	return DEFS.get(part_id, {})
 
 
+## Название активного блока на языке игрока (в DEFS — русский ключ перевода).
+static func title_of(part_id: String) -> String:
+	return String(TranslationServer.translate(String(def_of(part_id).get("title", part_id))))
+
+
+## Описание активного блока на языке игрока.
+static func hint_of(part_id: String) -> String:
+	return String(TranslationServer.translate(String(def_of(part_id).get("hint", ""))))
+
+
+## Описание пассива детали лиги на языке игрока ("" — пассива нет).
+static func passive_hint(part_id: String) -> String:
+	return String(TranslationServer.translate(String((PASSIVE.get(part_id, {}) as Dictionary).get("hint", ""))))
+
+
 static func channel_of(n: Dictionary) -> int:
 	var c := int(n.get(NODE_KEY, 0))
 	return c if c >= 1 and c <= CHANNELS else 0

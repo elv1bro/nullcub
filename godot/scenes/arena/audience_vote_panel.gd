@@ -46,7 +46,7 @@ func _apply_skin() -> void:
 func show_vote(options: Array, n0_line: String = "") -> void:
 	_hide_t = null
 	box.visible = true
-	title.text = "AUDIENCE EVENT"
+	title.text = tr("AUDIENCE EVENT")
 	result.visible = false
 	for i in rows.size():
 		var row: Control = rows[i]
@@ -75,10 +75,10 @@ func set_percents(pct: Array) -> void:
 func show_result(winner: String, applied: String = "", n0_line: String = "") -> void:
 	result.visible = true
 	if applied == "":
-		result.text = "%s WINS" % winner
+		result.text = tr("%s WINS") % winner
 		result.add_theme_color_override("font_color", COL_WIN)
 	else:
-		result.text = "%s WINS  →  %s" % [winner, applied]
+		result.text = tr("%s WINS  →  %s") % [winner, applied]
 		result.add_theme_color_override("font_color", COL_BAD)
 	if n0_line != "":
 		_say(n0_line)

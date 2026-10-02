@@ -1,5 +1,5 @@
 ## Кадры и ролик главного меню-гаража (scenes/menu/garage_menu.tscn). Нужно окно.
-##   godot --path godot --resolution 1920x1080 res://tests/garage_menu_shots.tscn -- out=/абс/папка
+##   godot --path godot --resolution 1920x1080 res://tests/garage_menu_shots.tscn -- out=/абс/папка   (lang=en — на английском)
 ##       → garage-<title|story|quick|workshop|trophies|settings|modes|exit|settings_screen|trophies_screen|into_tv>.png,
 ##         garage-tv_live_0..2.png; `shots=title,story` — только эти
 ##   godot --path godot --resolution 1280x720 --write-movie /абс/кадры/f.png --fixed-fps 24 res://tests/garage_menu_shots.tscn -- video=1
@@ -18,6 +18,9 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		var kv := a.split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
+	if args.has("lang"):   # язык кадров (locale/<код>.json): lang=en
+		get_node("/root/Loc").set_language(String(args["lang"]))
+		get_node("/root/Flow").settings["lang"] = String(args["lang"])   # без записи в user://settings.cfg
 	menu = MENU.instantiate() as GarageMenu
 	menu.dry_run = true
 	add_child(menu)

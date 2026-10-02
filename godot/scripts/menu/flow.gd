@@ -9,11 +9,13 @@ extends Node
 const MENU := "res://scenes/menu/garage_menu.tscn"
 const SETTINGS_PATH := "user://settings.cfg"
 ## Громкость — линейная доля 0..1 на шину Master (linear_to_db), fx — пресет FxPreset (full / reduced / off),
-## subtitles — субтитры реплик N0 в гараже, hud_skin — скин HUD боя (HudSkin: broadcast / neon / led, docs/plan-demo/HUD_SKINS.md).
-const DEFAULTS := {"volume": 0.8, "fullscreen": false, "vsync": true, "fx": "full", "subtitles": true, "hud_skin": "broadcast"}
+## lang — код языка интерфейса (Loc: locale/<код>.json, docs/plan-demo/I18N.md), subtitles — субтитры реплик N0 в гараже, hud_skin — скин HUD боя (HudSkin: broadcast / neon / led, docs/plan-demo/HUD_SKINS.md).
+const DEFAULTS := {"volume": 0.8, "fullscreen": false, "vsync": true, "fx": "full", "subtitles": true, "hud_skin": "broadcast", "lang": "ru"}
 const ACCENT := Color(1.0, 0.55, 0.2)
 
 var returning := false
+## Гараж перезагружается после смены языка: после возврата сразу открыть настройки (см. GarageMenu._ready).
+var reopen_settings := false
 var last_item := 0
 var settings := {}
 var _pause: CanvasLayer = null
@@ -80,20 +82,20 @@ func _build_pause() -> void:
 	box.add_theme_constant_override("separation", 10)
 	_pause.add_child(box)
 	var title := Label.new()
-	title.text = "ПАУЗА"
+	title.text = tr("ПАУЗА")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", head_font())
 	title.add_theme_font_size_override("font_size", 72)
 	title.add_theme_color_override("font_color", ACCENT)
 	box.add_child(title)
 	var first: Button = null
-	var items := [["ПРОДОЛЖИТЬ", close_pause]]
+	var items := [[tr("ПРОДОЛЖИТЬ"), close_pause]]
 	if _restart.is_valid():
-		items.append(["ЗАНОВО", func() -> void:
+		items.append([tr("ЗАНОВО"), func() -> void:
 			var r := _restart
 			close_pause()
 			r.call()])
-	items.append(["В ГАРАЖ", func() -> void: to_menu()])
+	items.append([tr("В ГАРАЖ"), func() -> void: to_menu()])
 	for it in items:
 		var b := Button.new()
 		b.text = it[0]
@@ -114,7 +116,7 @@ func _build_pause() -> void:
 		if first == null:
 			first = b
 	var hint := Label.new()
-	hint.text = "↑↓  ВЫБОР     ENTER  ОК     ESC  ПРОДОЛЖИТЬ"
+	hint.text = tr("↑↓  ВЫБОР     ENTER  ОК     ESC  ПРОДОЛЖИТЬ")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 18)
 	hint.add_theme_color_override("font_color", Color(0.65, 0.65, 0.7))
@@ -170,6 +172,9 @@ func get_setting(key: String) -> Variant:
 
 
 func apply_settings() -> void:
+	var loc := get_node_or_null("/root/Loc")
+	if loc != null:
+		loc.set_language(String(settings["lang"]))
 	_bus_volume("Master", float(settings["volume"]))
 	FxPreset.set_preset(String(settings["fx"]), get_tree())
 	HudSkin.set_skin(String(settings["hud_skin"]), false)

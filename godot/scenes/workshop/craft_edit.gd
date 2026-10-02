@@ -83,6 +83,15 @@ const KIND_TITLES := {
 const GROUP_TITLES := {
 	"Neck": "шея", "Shoulder": "плечо", "Elbow": "локоть", "Wrist": "запястье", "Hip": "бедро", "Knee": "колено", "Ankle": "лодыжка",
 }
+## Названия вида детали / группы мышц для игрока (в таблицах русские ключи, перевод — здесь).
+static func kind_title(kind: String) -> String:
+	return TranslationServer.translate(String(KIND_TITLES.get(kind, kind)))
+
+
+static func group_title(group: String) -> String:
+	return TranslationServer.translate(String(GROUP_TITLES.get(group, group)))
+
+
 const MAX_CONTROL := BodyBlueprint.MAX_PULLS   # тяг на куклу (предел — энергия, WORKSHOP_V3.md §3)
 const UID_CHARS := BodyBlueprint.UID_CHARS
 
@@ -392,12 +401,12 @@ static func structural_errors(bp: Resource) -> PackedStringArray:
 	for n in nodes_of(bp):
 		var uid := String(n.get("uid", ""))
 		if uid.length() != 1 or not UID_CHARS.contains(uid):
-			errors.append("uid «%s»: нужен один символ 0-9A-Z" % uid)
+			errors.append(TranslationServer.translate("uid «%s»: нужен один символ 0-9A-Z") % uid)
 		if uids.has(uid):
-			errors.append("uid «%s» повторяется" % uid)
+			errors.append(TranslationServer.translate("uid «%s» повторяется") % uid)
 		uids[uid] = true
 		if part(String(n.get("part", ""))) == null:
-			errors.append("нет детали «%s»" % n.get("part", ""))
+			errors.append(TranslationServer.translate("нет детали «%s»") % n.get("part", ""))
 		if String(n.get("parent", "")) == "":
 			roots += 1
 	if not errors.is_empty():
@@ -405,7 +414,7 @@ static func structural_errors(bp: Resource) -> PackedStringArray:
 	if nodes_of(bp).is_empty():
 		return errors
 	if roots != 1:
-		errors.append("корней %d, нужен один" % roots)
+		errors.append(TranslationServer.translate("корней %d, нужен один") % roots)
 		return errors
 	if is_weapon(bp):
 		errors.append_array((bp as WeaponBlueprint).validate())
@@ -413,7 +422,7 @@ static func structural_errors(bp: Resource) -> PackedStringArray:
 		return errors
 	var body := bp as BodyBlueprint
 	if part(String(find(bp, root_uid(bp)).get("part", ""))).kind != "core":
-		errors.append("корень должен быть ядром")
+		errors.append(TranslationServer.translate("корень должен быть ядром"))
 		return errors
 	for n in body.nodes:
 		var uid := String(n.get("uid", ""))
@@ -442,15 +451,15 @@ static func _weapon_anchor_errors(bp: Resource) -> PackedStringArray:
 		var an := anchor_name(String(n.get("anchor", "")))
 		var anchors := anchors_of(bp, p)
 		if not anchors.has(an):
-			errors.append("у «%s» нет якоря %s" % [p, an])
+			errors.append(TranslationServer.translate("у «%s» нет якоря %s") % [p, an])
 			continue
 		var acc: PackedStringArray = anchors[an]["accepts"]
 		var d := part(String(n.get("part", "")))
 		if not acc.is_empty() and d != null and not acc.has(d.kind):
-			errors.append("%s не принимает %s" % [an, d.kind])
+			errors.append(TranslationServer.translate("%s не принимает %s") % [an, d.kind])
 		var key := p + "/" + an
 		if used.has(key):
-			errors.append("на %s две детали" % an)
+			errors.append(TranslationServer.translate("на %s две детали") % an)
 		used[key] = true
 	return errors
 
@@ -468,7 +477,7 @@ static func friendly_errors(bp: Resource) -> PackedStringArray:
 		return out
 	var body := bp as BodyBlueprint
 	if body.nodes.is_empty():
-		out.append("Пусто: поставь ядро")
+		out.append(TranslationServer.translate("Пусто: поставь ядро"))
 		return out
 	for e in body.validate():
 		out.append(_friendly(e))
@@ -481,7 +490,7 @@ static func warnings(bp: BodyBlueprint) -> PackedStringArray:
 	if bp == null:
 		return out
 	if bp.control.is_empty():
-		out.append("Нет тяги: выбери деталь → «Настроить» → тяга ЛКМ (или Q)")
+		out.append(TranslationServer.translate("Нет тяги: выбери деталь → «Настроить» → тяга ЛКМ (или Q)"))
 	if bp.weapon != null:
 		var m := weapon_mount(bp)
 		if String(m["uid"]) == "":
@@ -489,47 +498,94 @@ static func warnings(bp: BodyBlueprint) -> PackedStringArray:
 	return out
 
 
+## Сообщения BodyBlueprint / structural_errors приходят уже переведёнными (tr в validate, joint_error), поэтому разбираются не по
+## русским кускам, а по шаблону ТОЙ ЖЕ строки-ключа в текущем языке (_msg_args): работает в любом языке, пока в переводе сохранены подстановки.
+const _MSG_ROOT := ["корень должен быть ядром, а не «%s»", "корней %d, нужен один (ядро)", "корней %d, нужен один", "корень должен быть ядром"]
+const _MSG_WELD := ["голову «%s» нельзя приварить: она держится на своём суставе Neck",
+	"управляемую деталь «%s» нельзя приварить: рука мышью тянет её собственное тело",
+	"«%s» нельзя приварить: сустав «%s» на её якоре «%s» берёт группу от неё (auto)"]
+const _MSG_NO_MUSCLE := "у сустава «%s» (%s) нет мышцы — шарнир «%s» ничего не усилит"
+const _MSG_FIXED := "«%s» (%s) крепится намертво — шарнир «%s» к ней не ставится"
+
+static var _msg_rx: Dictionary = {}   # "язык|ключ" -> RegEx
+
+
+## Подстановки сообщения e по шаблону key (русский ключ перевода) в текущем языке; null — сообщение не по этому шаблону.
+static func _msg_args(e: String, key: String) -> Variant:
+	var ck := TranslationServer.get_locale() + "|" + key
+	var rx: RegEx = _msg_rx.get(ck)
+	if rx == null:
+		var tpl := String(TranslationServer.translate(key))
+		var pat := "^"
+		var i := 0
+		while i < tpl.length():
+			var c := tpl[i]
+			if c == "%" and i + 1 < tpl.length():
+				var n := tpl[i + 1]
+				if n == "s":
+					pat += "(.*?)"
+					i += 2
+					continue
+				if n == "d":
+					pat += "(-?\\d+)"
+					i += 2
+					continue
+				if n == "%":
+					pat += "%"
+					i += 2
+					continue
+			if "\\.^$*+?()[]{}|".contains(c):
+				pat += "\\"
+			pat += c
+			i += 1
+		rx = RegEx.new()
+		rx.compile(pat + "$")
+		_msg_rx[ck] = rx
+	var m := rx.search(e)
+	if m == null:
+		return null
+	var out: Array = []
+	for g in range(1, m.get_group_count() + 1):
+		out.append(m.get_string(g))
+	return out
+
+
+static func _msg_is(e: String, keys: Array) -> bool:
+	for k in keys:
+		if _msg_args(e, String(k)) != null:
+			return true
+	return false
+
+
 static func _friendly(e: String) -> String:
-	if e.begins_with("голов 0"):
-		return "Голова обязательна — поставь голову на шею ядра"
-	if e.begins_with("голов "):
-		return "Голова должна быть одна"
-	if e.begins_with("энергия "):
-		var nums := _ints(e)
-		if nums.size() >= 2:
-			return "Перебор энергии: %d из %d" % [nums[0], nums[1]]
-	if e.begins_with("управляемая деталь"):
-		return "Деталь с тягой снята — выбери новую"
-	if e.begins_with("рука мышью на"):
-		return "Тяга стоит на детали без своего тела — поставь её на конечность заново"
-	if e.begins_with("корн") or e.begins_with("корень"):
-		return "В центре должно быть ядро"
-	if e.begins_with("голова «"):
-		return "Голова крепится только на шею ядра"
+	var a: Variant = _msg_args(e, "голов %d, нужна ровно одна")
+	if a != null:
+		if a.size() > 0 and int(a[0]) == 0:
+			return TranslationServer.translate("Голова обязательна — поставь голову на шею ядра")
+		return TranslationServer.translate("Голова должна быть одна")
+	a = _msg_args(e, "энергия %d > бюджета %d")
+	if a != null and a.size() >= 2:
+		return TranslationServer.translate("Перебор энергии: %d из %d") % [int(a[0]), int(a[1])]
+	if _msg_args(e, "управляемая деталь «%s» не найдена") != null:
+		return TranslationServer.translate("Деталь с тягой снята — выбери новую")
+	if _msg_args(e, "рука мышью на «%s» — у детали нет своего тела (fixed), отметь тело-хозяина") != null:
+		return TranslationServer.translate("Тяга стоит на детали без своего тела — поставь её на конечность заново")
+	if _msg_is(e, _MSG_ROOT):
+		return TranslationServer.translate("В центре должно быть ядро")
+	if _msg_args(e, "голова «%s» должна висеть на Anchor_Neck ядра") != null:
+		return TranslationServer.translate("Голова крепится только на шею ядра")
 	# запасная сетка для строк BodyBlueprint._joint_error (в них uid, имена якорей, «auto»): check / check_joint переводят их сами
-	if e.contains("нельзя приварить"):
-		return "Эту деталь не приварить — сними сварку или деталь на её конце"
-	if e.contains("нет мышцы"):
-		return "У этого сустава нет мышцы — мотор и пружина тут ничего не дают"
-	if e.contains("крепится намертво"):
-		return "Эта деталь крепится намертво — шарнира у неё нет"
+	if _msg_is(e, _MSG_WELD):
+		return TranslationServer.translate("Эту деталь не приварить — сними сварку или деталь на её конце")
+	if _msg_args(e, _MSG_NO_MUSCLE) != null:
+		return TranslationServer.translate("У этого сустава нет мышцы — мотор и пружина тут ничего не дают")
+	if _msg_args(e, _MSG_FIXED) != null:
+		return TranslationServer.translate("Эта деталь крепится намертво — шарнира у неё нет")
 	return _capital(e)
 
 
 static func _capital(s: String) -> String:
 	return s.substr(0, 1).to_upper() + s.substr(1) if s != "" else s
-
-
-static func _ints(s: String) -> Array:
-	var out: Array = []
-	var cur := ""
-	for ch in s + " ":
-		if ch >= "0" and ch <= "9":
-			cur += ch
-		elif cur != "":
-			out.append(int(cur))
-			cur = ""
-	return out
 
 
 static func energy_used(bp: Resource) -> int:
@@ -540,7 +596,7 @@ static func energy_used(bp: Resource) -> int:
 
 ## Отказ по энергии: цена детали зависит от выноса (BodyBlueprint.reach_mult, WORKSHOP_V3.md §2), поэтому — итог после установки.
 static func energy_reason(what: String, after: int, budget: int) -> String:
-	return "Не хватает энергии на %s: будет %d / %d. Чем дальше от ядра, тем дороже" % [what, after, budget]
+	return TranslationServer.translate("Не хватает энергии на %s: будет %d / %d. Чем дальше от ядра, тем дороже") % [what, after, budget]
 
 
 static func energy_budget(bp: Resource) -> int:
@@ -554,28 +610,28 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 	var r := {"ok": false, "code": "invalid", "reason": "", "replace": "", "drops": PackedStringArray(), "energy_after": energy_used(bp)}
 	var d := part(part_id)
 	if d == null:
-		r["reason"] = "Нет такой детали"
+		r["reason"] = TranslationServer.translate("Нет такой детали")
 		return r
 	if find(bp, parent_uid).is_empty():
-		r["reason"] = "Нет детали-родителя"
+		r["reason"] = TranslationServer.translate("Нет детали-родителя")
 		return r
 	var an := anchor_name(anchor)
 	var anchors := anchors_of(bp, parent_uid)
 	if not anchors.has(an):
-		r["reason"] = "Нет такого якоря"
+		r["reason"] = TranslationServer.translate("Нет такого якоря")
 		return r
 	if d.kind == "core":
 		r["code"] = "core"
-		r["reason"] = "Ядро — центр тела: перетащи его на старое ядро, чтобы заменить"
+		r["reason"] = TranslationServer.translate("Ядро — центр тела: перетащи его на старое ядро, чтобы заменить")
 		return r
 	var acc: PackedStringArray = anchors[an]["accepts"]
 	if not acc.is_empty() and not acc.has(d.kind):
 		r["code"] = "kind"
-		r["reason"] = "Сюда %s не встанет" % KIND_TITLES.get(d.kind, d.kind)
+		r["reason"] = TranslationServer.translate("Сюда %s не встанет") % kind_title(d.kind)
 		return r
 	if not is_weapon(bp) and d.kind == "head" and (parent_uid != root_uid(bp) or an != "Anchor_Neck"):
 		r["code"] = "head"
-		r["reason"] = "Голова — только на шею ядра"
+		r["reason"] = TranslationServer.translate("Голова — только на шею ядра")
 		return r
 	# приваренный родитель: деталь со своим суставом на его auto-конце взяла бы группу от сварки (BODY_KIT.md §5.2) — отказ словами
 	# игрока, а не строкой validate() с uid и «auto»; навершие, щиток, мод (fixed) — можно
@@ -583,7 +639,7 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 			and String((anchors[an] as Dictionary).get("joint_group", "")) == "auto" and not BodyBlueprint.is_fixed_part(d):
 		var pd := def_of(bp, parent_uid)
 		r["code"] = "welded"
-		r["reason"] = "Деталь «%s» приварена: на её конец встанет только навершие, щиток или мод — верни ей шарнир «Ось»" \
+		r["reason"] = TranslationServer.translate("Деталь «%s» приварена: на её конец встанет только навершие, щиток или мод — верни ей шарнир «Ось»") \
 			% (PartNames.of(pd) if pd != null else parent_uid)
 		return r
 	var trial: Resource = dup_body(bp as BodyBlueprint) if bp is BodyBlueprint else dup_weapon(bp as WeaponBlueprint)
@@ -593,7 +649,7 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 	r["face_lost"] = res.get("face_lost", "")
 	if not bool(res.get("ok", false)):
 		r["code"] = String(res.get("code", "invalid"))
-		r["reason"] = String(res.get("reason", "Не встаёт"))
+		r["reason"] = String(res.get("reason", TranslationServer.translate("Не встаёт")))
 		return r
 	if bp is BodyBlueprint:
 		var after := (trial as BodyBlueprint).energy_used()
@@ -631,7 +687,7 @@ static func _apply_attach(bp: Resource, part_id: String, parent_uid: String, an:
 		return rr
 	var uid := free_uid(bp, part_id, parent_uid, an)
 	if uid == "":
-		return {"ok": false, "code": "full", "reason": "Больше деталей не поместится (кончились номера)"}
+		return {"ok": false, "code": "full", "reason": TranslationServer.translate("Больше деталей не поместится (кончились номера)")}
 	var n := {"uid": uid, "part": part_id, "parent": parent_uid, "anchor": an}
 	if ActiveBlocks.is_active(part_id):
 		n[ActiveBlocks.NODE_KEY] = 1   # новый активный блок сразу на канале 1 (Q)
@@ -716,7 +772,7 @@ static func check_root(bp: Resource, part_id: String) -> Dictionary:
 	var need := "handle" if is_weapon(bp) else "core"
 	if d.kind != need:
 		r["code"] = "kind"
-		r["reason"] = "В основу встаёт только %s" % KIND_TITLES[need]
+		r["reason"] = TranslationServer.translate("В основу встаёт только %s") % kind_title(need)
 		return r
 	var trial: Resource = dup_body(bp as BodyBlueprint) if bp is BodyBlueprint else dup_weapon(bp as WeaponBlueprint)
 	var res := _apply_root(trial, part_id)
@@ -727,7 +783,7 @@ static func check_root(bp: Resource, part_id: String) -> Dictionary:
 		r["energy_after"] = after
 		if after > (bp as BodyBlueprint).energy_budget and after > energy_used(bp):
 			r["code"] = "energy"
-			r["reason"] = "Не хватает энергии"
+			r["reason"] = TranslationServer.translate("Не хватает энергии")
 			return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():
@@ -847,10 +903,10 @@ static func host_uid(bp: Resource, uid: String) -> String:
 ## переводит на ПКМ, по ПКМ-тяге — снимает.
 static func set_control(bp: BodyBlueprint, uid: String) -> Dictionary:
 	if find(bp, uid).is_empty():
-		return {"ok": false, "uid": "", "reason": "Нет такой детали", "code": "invalid"}
+		return {"ok": false, "uid": "", "reason": TranslationServer.translate("Нет такой детали"), "code": "invalid"}
 	var h := host_uid(bp, uid)
 	if h == root_uid(bp):
-		return {"ok": false, "uid": "", "reason": "Ядро — это ты сам: выбери конечность, кисть или цепь", "code": "core"}
+		return {"ok": false, "uid": "", "reason": TranslationServer.translate("Ядро — это ты сам: выбери конечность, кисть или цепь"), "code": "core"}
 	if bp.control.has(h):
 		if not bp.control_rmb.has(h):
 			var rmb: PackedStringArray = bp.control_rmb.duplicate()
@@ -865,14 +921,14 @@ static func set_control(bp: BodyBlueprint, uid: String) -> Dictionary:
 		_sync_rmb(bp, h)
 		return {"ok": true, "uid": h, "reason": "", "cleared": true, "button": "", "code": "cleared"}
 	if bp.control.size() >= MAX_CONTROL:
-		return {"ok": false, "uid": h, "reason": "Тяг уже %d — больше нельзя" % MAX_CONTROL, "code": "max"}
+		return {"ok": false, "uid": h, "reason": TranslationServer.translate("Тяг уже %d — больше нельзя") % MAX_CONTROL, "code": "max"}
 	var trial := dup_body(bp)
 	var ctrl2: PackedStringArray = trial.control.duplicate()
 	ctrl2.append(h)
 	trial.control = ctrl2
 	var after := trial.energy_used()
 	if after > bp.energy_budget and after > bp.energy_used():
-		return {"ok": false, "uid": h, "reason": energy_reason("тягу", after, bp.energy_budget), "code": "energy"}
+		return {"ok": false, "uid": h, "reason": energy_reason(TranslationServer.translate("тягу"), after, bp.energy_budget), "code": "energy"}
 	bp.control = ctrl2
 	return {"ok": true, "uid": h, "reason": "", "cleared": false, "button": "lmb", "code": "lmb"}
 
@@ -909,7 +965,7 @@ static func weapon_mount(bp: BodyBlueprint) -> Dictionary:
 		var d := def_of(bp, ctrl)
 		if d != null and not is_fixed(bp, ctrl):
 			return {"uid": ctrl, "kind": "end", "reason": ""}
-	return {"uid": "", "kind": "", "reason": "Оружие некуда взять: поставь кисть или дай детали тягу"}
+	return {"uid": "", "kind": "", "reason": TranslationServer.translate("Оружие некуда взять: поставь кисть или дай детали тягу")}
 
 
 static func _kind(bp: Resource, uid: String) -> String:
@@ -927,7 +983,7 @@ static func _is_hand(bp: Resource, uid: String) -> bool:
 ## Название материала ("" → «не красится»).
 static func mat_title(mat_id: String) -> String:
 	var m := MaterialDef.get_def(mat_id)
-	return m.title if m != null else ("не красится" if mat_id == "" else mat_id)
+	return m.title if m != null else (TranslationServer.translate("не красится") if mat_id == "" else mat_id)
 
 
 ## Физика материала одной строкой: «плотность ×2.2 · трение 0.5 · упругость 0.1 · магнит».
@@ -935,11 +991,11 @@ static func mat_line(mat_id: String) -> String:
 	var m := MaterialDef.get_def(mat_id)
 	if m == null:
 		return ""
-	var s := "плотность ×%s · трение %s · упругость %s" % [_num(m.density), _num(m.friction), _num(m.bounce)]
+	var s := TranslationServer.translate("плотность ×%s · трение %s · упругость %s") % [_num(m.density), _num(m.friction), _num(m.bounce)]
 	if not is_equal_approx(m.body_mult, 1.0):
-		s += " · удар ×%s" % _num(m.body_mult)
+		s += TranslationServer.translate(" · удар ×%s") % _num(m.body_mult)
 	if m.iron:
-		s += " · магнит"
+		s += TranslationServer.translate(" · магнит")
 	return s
 
 
@@ -948,14 +1004,14 @@ static func _num(x: float) -> String:
 
 
 static func joint_title(jt: String) -> String:
-	return String(KitJoint.info(jt).get("title", jt)) if jt != "" else "намертво"
+	return TranslationServer.translate(String(KitJoint.info(jt).get("title", jt))) if jt != "" else TranslationServer.translate("намертво")
 
 
 ## Можно ли покрасить деталь uid материалом mat_id: {ok, code, reason, changed, mat_before, mass_before, mass_after}.
 ## code: "" — можно; "same" — уже этот материал (ok, ничего не меняется); "paint" — деталь без base_mat; "unknown" — нет материала;
 ## "invalid" — нет детали / не тело.
 static func check_material(bp: Resource, uid: String, mat_id: String) -> Dictionary:
-	var r := {"ok": false, "code": "invalid", "reason": "Нет такой детали", "changed": false, "mat_before": "", "mass_before": 0.0,
+	var r := {"ok": false, "code": "invalid", "reason": TranslationServer.translate("Нет такой детали"), "changed": false, "mat_before": "", "mass_before": 0.0,
 		"mass_after": 0.0}
 	if not bp is BodyBlueprint or find(bp, uid).is_empty():
 		return r
@@ -968,11 +1024,11 @@ static func check_material(bp: Resource, uid: String, mat_id: String) -> Diction
 	r["mass_after"] = r["mass_before"]
 	if MaterialDef.get_def(mat_id) == null:
 		r["code"] = "unknown"
-		r["reason"] = "Нет материала «%s»" % mat_id
+		r["reason"] = TranslationServer.translate("Нет материала «%s»") % mat_id
 		return r
 	if d.base_mat == "":
 		r["code"] = "paint"
-		r["reason"] = "%s не красится: материал меняется только у деталей кита" % PartNames.of(d)
+		r["reason"] = TranslationServer.translate("%s не красится: материал меняется только у деталей кита") % PartNames.of(d)
 		return r
 	var err := body.mat_error(uid, mat_id)
 	if err != "":
@@ -1015,7 +1071,7 @@ static func _apply_material(bp: BodyBlueprint, uid: String, mat_id: String) -> v
 ## BodyBlueprint.joint_error (причина — словами игрока, _joint_refusal); "energy" — не влезает
 ## в бюджет Ядра; "invalid" — нет детали, неизвестный тип, сборка не сходится.
 static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
-	var r := {"ok": false, "code": "invalid", "reason": "Нет такой детали", "changed": false, "joint_before": "",
+	var r := {"ok": false, "code": "invalid", "reason": TranslationServer.translate("Нет такой детали"), "changed": false, "joint_before": "",
 		"energy_after": energy_used(bp)}
 	if not bp is BodyBlueprint or find(bp, uid).is_empty():
 		return r
@@ -1025,15 +1081,15 @@ static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
 	if d == null:
 		return r
 	if not KitJoint.is_type(jt):
-		r["reason"] = "Нет такого шарнира «%s»" % jt
+		r["reason"] = TranslationServer.translate("Нет такого шарнира «%s»") % jt
 		return r
 	if String(n.get("parent", "")) == "":
 		r["code"] = "root"
-		r["reason"] = "%s — корень тела, сустава с родителем нет" % PartNames.of(d)
+		r["reason"] = TranslationServer.translate("%s — корень тела, сустава с родителем нет") % PartNames.of(d)
 		return r
 	if BodyBlueprint.is_fixed_part(d):
 		r["code"] = "fixed"
-		r["reason"] = "Деталь «%s» крепится намертво — шарнира нет (%s)" % [PartNames.of(d), KIND_TITLES.get(d.kind, d.kind)]
+		r["reason"] = TranslationServer.translate("Деталь «%s» крепится намертво — шарнира нет (%s)") % [PartNames.of(d), kind_title(d.kind)]
 		return r
 	var cur := String(n.get("joint", ""))
 	r["joint_before"] = cur if cur != "" else KitJoint.DEFAULT
@@ -1053,7 +1109,7 @@ static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
 	r["energy_after"] = after
 	if after > body.energy_budget and after > body.energy_used():
 		r["code"] = "energy"
-		r["reason"] = energy_reason("шарнир «%s»" % joint_title(jt), after, body.energy_budget)
+		r["reason"] = energy_reason(TranslationServer.translate("шарнир «%s»") % joint_title(jt), after, body.energy_budget)
 		return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():
@@ -1071,9 +1127,9 @@ static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
 static func _joint_refusal(body: BodyBlueprint, uid: String, d: PartDef, jt: String, err: String) -> String:
 	if KitJoint.is_weld(jt):
 		if d.kind == "head":
-			return "Голову не приварить — она держится на шее"
+			return TranslationServer.translate("Голову не приварить — она держится на шее")
 		if body.control.has(uid):
-			return "Деталь «%s» ведёт тяга — сначала сними её (Q), потом приваривай" % PartNames.of(d)
+			return TranslationServer.translate("Деталь «%s» ведёт тяга — сначала сними её (Q), потом приваривай") % PartNames.of(d)
 		var anchors := BodyBlueprint.part_anchors(d)
 		for c in children_of(body, uid):
 			if body.is_fixed(String(c.get("uid", ""))):
@@ -1081,11 +1137,11 @@ static func _joint_refusal(body: BodyBlueprint, uid: String, d: PartDef, jt: Str
 			var a: Dictionary = anchors.get(String(c.get("anchor", "")), {})
 			if String(a.get("joint_group", "")) == "auto":
 				var cd := part(String(c.get("part", "")))
-				return "Деталь «%s» не приварить: на её конце держится «%s» на своём суставе — сначала сними или приварь ту деталь" \
-					% [PartNames.of(d), PartNames.of(cd) if cd != null else "деталь"]
-	elif err.contains("нет мышцы"):
+				return TranslationServer.translate("Деталь «%s» не приварить: на её конце держится «%s» на своём суставе — сначала сними или приварь ту деталь") \
+					% [PartNames.of(d), PartNames.of(cd) if cd != null else TranslationServer.translate("деталь")]
+	elif _msg_args(err, _MSG_NO_MUSCLE) != null:
 		var g := body.anchor_group_of(uid)
-		return "Деталь «%s» висит на суставе без мышцы (%s): шарнир «%s» ничего не усилит" % [PartNames.of(d), GROUP_TITLES.get(g, g),
+		return TranslationServer.translate("Деталь «%s» висит на суставе без мышцы (%s): шарнир «%s» ничего не усилит") % [PartNames.of(d), group_title(g),
 			joint_title(jt)]
 	return _friendly(err)
 
@@ -1221,11 +1277,11 @@ static func mirror_place(bp: BodyBlueprint, uid: String) -> Array:
 static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 	var place := mirror_place(bp, uid)
 	if place.is_empty():
-		return {"ok": false, "code": "center", "reason": "Деталь по центру — зеркалить некуда (выбери деталь сбоку: руку, ногу, наплечник)"}
+		return {"ok": false, "code": "center", "reason": TranslationServer.translate("Деталь по центру — зеркалить некуда (выбери деталь сбоку: руку, ногу, наплечник)")}
 	var replaced := occupant(bp, String(place[0]), String(place[1]))
 	if replaced != "":
 		if subtree(bp, uid).has(replaced) or subtree(bp, replaced).has(uid):
-			return {"ok": false, "code": "self", "reason": "Зеркальное место занято этой же веткой"}
+			return {"ok": false, "code": "self", "reason": TranslationServer.translate("Зеркальное место занято этой же веткой")}
 		detach(bp, replaced)
 	var queue: Array = [[uid, String(place[0]), String(place[1])]]
 	var first := ""
@@ -1237,8 +1293,8 @@ static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 		var c := check(bp, part_id, String(q[1]), String(q[2]))
 		if not bool(c["ok"]):
 			var d := part(part_id)
-			return {"ok": false, "code": String(c["code"]), "reason": energy_reason("зеркальную копию", int(c["energy_after"]), bp.energy_budget)
-				if String(c["code"]) == "energy" else "Зеркально не встаёт «%s»: %s" % [PartNames.of(d) if d != null else part_id, c["reason"]]}
+			return {"ok": false, "code": String(c["code"]), "reason": energy_reason(TranslationServer.translate("зеркальную копию"), int(c["energy_after"]), bp.energy_budget)
+				if String(c["code"]) == "energy" else TranslationServer.translate("Зеркально не встаёт «%s»: %s") % [PartNames.of(d) if d != null else part_id, c["reason"]]}
 		var res := _apply_attach(bp, part_id, String(q[1]), String(q[2]))
 		var nu := String(res.get("uid", ""))
 		var dst := find(bp, nu)
@@ -1251,7 +1307,7 @@ static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 		for ch in children_of(bp, String(q[0])):
 			queue.append([String(ch["uid"]), nu, String(ch.get("anchor", ""))])
 	if bp.energy_used() > bp.energy_budget:
-		return {"ok": false, "code": "energy", "reason": energy_reason("зеркальную копию", bp.energy_used(), bp.energy_budget)}
+		return {"ok": false, "code": "energy", "reason": energy_reason(TranslationServer.translate("зеркальную копию"), bp.energy_used(), bp.energy_budget)}
 	var errs := structural_errors(bp)
 	if not errs.is_empty():
 		return {"ok": false, "code": "invalid", "reason": _friendly(errs[0])}
@@ -1293,7 +1349,7 @@ static func graft_subtree(dst: BodyBlueprint, src: BodyBlueprint, src_uid: Strin
 		for ch in children_of(src, String(q[0])):
 			queue.append([String(ch["uid"]), nu, String(ch.get("anchor", ""))])
 	if dst.energy_used() > dst.energy_budget:
-		return {"ok": false, "code": "energy", "map": map, "reason": energy_reason("эту ветку", dst.energy_used(), dst.energy_budget)}
+		return {"ok": false, "code": "energy", "map": map, "reason": energy_reason(TranslationServer.translate("эту ветку"), dst.energy_used(), dst.energy_budget)}
 	var errs := structural_errors(dst)
 	if not errs.is_empty():
 		return {"ok": false, "code": "invalid", "map": map, "reason": _friendly(errs[0])}
@@ -1304,9 +1360,9 @@ static func graft_subtree(dst: BodyBlueprint, src: BodyBlueprint, src_uid: Strin
 ## Тяги, ПКМ-тяги и держатель оружия переезжают вместе с деталями (uid меняются — по map).
 static func move_subtree(bp: BodyBlueprint, uid: String, parent: String, anchor: String) -> Dictionary:
 	if String(find(bp, uid).get("parent", "")) == "":
-		return {"ok": false, "code": "root", "reason": "Ядро не переносится — перетащи другое ядро поверх"}
+		return {"ok": false, "code": "root", "reason": TranslationServer.translate("Ядро не переносится — перетащи другое ядро поверх")}
 	if subtree(bp, uid).has(parent):
-		return {"ok": false, "code": "self", "reason": "Ветку нельзя повесить на саму себя"}
+		return {"ok": false, "code": "self", "reason": TranslationServer.translate("Ветку нельзя повесить на саму себя")}
 	var trial := dup_body(bp)
 	detach(trial, uid)
 	var r := graft_subtree(trial, bp, uid, parent, anchor)
@@ -1335,7 +1391,7 @@ static func move_subtree(bp: BodyBlueprint, uid: String, parent: String, anchor:
 	# энергия — с тягами на новом выносе (graft считал без них: detach снял их вместе с веткой)
 	var after := trial.energy_used()
 	if after > trial.energy_budget and after > bp.energy_used():
-		return {"ok": false, "code": "energy", "map": m, "reason": energy_reason("перенос", after, trial.energy_budget)}
+		return {"ok": false, "code": "energy", "map": m, "reason": energy_reason(TranslationServer.translate("перенос"), after, trial.energy_budget)}
 	r["bp"] = trial
 	return r
 
@@ -1380,27 +1436,27 @@ static func part_desc(d: PartDef) -> String:
 		return ""
 	var lines: PackedStringArray = []
 	match d.kind:
-		"core": lines.append("Ядро — центр тела: к нему крепится всё остальное, чем дальше от него, тем дороже энергия.")
-		"head": lines.append("Голова: удар В неё ×%.1f — береги её." % Tuning.HEAD_HIT_MULT)
-		"hand": lines.append("Кисть: хват, бросок и удары. Удар В кисть почти не проходит (блок ×%.2f)." % Tuning.HAND_HIT_MULT)
-		"foot": lines.append("Стопа: опора и пинок.")
-		"limb": lines.append("Звено конечности: длиннее — дальше достаёт, но дороже по энергии.")
-		"joint", "chain": lines.append("Связующее звено: гибкость и размах.")
-		"plate", "armor": lines.append("Броня: сливается с деталью-хозяином, добавляет массу и прочность.")
+		"core": lines.append(TranslationServer.translate("Ядро — центр тела: к нему крепится всё остальное, чем дальше от него, тем дороже энергия."))
+		"head": lines.append(TranslationServer.translate("Голова: удар В неё ×%.1f — береги её.") % Tuning.HEAD_HIT_MULT)
+		"hand": lines.append(TranslationServer.translate("Кисть: хват, бросок и удары. Удар В кисть почти не проходит (блок ×%.2f).") % Tuning.HAND_HIT_MULT)
+		"foot": lines.append(TranslationServer.translate("Стопа: опора и пинок."))
+		"limb": lines.append(TranslationServer.translate("Звено конечности: длиннее — дальше достаёт, но дороже по энергии."))
+		"joint", "chain": lines.append(TranslationServer.translate("Связующее звено: гибкость и размах."))
+		"plate", "armor": lines.append(TranslationServer.translate("Броня: сливается с деталью-хозяином, добавляет массу и прочность."))
 		"deco":
 			if ActiveBlocks.is_active(d.id):
 				var ad := ActiveBlocks.def_of(d.id)
-				var cost := "%.0f заряда за выстрел" % float(ad["cost"]) if String(ad["action"]) == "gun" else "%.0f заряда/с" % float(ad["cost"])
-				lines.append("Активный блок: %s. Работает, пока зажата клавиша его канала; тратит %s." % [String(ad["hint"]), cost])
+				var cost := TranslationServer.translate("%.0f заряда за выстрел") % float(ad["cost"]) if String(ad["action"]) == "gun" else TranslationServer.translate("%.0f заряда/с") % float(ad["cost"])
+				lines.append(TranslationServer.translate("Активный блок: %s. Работает, пока зажата клавиша его канала; тратит %s.") % [TranslationServer.translate(String(ad["hint"])), cost])
 			else:
-				lines.append("Декор: сливается с деталью-хозяином.")
-		"weapon_head": lines.append("Навершие: на оружии — множитель урона ×%.2f; на теле — масса и форма." % d.weapon_mult)
-		_: lines.append(String(KIND_TITLES.get(d.kind, d.kind)).capitalize() + ".")
+				lines.append(TranslationServer.translate("Декор: сливается с деталью-хозяином."))
+		"weapon_head": lines.append(TranslationServer.translate("Навершие: на оружии — множитель урона ×%.2f; на теле — масса и форма.") % d.weapon_mult)
+		_: lines.append(kind_title(d.kind).capitalize() + ".")
 	if ActiveBlocks.PASSIVE.has(d.id):
-		lines.append("Особое свойство: %s." % String(ActiveBlocks.PASSIVE[d.id]["hint"]))
+		lines.append(TranslationServer.translate("Особое свойство: %s.") % TranslationServer.translate(String(ActiveBlocks.PASSIVE[d.id]["hint"])))
 	var sm := minf(d.body_mult if BodyBlueprint.is_fixed_part(d) else d.hit_mult, Tuning.SHAPE_MULT_MAX)
 	match d.hit_profile:
-		"sharp": lines.append("Колющая форма: до ×%.2f на медленном точном тычке, на быстром ударе ×1." % sm)
-		"blunt": lines.append("Дробящая форма: до ×%.2f на размахе и рывке, на медленном ×1." % sm)
-		"soft": lines.append("Мягкая: бьёт слабее (×%.2f)." % sm)
+		"sharp": lines.append(TranslationServer.translate("Колющая форма: до ×%.2f на медленном точном тычке, на быстром ударе ×1.") % sm)
+		"blunt": lines.append(TranslationServer.translate("Дробящая форма: до ×%.2f на размахе и рывке, на медленном ×1.") % sm)
+		"soft": lines.append(TranslationServer.translate("Мягкая: бьёт слабее (×%.2f).") % sm)
 	return " ".join(lines)

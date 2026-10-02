@@ -17,6 +17,7 @@ extends RefCounted
 
 const FILE := "user://control_feel.cfg"
 
+## Подписи (title / note / подписи ползунков) — русские ключи перевода: показываются через tr() / TranslationServer.translate().
 ## Что меняют ВАРИАНТЫ и ТЕМПЫ. Всё остальное в словаре values — только то, что есть в KEYS.
 const VARIANT_KEYS := ["head_share", "upright", "lean", "rotate"]
 const TEMPO_KEYS := ["thrust", "max_speed", "dash_mult", "damp_mult", "turn_boost"]
@@ -74,6 +75,9 @@ static var values: Dictionary = {}
 ## Растёт при любом изменении: Doll сверяет и пересчитывает дамп частей, панель обновляет подписи.
 static var rev := 0
 static var persist := false
+## Пробы с окном (панель Tab создаётся в каждом бою): true — enable_persistence ничего не читает и не пишет user://control_feel.cfg,
+## иначе проба затирала бы сохранённые настройки автора (у проектов в worktree тот же app_userdata).
+static var no_disk := false
 static var panel_open := false
 
 
@@ -190,8 +194,9 @@ static func cycle_tempo(dir: int = 1) -> String:
 	return tempo
 
 
-## Всё как в Tuning: вариант ТЕЛО + темп СЕЙЧАС.
+## Всё как в Tuning: вариант ТЕЛО + темп СЕЙЧАС, ДРАЙВ выключен.
 static func reset() -> void:
+	Drive.on = false
 	values = {}
 	variant = "body"
 	tempo = "now"
@@ -200,24 +205,25 @@ static func reset() -> void:
 
 
 static func variant_title() -> String:
-	return String(VARIANTS[variant]["title"]) if VARIANTS.has(variant) else "СВОЙ"
+	return TranslationServer.translate(String(VARIANTS[variant]["title"]) if VARIANTS.has(variant) else "СВОЙ")
 
 
 static func tempo_title() -> String:
-	return String(TEMPOS[tempo]["title"]) if TEMPOS.has(tempo) else "СВОЙ"
+	return TranslationServer.translate(String(TEMPOS[tempo]["title"]) if TEMPOS.has(tempo) else "СВОЙ")
 
 
 static func variant_note() -> String:
-	return String(VARIANTS[variant]["note"]) if VARIANTS.has(variant) else "набор ползунков, не совпадающий ни с одним вариантом"
+	return TranslationServer.translate(String(VARIANTS[variant]["note"]) if VARIANTS.has(variant) else "набор ползунков, не совпадающий ни с одним вариантом")
 
 
 static func tempo_note() -> String:
-	return String(TEMPOS[tempo]["note"]) if TEMPOS.has(tempo) else "числа подкручены вручную"
+	return TranslationServer.translate(String(TEMPOS[tempo]["note"]) if TEMPOS.has(tempo) else "числа подкручены вручную")
 
 
-## Коротко для тоста и панели клавиш: «ГОЛОВА · ЭКШЕН».
+## Коротко для тоста и панели клавиш: «ГОЛОВА · ЭКШЕН» (+ « · ДРАЙВ», если включён).
 static func label() -> String:
-	return "%s · %s" % [variant_title(), tempo_title()]
+	var s := "%s · %s" % [variant_title(), tempo_title()]
+	return s + " · " + TranslationServer.translate("ДРАЙВ") if Drive.on else s
 
 
 static func _changed() -> void:
@@ -226,10 +232,15 @@ static func _changed() -> void:
 		save()
 
 
+## Поднять rev (и сохранить): чужие переключатели того же файла — ДРАЙВ (Drive) — меняют дамп и гравитацию кукол.
+static func bump() -> void:
+	_changed()
+
+
 # --- сохранение (только если включила панель) ---
 
 static func enable_persistence() -> void:
-	if persist:
+	if persist or no_disk:
 		return
 	persist = true
 	load_saved()
@@ -240,6 +251,7 @@ static func save() -> void:
 	var cf := ConfigFile.new()
 	cf.set_value("control_feel", "variant", variant)
 	cf.set_value("control_feel", "tempo", tempo)
+	cf.set_value("drive", "on", Drive.on)
 	for k in values:
 		cf.set_value("values", String(k), float(values[k]))
 	cf.save(FILE)
@@ -259,4 +271,5 @@ static func load_saved() -> void:
 		variant = _match_preset(VARIANTS, VARIANT_KEYS)
 	if tempo != "custom" and not TEMPOS.has(tempo):
 		tempo = _match_preset(TEMPOS, TEMPO_KEYS)
+	Drive.on = bool(cf.get_value("drive", "on", Drive.on))
 	rev += 1

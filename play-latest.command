@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ragdoll Master — запуск ПОСЛЕДНЕЙ версии: сначала подтянуть main с GitHub, потом обычный ./play-mac.command (он сам обновит импорт Godot).
+# NULL GRAVITY — запуск ПОСЛЕДНЕЙ версии: сначала подтянуть main с GitHub, потом обычный ./play-mac.command (он сам обновит импорт Godot).
 # Двойной клик или ./play-latest.command. Если слияние не получилось (конфликт) — оно отменяется, игра запускается как есть.
 cd "$(dirname "$0")" || exit 1
 if git fetch origin 2>/dev/null; then

@@ -111,8 +111,8 @@ func _set_screen(s: int) -> void:
 
 func show_ladder() -> void:
 	_set_screen(Screen.LADDER)
-	%Tier.text = "%s · регламент: энергия %d" % [CampaignLeague.tier_title(state.tier), CampaignLeague.energy_budget(state.tier)]
-	%N0Line.text = String(N0_LINES[mini(state.step, N0_LINES.size() - 1)])
+	%Tier.text = tr("%s · регламент: энергия %d") % [CampaignLeague.tier_title(state.tier), CampaignLeague.energy_budget(state.tier)]
+	%N0Line.text = tr(String(N0_LINES[mini(state.step, N0_LINES.size() - 1)]))
 	var rows: Node = %Rivals
 	for c in rows.get_children():
 		rows.remove_child(c)
@@ -122,31 +122,31 @@ func show_ladder() -> void:
 		var r: Dictionary = ladder[i]
 		var l := Label.new()
 		l.add_theme_font_size_override("font_size", 28)
-		var mark := "▶ СЛЕДУЮЩИЙ" if i == state.step else ("✓ побеждён" if i < state.step else "")
+		var mark := tr("▶ СЛЕДУЮЩИЙ") if i == state.step else (tr("✓ побеждён") if i < state.step else "")
 		var tail := ""
 		if i < state.step:
 			var trophy := _trophy_of_step(i)
-			tail = " · трофей: %s" % CampaignLeague.part_title(trophy) if trophy != "" else ""
-		var final := " · ФИНАЛ" if bool(r.get("final", false)) else ""
+			tail = tr(" · трофей: %s") % CampaignLeague.part_title(trophy) if trophy != "" else ""
+		var final := tr(" · ФИНАЛ") if bool(r.get("final", false)) else ""
 		l.text = "%d.  %s%s   %s%s" % [i + 1, CampaignLeague.rival_title(r), final, mark, tail]
 		l.add_theme_color_override("font_color", COL_DONE if i < state.step else (COL_NEXT if i == state.step else COL_LATER))
 		rows.add_child(l)
 	var trophies: PackedStringArray = []
 	for id in state.trophies:
 		trophies.append(CampaignLeague.part_title(id))
-	%Record.text = "Побед: %d · поражений: %d · трофеи: %s" % [state.wins, state.losses,
-		", ".join(trophies) if not trophies.is_empty() else "пока нет"]
+	%Record.text = tr("Побед: %d · поражений: %d · трофеи: %s") % [state.wins, state.losses,
+		", ".join(trophies) if not trophies.is_empty() else tr("пока нет")]
 	var errs := CraftEdit.friendly_errors(state.blueprint)
 	var msg := ladder_message
 	if msg == "" and not errs.is_empty():
-		msg = "Сборка не готова к бою: %s — открой мастерскую." % errs[0]
+		msg = tr("Сборка не готова к бою: %s — открой мастерскую.") % errs[0]
 	%Message.text = msg
 	%Message.visible = msg != ""
 	ladder_message = ""
 	var fb: Button = %FightButton
 	fb.disabled = state.finished()
-	fb.text = "ЛИГА ПРОЙДЕНА" if state.finished() else "В БОЙ ▶"
-	%NewButton.text = "НОВАЯ КАМПАНИЯ"
+	fb.text = tr("ЛИГА ПРОЙДЕНА") if state.finished() else tr("В БОЙ ▶")
+	%NewButton.text = tr("НОВАЯ КАМПАНИЯ")
 	_new_armed_until = -1.0
 	(fb if not fb.disabled else %WorkshopButton as Button).grab_focus()
 
@@ -162,7 +162,7 @@ func _on_new_pressed() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	if now > _new_armed_until:
 		_new_armed_until = now + NEW_CONFIRM_S
-		%NewButton.text = "ЕЩЁ РАЗ — ПРОГРЕСС СОТРЁТСЯ"
+		%NewButton.text = tr("ЕЩЁ РАЗ — ПРОГРЕСС СОТРЁТСЯ")
 		return
 	new_campaign()
 
@@ -184,7 +184,7 @@ func start_fight() -> bool:
 		return false
 	var errs := CraftEdit.friendly_errors(state.blueprint)
 	if not errs.is_empty():
-		ladder_message = "Сборка не готова к бою: %s — открой мастерскую." % errs[0]
+		ladder_message = tr("Сборка не готова к бою: %s — открой мастерскую.") % errs[0]
 		show_ladder()
 		return false
 	_free_fight()
@@ -192,10 +192,10 @@ func start_fight() -> bool:
 	fight = FIGHT_SCENE.instantiate()
 	var tier_title := CampaignLeague.tier_title(state.tier)
 	fight.call("setup", state.blueprint, CampaignLeague.rival_blueprint(state.tier, r), r, CampaignLeague.rival_title(r), {
-		"entrance": entrance_enabled, "player_name": "Игрок", "player_build": state.blueprint.title,
-		"player_record": "побед %d · поражений %d · трофеев %d" % [state.wins, state.losses, state.trophies.size()],
-		"rival_build": "%s · уровень %d" % [tier_title, int(r.get("level", 1))],
-		"rival_record": "ФИНАЛ ЛИГИ" if bool(r.get("final", false)) else "соперник %d из %d" % [state.step + 1, state.ladder().size()]})
+		"entrance": entrance_enabled, "player_name": tr("Игрок"), "player_build": state.blueprint.title,
+		"player_record": tr("побед %d · поражений %d · трофеев %d") % [state.wins, state.losses, state.trophies.size()],
+		"rival_build": tr("%s · уровень %d") % [tier_title, int(r.get("level", 1))],
+		"rival_record": tr("ФИНАЛ ЛИГИ") if bool(r.get("final", false)) else tr("соперник %d из %d") % [state.step + 1, state.ladder().size()]})
 	fight.connect("fight_finished", finish_fight)
 	fight.connect("fight_abandoned", func() -> void:
 		_free_fight()
@@ -227,23 +227,23 @@ func show_outcome() -> void:
 	_set_screen(Screen.OUTCOME)
 	var won := bool(last_outcome.get("won", false))
 	var draw := bool(last_outcome.get("draw", false))
-	%Headline.text = "ПОБЕДА" if won else ("НИЧЬЯ" if draw else "ПОРАЖЕНИЕ")
+	%Headline.text = tr("ПОБЕДА") if won else (tr("НИЧЬЯ") if draw else tr("ПОРАЖЕНИЕ"))
 	%Headline.add_theme_color_override("font_color", COL_DONE if won else COL_BAD)
 	var lines: PackedStringArray = []
 	if won:
 		if last_trophy != "":
-			lines.append("TROPHY RIGHTS: %s" % CampaignLeague.part_title(last_trophy).to_upper())
-			lines.append("Деталь соперника теперь на полке мастерской.")
+			lines.append(tr("TROPHY RIGHTS: %s") % CampaignLeague.part_title(last_trophy).to_upper())
+			lines.append(tr("Деталь соперника теперь на полке мастерской."))
 		else:
-			lines.append("Трофея нет: у соперника не нашлось детали, которая может выпасть.")
+			lines.append(tr("Трофея нет: у соперника не нашлось детали, которая может выпасть."))
 		if state.finished():
-			lines.append("%s пройдена. Продолжение следует." % CampaignLeague.tier_title(state.tier))
+			lines.append(tr("%s пройдена. Продолжение следует.") % CampaignLeague.tier_title(state.tier))
 	else:
-		lines.append("Бой переигрывается: лестница стоит, штрафа нет.")
+		lines.append(tr("Бой переигрывается: лестница стоит, штрафа нет."))
 	%Detail.text = "\n".join(lines)
 	var nb: Button = %OutcomeNext
 	nb.visible = not state.finished()
-	nb.text = "СЛЕДУЮЩИЙ БОЙ ▶" if won else "ЕЩЁ РАЗ ▶"
+	nb.text = tr("СЛЕДУЮЩИЙ БОЙ ▶") if won else tr("ЕЩЁ РАЗ ▶")
 	(nb if nb.visible else %OutcomeLadder as Button).grab_focus()
 
 
@@ -270,8 +270,8 @@ func open_workshop() -> void:
 	ws.view_changed.emit(ws.view)   # UI перестраивает левую панель — плитки шаблонов прячутся (campaign_templates_locked)
 	workshop = ws
 	var r := state.current_rival()
-	%BarLabel.text = "КАМПАНИЯ%s · трофеев %d\nэнергия %d — тело и оружие (%d/кг) · шаблоны закрыты" % [
-		" · следующий: %s" % CampaignLeague.rival_title(r) if not r.is_empty() else "", state.trophies.size(),
+	%BarLabel.text = tr("КАМПАНИЯ%s · трофеев %d\nэнергия %d — тело и оружие (%d/кг) · шаблоны закрыты") % [
+		tr(" · следующий: %s") % CampaignLeague.rival_title(r) if not r.is_empty() else "", state.trophies.size(),
 		CampaignLeague.energy_budget(state.tier), int(CampaignLeague.weapon_energy_per_kg(state.tier))]
 	%BarFight.visible = not state.finished()
 	_set_screen(Screen.WORKSHOP)

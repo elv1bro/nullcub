@@ -45,7 +45,7 @@ func _ready() -> void:
 	end_panel.visible = false
 	field_label.text = ""
 	marks.draw.connect(_draw_marks)
-	wave_label.text = "ВОЛНА —"
+	wave_label.text = tr("ВОЛНА —")
 	left_label.text = ""
 
 
@@ -101,17 +101,17 @@ func panel_for(index: int) -> PlayerPanel:
 # --- сигналы режима ---
 
 func _on_wave_started(index: int, total: int, _line: String) -> void:
-	wave_label.text = "ВОЛНА %d/%d" % [index + 1, total]
+	wave_label.text = tr("ВОЛНА %d/%d") % [index + 1, total]
 	end_panel.visible = false
 	_sync_players()
 
 
 func _on_wave_cleared(index: int, total: int) -> void:
-	wave_label.text = "ВОЛНА %d/%d — ЧИСТО" % [index + 1, total]
+	wave_label.text = tr("ВОЛНА %d/%d — ЧИСТО") % [index + 1, total]
 
 
 func _on_enemies_changed(left: int, total: int) -> void:
-	left_label.text = "ВРАГОВ: %d из %d" % [left, total] if total > 0 else ""
+	left_label.text = tr("ВРАГОВ: %d из %d") % [left, total] if total > 0 else ""
 
 
 func _on_field_line(text: String) -> void:
@@ -120,7 +120,7 @@ func _on_field_line(text: String) -> void:
 
 
 func _on_run_over(victory: bool, line: String) -> void:
-	end_title.text = "ПОБЕДА" if victory else "ПОРАЖЕНИЕ"
+	end_title.text = tr("ПОБЕДА") if victory else tr("ПОРАЖЕНИЕ")
 	end_title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35) if victory else Color(0.95, 0.25, 0.18))
 	end_line.text = line
 	end_panel.visible = true
@@ -133,7 +133,7 @@ func _on_run_over(victory: bool, line: String) -> void:
 func _on_phase_changed(_p: int) -> void:
 	if director != null and String(director.get("wave_state")) == "intro":
 		end_panel.visible = false
-		wave_label.text = "ВОЛНА —"
+		wave_label.text = tr("ВОЛНА —")
 		_sync_players()
 
 

@@ -138,7 +138,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## H: следующий скин HUD (HudSkin: трансляция / неон / LED) и тост. Возвращает подпись скина.
 func cycle_hud_skin() -> String:
 	var l := HudSkin.cycle()
-	_show_fx_toast("HUD: " + l)
+	_show_fx_toast(tr("HUD: ") + l)
 	return l
 
 

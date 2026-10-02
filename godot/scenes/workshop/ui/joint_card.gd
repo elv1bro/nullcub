@@ -70,7 +70,7 @@ func setup(jt: String) -> void:
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(top)
 	var title := Label.new()
-	title.text = String(info.get("title", jt))
+	title.text = tr(String(info.get("title", jt)))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 21)
 	title.add_theme_color_override("font_color", Color(0.96, 0.92, 0.84))
@@ -84,7 +84,7 @@ func setup(jt: String) -> void:
 	energy.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(energy)
 	var hint := Label.new()
-	hint.text = String(info.get("hint", ""))
+	hint.text = tr(String(info.get("hint", "")))
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 15)
 	hint.add_theme_color_override("font_color", Color(0.8, 0.76, 0.7))
@@ -119,20 +119,20 @@ func _gui_input(event: InputEvent) -> void:
 
 static func _tooltip(jt: String) -> String:
 	var info := KitJoint.info(jt)
-	var lines: PackedStringArray = [String(info.get("title", jt)), String(info.get("hint", ""))]
+	var lines: PackedStringArray = [TranslationServer.translate(String(info.get("title", jt))), TranslationServer.translate(String(info.get("hint", "")))]
 	if KitJoint.is_weld(jt):
-		lines.append("своего тела и сустава нет: масса и формы — у родителя")
-		lines.append("нельзя: голова, рука мышью, деталь с суставом на конце")
+		lines.append(TranslationServer.translate("своего тела и сустава нет: масса и формы — у родителя"))
+		lines.append(TranslationServer.translate("нельзя: голова, рука мышью, деталь с суставом на конце"))
 	else:
-		lines.append("мышца ×%s · сила ×%s · трение ×%s" % [String.num(float(info.get("k", 1.0))), String.num(float(info.get("tmax", 1.0))),
+		lines.append(TranslationServer.translate("мышца ×%s · сила ×%s · трение ×%s") % [String.num(float(info.get("k", 1.0))), String.num(float(info.get("tmax", 1.0))),
 			String.num(float(info.get("friction", 1.0)))])
 		var l: Variant = info.get("limits", "group")
 		if l is Vector2:
-			lines.append("ход %d…%d°" % [int((l as Vector2).x), int((l as Vector2).y)])
+			lines.append(TranslationServer.translate("ход %d…%d°") % [int((l as Vector2).x), int((l as Vector2).y)])
 		elif String(l) == "group+20":
-			lines.append("ход шире сустава на 20° в обе стороны")
+			lines.append(TranslationServer.translate("ход шире сустава на 20° в обе стороны"))
 		else:
-			lines.append("ход — как у сустава")
+			lines.append(TranslationServer.translate("ход — как у сустава"))
 	if KitJoint.energy_of(jt) > 0:
-		lines.append("энергия %d" % KitJoint.energy_of(jt))
+		lines.append(TranslationServer.translate("энергия %d") % KitJoint.energy_of(jt))
 	return "\n".join(lines)

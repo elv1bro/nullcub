@@ -193,7 +193,7 @@ var config_title: Label
 var config_joint_caption: Label
 var config_pull_caption: Label
 var drag_proxy: TextureRect
-var intro_line := "Тащи деталь из библиотеки на бойца  ·  ПКМ — вращать  ·  колесо — ближе"
+var intro_line := tr("Тащи деталь из библиотеки на бойца  ·  ПКМ — вращать  ·  колесо — ближе")
 
 
 func _ready() -> void:
@@ -295,8 +295,8 @@ func _build_top() -> void:
 	lft.custom_minimum_size = Vector2(560, 0)
 	row.add_child(lft)
 	title_button = Button.new()
-	title_button.text = "Мастерская"
-	title_button.tooltip_text = "Клавиши и мышь"
+	title_button.text = tr("Мастерская")
+	title_button.tooltip_text = tr("Клавиши и мышь")
 	title_button.flat = true
 	title_button.focus_mode = Control.FOCUS_NONE
 	title_button.add_theme_font_size_override("font_size", 28)
@@ -314,12 +314,12 @@ func _build_top() -> void:
 	mid.alignment = BoxContainer.ALIGNMENT_CENTER
 	mid.add_theme_constant_override("separation", 2)
 	row.add_child(mid)
-	prev_template = _icon_button("chevron_left", "Предыдущий шаблон")
+	prev_template = _icon_button("chevron_left", tr("Предыдущий шаблон"))
 	prev_template.pressed.connect(func() -> void: _step_template(-1))
 	mid.add_child(prev_template)
 	name_button = Button.new()
 	name_button.focus_mode = Control.FOCUS_NONE
-	name_button.tooltip_text = "Шаблоны и имя"
+	name_button.tooltip_text = tr("Шаблоны и имя")
 	name_button.custom_minimum_size = Vector2(300, 0)
 	name_button.clip_text = true
 	name_button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -328,7 +328,7 @@ func _build_top() -> void:
 	name_button.add_theme_color_override("font_color", WsStyle.TEXT)
 	name_button.pressed.connect(func() -> void: _toggle_popup(templates_popup))
 	mid.add_child(name_button)
-	next_template = _icon_button("chevron_right", "Следующий шаблон")
+	next_template = _icon_button("chevron_right", tr("Следующий шаблон"))
 	next_template.pressed.connect(func() -> void: _step_template(1))
 	mid.add_child(next_template)
 	# справа: энергия, ↶ ↷, мои сборки
@@ -338,7 +338,7 @@ func _build_top() -> void:
 	rgt.add_theme_constant_override("separation", 8)
 	row.add_child(rgt)
 	var en := HBoxContainer.new()
-	en.tooltip_text = "Энергия ядра: чем дальше от ядра деталь, тем дороже"
+	en.tooltip_text = tr("Энергия ядра: чем дальше от ядра деталь, тем дороже")
 	en.mouse_filter = Control.MOUSE_FILTER_PASS
 	en.add_theme_constant_override("separation", 6)
 	rgt.add_child(en)
@@ -361,14 +361,14 @@ func _build_top() -> void:
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(14, 0)
 	rgt.add_child(gap)
-	undo_button = _icon_button("undo", "Отменить  Ctrl+Z")
+	undo_button = _icon_button("undo", tr("Отменить  Ctrl+Z"))
 	undo_button.pressed.connect(func() -> void: ctl.undo())
 	rgt.add_child(undo_button)
-	redo_button = _icon_button("redo", "Вернуть  Ctrl+Y")
+	redo_button = _icon_button("redo", tr("Вернуть  Ctrl+Y"))
 	redo_button.pressed.connect(func() -> void: ctl.redo())
 	rgt.add_child(redo_button)
 	builds_button = Button.new()
-	builds_button.text = "Мои сборки"
+	builds_button.text = tr("Мои сборки")
 	builds_button.focus_mode = Control.FOCUS_NONE
 	WsStyle.apply_button(builds_button)
 	WsIcon.add_to_button(builds_button, "folder", 20.0)
@@ -413,7 +413,7 @@ func _build_library() -> void:
 	sr.add_theme_constant_override("separation", 6)
 	v.add_child(sr)
 	search = LineEdit.new()
-	search.placeholder_text = "Найти деталь"
+	search.placeholder_text = tr("Найти деталь")
 	search.clear_button_enabled = true
 	search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	search.custom_minimum_size = Vector2(0, 40)
@@ -429,7 +429,7 @@ func _build_library() -> void:
 	search.text_changed.connect(func(_t: String) -> void: _build_shelf())
 	search.text_submitted.connect(func(_t: String) -> void: search.release_focus())
 	sr.add_child(search)
-	filter_button = _icon_button("filter", "Фильтр и порядок")
+	filter_button = _icon_button("filter", tr("Фильтр и порядок"))
 	filter_button.toggle_mode = true
 	WsStyle.apply_button(filter_button)
 	filter_button.pressed.connect(func() -> void:
@@ -498,10 +498,10 @@ func _build_right() -> void:
 	problems.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	summary_box.add_child(problems)
 	physics_button = Button.new()
-	physics_button.text = "Физика"
+	physics_button.text = tr("Физика")
 	physics_button.toggle_mode = true
 	physics_button.focus_mode = Control.FOCUS_NONE
-	physics_button.tooltip_text = "Центр масс, нагрузка на суставы, куда заваливается"
+	physics_button.tooltip_text = tr("Центр масс, нагрузка на суставы, куда заваливается")
 	WsStyle.apply_button(physics_button)
 	WsIcon.add_to_button(physics_button, "physics", 20.0)
 	physics_button.toggled.connect(func(on: bool) -> void:
@@ -539,7 +539,7 @@ func _build_right() -> void:
 	part_where.clip_text = true
 	part_where.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	hv.add_child(part_where)
-	var close := _icon_button("close", "Снять выбор  Esc", 16.0)
+	var close := _icon_button("close", tr("Снять выбор  Esc"), 16.0)
 	close.custom_minimum_size = Vector2(30, 30)
 	close.flat = true
 	close.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -593,7 +593,7 @@ func _build_right() -> void:
 	equip_button.pressed.connect(func() -> void: ctl.weapon_to_hand())
 	wb.add_child(equip_button)
 	clear_button = Button.new()
-	clear_button.text = "Очистить"
+	clear_button.text = tr("Очистить")
 	clear_button.focus_mode = Control.FOCUS_NONE
 	WsStyle.apply_button(clear_button, "danger")
 	WsIcon.add_to_button(clear_button, "delete", 18.0)
@@ -648,9 +648,9 @@ func _build_bottom() -> void:
 	root.add_child(help_line)
 	test_button = Button.new()
 	test_button.name = "TestButton"
-	test_button.text = "Испытать"
+	test_button.text = tr("Испытать")
 	test_button.focus_mode = Control.FOCUS_NONE
-	test_button.tooltip_text = "Испытать сборку на манекене  T"
+	test_button.tooltip_text = tr("Испытать сборку на манекене  T")
 	WsStyle.apply_button(test_button, "cta")
 	WsIcon.add_to_button(test_button, "play", 22.0)
 	test_button.set_meta("ws_sfx_kind", "test")
@@ -716,7 +716,7 @@ func _build_popups() -> void:
 	templates_popup.offset_right = 310
 	templates_popup.offset_top = TOP_Y + TOP_H + 6.0
 	var tv := templates_popup.get_child(0) as VBoxContainer
-	tv.add_child(_caption("Имя сборки"))
+	tv.add_child(_caption(tr("Имя сборки")))
 	rename_edit = LineEdit.new()
 	rename_edit.custom_minimum_size = Vector2(0, 40)
 	WsStyle.apply_field(rename_edit)
@@ -724,7 +724,7 @@ func _build_popups() -> void:
 		ctl.rename_build(t)
 		_close_popups())
 	tv.add_child(rename_edit)
-	tv.add_child(_caption("Начать с шаблона"))
+	tv.add_child(_caption(tr("Начать с шаблона")))
 	templates_grid = GridContainer.new()
 	templates_grid.columns = 5
 	templates_grid.add_theme_constant_override("h_separation", 6)
@@ -739,7 +739,7 @@ func _build_popups() -> void:
 	builds_popup.offset_right = -PAD
 	builds_popup.offset_top = TOP_Y + TOP_H + 6.0
 	var bv := builds_popup.get_child(0) as VBoxContainer
-	bv.add_child(_caption("Мои сборки"))
+	bv.add_child(_caption(tr("Мои сборки")))
 	var sc := ScrollContainer.new()
 	sc.custom_minimum_size = Vector2(0, 360)
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -749,10 +749,10 @@ func _build_popups() -> void:
 	builds_list.add_theme_constant_override("separation", 4)
 	sc.add_child(builds_list)
 	builds_empty = Label.new()
-	builds_empty.text = "Пока пусто: сохрани копию ниже"
+	builds_empty.text = tr("Пока пусто: сохрани копию ниже")
 	WsStyle.label(builds_empty, WsStyle.SIZE_S, true)
 	bv.add_child(builds_empty)
-	bv.add_child(_caption("Сохранить копию"))
+	bv.add_child(_caption(tr("Сохранить копию")))
 	var cr := HBoxContainer.new()
 	cr.add_theme_constant_override("separation", 6)
 	bv.add_child(cr)
@@ -763,14 +763,14 @@ func _build_popups() -> void:
 	copy_edit.text_submitted.connect(func(_t: String) -> void: _save_copy())
 	cr.add_child(copy_edit)
 	var sb := Button.new()
-	sb.text = "Сохранить"
+	sb.text = tr("Сохранить")
 	sb.focus_mode = Control.FOCUS_NONE
 	WsStyle.apply_button(sb)
 	WsIcon.add_to_button(sb, "save", 18.0)
 	sb.pressed.connect(_save_copy)
 	cr.add_child(sb)
 	var auto := Label.new()
-	auto.text = "Текущая сборка сохраняется сама"
+	auto.text = tr("Текущая сборка сохраняется сама")
 	WsStyle.label(auto, WsStyle.SIZE_XS, true)
 	bv.add_child(auto)
 	# фильтр библиотеки
@@ -784,13 +784,13 @@ func _build_popups() -> void:
 	help_popup.offset_right = PAD + 520.0
 	help_popup.offset_top = TOP_Y + TOP_H + 6.0
 	var hv := help_popup.get_child(0) as VBoxContainer
-	hv.add_child(_caption("Мышь"))
-	for r in [["ЛКМ по детали", "выбрать; тащи — перенести с тем, что на ней"], ["Shift-клик, двойной клик", "выбрать всю ветку"],
-			["ПКМ по детали", "открутить"], ["ПКМ и тащи", "вращать вид"], ["Колесо", "ближе / дальше"]]:
+	hv.add_child(_caption(tr("Мышь")))
+	for r in [[tr("ЛКМ по детали"), tr("выбрать; тащи — перенести с тем, что на ней")], [tr("Shift-клик, двойной клик"), tr("выбрать всю ветку")],
+			[tr("ПКМ по детали"), tr("открутить")], [tr("ПКМ и тащи"), tr("вращать вид")], [tr("Колесо"), tr("ближе / дальше")]]:
 		hv.add_child(_key_line(String(r[0]), String(r[1])))
-	hv.add_child(_caption("Клавиши"))
-	for r in [["D", "копия в руку"], ["M", "зеркало: Enter — поставить"], ["Del", "снять"], ["Q", "тяги ЛКМ / ПКМ на модели"],
-			["R", "вид по умолчанию"], ["Tab", "верстак оружия"], ["Ctrl+Z / Ctrl+Y", "отменить / вернуть"], ["T", "испытать"]]:
+	hv.add_child(_caption(tr("Клавиши")))
+	for r in [["D", tr("копия в руку")], ["M", tr("зеркало: Enter — поставить")], ["Del", tr("снять")], ["Q", tr("тяги ЛКМ / ПКМ на модели")],
+			["R", tr("вид по умолчанию")], ["Tab", tr("верстак оружия")], ["Ctrl+Z / Ctrl+Y", tr("отменить / вернуть")], ["T", tr("испытать")]]:
 		hv.add_child(_key_line(String(r[0]), String(r[1])))
 	_build_config_popup()
 	# деталь в руке над панелью: 3D-деталь под панелью не видна — её картинка поверх (v0.3 §14: деталь «выходит» из библиотеки)
@@ -817,10 +817,10 @@ func _build_config_popup() -> void:
 	config_title = Label.new()
 	WsStyle.label(config_title, WsStyle.SIZE_S)
 	cv.add_child(config_title)
-	config_joint_caption = _caption("Шарнир — как деталь держится за родителя")
+	config_joint_caption = _caption(tr("Шарнир — как деталь держится за родителя"))
 	cv.add_child(config_joint_caption)
 	cv.add_child(joint_row)
-	config_pull_caption = _caption("Тяга — тянется за мышью, пока зажата кнопка")
+	config_pull_caption = _caption(tr("Тяга — тянется за мышью, пока зажата кнопка"))
 	cv.add_child(config_pull_caption)
 	cv.add_child(pull_row)
 
@@ -949,8 +949,8 @@ func _build_left() -> void:
 	_cat_buttons.clear()
 	if weapon:
 		var back := Button.new()
-		back.text = "Боец"
-		back.tooltip_text = "К бойцу  Tab"
+		back.text = tr("Боец")
+		back.tooltip_text = tr("К бойцу  Tab")
 		back.focus_mode = Control.FOCUS_NONE
 		WsStyle.apply_button(back, "tab")
 		WsIcon.add_to_button(back, "chevron_left", 18.0)
@@ -959,7 +959,7 @@ func _build_left() -> void:
 	for c in _cats():
 		var cid := String(c["id"])
 		var on := cid == tab or (cid == "deco" and tab == "paint")
-		var b := _chip(String(c["icon"]), String(c["title"]), on)
+		var b := _chip(String(c["icon"]), tr(String(c["title"])), on)
 		b.pressed.connect(func() -> void: _select_tab(cid))
 		cats_row.add_child(b)
 		_cat_buttons[cid] = b
@@ -969,7 +969,7 @@ func _build_left() -> void:
 	sub_row.visible = false
 	if not weapon and (tab == "deco" or tab == "paint"):
 		sub_row.visible = true
-		for pair in [["deco", "Детали", "decor"], ["paint", "Покраска", "paint"]]:
+		for pair in [["deco", tr("Детали"), "decor"], ["paint", tr("Покраска"), "paint"]]:
 			var sid := String(pair[0])
 			var sb := Button.new()
 			sb.text = String(pair[1])
@@ -984,7 +984,7 @@ func _build_left() -> void:
 	elif not weapon and tab == "weapon":
 		sub_row.visible = true
 		var wb := Button.new()
-		wb.text = "Собрать оружие на верстаке"
+		wb.text = tr("Собрать оружие на верстаке")
 		wb.focus_mode = Control.FOCUS_NONE
 		wb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		WsStyle.apply_button(wb)
@@ -1085,7 +1085,7 @@ func _build_shelf() -> void:
 			pp.setup(ctl)
 	tools_box.visible = not _tool_cards.is_empty() or (_tool == "paint" and query == "")
 	tool_hint.visible = tools_box.visible and TOOL_HINTS.has(_tool)
-	tool_hint.text = String(TOOL_HINTS.get(_tool, ""))
+	tool_hint.text = tr(String(TOOL_HINTS.get(_tool, "")))
 	# детали: поиск — по всей библиотеке вида; иначе — категория (группами, где они есть)
 	var groups: Array = []   # [[заголовок, [PartDef]]]
 	if query != "":
@@ -1152,7 +1152,7 @@ func _build_shelf() -> void:
 		var l := Label.new()
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		WsStyle.label(l, WsStyle.SIZE_S, true)
-		l.text = "Ничего не нашлось" if query != "" else ("Под фильтр ничего не подходит" if _filters_active() else "Пусто")
+		l.text = tr("Ничего не нашлось") if query != "" else (tr("Под фильтр ничего не подходит") if _filters_active() else tr("Пусто"))
 		shelf.add_child(l)
 	shelf_scroll.scroll_vertical = 0
 	_update_card_state()
@@ -1180,7 +1180,7 @@ func _on_shelf_wheel(e: InputEvent) -> void:
 
 ## Поиск без разницы «ё» / «е» и регистра («веревк» находит «Верёвочную руку»).
 static func _norm(t: String) -> String:
-	return t.to_lower().replace("ё", "е")
+	return t.to_lower().replace(String.chr(0x451), String.chr(0x435))   # ё → е
 
 
 ## Фильтр библиотеки: влезает по энергии, избранное, недавние, масса, материал.
@@ -1240,7 +1240,7 @@ func _group_header(text: String, n: int) -> Control:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 8)
 	var l := Label.new()
-	l.text = text
+	l.text = tr(text)
 	WsStyle.label(l, WsStyle.SIZE_S)
 	h.add_child(l)
 	var sep := HSeparator.new()
@@ -1358,7 +1358,7 @@ func _fill_templates() -> void:
 		tiles = []
 	for t in tiles:
 		var pid := String(t[0])
-		var b := _tile(String(PRESET_SHORT.get(pid, _preset_title(pid, weapon))), String(t[1]))
+		var b := _tile(tr(String(PRESET_SHORT.get(pid, _preset_title(pid, weapon)))), String(t[1]))
 		var cur_id := ctl.weapon_bp.id if weapon and ctl.weapon_bp != null else ctl.blueprint.id
 		if pid == cur_id:
 			b.add_theme_stylebox_override("normal", WsStyle.button("selected"))
@@ -1424,7 +1424,7 @@ func _fill_builds() -> void:
 		b.custom_minimum_size = Vector2(0, 44)
 		b.clip_text = true
 		WsStyle.apply_button(b)
-		b.text = "%s   ·   ⚡%d   ·   %d дет." % [it["title"], it["energy"], it["parts"]]
+		b.text = tr("%s   ·   ⚡%d   ·   %d дет.") % [it["title"], it["energy"], it["parts"]]
 		var path := String(it["path"])
 		b.pressed.connect(func() -> void:
 			_close_popups()
@@ -1433,13 +1433,13 @@ func _fill_builds() -> void:
 		shown += 1
 	builds_empty.visible = shown == 0
 	var bt := ctl.blueprint.title.trim_suffix(" *").strip_edges()   # копия — всегда бойца (и с верстака)
-	copy_edit.text = bt if bt != "" else "Своя сборка"
+	copy_edit.text = bt if bt != "" else tr("Своя сборка")
 
 
 func _save_copy() -> void:
 	var t := copy_edit.text.strip_edges()
 	if t == "":
-		t = "Своя сборка"
+		t = tr("Своя сборка")
 	# «копия» не затирает сохранённую с тем же именем: «Паук» → «Паук 2»
 	var base := t
 	var k := 2
@@ -1456,8 +1456,8 @@ func _fill_filter() -> void:
 	var v := filter_popup.get_child(0) as VBoxContainer
 	for c in v.get_children():
 		c.queue_free()
-	v.add_child(_caption("Показывать"))
-	for f in [["fits", "Влезает по энергии", "energy"], ["fav", "Только избранное", "star"], ["recent", "Недавние", "clock"]]:
+	v.add_child(_caption(tr("Показывать")))
+	for f in [["fits", tr("Влезает по энергии"), "energy"], ["fav", tr("Только избранное"), "star"], ["recent", tr("Недавние"), "clock"]]:
 		var key := String(f[0])
 		var b := Button.new()
 		b.text = String(f[1])
@@ -1471,14 +1471,14 @@ func _fill_filter() -> void:
 			filters[key] = on
 			_after_filter())
 		v.add_child(b)
-	v.add_child(_caption("Масса"))
-	v.add_child(_choice_row("mass", [["", "Любая"], ["light", "Лёгкие"], ["heavy", "Тяжёлые"]]))
-	v.add_child(_caption("Материал"))
-	v.add_child(_choice_row("mat", [["", "Любой"], ["wood", "Дерево"], ["metal", "Металл"], ["soft", "Мягкий"]]))
-	v.add_child(_caption("Порядок"))
-	v.add_child(_choice_row("sort", [[0, SORTS[0]], [1, SORTS[1]], [2, SORTS[2]]]))
+	v.add_child(_caption(tr("Масса")))
+	v.add_child(_choice_row("mass", [["", tr("Любая")], ["light", tr("Лёгкие")], ["heavy", tr("Тяжёлые")]]))
+	v.add_child(_caption(tr("Материал")))
+	v.add_child(_choice_row("mat", [["", tr("Любой")], ["wood", tr("Дерево")], ["metal", tr("Металл")], ["soft", tr("Мягкий")]]))
+	v.add_child(_caption(tr("Порядок")))
+	v.add_child(_choice_row("sort", [[0, tr(SORTS[0])], [1, tr(SORTS[1])], [2, tr(SORTS[2])]]))
 	var reset := Button.new()
-	reset.text = "Сбросить фильтр"
+	reset.text = tr("Сбросить фильтр")
 	reset.focus_mode = Control.FOCUS_NONE
 	WsStyle.apply_button(reset)
 	reset.pressed.connect(func() -> void:
@@ -1562,14 +1562,14 @@ func _current_title() -> String:
 	t = t.trim_suffix(" *").strip_edges()
 	# имя шаблона как есть («Кистень: рука → цепь → булава», «Паук из кита») — короткое имя плитки
 	if PRESET_SHORT.has(id) and t == _preset_title(id, weapon).trim_suffix(" *").strip_edges():
-		return String(PRESET_SHORT[id])
+		return tr(String(PRESET_SHORT[id]))
 	var br := t.rfind(" (")
 	if br > 0 and t.ends_with(")"):
 		t = t.substr(0, br)
 	var colon := t.find(": ")
 	if colon > 0:
 		t = t.substr(0, colon)
-	return t if t != "" else "Своя сборка"
+	return t if t != "" else tr("Своя сборка")
 
 
 func _update_name() -> void:
@@ -1578,7 +1578,7 @@ func _update_name() -> void:
 	var t := ctl.weapon_bp.title if ctl.view == WorkshopBuild.View.WEAPON and ctl.weapon_bp != null else ctl.blueprint.title
 	var edited := t.ends_with("*")
 	name_button.text = _current_title()
-	name_button.tooltip_text = "Шаблоны и имя%s" % ("  ·  изменена, сохраняется сама" if edited else "")
+	name_button.tooltip_text = tr("Шаблоны и имя  ·  изменена, сохраняется сама") if edited else tr("Шаблоны и имя")
 
 
 # ------------------------------------------------------------------ правая панель, энергия
@@ -1612,7 +1612,7 @@ func _refresh() -> void:
 	undo_button.disabled = ctl.history.is_empty()
 	redo_button.disabled = ctl.redo_stack.is_empty()
 	test_button.disabled = not (s["errors"] as PackedStringArray).is_empty()
-	test_button.tooltip_text = "Испытать сборку на манекене  T" if not test_button.disabled else "Сначала исправь: %s" % (s["errors"] as PackedStringArray)[0]
+	test_button.tooltip_text = tr("Испытать сборку на манекене  T") if not test_button.disabled else tr("Сначала исправь: %s") % (s["errors"] as PackedStringArray)[0]
 	if bool(filters["fits"]) or bool(filters["recent"]):
 		var sig := "%d/%s" % [ctl.blueprint.energy_used(), ",".join(ctl.recent_parts)]
 		if sig != _shelf_sig and ctl.drag.is_empty():
@@ -1634,7 +1634,7 @@ func _refresh_energy(s: Dictionary, pv: Dictionary) -> void:
 	var used := int(s["energy"])
 	var budget := int(s["budget"])
 	var after := int(pv.get("energy", -1)) if not pv.is_empty() else -1
-	var bad := after > budget or (not pv.is_empty() and not bool(pv["ok"]) and String(pv.get("reason", "")).contains("энерги"))
+	var bad := after > budget or (not pv.is_empty() and not bool(pv["ok"]) and String(pv.get("code", "")) == "energy")
 	var near := float(maxi(used, after)) / maxf(budget, 1) >= 0.9
 	var col := WsStyle.RED if bad or used > budget else (Color(1.0, 0.55, 0.22) if near else (WsStyle.AMBER if after > used else WsStyle.TEXT))
 	energy_value.add_theme_color_override("font_color", col)
@@ -1672,11 +1672,11 @@ func _refresh_summary(s: Dictionary, pv: Dictionary) -> void:
 	var acc := float(s["accel"])
 	var sp := "speed" if WsIcon.names().has("speed") else "play"
 	if pv.is_empty():
-		_row(summary_rows, "mass", "Масса", "%.1f кг" % (mass + wm), WsStyle.TEXT,
-			"" if wm <= 0.0 else "тело %.1f · оружие %.1f кг" % [mass, wm])
-		_row(summary_rows, "all", "Детали", str(int(s["parts"])))
-		_row(summary_rows, sp, "Разгон", "×%.2f" % acc)
-		_row(summary_rows, "energy", "Энергия", "%d / %d" % [int(s["energy"]), int(s["budget"])])
+		_row(summary_rows, "mass", tr("Масса"), tr("%.1f кг") % (mass + wm), WsStyle.TEXT,
+			"" if wm <= 0.0 else tr("тело %.1f · оружие %.1f кг") % [mass, wm])
+		_row(summary_rows, "all", tr("Детали"), str(int(s["parts"])))
+		_row(summary_rows, sp, tr("Разгон"), "×%.2f" % acc)
+		_row(summary_rows, "energy", tr("Энергия"), "%d / %d" % [int(s["energy"]), int(s["budget"])])
 	else:
 		# «было → станет» — только у того, что меняется; остальное как есть, приглушённо
 		var ok := bool(pv["ok"])
@@ -1684,13 +1684,13 @@ func _refresh_summary(s: Dictionary, pv: Dictionary) -> void:
 		var a1 := float(pv["accel"])
 		var e1 := int(pv["energy"])
 		var p1 := int(pv["parts"])
-		_row(summary_rows, "mass", "Масса", "%.1f → %.1f" % [mass + wm, m1] if absf(m1 - mass - wm) >= 0.05 else "%.1f кг" % m1,
+		_row(summary_rows, "mass", tr("Масса"), "%.1f → %.1f" % [mass + wm, m1] if absf(m1 - mass - wm) >= 0.05 else tr("%.1f кг") % m1,
 			WsStyle.AMBER if absf(m1 - mass - wm) >= 0.05 else WsStyle.TEXT_DIM)
-		_row(summary_rows, "all", "Детали", "%d → %d" % [int(s["parts"]), p1] if p1 != int(s["parts"]) else str(p1),
+		_row(summary_rows, "all", tr("Детали"), "%d → %d" % [int(s["parts"]), p1] if p1 != int(s["parts"]) else str(p1),
 			WsStyle.TEXT if p1 != int(s["parts"]) else WsStyle.TEXT_DIM)
-		_row(summary_rows, sp, "Разгон", "×%.2f → ×%.2f" % [acc, a1] if absf(a1 - acc) >= 0.005 else "×%.2f" % a1,
+		_row(summary_rows, sp, tr("Разгон"), "×%.2f → ×%.2f" % [acc, a1] if absf(a1 - acc) >= 0.005 else "×%.2f" % a1,
 			WsStyle.GREEN if a1 > acc + 0.005 else (WsStyle.AMBER if a1 < acc - 0.005 else WsStyle.TEXT_DIM))
-		_row(summary_rows, "energy", "Энергия", "%d → %d" % [int(s["energy"]), e1] if e1 != int(s["energy"]) else "%d / %d" % [e1, int(s["budget"])],
+		_row(summary_rows, "energy", tr("Энергия"), "%d → %d" % [int(s["energy"]), e1] if e1 != int(s["energy"]) else "%d / %d" % [e1, int(s["budget"])],
 			WsStyle.RED if e1 > int(s["budget"]) or not ok else (WsStyle.AMBER if e1 != int(s["energy"]) else WsStyle.TEXT_DIM))
 	var lines: PackedStringArray = []
 	for e in (s["errors"] as PackedStringArray):
@@ -1716,31 +1716,31 @@ func _physics_text() -> String:
 	var tip: Dictionary = sm.get("tip", {})
 	var margin := float(tip.get("margin", 1.0))
 	var dir := float(tip.get("dir", 0.0))
-	var side := "вправо" if dir > 0.0 else "влево"
+	var side := tr("вправо") if dir > 0.0 else tr("влево")
 	var lines: PackedStringArray = []
 	if margin < 0.0:
-		lines.append("Заваливается %s" % side)
+		lines.append(tr("Заваливается %s") % side)
 	elif margin < 0.05:
-		lines.append("Еле стоит, клонит %s" % side)
+		lines.append(tr("Еле стоит, клонит %s") % side)
 	else:
-		lines.append("Стоит устойчиво")
+		lines.append(tr("Стоит устойчиво"))
 	var j := String(sm.get("max_muscle_joint", sm.get("max_joint", "")))
 	if j != "":
-		lines.append("Тяжелее всего: %s — %d %%" % [_joint_words(j), roundi(float(sm.get("max_muscle_load", sm.get("max_load", 0.0))) * 100.0)])
+		lines.append(tr("Тяжелее всего: %s — %d %%") % [_joint_words(j), roundi(float(sm.get("max_muscle_load", sm.get("max_load", 0.0))) * 100.0)])
 	var free: PackedStringArray = sm.get("free_joints", PackedStringArray())
 	if not free.is_empty():
-		lines.append("Болтается свободно: %d" % free.size())
+		lines.append(tr("Болтается свободно: %d") % free.size())
 	return "\n".join(lines)
 
 
 ## «Shoulder_L» → «плечо слева».
 static func _joint_words(j: String) -> String:
 	var base := j.get_slice("_", 0)
-	var w := String(CraftEdit.GROUP_TITLES.get(base, "сустав"))
+	var w := TranslationServer.translate(String(CraftEdit.GROUP_TITLES.get(base, "сустав")))
 	if j.ends_with("_L"):
-		w += " слева"
+		return TranslationServer.translate("%s слева") % w
 	elif j.ends_with("_R"):
-		w += " справа"
+		return TranslationServer.translate("%s справа") % w
 	return w
 
 
@@ -1765,7 +1765,7 @@ func _refresh_part() -> void:
 		energy = ctl.blueprint.node_energy(uid)
 		mass = ctl.blueprint.node_mass(uid)
 		var par := String(n.get("parent", ""))
-		part_where.text = "ядро бойца" if par == "" else "на бойце · %s" % _anchor_title(String(n.get("anchor", "")))
+		part_where.text = tr("ядро бойца") if par == "" else tr("на бойце · %s") % _anchor_title(String(n.get("anchor", "")))
 		if branch:
 			var sub := CraftEdit.subtree(ctl.blueprint, uid)
 			mass = 0.0
@@ -1774,32 +1774,32 @@ func _refresh_part() -> void:
 				mass += ctl.blueprint.node_mass(u)
 				energy += ctl.blueprint.node_energy(u)
 	else:
-		part_where.text = "в библиотеке"
+		part_where.text = tr("в библиотеке")
 		cost = ctl.cheapest_cost(d.id)
 	for c in part_rows.get_children():
 		c.queue_free()
-	_row(part_rows, "mass", "Масса", "%.1f кг" % mass)
+	_row(part_rows, "mass", tr("Масса"), tr("%.1f кг") % mass)
 	if on_stand:
-		_row(part_rows, "energy", "Энергия", str(energy), WsStyle.AMBER, "дальше от ядра — дороже")
+		_row(part_rows, "energy", tr("Энергия"), str(energy), WsStyle.AMBER, tr("дальше от ядра — дороже"))
 	else:
 		var fits := cost >= 0 and cost <= ctl.energy_free()
-		_row(part_rows, "energy", "Энергия", str(cost if cost >= 0 else d.energy), WsStyle.AMBER if fits else WsStyle.RED,
-			"у ближайшего свободного разъёма; дальше от ядра — дороже" if cost >= 0 else "свободного разъёма под неё нет")
-	_row(part_rows, "limb", "Длина", "%.2f м" % CraftEdit.part_length(d))
+		_row(part_rows, "energy", tr("Энергия"), str(cost if cost >= 0 else d.energy), WsStyle.AMBER if fits else WsStyle.RED,
+			tr("у ближайшего свободного разъёма; дальше от ядра — дороже") if cost >= 0 else tr("свободного разъёма под неё нет"))
+	_row(part_rows, "limb", tr("Длина"), tr("%.2f м") % CraftEdit.part_length(d))
 	# деталь / ветка
 	for c in branch_row.get_children():
 		c.queue_free()
 	var sub_n := CraftEdit.subtree(ctl.blueprint, uid).size() if on_stand else 1
 	branch_row.visible = on_stand and sub_n > 1
 	if branch_row.visible:
-		for pair in [[false, "Деталь"], [true, "Ветка · %d" % sub_n]]:
+		for pair in [[false, tr("Деталь")], [true, tr("Ветка · %d") % sub_n]]:
 			var want := bool(pair[0])
 			var b := Button.new()
 			b.text = String(pair[1])
 			b.toggle_mode = true
 			b.focus_mode = Control.FOCUS_NONE
 			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			b.tooltip_text = "Копия и зеркало — только этой детали" if not want else "Копия и зеркало — с тем, что на ней  (Shift-клик)"
+			b.tooltip_text = tr("Копия и зеркало — только этой детали") if not want else tr("Копия и зеркало — с тем, что на ней  (Shift-клик)")
 			WsStyle.apply_button(b, "tab")
 			b.set_pressed_no_signal(branch == want)
 			b.pressed.connect(func() -> void: ctl.select_stand(uid, "body", want))
@@ -1810,7 +1810,7 @@ func _refresh_part() -> void:
 		c.queue_free()
 	channel_row.visible = on_stand and ActiveBlocks.is_active(d.id)
 	if channel_row.visible:
-		var cap3 := _caption("Канал")
+		var cap3 := _caption(tr("Канал"))
 		cap3.custom_minimum_size = Vector2(62, 0)
 		channel_row.add_child(cap3)
 		var cur_ch := ActiveBlocks.channel_of(n)
@@ -1821,7 +1821,7 @@ func _refresh_part() -> void:
 			b.toggle_mode = true
 			b.focus_mode = Control.FOCUS_NONE
 			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			b.tooltip_text = "Без канала: в бою молчит" if ch == 0 else "Канал %d: пока зажата %s (P2 — %s, геймпад — %s)" % [ch,
+			b.tooltip_text = tr("Без канала: в бою молчит") if ch == 0 else tr("Канал %d: пока зажата %s (P2 — %s, геймпад — %s)") % [ch,
 				ActiveBlocks.key_label("p1", ch), ActiveBlocks.key_label("p2", ch), ActiveBlocks.PAD_LABELS[ch - 1]]
 			WsStyle.apply_button(b, "chip")
 			b.set_pressed_no_signal(ch == cur_ch)
@@ -1842,21 +1842,21 @@ func _refresh_part() -> void:
 		c.queue_free()
 	if on_stand:
 		var root_part := String(n.get("parent", "")) == ""
-		var dup := _action("duplicate", "Копия", "Копия в руку  D")
+		var dup := _action("duplicate", tr("Копия"), tr("Копия в руку  D"))
 		dup.disabled = root_part
 		dup.pressed.connect(func() -> void: ctl.duplicate_to_hand(uid, "body", bool(ctl.selected.get("branch", false))))
 		part_actions.add_child(dup)
-		var mir := _action("mirror", "Зеркало", "Зеркальная копия  M")
+		var mir := _action("mirror", tr("Зеркало"), tr("Зеркальная копия  M"))
 		mir.disabled = CraftEdit.mirror_place(ctl.blueprint, uid).is_empty()
 		mir.pressed.connect(func() -> void: ctl.start_mirror_preview(uid, bool(ctl.selected.get("branch", false))))
 		part_actions.add_child(mir)
-		var del := _action("delete", "Снять", "Снять с бойца  Del", "danger")
+		var del := _action("delete", tr("Снять"), tr("Снять с бойца  Del"), "danger")
 		del.set_meta("ws_sfx_kind", "delete")
 		del.disabled = root_part
 		del.pressed.connect(func() -> void: ctl.delete_selected())
 		part_actions.add_child(del)
 		if not root_part:
-			var cfg := _action("gear", "", "Настроить: шарнир и тяга")
+			var cfg := _action("gear", "", tr("Настроить: шарнир и тяга"))
 			cfg.size_flags_horizontal = Control.SIZE_SHRINK_END
 			cfg.custom_minimum_size = Vector2(40, 40)
 			cfg.toggle_mode = true
@@ -1869,10 +1869,10 @@ func _refresh_part() -> void:
 					_open_config())
 			part_actions.add_child(cfg)
 	else:
-		var ins := _action("plus", "Поставить", "На свободный подходящий разъём (или тащи на бойца)")
+		var ins := _action("plus", tr("Поставить"), tr("На свободный подходящий разъём (или тащи на бойца)"))
 		ins.disabled = cost < 0 or cost > ctl.energy_free()
 		if ins.disabled:
-			ins.tooltip_text = "Не хватает энергии" if cost >= 0 else "Свободного подходящего разъёма нет"
+			ins.tooltip_text = tr("Не хватает энергии") if cost >= 0 else tr("Свободного подходящего разъёма нет")
 		ins.pressed.connect(_on_install)
 		part_actions.add_child(ins)
 
@@ -1887,7 +1887,7 @@ func _refresh_config(d: PartDef, on_stand: bool, uid: String, n: Dictionary) -> 
 		if config_popup.visible:
 			_close_popups()
 		return
-	config_title.text = "Настроить: %s" % PartNames.of(d)
+	config_title.text = tr("Настроить: %s") % PartNames.of(d)
 	var jt := ctl.blueprint.joint_type_of(uid)
 	var has_joint := jt != "" and String(n.get("parent", "")) != ""
 	joint_row.visible = has_joint
@@ -1896,7 +1896,7 @@ func _refresh_config(d: PartDef, on_stand: bool, uid: String, n: Dictionary) -> 
 		for t in KitJoint.ORDER:
 			var tid := String(t)
 			var b := Button.new()
-			b.text = CraftEdit.joint_title(tid)
+			b.text = tr(CraftEdit.joint_title(tid))
 			b.toggle_mode = true
 			b.focus_mode = Control.FOCUS_NONE
 			WsStyle.apply_button(b, "chip")
@@ -1914,11 +1914,11 @@ func _refresh_config(d: PartDef, on_stand: bool, uid: String, n: Dictionary) -> 
 		for p in ["", "lmb", "rmb"]:
 			var pid := String(p)
 			var b := Button.new()
-			b.text = String(PULL_TITLES[pid])
+			b.text = tr(String(PULL_TITLES[pid]))
 			b.toggle_mode = true
 			b.focus_mode = Control.FOCUS_NONE
 			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			b.tooltip_text = "Без тяги" if pid == "" else "Тянется за мышью, пока зажата %s" % String(PULL_TITLES[pid])
+			b.tooltip_text = tr("Без тяги") if pid == "" else tr("Тянется за мышью, пока зажата %s") % tr(String(PULL_TITLES[pid]))
 			WsStyle.apply_button(b, "chip")
 			b.set_pressed_no_signal(pid == cur)
 			b.pressed.connect(func() -> void:
@@ -1950,18 +1950,18 @@ func _on_install() -> void:
 
 func _refresh_weapon() -> void:
 	var w := ctl.weapon_stats()
-	weapon_name.text = String(w["title"]).trim_suffix(" *") if not bool(w["empty"]) else "Верстак пуст — положи рукоять"
+	weapon_name.text = String(w["title"]).trim_suffix(" *") if not bool(w["empty"]) else tr("Верстак пуст — положи рукоять")
 	for c in wstats.get_children():
 		c.queue_free()
-	var wicons := {"Масса": "mass", "Центр масс": "physics", "Длина": "limb", "Раскрутка": "gear", "Урон": "weapon"}
+	var wicons := {"mass": "mass", "com": "physics", "length": "limb", "spin": "gear", "damage": "weapon"}   # по id строки, не по тексту подписи
 	for r in (w["rows"] as Array):
-		var val := String(r["value"]).replace(" от хвата", "")
-		_row(wstats, String(wicons.get(String(r["label"]), "")), String(r["label"]), val, WsStyle.TEXT, String(r.get("word", "")))
+		var val := String(r.get("value_short", r["value"]))
+		_row(wstats, String(wicons.get(String(r.get("id", "")), "")), String(r["label"]), val, WsStyle.TEXT, String(r.get("word", "")))
 	var errs: PackedStringArray = w["errors"]
 	wproblems.text = errs[0] if not errs.is_empty() else ""
 	wproblems.visible = not errs.is_empty()
 	var equipped := bool(w["equipped"])
-	equip_button.text = "Снять с руки" if equipped else "В руку"
+	equip_button.text = tr("Снять с руки") if equipped else tr("В руку")
 	equip_button.disabled = bool(w["empty"]) and not equipped
 
 
@@ -1969,16 +1969,21 @@ func _anchor_title(an: String) -> String:
 	var s := an.trim_prefix("Anchor_")
 	var side := ""
 	if s.ends_with("_L"):
-		side = " слева"
+		side = "L"
 		s = s.trim_suffix("_L")
 	elif s.ends_with("_R"):
-		side = " справа"
+		side = "R"
 		s = s.trim_suffix("_R")
 	if s == "L" or s == "R":
-		return "слева" if s == "L" else "справа"
+		return tr("слева") if s == "L" else tr("справа")
 	if s == "":
-		return "корень"
-	return String(CraftEdit.GROUP_TITLES.get(s, ANCHOR_WORDS.get(s, "разъём"))) + side
+		return tr("корень")
+	var word := tr(String(CraftEdit.GROUP_TITLES.get(s, ANCHOR_WORDS.get(s, "разъём"))))
+	if side == "L":
+		return tr("%s слева") % word
+	if side == "R":
+		return tr("%s справа") % word
+	return word
 
 
 # ------------------------------------------------------------------ подсказка, сообщения
@@ -2059,12 +2064,12 @@ func _update_drag_info(dragging: bool) -> void:
 	var d := CraftEdit.part(String(ctl.drag["part"]))
 	var txt := ""
 	if String(t["target"]) == "weapon":
-		txt = "[color=#e9dcc4]%s[/color]  ·  +%.1f кг" % [_anchor_title(String(t["anchor"])), d.mass]
+		txt = tr("[color=#e9dcc4]%s[/color]  ·  +%.1f кг") % [_anchor_title(String(t["anchor"])), d.mass]
 	else:
 		var pv := ctl.drag_preview()
 		if pv.is_empty() or not bool(pv["ok"]):
 			var why := String(pv.get("reason", t.get("reason", ""))) if not pv.is_empty() else String(t.get("reason", ""))
-			txt = "[color=#ee5a44]%s[/color]" % ("Не хватает энергии" if why.contains("энерги") else (why if why.length() < 40 else "Сюда не встанет"))
+			txt = "[color=#ee5a44]%s[/color]" % (tr("Не хватает энергии") if String(pv.get("code", t.get("code", ""))) == "energy" else (why if why.length() < 40 else tr("Сюда не встанет")))
 		else:
 			var s := ctl.body_stats()
 			var dm := float(pv["mass"]) - float(s["mass"])
@@ -2074,11 +2079,11 @@ func _update_drag_info(dragging: bool) -> void:
 				var g: Variant = ctl.drag_com()
 				if g is Vector3:
 					var dx := ((g as Vector3).x - ctl.stand_com().x) * 100.0
-					com = "  ·  ЦМ %s" % ("→" if dx > 0.5 else ("←" if dx < -0.5 else "·"))
+					com = tr("  ·  ЦМ %s") % ("→" if dx > 0.5 else ("←" if dx < -0.5 else "·"))
 			var repl := ""
 			if String(t["replace"]) != "":
-				repl = "  ·  [color=#ffb35a]замена[/color]"
-			txt = "%+.1f кг  ·  [color=#ffbd4d]⚡ %+d[/color]%s%s" % [dm, de, com, repl]
+				repl = tr("  ·  [color=#ffb35a]замена[/color]")
+			txt = tr("%+.1f кг  ·  [color=#ffbd4d]⚡ %+d[/color]%s%s") % [dm, de, com, repl]
 	drag_info_text.text = txt
 	drag_info.reset_size()
 	var p: Vector2 = ctl.drag["pos"]
@@ -2149,9 +2154,9 @@ func _on_dummy_hit(amount: float, pos: Vector3, part: String, kind: String) -> v
 	var l := Label.new()
 	l.text = "%d" % roundi(amount) if amount >= 1.0 else "%.1f" % amount
 	if part.begins_with("Head"):
-		l.text += "  в голову!"
+		l.text += tr("  в голову!")
 	elif part.begins_with("Hand"):
-		l.text += "  блок"
+		l.text += tr("  блок")
 	l.theme_type_variation = &"AnnounceLabel"
 	var fs := int(clampf(34.0 + amount * 1.6, 34.0, 96.0))
 	l.add_theme_font_size_override("font_size", fs)
@@ -2179,7 +2184,7 @@ static func _projectable(cam: Camera3D, p: Vector3) -> bool:
 
 
 func _update_test_stats() -> void:
-	test_stats_text.text = "Урон по манекену: %d\nУдаров: %d   ·   сильнейший: %d%s" % [roundi(_dmg_total), _dmg_hits, roundi(_dmg_best),
+	test_stats_text.text = tr("Урон по манекену: %d\nУдаров: %d   ·   сильнейший: %d%s") % [roundi(_dmg_total), _dmg_hits, roundi(_dmg_best),
 		"\n" + _last_hit if _last_hit != "" else ""]
 
 
@@ -2190,18 +2195,18 @@ func _on_feel_hit(ctx: Dictionary) -> void:
 		return
 	var sp := float(ctx.get("speed", 0.0))
 	var part := String(ctx.get("part_base", ""))
-	var note := "  ·  в кисть ×%.2f" % Tuning.HAND_HIT_MULT if part == "Hand" else ("  ·  в голову ×%.1f" % Tuning.HEAD_HIT_MULT if part == "Head" else "")
-	_last_hit = "Последний: %d HP  ·  %.1f м/с%s" % [roundi(float(ctx.get("damage", 0.0))), sp, note]
+	var note := tr("  ·  в кисть ×%.2f") % Tuning.HAND_HIT_MULT if part == "Hand" else (tr("  ·  в голову ×%.1f") % Tuning.HEAD_HIT_MULT if part == "Head" else "")
+	_last_hit = tr("Последний: %d HP  ·  %.1f м/с%s") % [roundi(float(ctx.get("damage", 0.0))), sp, note]
 	_update_test_stats()
-	_float_small(ctx.get("position", Vector3.ZERO), "%.1f м/с" % sp, Color(0.85, 0.9, 1.0), Vector2(0, 26))
+	_float_small(ctx.get("position", Vector3.ZERO), tr("%.1f м/с") % sp, Color(0.85, 0.9, 1.0), Vector2(0, 26))
 
 
 ## Касание манекена ниже порога урона (Tuning.MIN_IMPACT_SPEED): серое «0 · 1.2 м/с» — видно, почему не бьёт.
 func _on_weak_contact(victim: Doll, speed: float, pos: Vector3) -> void:
 	if victim == null or not is_instance_valid(victim) or victim != ctl.dummy.get("doll"):
 		return
-	_float_small(pos, "0 · %.1f м/с" % speed, Color(0.7, 0.7, 0.72), Vector2.ZERO)
-	_last_hit = "Слабо: %.1f м/с (урон от %.1f м/с)" % [speed, Tuning.MIN_IMPACT_SPEED]
+	_float_small(pos, tr("0 · %.1f м/с") % speed, Color(0.7, 0.7, 0.72), Vector2.ZERO)
+	_last_hit = tr("Слабо: %.1f м/с (урон от %.1f м/с)") % [speed, Tuning.MIN_IMPACT_SPEED]
 	_update_test_stats()
 
 
@@ -2248,7 +2253,7 @@ func _update_dummy_panel() -> void:
 		dummy_hp.set_hp(hp, false)
 	if not is_equal_approx(hp, dummy_hp.hp):
 		dummy_hp.set_hp(hp, true)
-	dummy_hp_text.text = "%d / %d" % [roundi(hp), roundi(mx)] if bool(d.call("alive")) else "Нокаут — встаёт…"
+	dummy_hp_text.text = "%d / %d" % [roundi(hp), roundi(mx)] if bool(d.call("alive")) else tr("Нокаут — встаёт…")
 
 
 ## Полный запас HP манекена: TrainingDummy.max_hp() (= Doll.max_hp его куклы), иначе поле max_hp куклы, иначе Tuning.MAX_HP.

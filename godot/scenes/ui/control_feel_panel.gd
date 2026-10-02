@@ -1,5 +1,5 @@
 ## Панель «Управление» (ControlFeel): кнопки вариантов и темпа, ползунки разгона / скорости / инерции / доли тяги на голову, живая скорость
-## бойца. Tab — открыть/скрыть, V / T — следующий вариант / темп без панели (тост). Мышь работает, пока панель открыта; кнопки без фокуса,
+## бойца. Tab — открыть/скрыть, V / T — следующий вариант / темп без панели (тост), J — ДРАЙВ вкл/выкл (Drive, DRIVE.md). Мышь работает, пока панель открыта; кнопки без фокуса,
 ## чтобы Space / Enter (раскрутка P1 / P2) не «нажимали» их. Создаёт HitJuice (не в headless). Сохраняет в user://control_feel.cfg.
 ## Запрос автора 02.10: «управление было больше головой… сделать разные варианты и дать попробовать… общий разгон и скорость настраивать».
 class_name ControlFeelPanel
@@ -9,6 +9,7 @@ const LAYER := 21
 const KEY_PANEL := KEY_TAB
 const KEY_VARIANT := KEY_V
 const KEY_TEMPO := KEY_T
+const KEY_DRIVE := KEY_J            # ДРАЙВ (Drive): J свободна во всех боях (Ж в русской раскладке — physical_keycode)
 const FONT := 15
 const SPEED_WINDOW_S := 3.0
 
@@ -25,6 +26,8 @@ var _tempo_note: Label
 var _sliders: Dictionary = {}
 var _slider_vals: Dictionary = {}
 var _speed: Label
+var _drive_btn: Button
+var _drive_note: Label
 var _t := 0.0
 var _peak := 0.0
 var _peak_t := 0.0
@@ -73,33 +76,38 @@ func _build() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 3)
 	_panel.add_child(box)
-	box.add_child(_label("УПРАВЛЕНИЕ    Tab — скрыть    V / T — вариант / темп", Color(1.0, 0.82, 0.4)))
-	box.add_child(_label("ВАРИАНТ — куда приложена тяга", Color(0.75, 0.8, 0.9)))
+	box.add_child(_label(tr("УПРАВЛЕНИЕ    Tab — скрыть    V / T — вариант / темп"), Color(1.0, 0.82, 0.4)))
+	_drive_btn = _button(tr("ДРАЙВ (J) — импульс живёт"))
+	_drive_btn.pressed.connect(func() -> void: Drive.toggle(); _sync())
+	box.add_child(_drive_btn)
+	_drive_note = _label("", Color(0.6, 0.95, 0.7))
+	box.add_child(_drive_note)
+	box.add_child(_label(tr("ВАРИАНТ — куда приложена тяга"), Color(0.75, 0.8, 0.9)))
 	var vf := HFlowContainer.new()
 	box.add_child(vf)
 	for id in ControlFeel.VARIANT_ORDER:
-		var b := _button(String(ControlFeel.VARIANTS[id]["title"]))
+		var b := _button(tr(String(ControlFeel.VARIANTS[id]["title"])))
 		b.pressed.connect(func() -> void: ControlFeel.set_variant(String(id)); _sync())
 		vf.add_child(b)
 		_variant_btns[id] = b
 	_variant_note = _label("", Color(0.6, 0.95, 0.7))
 	box.add_child(_variant_note)
-	box.add_child(_label("ТЕМП — разгон и скорость", Color(0.75, 0.8, 0.9)))
+	box.add_child(_label(tr("ТЕМП — разгон и скорость"), Color(0.75, 0.8, 0.9)))
 	var tf := HFlowContainer.new()
 	box.add_child(tf)
 	for id in ControlFeel.TEMPO_ORDER:
-		var b := _button(String(ControlFeel.TEMPOS[id]["title"]))
+		var b := _button(tr(String(ControlFeel.TEMPOS[id]["title"])))
 		b.pressed.connect(func() -> void: ControlFeel.set_tempo(String(id)); _sync())
 		tf.add_child(b)
 		_tempo_btns[id] = b
 	_tempo_note = _label("", Color(0.6, 0.95, 0.7))
 	box.add_child(_tempo_note)
-	box.add_child(_label("РУЧКИ (любая меняет бой сразу и запоминается)", Color(0.75, 0.8, 0.9)))
+	box.add_child(_label(tr("РУЧКИ (любая меняет бой сразу и запоминается)"), Color(0.75, 0.8, 0.9)))
 	for s in ControlFeel.SLIDERS:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		box.add_child(row)
-		var l := _label(String(s[1]), Color(0.93, 0.93, 0.93), false)
+		var l := _label(tr(String(s[1])), Color(0.93, 0.93, 0.93), false)
 		l.custom_minimum_size = Vector2(250, 0)
 		row.add_child(l)
 		var sl := HSlider.new()
@@ -123,7 +131,7 @@ func _build() -> void:
 	var foot := HBoxContainer.new()
 	foot.add_theme_constant_override("separation", 12)
 	box.add_child(foot)
-	var reset := _button("Сбросить: ТЕЛО · СЕЙЧАС")
+	var reset := _button(tr("Сбросить: ТЕЛО · СЕЙЧАС"))   # и ДРАЙВ выкл (ControlFeel.reset)
 	reset.pressed.connect(func() -> void: ControlFeel.reset(); _sync())
 	foot.add_child(reset)
 	_speed = _label("", Color(1, 1, 1), false)
@@ -160,6 +168,8 @@ func _sync() -> void:
 		_mark(_variant_btns[id] as Button, ControlFeel.variant == id)
 	for id in _tempo_btns:
 		_mark(_tempo_btns[id] as Button, ControlFeel.tempo == id)
+	_mark(_drive_btn, Drive.on)
+	_drive_note.text = tr("ДРАЙВ вкл: гравитация ниже, полёт после удара живёт, отлёт по силе удара, размен решает сила, отклик на каждый удар, камера держит обоих вблизи, бот давит") if Drive.on else tr("ДРАЙВ выкл: бой как раньше")
 	_variant_note.text = "%s: %s" % [ControlFeel.variant_title(), ControlFeel.variant_note()]
 	_tempo_note.text = "%s: %s" % [ControlFeel.tempo_title(), ControlFeel.tempo_note()]
 	for key in _sliders:
@@ -168,7 +178,7 @@ func _sync() -> void:
 		var info: Array = _slider_vals[key]
 		(info[0] as Label).text = String(info[1]) % v
 	_syncing = false
-	_tag.text = "Tab — управление: %s" % ControlFeel.label()
+	_tag.text = tr("Tab — управление: %s") % ControlFeel.label()
 
 
 func _mark(b: Button, on: bool) -> void:
@@ -204,12 +214,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_VARIANT:
 			ControlFeel.cycle_variant(1)
 			_sync()
-			_toast("Управление: %s   (V — следующий, Tab — ручки)" % ControlFeel.variant_title())
+			_toast(tr("Управление: %s   (V — следующий, Tab — ручки)") % ControlFeel.variant_title())
 			get_viewport().set_input_as_handled()
 		KEY_TEMPO:
 			ControlFeel.cycle_tempo(1)
 			_sync()
-			_toast("Темп: %s   (T — следующий, Tab — ручки)" % ControlFeel.tempo_title())
+			_toast(tr("Темп: %s   (T — следующий, Tab — ручки)") % ControlFeel.tempo_title())
+			get_viewport().set_input_as_handled()
+		KEY_DRIVE:
+			Drive.toggle()
+			_sync()
+			_toast(tr("%s   (J — переключить; управление: %s)") % [Drive.title(), ControlFeel.variant_title()])
 			get_viewport().set_input_as_handled()
 
 
@@ -233,7 +248,7 @@ func _process(delta: float) -> void:
 	if sp >= _peak or _peak_t > SPEED_WINDOW_S:
 		_peak = sp
 		_peak_t = 0.0
-	_speed.text = "скорость %.1f м/с (пик %.1f)" % [sp, _peak]
+	_speed.text = tr("скорость %.1f м/с (пик %.1f)") % [sp, _peak]
 
 
 func _first_doll() -> Doll:

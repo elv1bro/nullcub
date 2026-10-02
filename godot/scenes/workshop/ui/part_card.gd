@@ -55,7 +55,7 @@ func setup(d: PartDef, on_body := false, fav := false) -> void:
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(icon_box)
 	_kind = Label.new()
-	_kind.text = String(CraftEdit.KIND_TITLES.get(d.kind, d.kind)).capitalize()
+	_kind.text = tr(String(CraftEdit.KIND_TITLES.get(d.kind, d.kind))).capitalize()
 	WsStyle.label(_kind, WsStyle.SIZE_XS, true)
 	_kind.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_kind.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -75,7 +75,7 @@ func setup(d: PartDef, on_body := false, fav := false) -> void:
 	_star.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_star.offset_left = -30
 	_star.offset_bottom = 30
-	_star.tooltip_text = "В избранное"
+	_star.tooltip_text = tr("В избранное")
 	_star.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_star.pressed.connect(func() -> void:
 		_fav = not _fav
@@ -113,7 +113,7 @@ func setup(d: PartDef, on_body := false, fav := false) -> void:
 	row.add_child(gap)
 	row.add_child(WsIcon.make("mass", 16.0, WsStyle.TEXT_DIM))
 	var mass := Label.new()
-	mass.text = "%.1f кг" % d.mass
+	mass.text = tr("%.1f кг") % d.mass
 	WsStyle.label(mass, WsStyle.SIZE_S, true)
 	mass.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(mass)
@@ -182,7 +182,7 @@ func _sync_star() -> void:
 	if _star == null:
 		return
 	WsIcon.add_to_button(_star, "star_filled" if _fav else "star", 18.0, WsStyle.AMBER if _fav else WsStyle.TEXT_FAINT)
-	_star.tooltip_text = "Убрать из избранного" if _fav else "В избранное"
+	_star.tooltip_text = tr("Убрать из избранного") if _fav else tr("В избранное")
 	_star.modulate.a = 1.0 if (_fav or _hover) else 0.0
 
 
@@ -225,8 +225,8 @@ func _gui_input(event: InputEvent) -> void:
 static func hit_word(id: String) -> String:
 	for k in HIT_WORDS:
 		if id.begins_with(String(k)):
-			return String(HIT_WORDS[k])
-	return "форма"
+			return TranslationServer.translate(String(HIT_WORDS[k]))
+	return TranslationServer.translate("форма")
 
 
 ## 1.3 → «1.3», 1.15 → «1.15», 0.85 → «0.85» (без хвостовых нулей).
@@ -237,14 +237,14 @@ static func _mult_str(v: float) -> String:
 
 ## Короткая подсказка (v0.3 §48): вид · материал; чем особенная (удар формы, намертво, урон в оружии).
 static func _tooltip(d: PartDef, on_body := false) -> String:
-	var mat := CraftEdit.mat_title(d.base_mat) if d.base_mat != "" else String({"wood": "дерево", "iron": "железо", "cloth": "ткань"}.get(d.material, ""))
-	var lines: PackedStringArray = ["%s%s" % [String(CraftEdit.KIND_TITLES.get(d.kind, d.kind)).capitalize(), " · " + mat.to_lower() if mat != "" else ""]]
+	var mat := CraftEdit.mat_title(d.base_mat) if d.base_mat != "" else String({"wood": TranslationServer.translate("дерево"), "iron": TranslationServer.translate("железо"), "cloth": TranslationServer.translate("ткань")}.get(d.material, ""))
+	var lines: PackedStringArray = ["%s%s" % [TranslationServer.translate(String(CraftEdit.KIND_TITLES.get(d.kind, d.kind))).capitalize(), " · " + mat.to_lower() if mat != "" else ""]]
 	if d.weapon_mult > 1.0:
-		lines.append(("в оружии урон ×%s" if on_body else "урон ×%s") % _mult_str(d.weapon_mult))
+		lines.append((TranslationServer.translate("в оружии урон ×%s") if on_body else TranslationServer.translate("урон ×%s")) % _mult_str(d.weapon_mult))
 	elif not is_equal_approx(d.hit_mult, 1.0) and not BodyBlueprint.is_fixed_part(d):
-		lines.append("%s: удар ×%s" % [hit_word(d.id), _mult_str(d.hit_mult)])
+		lines.append(TranslationServer.translate("%s: удар ×%s") % [hit_word(d.id), _mult_str(d.hit_mult)])
 	elif PartDef.FIXED_KINDS.has(d.kind) and not is_equal_approx(d.body_mult, 1.0):
-		lines.append("удар хозяином ×%s" % _mult_str(d.body_mult))
+		lines.append(TranslationServer.translate("удар хозяином ×%s") % _mult_str(d.body_mult))
 	elif BodyBlueprint.is_fixed_part(d):
-		lines.append("крепится намертво")
+		lines.append(TranslationServer.translate("крепится намертво"))
 	return "\n".join(lines)

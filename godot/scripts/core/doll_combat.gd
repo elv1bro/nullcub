@@ -56,6 +56,9 @@ var last_kind_taken := ""
 ## оружие), но проигнорированы, и их максимальная скорость (м/с) — гейт доказывает, что ноль урона не из-за слабого касания.
 var env_ignored := 0
 var env_ignored_max_speed := 0.0
+## ДРАЙВ (Drive): лучший сырой урон по мне от каждого атакующего, записанный при разрешении очереди — {instance_id: {"f": тик, "raw": HP}}.
+## Встречная сторона размена сверяет с ним свой удар (_drive_counter_raw), если её очередь разрешилась позже в том же окне.
+var _ex_from: Dictionary = {}
 
 var _time := 0.0
 var _queue: Array = []                 # кандидаты ударов по моей кукле (см. _enqueue)
@@ -146,6 +149,7 @@ func reset() -> void:
 	last_kind_taken = ""
 	env_ignored = 0
 	env_ignored_max_speed = 0.0
+	_ex_from.clear()
 
 
 func _combat_allowed() -> bool:
@@ -257,10 +261,19 @@ func _contact_doll(part: RigidBody3D, other: RigidBody3D, other_doll: Doll, pos:
 		# моя кукла — жертва: бьёт other. Голова о голову бьёт обоих (RM) той же скоростью, без бонуса «в голову».
 		var striker_v := v_other - v_part
 		var dir := striker_v if striker_v.length_squared() > 1e-4 else (part.global_position - other.global_position)
+		var hit_speed := closing
+		if head_head and Drive.on:
+			# ДРАЙВ: голова о голову — урон по собственной скорости чужой головы ко мне (налетевший бьёт, стоявший почти нет)
+			var u := part.global_position - other.global_position
+			u.z = 0.0
+			var own_other := maxf(v_other.dot(u.normalized()), 0.0) if u.length_squared() > 1e-6 else closing
+			hit_speed = minf(closing, own_other)
+			if hit_speed < closing - 0.01:
+				Drive.stats["head_soft"] = int(Drive.stats["head_soft"]) + 1
 		_enqueue({
 			"victim_part": part, "striker": other, "attacker": other_doll, "kind": "head" if part.name.begins_with("Head") else "body",
 			"mass": other.mass, "body_mult": Damage.body_mult_of_body(other) * Damage.shape_mult_of_body(other, closing), "weapon_mult": 1.0, "weapon_id": "",
-			"speed": closing, "target_mult": 1.0 if head_head else Damage.target_mult_of(part.name),
+			"speed": hit_speed, "target_mult": 1.0 if head_head else Damage.target_mult_of(part.name),
 			"pos": pos, "nrm": nrm, "dir": dir, "t": _time,
 		})
 		return
@@ -386,6 +399,8 @@ func _resolve_queue() -> void:
 	for c in q:
 		c["est"] = _raw_damage(c, 1.0)
 	q.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["est"]) > float(b["est"]))
+	if Drive.on:
+		_drive_trades(q)
 	var seen_pairs: Dictionary = {}
 	for c in q:
 		var vp: RigidBody3D = c["victim_part"]
@@ -407,6 +422,49 @@ func _resolve_queue() -> void:
 			_apply_hit(c)
 		if not doll.alive:
 			return
+
+
+## ДРАЙВ: размен решает сила. Для каждого атакующего X в очереди: мой лучший сырой урон от X против лучшего сырого урона, который
+## я в то же окно наношу X (его очередь ещё не разрешена — смотрим в неё; уже разрешена — его запись _ex_from). Если мой удар по X
+## сильнее в DRIVE_TRADE_WIN_RATIO раз, удары X по мне в этом шаге × DRIVE_TRADE_LOSER_MULT (c["trade_mult"]). Обе стороны сравнивают
+## одни и те же два числа, поэтому решение согласовано независимо от порядка _physics_process кукол.
+func _drive_trades(q: Array) -> void:
+	var frame := Engine.get_physics_frames()
+	var best: Dictionary = {}   # Doll -> сырой урон по мне
+	for c in q:
+		var a: Variant = c["attacker"]
+		if not (a is Doll) or not is_instance_valid(a) or a == doll or c["kind"] == "environment" or float(c["est"]) <= 0.0:
+			continue
+		best[a] = maxf(float(best.get(a, 0.0)), float(c["est"]))
+	for a in best:
+		var mine: float = best[a]
+		_ex_from[(a as Doll).get_instance_id()] = {"f": frame, "raw": mine}
+		var theirs := _drive_counter_raw(a as Doll, frame)
+		if theirs <= 0.0:
+			continue
+		Drive.stats["trades"] = int(Drive.stats["trades"]) + 1
+		if theirs >= mine * Tuning.DRIVE_TRADE_WIN_RATIO:
+			Drive.stats["trade_cut"] = int(Drive.stats["trade_cut"]) + 1
+			for c in q:
+				if c["attacker"] == a:
+					c["trade_mult"] = Tuning.DRIVE_TRADE_LOSER_MULT
+
+
+## Сырой урон, который моя кукла в это же окно наносит кукле a (её очередь или её запись _ex_from); 0 — встречного удара нет.
+func _drive_counter_raw(a: Doll, frame: int) -> float:
+	var oc := combat_of(a)
+	if oc == null:
+		return 0.0
+	var r := 0.0
+	for c in oc._queue:
+		if c.get("attacker") == doll and c["kind"] != "environment":
+			r = maxf(r, oc._raw_damage(c, 1.0))
+	if r > 0.0:
+		return r
+	var e: Dictionary = oc._ex_from.get(doll.get_instance_id(), {})
+	if not e.is_empty() and frame - int(e["f"]) <= Tuning.DRIVE_TRADE_WINDOW_FRAMES:
+		return float(e["raw"])
+	return 0.0
 
 
 ## Удар куклой/оружием: кулдаун пары, DOUBLE BLOW, комбо, урон, knockback, стан, FX, Match.
@@ -438,7 +496,7 @@ func _apply_hit(c: Dictionary) -> void:
 	if ac != null:
 		n_prev = ac.combo_n if _time - ac.combo_last_t <= Tuning.COMBO_WINDOW_S else 0
 	var cm := Damage.combo_mult(n_prev)
-	var dmg := _raw_damage(c, cm)
+	var dmg := _raw_damage(c, cm) * float(c.get("trade_mult", 1.0))
 	if double_blow:
 		dmg *= Tuning.DOUBLE_BLOW_MULT   # второе тело в том же клинче: у рэгдолла из 10 частей это норма, а не редкость
 	if dmg <= 0.0:
@@ -518,23 +576,23 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 	# knockback: направление от бьющего к жертве + апбиас; SD множит. Блок кистью (TargetMult < 1, Tuning.HAND_HIT_MULT) режет урон и
 	# стан, но не отброс: удар в подставленную руку толкает тело как обычный (метла Метельщика сталкивает и через «блок»)
 	var tm := float(c.get("target_mult", Damage.target_mult_of(vp.name)))
-	var j := Damage.knockback_impulse(dmg / tm if tm > 0.0 and tm < 1.0 else dmg, _knockback_mult())
+	var j := Drive.knockback_impulse(dmg / tm if tm > 0.0 and tm < 1.0 else dmg, _knockback_mult())
 	var dir_v: Vector3 = c["dir"]
 	var env := kind == "environment" and not (c["striker"] is Weapon)
 	if env:
 		j *= 0.5   # dir — отскок от стены (нормаль против подлёта)
 	var by_doll := attacker != null and attacker != doll and not env
 	# v6.2: лёгкий удар всё равно разводит кукол (RM: жертва уходит на ~1 H/с); SD множит и минимум. Добор до минимума — в торс.
-	var j_min := Tuning.KNOCKBACK_MIN * _knockback_mult() if by_doll and j > 0.0 else 0.0
+	var j_min := Drive.knockback_min() * _knockback_mult() if by_doll and j > 0.0 else 0.0
 	var kb_dir := Damage.knockback_dir(dir_v)
 	if j > 0.0 and not doll.is_broken():
 		doll.apply_knockback(kb_dir * j, vp, stun_s, Vector3(dir_v.x, dir_v.y, 0.0) if by_doll else Vector3.ZERO, j_min)
 	j = maxf(j, j_min)
-	if by_doll and Tuning.HIT_ATTACKER_RECOIL + Tuning.HIT_ATTACKER_THRUST_LOCK_S > 0.0:
+	if by_doll and Drive.recoil() + Drive.thrust_lock_s() > 0.0:
 		# отдача атакующего: сближение вдоль удара гасится, он отходит на RECOIL × Δv ЦМ жертвы (и после KO — RM: бьющий
 		# отлетает и висит), тяга выключена THRUST_LOCK_S — иначе 40 кг на 4–5 м/с догоняют жертву и куклы летят сцепившись
 		var flat := Vector3(dir_v.x, dir_v.y, 0.0)
-		attacker.apply_recoil(flat, Tuning.HIT_ATTACKER_RECOIL * j / maxf(doll.total_mass, 1.0), Tuning.HIT_ATTACKER_THRUST_LOCK_S)
+		attacker.apply_recoil(flat, Drive.recoil() * j / maxf(doll.total_mass, 1.0), Drive.thrust_lock_s())
 	if stun_s > 0.0 and doll.alive:
 		doll.stun(stun_s)
 	if dmg >= Tuning.FLIGHT_TRACK_DAMAGE:

@@ -53,7 +53,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_N:
 				hud.announcer.announce(get_node("/root/GameAudio").toggle_crowd(), Color(0.9, 0.9, 0.95), "")
 			KEY_H:   # скин HUD (HudSkin): в PvE перекрашивает диктора
-				hud.announcer.announce("HUD: " + HudSkin.cycle(), Color(0.9, 0.9, 0.95), "")
+				hud.announcer.announce(tr("HUD: ") + HudSkin.cycle(), Color(0.9, 0.9, 0.95), "")
 			KEY_ESCAPE:
 				Flow.toggle_pause(director.restart)   # пауза: продолжить / заново / в гараж (scripts/menu/flow.gd)
 			_:

@@ -8,7 +8,18 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 fail=0
-run() { godot --headless --path . --fixed-fps 60 "res://tests/$1" -- "${2:-}" > /dev/null 2>&1; local rc=$?; echo "  $1 ${2:-} exit $rc"; [ $rc -eq 0 ] || fail=1; }
+# Вывод пробы не выбрасывается: при ненулевом коде печатаются строки FAIL / ошибки (hitfx_core_probe изредка краснел в гейте, а сам по себе — нет, причину не видно было)
+run() {
+	local log; log=$(mktemp)
+	godot --headless --path . --fixed-fps 60 "res://tests/$1" -- "${2:-}" > "$log" 2>&1; local rc=$?
+	echo "  $1 ${2:-} exit $rc"
+	if [ $rc -ne 0 ]; then
+		grep -E "FAIL|SCRIPT ERROR|ERROR:" "$log" | cut -c1-300 | head -12 | sed 's/^/      /'
+		cp "$log" "/tmp/run_hitfx_gate_fail_$(basename "$1" .tscn).log"
+		fail=1
+	fi
+	rm -f "$log"
+}
 run hit_tier_probe.tscn
 run hitfx_core_probe.tscn
 run hitfx_probe.tscn "scene=void,victim=p2"

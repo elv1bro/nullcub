@@ -84,7 +84,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return   # там F1–F13 — пресеты тела
 	if k.shift_pressed:
 		set_auto_scale(not auto_scale)
-		show_toast("Авто-масштаб: %s" % ("вкл" if auto_scale else "выкл"))
+		show_toast(tr("Авто-масштаб: %s") % (tr("вкл") if auto_scale else tr("выкл")))
 		return
 	cycle()
 
@@ -115,7 +115,7 @@ func cycle() -> String:
 
 func label() -> String:
 	var info := "%s · %d×%d" % [preset.to_upper(), render_size.x, render_size.y] if render_size != Vector2i.ZERO else preset.to_upper()
-	return "Графика: " + info + (" · авто" if auto_scale else "")
+	return tr("Графика: ") + info + (tr(" · авто") if auto_scale else "")
 
 
 ## Что сейчас: для проб и отчётов.

@@ -29,7 +29,7 @@ func _ready() -> void:
 	_build_ui()
 	await get_tree().process_frame
 	amb.start_preset("scrap")
-	_set_status("Свалка: фон, реверберация «купол»")
+	_set_status(tr("Свалка: фон, реверберация «купол»"))
 
 
 func _ctx(tier: String, damage: float, weapon := "", part := "Torso") -> Dictionary:
@@ -39,11 +39,11 @@ func _ctx(tier: String, damage: float, weapon := "", part := "Torso") -> Diction
 
 func _events() -> Array:
 	return [
-		["Лёгкий: дерево по дереву", _ev_light], ["Лёгкий: по голове", _ev_light_head], ["Тяжёлый: дерево", _ev_heavy],
-		["Тяжёлый: голова", _ev_heavy_head], ["Тяжёлый: молот", _ev_heavy_hammer], ["Тяжёлый: сковорода", _ev_heavy_pan],
-		["Тяжёлый: меч", _ev_heavy_sword], ["Крит (крупный план)", _ev_crit], ["Крит без крупного плана", _ev_crit_short],
-		["KO", _ev_ko], ["Удар о стену", _ev_slam], ["Удар о стену в крит-полёте", _ev_slam_crit], ["Взрыв бочки", _ev_explosion],
-		["Отсчёт 3-2-1 + FIGHT!", _countdown], ["Комбо 2 → 6", _combo], ["Конец матча", _ev_over],
+		[tr("Лёгкий: дерево по дереву"), _ev_light], [tr("Лёгкий: по голове"), _ev_light_head], [tr("Тяжёлый: дерево"), _ev_heavy],
+		[tr("Тяжёлый: голова"), _ev_heavy_head], [tr("Тяжёлый: молот"), _ev_heavy_hammer], [tr("Тяжёлый: сковорода"), _ev_heavy_pan],
+		[tr("Тяжёлый: меч"), _ev_heavy_sword], [tr("Крит (крупный план)"), _ev_crit], [tr("Крит без крупного плана"), _ev_crit_short],
+		["KO", _ev_ko], [tr("Удар о стену"), _ev_slam], [tr("Удар о стену в крит-полёте"), _ev_slam_crit], [tr("Взрыв бочки"), _ev_explosion],
+		[tr("Отсчёт 3-2-1 + FIGHT!"), _countdown], [tr("Комбо 2 → 6"), _combo], [tr("Конец матча"), _ev_over],
 	]
 
 
@@ -140,7 +140,7 @@ func _build_ui() -> void:
 	root.offset_bottom = -12
 	add_child(root)
 	var title := Label.new()
-	title.text = "Звуковая доска — Ragdoll Master (пробел — повторить, Esc — выход)"
+	title.text = tr("Звуковая доска — NULL GRAVITY (пробел — повторить, Esc — выход)")
 	title.add_theme_font_size_override("font_size", 22)
 	root.add_child(title)
 	_status = Label.new()
@@ -150,11 +150,11 @@ func _build_ui() -> void:
 	cols.add_theme_constant_override("separation", 16)
 	root.add_child(cols)
 	# события
-	var ev := _column(cols, "События боя", 1.0)
+	var ev := _column(cols, tr("События боя"), 1.0)
 	for e in _events():
 		_button(ev, String(e[0]), e[1])
 	# слои
-	var lay_box := _column(cols, "Слои SfxDirector", 2.0)
+	var lay_box := _column(cols, tr("Слои SfxDirector"), 2.0)
 	var grid := GridContainer.new()
 	grid.columns = 4
 	lay_box.add_child(grid)
@@ -162,9 +162,9 @@ func _build_ui() -> void:
 		var l := String(layer)
 		_button(grid, l, func() -> void: sfx.play_layer(l, 0.0, 1.0))
 	# толпа, фон, музыка
-	var side := _column(cols, "Толпа, фон, музыка", 1.2)
+	var side := _column(cols, tr("Толпа, фон, музыка"), 1.2)
 	var lv := Label.new()
-	lv.text = "Возбуждение толпы (гул → оживление → рёв)"
+	lv.text = tr("Возбуждение толпы (гул → оживление → рёв)")
 	side.add_child(lv)
 	_level = HSlider.new()
 	_level.min_value = 0.0
@@ -173,32 +173,32 @@ func _build_ui() -> void:
 	_level.value = 0.2
 	_level.value_changed.connect(func(v: float) -> void:
 		crowd.excitement = v
-		_set_status("толпа: возбуждение %.2f" % v))
+		_set_status(tr("толпа: возбуждение %.2f") % v))
 	side.add_child(_level)
 	for r in CrowdDirector.SHOTS:
 		var rl := String(r)
-		_button(side, "Толпа: " + rl.trim_prefix("crowd_"), func() -> void: crowd.react(rl, 0.0, "board", true, 0.0))
+		_button(side, tr("Толпа: ") + rl.trim_prefix("crowd_"), func() -> void: crowd.react(rl, 0.0, "board", true, 0.0))
 	for a in ["scrap", "ruins", "workshop", "void"]:
 		var an := String(a)
-		_button(side, "Фон: " + an, func() -> void:
+		_button(side, tr("Фон: ") + an, func() -> void:
 			amb.start_preset(an)
-			_set_status("фон %s, реверберация %s" % [an, ga.room if ga != null else "?"]))
-	_button(side, "Музыка: вкл/выкл", func() -> void:
+			_set_status(tr("фон %s, реверберация %s") % [an, ga.room if ga != null else "?"]))
+	_button(side, tr("Музыка: вкл/выкл"), func() -> void:
 		if ga != null:
 			if ga.music_context == "":
 				ga.play_context("fight")
 				ga.set_music_on(true, false)
 			else:
 				ga.play_context("")
-			_set_status("музыка: %s %s" % [ga.music_context, ga.music_track]))
-	_button(side, "Музыка: следующий трек", func() -> void:
+			_set_status(tr("музыка: %s %s") % [ga.music_context, ga.music_track]))
+	_button(side, tr("Музыка: следующий трек"), func() -> void:
 		if ga != null:
 			ga.play_context("fight")
 			ga.call("_start_track", "fight")
-			_set_status("музыка: %s" % ga.music_track))
-	_button(side, "Глушение крита вкл/выкл", func() -> void:
+			_set_status(tr("музыка: %s") % ga.music_track))
+	_button(side, tr("Глушение крита вкл/выкл"), func() -> void:
 		sfx.set_muffle(not sfx.is_muffled())
-		_set_status("глушение: %s" % sfx.is_muffled()))
+		_set_status(tr("глушение: %s") % sfx.is_muffled()))
 
 
 func _column(parent: Node, title: String, ratio: float) -> VBoxContainer:

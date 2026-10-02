@@ -1,11 +1,11 @@
-## Логотип финала заставки-комикса: чёрная рваная полоса поперёк страницы, корона, RAGDOLL / MASTER и строка темы.
+## Логотип финала заставки-комикса: чёрная рваная полоса поперёк страницы, корона, NULL / GRAVITY и строка темы.
 ## Рисуется в координатах страницы вокруг своего origin (узел стоит в центре страницы), масштаб «удара» — у IntroComic.
 @tool
 class_name ComicTitle
 extends Node2D
 
-@export var line1 := "RAGDOLL"
-@export var line2 := "MASTER"
+@export var line1 := "NULL"
+@export var line2 := "GRAVITY"
 @export var tagline := "GRAVITY IS OPTIONAL.  WINNING IS NOT."
 @export var size1 := 290.0
 @export var size2 := 360.0

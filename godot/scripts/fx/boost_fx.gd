@@ -77,7 +77,7 @@ static func values(name: String = "") -> Dictionary:
 
 
 static func label() -> String:
-	return "Ускорение: " + String(values().get("label", ""))
+	return TranslationServer.translate("Ускорение: ") + TranslationServer.translate(String(values().get("label", "")))
 
 
 ## Следующий пресет по кругу PRESET_ORDER (все BoostFx в дереве подхватывают сразу). Возвращает имя.

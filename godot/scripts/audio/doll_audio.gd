@@ -151,7 +151,8 @@ func _physics_process(delta: float) -> void:
 		_scan_ms = now
 		_scan_weapons()
 	_tick_swings(now)
-	_tick_creaks(now)
+	if (Engine.get_physics_frames() + get_instance_id()) % 2 == 0:
+		_tick_creaks(now)   # скрип — через тик (30 Гц, куклы вразнобой): излом сустава длится дольше тика, слух не отличит
 
 
 func _tick_wind(delta: float, crit: bool) -> void:
@@ -164,7 +165,10 @@ func _tick_wind(delta: float, crit: bool) -> void:
 		target += WIND_CRIT_DB
 	var real_dt := delta / maxf(Engine.time_scale, 0.05)
 	var rate := WIND_ATTACK_DB_S if target > wind_db else WIND_RELEASE_DB_S
+	var idle := target <= WIND_OFF_DB and wind_db <= WIND_OFF_DB + 1.0 and not wind.playing
 	wind_db = move_toward(wind_db, target, rate * real_dt)
+	if idle:
+		return          # тишина и не играет (кукла стоит): три записи свойств плеера каждый тик не нужны — при старте они ниже
 	wind.volume_db = wind_db
 	wind.pitch_scale = lerpf(0.75, 1.35, k) * SfxDirector.time_pitch(Engine.time_scale)
 	if is_inside_tree():
@@ -225,13 +229,20 @@ func _tick_swings(now: float) -> void:
 		_was_fast_hand[hn] = fast
 
 
+var _creak_pairs: Dictionary = {}   # имя сустава → [Joint3D, тело A, тело B]
+
+
 func _tick_creaks(now: float) -> void:
 	for jn in doll.joints.keys():
 		var j := doll.joints[jn] as Joint3D
 		if j == null or not is_instance_valid(j):
 			continue
-		var a := j.get_node_or_null(j.node_a) as RigidBody3D
-		var b := j.get_node_or_null(j.node_b) as RigidBody3D
+		var pair: Array = _creak_pairs.get(jn, [])
+		if pair.size() != 3 or pair[0] != j or not is_instance_valid(pair[1]) or not is_instance_valid(pair[2]):
+			pair = [j, j.get_node_or_null(j.node_a) as RigidBody3D, j.get_node_or_null(j.node_b) as RigidBody3D]   # пути node_a/node_b — не каждый тик
+			_creak_pairs[jn] = pair
+		var a := pair[1] as RigidBody3D
+		var b := pair[2] as RigidBody3D
 		if a == null or b == null:
 			continue
 		var rel := (b.angular_velocity - a.angular_velocity).length()

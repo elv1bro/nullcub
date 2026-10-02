@@ -37,7 +37,7 @@ func _ready() -> void:
 	_last_ms = Time.get_ticks_msec()
 	splatter.visible = false
 	ko_label.rotation = 0.0
-	sub.text = "FIGHTER OFFLINE"
+	sub.text = tr("FIGHTER OFFLINE")
 	_apply_skin()
 	HudSkin.events.changed.connect(func(_id: String) -> void: _apply_skin())
 

@@ -31,8 +31,8 @@ var _names: Array = []
 func setup(f_head: Font, f_body: Font, f_mono: Font) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_lbl("ТРОФЕИ", Vector2(_x0, 296), 50, Color(1, 1, 1), f_head)
-	_lbl("полка бокса 07", Vector2(_x0 + 2, 360), 20, Color(0.7, 0.7, 0.72), f_body)
+	_lbl(tr("ТРОФЕИ"), Vector2(_x0, 296), 50, Color(1, 1, 1), f_head)
+	_lbl(tr("полка бокса 07"), Vector2(_x0 + 2, 360), 20, Color(0.7, 0.7, 0.72), f_body)
 	var bg := ColorRect.new()
 	bg.color = Color(1.0, 0.55, 0.2, 0.13)
 	bg.position = Vector2(_x0 - 26, 404)
@@ -63,8 +63,8 @@ func setup(f_head: Font, f_body: Font, f_mono: Font) -> void:
 		a.pressed.connect(func() -> void: step(d))
 		add_child(a)
 	for i in EXHIBITS.size():
-		_names.append(_lbl(EXHIBITS[i]["title"], Vector2(_x0, 640 + i * 40), 24, Color(0.78, 0.76, 0.72, 0.85), f_head))
-	_lbl("←→  ПРЕДМЕТ     ESC  НАЗАД", Vector2(_x0, 1080 - 76), 17, Color(0.65, 0.65, 0.7), f_mono)
+		_names.append(_lbl(tr(String(EXHIBITS[i]["title"])), Vector2(_x0, 640 + i * 40), 24, Color(0.78, 0.76, 0.72, 0.85), f_head))
+	_lbl(tr("←→  ПРЕДМЕТ     ESC  НАЗАД"), Vector2(_x0, 1080 - 76), 17, Color(0.65, 0.65, 0.7), f_mono)
 	visible = false
 
 
@@ -102,9 +102,9 @@ func handle_input(e: InputEvent) -> bool:
 
 func _refresh() -> void:
 	var ex: Dictionary = EXHIBITS[index]
-	_title.text = ex["title"]
-	_l1.text = ex["l1"]
-	_l2.text = ex["l2"]
+	_title.text = tr(String(ex["title"]))
+	_l1.text = tr(String(ex["l1"]))
+	_l2.text = tr(String(ex["l2"]))
 	_l2.position.y = 516 + (24 if _l1.get_line_count() > 1 else 0)
 	_count.text = "%d / %d" % [index + 1, EXHIBITS.size()]
 	for i in _names.size():
