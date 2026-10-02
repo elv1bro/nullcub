@@ -13,7 +13,6 @@
 ## Щепки/пыль (ImpactFx) и урон считает DollCombat — ребёнок каждой куклы, его добавляет Match.register.
 ## P1: WASD, Shift ускорение (держать, за Заряд), Space + A/D раскрутка. P2: стрелки, правый Ctrl ускорение, Enter раскрутка.
 ## F10 — пресет эффектов ударов full → reduced → off (FxPreset, HIT_FX.md §11.2), тост «FX: …» внизу экрана на FX_TOAST_S.
-## F11 — пресет эффектов ускорения / раскрутки (BoostFx: ленты, послеобразы, пыль, линии скорости, подсветка), тост «Ускорение: …».
 extends Node3D
 
 const SCENES := {
@@ -105,21 +104,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				switch_arena("pve")
 			KEY_F10:
 				cycle_fx_preset()
-			KEY_F11:
-				cycle_boost_fx()
 
 
 ## F10: следующий пресет FX (применяется ко всем HitFxDirector сразу) и тост. Возвращает имя пресета.
 func cycle_fx_preset() -> String:
 	var preset := FxPreset.cycle(get_tree())
 	_show_fx_toast(FxPreset.label())
-	return preset
-
-
-## F11: следующий пресет эффектов ускорения / раскрутки (BoostFx) и тост «Ускорение: …».
-func cycle_boost_fx() -> String:
-	var preset := BoostFx.cycle(get_tree())
-	_show_fx_toast(BoostFx.label())
 	return preset
 
 
