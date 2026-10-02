@@ -6,7 +6,7 @@
 ##   • победивший вариант действует effect_s, потом поле возвращается к регламенту (Tuning.GRAVITY вниз), обломки убираются;
 ##   • толпа заводится на старте и на итоге (NullHallArena.excite), табло зала пишет AUDIENCE EVENT / «… WINS»;
 ##   • аномалия (anomaly = "vote_mismatch", кампания, бой 3 — §14): 74 % за LOW GRAVITY, а поле включает GRAVITY INVERSION;
-##     табло мигает, у N0 на экране GLITCH, субтитр — заглушка до этапа 14 (N0_VOICE.md).
+##     табло мигает, у N0 на экране GLITCH; реплику говорит N0 облачком (n0_host.gd), без N0 — субтитр в панели.
 ## Панель — scenes/arena/audience_vote_panel.tscn (ребёнок Panel). Пробы укорачивают first_s / duration_s / effect_s.
 ## Журнал history (для проб): {options, pct, winner, applied, anomaly, fight_time}.
 class_name AudienceVote
@@ -150,7 +150,7 @@ func start_vote() -> void:
 		arena.call("excite", 0.6)
 	_set_board("AUDIENCE EVENT")
 	if panel != null:
-		panel.call("show_vote", options, N0_LINES["start"])
+		panel.call("show_vote", options, _panel_n0_line("start"))
 	vote_started.emit(options)
 
 
@@ -177,13 +177,19 @@ func _finish_vote() -> void:
 	if panel != null:
 		panel.call("set_percents", target_pct)
 		panel.call("show_result", String(winner["title"]), String(applied["title"]) if mismatch else "",
-			N0_LINES["anomaly"] if mismatch else "")
+			_panel_n0_line("anomaly") if mismatch else "")
 	if mismatch:
 		_glitch_board(String(winner["title"]), String(applied["title"]))
 		var n0 := get_parent().get_node_or_null("N0")
 		if n0 != null and n0.has_method("flash_expression"):
 			n0.call("flash_expression", "glitch", 2.5)
 	vote_finished.emit(result)
+
+
+## Субтитр N0 в панели — только если на площадке нет N0 с облачком (scripts/n0/n0_host.gd сам говорит на vote_started / vote_finished).
+func _panel_n0_line(key: String) -> String:
+	var host := get_parent().get_node_or_null("N0/Host")
+	return "" if host != null and host.has_method("say") else String(N0_LINES[key])
 
 
 ## Конец действия: поле по регламенту, обломки убрать, табло — как было.

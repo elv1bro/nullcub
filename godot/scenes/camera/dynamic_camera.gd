@@ -23,6 +23,10 @@
 ## потом сдвиг центра — поверх клэмпа границ арены (за стеной Void — чёрная пустота). avoid (доли кадра) — ещё одна зона, из которой
 ## убирается «корпус» цели (голова + торс): карточка KO в ko_crit. После окна сдвиг и отъезд плавно уходят (safe_release_tau).
 ## Без вызова keep_safe камера прежняя.
+## v4 (купол, автор 02.10.2026: «камера слишком далеко, мне не важно видеть соперника»): follow_mode = "humans" — цель строится
+## только по куклам людей (external_input = false): P1 всегда, другой человек — с первого нажатия своих клавиш (Быстрый бой вдвоём);
+## людей нет — все куклы (бой ботов в пробах). Соперник за кадром — стрелка с метрами (scenes/ui/offscreen_markers.gd).
+## primary_doll() — главная кукла кадра (P1): от неё стрелки меряют расстояние, рядом с ней летает N0 (scripts/n0/n0_host.gd).
 ## Только поведение: узел Camera3D живёт в scenes/playground.tscn.
 class_name DynamicCamera
 extends Camera3D
@@ -34,6 +38,8 @@ extends Camera3D
 ## Клэмп центра идёт по урезанным границам, максимум зума — по полной высоте арены (§7: «до всей арены»).
 @export var floor_inset := 4.5
 @export var target_group := "dolls"
+## "all" — в кадре все куклы группы (как раньше); "humans" — только куклы людей (см. v4 в шапке).
+@export var follow_mode := "all"
 @export var padding := 2.5
 ## Вертикальный отступ (м) вокруг цели; < 0 — как padding.
 @export var padding_y := -1.0
@@ -106,6 +112,7 @@ var _safe_s := 0.0
 var _safe_avoid := Rect2()
 var _safe_shift := Vector2.ZERO
 var _safe_zoom := 1.0
+var _joined := {}   # input_prefix → true: этот человек уже нажимал свои клавиши (follow_mode "humans")
 
 
 func _ready() -> void:
@@ -159,13 +166,63 @@ func _flying(n: Node, v: Vector3) -> bool:
 	return v.length() > lead_speed
 
 
-## Точки цели: ЦМ живых кукол (+ упреждение для летящих). Если живых нет — все.
+## Кукла человека (не бот): external_input = false.
+static func is_human(n: Node) -> bool:
+	return n != null and n.has_method("centre_of_mass") and n.get("external_input") != true
+
+
+## Главная кукла кадра: кукла человека с наименьшим player_index (P1); людей нет — null.
+func primary_doll() -> Node3D:
+	var best: Node3D = null
+	for n in get_tree().get_nodes_in_group(target_group):
+		if not (n is Node3D) or not is_human(n):
+			continue
+		if best == null or _player_index(n) < _player_index(best):
+			best = n
+	return best
+
+
+static func _player_index(n: Node) -> int:
+	var pi: Variant = n.get("player_index")
+	return int(pi) if pi != null else 99
+
+
+## Куклы, которые держит кадр: "all" — все с centre_of_mass(); "humans" — главная кукла и люди, уже нажимавшие свои клавиши;
+## людей нет — все.
+func followed_dolls() -> Array:
+	var all: Array = []
+	for n in get_tree().get_nodes_in_group(target_group):
+		if n.has_method("centre_of_mass"):
+			all.append(n)
+	if follow_mode != "humans":
+		return all
+	var main := primary_doll()
+	if main == null:
+		return all
+	var out: Array = []
+	for n in all:
+		if n == main or (is_human(n) and _joined_input(n)):
+			out.append(n)
+	return out
+
+
+func _joined_input(n: Node) -> bool:
+	var pre := String(n.get("input_prefix")) if n.get("input_prefix") != null else ""
+	if pre == "":
+		return false
+	if not _joined.has(pre):
+		for a in ["_left", "_right", "_up", "_down", "_dash", "_flip"]:
+			if InputMap.has_action(pre + a) and Input.is_action_pressed(pre + a):
+				_joined[pre] = true
+				break
+	return _joined.has(pre)
+
+
+## Точки цели: ЦМ живых кукол из followed_dolls() (+ упреждение для летящих). Если живых нет — все.
 func _targets() -> Array:
 	var alive_pts: Array = []
 	var all_pts: Array = []
-	for n in get_tree().get_nodes_in_group(target_group):
-		if not n.has_method("centre_of_mass"):
-			continue
+	for n in followed_dolls():
 		var com: Vector3 = n.centre_of_mass()
 		var v := Vector3.ZERO
 		if n.has_method("torso"):

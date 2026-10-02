@@ -647,9 +647,11 @@ func _err(msg: String) -> void:
 
 
 # --- площадка: зал + две куклы + камера по листу камеры + Match + HUD + стрелки за экраном + N0 ---
-## Как playground_void.tscn (скрипт scenes/playground.gd, arena_id "null_hall"), но камера по листу камеры (ART_NULL.md, лист 1):
-## часть арены, боец 8–12 % высоты кадра → полувысота кадра 7.5…11 м (кукла 1.8 м), без fit_bounds; стрелки за экраном —
-## scenes/ui/offscreen_markers.gd; N0-ведущий (scripts/n0/n0_host.gd) держится у верхнего края кадра со свободной стороны.
+## Как playground_void.tscn (скрипт scenes/playground.gd, arena_id "null_hall"), но камера по листу камеры (ART_NULL.md, лист 1)
+## с поправкой автора 02.10.2026: камера за игроком (follow_mode "humans" — соперник-бот в кадр не тянет), полувысота кадра 4.2 м
+## (кукла 1.8 м — около 21 % высоты; до 11 м, если в бою двое людей), без fit_bounds; соперник за кадром — стрелка с метрами
+## от игрока (scenes/ui/offscreen_markers.gd); N0 (scripts/n0/n0_host.gd) летает за плечом игрока, за плоскостью боя, и говорит
+## реплики облачком.
 func _build_playground() -> void:
 	var pg := Node3D.new()
 	pg.name = "Playground"
@@ -684,7 +686,8 @@ func _build_playground() -> void:
 	cam.set("floor_inset", 0.0)
 	cam.set("padding", 3.0)
 	cam.set("padding_y", 2.0)
-	cam.set("min_half_height", 7.5)
+	cam.set("follow_mode", "humans")
+	cam.set("min_half_height", 4.2)
 	cam.set("max_half_height", 11.0)
 	cam.set("fit_bounds", false)
 	cam.set("zoom_out_tau", 0.25)
@@ -712,8 +715,8 @@ func _build_playground() -> void:
 	marks.owner = pg
 	var n0 := (load("res://scenes/n0/n0.tscn") as PackedScene).instantiate() as Node3D
 	n0.name = "N0"
-	n0.position = Vector3(-DOME_A + 2.0, 14.0, 3.2)
-	n0.scale = Vector3.ONE * 0.8
+	n0.position = Vector3(SPAWN_X[0] - 2.0, 4.0, -1.4)
+	n0.scale = Vector3.ONE * 0.6
 	pg.add_child(n0)
 	n0.owner = pg
 	var host := Node.new()

@@ -3,7 +3,7 @@
 ##
 ## Экран: материал N0_Screen берёт эмиссию из атласа 5 × 2 (assets/models/n0/n0_face_atlas.png); выражение = uv1_offset ячейки.
 ## Ливрея: основной и акцентный цвет краски (роли N0_Livery / N0_Accent) — свои копии материалов у каждого дрона.
-## В бою не участвует: коллизий нет, это Node3D, которую двигает режиссёр/камера (позже — N0 вместо диктора).
+## В бою не участвует: коллизий нет, это Node3D; в бою его двигает scripts/n0/n0_host.gd (рядом с игроком, реплики-субтитры).
 class_name N0Drone
 extends Node3D
 
@@ -31,6 +31,8 @@ const PAINT_ALBEDO := 0.82
 @export var idle := true
 @export var bob_height := 0.035
 @export var bob_hz := 0.45
+## Говорит (N0Speech набирает реплику): корпус подпрыгивает в такт «слогам», антенна-уши вздрагивают.
+var talking := false
 
 var _t := 0.0
 var _screen_mat: StandardMaterial3D
@@ -101,11 +103,13 @@ func _process(delta: float) -> void:
 	_t += delta
 	var w := TAU * bob_hz
 	var bob := sin(_t * w) * bob_height
+	var talk := absf(sin(_t * 15.0)) * 0.03 if talking else 0.0
+	bob += talk
 	model.position = Vector3(0.0, bob, 0.0)
 	model.rotation = Vector3(sin(_t * w * 0.5) * 0.04, sin(_t * 0.23 * TAU) * 0.06, sin(_t * w + 0.8) * 0.03)
 	# уши: плавник отстаёт от корпуса — фаза позже, амплитуда больше
-	_swing("N0_Ear_L", Vector3(sin(_t * w - 0.9) * 0.10, 0.0, sin(_t * w * 0.7) * 0.05))
-	_swing("N0_Ear_R", Vector3(sin(_t * w - 1.1) * 0.10, 0.0, -sin(_t * w * 0.7 + 0.4) * 0.05))
+	_swing("N0_Ear_L", Vector3(sin(_t * w - 0.9) * 0.10 + talk * 3.0, 0.0, sin(_t * w * 0.7) * 0.05))
+	_swing("N0_Ear_R", Vector3(sin(_t * w - 1.1) * 0.10 + talk * 3.0, 0.0, -sin(_t * w * 0.7 + 0.4) * 0.05))
 	_swing("N0_Legs_L", Vector3(-sin(_t * w - 1.4) * 0.12, 0.0, sin(_t * w * 0.5) * 0.04))
 	_swing("N0_Legs_R", Vector3(-sin(_t * w - 1.6) * 0.12, 0.0, -sin(_t * w * 0.5) * 0.04))
 	_swing("N0_Arm_L", Vector3(sin(_t * w * 0.8 - 0.5) * 0.06, 0.0, 0.0))

@@ -1,14 +1,17 @@
 ## Стрелки за экраном (лист камеры автора, правило 4, docs/plan-demo/ART_NULL.md): если боец вне кадра, у края экрана
-## рисуется стрелка его цвета с подписью «P2 → 37m» — расстояние от центра кадра до бойца в плоскости боя.
+## рисуется стрелка его цвета с подписью «P2 · 37 м» — расстояние в плоскости боя от главной куклы кадра (P1,
+## DynamicCamera.primary_doll(); автор 02.10: «стрелкой и написать количество метров до него»). Стрелка самой главной куклы
+## (её увела кинематография крита) и камера без primary_doll() — от центра кадра.
 ## Узел — CanvasLayer в сцене площадки; бойцы — группа dolls (Doll: player_index, centre_of_mass()), камера — текущая.
 extends CanvasLayer
 
 @export var dolls_group := "dolls"
 ## Отступ стрелки от края экрана (px) и «мёртвая зона»: боец чуть за краем — ещё не стрелка.
-@export var margin := 46.0
+@export var margin := 52.0
 @export var inside_pad := 8.0
+@export var font_size := 24
 
-var markers: Array[Dictionary] = []   # последние стрелки: {player, pos, dist} — для проб
+var markers: Array[Dictionary] = []   # последние стрелки: {player, pos, dir, dist, from_doll} — для проб
 var _canvas: Control
 
 
@@ -34,6 +37,12 @@ func _process(_delta: float) -> void:
 	var from := cam.project_ray_origin(centre)
 	var dir := cam.project_ray_normal(centre)
 	var world_centre := from + dir * (-from.z / dir.z) if absf(dir.z) > 1e-4 else from
+	var main: Node3D = null
+	if cam.has_method("primary_doll"):
+		main = cam.call("primary_doll")
+	var main_pos: Vector3 = world_centre
+	if main != null:
+		main_pos = main.call("centre_of_mass")
 	for d in get_tree().get_nodes_in_group(dolls_group):
 		if not (d is Node3D) or not d.has_method("centre_of_mass"):
 			continue
@@ -52,8 +61,9 @@ func _process(_delta: float) -> void:
 		var k := minf(half.x / maxf(absf(v.x), 1e-4), half.y / maxf(absf(v.y), 1e-4))
 		var pos := centre + v * k
 		var idx := int(d.get("player_index")) if d.get("player_index") != null else 0
-		markers.append({"player": idx, "pos": pos, "dir": v.normalized(),
-			"dist": Vector2(com.x - world_centre.x, com.y - world_centre.y).length()})
+		var origin := main_pos if d != main else world_centre
+		markers.append({"player": idx, "pos": pos, "dir": v.normalized(), "from_doll": d != main and main != null,
+			"dist": Vector2(com.x - origin.x, com.y - origin.y).length()})
 	_canvas.queue_redraw()
 
 
@@ -65,15 +75,16 @@ func _draw_markers() -> void:
 		var p: Vector2 = m["pos"]
 		var d: Vector2 = m["dir"]
 		var side := Vector2(-d.y, d.x)
-		var tip := p + d * 20.0
-		var pts := PackedVector2Array([tip, p - d * 10.0 + side * 14.0, p - d * 4.0, p - d * 10.0 - side * 14.0])
-		_canvas.draw_colored_polygon(pts, Color(0, 0, 0, 0.55))
+		var tip := p + d * 26.0
+		var pts := PackedVector2Array([tip, p - d * 12.0 + side * 18.0, p - d * 4.0, p - d * 12.0 - side * 18.0])
+		_canvas.draw_colored_polygon(pts, Color(0, 0, 0, 0.6))
 		var inner := PackedVector2Array()
 		for q in pts:
 			inner.append(p + (q - p) * 0.8)
 		_canvas.draw_colored_polygon(inner, col)
-		var label := "P%d  %dm" % [idx + 1, int(round(float(m["dist"])))]
-		var ls := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 22)
-		var lp := p - d * 34.0 - ls * 0.5 + Vector2(0.0, ls.y * 0.35)
-		_canvas.draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, 6, Color(0, 0, 0, 0.8))
-		_canvas.draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, col.lightened(0.35))
+		var label := "P%d · %d м" % [idx + 1, int(round(float(m["dist"])))]
+		var ls := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+		var lp := p - d * 40.0 - ls * 0.5 + Vector2(0.0, ls.y * 0.35)
+		lp.x = clampf(lp.x, 6.0, _canvas.size.x - ls.x - 6.0)
+		_canvas.draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 7, Color(0, 0, 0, 0.85))
+		_canvas.draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, col.lightened(0.35))

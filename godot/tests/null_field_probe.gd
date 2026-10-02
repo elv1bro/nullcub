@@ -11,7 +11,8 @@
 ##                     нет NaN; мембрана светится у места удара (hits), сигнал membrane_hit был
 ##   bot_hover         бот (enemy_scrapling) в поле «влево»: hover_vec() смотрит против гравитации (вправо)
 ##   offscreen_marker  площадка playground_null_hall: кукла P2 за правым краем кадра → стрелка P2 с расстоянием
-##   playground        площадка грузится, матч идёт, камера держит полувысоту кадра 7.5…11 м (боец 8–12 % кадра)
+##   playground        площадка грузится, матч идёт, камера держит только P1 (P2 клавиш не нажимал) с полувысотой кадра
+##                     4.2…5.5 м (боец ~21 % кадра; автор 02.10.2026 — «камера слишком далеко»)
 extends Node
 
 const HALL := preload("res://scenes/arena/null_hall.tscn")
@@ -207,8 +208,10 @@ func _playground() -> void:
 	var m := pg.get_node("Match")
 	var hh := cam.half_height
 	var phase := str(m.get("phase"))
-	info["playground"] = {"half_height": snappedf(hh, 0.01), "phase": phase}
-	_check("playground", hh >= 7.5 - 0.01 and hh <= 11.0 + 0.01, "half_height %.2f, phase %s" % [hh, phase])
+	var fd := cam.followed_dolls()
+	var only_p1: bool = fd.size() == 1 and fd[0] == pg.get_node("P1")
+	info["playground"] = {"half_height": snappedf(hh, 0.01), "phase": phase, "only_p1": only_p1}
+	_check("playground", only_p1 and hh >= 4.2 - 0.01 and hh <= 5.5, "half_height %.2f, phase %s, в кадре только P1: %s" % [hh, phase, only_p1])
 	# P2 далеко вправо за кадр: стрелка
 	var p2 := pg.get_node("P2") as Doll
 	var marks := pg.get_node("Offscreen")
