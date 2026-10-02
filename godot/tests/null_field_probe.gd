@@ -31,6 +31,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	DynamicCamera.user_zoom = 1.0   # проба про автокадрирование, не про масштаб игрока (по умолчанию 1.5×)
 	hall = HALL.instantiate() as NullHallArena
 	add_child(hall)
 	field = hall.field

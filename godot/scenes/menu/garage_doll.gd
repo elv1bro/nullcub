@@ -36,6 +36,25 @@ func _ready() -> void:
 	build()
 
 
+## Пересобрать куклу по свежему чертежу (вернулись из мастерской гаража: автосейв изменился).
+func rebuild() -> void:
+	if doll != null:
+		remove_child(doll)
+		doll.queue_free()
+		doll = null
+	_children = {}
+	_pivot_local = {}
+	_neck_bodies = []
+	_neck_base = {}
+	_neck_pivot = Vector3.ZERO
+	var keep := _look_target
+	_look_yaw = 0.0
+	build()
+	_look_target = keep
+	_look_yaw = keep
+	_apply_look()
+
+
 func build() -> void:
 	var bp := _blueprint()
 	doll = MODULAR_DOLL.instantiate() as ModularDoll
@@ -94,6 +113,7 @@ func _blueprint() -> BodyBlueprint:
 	if bp == null:
 		bp = CraftEdit.load_body_preset(PRESET)
 		blueprint_source = "preset"
+	bp.energy_budget = maxi(bp.energy_budget, 100000)   # кукла только для показа: сборка сверх бюджета (мастерская её не бракует) всё равно сидит на ящике
 	return bp
 
 
@@ -172,6 +192,10 @@ func _process(delta: float) -> void:
 	if _neck_bodies.is_empty() or absf(_look_target - _look_yaw) < 0.05:
 		return
 	_look_yaw = lerpf(_look_yaw, _look_target, 1.0 - exp(-delta * 4.0))
+	_apply_look()
+
+
+func _apply_look() -> void:
 	var r := Basis(Vector3.UP, deg_to_rad(_look_yaw))
 	var xf := Transform3D(r, _neck_pivot - r * _neck_pivot)
 	for b in _neck_bodies:

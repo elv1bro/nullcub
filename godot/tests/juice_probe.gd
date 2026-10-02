@@ -354,7 +354,7 @@ func _ui_checks(p1: Doll, p2: Doll) -> void:
 	var lvl_back := HitJuice.zoom_level()
 	_check("ui_zoom", lvl > 1.3 and h1 < h0 * 0.85 and absf(lvl_back - 1.0) < 0.01, [snappedf(lvl, 0.01), snappedf(h0, 0.01), snappedf(h1, 0.01), snappedf(lvl_back, 0.01)],
 		["> 1.3× after 3 wheel-ups", "half-height drops", "back to 1.00× after 3 commas"])
-	HitJuice.set_zoom_level(1.0)
+	DynamicCamera.user_zoom = DynamicCamera.DEFAULT_USER_ZOOM
 
 
 # ------------------------------------------------------------------ следы
