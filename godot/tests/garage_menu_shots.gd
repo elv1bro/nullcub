@@ -1,6 +1,6 @@
 ## Кадры и ролик главного меню-гаража (scenes/menu/garage_menu.tscn). Нужно окно.
 ##   godot --path godot --resolution 1920x1080 res://tests/garage_menu_shots.tscn -- out=/абс/папка
-##       → garage-<title|story|quick|workshop|trophies|settings|exit|into_tv>.png
+##       → garage-<title|story|quick|workshop|trophies|settings|exit|settings_screen|into_tv>.png
 ##   godot --path godot --resolution 1280x720 --write-movie /абс/кадры/f.png --fixed-fps 24 res://tests/garage_menu_shots.tscn -- video=1
 ##       → сценарий: титул → любая клавиша → пункты вниз/вверх → Enter на «Истории» (нырок в телевизор); потом ffmpeg.
 extends Node
@@ -49,6 +49,13 @@ func _stills(out: String, which: String) -> void:
 		menu.set_focus(i, true)
 		await _wait(20)
 		_save(out, NAMES[i])
+	if want.call("settings_screen"):
+		menu.set_focus(4, true)
+		menu.activate()
+		menu._move_to("SettingsClose", 0.1, 0.0, true)
+		await _wait(20)
+		_save(out, "settings_screen")
+		menu.settings_ui.close()
 	if want.call("into_tv"):
 		menu.set_focus(0, true)
 		menu.ui.modulate.a = 0.0

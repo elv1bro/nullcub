@@ -310,6 +310,7 @@ func _spots(g: Node3D) -> void:
 	_spot(g, "Workshop", Vector3(0.9, 1.55, 0.85), Vector3(-0.75, 1.05, -2.0), 0.35, 50.0)
 	_spot(g, "Trophies", Vector3(2.45, 1.95, 0.75), Vector3(1.8, 2.45, -2.85), 0.33, 42.0)
 	_spot(g, "Settings", Vector3(1.9, 1.6, 1.15), Vector3(4.55, 1.2, 1.55), 0.36, 50.0)
+	_spot(g, "SettingsClose", Vector3(2.75, 1.5, 2.55), Vector3(4.5, 1.3, 1.55), 0.34, 46.0)
 	# ныряние при входе: в экран телевизора, к иллюминатору ворот, к стенду
 	_spot(g, "IntoTV", Vector3(1.62, 1.155, -1.66), Vector3(1.62, 1.155, -2.27), 0.5, 50.0)
 	_spot(g, "IntoGate", Vector3(-2.75, 1.5, -1.0), Vector3(-3.84, 1.6, -2.1), 0.5, 50.0)

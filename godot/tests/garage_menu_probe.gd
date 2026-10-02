@@ -79,7 +79,7 @@ func _zone_ok(zone: String) -> bool:
 func _run() -> void:
 	# 1. структура
 	var missing: Array = []
-	for s in ["Title", "Story", "Quick", "Workshop", "Trophies", "Settings", "IntoTV", "IntoGate", "IntoStand"]:
+	for s in ["Title", "Story", "Quick", "Workshop", "Trophies", "Settings", "SettingsClose", "IntoTV", "IntoGate", "IntoStand"]:
 		if not menu.spots.has(s):
 			missing.append(s)
 	_check("spots_present", missing.is_empty(), missing)
@@ -111,6 +111,23 @@ func _run() -> void:
 		_check("camera_%s" % id, at[0] < 0.01 and at[1] < 0.5 and t <= limit, [snappedf(at[0], 0.001), snappedf(at[1], 0.01), snappedf(t, 0.01)], [0.01, 0.5, limit])
 		_check("tv_%s" % id, menu.tv_mode == String(it["tv"]), menu.tv_mode, it["tv"])
 		_check("zone_%s" % id, _zone_ok(String(it["zone"])), it["zone"])
+	# 3б. «Настройки»: Enter открывает экран у радио, → громкость +10 % (Flow, сохраняется), ← обратно, Esc — к списку
+	await _key(KEY_5)
+	await _settle()
+	await _key(KEY_ENTER)
+	await _settle()
+	var flow := get_node_or_null("/root/Flow")
+	var at_s := _at_spot("SettingsClose")
+	_check("settings_open", menu.state == "settings" and menu.settings_ui.visible and at_s[0] < 0.01, [menu.state, snappedf(at_s[0], 0.001)])
+	var v0: float = float(flow.get_setting("volume")) if flow != null else 0.8
+	await _key(KEY_RIGHT)
+	var v1: float = float(flow.get_setting("volume")) if flow != null else 0.0
+	await _key(KEY_LEFT)
+	var v2: float = float(flow.get_setting("volume")) if flow != null else 0.0
+	_check("settings_volume", flow != null and absf(v1 - minf(v0 + 0.1, 1.0)) < 0.051 and absf(v2 - v0) < 0.051, [v0, v1, v2])
+	await _key(KEY_ESCAPE)
+	await _settle()
+	_check("settings_back", menu.state == "menu" and menu.focus == 4 and not menu.settings_ui.visible, [menu.state, menu.focus])
 	# 4. цифра 3 → «Мастерская», Esc → «Выход»
 	await _key(KEY_3)
 	_check("digit_jump", menu.focus == 2, menu.focus, 2)

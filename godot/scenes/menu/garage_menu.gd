@@ -26,7 +26,7 @@ const ITEMS := [
 	{"id": "trophies", "title": "ТРОФЕИ", "l1": "Детали, взятые у соперников", "l2": "Следующее место на полке пока пустое",
 		"spot": "Trophies", "zone": "shelf", "tv": "replay", "go": "", "via": "",
 		"n0": "Повтор! Следите за головой Полена. Нет, выше. Ещё выше."},
-	{"id": "settings", "title": "НАСТРОЙКИ", "l1": "Звук · экран · управление · эффекты", "l2": "Яркость — по настроечной таблице на ТВ",
+	{"id": "settings", "title": "НАСТРОЙКИ", "l1": "Звук · экран · управление · эффекты", "l2": "Громкость, эффекты, экран, субтитры N0",
 		"spot": "Settings", "zone": "radio", "tv": "testcard", "go": "", "via": "",
 		"n0": "Крути ручку, пока не увидишь все шесть клеток. Я подожду. Я всегда жду."},
 	{"id": "exit", "title": "ВЫХОД", "l1": "Выключить свет в боксе", "l2": "", "spot": "Settings", "zone": "", "tv": "live",
@@ -43,7 +43,7 @@ const TV_DIR := "res://assets/textures/garage/tv/"
 @export var dry_run := false
 @export var move_time := 0.75
 
-var state := "title"            # title | menu | leaving
+var state := "title"            # title | menu | settings | trophies | leaving
 var focus := 0
 var tv_mode := ""
 var cam: Camera3D
@@ -77,6 +77,7 @@ var sub_text: Label
 var sub_panel: PanelContainer
 var fade: ColorRect
 var press_label: Label
+var settings_ui: GarageSettings
 var _live_line := 0
 var _live_timer := 0.0
 
@@ -107,6 +108,16 @@ func _ready() -> void:
 	_show_title(true)
 	_apply_tv("live")
 	_set_zone_mult("", 0.0)
+	# вернулись из боя или мастерской (Flow.to_menu): сразу список на том же пункте, из темноты
+	var flow := get_node_or_null("/root/Flow")
+	if flow != null and bool(flow.returning):
+		flow.returning = false
+		state = "menu"
+		_show_title(false)
+		set_focus(int(flow.last_item), true)
+		_say("С возвращением в бокс 07! Повтор покажу потом, когда его смонтируют.")
+		fade.color.a = 1.0
+		create_tween().tween_property(fade, "color:a", 0.0, 0.5)
 
 
 # ---------------------------------------------------------------- состояние и ввод
@@ -139,6 +150,9 @@ func activate() -> void:
 	if id == "exit":
 		_exit_sequence()
 		return
+	if id == "settings":
+		_open_settings()
+		return
 	var go := String(it["go"])
 	if go == "":
 		_say(String(SOON.get(id, "Скоро.")))
@@ -155,6 +169,27 @@ func activate() -> void:
 	t2.tween_callback(_go.bind(go))
 
 
+func _open_settings() -> void:
+	state = "settings"
+	menu_box.visible = false
+	settings_ui.open()
+	_move_to("SettingsClose", 0.6, 0.03)
+	_say("Крути ручку. Громче — ярче шкала. Я всегда так делаю, когда никто не смотрит.")
+
+
+func _close_settings() -> void:
+	state = "menu"
+	menu_box.visible = true
+	set_focus(focus)
+
+
+## Громкость из настроек: шкала радио светится ярче (сюжет и интерфейс — одна вещь).
+func _on_volume(v: float) -> void:
+	for l in zone_lights.get("radio", []):
+		if (l as Node).name.begins_with("RadioDial"):
+			(l as Light3D).light_energy = 0.1 + 0.8 * v
+
+
 func is_moving() -> bool:
 	return _t < 1.0
 
@@ -164,6 +199,9 @@ func spot_transform(name: String) -> Transform3D:
 
 
 func _go(target: String) -> void:
+	var flow := get_node_or_null("/root/Flow")
+	if flow != null:
+		flow.last_item = focus
 	navigated.emit(target)
 	if not dry_run:
 		get_tree().change_scene_to_file(target)
@@ -190,6 +228,10 @@ func _exit_sequence() -> void:
 
 func _unhandled_input(e: InputEvent) -> void:
 	if state == "leaving":
+		return
+	if state == "settings":
+		if settings_ui.handle_input(e):
+			get_viewport().set_input_as_handled()
 		return
 	if state == "title":
 		var pressed: bool = (e is InputEventKey and e.pressed and not e.echo) or (e is InputEventJoypadButton and e.pressed) \
@@ -602,6 +644,11 @@ func _build_ui() -> void:
 		menu_box.move_child(bg, 1)
 		menu_box.move_child(bar, 2)
 		item_nodes.append({"btn": b, "d1": d1, "d2": d2, "bg": bg, "bar": bar, "en": en})
+	settings_ui = GarageSettings.new()
+	ui.add_child(settings_ui)
+	settings_ui.setup(f_head, f_body, f_mono)
+	settings_ui.closed.connect(_close_settings)
+	settings_ui.volume_changed.connect(_on_volume)
 	_rect(menu_box, Vector2(x0, 1080 - 90), Vector2(500, 1), Color(1, 1, 1, 0.12))
 	_label(menu_box, "↑↓  ВЫБОР     ENTER  ВОЙТИ     ESC  ВЫХОД", Vector2(x0, 1080 - 76), 17, Color(0.65, 0.65, 0.7), f_mono)
 	# субтитр эфира
@@ -676,6 +723,9 @@ func _update_items() -> void:
 
 
 func _say(s: String) -> void:
+	var flow := get_node_or_null("/root/Flow")
+	if flow != null and not bool(flow.get_setting("subtitles")):
+		s = ""
 	sub_panel.visible = s != ""
 	sub_text.text = s
 	sub_panel.reset_size()
