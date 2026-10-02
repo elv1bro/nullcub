@@ -89,6 +89,10 @@ var fight_seen := false               # фаза FIGHT наступала (до 
 var report := {"ok": true, "checks": [], "info": {}}
 # --- perf=1 / spikes=1: рывки кадра по реальным часам и узлы, добавленные в кадр ---
 var perf := false
+var pipes := false           # pipes=1 (окно): компиляции пайплайнов Godot по кадрам (Performance.PIPELINE_COMPILATIONS_*) и события рядом
+var _pipe_last: Array = [0, 0, 0, 0, 0]
+var _pipe_fight: Array = [0, 0, 0, 0, 0]   # сумма за активный бой
+var _pipe_lines: Array = []
 var spikes := false
 var spike_ms := 28.0
 var limit_p99_ms := 60.0
@@ -129,7 +133,33 @@ func _top_added() -> String:
 	return ", ".join(parts)
 
 
+func _pipe_tick(in_fight: bool) -> void:
+	var cur: Array = []
+	for c in [Performance.PIPELINE_COMPILATIONS_CANVAS, Performance.PIPELINE_COMPILATIONS_MESH, Performance.PIPELINE_COMPILATIONS_SURFACE,
+			Performance.PIPELINE_COMPILATIONS_DRAW, Performance.PIPELINE_COMPILATIONS_SPECIALIZATION]:
+		cur.append(int(Performance.get_monitor(c)))
+	var d: Array = []
+	var any := false
+	for i in range(5):
+		d.append(int(cur[i]) - int(_pipe_last[i]))
+		any = any or int(d[i]) > 0
+	_pipe_last = cur
+	if not any or t < 0.5:
+		return
+	if in_fight:
+		for i in range(5):
+			_pipe_fight[i] = int(_pipe_fight[i]) + int(d[i])
+	var now := Time.get_ticks_usec()
+	var near: PackedStringArray = []
+	for c in _ctx:
+		if now - int(c["us"]) < 600000:
+			near.append("%s(-%dms)" % [c["text"], (now - int(c["us"])) / 1000])
+	_pipe_lines.append("PIPE t=%.2f fight=%.2f %s canvas/mesh/surface/draw/spec=%s%s" % [t, match_node.fight_time, "БОЙ" if in_fight else "вне боя", d, (" [" + ", ".join(near) + "]") if not near.is_empty() else ""])
+
+
 func _process(_d: float) -> void:
+	if pipes:
+		_pipe_tick(stage == 0 and fight_seen and not ko_fired and match_node.combat_active())
 	if not (perf or spikes):
 		return
 	var now := Time.get_ticks_usec()
@@ -158,6 +188,11 @@ func _process(_d: float) -> void:
 
 
 func _perf_summary() -> void:
+	if pipes:
+		print("PIPELINES scene=%s в бою (canvas/mesh/surface/draw/spec) = %s, событий %d" % [scene_id, _pipe_fight, _pipe_lines.size()])
+		for l in _pipe_lines:
+			print("  ", l)
+		report["info"]["pipelines_in_fight"] = _pipe_fight
 	if _frame_ms.is_empty():
 		return
 	var a: Array = _frame_ms.duplicate()
@@ -198,6 +233,7 @@ func _ready() -> void:
 				"retreat": rush_retreat_s = float(p[1])
 				"legacy": legacy_dash = p[1] != "0"
 				"perf": perf = p[1] != "0"
+				"pipes": pipes = p[1] != "0"
 				"spikes": spikes = p[1] != "0"
 				"spike_ms": spike_ms = float(p[1])
 				"p99_ms": limit_p99_ms = float(p[1])
