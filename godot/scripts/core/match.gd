@@ -278,6 +278,8 @@ func begin() -> void:
 		if (d as Doll).is_broken():
 			respawn_doll(d)
 	for d in dolls():
+		_drive_hp(d as Doll)
+	for d in dolls():
 		var dd := d as Doll
 		dd.control_enabled = false
 		var c := combat_of(dd)
@@ -291,6 +293,16 @@ func begin() -> void:
 	time_left.emit(time_limit_s)
 	if countdown_s <= 0.0:
 		_start_fight()
+
+
+## ДРАЙВ (Drive): удары сильнее и чаще (бой ботов 24 → 15 с), поэтому запас HP обычной куклы Tuning.DRIVE_MAX_HP — длина боя прежняя.
+## Особый запас (враги PvE 25 / 50) не трогается; выключили ДРАЙВ — со следующего begin() снова Tuning.MAX_HP.
+func _drive_hp(d: Doll) -> void:
+	var want := Tuning.DRIVE_MAX_HP if Drive.on else Tuning.MAX_HP
+	if is_equal_approx(d.max_hp, want) or not (is_equal_approx(d.max_hp, Tuning.MAX_HP) or is_equal_approx(d.max_hp, Tuning.DRIVE_MAX_HP)):
+		return
+	d.max_hp = want
+	d.hp = want
 
 
 ## Заново: все куклы инстанцируются на точках спавна, потом begin().
@@ -502,7 +514,7 @@ func _camera_fx(strength: float, _position: Vector3) -> void:
 		return
 	var k := FxPreset.shake()   # пресет FX (HIT_FX.md §11.2): full 1, reduced 0.5, off 0
 	if cam.has_method("shake") and k > 0.0:
-		cam.call("shake", Tuning.HIT_SHAKE_PER_10HP * strength / 10.0 * k)
+		cam.call("shake", Tuning.HIT_SHAKE_PER_10HP * strength / 10.0 * k * Drive.shake_mult())
 	if strength >= Tuning.HIT_ZOOM_DAMAGE and cam.has_method("zoom_impulse") and k > 0.0:
 		cam.call("zoom_impulse", Tuning.HIT_ZOOM_FRAC * k, Tuning.HIT_ZOOM_S)
 
@@ -718,6 +730,7 @@ func _emit_hit_fx(victim: Doll, attacker: Node, damage: float, kind: String, pos
 	if tier == HitTier.HEAVY and damage < Tuning.HIT_STOP_DAMAGE_1:
 		request_time_scale(Tuning.HIT_STOP_TIME_SCALE, Tuning.HITFX_HEAVY_STOP_S, "heavy_stop")
 	_juice_time(tier, damage)
+	Drive.camera_kick(_camera(), ctx, FxPreset.shake())   # ДРАЙВ: толчок кадра в сторону удара на каждом light (Drive)
 	hit_fx_count += 1
 	var charge_got := Charge.apply_hit(ctx)   # Заряд (COMBAT_CHARGE.md): атакующему за удар, жертве — доля урона
 	ctx["charge_attacker"] = float(charge_got[0])

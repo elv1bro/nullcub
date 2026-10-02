@@ -119,6 +119,7 @@ var _safe_avoid := Rect2()
 var _safe_shift := Vector2.ZERO
 var _safe_zoom := 1.0
 var _joined := {}   # input_prefix → true: этот человек уже нажимал свои клавиши (follow_mode "humans")
+var _drive_close := {}   # ДРАЙВ: кукла-соперник → true, пока она в кадре вместе с игроком (гистерезис _drive_framed)
 
 
 func _ready() -> void:
@@ -209,9 +210,26 @@ func followed_dolls() -> Array:
 		return all
 	var out: Array = []
 	for n in all:
-		if n == main or (is_human(n) and _joined_input(n)):
+		if n == main or (is_human(n) and _joined_input(n)) or _drive_framed(main, n):
 			out.append(n)
 	return out
+
+
+## ДРАЙВ (Drive): живой соперник ближе Tuning.DRIVE_FRAME_BOTH_M к главной кукле входит в кадр и держится, пока не дальше
+## DRIVE_FRAME_RELEASE_M (гистерезис — кадр не дёргается на границе); дальше — как без ДРАЙВА: игрок + стрелка с метрами.
+func _drive_framed(main: Node, n: Node) -> bool:
+	if not Drive.on or n == main or n.get("alive") == false:
+		_drive_close.erase(n)
+		return false
+	var a: Vector3 = main.centre_of_mass(true) if main is Doll else main.centre_of_mass()
+	var b: Vector3 = n.centre_of_mass(true) if n is Doll else n.centre_of_mass()
+	var d := Vector2(a.x - b.x, a.y - b.y).length()
+	var lim := Tuning.DRIVE_FRAME_RELEASE_M if _drive_close.has(n) else Tuning.DRIVE_FRAME_BOTH_M
+	if d <= lim:
+		_drive_close[n] = true
+		return true
+	_drive_close.erase(n)
+	return false
 
 
 func _joined_input(n: Node) -> bool:
@@ -239,7 +257,10 @@ func _targets() -> Array:
 				v = t.linear_velocity
 		var pts: Array = [Vector2(com.x, com.y)]
 		if _flying(n, v):
-			pts.append(Vector2(com.x + v.x * lead_time, com.y + v.y * lead_time))
+			var lead := Vector2(v.x, v.y) * lead_time
+			if Drive.on:   # ДРАЙВ: полёты быстрые (до 14 м/с) — упреждение не больше DRIVE_FRAME_LEAD_M, иначе кадр отъезжает на каждый удар
+				lead = lead.limit_length(Tuning.DRIVE_FRAME_LEAD_M)
+			pts.append(Vector2(com.x + lead.x, com.y + lead.y))
 		all_pts += pts
 		if n.get("alive") != false:
 			alive_pts += pts
@@ -274,8 +295,15 @@ func _process(delta: float) -> void:
 		max_h = minf(max_h, max_half_height)
 	var min_h := minf(min_half_height, max_h)
 	var pad_y := padding if padding_y < 0.0 else padding_y
-	var need := maxf(box.size.y * 0.5 + pad_y, (box.size.x * 0.5 + padding) / aspect)
+	var pad_x := padding
+	if Drive.on and follow_mode == "humans":   # ДРАЙВ: двое в кадре — отступы меньше (кукла не мельчает, JS: 40–57 % высоты кадра)
+		pad_x *= Tuning.DRIVE_FRAME_PAD_MULT
+		pad_y *= Tuning.DRIVE_FRAME_PAD_MULT
+	var need := maxf(box.size.y * 0.5 + pad_y, (box.size.x * 0.5 + pad_x) / aspect)
 	var target_h := clampf(need, min_h, max_h) * user_zoom
+	if Drive.on and follow_mode == "humans":
+		# ДРАЙВ: масштаб игрока (user_zoom) приближает только пустой кадр одного бойца; держа двоих, кадр не режет отступы
+		target_h = clampf(maxf(need, min_h * user_zoom), min_h * user_zoom, max_h)
 	var target_c := _clamp_centre(box.get_center(), target_h * aspect, target_h, b)
 	if not _snapped:
 		half_height = target_h

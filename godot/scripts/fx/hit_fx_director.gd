@@ -825,7 +825,7 @@ func _camera_hit(pos: Vector3, dir: Vector3, frac: float, pull: float, punch_s: 
 		var s := -1.0 if dir.x >= 0.0 else 1.0     # кадр кренится вслед удару
 		cam.call("roll_kick", roll_deg * s * shake_intensity, roll_s)
 	if cam.has_method("kick"):
-		cam.call("kick", Vector2(dir.x, dir.y), HEAVY_KICK_M * shake_intensity, HEAVY_KICK_S)
+		cam.call("kick", Vector2(dir.x, dir.y), HEAVY_KICK_M * shake_intensity * Drive.heavy_kick_mult(), HEAVY_KICK_S)
 
 
 func _camera_focus(victim: Doll, w: float, s: float) -> void:

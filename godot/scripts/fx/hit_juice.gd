@@ -63,6 +63,8 @@ var _outline_shown := true       # текущее видимое состоян�
 
 
 static func variant() -> Dictionary:
+	if Drive.on and time_variant != "off":   # ДРАЙВ: свой микростоп почти на каждый удар (Tuning.DRIVE_TIME); «выкл» клавиши 0 главнее
+		return Tuning.DRIVE_TIME
 	return Tuning.JUICE_TIME_VARIANTS.get(time_variant, Tuning.JUICE_TIME_VARIANTS[Tuning.JUICE_TIME_DEFAULT])
 
 
@@ -238,6 +240,7 @@ func keys_lines() -> Array:
 		["Space + A/D", tr("раскрутка (держать)"), ""],
 		["Tab", tr("панель управления"), ControlFeel.label()],
 		["V  /  T", tr("вариант / темп управления"), ""],
+		["J", tr("ДРАЙВ: импульс живёт"), tr("вкл") if Drive.on else tr("выкл")],
 		[tr("ЛКМ / ПКМ"), tr("тяги рук"), ""],
 		["I  O  P", tr("активные блоки"), ""],
 		["R", tr("бой заново"), ""],
