@@ -2,7 +2,7 @@
 
 Демо-проект по плану `../docs/plan-demo/` (правила: `ASSET_PIPELINE.md`). Запуск игры: `godot --path godot` или ярлык `~/Desktop/Ragdoll Master.app`. Редактор: `godot --path godot -e`.
 
-Главная сцена — заставка-комикс `scenes/intro/intro_comic.tscn` (13 панелей, 3D-кадры на арене «Свалка», звук; пробел — дальше, удерживать или Esc — пропустить), после неё `scenes/playground_scrap.tscn`. Устройство, раскадровка и правка — `../docs/plan-demo/INTRO_COMIC.md`, пересборка: `-s res://tools/build_intro_comic.gd`.
+Главная сцена — тестовое меню сборки `scenes/menu/test_menu.tscn` (сборка 0.0.1, `../docs/plan-demo/RELEASE_0.0.1.md`): кампания, Быстрый бой в куполе, мастерская, PvE, площадки арен; Esc с площадок возвращает в меню. Запуск на Mac — `../play-mac.command`. Заставка-комикс Башни (`scenes/intro/intro_comic.tscn`, `../docs/plan-demo/INTRO_COMIC.md`) — архив, из меню не открывается.
 
 Площадка `scenes/playground.tscn`: арена «Руины» + две куклы + оружие + динамическая камера + `Match` (бой: HP, урон, KO, Sudden Death, итоги) + `HUD`. `scenes/playground_workshop.tscn` — то же на арене «Мастерская», `scenes/playground_void.tscn` — пустое чёрное поле «Void» как в Ragdoll Masters (без оружия, для проверки механики). P1 WASD + Shift (рывок) + Space (переворот), P2 стрелки + правый Ctrl + Enter, R заново (`Match.restart()`), 1 / 2 / 3 — Руины / Мастерская / Void, F10 — эффекты ударов full / reduced / off (`FxPreset`, тост «FX: …»), Esc выход.
 
@@ -40,6 +40,7 @@ godot --headless --path godot --fixed-fps 60 res://tests/campaign_probe.tscn -- 
 xvfb-run -a -s "-screen 0 1920x1080x24" godot --path godot --resolution 1920x1080 --fixed-fps 60 res://tests/campaign_snapshot.tscn -- "sheet=/abs/campaign.jpg"   # кадры кампании 2×2: лестница, бой, исход, мастерская
 godot --headless --path godot --fixed-fps 60 res://tests/arena_events_probe.tscn   # голосование зрителей (старт, итог, возврат, SD, 20 голосований, аномалия) и выход бойца (≤ 12 с, пропуск) → tests/arena_events_probe_report.json
 xvfb-run -a -s "-screen 0 1920x1080x24" godot --path godot --resolution 1920x1080 --fixed-fps 60 res://tests/arena_events_snapshot.tscn -- "sheet=/abs/ev.jpg"   # кадры: выход бойца ×4, голосование, аномалия
+godot --headless --path godot --fixed-fps 60 res://tests/menu_probe.tscn   # тестовое меню 0.0.1: пункты, версия, каждый открывается, Esc с площадки — в меню
 godot/tests/run_combat_gate.sh                  # гейт боя (128 проверок: калибровка, полосы урона, KO, SD, match_over, env-урон = 0), tests/combat_gate_report.json
 godot --headless --path godot --fixed-fps 60 res://tests/match_probe.tscn -- "scene=ruins"     # бой до KO на настоящей площадке с HUD (scene=workshop|void|scrap, sd=1, out=<путь>; info.hitfx — уровни, crits[], env_slam; без ударов 6 с — расклинивание: попеременно врозь и прыжком через станок к сопернику)
 godot --headless --path godot --fixed-fps 60 res://tests/scene_switch_probe.tscn               # клавиши 2 → 3 → 1 → R (Руины → Мастерская → Void → Руины)

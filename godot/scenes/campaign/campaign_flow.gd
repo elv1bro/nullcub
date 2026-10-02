@@ -18,7 +18,7 @@ signal screen_changed(screen: int)
 
 const FIGHT_SCENE := preload("res://scenes/campaign/campaign_fight.tscn")
 const WORKSHOP_SCENE := "res://scenes/workshop/workshop_build.tscn"
-const EXIT_SCENE := "res://scenes/playground_null_hall.tscn"
+const EXIT_SCENE := "res://scenes/menu/test_menu.tscn"   # «Выход» — в тестовое меню сборки
 const COL_DONE := Color(0.55, 0.9, 0.5)
 const COL_NEXT := Color(1.0, 0.82, 0.3)
 const COL_LATER := Color(0.75, 0.75, 0.78)

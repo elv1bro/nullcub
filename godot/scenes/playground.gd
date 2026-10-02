@@ -3,7 +3,8 @@
 ## Дерево (арена, P1/P2 с WeaponPickup, Weapons, Camera, Match, HUD, UI/Hint) живёт в сцене: scenes/playground.tscn — «Руины»,
 ## scenes/playground_workshop.tscn — «Мастерская», scenes/playground_void.tscn — «Void» (пустое чёрное поле RM, без оружия;
 ## Weapons там пустой — только молот Sudden Death) (ASSET_PIPELINE.md, правило 2). Здесь только поведение:
-##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — выход, 1–9 — сменить площадку (9 — кампания)
+##   R — match.restart() (куклы пересоздаются на точках спавна арены), Esc — в тестовое меню (scenes/menu/), 1–9 — сменить площадку
+##   (9 — кампания)
 ##   (Руины / Мастерская / Void / Свалка / Тело / Сборка — последние две из сессии сборки тела, BODY_CRAFT.md);
 ##   пропасть (сигнал body_fell арены): во время боя — Doll.knock_out() (KO kind "self", Match сам заканчивает матч), иначе —
 ##   респавн через RESPAWN_DELAY_S через Match.respawn_doll (той же породы дерева);
@@ -104,7 +105,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_R:
 				match_node.restart()
 			KEY_ESCAPE:
-				get_tree().quit()
+				preload("res://scenes/menu/test_menu.gd").back_to_menu(get_tree())   # тестовое меню сборки (или выход)
 			KEY_1:
 				switch_arena("ruins")
 			KEY_2:
