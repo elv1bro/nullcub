@@ -36,6 +36,8 @@ const NEW_CONFIRM_S := 3.0
 @export var save_path := CampaignState.SAVE_PATH
 @export var bp_name := CampaignState.BP_NAME
 @export var load_save := true
+## Выход бойцов перед каждым боем (этап 16); пробы выключают.
+@export var entrance_enabled := true
 
 var state: CampaignState
 var screen := Screen.LADDER
@@ -183,7 +185,12 @@ func start_fight() -> bool:
 	_free_fight()
 	var r := state.current_rival()
 	fight = FIGHT_SCENE.instantiate()
-	fight.call("setup", state.blueprint, CampaignLeague.rival_blueprint(state.tier, r), r, CampaignLeague.rival_title(r))
+	var tier_title := CampaignLeague.tier_title(state.tier)
+	fight.call("setup", state.blueprint, CampaignLeague.rival_blueprint(state.tier, r), r, CampaignLeague.rival_title(r), {
+		"entrance": entrance_enabled, "player_name": "Игрок", "player_build": state.blueprint.title,
+		"player_record": "побед %d · поражений %d · трофеев %d" % [state.wins, state.losses, state.trophies.size()],
+		"rival_build": "%s · уровень %d" % [tier_title, int(r.get("level", 1))],
+		"rival_record": "ФИНАЛ ЛИГИ" if bool(r.get("final", false)) else "соперник %d из %d" % [state.step + 1, state.ladder().size()]})
 	fight.connect("fight_finished", finish_fight)
 	fight.connect("fight_abandoned", func() -> void:
 		_free_fight()

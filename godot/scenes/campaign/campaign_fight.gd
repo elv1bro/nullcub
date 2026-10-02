@@ -3,6 +3,8 @@
 ## P2 — ModularDoll по чертежу лиги с мозгом RivalBrain (уровень ступени). Дерево — scenes/campaign/campaign_fight.tscn (правило 2
 ## ASSET_PIPELINE), чертежи и уровень ставит CampaignFlow до add_child (setup) — сборка ModularDoll идёт в её _ready.
 ## Поведение площадки — как у playground.gd (пропасть → KO, молот Sudden Death), но без смены арен и R: исход боя решает кампания.
+## Перед боем — выход бойцов (Entrance, FighterEntrance, этап 16; у Match autostart = false — бой начинает конец выхода), в бою —
+## голосование зрителей (AudienceVote, этап 15; у соперника с anomaly "vote_mismatch" — аномалия §14).
 ## Конец матча → итоги HUD Tuning.CAMPAIGN_RESULT_DELAY_S реальных секунд → сигнал fight_finished(won, info). Esc — сдаться
 ## и вернуться к лестнице (fight_abandoned, бой не засчитывается).
 extends "res://scenes/playground.gd"
@@ -11,19 +13,27 @@ signal fight_finished(won: bool, info: Dictionary)
 signal fight_abandoned
 
 var rival: Dictionary = {}
+var info: Dictionary = {}
 var finished := false
 var outcome: Dictionary = {}
+## false — без выхода бойцов (пробы боя): матч начинается сразу.
+var entrance_enabled := true
 
 @onready var p1: ModularDoll = $P1
 @onready var p2: ModularDoll = $P2
 
 
-## До add_child: чертежи бойцов и соперник лестницы (CampaignLeague.LADDER).
-func setup(player_bp: BodyBlueprint, rival_bp: BodyBlueprint, r: Dictionary, rival_title: String) -> void:
+## До add_child: чертежи бойцов и соперник лестницы (CampaignLeague.LADDER). extra — карточки выхода: player_name, player_build,
+## player_record, rival_record; entrance (false — без выхода).
+func setup(player_bp: BodyBlueprint, rival_bp: BodyBlueprint, r: Dictionary, rival_title: String, extra: Dictionary = {}) -> void:
 	rival = r
+	info = extra.duplicate()
+	info["rival_title"] = rival_title
+	entrance_enabled = bool(extra.get("entrance", true))
 	($P1 as ModularDoll).blueprint = CraftEdit.dup_body(player_bp)
 	($P2 as ModularDoll).blueprint = rival_bp
 	($P2/Brain as RivalBrain).level = int(r.get("level", 1))
+	($AudienceVote as AudienceVote).anomaly = String(r.get("anomaly", ""))
 	($UI/Hint as Label).text = "Кампания · %s · WASD + Shift + Space, мышь — тяги · Esc — сдаться и к лестнице" % rival_title
 
 
@@ -33,6 +43,22 @@ func _ready() -> void:
 	for d in [p1, p2]:
 		_equip_crafted(d as ModularDoll)
 	match_node.match_over.connect(_on_match_over)
+	_start.call_deferred()
+
+
+## Выход бойцов, потом отсчёт (Match.begin). Без выхода — сразу отсчёт.
+func _start() -> void:
+	var ent := get_node_or_null("Entrance") as FighterEntrance
+	if not entrance_enabled or ent == null:
+		match_node.begin()
+		return
+	ent.finished.connect(func(_skipped: bool) -> void: match_node.begin(), CONNECT_ONE_SHOT)
+	ent.play([
+		{"doll": p1, "name": String(info.get("player_name", "Игрок")), "build": String(info.get("player_build", p1.blueprint.title)),
+			"mass": p1.blueprint.total_mass(), "parts": p1.blueprint.nodes.size(), "record": String(info.get("player_record", ""))},
+		{"doll": p2, "name": String(info.get("rival_title", p2.blueprint.title)), "build": String(info.get("rival_build", "")),
+			"mass": p2.blueprint.total_mass(), "parts": p2.blueprint.nodes.size(), "record": String(info.get("rival_record", ""))},
+	])
 
 
 func _unhandled_input(event: InputEvent) -> void:

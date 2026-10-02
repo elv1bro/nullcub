@@ -348,3 +348,22 @@ const RIVAL_LEVELS := {
 	4: {"reaction_s": 0.2, "aim_error_m": 0.25, "lead_s": 0.3, "retreat_s": 1.1, "dash": true},
 }
 const CAMPAIGN_RESULT_DELAY_S := 3.5     # с реального времени: после конца боя — итоги HUD, потом экран исхода кампании
+
+# --- Голосование зрителей купола (docs/plan-demo/15-audience-vote.md; лор §8, §14) ---
+const VOTE_FIRST_S := 30.0               # с боя: первое голосование (второе — на Sudden Death)
+const VOTE_DURATION_S := 6.0             # с: проценты растут на табло
+const VOTE_EFFECT_S := 20.0              # с: выбранное поле держится, потом — регламент
+const VOTE_RESULT_SHOW_S := 2.5          # с реального времени: «… WINS» на панели
+const VOTE_MAX_PER_MATCH := 2
+const VOTE_DEBRIS_COUNT := 5             # DEBRIS DROP: ящиков сверху купола
+const VOTE_CHAOS_PER_CRIT := 0.25        # крит сдвигает голоса к хаосу (0..1 копится до голосования)
+const VOTE_CHAOS_PER_COMBO := 0.1        # комбо 3+
+
+# --- Выход бойца (docs/plan-demo/16-fighter-entrance.md; лор §7) ---
+const ENTRANCE_DIM_S := 0.4              # с: свет зала гаснет / возвращается
+const ENTRANCE_DIM_ENERGY := 0.3         # доля энергии ламп зала во время выхода
+const ENTRANCE_GATE_S := 0.6             # с: створки ворот
+const ENTRANCE_CARRY_S := 3.0            # с: от ворот сквозь мембрану внутрь поля
+const ENTRANCE_HOLD_S := 0.9             # с: кадр на бойце после мембраны (конечности всплывают)
+const ENTRANCE_RELEASE_SPEED := 2.5      # м/с: боец влетает внутрь поля после мембраны
+const ENTRANCE_FAST := 3.0               # первая кнопка — выход быстрее во столько раз, вторая — пропуск

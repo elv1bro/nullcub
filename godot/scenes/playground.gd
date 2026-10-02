@@ -62,10 +62,24 @@ func _ready() -> void:
 	if arena != null and arena.has_signal("body_fell"):
 		arena.connect("body_fell", _on_body_fell)
 	hud.bind(match_node)
+	if arena is NullHallArena and get_node_or_null("AudienceVote") == null:
+		_add_audience_vote()
 	match_node.phase_changed.connect(_on_phase_changed)
 	match_node.sudden_death_step.connect(_on_sudden_death_step)
 	match_node.hit.connect(func(_v: Doll, _a: Node, _d: float, _k: String, _p: Vector3) -> void: hits += 1)
 	_set_gi_dynamic(weapons_root)
+
+
+## Купол (Быстрый бой в Old NULL Hall): голосование зрителей за поле (docs/plan-demo/15-audience-vote.md). Площадку купола собирает
+## builder сессии купола, поэтому узел добавляется здесь, если его нет в сцене (в сцене боя кампании он есть).
+func _add_audience_vote() -> void:
+	var v := AudienceVote.new()
+	v.name = "AudienceVote"
+	v.arena_path = NodePath("../" + String(arena.name))
+	var panel := (load("res://scenes/arena/audience_vote_panel.tscn") as PackedScene).instantiate()
+	panel.name = "Panel"
+	v.add_child(panel)
+	add_child(v)
 
 
 ## Арена — первый ребёнок с spawn_points() (Ruins / Workshop / Void).

@@ -140,6 +140,7 @@ func _flow() -> void:
 	c.set("save_path", SAVE)
 	c.set("bp_name", BP)
 	c.set("load_save", false)
+	c.set("entrance_enabled", false)   # выход бойцов — своя проба (arena_events_probe)
 	add_child(c)
 	await _phys(2)
 	var st: CampaignState = c.get("state")

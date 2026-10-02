@@ -28,6 +28,7 @@ func _run() -> void:
 	c.set("save_path", SAVE)
 	c.set("bp_name", BP)
 	c.set("load_save", false)
+	c.set("entrance_enabled", false)   # выход бойцов — своя проба (arena_events_probe)
 	add_child(c)
 	var st: CampaignState = c.get("state")
 	st.record_result(true, {"reason": "ko"})   # первый соперник побеждён — на лестнице видно отметку и трофей
