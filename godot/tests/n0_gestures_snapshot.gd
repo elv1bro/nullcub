@@ -1,6 +1,6 @@
 ## Лист жестов тела N0 (scripts/n0/n0_drone.gd, «Тело», 02.10.2026). Нужен рендер (окно; в контейнере — xvfb-run):
 ##   godot --path godot --resolution 1600x900 res://tests/n0_gestures_snapshot.tscn -- "out=/tmp/n0_gestures.png"
-## Ряд 1: покой, полёт вправо с разгоном (крылья чаще, ножки отстают), говорит (микрофон к экрану), показывает вправо.
+## Ряд 1: покой, полёт вправо с разгоном (крылья чаще, ножки отстают), говорит (микрофон к экрану), злится (angry).
 ## Ряд 2: ликует (excited), машет (happy), вздрогнул (shocked), сник (sad), задумался (curious).
 ## Камера как в бою: с +Z, без наклона. Кадр снимается в середине жестов.
 extends Node3D
@@ -24,7 +24,7 @@ func _ready() -> void:
 	add_child(cam)
 	cam.current = true
 	var cells := [
-		["покой", ""], ["полёт →", "fly"], ["говорит", "talk"], ["показывает →", "point"], ["", ""],
+		["покой", ""], ["полёт →", "fly"], ["говорит", "talk"], ["злится", "angry"], ["", ""],
 		["ликует", "excited"], ["машет", "happy"], ["вздрогнул", "shocked"], ["сник", "sad"], ["задумался", "curious"],
 	]
 	var drones: Array = []
@@ -53,8 +53,6 @@ func _ready() -> void:
 				d.set_motion(Vector3(8.0, 0.0, 0.0), Vector3(40.0, 0.0, 0.0))
 			"talk":
 				d.talking = true
-			"point":
-				d.point_at(d.global_position + Vector3(4.0, 1.0, 2.0), 30.0)
 			"":
 				pass
 			_:

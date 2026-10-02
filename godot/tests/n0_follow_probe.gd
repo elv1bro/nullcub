@@ -13,7 +13,8 @@
 ##   n0_in_frame        N0 в кадре (экранная точка внутри окна) в ≥ 98 % кадров
 ##   n0_keeps_off_rival до ЦМ соперника (XY) ≥ 0.8 м в ≥ 97 % кадров
 ##   marker_from_player соперник за 22 м: стрелка P2 у правого края, расстояние — от P1 (±0.5 м), камера осталась на P1
-##   lines_rules        N0Lines: мелкий повод не чаще 8 с и не поверх реплики, важный — всегда
+##   lines_rules        N0Lines: мелкий повод не чаще 8 с и не поверх реплики, важный — всегда; повода «соперник далеко» нет
+##                      (где соперник — только стрелка HUD, автор 02.10)
 ##   line_countdown     на отсчёте N0 сказал реплику «fight», облачко видно и не залезает на полосу HUD
 ##   line_events        KO соперника, Sudden Death и голосование зрителей — реплики N0; субтитра N0 в панели голосования нет
 ##   hotseat_join       Быстрый бой: P2-человек не в кадре, пока не нажал клавиш; нажал стрелку — кадр держит обоих
@@ -21,7 +22,7 @@
 ##   anim_wings         крылья машут в плоскости экрана: размах за 1 с в полёте 8 м/с ≥ 0.4 рад и в 1.5 раза больше, чем в покое
 ##   anim_legs          разгон вправо 40 м/с² — кончики ножек отстают влево (≥ 0.4 рад) и возвращаются после остановки
 ##   anim_gestures      каждое выражение с жестом даёт свой жест, поза уходит от покоя ≥ 0.35 рад (рука или крыло)
-##   anim_point_mic     показ вправо — правая рука смотрит вправо (x ≥ 0.7); микрофон всё время у кисти (±1 мм)
+##   anim_mic           микрофон всё время жестов у кисти правой руки (±1 мм)
 extends Node
 
 const FIGHT := preload("res://scenes/campaign/campaign_fight.tscn")
@@ -269,15 +270,8 @@ func _anim() -> void:
 			await get_tree().process_frame
 	info["anim_gestures"] = gest
 	_check("anim_gestures", ok_all, str(gest))
-	# показ рукой вправо
-	d.point_at(d.global_position + Vector3(6.0, 0.5, 1.4), 1.5)
-	for i in 30:
-		await get_tree().process_frame
-		mic_err = maxf(mic_err, ((arm_r.transform.affine_inverse() * mic.transform.origin) - mic_rel).length())
-	var pdir := d.arm_direction("N0_Arm_R")
-	info["anim_point_mic"] = {"dir": [snappedf(pdir.x, 0.01), snappedf(pdir.y, 0.01), snappedf(pdir.z, 0.01)],
-		"mic_err_mm": snappedf(mic_err * 1000.0, 0.01)}
-	_check("anim_point_mic", pdir.x >= 0.7 and mic_err <= 0.001, str(info["anim_point_mic"]))
+	info["anim_mic"] = {"mic_err_mm": snappedf(mic_err * 1000.0, 0.01)}
+	_check("anim_mic", mic_err <= 0.001, str(info["anim_mic"]))
 	d.queue_free()
 	await get_tree().process_frame
 
@@ -292,12 +286,13 @@ func _lines_rules() -> void:
 	var c := l.pick("membrane", 9.0, true) == ""        # N0 говорит — мелкое молчит
 	var d := l.pick("membrane", 9.5, false) != ""
 	var e := l.pick("crit", 10.0, true) != ""           # важное — всегда
-	var g: bool = l.pick("far", 30.0, false, [17]) != "" and String(l.said[l.said.size() - 1]["event"]) == "far"
+	var g: bool = l.pick("vote_result", 30.0, false, ["ZERO G"]).contains("ZERO G")   # подстановка в строку
 	var all_ru := true
 	for k in N0Lines.LINES:
 		for v in N0Lines.LINES[k]:
 			all_ru = all_ru and String(v.get("ru", "")) != "" and String(v.get("en", "")) != ""
-	_check("lines_rules", a and b and c and d and e and g and all_ru, "%s" % [[a, b, c, d, e, g, all_ru]])
+	var no_hint := not N0Lines.LINES.has("far")
+	_check("lines_rules", a and b and c and d and e and g and all_ru and no_hint, "%s" % [[a, b, c, d, e, g, all_ru, no_hint]])
 
 
 # ------------------------------------------------------------------ Быстрый бой вдвоём
