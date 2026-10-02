@@ -9,6 +9,7 @@
 class_name ExplosiveBarrel
 extends Breakable
 
+const FUSE_HISS := "res://assets/audio/loops/fuse_hiss.ogg"
 const FUSE_S := 2.2
 const BLINK_HZ_FROM := 2.5
 const BLINK_HZ_TO := 12.0
@@ -48,7 +49,26 @@ func ignite(delay: float = FUSE_S, by: Node = null) -> void:
 	fuse_left = delay
 	var sfx := get_tree().get_first_node_in_group(SfxDirector.GROUP) as SfxDirector if is_inside_tree() else null
 	if sfx != null:
-		sfx.play_layer("zap_low", -4.0, 1.4, SfxDirector.BUS_SFX, sfx.pan_for(global_position))
+		sfx.play_layer("clank", -2.0, 1.2, SfxDirector.BUS_SFX, sfx.pan_for(global_position))
+	_start_fuse_hiss()
+
+
+## Шипение фитиля (петля loops/fuse_hiss.ogg на AudioStreamPlayer3D, шина SFX) — громче к взрыву; гаснет с бочкой.
+func _start_fuse_hiss() -> void:
+	if get_node_or_null("FuseHiss") != null or not ResourceLoader.exists(FUSE_HISS):
+		return
+	var p := AudioStreamPlayer3D.new()
+	p.name = "FuseHiss"
+	var st := load(FUSE_HISS) as AudioStream
+	if st is AudioStreamOggVorbis:
+		(st as AudioStreamOggVorbis).loop = true
+	p.stream = st
+	p.bus = "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"
+	p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
+	p.panning_strength = 0.7
+	p.volume_db = -14.0
+	add_child(p)
+	p.play()
 
 
 func _on_state(s: int) -> void:
@@ -89,6 +109,10 @@ func _physics_process(delta: float) -> void:
 		return
 	fuse_left -= delta
 	var k := 1.0 - clampf(fuse_left / FUSE_S, 0.0, 1.0)
+	var hiss := get_node_or_null("FuseHiss") as AudioStreamPlayer3D
+	if hiss != null:
+		hiss.volume_db = lerpf(-14.0, -4.0, k)
+		hiss.pitch_scale = lerpf(0.9, 1.3, k)
 	var hz := lerpf(BLINK_HZ_FROM, BLINK_HZ_TO, k * k)
 	var on := fmod(_time * hz, 1.0) < 0.5
 	if on != _blink_on:

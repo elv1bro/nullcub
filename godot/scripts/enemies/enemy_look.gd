@@ -92,7 +92,11 @@ func setup(d: Doll) -> void:
 		sfx = AudioStreamPlayer3D.new()
 		sfx.name = "EnemySfx"
 		sfx.volume_db = -6.0
-		sfx.max_distance = 40.0
+		sfx.max_distance = 80.0
+		sfx.unit_size = 20.0
+		sfx.panning_strength = 0.7
+		if AudioServer.get_bus_index("SFX") >= 0:
+			sfx.bus = "SFX"
 		torso.add_child(sfx)
 	doll.knocked_out.connect(func(_a: Node, _r: Dictionary) -> void: _die())
 
@@ -197,7 +201,8 @@ func callout_active() -> bool:
 func play(kind: String) -> void:
 	if sfx == null or not is_instance_valid(sfx) or _dead:
 		return
-	sfx.stream = _wav(kind)
+	var path := "res://assets/audio/enemies/%s.ogg" % kind   # записанный ассет (build_audio.py), иначе синтез
+	sfx.stream = load(path) as AudioStream if ResourceLoader.exists(path) else _wav(kind)
 	sfx.play()
 
 

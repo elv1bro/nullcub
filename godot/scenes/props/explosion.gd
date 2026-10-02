@@ -237,9 +237,14 @@ func _effects() -> void:
 	var sfx := get_tree().get_first_node_in_group(SfxDirector.GROUP) as SfxDirector
 	if sfx != null:
 		var pan := sfx.pan_for(p)
-		sfx.play_layer("boom", 4.0, 0.72, SfxDirector.BUS_SFX, pan)
-		sfx.play_layer("crash", -1.0, 0.85, SfxDirector.BUS_SFX, pan)
-		sfx.play_layer("thud", 2.0, 0.6, SfxDirector.BUS_SFX, pan)
+		sfx.play_layer("explosion", 2.0, randf_range(0.92, 1.05), SfxDirector.BUS_SFX, pan)
+		sfx.play_layer("boom", -4.0, 0.8, SfxDirector.BUS_SFX, pan)
+		sfx.play_layer("crash", -3.0, 0.85, SfxDirector.BUS_SFX, pan)
+		sfx.play_layer("clank", -6.0, 0.8, SfxDirector.BUS_SFX, pan)
+	var crowd := get_tree().get_first_node_in_group(CrowdDirector.GROUP) as CrowdDirector
+	if crowd != null:
+		crowd.bump(0.25)
+		crowd.react("crowd_ooh", 0.0, "explosion", true, 250.0)
 
 
 ## Мягкий клуб (billboard-квад с радиальным градиентом, аддитивный — огонь, обычный — дым): растёт r0 → r1 с ease-out за life,

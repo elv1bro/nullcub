@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 Tuning="*res://scripts/tuning.gd"
 InputSetup="*res://scripts/input/input_setup.gd"
+GameAudio="*res://scripts/audio/game_audio.gd"
 
 [display]
 

@@ -307,6 +307,7 @@ const HITFX_IMPACT_FRAMES := true       # кадры инверсии (heavy/ko/
 const HITFX_CRIT_CINEMATIC := true      # false — крит без крупного плана/рентгена: надпись, отлёт, замедление
 const HITFX_MAX_FLASHES_PER_S := 3      # полноэкранных вспышек/инверсий не больше 3 в секунду (WCAG 2.3.1)
 const HITFX_SFX_VOLUME_DB := 0.0        # громкость шин SFX и SFX_Crit (SfxDirector, дБ; 0 — как смикшировано; −80 — без звука ударов)
+const AUDIO_WORLD_ENABLED := true      # Match создаёт CrowdDirector, ImpactAudio, ArenaAmbience (docs/plan-demo/AUDIO.md §4); false — только SfxDirector
 # Пресеты FX для игрока (v2, HIT_FX.md §11.2): F10 на площадке — full → reduced → off. FxPreset.apply пишет flash/shake/impact_frames/
 # crit_cinematic в HitFxDirector (CritCinematic читает их у директора); time_fx = false — Match.request_time_scale отказывает всем тегам,
 # кроме ko* (heavy_stop, стоп-кадр и замедление крита), и старый hit stop 80/120 мс не ставится; KO slow-mo остаётся всегда.

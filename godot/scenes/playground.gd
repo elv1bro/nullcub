@@ -104,6 +104,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				switch_arena("pve")
 			KEY_F10:
 				cycle_fx_preset()
+			KEY_M:
+				_show_fx_toast(get_node("/root/GameAudio").toggle_music())   # музыка вкл/выкл (user://audio.cfg, docs/plan-demo/AUDIO.md §5)
+			KEY_N:
+				_show_fx_toast(get_node("/root/GameAudio").toggle_crowd())   # толпа вкл/выкл
 
 
 ## F10: следующий пресет FX (применяется ко всем HitFxDirector сразу) и тост. Возвращает имя пресета.

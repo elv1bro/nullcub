@@ -30,6 +30,10 @@ signal damaged(amount: float, attacker: Node, part: String, position: Vector3, k
 ## HP кончилось (или knock_out() извне): record — KoRecord {victim, attacker, part, kind, damage, speed, weapon_id, position, time, ...}.
 signal knocked_out(attacker: Node, record: Dictionary)
 signal stunned(seconds: float)
+## Рывок начался (кнопка или request_dash) — звук DollAudio.
+signal dashed
+## Переворот (FLIP_IMPULSE), dir — знак крутки по Z.
+signal flipped(dir: float)
 ## Часть оторвана detach_part (PvE: Разборщик, пресс, Садовник): part_name — имя оторванного тела, by — кто оторвал (или null).
 signal part_detached(part_name: String, by: Node)
 ## Оторванная часть прикручена обратно reattach_part.
@@ -1212,6 +1216,7 @@ func _physics_process(delta: float) -> void:
 	if dash_pressed and _time >= dash_ready_at and not is_stunned() and not locked:
 		dash_until = _time + Tuning.DASH_DURATION_S
 		dash_ready_at = _time + Tuning.DASH_COOLDOWN_S
+		dashed.emit()
 	var body := _control_body()
 	var mode: String = control_mode if control_mode != "" else Tuning.CONTROL_MODE
 	var mult: float = (Tuning.DASH_MULT if _time < dash_until else 1.0) * control
@@ -1234,3 +1239,4 @@ func _physics_process(delta: float) -> void:
 		body.linear_velocity = body.linear_velocity.normalized() * max_speed
 	if flip_pressed and not is_stunned():
 		torso().apply_torque_impulse(Vector3(0, 0, Tuning.FLIP_IMPULSE * (1.0 if v.x >= 0.0 else -1.0)))
+		flipped.emit(1.0 if v.x >= 0.0 else -1.0)

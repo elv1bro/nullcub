@@ -666,6 +666,13 @@ func _ensure_fx_directors() -> void:
 		add_child(n)
 		if n.is_in_group(FxPreset.DIRECTOR_GROUP):
 			FxPreset.apply(n)   # пресет FX игрока (F10, HIT_FX.md §11.2)
+	# мир звука (docs/plan-demo/AUDIO.md §4): толпа, стук столкновений, фон арены и музыка боя
+	if Tuning.AUDIO_WORLD_ENABLED:
+		for e in [["CrowdDirector", CrowdDirector], ["ImpactAudio", ImpactAudio], ["ArenaAmbience", ArenaAmbience]]:
+			if get_node_or_null(String(e[0])) == null:
+				var a: Node = (e[1] as GDScript).new()
+				a.name = String(e[0])
+				add_child(a)
 
 
 ## COUNTDOWN (begin / restart): кулдауны крита заново; захваченная камера возвращается. OVER без KO (таймаут) — тоже;
