@@ -180,5 +180,10 @@ func _rebuild(tr: Dictionary, fade: float) -> void:
 	im.surface_end()
 
 
+## Мягкий конец (BoostFx: ускорение кончилось): новые точки не добавляются, ленты гаснут за FADE_MS и узел уходит сам.
+func finish() -> void:
+	_life_ms = minf(_life_ms, _t + FADE_MS)
+
+
 func stop() -> void:
 	queue_free()

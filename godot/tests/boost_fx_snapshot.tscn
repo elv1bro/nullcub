@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://boostfxsnap001"]
+
+[ext_resource type="Script" path="res://tests/boost_fx_snapshot.gd" id="1_snap"]
+
+[node name="BoostFxSnapshot" type="Node3D"]
+script = ExtResource("1_snap")
