@@ -52,6 +52,37 @@ func _exit_tree() -> void:
 	Engine.time_scale = 1.0
 
 
+## Узел пережил испытание (WorkshopBuild держит его, чтобы не поднимать директоры заново: HitFx + Sfx — 75 мс на «Испытать» и ~150 мс
+## удаления на «назад»): счётчики и замедления — с нуля, эффекты прежнего испытания — долой, директоры — к новым куклам.
+func reset_for_test() -> void:
+	fight_time = 0.0
+	hit_fx_count = 0
+	weak_count = 0
+	hit_tiers = HitTier.new()
+	camera = null
+	_weak_seen.clear()
+	abort_fx()
+	for c in get_children():
+		if c.is_in_group(FxPreset.DIRECTOR_GROUP):
+			FxPreset.apply(c)
+
+
+## Погасить эффекты и замедления (выход из испытания, узел в этот момент может быть вне дерева).
+func abort_fx() -> void:
+	_time_effects.clear()
+	Engine.time_scale = 1.0
+	for c in get_children():
+		if c.has_method("abort_all"):
+			c.call("abort_all")
+
+
+## После входа в дерево: директоры привязываются к новым куклам (куклы испытания появятся в этом же кадре — привязка после них).
+func rebind_directors() -> void:
+	for c in get_children():
+		if c.has_method("rebind"):
+			c.call_deferred("rebind")
+
+
 func _process(delta: float) -> void:
 	var real := delta / maxf(Engine.time_scale, 1e-3)
 	fight_time += delta

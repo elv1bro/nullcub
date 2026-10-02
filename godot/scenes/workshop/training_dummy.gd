@@ -12,6 +12,7 @@ signal knocked_out()
 signal respawned(doll: Doll)
 
 const DUMMY_SCENE := "res://scenes/doll/doll_dark.tscn"
+static var _scene: PackedScene
 const RESPAWN_S := 2.0
 ## Пружина к дому: 40 кг, ω ≈ √(140/40) ≈ 1.9 рад/с — возвращается за ~1.5 с без перелёта (ζ ≈ 0.8).
 const HOME_K := 140.0              # Н/м
@@ -57,8 +58,9 @@ func _ready() -> void:
 func spawn() -> void:
 	if doll != null and is_instance_valid(doll):
 		doll.queue_free()
-	var ps := load(DUMMY_SCENE) as PackedScene
-	doll = ps.instantiate() as Doll
+	if _scene == null:
+		_scene = load(DUMMY_SCENE) as PackedScene   # держим: слабый кэш ресурсов иначе перечитывает сцену при каждом испытании
+	doll = _scene.instantiate() as Doll
 	doll.name = "Dummy"
 	doll.external_input = true
 	doll.player_index = 1

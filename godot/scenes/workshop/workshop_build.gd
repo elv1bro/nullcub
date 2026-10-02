@@ -199,6 +199,7 @@ const CLEAR_ARENA_PROPS := ["Props/Barrel_2", "Props/Sawhorse_1"]
 
 func _ready() -> void:
 	build_cam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # ездит в _process
+	_warm_test_resources.call_deferred()
 	for p in CLEAR_ARENA_PROPS:
 		var n := arena.get_node_or_null(p)
 		if n != null:
@@ -943,6 +944,8 @@ func _notification(what: int) -> void:
 
 func _exit_tree() -> void:
 	_flush_autosave(true)
+	if _feel_keep != null and is_instance_valid(_feel_keep) and not _feel_keep.is_inside_tree():
+		_feel_keep.free()
 
 
 # --- сохранение ---
@@ -2421,6 +2424,46 @@ func set_view(v: int) -> void:
 # =================================================================== испытание
 
 ## Кукла оживает: обычная физика, WASD, рука мышью, подбор оружия, манекен и предметы рядом. false — чертёж с ошибками.
+var _feel_keep: TrainingFeel                 # живёт между испытаниями (HitFxDirector + SfxDirector внутри)
+static var _prop_scenes: Dictionary = {}     # путь -> PackedScene: ящик и бочка испытания не перечитываются с диска
+static var _warm_keep: Array = []            # ресурсы испытания, догруженные в фоне (держим — кэш ресурсов Godot слабый)
+static var _warm_started := false
+
+
+## Первый «Испытать» поднимал HitFxDirector и SfxDirector, манекена и пропсы с диска (≈ 270 мс): через 1.5 с после открытия мастерской
+## догружаем их в потоке, а слои звука собираем по одному за кадр. Headless-пробы не греют (им фон не нужен).
+func _warm_test_resources() -> void:
+	if _warm_started or DisplayServer.get_name() == "headless":
+		return
+	_warm_started = true
+	await get_tree().create_timer(1.5).timeout
+	var left: Array = [TrainingFeel.HIT_FX_DIRECTOR_SCENE, TrainingFeel.SFX_DIRECTOR_SCENE, DummyScript.DUMMY_SCENE, CRATE_SCENE, BARREL_SCENE]
+	for p in left:
+		ResourceLoader.load_threaded_request(String(p))
+	var guard := 0
+	while not left.is_empty() and guard < 200 and is_inside_tree():
+		await get_tree().create_timer(0.1).timeout
+		guard += 1
+		for p in left.duplicate():
+			var st := ResourceLoader.load_threaded_get_status(String(p))
+			if st == ResourceLoader.THREAD_LOAD_LOADED:
+				_warm_keep.append(ResourceLoader.load_threaded_get(String(p)))
+				left.erase(p)
+			elif st != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				left.erase(p)
+	for layer in SfxDirector.LAYER_ORDER:
+		if not is_inside_tree():
+			return
+		SfxDirector.warm_layer(String(layer))
+		await get_tree().process_frame
+
+
+static func _prop_scene(path: String) -> PackedScene:
+	if not _prop_scenes.has(path):
+		_prop_scenes[path] = load(path) as PackedScene
+	return _prop_scenes[path]
+
+
 func start_test() -> bool:
 	if mode == Mode.TEST:
 		return true
@@ -2448,9 +2491,14 @@ func start_test() -> bool:
 	_free_node(bench_weapon)
 	bench_weapon = null
 	# «сок» боя до кукол: их DollCombat находит TrainingFeel по группе "match" (WORKSHOP_V3.md §5)
-	feel = TrainingFeel.new()
-	feel.name = "TrainingFeel"
+	if _feel_keep == null or not is_instance_valid(_feel_keep):
+		_feel_keep = TrainingFeel.new()
+		_feel_keep.name = "TrainingFeel"
+	else:
+		_feel_keep.reset_for_test()
+	feel = _feel_keep
 	test_root.add_child(feel)
+	feel.rebind_directors()
 	var d := MODULAR_DOLL.instantiate() as ModularDoll
 	d.name = "Player"
 	d.blueprint = CraftEdit.dup_body(blueprint)
@@ -2488,7 +2536,7 @@ func start_test() -> bool:
 	if dd != null:
 		dd.add_to_group(TEST_GROUP)
 	for spec in [[CRATE_SCENE, crate_spot], [BARREL_SCENE, barrel_spot]]:
-		var ps := load(String(spec[0])) as PackedScene
+		var ps := _prop_scene(String(spec[0]))
 		if ps != null:
 			var it := ps.instantiate() as Node3D
 			it.position = (spec[1] as Node3D).global_position
@@ -2535,6 +2583,9 @@ func stop_test() -> void:
 		return
 	for c in test_root.get_children():
 		test_root.remove_child(c)
+		if c == _feel_keep:
+			_feel_keep.abort_fx()   # эффекты прежнего испытания гасим сразу, сам узел живёт до следующего
+			continue
 		c.queue_free()
 	test_doll = null
 	test_weapon = null
