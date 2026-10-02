@@ -92,6 +92,7 @@ func on_hit(victim: Doll, attacker: Node, damage: float, kind: String, position:
 	ctx["tier"] = hit_tiers.classify(ctx, fight_time, false)
 	ctx["launch_dv"] = Vector3.ZERO
 	hit_fx_count += 1
+	Charge.apply_hit(ctx)   # Заряд как в бою: сборка проверяется вместе с ускорением (COMBAT_CHARGE.md)
 	hit_fx.emit(ctx)
 
 

@@ -11,7 +11,7 @@
 ##   SUDDEN_DEATH_BREAK_PLATFORMS_STEP — верёвочные мосты арены (RopeBridge.break_apart) обрываются;
 ##   камера: snap на отсчёте (после рестарта куклы стоят на новых местах); меши оружия → gi_mode DYNAMIC (SDFGI в окружении).
 ## Щепки/пыль (ImpactFx) и урон считает DollCombat — ребёнок каждой куклы, его добавляет Match.register.
-## P1: WASD, Shift рывок, Space переворот. P2: стрелки, правый Ctrl рывок, Enter переворот.
+## P1: WASD, Shift ускорение (держать, за Заряд), Space + A/D раскрутка. P2: стрелки, правый Ctrl ускорение, Enter раскрутка.
 ## F10 — пресет эффектов ударов full → reduced → off (FxPreset, HIT_FX.md §11.2), тост «FX: …» внизу экрана на FX_TOAST_S.
 extends Node3D
 

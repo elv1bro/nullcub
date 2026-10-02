@@ -87,8 +87,9 @@ var parts: Dictionary = {}    # name -> RigidBody3D
 var joints: Dictionary = {}   # name -> Generic6DOFJoint3D
 ## Пара мышцы на сустав: [body_a, body_b, rest (рад, measured), k, c, tmax, group, joint_name]. k/c/tmax — база (без стана/SD).
 var _muscle_pairs: Array = []
-var _req_dash := false   # request_dash(): рывок на ближайшем тике управления (боты, external_input)
-var _req_flip := false   # request_flip(): переворот на ближайшем тике управления
+var _req_dash := false   # request_dash(): ускорение «держится» на ближайшем тике управления (боты, external_input)
+var _req_spin := false   # request_spin(): раскрутка «держится» на ближайшем тике управления
+var _req_flip := false   # request_flip(): разовый импульс переворота на ближайшем тике управления
 const MP_REST := 2
 const MP_K := 3
 const MP_C := 4
@@ -125,8 +126,22 @@ var _joint_xf_b: Dictionary = {}
 ## Оторванные корни (RigidBody3D) -> запись для reattach_part: сустав подвеса (отключён, остаётся ребёнком куклы), родитель,
 ## поддерево, внутренние суставы с трением, снятые пары мышц, тела под монитором DollCombat.
 var _detached: Dictionary = {}
+## Принудительное ускорение без траты Заряда (пробы, клипы: «как Shift»): is_dashing() до этого момента (_time). В игре ускорение
+## даёт удерживаемый Shift за Заряд (_boosting); кулдауна нет, dash_ready_at только для проб — всегда ≤ _time.
 var dash_until := 0.0
 var dash_ready_at := 0.0
+
+# --- Заряд (docs/plan-demo/COMBAT_CHARGE.md): ресурс ускорения и раскрутки ---
+## Заряд 0…CHARGE_MAX; выше — перезаряд до CHARGE_OVER_MAX (тает, когда серия ударов оборвалась). HUD читает charge / charge_locked.
+var charge: float = Tuning.CHARGE_MAX
+## Выдохся (дошёл до 0): ускорение и раскрутка заперты, пока charge не вернётся до CHARGE_RESTART.
+var charge_locked := false
+var _boosting := false                ## ускорение включено в этот тик (Shift держится, Заряд есть)
+var _spinning := false                ## раскрутка включена в этот тик (Space + A/D, Заряд есть)
+var _boost_rearm := false             ## выдохся с зажатым Shift — после этого нужно отпустить, иначе ускорение мерцало бы на пороге
+var _spin_rearm := false
+var _charge_regen_at := 0.0           ## до этого момента (_time) накопление стоит (пауза после траты)
+var _charge_hold_until := 0.0         ## до этого момента перезаряд не тает (серия идёт)
 var _time := 0.0
 
 # --- бой (06) ---
@@ -532,6 +547,8 @@ static func fresh_stats() -> Dictionary:
 		"air_time": 0.0, "wall_collisions": 0, "collisions": 0, "weapon_hits": 0, "rotations": 0,
 		"max_speed": 0.0, "flight_distance": 0.0, "combo_max": 0, "combo_score": 0.0,
 		"self_damage": 0.0, "low_hp_survived_s": 0.0,
+		# Заряд (COMBAT_CHARGE.md): откуда пришёл и куда ушёл — для проб и баланса
+		"charge_from_hits": 0.0, "charge_from_regen": 0.0, "charge_spent": 0.0, "boost_s": 0.0, "spin_s": 0.0, "charge_empty": 0,
 	}
 
 
@@ -573,15 +590,97 @@ func team_mult_for(attacker: Node) -> float:
 	return team_damage_mult if team_damage_mult >= 0.0 else Tuning.TEAM_DAMAGE_MULT
 
 
-## Рывок на ближайшем тике управления — для ботов (external_input): Input они не читают. Те же правила, что у кнопки
-## (перезарядка DASH_COOLDOWN_S, не в стане, не во время отдачи после удара).
+## Ускорение «удерживается» на ближайшем тике управления — для ботов (external_input): Input они не читают. Те же правила, что у
+## Shift: тратит Заряд, пока просят (звать каждый тик), не в стане, не во время отдачи после удара. Одно обращение = один тик.
 func request_dash() -> void:
 	_req_dash = true
 
 
-## Переворот (FLIP_IMPULSE) на ближайшем тике управления — для ботов; направление — по input_vec.x, как у кнопки.
+## Раскрутка «удерживается» на ближайшем тике (как Space + A/D): направление и сила — по input_vec.x. Тратит Заряд, пока просят.
+func request_spin() -> void:
+	_req_spin = true
+
+
+## Разовый импульс переворота (FLIP_IMPULSE) на ближайшем тике управления — хук для ботов и проб; направление — по input_vec.x
+## (вправо — +, как раньше). Клавиша Space его больше не вызывает: она держит раскрутку (request_spin), которая платит Зарядом.
 func request_flip() -> void:
 	_req_flip = true
+
+
+## Ускорение сейчас включено (удерживаемый Shift за Заряд или принудительное dash_until пробы).
+func is_dashing() -> bool:
+	return _boosting or _time < dash_until
+
+
+func is_spinning() -> bool:
+	return _spinning
+
+
+## Можно ли начать ускорение/раскрутку: жива, не в стане, не выдохлась и Заряд есть.
+func can_spend_charge() -> bool:
+	return alive and not _broken and not is_stunned() and not charge_locked and charge > 0.0
+
+
+## Снять ускорение (крит-удар: атакующий не дожимает жертву, CritLaunch.stop_attacker): включённое и принудительное. Заряд не возвращается.
+func cancel_boost() -> void:
+	_boosting = false
+	dash_until = _time
+
+
+## Заряд атакующему/жертве. over = true — можно выше CHARGE_MAX (до CHARGE_OVER_MAX) и серия держит перезаряд от таяния
+## CHARGE_OVER_HOLD_S; false — не выше CHARGE_MAX (жертва) и уже накопленный перезаряд не трогает. Возвращает фактически добавленное.
+func add_charge(amount: float, over: bool = false) -> float:
+	if amount <= 0.0 or not alive or _broken:
+		return 0.0
+	if over:
+		_charge_hold_until = _time + Tuning.CHARGE_OVER_HOLD_S
+	var cap := Tuning.CHARGE_OVER_MAX if over else Tuning.CHARGE_MAX
+	var added := clampf(minf(amount, cap - charge), 0.0, amount)
+	charge += added
+	stats["charge_from_hits"] = float(stats["charge_from_hits"]) + added
+	return added
+
+
+## Полный бак, снять запоры (начало матча, reset_for_match).
+func reset_charge() -> void:
+	charge = Tuning.CHARGE_MAX
+	charge_locked = false
+	_boosting = false
+	_spinning = false
+	_boost_rearm = false
+	_spin_rearm = false
+	_charge_regen_at = _time
+	_charge_hold_until = _time
+
+
+## Экономика заряда за физический тик: расход на ускорение/раскрутку, накопление (пауза после траты), таяние перезаряда, запор при 0.
+func _tick_charge(delta: float, boosting: bool, spinning: bool) -> void:
+	var spend := 0.0
+	if boosting:
+		spend += Tuning.CHARGE_DRAIN_PER_S
+		stats["boost_s"] = float(stats["boost_s"]) + delta
+	if spinning:
+		spend += Tuning.CHARGE_SPIN_DRAIN_PER_S
+		stats["spin_s"] = float(stats["spin_s"]) + delta
+	if spend > 0.0:
+		var spent := minf(charge, spend * delta)
+		charge -= spent
+		stats["charge_spent"] = float(stats["charge_spent"]) + spent
+		_charge_regen_at = _time + Tuning.CHARGE_REGEN_PAUSE_S
+		if charge <= 0.0:
+			charge = 0.0
+			charge_locked = true
+			_boost_rearm = boosting
+			_spin_rearm = spinning
+			stats["charge_empty"] = int(stats["charge_empty"]) + 1
+	elif _time >= _charge_regen_at and charge < Tuning.CHARGE_MAX:
+		var gained := minf(Tuning.CHARGE_MAX - charge, Tuning.CHARGE_REGEN_PER_S * delta)
+		charge += gained
+		stats["charge_from_regen"] = float(stats["charge_from_regen"]) + gained
+	if charge_locked and charge >= Tuning.CHARGE_RESTART:
+		charge_locked = false
+	if charge > Tuning.CHARGE_MAX and _time >= _charge_hold_until:
+		charge = maxf(Tuning.CHARGE_MAX, charge - Tuning.CHARGE_OVER_DECAY_PER_S * delta)
 
 
 ## Оторвать часть вместе с поддеревом (PvE, CONCEPT_V2: Разборщик откручивает деталь, позже пресс и Садовник).
@@ -867,6 +966,7 @@ func reset_for_match() -> void:
 	stability_mult = 1.0
 	dash_until = 0.0
 	dash_ready_at = 0.0
+	reset_charge()
 	if _broken:
 		push_warning("Doll.reset_for_match on a broken doll (%s): respawn it via Match.respawn_doll()" % name)
 		return
@@ -1054,10 +1154,6 @@ func flight_cap_active() -> bool:
 	return _time < _flight_cap_until
 
 
-func is_dashing() -> bool:
-	return _time < dash_until
-
-
 ## Стан (CONCEPT.md §9, В7): контроль ×(1 − STUN_CONTROL_LOSS), мышцы STUN_MUSCLE_STIFFNESS, трение STUN_JOINT_FRICTION —
 ## кукла пассивный рэгдолл; повторный стан продлевает, не складывает; после — возврат мышц за STUN_RECOVER_S.
 func stun(seconds: float) -> void:
@@ -1173,8 +1269,10 @@ func _control_body() -> RigidBody3D:
 func _physics_process(delta: float) -> void:
 	_time += delta
 	var req_dash := _req_dash   # одноразовые запросы ботов: живут один тик (стан/нет управления — пропадают)
+	var req_spin := _req_spin
 	var req_flip := _req_flip
 	_req_dash = false
+	_req_spin = false
 	_req_flip = false
 	if _stun_phase == StunPhase.STUNNED and not is_stunned():
 		_stun_phase = StunPhase.RECOVER
@@ -1190,37 +1288,54 @@ func _physics_process(delta: float) -> void:
 	if _time < knockback_until and not _broken:
 		_cap_flight_speed()
 	if not alive:
+		_boosting = false
+		_spinning = false
 		return
 	if hp <= LOW_HP:
 		stats["low_hp_survived_s"] = float(stats["low_hp_survived_s"]) + delta
 	if not control_enabled:
+		_boosting = false
+		_spinning = false
+		_tick_charge(delta, false, false)
 		return
 	var v := input_vec
-	var dash_pressed := false
-	var flip_pressed := false
+	var boost_held := false
+	var spin_held := false
 	if not external_input:
 		v = Input.get_vector(input_prefix + "_left", input_prefix + "_right", input_prefix + "_down", input_prefix + "_up")
-		dash_pressed = Input.is_action_just_pressed(input_prefix + "_dash")
-		flip_pressed = Input.is_action_just_pressed(input_prefix + "_flip")
-	dash_pressed = dash_pressed or req_dash
-	flip_pressed = flip_pressed or req_flip
+		boost_held = Input.is_action_pressed(input_prefix + "_dash")
+		spin_held = Input.is_action_pressed(input_prefix + "_flip")
+	boost_held = boost_held or req_dash
+	spin_held = spin_held or req_spin
 	var locked := _time < thrust_lock_until
 	if locked:
 		v = Vector2.ZERO   # отдача после удара: тяги нет (RM: бьющий не дожимает жертву)
 	_set_idle_brake(v.length_squared() <= 0.0001 and _time >= knockback_until)
 	var control := 1.0 - Tuning.STUN_CONTROL_LOSS if is_stunned() else 1.0
-	if dash_pressed and _time >= dash_ready_at and not is_stunned() and not locked:
-		dash_until = _time + Tuning.DASH_DURATION_S
-		dash_ready_at = _time + Tuning.DASH_COOLDOWN_S
 	var body := _control_body()
 	var mode: String = control_mode if control_mode != "" else Tuning.CONTROL_MODE
-	var mult: float = (Tuning.DASH_MULT if _time < dash_until else 1.0) * control
+	# Заряд (COMBAT_CHARGE.md): ускорение — пока держится Shift и есть Заряд; раскрутка — Space + A/D. Выдохся с зажатой клавишей —
+	# сначала отпустить (иначе ускорение мерцало бы на пороге CHARGE_RESTART). В отдаче после удара тяги и расхода нет.
+	if not boost_held:
+		_boost_rearm = false
+	if not spin_held:
+		_spin_rearm = false
+	var can_spend := can_spend_charge() and not locked
+	_boosting = boost_held and not _boost_rearm and can_spend
+	_spinning = spin_held and not _spin_rearm and can_spend and mode != "rotate" and absf(v.x) >= Tuning.SPIN_INPUT_MIN
+	var mult: float = (Tuning.DASH_MULT if is_dashing() else 1.0) * control
+	if _spinning:
+		# вправо — по часовой (кувырок вперёд по ходу), как режим rotate; выше SPIN_MAX_W момент не прикладывается
+		var s := -signf(v.x)
+		if torso().angular_velocity.z * s < Tuning.SPIN_MAX_W:
+			torso().apply_torque(Vector3(0, 0, s * minf(absf(v.x), 1.0) * Tuning.SPIN_TORQUE_PER_KG * thrust_mass()))
+	_tick_charge(delta, _boosting, _spinning)
 	if mode == "rotate":
 		if abs(v.x) > 0.01:
 			torso().apply_torque(Vector3(0, 0, -v.x * Tuning.ROTATE_TORQUE * mult))
 		if abs(v.y) > 0.01:
 			body.apply_central_force(Vector3(0, v.y, 0) * Tuning.MOVE_FORCE_PER_KG * thrust_mass() * mult)
-	var max_speed: float = Tuning.MAX_MOVE_SPEED * (Tuning.DASH_MULT if _time < dash_until else 1.0)
+	var max_speed: float = Tuning.MAX_MOVE_SPEED * (Tuning.DASH_MULT if is_dashing() else 1.0)
 	if mode != "rotate" and v.length_squared() > 0.0001:
 		var f := Vector3(v.x, v.y, 0.0).limit_length(1.0) * Tuning.MOVE_FORCE_PER_KG * thrust_mass() * mult
 		if _time < knockback_until and body.linear_velocity.length() > max_speed:
@@ -1232,5 +1347,5 @@ func _physics_process(delta: float) -> void:
 		body.apply_central_force(f)
 	if _time >= knockback_until and body.linear_velocity.length() > max_speed:   # после удара клэмп не режет полёт (§5)
 		body.linear_velocity = body.linear_velocity.normalized() * max_speed
-	if flip_pressed and not is_stunned():
+	if req_flip and not is_stunned():
 		torso().apply_torque_impulse(Vector3(0, 0, Tuning.FLIP_IMPULSE * (1.0 if v.x >= 0.0 else -1.0)))

@@ -30,7 +30,9 @@ const RUSH_RETREAT_S := 1.2             # отход полной тягой: р
                                         # KO обоих в одном тике (42.5 с) → Match.winner мёртв, match_winner = 0 (3 прогона одинаково);
                                         # 1.2 и 0.9 — KO одного на всех трёх площадках. 29.09: двойной KO — ничья (Match.build_results),
                                         # match_winner её принимает; 1.2 оставлен — проба проверяет обычный KO
-const DASH_FROM_M := 2.0                 # рывок, если до соперника дальше (кулдаун Tuning.DASH_COOLDOWN_S)
+const DASH_FROM_M := 2.0                 # ускорение (Shift за Заряд), если до соперника дальше; legacy=1 — старый рывок с кулдауном DASH_COOLDOWN_S
+const BOOST_START_CHARGE := 40.0         # как у ботов EnemyBrain.DASH_START_CHARGE: ниже ускорение не начинают, ниже BOOST_KEEP_CHARGE — отпускают
+const BOOST_KEEP_CHARGE := 5.0
 const STUCK_S := 6.0                 # без ударов столько секунд — куклы заклинило геометрией (полка, станок): прыжок врозь
 const UNSTICK_S := 1.2
 const RESULTS_WAIT_REAL_MS := 6000
@@ -44,6 +46,8 @@ var env_slams := 0
 var max_s := 120.0
 var sd_mode := false
 var rush_retreat_s := RUSH_RETREAT_S
+var legacy_dash := false             # legacy=1: старый рывок без Заряда (dash_until + кулдаун 10 с) — сравнение с экономикой Заряда
+var rush_boost: Dictionary = {}      # Doll -> true, пока бот держит ускорение
 const SD_TIME_LIMIT_S := 3.0
 const SD_SETTLE_S := 2.0             # после шага обрыва мостов ждём столько: доски должны упасть
 var plank_y_at_break: Dictionary = {}   # RopeBridge -> Array[float] высоты досок в момент break_apart
@@ -94,6 +98,7 @@ func _ready() -> void:
 				"sd": sd_mode = p[1] != "0"
 				"out": out_path = p[1]
 				"retreat": rush_retreat_s = float(p[1])
+				"legacy": legacy_dash = p[1] != "0"
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
 	add_child(pg)
 	p1 = pg.get_node("P1")
@@ -189,9 +194,18 @@ func _rush(d: Doll, other: Doll) -> void:
 	else:
 		# с отбросом RM (FEEL_TARGET §9: 1–2 H/с вместо 4) куклы после удара остаются рядом и толкаются по 0.1–3 HP:
 		# отход полной тягой RUSH_RETREAT_S и рывок (как Shift, DASH_COOLDOWN_S) с разбега ≥ DASH_FROM_M — удары 8–20 HP
-		if absf(dx) > DASH_FROM_M and d._time >= d.dash_ready_at and not d.is_stunned():
-			d.dash_until = d._time + Tuning.DASH_DURATION_S
-			d.dash_ready_at = d._time + Tuning.DASH_COOLDOWN_S
+		if legacy_dash:
+			if absf(dx) > DASH_FROM_M and d._time >= d.dash_ready_at and not d.is_stunned():
+				d.dash_until = d._time + Tuning.DASH_DURATION_S
+				d.dash_ready_at = d._time + Tuning.DASH_COOLDOWN_S
+		else:
+			# Заряд (COMBAT_CHARGE.md): как игрок, держащий Shift на разбеге; начинает с BOOST_START_CHARGE, отпускает у BOOST_KEEP_CHARGE
+			var holding := bool(rush_boost.get(d, false))
+			if absf(dx) > DASH_FROM_M and not d.is_stunned() and (d.charge >= BOOST_START_CHARGE or (holding and d.charge > BOOST_KEEP_CHARGE)):
+				rush_boost[d] = true
+				d.request_dash()
+			else:
+				rush_boost[d] = false
 		d.input_vec = Vector2(sgn, vy)
 
 
@@ -370,6 +384,16 @@ func _checks_ko() -> void:
 	report["info"]["hp"] = {"p1": p1.hp, "p2": p2.hp}
 	report["info"]["stats_p1"] = p1.stats.duplicate()
 	report["info"]["stats_p2"] = p2.stats.duplicate()
+	var ch := {}
+	for pair in [["p1", p1], ["p2", p2]]:
+		var st: Dictionary = (pair[1] as Doll).stats
+		var inc := float(st["charge_from_hits"]) + float(st["charge_from_regen"])
+		ch[pair[0]] = {"from_hits": snappedf(float(st["charge_from_hits"]), 0.1), "from_regen": snappedf(float(st["charge_from_regen"]), 0.1),
+			"hit_share": snappedf(float(st["charge_from_hits"]) / inc, 0.01) if inc > 0.0 else 0.0, "spent": snappedf(float(st["charge_spent"]), 0.1),
+			"boost_s": snappedf(float(st["boost_s"]), 0.01), "spin_s": snappedf(float(st["spin_s"]), 0.01), "empty": int(st["charge_empty"]),
+			"charge_end": snappedf((pair[1] as Doll).charge, 0.1)}
+	report["info"]["charge"] = ch
+	report["info"]["legacy_dash"] = legacy_dash
 
 
 func _checks_over() -> void:
