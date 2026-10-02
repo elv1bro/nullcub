@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cgwt22nbe1pj"
-path="res://.godot/imported/Metal_Plate_B_metallic.png-roughness.webp-0305b954997cbb4a09f1da442b8a2e88.ctex"
+path.s3tc="res://.godot/imported/Metal_Plate_B_metallic.png-roughness.webp-0305b954997cbb4a09f1da442b8a2e88.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "60860102ddb371a2af2a891e822e43ec"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Metal_Plate_B_metallic.png-roughness.webp"
-dest_files=["res://.godot/imported/Metal_Plate_B_metallic.png-roughness.webp-0305b954997cbb4a09f1da442b8a2e88.ctex"]
+dest_files=["res://.godot/imported/Metal_Plate_B_metallic.png-roughness.webp-0305b954997cbb4a09f1da442b8a2e88.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

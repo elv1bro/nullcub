@@ -236,6 +236,9 @@ func keys_lines() -> Array:
 		["колесо  ,  .", "масштаб камеры", "%.2f×" % zoom_level()],
 		["F10", "яркость эффектов", FxPreset.label().replace("FX: ", "")],
 	]
+	var gfx := get_node_or_null("/root/Gfx") if is_inside_tree() else null
+	if gfx != null and gfx.has_method("label"):
+		rows.append(["F9", "качество графики", String(gfx.call("label"))])
 	var arena := get_tree().get_first_node_in_group("arena") if is_inside_tree() else null
 	if arena != null and arena.has_method("call_champion"):
 		rows.append(["", "Купол", ""])

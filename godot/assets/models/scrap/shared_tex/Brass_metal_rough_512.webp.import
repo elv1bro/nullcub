@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b3gput736hlfb"
-path.bptc="res://.godot/imported/Brass_metal_rough_512.webp-5a1ab92a670cb85a9d3d0f81373f1135.bptc.ctex"
+path.s3tc="res://.godot/imported/Brass_metal_rough_512.webp-5a1ab92a670cb85a9d3d0f81373f1135.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -12,12 +12,12 @@ metadata={
 [deps]
 
 source_file="res://assets/models/scrap/shared_tex/Brass_metal_rough_512.webp"
-dest_files=["res://.godot/imported/Brass_metal_rough_512.webp-5a1ab92a670cb85a9d3d0f81373f1135.bptc.ctex"]
+dest_files=["res://.godot/imported/Brass_metal_rough_512.webp-5a1ab92a670cb85a9d3d0f81373f1135.s3tc.ctex"]
 
 [params]
 
 compress/mode=2
-compress/high_quality=true
+compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0

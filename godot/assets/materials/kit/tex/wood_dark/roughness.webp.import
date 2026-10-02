@@ -3,19 +3,20 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ux041mrmqdds"
-path="res://.godot/imported/roughness.webp-bfe036d8775bfac29d82bc509ffd4d10.ctex"
+path.s3tc="res://.godot/imported/roughness.webp-bfe036d8775bfac29d82bc509ffd4d10.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/materials/kit/tex/wood_dark/roughness.webp"
-dest_files=["res://.godot/imported/roughness.webp-bfe036d8775bfac29d82bc509ffd4d10.ctex"]
+dest_files=["res://.godot/imported/roughness.webp-bfe036d8775bfac29d82bc509ffd4d10.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

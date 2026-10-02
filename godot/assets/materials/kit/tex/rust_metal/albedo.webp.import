@@ -3,19 +3,20 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c6pvk1vsr865u"
-path="res://.godot/imported/albedo.webp-2c78f4f80119f354c25507c2a3694c4c.ctex"
+path.s3tc="res://.godot/imported/albedo.webp-2c78f4f80119f354c25507c2a3694c4c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/materials/kit/tex/rust_metal/albedo.webp"
-dest_files=["res://.godot/imported/albedo.webp-2c78f4f80119f354c25507c2a3694c4c.ctex"]
+dest_files=["res://.godot/imported/albedo.webp-2c78f4f80119f354c25507c2a3694c4c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

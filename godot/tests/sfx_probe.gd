@@ -1,20 +1,24 @@
-## Проба звука ударов SfxDirector (docs/plan-demo/HIT_FX.md §2.5, §4.4, §5.4 «Звук»), headless (аудио-драйвер Dummy):
+## Проба звука ударов SfxDirector (docs/plan-demo/AUDIO.md §4.2, §6; история — HIT_FX.md §2.5, §4.4), headless (драйвер Dummy):
 ## настоящая площадка Void с Match и HUD; SfxDirector — ребёнок Match (Match._ensure_fx_directors) или подключается вручную.
+## Куклы Void — дерево (Doll v3), удары синтетические (ctx без оружия): основа — записанный удар (hit_l / hit_m / hit_h, как в
+## JS-версии), подложка дерева по дереву не нужна (тот же материал). DollAudio и ImpactAudio на время точных
+## проверок выключены (их звуки идут в тот же журнал played), в бою ботов — включены. Толпа — tests/audio_probe.
 ## Проверки (checks[].id):
-##   scene_voices — 12 голосов AudioStreamPlayer; layers_loaded — все слои LAYER_ORDER, каждый звук — OGG длиной > 0.05 с;
+##   scene_voices — 24 голоса AudioStreamPlayer; layers_loaded — все слои LAYER_ORDER, каждый звук — OGG длиной > 0.05 с;
 ##   buses — SFX (→ Master; LowPass выкл., HardLimiter −0.5 dB), SFX_PanL2…R2 (→ SFX, AudioEffectPanner), SFX_Crit (→ Master);
-##   attached / bound — один директор под Match, подписки на сигналы Match; countdown_ticks / fight_gong — отсчёт и гонг FIGHT!;
-##   light — «ток» (−10…−4 dB, питч 1.15–1.3), light_rate — не чаще раза в 60 мс на жертву; heavy — удар + треск + тумп,
-##   heavy_whoosh — «вух» ~70 мс по скорости ЦМ; crit_cine_* — таймлайн крита: freeze 0 (удар, вдох) / cut_in 120 (бум, тумп,
-##   удар, zap, треск, скрип) / caption 220 (ох) / crack_2 400 / cut_out 620 (свист, вух) ±17 мс, всё на SFX_Crit, мир заглушён
-##   (low-pass ≤ 1 кГц) 70–600 мс и открыт с 720 мс; crit_sync_* — фазы CritCinematic ведут звук (кат на 200 мс → бум на 200,
-##   а не 120; нет двойного вдоха); crit_short — крит без крупного плана; ko — KO + треск + рассыпание, аплодисменты 300 мс,
-##   ko_dedupe — hit_fx(ko) того же удара не дублирует KO; ko_crit_cheer — аплодисменты после выхода из крупного плана (700 мс);
-##   slam / slam_crit — тумп; в крит-полёте ещё треск и crash; sd_gong (2 удара, 260 мс), over_gong (3 удара, 220 мс);
-##   slowmo_pitch — питч × 0.3^0.2 в slow-mo 0.3×, гонг без, стоп-кадр 0.02× без; pan_bus — панорамные шины, pan_side — P1
-##   левее P2; voice_limit — 16 слоёв разом → голосов ≤ 12, лишние вытеснены/отброшены; layer_cap — не больше 4 голосов слоя;
-##   muffle / muffle_watchdog; abort — COUNTDOWN снимает очередь и глушение; signal_path — удар через настоящий сигнал Match;
-##   fight_* — бой ботов fight_s секунд: звуки есть, голосов ≤ 12, time_scale вернулся к 1.
+##   attached / bound — один директор под Match, подписки на сигналы Match; countdown_ticks / fight_bell — бип отсчёта, колокол
+##   и горн FIGHT!; light — hit_l (−6…0 dB к LAYER_DB, питч ±2.5 полутона), light_rate — не чаще раза в 60 мс на жертву; heavy —
+##   hit_h + треск snap + низ sub, heavy_whoosh — «вух» ~70 мс по скорости ЦМ; crit_cine_* — таймлайн крита: freeze 0 (вдох) /
+##   cut_in 120 (бум, удар, низ, треск, скрип) / crack_2 400 (треск, щепки) / cut_out 620 (свист, вух) ±17 мс, всё на SFX_Crit,
+##   мир заглушён (low-pass ≤ 1 кГц) 70–600 мс и открыт с 720 мс; crit_phase — сигнал фаз для толпы; crit_sync_* — фазы
+##   CritCinematic ведут звук (кат на 200 мс → бум на 200, а не 120; нет двойного вдоха); crit_short — крит без крупного плана;
+##   ko — удар KO + рассыпание + треск + низ, ko_dedupe — hit_fx(ko) того же удара не дублирует KO; ko_crit — один KO и бум
+##   крупного плана; slam / slam_crit — глухой удар + стук материала, в крит-полёте ещё треск и crash; sd_bell (2 удара, 260 мс),
+##   over_bell (3 удара, 220 мс); slowmo_pitch — питч × 0.3^0.2 в slow-mo 0.3×, колокол без, стоп-кадр 0.02× без; pan_bus —
+##   панорамные шины, pan_side — P1 левее P2; voice_limit — все слои разом → голосов ≤ 24, лишние вытеснены/отброшены;
+##   layer_cap — не больше 4 голосов слоя; muffle / muffle_watchdog; abort — COUNTDOWN снимает очередь и глушение;
+##   signal_path — удар через настоящий сигнал Match; fight_* — бой ботов fight_s секунд: звуки есть, голосов ≤ 24,
+##   time_scale вернулся к 1.
 ## Запуск: godot --headless --path . --fixed-fps 60 res://tests/sfx_probe.tscn -- "fight_s=20"
 ## Отчёт tests/sfx_probe_report.json, exit 0/1.
 extends Node3D
@@ -50,6 +54,8 @@ var rush_retreat: Dictionary = {}
 var fight := false
 var t := 0.0
 var report := {"ok": true, "checks": [], "info": {}}
+var phases: Array = []                 # SfxDirector.crit_phase: [[имя, мс часов]]
+const HIT_LAYERS := ["hit_l", "hit_m", "hit_h", "wood_l", "wood_m", "wood_h", "metal_l", "metal_m", "metal_h", "head", "pan", "blade", "bone", "rubber"]
 
 
 func _ready() -> void:
@@ -179,6 +185,8 @@ func _run() -> void:
 		if c is SfxDirector:
 			n_dir += 1
 	_check("attached", n_dir == 1, "%s, директоров под Match: %d" % [report["info"]["attached"], n_dir])
+	_quiet_world(true)
+	sfx.crit_phase.connect(func(n: String, _ms: float) -> void: phases.append([n, sfx.clock_ms()]))
 	_check_resources()
 	_check_buses()
 	var hit_sig := "hit_fx" if match_node.has_signal("hit_fx") else "hit"
@@ -201,9 +209,10 @@ func _run() -> void:
 		await _frames(1)
 		guard += 1
 	await _frames(2)
-	_check("countdown_ticks", _count(sfx.played, "tok") >= 2, "тиков отсчёта: %d" % _count(sfx.played, "tok"))
+	_check("countdown_ticks", _count(sfx.played, "countdown") >= 2, "бипов отсчёта: %d" % _count(sfx.played, "countdown"))
 	var fight_ms := float(st["fight_ms"])
-	_check("fight_gong", fight_ms >= 0.0 and _at(sfx.played, fight_ms, "gong", 0.0), "FIGHT! @%.0f мс, звуки %s" % [fight_ms, str(_layers(sfx.played))])
+	_check("fight_bell", fight_ms >= 0.0 and _at(sfx.played, fight_ms, "bell", 0.0) and _at(sfx.played, fight_ms, "horn", 0.0),
+		"FIGHT! @%.0f мс, звуки %s" % [fight_ms, str(_layers(sfx.played))])
 	await _wait_ms(300.0)
 	await _test_light()
 	await _test_heavy()
@@ -225,6 +234,19 @@ func _run() -> void:
 	report["info"]["stolen"] = sfx.stolen
 	report["info"]["played_total"] = sfx.played.size()
 	_finish()
+
+
+## Тишина «мира» на время точных проверок: DollAudio кукол снят, ImpactAudio выключен (их звуки — в том же журнале played).
+func _quiet_world(on: bool) -> void:
+	sfx.doll_audio = not on
+	for c in match_node.get_children():
+		if c is ImpactAudio:
+			(c as ImpactAudio).enabled = not on
+	if on:
+		for d in [p1, p2]:
+			var da := (d as Node).get_node_or_null("DollAudio")
+			if da != null:
+				da.free()
 
 
 func _check_resources() -> void:
@@ -284,15 +306,16 @@ func _test_light() -> void:
 	sfx.handle_hit_fx(_ctx("light", p2, p1, 4.0))
 	sfx.handle_hit_fx(_ctx("light", p2, p1, 4.0))
 	var e := _since(t0)
-	var ok := _layers(e) == ["tok"] and float(e[0]["db"]) >= -10.01 and float(e[0]["db"]) <= -3.99 \
-		and float(e[0]["pitch"]) >= 1.149 and float(e[0]["pitch"]) <= 1.301
+	var base := float(SfxDirector.LAYER_DB["hit_l"])
+	var ok := _layers(e) == ["hit_l"] and float(e[0]["db"]) >= base - 6.01 and float(e[0]["db"]) <= base + 0.01 \
+		and float(e[0]["pitch"]) >= 0.865 and float(e[0]["pitch"]) <= 1.156
 	_check("light", ok, "звуки %s" % str(e))
 	await _frames(3)                         # 50 мс: слой уже можно (40 мс), жертву P2 ещё нельзя (60 мс)
 	sfx.handle_hit_fx(_ctx("light", p2, p1, 4.0))
 	sfx.handle_hit_fx(_ctx("light", p1, p2, 4.0))
 	e = _since(t0)
-	_check("light_rate", _count(e, "tok") == 2 and int(sfx.dropped["rate"]) - rate0 == 2,
-		"ток %d (ждём 2), отброшено по жертве %d (ждём 2)" % [_count(e, "tok"), int(sfx.dropped["rate"]) - rate0])
+	_check("light_rate", _count(e, "hit_l") == 2 and int(sfx.dropped["rate"]) - rate0 == 2,
+		"удар %d (ждём 2), отброшено по жертве %d (ждём 2)" % [_count(e, "hit_l"), int(sfx.dropped["rate"]) - rate0])
 	await _wait_ms(300.0)
 
 
@@ -302,7 +325,7 @@ func _test_heavy() -> void:
 	var t0 := sfx.clock_ms()
 	sfx.handle_hit_fx(_ctx("heavy", p2, p1, 12.0))
 	var e0 := _since(t0)
-	_check("heavy", _layers(e0) == ["punch", "crack", "thud"], "звуки %s" % str(_offsets(e0, t0)))
+	_check("heavy", _layers(e0) == ["hit_h", "snap", "sub"], "звуки %s" % str(_offsets(e0, t0)))
 	await _wait_ms(150.0)
 	hold_vel.clear()
 	var e := _since(t0)
@@ -332,14 +355,19 @@ func _test_crit_cine() -> void:
 	sfx.force_crit_mode = ""
 	var e := _since(t0)
 	var C := SfxDirector.BUS_CRIT
-	var want := [["punch", 0.0], ["inhale", 0.0], ["boom", 120.0], ["thud", 120.0], ["punch", 120.0], ["zap_low", 120.0],
-		["crack", 120.0], ["creak", 120.0], ["crowd_oof", 220.0], ["crack", 400.0], ["whistle", 620.0], ["whoosh", 620.0]]
+	var want := [["inhale", 0.0], ["boom", 120.0], ["hit_h", 120.0], ["sub", 120.0], ["snap", 120.0], ["creak", 120.0],
+		["snap", 400.0], ["splinter", 400.0], ["swing_h", 620.0], ["whoosh", 620.0]]
 	var miss: Array = []
 	for w in want:
 		if not _at(e, t0, w[0], w[1], C):
 			miss.append("%s@%d" % [w[0], w[1]])
 	_check("crit_cine_timeline", miss.is_empty() and e.size() == want.size(), "нет %s; звуки %s" % [str(miss), str(_offsets(e, t0))])
 	_check("crit_cine_muffle", muffled_ok and open_ok, "срез low-pass (мс:Гц) %s" % str(samples))
+	var names: Array = []
+	for ph in phases:
+		if float(ph[1]) >= t0 - 0.05:
+			names.append(ph[0])
+	_check("crit_phase", names == ["freeze", "cut_in", "caption", "crack_2", "cut_out", "done"], "сигнал crit_phase: %s" % str(names))
 	await _wait_ms(700.0)
 
 
@@ -360,7 +388,7 @@ func _test_crit_sync() -> void:
 	fake.playing = false
 	var e := _since(t0)
 	var ok := _count(e, "inhale") == 1 and _count(e, "boom") == 1 and _at(e, t0, "boom", 200.0) and not _at(e, t0, "boom", 120.0) \
-		and _at(e, t0, "crowd_oof", 300.0) and _at(e, t0, "whistle", 700.0) and _count(e, "crack") == 2
+		and _at(e, t0, "swing_h", 700.0) and _count(e, "snap") == 2
 	_check("crit_sync_cine_first", ok, "звуки %s" % str(_offsets(e, t0)))
 	await _wait_ms(400.0)
 	# B: сначала hit_fx (свой таймлайн), freeze — в том же кадре; кат на 150 мс
@@ -376,7 +404,7 @@ func _test_crit_sync() -> void:
 		fake.phase.emit(ph, sfx.clock_ms() - t0)
 	fake.playing = false
 	e = _since(t0)
-	ok = _count(e, "inhale") == 1 and _count(e, "boom") == 1 and _at(e, t0, "boom", 150.0) and _count(e, "whistle") == 1
+	ok = _count(e, "inhale") == 1 and _count(e, "boom") == 1 and _at(e, t0, "boom", 150.0) and _count(e, "swing_h") == 1
 	_check("crit_sync_hit_first", ok, "звуки %s" % str(_offsets(e, t0)))
 	sfx.set("_cine", null)
 	fake.queue_free()
@@ -394,8 +422,7 @@ func _test_crit_short() -> void:
 	sfx.force_crit_mode = ""
 	var e := _since(t0)
 	var C := SfxDirector.BUS_CRIT
-	var ok := _at(e, t0, "punch", 0.0, C) and _at(e, t0, "thud", 0.0, C) and _at(e, t0, "boom", 0.0, C) and _at(e, t0, "crack", 0.0, C) \
-		and _at(e, t0, "zap_low", 0.0, C) and _at(e, t0, "crowd_oof", SfxDirector.CRIT_SHORT_OOF_MS, C) \
+	var ok := _at(e, t0, "boom", 0.0, C) and _at(e, t0, "hit_h", 0.0, C) and _at(e, t0, "snap", 0.0, C) and _at(e, t0, "sub", 0.0, C) \
 		and _at(e, t0, "whoosh", SfxDirector.CRIT_SHORT_WHOOSH_MS, C) and not muffled and _count(e, "inhale") == 0
 	_check("crit_short", ok, "звуки %s, глушение %s" % [str(_offsets(e, t0)), muffled])
 	await _wait_ms(800.0)
@@ -407,9 +434,10 @@ func _test_ko() -> void:
 	sfx.handle_hit_fx(_ctx("ko", p2, p1, 30.0))
 	await _wait_ms(450.0)
 	var e := _since(t0)
-	_check("ko", _at(e, t0, "ko", 0.0) and _at(e, t0, "crack", 0.0) and _at(e, t0, "shatter", 0.0) and _at(e, t0, "crowd_cheer", SfxDirector.KO_CHEER_MS),
+	_check("ko", _at(e, t0, "ko", 0.0) and _at(e, t0, "snap", 0.0) and _at(e, t0, "shatter", 0.0) and _at(e, t0, "sub", 0.0),
 		"звуки %s" % str(_offsets(e, t0)))
-	_check("ko_dedupe", _count(e, "ko") == 1 and _count(e, "shatter") == 1 and _at(e, t0, "thud", 0.0), "KO %d, рассыпание %d" % [_count(e, "ko"), _count(e, "shatter")])
+	_check("ko_dedupe", _count(e, "ko") == 1 and _count(e, "shatter") == 1 and _at(e, t0, "hit_h", 0.0),
+		"KO %d, рассыпание %d" % [_count(e, "ko"), _count(e, "shatter")])
 	await _wait_ms(800.0)
 	# ko_crit: KO пришёл раньше hit_fx (как в ядре: knocked_out внутри take_damage), аплодисменты — после крупного плана
 	sfx.force_crit_mode = "cine"
@@ -419,8 +447,7 @@ func _test_ko() -> void:
 	sfx.force_crit_mode = ""
 	await _wait_ms(1500.0)
 	e = _since(t0)
-	_check("ko_crit_cheer", _count(e, "crowd_cheer") == 1 and _at(e, t0, "crowd_cheer", SfxDirector.KO_CRIT_CHEER_MS) and _count(e, "ko") == 1
-		and _at(e, t0, "boom", 120.0, SfxDirector.BUS_CRIT), "звуки %s" % str(_offsets(e, t0)))
+	_check("ko_crit", _count(e, "ko") == 1 and _at(e, t0, "boom", 120.0, SfxDirector.BUS_CRIT), "звуки %s" % str(_offsets(e, t0)))
 	await _wait_ms(300.0)
 
 
@@ -429,13 +456,13 @@ func _test_slam() -> void:
 	sfx.handle_env_slam({"doll": p2, "part": "Torso", "speed": 8.0, "position": p2.centre_of_mass(), "normal": Vector3.LEFT,
 		"flying": true, "crit_flight": false, "fight_time": match_node.fight_time})
 	var e := _since(t0)
-	_check("slam", _layers(e) == ["thud"], "звуки %s" % str(_offsets(e, t0)))
+	_check("slam", _layers(e) == ["thud", "hit_m"], "звуки %s" % str(_offsets(e, t0)))
 	await _wait_ms(100.0)
 	t0 = sfx.clock_ms()
 	sfx.handle_env_slam({"doll": p2, "part": "Torso", "speed": 8.0, "position": p2.centre_of_mass(), "normal": Vector3.LEFT,
 		"flying": true, "crit_flight": true, "fight_time": match_node.fight_time})
 	e = _since(t0)
-	_check("slam_crit", _layers(e) == ["thud", "crack", "crash"], "звуки %s" % str(_offsets(e, t0)))
+	_check("slam_crit", _layers(e) == ["thud", "hit_m", "hit_h", "snap", "crash"], "звуки %s" % str(_offsets(e, t0)))
 	await _wait_ms(300.0)
 
 
@@ -444,38 +471,38 @@ func _test_gongs() -> void:
 	sfx.handle_announce("SUDDEN DEATH", Color.RED, "sudden_death")
 	await _wait_ms(400.0)
 	var e := _since(t0)
-	_check("sd_gong", _count(e, "gong") == 2 and _at(e, t0, "gong", 0.0) and _at(e, t0, "gong", SfxDirector.SD_GONG_GAP_MS), "звуки %s" % str(_offsets(e, t0)))
+	_check("sd_bell", _count(e, "bell") == 2 and _at(e, t0, "bell", 0.0) and _at(e, t0, "bell", SfxDirector.SD_BELL_GAP_MS), "звуки %s" % str(_offsets(e, t0)))
 	await _wait_ms(200.0)
 	t0 = sfx.clock_ms()
 	sfx.handle_match_over(p1, {})
 	await _wait_ms(600.0)
 	e = _since(t0)
-	_check("over_gong", _count(e, "gong") == 3 and _at(e, t0, "gong", SfxDirector.OVER_GONG_GAP_MS * 2.0), "звуки %s" % str(_offsets(e, t0)))
+	_check("over_bell", _count(e, "bell") == 3 and _at(e, t0, "bell", SfxDirector.OVER_BELL_GAP_MS * 2.0), "звуки %s" % str(_offsets(e, t0)))
 	await _wait_ms(200.0)
 
 
 func _test_slowmo_pitch() -> void:
 	var ts0 := Engine.time_scale
 	Engine.time_scale = 0.3
-	var v1 := sfx.play_layer("tok", 0.0, 1.0)
-	var v2 := sfx.play_layer("gong", -20.0, 1.0)
+	var v1 := sfx.play_layer("wood_l", 0.0, 1.0)
+	var v2 := sfx.play_layer("bell", -20.0, 1.0)
 	var p_slow := sfx.voice(v1).pitch_scale if v1 >= 0 else -1.0
 	var p_gong := sfx.voice(v2).pitch_scale if v2 >= 0 else -1.0
 	Engine.time_scale = 0.02
 	await _wait_ms(60.0)
-	var v3 := sfx.play_layer("tok", 0.0, 1.0)
+	var v3 := sfx.play_layer("wood_l", 0.0, 1.0)
 	var p_freeze := sfx.voice(v3).pitch_scale if v3 >= 0 else -1.0
 	Engine.time_scale = ts0
 	var want := pow(0.3, SfxDirector.SLOWMO_PITCH_EXP)
 	_check("slowmo_pitch", absf(p_slow - want) < 0.002 and is_equal_approx(p_gong, 1.0) and is_equal_approx(p_freeze, 1.0),
-		"0.3×: ток %.3f (ждём %.3f), гонг %.3f; 0.02×: ток %.3f" % [p_slow, want, p_gong, p_freeze])
+		"0.3×: стук %.3f (ждём %.3f), колокол %.3f; 0.02×: стук %.3f" % [p_slow, want, p_gong, p_freeze])
 	await _wait_ms(200.0)
 
 
 func _test_pan() -> void:
-	var a := sfx.play_layer("crack", -30.0, 1.0, SfxDirector.BUS_SFX, -0.5)
+	var a := sfx.play_layer("snap", -30.0, 1.0, SfxDirector.BUS_SFX, -0.5)
 	var b := sfx.play_layer("thud", -30.0, 1.0, SfxDirector.BUS_SFX, 0.3)
-	var c := sfx.play_layer("tok", -30.0, 1.0, SfxDirector.BUS_SFX, 0.05)
+	var c := sfx.play_layer("wood_l", -30.0, 1.0, SfxDirector.BUS_SFX, 0.05)
 	var d := sfx.play_layer("boom", -30.0, 1.0, SfxDirector.BUS_CRIT, 0.5)
 	var buses: Array = []
 	for v in [a, b, c, d]:
@@ -501,7 +528,7 @@ func _test_voice_limit() -> void:
 			busy += 1
 	var pushed := sfx.stolen - st0 + int(sfx.dropped["voices"]) - dv0
 	_check("voice_limit", active <= SfxDirector.VOICES and busy <= SfxDirector.VOICES and pushed >= SfxDirector.LAYER_ORDER.size() - SfxDirector.VOICES,
-		"16 слоёв разом: принято %d, активно %d, играет %d, вытеснено %d, отброшено %d" % [ok_n, active, busy, sfx.stolen - st0, int(sfx.dropped["voices"]) - dv0])
+		"все слои разом: принято %d, активно %d, играет %d, вытеснено %d, отброшено %d" % [ok_n, active, busy, sfx.stolen - st0, int(sfx.dropped["voices"]) - dv0])
 	await _wait_ms(2000.0)
 	var cap0 := int(sfx.dropped["layer_cap"])
 	var got := 0
@@ -510,7 +537,7 @@ func _test_voice_limit() -> void:
 			got += 1
 		await _wait_ms(50.0)
 	_check("layer_cap", got == SfxDirector.MAX_PER_LAYER and int(sfx.dropped["layer_cap"]) - cap0 == 2,
-		"скрип ×6 через 50 мс (0.5 с каждый): сыграно %d, отброшено по лимиту слоя %d" % [got, int(sfx.dropped["layer_cap"]) - cap0])
+		"скрип ×6 через 50 мс (≈1 с каждый): сыграно %d, отброшено по лимиту слоя %d" % [got, int(sfx.dropped["layer_cap"]) - cap0])
 	await _wait_ms(800.0)
 
 
@@ -552,7 +579,7 @@ func _test_signal_path() -> void:
 	else:
 		match_node.hit.emit(p2, p1, 4.0, "body", p2.centre_of_mass())
 	var e := _since(t0)
-	_check("signal_path", _count(e, "tok") == 1, "%s → %s" % ["hit_fx" if match_node.has_signal("hit_fx") else "hit", str(_layers(e))])
+	_check("signal_path", _count(e, "hit_l") == 1, "%s → %s" % ["hit_fx" if match_node.has_signal("hit_fx") else "hit", str(_layers(e))])
 	await _wait_ms(300.0)
 
 
@@ -581,7 +608,7 @@ func _test_real_crit() -> void:
 	var e := _since(t0)
 	var ok := String(st["tier"]) == "crit" and ph.has("cut_in") and ph.has("cut_out") and ph.has("done") \
 		and _count(e, "inhale") == 1 and _count(e, "boom") == 1 and _at(e, t0, "inhale", 0.0) \
-		and _at(e, t0, "boom", float(ph.get("cut_in", -999.0))) and _at(e, t0, "whistle", float(ph.get("cut_out", -999.0)))
+		and _at(e, t0, "boom", float(ph.get("cut_in", -999.0))) and _at(e, t0, "swing_h", float(ph.get("cut_out", -999.0)))
 	var rounded := {}
 	for k in ph.keys():
 		rounded[k] = roundi(float(ph[k]))
@@ -595,6 +622,7 @@ func _test_real_crit() -> void:
 
 
 func _test_fight() -> void:
+	_quiet_world(false)
 	var t0 := sfx.clock_ms()
 	p1.external_input = true
 	p2.external_input = true
@@ -630,13 +658,15 @@ func _test_fight() -> void:
 		by_layer[x["layer"]] = int(by_layer.get(x["layer"], 0)) + 1
 	report["info"]["fight"] = {"fight_s": snappedf(match_node.fight_time - ft0, 0.01), "hits": hits, "kos": kos, "over": over,
 		"tiers": tiers, "layers": by_layer, "max_active": max_active, "time_scale": Engine.time_scale}
-	var hit_sounds := int(by_layer.get("tok", 0)) + int(by_layer.get("punch", 0))
+	var hit_sounds := 0
+	for l in HIT_LAYERS:
+		hit_sounds += int(by_layer.get(l, 0))
 	_check("fight_sounds", hits == 0 or hit_sounds >= 1, "ударов %d, звуков удара %d, слои %s" % [hits, hit_sounds, str(by_layer)])
 	_check("fight_voices", max_active <= SfxDirector.VOICES, "макс. голосов %d" % max_active)
 	if kos > 0:
-		_check("fight_ko", int(by_layer.get("ko", 0)) >= 1 and int(by_layer.get("crowd_cheer", 0)) >= 1, "KO %d: слои %s" % [kos, str(by_layer)])
+		_check("fight_ko", int(by_layer.get("ko", 0)) >= 1 and int(by_layer.get("shatter", 0)) >= 1, "KO %d: слои %s" % [kos, str(by_layer)])
 	if over:
-		_check("fight_over_gong", int(by_layer.get("gong", 0)) >= 3, "гонгов %d" % int(by_layer.get("gong", 0)))
+		_check("fight_over_bell", int(by_layer.get("bell", 0)) >= 3, "колоколов %d" % int(by_layer.get("bell", 0)))
 	_check("fight_time_scale", is_equal_approx(Engine.time_scale, 1.0) or match_node.phase == Match.Phase.OVER and Engine.time_scale >= 0.25,
 		"Engine.time_scale %.3f, фаза %d" % [Engine.time_scale, match_node.phase])
 	_check("fight_unmuffled", not sfx.is_muffled() and sfx.pending_count() == 0, "глушение %s, очередь %d" % [sfx.is_muffled(), sfx.pending_count()])

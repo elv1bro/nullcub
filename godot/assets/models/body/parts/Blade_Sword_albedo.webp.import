@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://va2jll62ol1c"
-path="res://.godot/imported/Blade_Sword_albedo.webp-0d6bd3b3d81fd63a1b2f4ec0caabdc3a.ctex"
+path.s3tc="res://.godot/imported/Blade_Sword_albedo.webp-0d6bd3b3d81fd63a1b2f4ec0caabdc3a.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "c1014d2bd2f5938b6101fec4e785b4a1"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Blade_Sword_albedo.webp"
-dest_files=["res://.godot/imported/Blade_Sword_albedo.webp-0d6bd3b3d81fd63a1b2f4ec0caabdc3a.ctex"]
+dest_files=["res://.godot/imported/Blade_Sword_albedo.webp-0d6bd3b3d81fd63a1b2f4ec0caabdc3a.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

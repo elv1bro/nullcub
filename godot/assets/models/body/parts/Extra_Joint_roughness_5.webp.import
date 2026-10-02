@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://5gom6db61t7d"
-path="res://.godot/imported/Extra_Joint_roughness_5.webp-37c8e12058d3762a9ef62ff1bf2570c8.ctex"
+path.s3tc="res://.godot/imported/Extra_Joint_roughness_5.webp-37c8e12058d3762a9ef62ff1bf2570c8.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "5c8f93c131a66a887de2e075559f7a14"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Extra_Joint_roughness_5.webp"
-dest_files=["res://.godot/imported/Extra_Joint_roughness_5.webp-37c8e12058d3762a9ef62ff1bf2570c8.ctex"]
+dest_files=["res://.godot/imported/Extra_Joint_roughness_5.webp-37c8e12058d3762a9ef62ff1bf2570c8.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

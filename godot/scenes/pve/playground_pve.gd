@@ -48,6 +48,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F10:
 				FxPreset.cycle(get_tree())
 				hud.announcer.announce(FxPreset.label(), Color(0.9, 0.9, 0.95), "")
+			KEY_M:
+				hud.announcer.announce(get_node("/root/GameAudio").toggle_music(), Color(0.9, 0.9, 0.95), "")
+			KEY_N:
+				hud.announcer.announce(get_node("/root/GameAudio").toggle_crowd(), Color(0.9, 0.9, 0.95), "")
 			KEY_ESCAPE:
 				preload("res://scenes/menu/test_menu.gd").back_to_menu(get_tree())   # тестовое меню сборки (или выход)
 			_:

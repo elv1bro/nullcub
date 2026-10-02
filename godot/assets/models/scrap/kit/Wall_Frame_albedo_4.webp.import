@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgpltphiecrpj"
-path="res://.godot/imported/Wall_Frame_albedo_4.webp-e7b1e4b5164903c72e553ff5f7538f23.ctex"
+path.s3tc="res://.godot/imported/Wall_Frame_albedo_4.webp-e7b1e4b5164903c72e553ff5f7538f23.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "912b2105ef80f2edce089f111963f326"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/kit/Wall_Frame_albedo_4.webp"
-dest_files=["res://.godot/imported/Wall_Frame_albedo_4.webp-e7b1e4b5164903c72e553ff5f7538f23.ctex"]
+dest_files=["res://.godot/imported/Wall_Frame_albedo_4.webp-e7b1e4b5164903c72e553ff5f7538f23.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

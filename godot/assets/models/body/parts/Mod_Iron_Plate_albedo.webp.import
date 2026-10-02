@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://coqlaw4376yu0"
-path="res://.godot/imported/Mod_Iron_Plate_albedo.webp-05817f8b9b6068532e63c59f6abd9bb4.ctex"
+path.s3tc="res://.godot/imported/Mod_Iron_Plate_albedo.webp-05817f8b9b6068532e63c59f6abd9bb4.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "c1014d2bd2f5938b6101fec4e785b4a1"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Mod_Iron_Plate_albedo.webp"
-dest_files=["res://.godot/imported/Mod_Iron_Plate_albedo.webp-05817f8b9b6068532e63c59f6abd9bb4.ctex"]
+dest_files=["res://.godot/imported/Mod_Iron_Plate_albedo.webp-05817f8b9b6068532e63c59f6abd9bb4.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

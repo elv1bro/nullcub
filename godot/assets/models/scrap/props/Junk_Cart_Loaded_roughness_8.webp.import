@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bptlbtvqgwm8f"
-path="res://.godot/imported/Junk_Cart_Loaded_roughness_8.webp-427e362ec12d997f1cbb33fd00186f30.ctex"
+path.s3tc="res://.godot/imported/Junk_Cart_Loaded_roughness_8.webp-427e362ec12d997f1cbb33fd00186f30.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "bfe144c21d65ff84804c4dfad88a7255"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Junk_Cart_Loaded_roughness_8.webp"
-dest_files=["res://.godot/imported/Junk_Cart_Loaded_roughness_8.webp-427e362ec12d997f1cbb33fd00186f30.ctex"]
+dest_files=["res://.godot/imported/Junk_Cart_Loaded_roughness_8.webp-427e362ec12d997f1cbb33fd00186f30.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

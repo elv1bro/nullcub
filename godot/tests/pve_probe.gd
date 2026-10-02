@@ -48,6 +48,7 @@ const PERF_WARM_S := 2.0
 const SHOT_DIR := "res://../docs/plan-demo/img/"
 
 const TRIALED := ["sweep", "sweep_lane", "steal_weapon", "steal_part", "clear_wave1", "run", "aggro"]
+const BOOST_START_CHARGE := 90.0         # бот-игрок: ускорение с такого Заряда (почти полный бак), как прежний рывок раз в 10 с
 const AGGRO_S := 30.0                   # aggro: сколько секунд волна 3 дерётся с ботом
 const AGGRO_FIRST_ATTACK_S := 3.0
 const AGGRO_ATTACKS_PER_MIN := 12.0
@@ -211,7 +212,7 @@ func _give_hammer(d: Doll, hand := "Hand_R") -> Weapon:
 	return h
 
 
-## Бот-игрок: наскок как tests/match_probe.gd (разбег → отход RETREAT_S → разбег, рывок с ≥ 2.5 м, если есть request_dash).
+## Бот-игрок: наскок как tests/match_probe.gd (разбег → отход RETREAT_S → разбег, ускорение с ≥ 2.5 м за Заряд, если есть request_dash).
 func _bot_rush(d: Doll, target: Doll) -> void:
 	if d == null or not d.alive:
 		return
@@ -231,8 +232,14 @@ func _bot_rush(d: Doll, target: Doll) -> void:
 		st["retreat_until"] = t + 0.9
 		d.input_vec = Vector2(-sgn, 0.3)
 	else:
-		if Vector2(dx, dy).length() > 2.5 and d.has_method("request_dash") and float(d.get("_time")) >= d.dash_ready_at:
+		# ускорение за Заряд (COMBAT_CHARGE.md): держит Shift на разбеге; начинает с почти полного бака (BOOST_START_CHARGE) и отпускает
+		# у 5 — примерно как прежний рывок «2 с раз в 10 с», чтобы замеры ИИ врагов остались сравнимы с прошлыми (aggro_first_attack)
+		var holding := bool(st.get("boost", false))
+		if Vector2(dx, dy).length() > 2.5 and d.has_method("request_dash") and (float(d.get("charge")) >= BOOST_START_CHARGE or (holding and float(d.get("charge")) > 5.0)):
+			st["boost"] = true
 			d.call("request_dash")
+		else:
+			st["boost"] = false
 		d.input_vec = Vector2(sgn, vy)
 	_bot[d] = st
 

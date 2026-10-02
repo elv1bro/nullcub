@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bp008kao73wew"
-path="res://.godot/imported/Metal_Barrel_Dented_albedo.webp-0a854522c080c2a0d132203e58fd0b46.ctex"
+path.s3tc="res://.godot/imported/Metal_Barrel_Dented_albedo.webp-0a854522c080c2a0d132203e58fd0b46.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "9c42b57b6881bec5612cf517a130058f"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Metal_Barrel_Dented_albedo.webp"
-dest_files=["res://.godot/imported/Metal_Barrel_Dented_albedo.webp-0a854522c080c2a0d132203e58fd0b46.ctex"]
+dest_files=["res://.godot/imported/Metal_Barrel_Dented_albedo.webp-0a854522c080c2a0d132203e58fd0b46.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

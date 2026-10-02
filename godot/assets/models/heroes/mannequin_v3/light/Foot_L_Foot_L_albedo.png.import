@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ds5jyvs1n1ipk"
-path="res://.godot/imported/Foot_L_Foot_L_albedo.png-d3b19bb7e0e2f398acd526c9899b2579.ctex"
+path.s3tc="res://.godot/imported/Foot_L_Foot_L_albedo.png-d3b19bb7e0e2f398acd526c9899b2579.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "973b733178b682767c4a5f80d010e7a0"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/light/Foot_L_Foot_L_albedo.png"
-dest_files=["res://.godot/imported/Foot_L_Foot_L_albedo.png-d3b19bb7e0e2f398acd526c9899b2579.ctex"]
+dest_files=["res://.godot/imported/Foot_L_Foot_L_albedo.png-d3b19bb7e0e2f398acd526c9899b2579.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

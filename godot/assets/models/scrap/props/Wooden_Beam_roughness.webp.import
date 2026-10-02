@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://brrggpalmk7pj"
-path="res://.godot/imported/Wooden_Beam_roughness.webp-d5ddf2cd779d9bb90cd414769cb4c55c.ctex"
+path.s3tc="res://.godot/imported/Wooden_Beam_roughness.webp-d5ddf2cd779d9bb90cd414769cb4c55c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "55b954ecb33c086d8b12ef9be5c93344"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Wooden_Beam_roughness.webp"
-dest_files=["res://.godot/imported/Wooden_Beam_roughness.webp-d5ddf2cd779d9bb90cd414769cb4c55c.ctex"]
+dest_files=["res://.godot/imported/Wooden_Beam_roughness.webp-d5ddf2cd779d9bb90cd414769cb4c55c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

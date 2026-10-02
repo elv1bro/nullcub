@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cjegmgajln7c0"
-path="res://.godot/imported/Blade_Axe_metallic-roughness.webp-b8b8e588093ac10aa23f66595fb88a1c.ctex"
+path.s3tc="res://.godot/imported/Blade_Axe_metallic-roughness.webp-b8b8e588093ac10aa23f66595fb88a1c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "fe4c5da4a32f7dc2b6a376a5787c21ab"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Blade_Axe_metallic-roughness.webp"
-dest_files=["res://.godot/imported/Blade_Axe_metallic-roughness.webp-b8b8e588093ac10aa23f66595fb88a1c.ctex"]
+dest_files=["res://.godot/imported/Blade_Axe_metallic-roughness.webp-b8b8e588093ac10aa23f66595fb88a1c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

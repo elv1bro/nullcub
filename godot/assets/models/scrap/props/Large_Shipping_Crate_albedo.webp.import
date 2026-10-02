@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dp2epegw8i4vm"
-path="res://.godot/imported/Large_Shipping_Crate_albedo.webp-a8aec63c07a8b2fe91a00eb021bfa434.ctex"
+path.s3tc="res://.godot/imported/Large_Shipping_Crate_albedo.webp-a8aec63c07a8b2fe91a00eb021bfa434.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "8ea57410caff29de17a4ac77873e163d"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Large_Shipping_Crate_albedo.webp"
-dest_files=["res://.godot/imported/Large_Shipping_Crate_albedo.webp-a8aec63c07a8b2fe91a00eb021bfa434.ctex"]
+dest_files=["res://.godot/imported/Large_Shipping_Crate_albedo.webp-a8aec63c07a8b2fe91a00eb021bfa434.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

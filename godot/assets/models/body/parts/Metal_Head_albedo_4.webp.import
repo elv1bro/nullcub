@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://djxi6i82bq1qj"
-path="res://.godot/imported/Metal_Head_albedo_4.webp-cec8c603c365f708e55dd6f119def254.ctex"
+path.s3tc="res://.godot/imported/Metal_Head_albedo_4.webp-cec8c603c365f708e55dd6f119def254.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "ac314a34e92e4c0cd63dcaf6231a44b3"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Metal_Head_albedo_4.webp"
-dest_files=["res://.godot/imported/Metal_Head_albedo_4.webp-cec8c603c365f708e55dd6f119def254.ctex"]
+dest_files=["res://.godot/imported/Metal_Head_albedo_4.webp-cec8c603c365f708e55dd6f119def254.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

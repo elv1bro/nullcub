@@ -222,6 +222,7 @@ func _reset_weapons() -> void:
 		if ww.is_held():
 			ww.drop()
 		ww.global_transform = _weapon_home[w]
+		ww.reset_physics_interpolation()   # оружие вернулось домой — телепорт
 		ww.linear_velocity = Vector3.ZERO
 		ww.angular_velocity = Vector3.ZERO
 

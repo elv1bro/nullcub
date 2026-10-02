@@ -23,7 +23,7 @@ const ITEMS := [
 ]
 const CONTROLS := """P1 — WASD летать · Shift рывок · Space переворот · мышь: ЛКМ / ПКМ — тяги рук · I / O / P — активные блоки
 P2 — стрелки · правый Ctrl рывок · Enter переворот · Num 1 / 2 / 3 — активные блоки
-Esc — назад в это меню · R — бой заново · 1–9 — сменить площадку · F10 — эффекты ударов full / reduced / off
+Esc — назад в это меню · R — бой заново · 1–9 — сменить площадку · F10 — эффекты ударов full / reduced / off · F9 — качество графики
 L — панель всех клавиш · = стиль удара · 0 замедление · − цифры урона · B обводка · колесо мыши — масштаб камеры"""
 
 
@@ -44,6 +44,18 @@ func _ready() -> void:
 		b.focus_entered.connect(func() -> void: %Hint.text = String(it[2]))
 		b.mouse_entered.connect(func() -> void: %Hint.text = String(it[2]))
 		list.add_child(b)
+	var gfx := Button.new()   # качество графики (Gfx): low / medium / high / ultra, F9 — то же в любой сцене
+	gfx.custom_minimum_size = Vector2(0, 48)
+	gfx.add_theme_font_size_override("font_size", 22)
+	gfx.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	gfx.tooltip_text = "Бюджет пикселей 3D, глубина резкости, свечение, мягкость теней. F9 — то же в любой сцене"
+	var gfx_text := func() -> void:
+		gfx.text = "Качество графики: %s   ▸" % Gfx.label().trim_prefix("Графика: ")
+	gfx.pressed.connect(func() -> void:
+		Gfx.cycle()
+		gfx_text.call())
+	gfx_text.call()
+	list.add_child(gfx)
 	var quit := Button.new()
 	quit.text = "Выход"
 	quit.custom_minimum_size = Vector2(0, 48)

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://kqrpgse85jgm"
-path="res://.godot/imported/Post_roughness_5.webp-5b25aad06023f3c15ab81cc2ff8ad9c6.ctex"
+path.s3tc="res://.godot/imported/Post_roughness_5.webp-5b25aad06023f3c15ab81cc2ff8ad9c6.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "761bab3ad231eafb6254c9ea9fe8b521"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Post_roughness_5.webp"
-dest_files=["res://.godot/imported/Post_roughness_5.webp-5b25aad06023f3c15ab81cc2ff8ad9c6.ctex"]
+dest_files=["res://.godot/imported/Post_roughness_5.webp-5b25aad06023f3c15ab81cc2ff8ad9c6.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

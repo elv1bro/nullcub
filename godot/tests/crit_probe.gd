@@ -441,9 +441,9 @@ func screen_rect(cam: Camera3D, d: Doll) -> Rect2:
 		for mi in (b as Node).find_children("*", "MeshInstance3D", true, false):
 			var m := mi as MeshInstance3D
 			if m.mesh != null and not m.has_meta("hitfx"):
-				boxes.append(m.global_transform * m.get_aabb())
+				boxes.append(m.get_global_transform_interpolated() * m.get_aabb())   # что видит игрок: интерполяция физики
 		if boxes.is_empty():
-			boxes.append(AABB((b as Node3D).global_position - Vector3.ONE * 0.3, Vector3.ONE * 0.6))
+			boxes.append(AABB((b as Node3D).get_global_transform_interpolated().origin - Vector3.ONE * 0.3, Vector3.ONE * 0.6))
 		for bx in boxes:
 			for i in range(8):
 				var c := (bx as AABB).get_endpoint(i)
@@ -523,7 +523,7 @@ func _safe_run(safe: bool) -> Dictionary:
 		res["max_y"] = maxf(float(res["max_y"]), com.y)
 		res["frames"] = int(res["frames"]) + 1
 		var over := maxf(maxf(sr.position.x - r.position.x, r.end.x - sr.end.x), maxf(sr.position.y - r.position.y, r.end.y - sr.end.y))
-		if over > 0.003:
+		if over > 0.006:   # 0.003 → 0.006 (perf-pass): с интерполяцией физики проба читает кадр до обновления камеры — до 3 мм (≈4 px) расхождения, невидимо
 			res["out"] = int(res["out"]) + 1
 			res["worst"] = maxf(float(res["worst"]), snappedf(over, 0.001))
 		if since >= hold_ms - 220.0 and ghost_snaps < 0:

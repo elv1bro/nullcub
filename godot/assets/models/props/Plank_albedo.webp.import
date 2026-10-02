@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://hgi5hh6ae505"
-path="res://.godot/imported/Plank_albedo.webp-75e7c88c73ac350a051c95835313174c.ctex"
+path.s3tc="res://.godot/imported/Plank_albedo.webp-75e7c88c73ac350a051c95835313174c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "665508357eb243f0732791ff5e50b130"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Plank_albedo.webp"
-dest_files=["res://.godot/imported/Plank_albedo.webp-75e7c88c73ac350a051c95835313174c.ctex"]
+dest_files=["res://.godot/imported/Plank_albedo.webp-75e7c88c73ac350a051c95835313174c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

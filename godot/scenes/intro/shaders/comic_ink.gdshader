@@ -6,7 +6,9 @@ shader_type spatial;
 render_mode unshaded, fog_disabled, depth_draw_never, depth_test_disabled, cull_disabled, shadows_disabled, blend_mix;
 
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest;
+#if CURRENT_RENDERER == RENDERER_FORWARD_PLUS
 uniform sampler2D normal_tex : hint_normal_roughness_texture, filter_nearest;
+#endif
 
 uniform float strength : hint_range(0.0, 1.0) = 0.85;
 uniform float line_px : hint_range(0.5, 4.0) = 1.4;
@@ -27,9 +29,11 @@ float lin_depth(vec2 uv, mat4 inv_proj) {
 	return -v.z / v.w;
 }
 
+#if CURRENT_RENDERER == RENDERER_FORWARD_PLUS
 vec3 nrm(vec2 uv) {
 	return normalize(texture(normal_tex, uv).xyz * 2.0 - 1.0);
 }
+#endif
 
 void fragment() {
 	vec2 px = line_px / VIEWPORT_SIZE;
@@ -44,11 +48,15 @@ void fragment() {
 	float dmax = max(max(dl, dr), max(du, dd));
 	float rel = (dmax - d0) / max(d0, 0.05);
 	float e_depth = smoothstep(depth_rel, depth_rel * 2.5, rel);
-	// грани: разрыв нормалей
+	// грани: разрыв нормалей (в Mobile буфера нормалей нет — только силуэты по глубине; заставка в архиве)
+#if CURRENT_RENDERER == RENDERER_FORWARD_PLUS
 	vec3 n0 = nrm(uv);
 	float nd = min(min(dot(n0, nrm(uv - vec2(px.x, 0.0))), dot(n0, nrm(uv + vec2(px.x, 0.0)))),
 			min(dot(n0, nrm(uv - vec2(0.0, px.y))), dot(n0, nrm(uv + vec2(0.0, px.y)))));
 	float e_norm = smoothstep(1.0 - normal_min, 1.0 - normal_min * 2.2, nd) * normal_weight;
+#else
+	float e_norm = 0.0;
+#endif
 	// сила по глубине: ближние линии полные, к far_zero гаснут
 	float fade = 1.0 - smoothstep(near_full, far_zero, d0);
 	float e = max(e_depth, e_norm) * fade * strength;

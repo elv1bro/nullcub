@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dp34w77dx0c6w"
-path="res://.godot/imported/UpperLeg_L_UpperLeg_L_albedo.png-9d4ae2ce713577c7f2fa5d21b4452556.ctex"
+path.s3tc="res://.godot/imported/UpperLeg_L_UpperLeg_L_albedo.png-9d4ae2ce713577c7f2fa5d21b4452556.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "ca5c93a8d8bb976ee97a416e82ff401e"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/light/UpperLeg_L_UpperLeg_L_albedo.png"
-dest_files=["res://.godot/imported/UpperLeg_L_UpperLeg_L_albedo.png-9d4ae2ce713577c7f2fa5d21b4452556.ctex"]
+dest_files=["res://.godot/imported/UpperLeg_L_UpperLeg_L_albedo.png-9d4ae2ce713577c7f2fa5d21b4452556.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

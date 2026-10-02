@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://jajq4oojqcq8"
-path="res://.godot/imported/Hand_R_Hand_R_roughness.png-6fc2b95e45f64bcb31ba63dca537ea7b.ctex"
+path.s3tc="res://.godot/imported/Hand_R_Hand_R_roughness.png-6fc2b95e45f64bcb31ba63dca537ea7b.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "767af2c9eb48de5a5fe15cc84e6108e4"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/light/Hand_R_Hand_R_roughness.png"
-dest_files=["res://.godot/imported/Hand_R_Hand_R_roughness.png-6fc2b95e45f64bcb31ba63dca537ea7b.ctex"]
+dest_files=["res://.godot/imported/Hand_R_Hand_R_roughness.png-6fc2b95e45f64bcb31ba63dca537ea7b.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dfd658ji6p32b"
-path="res://.godot/imported/Doll_Torso_Shell_metallic.png-roughness.webp-9c192c7a75e92d88ea9ce8b2183d3e68.ctex"
+path.s3tc="res://.godot/imported/Doll_Torso_Shell_metallic.png-roughness.webp-9c192c7a75e92d88ea9ce8b2183d3e68.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "214ab0b39cb9639b24b7fc58e9b97050"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Doll_Torso_Shell_metallic.png-roughness.webp"
-dest_files=["res://.godot/imported/Doll_Torso_Shell_metallic.png-roughness.webp-9c192c7a75e92d88ea9ce8b2183d3e68.ctex"]
+dest_files=["res://.godot/imported/Doll_Torso_Shell_metallic.png-roughness.webp-9c192c7a75e92d88ea9ce8b2183d3e68.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

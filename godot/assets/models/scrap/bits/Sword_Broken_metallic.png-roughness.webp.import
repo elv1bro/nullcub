@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnrqx72tvnph0"
-path="res://.godot/imported/Sword_Broken_metallic.png-roughness.webp-2ce0cc50cc2b61a160ddf74e8b1382bd.ctex"
+path.s3tc="res://.godot/imported/Sword_Broken_metallic.png-roughness.webp-2ce0cc50cc2b61a160ddf74e8b1382bd.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "0970c1b984c3d9490c29f6fa4f7997b5"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Sword_Broken_metallic.png-roughness.webp"
-dest_files=["res://.godot/imported/Sword_Broken_metallic.png-roughness.webp-2ce0cc50cc2b61a160ddf74e8b1382bd.ctex"]
+dest_files=["res://.godot/imported/Sword_Broken_metallic.png-roughness.webp-2ce0cc50cc2b61a160ddf74e8b1382bd.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
