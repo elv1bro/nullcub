@@ -26,6 +26,7 @@
 godot --headless --path godot --import          # импорт и проверка скриптов
 godot/tests/run_gate.sh                         # гейт куклы: doll_gate (9 проверок) + feel_probe strict=1 (99 целей / 73 проверки, FEEL_TARGET §7 и §9–9.3), отчёты tests/doll_gate_report.json, tests/feel_probe_report.json
 gtimeout 3000 /usr/bin/arch -arm64 /bin/bash godot/tests/run_gate.sh   # то же из-под x86_64-обёртки gtimeout: arch -arm64 обязателен (иначе Godot идёт через Rosetta); так же run_combat_gate.sh и `gtimeout N /usr/bin/arch -arm64 /usr/local/bin/godot …` для любой сцены ниже
+godot/tools/godot_nofocus.sh --path godot --resolution 1280x720 res://tests/hud_snapshot.tscn   # любая ОКОННАЯ проба ниже без кражи фокуса (macOS): окно рисуется, но приложение не активируется (DYLD-вставка tools/nofocus/nofocus.m, бинарь Godot не трогается); --always-on-top не нужен; окно не уводить за экран (--position) — macOS троттлит, FPS вдвое ниже, для perf_probe это ломает замер. Замер 02.10: обычный запуск держит передний план ~15% кадров пробы, через обёртку 0%; hud_snapshot/hitfx_snapshot (--fixed-fps 60)/perf_probe проходят exit 0. Все пробы с --headless обёртка не требуют
 godot --path godot --resolution 1280x720 res://tests/doll_snapshot.tscn      # манекен спереди + в полёте
 godot --path godot --resolution 1280x720 res://tests/arena_snapshot.tscn     # арена целиком, полёт, крупный план
 godot --path godot --resolution 1280x720 res://tests/weapons_snapshot.tscn   # оружие в ряд + молот в руке
