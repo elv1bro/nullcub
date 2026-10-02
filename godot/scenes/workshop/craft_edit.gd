@@ -107,6 +107,40 @@ static var _scene_names: Dictionary = {}   # путь сцены детали ->
 
 # ------------------------------------------------------------------ детали
 
+static var _preload_paths: PackedStringArray = []
+
+
+## Файлы деталей полок (все .tres из data/body/parts, кроме SHELF_HIDDEN_PREFIXES).
+static func _part_files() -> PackedStringArray:
+	var out: PackedStringArray = []
+	var dir := DirAccess.open(PARTS_DIR)
+	if dir == null:
+		return out
+	for f in dir.get_files():
+		var fn := f.trim_suffix(".remap")
+		if fn.ends_with(".tres") and not SHELF_HIDDEN_PREFIXES.any(func(p: String) -> bool: return fn.begins_with(p)):
+			out.append(PARTS_DIR + fn)
+	return out
+
+
+## Фоновая загрузка всех PartDef полок (потоки движка). Первый all_parts() читал 157 файлов синхронно (с их сценами и мешами) — ≈ 540 мс одним кадром
+## при постановке мастерской в мир (гараж, титул замирал на секунду); после предзагрузки load() берёт готовые ресурсы.
+static func preload_parts_threaded() -> void:
+	if not _parts_cache.is_empty() or not _preload_paths.is_empty():
+		return
+	_preload_paths = _part_files()
+	for path in _preload_paths:
+		ResourceLoader.load_threaded_request(path, "", false)   # без под-потоков: 157 запросов с под-потоками разом упирались в пул потоков и не завершались
+
+
+## Предзагрузка закончилась (или не запускалась / кэш уже собран): all_parts() не будет ждать диск.
+static func parts_preloaded() -> bool:
+	for path in _preload_paths:
+		if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return false
+	return true
+
+
 ## Все PartDef полок из data/body/parts (кроме SHELF_HIDDEN_PREFIXES), по порядку KIND_ORDER, внутри — по энергии и массе.
 static func all_parts() -> Array[PartDef]:
 	if not _parts_cache.is_empty():

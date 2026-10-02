@@ -1052,6 +1052,7 @@ func _build_shelf() -> void:
 	for c in tools_box.get_children():
 		c.queue_free()
 	_cards.clear()
+	_card_queue.clear()
 	_tool_cards.clear()
 	var weapon := ctl.view == WorkshopBuild.View.WEAPON
 	var cat := _cat()
@@ -1135,18 +1136,7 @@ func _build_shelf() -> void:
 		grid.add_theme_constant_override("v_separation", 10)
 		shelf.add_child(grid)
 		for d in list:
-			var card := PartCard.new()
-			card.setup(d, not weapon, favorites.has((d as PartDef).id))
-			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			card.grabbed.connect(_on_card_grabbed)
-			card.picked.connect(_on_card_picked)
-			card.favorite_toggled.connect(_on_favorite)
-			card.hovered.connect(_on_card_hover)
-			grid.add_child(card)
-			_cards[d.id] = card
-			var tex := icons.request(d.id)
-			if tex != null:
-				card.set_icon(tex)
+			_card_queue.append([grid, d, weapon])
 			total += 1
 	if total == 0 and not (_tool != "" and query == ""):
 		var l := Label.new()
@@ -1155,7 +1145,8 @@ func _build_shelf() -> void:
 		l.text = tr("Ничего не нашлось") if query != "" else (tr("Под фильтр ничего не подходит") if _filters_active() else tr("Пусто"))
 		shelf.add_child(l)
 	shelf_scroll.scroll_vertical = 0
-	_update_card_state()
+	# карточки (≈ 150 штук по ~20 узлов) строятся порциями: первый экран — сразу, остальное по кадрам (pump_cards); в headless (пробы) — сразу все
+	pump_cards(INF, FIRST_CARDS if _slice_cards else 1 << 30)   # состояние карточек обновляет сама pump_cards
 	_update_tool_cards()
 
 
@@ -1326,13 +1317,65 @@ func _on_card_hover(part_id: String, on: bool) -> void:
 		_live_card = ""
 
 
-func _update_card_state() -> void:
+## Построение карточек порциями. Всё сразу стоило ≈ 90–100 мс одним кадром (150 карточек, 3000 узлов), а их первая раскладка при показе — ещё 150–300 мс
+## (вход в мастерскую в гараже). Очередь _card_queue: [сетка, PartDef, оружие?]; первые FIRST_CARDS — синхронно, дальше pump_cards(бюджет мс)
+## из _process панели (в гараже, пока мастерская спит, — из GarageWorkshop._process). Закончили — состояние карточек (цена / влезает / выбрана) обновляется разом.
+const FIRST_CARDS := 12
+const CARD_BUDGET_MS := 4.0
+var _card_queue: Array = []
+var _slice_cards := DisplayServer.get_name() != "headless"
+
+
+## Достроить карточки в пределах budget_ms (всегда хотя бы одну) и не больше max_n; true — очередь ещё не пуста.
+func pump_cards(budget_ms: float, max_n: int = 1 << 30) -> bool:
+	var t0 := Time.get_ticks_usec()
+	var built: Array = []
+	var n := 0
+	while not _card_queue.is_empty() and n < max_n:
+		if n > 0 and float(Time.get_ticks_usec() - t0) / 1000.0 >= budget_ms:
+			break
+		var e: Array = _card_queue.pop_front()
+		var grid: GridContainer = e[0]
+		if not is_instance_valid(grid):
+			continue
+		var d: PartDef = e[1]
+		var weapon: bool = e[2]
+		var card := PartCard.new()
+		card.setup(d, not weapon, favorites.has(d.id))
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.grabbed.connect(_on_card_grabbed)
+		card.picked.connect(_on_card_picked)
+		card.favorite_toggled.connect(_on_favorite)
+		card.hovered.connect(_on_card_hover)
+		grid.add_child(card)
+		_cards[d.id] = card
+		var tex := icons.request(d.id)
+		if tex != null:
+			card.set_icon(tex)
+		built.append(d.id)
+		n += 1
+	if not built.is_empty() and ctl != null:
+		_update_card_state(built)
+	return not _card_queue.is_empty()
+
+
+## Остались ли неготовые карточки библиотеки.
+func cards_pending() -> bool:
+	return not _card_queue.is_empty()
+
+
+## Достроить все карточки сейчас (пробы, кадры).
+func flush_cards() -> void:
+	pump_cards(INF)
+
+
+func _update_card_state(only: Array = []) -> void:
 	if ctl == null:
 		return
 	var free_e := ctl.energy_free()
 	var weapon := ctl.view == WorkshopBuild.View.WEAPON
 	var sel := String(ctl.selected.get("part", "")) if String(ctl.selected.get("source", "")) == "shelf" else ""
-	for id in _cards:
+	for id in (only if not only.is_empty() else _cards.keys()):
 		# цена у ближайшего свободного подходящего разъёма (дальше от ядра дороже): на карточке — она, не базовая
 		var cost := ctl.cheapest_cost(String(id)) if not weapon else -2
 		if cost >= -1:
@@ -2021,6 +2064,8 @@ func show_toast(text: String, colour: Color) -> void:
 func _process(delta: float) -> void:
 	if ctl == null:
 		return
+	if not _card_queue.is_empty():
+		pump_cards(CARD_BUDGET_MS)
 	_hint_t += delta
 	if _hint_t > 0.1:
 		_hint_t = 0.0
@@ -2116,8 +2161,11 @@ func _on_mode(m: int) -> void:
 		_last_hit = ""
 		# скорость удара, блок кистью и слабые касания (TrainingFeel — WORKSHOP_V3.md §5)
 		if ctl.feel != null:
-			ctl.feel.hit_fx.connect(_on_feel_hit)
-			ctl.feel.weak_contact.connect(_on_weak_contact)
+			# TrainingFeel живёт между испытаниями (reset_for_test): повторное подключение — ошибка движка «already connected»
+			if not ctl.feel.hit_fx.is_connected(_on_feel_hit):
+				ctl.feel.hit_fx.connect(_on_feel_hit)
+			if not ctl.feel.weak_contact.is_connected(_on_weak_contact):
+				ctl.feel.weak_contact.connect(_on_weak_contact)
 		help_line.position = Vector2(0, root.size.y - 44.0)
 		help_line.size = Vector2(root.size.x, 28.0)
 	else:

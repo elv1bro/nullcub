@@ -39,16 +39,20 @@ func preload_scene() -> void:
 	if ResourceLoader.load_threaded_request(SCENE, "", true) == OK:
 		loading = true
 		_t_load = Time.get_ticks_msec()
+		CraftEdit.preload_parts_threaded()   # детали полок — туда же, в потоки: иначе их 157 файлов читаются в кадре постановки (≈ 540 мс)
 
 
 func _process(_delta: float) -> void:
+	# мастерская спит (process_mode = DISABLED) и её панель сама карточки не достроит — доделываем библиотеку по кадрам, пока игрок в меню
+	if ws != null and not is_open() and ws.ui != null and ws.ui.has_method("pump_cards"):
+		ws.ui.call("pump_cards", 3.0)
 	if not loading:
 		return
 	var st := ResourceLoader.load_threaded_get_status(SCENE)
 	if st == ResourceLoader.THREAD_LOAD_LOADED:
 		load_ms = Time.get_ticks_msec() - _t_load
 		# ставим, когда камера стоит (титул / пункт меню): подвисание кадра при сборке мастерской не видно на переезде
-		if not bool(garage.call("is_moving")):
+		if not bool(garage.call("is_moving")) and CraftEdit.parts_preloaded():
 			_instantiate()
 	elif st == ResourceLoader.THREAD_LOAD_FAILED or st == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 		loading = false

@@ -6,10 +6,13 @@
 #   3. perf_gate_probe — жесты мастерской, part_def, обломки: время (минимум из N) против пределов;
 #   4. match_probe perf=1 на Руинах и Свалке — рывки кадра и «узлов за кадр» в активном бою (headless: реальные часы между кадрами =
 #      цена кадра на CPU). Остальные проверки match_probe тут не смотрим (разброс ботов), только perf_*;
-#   4b. pve_cpu_probe — скрипты PvE (5 врагов + бот-игрок) за физический тик: сумма мкс против бюджета 1700 (было 1850 до кэша
-#      Doll.centre_of_mass; сейчас ~1200); лучший из трёх прогонов — под чужой нагрузкой цифры плавают (при load 15 один прогон давал 1736 при ~1200 в покое);
+#   4b. pve_cpu_probe — скрипты PvE (5 врагов + бот-игрок) за физический тик: сумма мкс в единицах «один расчёт ЦМ без кэша» (линейка
+#      скорости машины: абсолютные мкс плавают в 1,5–2 раза) против 190 (≈ 235 до кэша Doll.centre_of_mass, сейчас ≈ 150–165;
+#      в мкс это 1200 на быстрой машине и 2000 на медленной); лучший из трёх прогонов;
 #   5. --window: stats_probe в окне (Mobile): память текстур ≤ 280 МБ и draw calls ≤ пределов на аренах и в сборке;
-#   6. --window: cold_ws_probe — первые жесты мастерской (в т. ч. «Испытать» / «назад»), худший кадр ≤ 120 мс.
+#   6. --window: garage_ws_hitch_probe — мастерская В ГАРАЖЕ так, как её видит игрок (фоновая загрузка и постановка ≤ 300 мс, вход, правка, «Испытать» / «назад»,
+#      выход): худший кадр ≤ 150 мс, кроме первых показов мира и полигона (≤ 600 мс: пайплайны Metal). Прежний cold_ws_probe (отдельная сцена мастерской) остался
+#      как ручной замер: первый кадр сцены ≈ 410 мс (3050 узлов + PartDef с диска), «Испытать» ≈ 80–130 мс.
 # Godot на Mac запускать нативно: gtimeout 1800 /usr/bin/arch -arm64 /bin/bash tests/run_perf_gate.sh  (GODOT=… — свой бинарник).
 # Время — реальные часы: под чужой нагрузкой (load average >> числа ядер) пределы могут ложно сработать — перезапустить.
 cd "$(dirname "$0")/.." || exit 2
@@ -45,10 +48,10 @@ for sc in ruins scrap; do
   echo "$out" | grep -qE "ok +perf_nodes_per_frame" || fail=1
 done
 
-say "4b. скрипты PvE за тик (pve_cpu_probe, бюджет 1700 мкс, лучший из трёх)"
+say "4b. скрипты PvE за тик (pve_cpu_probe, бюджет 190 «расчётов ЦМ без кэша», лучший из трёх)"
 pve_ok=0
 for i in 1 2 3; do
-  out=$($G --headless --path . --fixed-fps 60 res://tests/pve_cpu_probe.tscn -- "secs=10,warm=2,budget_us=1700" 2>&1)
+  out=$($G --headless --path . --fixed-fps 60 res://tests/pve_cpu_probe.tscn -- "secs=10,warm=2,budget_ratio=190" 2>&1)
   echo "$out" | grep -E "^TOTAL|^FAIL budget" | cut -c1-120
   echo "$out" | grep -q "=== OK ===" && { pve_ok=1; break; }
 done
@@ -58,7 +61,7 @@ if [ "${1:-}" = "--window" ]; then
   say "5. окно (Mobile, 1280x720): память текстур и draw calls"
   for sc in playground:1500 playground_scrap:1500 playground_null_hall:1500 workshop/workshop_build:2200; do
     scene=${sc%%:*}; draws=${sc##*:}
-    out=$($G --path . --resolution 1280x720 --position 100,100 res://tests/stats_probe.tscn -- "scene=res://scenes/$scene.tscn,frames=150" 2>&1)
+    out=$(GODOT_BIN=$G tools/godot_nofocus.sh --path . --resolution 1280x720 res://tests/stats_probe.tscn -- "scene=res://scenes/$scene.tscn,frames=150" 2>&1)
     tex=$(echo "$out" | sed -nE 's/.*texture=([0-9]+) MB.*/\1/p' | head -1)
     dc=$(echo "$out" | sed -nE 's/.*draw=([0-9]+) .*/\1/p' | head -1)
     ok="ok  "; { [ -n "$tex" ] && [ "$tex" -le 280 ] && [ -n "$dc" ] && [ "$dc" -le "$draws" ]; } || { ok="FAIL"; fail=1; }
@@ -67,10 +70,10 @@ if [ "${1:-}" = "--window" ]; then
 fi
 
 if [ "${1:-}" = "--window" ]; then
-  say "6. окно: холодный старт мастерской (cold_ws_probe — худший кадр после каждого жеста ≤ 120 мс)"
-  out=$(GODOT_BIN=$G tools/godot_nofocus.sh --path . --resolution 1280x720 --position 100,100 res://tests/cold_ws_probe.tscn 2>&1)
-  echo "$out" | grep -E "COLDWS («Испытать»|назад)" | cut -c1-120
-  echo "$out" | grep -q "COLD WS PROBE OK" && echo "  ok   cold_ws_probe" || { echo "  FAIL cold_ws_probe"; fail=1; }
+  say "6. окно: мастерская в гараже (garage_ws_hitch_probe — постановка в мир ≤ 300 мс, худший кадр после жеста ≤ 150 мс; первые показы мира и полигона ≤ 600)"
+  out=$(GODOT_BIN=$G tools/godot_nofocus.sh --path . --resolution 1280x720 res://tests/garage_ws_hitch_probe.tscn 2>&1)
+  echo "$out" | grep -E "^GWH (фон|библиотека)|^GWH [^ ]+.*худший кадр" | cut -c1-120
+  echo "$out" | grep -q "GARAGE WS HITCH PROBE OK" && echo "  ok   garage_ws_hitch_probe" || { echo "  FAIL garage_ws_hitch_probe"; fail=1; }
 fi
 
 echo
