@@ -70,8 +70,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_preset = (_preset + 1) % FIELD_PRESETS.size()
 		var p: Array = FIELD_PRESETS[_preset]
 		set_field(float(p[0]), p[1])
-	if debug_keys and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_L:
-		call_champion()
+	if debug_keys and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_K:
+		call_champion()   # K (был L — автор 02.10 отдал L под панель клавиш HitJuice)
 
 
 var _champion: Doll

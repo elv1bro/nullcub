@@ -550,7 +550,11 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 			var fx_nrm := nrm
 			if fx_nrm.dot(away) < 0.0:
 				fx_nrm = -fx_nrm
-			ImpactFx.spawn_impact(parent, pos, fx_nrm, FX_STRENGTH_BASE + dmg_eff * FX_STRENGTH_PER_HP, kind)
+			# обломки — по материалу ударенной детали (HIT_FX.md §13): щепки / хлопья краски / искры / сколы кости
+			var mat := FxMaterial.id_of(doll, vp)
+			var s_doll: Node = attacker if attacker != null else null
+			ImpactFx.spawn_impact(parent, pos, fx_nrm, FX_STRENGTH_BASE + dmg_eff * FX_STRENGTH_PER_HP, kind, mat,
+				FxMaterial.tint_of(mat, doll), FxMaterial.striker_metal(c["striker"], s_doll))
 	if match_ref != null and is_instance_valid(match_ref) and match_ref.has_method("on_hit"):
 		match_ref.call("on_hit", doll, attacker, dmg_eff, kind, pos, combo_n_new if ac != null else 0, double_blow, c["weapon_id"], speed)
 

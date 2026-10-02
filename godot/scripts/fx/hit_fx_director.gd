@@ -119,6 +119,22 @@ const CRIT_SMOKE_MAX := 18
 const KO_CARD_AVOID := Rect2(0.3, 0.3, 0.4, 0.36)   # доли кадра: «KO!» карточки (ko_card.tscn: 680×340 в центре 1920×1080, −40 px)
 const WAVE_SIZE_MIN := 0.55           # v3: радиус кольца × lerp(WAVE_SIZE_MIN, 1, flash_intensity) — reduced (0.4) → 0.73
 const CRIT_CAPTION := "CRUSHING BLOW!"
+
+# --- стиль «серьёзный» (HIT_FX.md §13, HitJuice.impact_style): свет удара, волна воздуха, плотная пыль, камера; без белого кадра,
+# цветных колец, конуса искр цвета атакующего, инверсии, послеобразов, лент и линий скорости (стиль «мульт» — прежний, RM) ---
+const SERIOUS_HEAVY_LIGHT := 7.0      # энергия ImpactLight
+const SERIOUS_HEAVY_RANGE := 3.2      # м
+const SERIOUS_HEAVY_LIGHT_S := 0.12   # реальные с
+const SERIOUS_HEAVY_SHOCK_R := 1.3    # м: волна воздуха AirShock
+const SERIOUS_HEAVY_SHOCK_S := 0.16
+const SERIOUS_HEAVY_SHOCK_K := 0.028  # сдвиг экрана на кольце
+const SERIOUS_HEAVY_DUST := 2.0       # × скорость клубов пыли (плотный выброс)
+const SERIOUS_KO_LIGHT := 12.0
+const SERIOUS_KO_RANGE := 4.2
+const SERIOUS_KO_LIGHT_S := 0.2
+const SERIOUS_KO_SHOCK_R := 2.0
+const SERIOUS_KO_SHOCK_S := 0.24
+const SERIOUS_KO_SHOCK_K := 0.04
 const CRIT_COLOUR := Color(1.0, 0.8, 0.2)
 
 # --- удар о стену (§2.4) ---
@@ -358,8 +374,10 @@ func play_slam(ctx: Dictionary) -> void:
 			cam.call("shake", amp)
 		if crit_flight and cam.has_method("roll_kick"):
 			cam.call("roll_kick", SLAM_ROLL_DEG * shake_intensity * (1.0 if nrm.x >= 0.0 else -1.0), SLAM_ROLL_S)
-	if crit_flight:
+	if crit_flight and not _serious():
 		_wave(pos, SLAM_WAVE_R, SLAM_WAVE_MS, SLAM_COLOUR, Vector2(nrm.x, nrm.y))
+	elif crit_flight:
+		_air_shock(pos, SLAM_WAVE_R.y, SLAM_WAVE_MS / 1000.0, SERIOUS_HEAVY_SHOCK_K)
 	stats["slams"] = int(stats["slams"]) + 1
 	played.append({"tier": "slam", "ms": _clock, "mode": "crit_slam" if crit_flight else "slam"})
 
@@ -376,6 +394,9 @@ func _play_heavy(ctx: Dictionary, boost: float = 1.0) -> void:
 	# hit-stop: ядро (Match._emit_hit_fx) ставит его само; без ядра — здесь (§2.2: < HIT_STOP_DAMAGE_1 → 50 мс)
 	if _match != null and not _match.has_method("_emit_hit_fx") and float(ctx.get("damage", 0.0)) < Tuning.HIT_STOP_DAMAGE_1:
 		_time_scale(Tuning.HIT_STOP_TIME_SCALE, Tuning.HITFX_HEAVY_STOP_S, "heavy_stop")
+	if _serious():
+		_serious_hit(ctx, pos, nrm, dir, victim, boost, false)
+		return
 	_white_flash(HEAVY_FLASH_ALPHA * boost)
 	_collapse_flashes(pos, HEAVY_FLASH_COLLAPSE_MS)
 	var ring := _attacker_colour(ctx, _kind_colour(kind))
@@ -399,6 +420,9 @@ func _play_ko(ctx: Dictionary) -> void:
 	var nrm: Vector3 = ctx.get("normal", Vector3.BACK)
 	var dir := _dir(ctx)
 	var colour := _colour(ctx)
+	if _serious():
+		_serious_hit(ctx, pos, nrm, dir, victim, 1.0, true)
+		return
 	_inversion()
 	_collapse_flashes(pos, KO_FLASH_COLLAPSE_MS)
 	_wave(pos, KO_WAVE_R, KO_WAVE_MS, _kind_colour(String(ctx.get("kind", "body"))))
@@ -455,15 +479,19 @@ func _crit_fallback(ctx: Dictionary) -> void:
 		_after(CRIT_STOP_S * 1000.0, func() -> void:
 			_time_scale(Tuning.CRIT_SLOWMO_SCALE, CRIT_FALLBACK_SLOWMO_S, "crit_slowmo"))
 	if _match != null and _match.has_signal("announce"):
-		_match.emit_signal("announce", CRIT_CAPTION, CRIT_COLOUR, "crit")
-	_inversion()
-	_wave(pos, KO_WAVE_R, KO_WAVE_MS, CRIT_COLOUR)
+		_match.emit_signal("announce", HitJuice.impact_caption(ctx, CRIT_CAPTION), CRIT_COLOUR, "crit")   # табло: «IMPACT xG» (§13)
+	if _serious():
+		_impact_light(pos, SERIOUS_KO_LIGHT, SERIOUS_KO_RANGE, SERIOUS_KO_LIGHT_S)
+		_air_shock(pos, SERIOUS_KO_SHOCK_R, SERIOUS_KO_SHOCK_S, SERIOUS_KO_SHOCK_K)
+	else:
+		_inversion()
+		_wave(pos, KO_WAVE_R, KO_WAVE_MS, CRIT_COLOUR)
 	_burst(SPLINTERS, pos, nrm, KO_SPLINTER_K, 1.0)
 	_burst(DUST_PUFF, pos, nrm, 1.4, 1.0)
 	_camera_hit(pos, _dir(ctx), CRIT_PUNCH_FRAC, KO_PUNCH_PULL, KO_PUNCH_S, CRIT_ROLL_DEG, KO_ROLL_S)
 	if victim != null:
 		_camera_focus(victim, CRIT_FOCUS_W, CRIT_FOCUS_S)
-		if tier == "ko_crit":
+		if tier == "ko_crit" and not _serious():
 			_trail(victim, KO_TRAIL_PARTS, false, KO_TRAIL_MS, colour, 0.0)
 		_crit_flight_fx(victim, colour, null, crit_hold_s(tier, false) + CRIT_STOP_S, tier == "ko_crit")
 
@@ -484,6 +512,9 @@ func _crit_flight_fx(victim: Doll, colour: Color, cc: Node, hold_s: float = 0.85
 	if cc != null and is_instance_valid(cc) and cc.has_method("is_playing") and not bool(cc.call("is_playing")):
 		return   # кинематограф прерван (abort) — отлёт не показываем
 	var win_ms := hold_s * 1000.0
+	if _serious():
+		_crit_camera_hold(victim, hold_s, ko, 0.0)   # стиль «серьёзный»: без послеобразов, лент и линий скорости — камера и пыль
+		return
 	var n := clampi(int(ceil(win_ms / CRIT_FLIGHT_GHOST_INTERVAL_MS)), CRIT_GHOSTS, AfterimageTrail.MAX_SNAPSHOTS)
 	_afterimages(victim, n, CRIT_FLIGHT_GHOST_INTERVAL_MS, CRIT_GHOST_FADE_MS, win_ms, colour, 0.06)
 	var tr := _trail(victim, TRAIL_PARTS, true, win_ms + FlightTrail.FADE_MS, colour, win_ms)
@@ -531,6 +562,43 @@ func _on_legacy_hit(victim: Doll, attacker: Node, damage: float, kind: String, p
 		"part_base": Doll.part_base_name(part), "position": position, "normal": normal, "dir": dir,
 		"score": score, "tier": tier, "is_ko": not victim.alive, "hp_after": victim.hp,
 		"colour": Tuning.PLAYER_COLORS[clampi(victim.player_index, 0, Tuning.PLAYER_COLORS.size() - 1)]})
+
+
+# --- стиль «серьёзный» (HIT_FX.md §13) ---
+
+func _serious() -> bool:
+	return HitJuice.impact_style == "serious"
+
+
+## heavy / ko «серьёзно»: свет удара, волна воздуха, плотная пыль, удар камеры и фокус. Обломки по материалу уже дал ImpactFx.
+func _serious_hit(ctx: Dictionary, pos: Vector3, nrm: Vector3, dir: Vector3, victim: Doll, boost: float, ko: bool) -> void:
+	_collapse_flashes(pos, HEAVY_FLASH_COLLAPSE_MS)   # горячее пятно этого удара гаснет быстрее (и звёзды «мульт», если были)
+	if ko:
+		_impact_light(pos, SERIOUS_KO_LIGHT, SERIOUS_KO_RANGE, SERIOUS_KO_LIGHT_S)
+		_air_shock(pos, SERIOUS_KO_SHOCK_R, SERIOUS_KO_SHOCK_S, SERIOUS_KO_SHOCK_K)
+		_burst(DUST_PUFF, pos, nrm, SERIOUS_HEAVY_DUST * 1.3, 1.0, 1.8)
+		_camera_hit(pos, dir, KO_PUNCH_FRAC, KO_PUNCH_PULL, KO_PUNCH_S, KO_ROLL_DEG, KO_ROLL_S)
+		if victim != null:
+			_camera_focus(victim, KO_FOCUS_W, KO_FOCUS_S)
+		return
+	_impact_light(pos, SERIOUS_HEAVY_LIGHT * boost, SERIOUS_HEAVY_RANGE, SERIOUS_HEAVY_LIGHT_S)
+	_air_shock(pos, SERIOUS_HEAVY_SHOCK_R * boost, SERIOUS_HEAVY_SHOCK_S, SERIOUS_HEAVY_SHOCK_K)
+	_burst(DUST_PUFF, pos, nrm, SERIOUS_HEAVY_DUST * boost, 1.0, 1.5)
+	_camera_hit(pos, dir, HEAVY_PUNCH_FRAC, HEAVY_PUNCH_PULL, HEAVY_PUNCH_S, HEAVY_ROLL_DEG, HEAVY_ROLL_S)
+	if victim != null:
+		_camera_focus(victim, HEAVY_FOCUS_W, HEAVY_FOCUS_S)
+
+
+func _impact_light(pos: Vector3, energy: float, range_m: float, life_s: float) -> void:
+	if ImpactLight.flash(fx_root, pos, energy * flash_intensity, range_m, life_s) != null:
+		stats["lights"] = int(stats.get("lights", 0)) + 1
+
+
+func _air_shock(pos: Vector3, radius: float, life_s: float, strength: float) -> void:
+	if flash_intensity <= 0.001:
+		return   # пресет FX off — без искажений
+	if AirShock.spawn(fx_root, pos, radius * lerpf(WAVE_SIZE_MIN, 1.0, flash_intensity), life_s, strength * flash_intensity) != null:
+		stats["air_shocks"] = int(stats.get("air_shocks", 0)) + 1
 
 
 # --- строительные блоки (публичные — ими пользуется CritCinematic) ---

@@ -82,6 +82,26 @@ const LINES := {
 		{"ru": "Это бой или медитация? Спрашиваю для трансляции.", "en": "Is this a fight or a meditation? Asking for the broadcast."},
 		{"ru": "Зрители скучают. Я тоже.", "en": "The crowd's getting bored. So am I."},
 	],
+	# сок удара (HIT_FX.md §13, 02.10; поводы шлёт HitJuice.juice_event) — предложение
+	# большая цифра-обломок урона упала (≥ JUICE_DIGIT_BIG, не крит)
+	"digit_big": [
+		{"ru": "%d! Это число теперь лежит на полу. Буквально.", "en": "%d! That number is on the floor now. Literally."},
+		{"ru": "Минус %d. Табло записало, пол подобрал.", "en": "Minus %d. The board logged it, the floor caught it."},
+	],
+	# сильный удар по железной детали
+	"metal": [
+		{"ru": "Звенит! Значит, железо настоящее.", "en": "It rings! So the metal's real."},
+		{"ru": "Искры! Мембрана, не бойся, это не тебе.", "en": "Sparks! Relax, membrane, that wasn't for you."},
+	],
+	# деталь вся в сколах (сумма следов ≥ JUICE_WORN_POWER)
+	"worn": [
+		{"ru": "Эта деталь уже вся в сколах. Как трофей — так себе.", "en": "That part's all chipped up. Not much of a trophy anymore."},
+		{"ru": "По этой детали теперь можно читать историю боя.", "en": "You can read the whole fight off that part now."},
+	],
+	# цифр урона на полу много
+	"digits_pile": [
+		{"ru": "Цифры уже по щиколотку. Уборщики, вы где?", "en": "The numbers are ankle-deep. Cleanup crew, anyone?"},
+	],
 }
 
 var minor_gap_s := 8.0

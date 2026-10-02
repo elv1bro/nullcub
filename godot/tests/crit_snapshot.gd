@@ -39,6 +39,8 @@ var report := {"ok": true, "checks": []}
 
 
 func _ready() -> void:
+	HitJuice.impact_style = "cartoon"   # проба проверяет стиль «мульт» (звезда, кольца, послеобразы); «серьёзный» — juice_probe (§13)
+	HitJuice.outline_on = false   # обводка бойцов (B) — свои узлы на мешах кукол; проба считает узлы и оверлеи частей
 	process_priority = 2000   # после CritCinematic (1000): кадр снимается с уже применённым состоянием таймлайна
 	for arg in OS.get_cmdline_user_args():
 		for kv in arg.split(","):

@@ -30,7 +30,7 @@
 extends Node3D
 
 const SCENE := "res://scenes/playground_void.tscn"
-const SCENES := {"void": SCENE, "ruins": "res://scenes/playground.tscn", "scrap": "res://scenes/playground_scrap.tscn"}
+const SCENES := {"void": SCENE, "ruins": "res://scenes/playground.tscn", "scrap": "res://scenes/playground_scrap.tscn", "null_hall": "res://scenes/playground_null_hall.tscn"}
 const CRIT_SEQ_MS := 1350.0
 const OUT_DIR := "res://tests/clip"
 const REST_S := 1.0

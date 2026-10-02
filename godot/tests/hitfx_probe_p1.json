@@ -134,6 +134,12 @@
       "limit": "83±17 (Match._emit_hit_fx, Tuning.HITFX_HEAVY_STOP_S)"
     },
     {
+      "id": "heavy_slow_after_stop",
+      "ok": true,
+      "value": 15,
+      "limit": ">=6 frames of heavy_slow (HIT_FX.md §13)"
+    },
+    {
       "id": "heavy_freed_3s",
       "ok": true,
       "value": 3,
@@ -276,8 +282,8 @@
     {
       "id": "crit_camera_restored",
       "ok": true,
-      "value": "Camera:<Camera3D#132154133002>",
-      "limit": "Camera:<Camera3D#132154133002>"
+      "value": "Camera:<Camera3D#142707001995>",
+      "limit": "Camera:<Camera3D#142707001995>"
     },
     {
       "id": "crit_no_time_tags",
@@ -468,14 +474,14 @@
     {
       "id": "final_camera_game",
       "ok": true,
-      "value": "Camera:<Camera3D#132154133002>",
-      "limit": "Camera:<Camera3D#132154133002>"
+      "value": "Camera:<Camera3D#142707001995>",
+      "limit": "Camera:<Camera3D#142707001995>"
     },
     {
       "id": "final_match_fx_children",
       "ok": true,
-      "value": 2,
-      "limit": 2
+      "value": 6,
+      "limit": 6
     }
   ],
   "info": {
@@ -489,104 +495,104 @@
     "heavy_brake": {
       "stand_1.2_off": {
         "tier": "heavy",
-        "along_max": -1.98347795009613,
-        "gap_400": 1.53501558303833,
+        "along_max": -1.98348319530487,
+        "gap_400": 1.33287155628204,
         "gap_0": 1.2
       },
       "stand_1.2_on": {
         "tier": "heavy",
-        "along_max": -1.98347783088684,
-        "gap_400": 1.52247977256775,
+        "along_max": -1.98347795009613,
+        "gap_400": 1.33206522464752,
         "gap_0": 1.2
       },
       "stand_1.6_off": {
         "tier": "heavy",
-        "along_max": -1.98187017440796,
-        "gap_400": 2.20757222175598,
+        "along_max": -1.98186993598938,
+        "gap_400": 2.20670914649963,
         "gap_0": 1.6
       },
       "stand_1.6_on": {
         "tier": "heavy",
-        "along_max": -1.98153698444366,
-        "gap_400": 1.93685448169708,
+        "along_max": -1.98152482509613,
+        "gap_400": 1.83761465549469,
         "gap_0": 1.6
       },
       "dash_1.0_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.19724905490875,
+        "gap_400": 1.20185244083405,
         "gap_0": 1.0
       },
       "dash_1.0_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.19634771347046,
+        "gap_400": 1.20310199260712,
         "gap_0": 1.0
       },
       "dash_1.1_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.44702422618866,
+        "gap_400": 1.31844842433929,
         "gap_0": 1.1
       },
       "dash_1.1_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.61147272586823,
+        "gap_400": 1.32059335708618,
         "gap_0": 1.1
       },
       "dash_1.2_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 0.877963244915009,
+        "gap_400": 1.6029464006424,
         "gap_0": 1.2
       },
       "dash_1.2_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 0.655546307563782,
+        "gap_400": 1.59734308719635,
         "gap_0": 1.2
       },
       "dash_1.3_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 2.36163854598999,
+        "gap_400": 1.75610327720642,
         "gap_0": 1.3
       },
       "dash_1.3_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.85410237312317,
+        "gap_400": 1.77969229221344,
         "gap_0": 1.3
       }
     },
     "heavy_brake_gap_400_stand": [
-      1.87,
-      1.73
+      1.77,
+      1.58
     ],
     "heavy_brake_dash_along_max": 0.0,
     "heavy_brake_gap_400_dash": [
       1.47,
-      1.33
+      1.48
     ],
     "real_ko_mode": "cinematic",
-    "played": 85,
+    "played": 77,
     "stats": {
-      "flashes": 23,
+      "flashes": 21,
       "impact_frames": 1,
-      "waves": 65,
-      "afterimages": 35,
-      "trails": 35,
-      "bursts": 161,
-      "puffs": 77,
-      "lines": 30,
-      "punches": 33,
-      "slams": 9,
+      "waves": 61,
+      "afterimages": 33,
+      "trails": 33,
+      "bursts": 158,
+      "puffs": 88,
+      "lines": 28,
+      "punches": 31,
+      "slams": 4,
       "cinematic": 2,
       "crit_fallback": 0,
       "time_requests": 0,
-      "sparks": 31,
-      "flash_collapses": 22,
+      "sparks": 29,
+      "flash_collapses": 19,
       "safe_holds": 2
     }
   }
