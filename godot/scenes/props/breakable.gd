@@ -51,7 +51,30 @@ var _time := 0.0
 var _spawned := false
 
 
+## Выпуклая оболочка куска считается раз на меш (ящик ≈ 40 мс, бочка ≈ 75 мс на 6 кусков — это и был рывок при разрушении):
+## ConvexPolygonShape3D — Resource, его можно делить между телами.
+static var _hulls: Dictionary = {}   # Mesh -> Shape3D
+
+
+static func hull_of(mesh: Mesh) -> Shape3D:
+	if not _hulls.has(mesh):
+		_hulls[mesh] = mesh.create_convex_shape(true, true)
+	return _hulls[mesh]
+
+
+## Прогрев при загрузке арены (до боя): оболочки всех кусков этого вида.
+func _prewarm_hulls() -> void:
+	var m := _mesh_root()
+	var tpl := m.find_child("Destroyed", true, false) if m else null
+	if tpl == null:
+		return
+	for p in tpl.get_children():
+		if p is MeshInstance3D and (p as MeshInstance3D).mesh != null:
+			hull_of((p as MeshInstance3D).mesh)
+
+
 func _ready() -> void:
+	_prewarm_hulls.call_deferred()
 	max_hp = maxf(hp, 1.0)
 	if max_contacts_reported < MIN_CONTACTS:
 		max_contacts_reported = MIN_CONTACTS
@@ -185,7 +208,7 @@ func _spawn_debris() -> void:
 		body.add_to_group("debris")
 		var cs := CollisionShape3D.new()
 		cs.name = "Shape"
-		cs.shape = piece.mesh.create_convex_shape(true, true)
+		cs.shape = hull_of(piece.mesh)
 		body.add_child(cs)
 		var mi := piece.duplicate() as MeshInstance3D
 		mi.name = "Mesh"

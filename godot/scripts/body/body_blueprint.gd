@@ -31,11 +31,19 @@ const PARTS_DIR := "res://data/body/parts/"
 @export var weapon_energy_per_kg := 0.0
 
 
+static var _part_def_cache: Dictionary = {}   # id -> PartDef (null — файла нет)
+
+
+## PartDef по id. Кэш ресурсов Godot слабый: PartDef без владельца освобождался вместе со сценой детали и перечитывался с диска на
+## каждый вызов (≈ 0.3 мс), а validate / energy_used / total_mass / cheapest_cost зовут его сотнями за одну правку в мастерской.
+## Файлы деталей пишут только builder-ы (tools/), в игре они не меняются.
 static func part_def(part_id: String) -> PartDef:
+	if _part_def_cache.has(part_id):
+		return _part_def_cache[part_id]
 	var path := PARTS_DIR + part_id + ".tres"
-	if not ResourceLoader.exists(path):
-		return null
-	return load(path) as PartDef
+	var d: PartDef = load(path) as PartDef if ResourceLoader.exists(path) else null
+	_part_def_cache[part_id] = d
+	return d
 
 
 ## Энергия по расстоянию (docs/plan-demo/WORKSHOP_V3.md §2): чем дальше деталь от ядра, тем дороже — дефицит без смены бюджета.
