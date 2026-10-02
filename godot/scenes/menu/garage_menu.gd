@@ -8,7 +8,8 @@
 ## телевизор схлопывается. Строки ИСТОРИИ — из сохранения кампании (CampaignState, user://campaign.tres).
 ## Ввод: ↑↓ / W S / D-pad, Enter / Space / A, Esc / B — к пункту «Выход», цифры 1–6, мышь (наведение и клик).
 ## Пробы: dry_run (или аргумент `-- menu_dry_run=1`) — Enter не меняет сцену, только сигнал navigated(путь).
-## API для проб: enter_menu(), set_focus(i, instant), activate(), tv_mode, state, focus, spot_transform(name), is_moving().
+## API для проб: enter_menu(), set_focus(i, instant), activate(), tv_mode, state, focus, spot_transform(name), is_moving(), workshop.
+## МАСТЕРСКАЯ — не смена сцены, а состояние "workshop": её сцена грузится в фоне и живёт в этом же мире (garage_workshop.gd).
 class_name GarageMenu
 extends Node3D
 
@@ -56,7 +57,7 @@ const OPPONENT_PIC_PRESET := "kit_horned"           # tv/tv_opponent.png — к�
 @export var live_tv := true
 @export var move_time := 0.75
 
-var state := "title"            # title | menu | settings | trophies | leaving
+var state := "title"            # title | menu | settings | trophies | workshop | leaving
 var _campaign: CampaignState = null
 var _campaign_read := false
 var focus := 0
@@ -97,6 +98,7 @@ var settings_ui: GarageSettings
 var trophies_ui: GarageTrophies
 var _tw_exhibit: Tween
 var player_doll: GarageDoll
+var workshop: GarageWorkshop           # мастерская внутри гаража (scenes/menu/garage_workshop.gd)
 var _live_line := 0
 var _live_timer := 0.0
 
@@ -123,6 +125,10 @@ func _ready() -> void:
 	_setup_tv()
 	player_doll = get_node_or_null("Props/PlayerDoll") as GarageDoll
 	_build_ui()
+	workshop = GarageWorkshop.new(self)
+	workshop.name = "GarageWorkshop"
+	add_child(workshop)
+	workshop.preload_scene()
 	cam.global_transform = spots["Title"]
 	cam.fov = spot_fov["Title"]
 	_to = cam.global_transform
@@ -179,6 +185,9 @@ func activate() -> void:
 		return
 	if id == "trophies":
 		_open_trophies()
+		return
+	if id == "workshop":
+		workshop.open()
 		return
 	var go := String(it["go"])
 	if go == "":
@@ -308,7 +317,7 @@ func _exit_sequence() -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
-	if state == "leaving":
+	if state == "leaving" or state == "workshop":   # в мастерской ввод — её собственный (workshop_build.gd)
 		return
 	if state == "settings":
 		if settings_ui.handle_input(e):
