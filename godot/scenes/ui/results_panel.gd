@@ -1,5 +1,5 @@
 ## Панель итогов (R20 RESULTS/VICTORY + 09 §19–§20): слева корона и «P1 WINS!» (имя цветом игрока), кнопки-планки
-## REMATCH (сигнал rematch → Match.restart()) и MAIN MENU (заглушка, disabled); справа деревянная рамка:
+## REMATCH (сигнал rematch → Match.restart()) и MAIN MENU (сигнал main_menu → гараж, hud.gd → Flow.to_menu); справа деревянная рамка:
 ## места с портретами, таблица статистики (KO, урон нанесён/получен, сильнейший удар, время в воздухе, MAX COMBO,
 ## COMBO SCORE; лучшее в строке — золотом) и ряд медалей из results.medals {name: Doll}.
 ## show_results(winner, results): results = {places: Array[Doll], stats: {doll: stats}, medals: {name: doll}, ranks, ko_records};
