@@ -113,6 +113,7 @@ func _blueprint() -> BodyBlueprint:
 	if bp == null:
 		bp = CraftEdit.load_body_preset(PRESET)
 		blueprint_source = "preset"
+	bp.energy_budget = maxi(bp.energy_budget, 100000)   # кукла только для показа: сборка сверх бюджета (мастерская её не бракует) всё равно сидит на ящике
 	return bp
 
 
