@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/dynres_probe.gd" id="1_d"]
+
+[node name="DynResProbe" type="Node"]
+script = ExtResource("1_d")
