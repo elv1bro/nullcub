@@ -9,6 +9,9 @@ extends Node3D
 
 const ARENA := preload("res://scenes/arena/void.tscn")
 const MODULAR_DOLL := preload("res://scenes/body/modular_doll.tscn")
+const N0_MODEL := preload("res://assets/models/garage/Garage_N0.glb")
+## N0 висит в углу кадра трансляции (ребёнок камеры): ведущий рядом с полем, в бою не участвует (§9 документа автора).
+const N0_OFFSET := Vector3(0.98, 0.3, -2.6)
 const FIGHTERS := ["kit_brawler", "kit_horned"]      # «Громила» (карточка бойца) против «Гайки» (рогатый, карточка соперника)
 const RUSH_NEAR := 1.3
 const RETREAT_S := 1.2
@@ -18,6 +21,7 @@ const RESET_FAR_M := 9.0
 var arena: Node3D
 var dolls: Array = []
 var cam: Camera3D
+var n0: Node3D
 var _retreat := {}
 var _t := 0.0
 var _cam_mid := Vector3.ZERO
@@ -41,6 +45,16 @@ func _ready() -> void:
 	cam.fov = 40.0
 	add_child(cam)
 	cam.current = true
+	n0 = N0_MODEL.instantiate() as Node3D
+	n0.name = "N0"
+	n0.position = N0_OFFSET
+	n0.scale = Vector3.ONE * 1.05
+	cam.add_child(n0)
+	var key := OmniLight3D.new()          # свой мягкий свет ведущему, чтобы читался на чёрном поле
+	key.position = N0_OFFSET + Vector3(-0.4, 0.3, 0.6)
+	key.omni_range = 1.6
+	key.light_energy = 0.8
+	cam.add_child(key)
 	_cam_mid = (spawns[0] + spawns[1]) * 0.5 + Vector3(0, 1.4, 0)
 	_place_cam(1.0)
 
@@ -97,6 +111,10 @@ func _reset() -> void:
 
 func _process(delta: float) -> void:
 	_place_cam(1.0 - exp(-delta * 3.0))
+	if n0 != null:     # парит: покачивание и взгляд то на бой, то в камеру
+		var tt := _t
+		n0.position = N0_OFFSET + Vector3(0.0, sin(tt * 1.7) * 0.05, 0.0)
+		n0.rotation = Vector3(sin(tt * 1.1) * 0.08, deg_to_rad(-28.0) + sin(tt * 0.45) * 0.35, sin(tt * 1.3) * 0.06)
 
 
 ## Камера трансляции: середина между бойцами, отъезд по их разлёту.

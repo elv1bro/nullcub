@@ -32,8 +32,7 @@ const ITEMS := [
 	{"id": "exit", "title": "ВЫХОД", "l1": "Выключить свет в боксе", "l2": "", "spot": "Settings", "zone": "", "tv": "live",
 		"go": "", "via": "", "n0": "Уже? Ну ладно. Свет выключу сам."},
 ]
-const SOON := {"trophies": "Полку я пока протираю. Скоро здесь будет что показать.",
-	"settings": "Настройки в разработке. Пока крути громкость на колонках."}
+const SOON := {}
 const LIVE_LINES := ["…и Клёпа улетает в мембрану! Мембрана — один, Клёпа — ноль!", "Гравитация 0.20G — летаем, друзья, летаем!",
 	"Зрители голосуют: ПЕРЕВОРОТ ГРАВИТАЦИИ. Держите обед."]
 const ACCENT := Color(1.0, 0.55, 0.2)
@@ -42,6 +41,8 @@ const LOOK := {"story": Vector3(1.62, 1.15, -2.26), "quick": Vector3(-3.5, 1.4, 
 	"trophies": Vector3(1.8, 2.5, -2.85), "settings": Vector3(4.4, 1.0, 1.25), "exit": Vector3(1.62, 1.15, -2.26)}
 const SCREEN := Vector2i(768, 576)
 const TV_DIR := "res://assets/textures/garage/tv/"
+const EXHIBIT_CAM := Vector3(0.5, -0.25, 2.15)    # камера витрины «Трофеи» относительно предмета
+const EXHIBIT_FOV := 38.0
 
 @export var dry_run := false
 ## Живой эфир (scenes/menu/tv_bout.gd: две куклы на арене Void в своём 3D-мире телевизора); false или `-- menu_live_tv=0` —
@@ -85,6 +86,8 @@ var sub_panel: PanelContainer
 var fade: ColorRect
 var press_label: Label
 var settings_ui: GarageSettings
+var trophies_ui: GarageTrophies
+var _tw_exhibit: Tween
 var player_doll: GarageDoll
 var _live_line := 0
 var _live_timer := 0.0
@@ -166,6 +169,9 @@ func activate() -> void:
 	if id == "settings":
 		_open_settings()
 		return
+	if id == "trophies":
+		_open_trophies()
+		return
 	var go := String(it["go"])
 	if go == "":
 		_say(String(SOON.get(id, "Скоро.")))
@@ -201,6 +207,60 @@ func _on_volume(v: float) -> void:
 	for l in zone_lights.get("radio", []):
 		if (l as Node).name.begins_with("RadioDial"):
 			(l as Light3D).light_energy = 0.1 + 0.8 * v
+
+
+func _open_trophies() -> void:
+	state = "trophies"
+	menu_box.visible = false
+	trophies_ui.open()
+
+
+func _close_trophies() -> void:
+	if _tw_exhibit != null and _tw_exhibit.is_valid():
+		_tw_exhibit.kill()
+	state = "menu"
+	menu_box.visible = true
+	set_focus(focus)
+
+
+## Камера к предмету витрины (спереди-справа, чуть снизу, предмет на трети кадра слева), лампа над ним ярче.
+func _frame_exhibit(i: int) -> void:
+	var node := get_node_or_null(String(GarageTrophies.EXHIBITS[i]["node"])) as Node3D
+	if node == null:
+		return
+	var subj := node.global_position + Vector3(0, 0.16, 0)
+	_move_xf(exhibit_transform(i), EXHIBIT_FOV, 0.55, 0.02)
+	var best: Light3D = null
+	for l in zone_lights.get("shelf", []):
+		if best == null or absf((l as Node3D).global_position.x - subj.x) < absf(best.global_position.x - subj.x):
+			best = l
+	if _tw_exhibit != null and _tw_exhibit.is_valid():
+		_tw_exhibit.kill()
+	_tw_exhibit = create_tween().set_parallel(true)
+	for l in zone_lights.get("shelf", []):
+		var target := float(l.get_meta("base")) * (2.4 if l == best else 0.7)
+		_tw_exhibit.tween_property(l, "light_energy", target, 0.4)
+	_say(String(["Шлем как новый. Не волнуйся, это ненадолго.", "Не крути шкалу до конца. Просто… не крути.",
+		"Пустое место — самое ценное на полке.", "Прошлый хозяин бокса был хорош. Где он теперь — не знаю.",
+		"Малый кубок. Большие надежды."][i]))
+
+
+## Кадр камеры у предмета витрины i: спереди-справа (EXHIBIT_CAM от предмета), предмет на трети кадра слева.
+func exhibit_transform(i: int) -> Transform3D:
+	var node := get_node_or_null(String(GarageTrophies.EXHIBITS[i]["node"])) as Node3D
+	if node == null:
+		return cam.global_transform
+	var subj := node.global_position + Vector3(0, 0.16, 0)
+	return _frame(subj + EXHIBIT_CAM, subj, 0.33, EXHIBIT_FOV)
+
+
+## Кадр камеры: из pos на subj, subj — на доле frac ширины 16:9 (как _spot в tools/build_garage_menu.gd).
+func _frame(pos: Vector3, subj: Vector3, frac: float, fov: float) -> Transform3D:
+	var xf := Transform3D(Basis(), pos).looking_at(subj, Vector3.UP)
+	var tan_h := tan(deg_to_rad(fov * 0.5)) * 16.0 / 9.0
+	var yaw := atan(-(frac - 0.5) * 2.0 * tan_h)
+	xf.basis = Basis(Vector3.UP, -yaw) * xf.basis
+	return xf
 
 
 func is_moving() -> bool:
@@ -246,6 +306,10 @@ func _unhandled_input(e: InputEvent) -> void:
 		if settings_ui.handle_input(e):
 			get_viewport().set_input_as_handled()
 		return
+	if state == "trophies":
+		if trophies_ui.handle_input(e):
+			get_viewport().set_input_as_handled()
+		return
 	if state == "title":
 		var pressed: bool = (e is InputEventKey and e.pressed and not e.echo) or (e is InputEventJoypadButton and e.pressed) \
 			or (e is InputEventMouseButton and e.pressed)
@@ -273,10 +337,14 @@ func _unhandled_input(e: InputEvent) -> void:
 func _move_to(spot: String, dur: float, arc: float, instant := false, ease_in := false) -> void:
 	if not spots.has(spot):
 		return
+	_move_xf(spots[spot], spot_fov[spot], dur, arc, instant, ease_in)
+
+
+func _move_xf(xf: Transform3D, fov: float, dur: float, arc: float, instant := false, ease_in := false) -> void:
 	_from = cam.global_transform
-	_to = spots[spot]
+	_to = xf
 	_fov_from = cam.fov
-	_fov_to = spot_fov[spot]
+	_fov_to = fov
 	_dur = max(dur, 0.01)
 	_arc = arc
 	_t = 1.0 if instant else 0.0
@@ -401,7 +469,8 @@ func _build_tv(mode: String) -> void:
 			_tv_bar("● LIVE", "NULL FIGHTING · МЕСТНАЯ ЛИГА")
 			_tv_score("КЛЁПА", "2 : 1", "ТУМБА", "NULL FIELD 0.20G ↓")
 			_tv_ticker("ОТКРЫТ НАБОР НОВИЧКОВ · БОКСЫ 01–12 · ГРАВИТАЦИЮ ВЫБИРАЮТ ЗРИТЕЛИ · ")
-			_tv_n0()
+			if not live3d:
+				_tv_n0()      # в живом эфире N0 — 3D-модель в углу кадра (TvBout)
 		"opponent":
 			_tv_grad(Color(0.12, 0.04, 0.07), Color(0.42, 0.1, 0.12))
 			_tv_pic(TV_DIR + "tv_opponent.png", Rect2(40, 92, 300, 394))
@@ -555,7 +624,7 @@ func _tv_ticker(s: String) -> void:
 	_tv_anim["ticker"] = l
 
 
-## Заглушка N0 в углу эфира — дизайна N0 ещё нет (MENU_GARAGE.md §9).
+## Плоская заглушка N0 в углу эфира — только без живого эфира (там N0 — модель Garage_N0 в кадре TvBout).
 func _tv_n0() -> void:
 	var p := Vector2(SCREEN.x - 150, 96)
 	for spec in [[p, Vector2(120, 120), Color(0.9, 0.85, 0.72), Color(0.3, 0.25, 0.2), 60, 5],
@@ -672,6 +741,11 @@ func _build_ui() -> void:
 	settings_ui.setup(f_head, f_body, f_mono)
 	settings_ui.closed.connect(_close_settings)
 	settings_ui.volume_changed.connect(_on_volume)
+	trophies_ui = GarageTrophies.new()
+	ui.add_child(trophies_ui)
+	trophies_ui.setup(f_head, f_body, f_mono)
+	trophies_ui.closed.connect(_close_trophies)
+	trophies_ui.selected.connect(_frame_exhibit)
 	_rect(menu_box, Vector2(x0, 1080 - 90), Vector2(500, 1), Color(1, 1, 1, 0.12))
 	_label(menu_box, "↑↓  ВЫБОР     ENTER  ВОЙТИ     ESC  ВЫХОД", Vector2(x0, 1080 - 76), 17, Color(0.65, 0.65, 0.7), f_mono)
 	# субтитр эфира

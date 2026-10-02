@@ -1,8 +1,9 @@
 ## Кадры и ролик главного меню-гаража (scenes/menu/garage_menu.tscn). Нужно окно.
 ##   godot --path godot --resolution 1920x1080 res://tests/garage_menu_shots.tscn -- out=/абс/папка
-##       → garage-<title|story|quick|workshop|trophies|settings|exit|settings_screen|into_tv>.png, garage-tv_live_0..2.png
+##       → garage-<title|story|quick|workshop|trophies|settings|exit|settings_screen|trophies_screen|into_tv>.png, garage-tv_live_0..2.png
 ##   godot --path godot --resolution 1280x720 --write-movie /абс/кадры/f.png --fixed-fps 24 res://tests/garage_menu_shots.tscn -- video=1
-##       → сценарий: титул → любая клавиша → пункты вниз/вверх → Enter на «Истории» (нырок в телевизор); потом ffmpeg.
+##       → сценарий: титул → любая клавиша → пункты вниз → витрина «Трофеи» → «Настройки» → вверх → Enter на «Истории»
+##         (нырок в телевизор); потом ffmpeg.
 extends Node
 
 const MENU := preload("res://scenes/menu/garage_menu.tscn")
@@ -61,6 +62,15 @@ func _stills(out: String, which: String) -> void:
 		await _wait(20)
 		_save(out, "settings_screen")
 		menu.settings_ui.close()
+	if want.call("trophies_screen"):    # витрина на «месте для трофея» (третий предмет)
+		menu.set_focus(3, true)
+		menu.activate()
+		menu.trophies_ui.step(1)
+		menu.trophies_ui.step(1)
+		await get_tree().create_timer(1.0).timeout
+		await _wait(10)
+		_save(out, "trophies_screen")
+		menu.trophies_ui.close()
 	if want.call("into_tv"):
 		menu.set_focus(0, true)
 		menu.ui.modulate.a = 0.0
@@ -85,11 +95,31 @@ func _sec(s: float) -> void:
 
 
 func _video() -> void:
-	await _sec(2.5)
+	await _sec(3.0)
 	_key(KEY_ENTER)
-	await _sec(1.6)
-	for k in [KEY_DOWN, KEY_DOWN, KEY_DOWN, KEY_DOWN, KEY_UP, KEY_UP, KEY_UP, KEY_UP]:
+	await _sec(1.8)
+	for k in [KEY_DOWN, KEY_DOWN, KEY_DOWN]:
 		_key(k)
-		await _sec(1.5)
-	_key(KEY_ENTER)
+		await _sec(1.6)
+	_key(KEY_ENTER)                     # «Трофеи»: витрина, два предмета вправо, назад
+	await _sec(1.4)
+	for k in [KEY_RIGHT, KEY_RIGHT]:
+		_key(k)
+		await _sec(1.3)
+	_key(KEY_ESCAPE)
+	await _sec(1.2)
+	_key(KEY_DOWN)
+	await _sec(1.4)
+	_key(KEY_ENTER)                     # «Настройки»: громкость туда-обратно, назад
+	await _sec(1.4)
+	_key(KEY_LEFT)
+	await _sec(0.6)
+	_key(KEY_RIGHT)
+	await _sec(0.8)
+	_key(KEY_ESCAPE)
+	await _sec(1.0)
+	for k in [KEY_UP, KEY_UP, KEY_UP, KEY_UP]:
+		_key(k)
+		await _sec(1.3)
+	_key(KEY_ENTER)                     # «История»: нырок в телевизор
 	await _sec(1.6)

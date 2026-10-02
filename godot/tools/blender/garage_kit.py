@@ -47,6 +47,8 @@ ROLES = {
     "Photo_A": (0.7, 0.6, 0.5), "Photo_B": (0.7, 0.6, 0.5), "Photo_C": (0.7, 0.6, 0.5), "Photo_D": (0.7, 0.6, 0.5),
     "Photo_E": (0.7, 0.6, 0.5), "Photo_F": (0.7, 0.6, 0.5), "Poster_A": (0.6, 0.4, 0.3), "Poster_B": (0.4, 0.5, 0.6),
     "Poster_C": (0.5, 0.4, 0.6),
+    # N0 (дрон-ведущий): ливрея лиги и свечение глаза
+    "LiveryOrange": (0.9, 0.45, 0.12), "LiveryTeal": (0.15, 0.55, 0.55), "EyeGlow": (0.3, 0.9, 1.0),
 }
 
 _rng = random.Random(7)
@@ -1146,6 +1148,55 @@ CARDS = [("Card_Blueprint", 1.2, 0.825, "Blueprint", 2)] + \
     [("Card_Poster_%s" % k, 0.42, 0.62, "Poster_%s" % k, 2) for k in "ABC"]
 
 
+def build_N0(name):
+    """N0 — дрон-ведущий лиги (предложение по промту MENU_GARAGE.md §9; дизайна автора ещё нет): керамический шар ⌀0.3
+    со старыми латунными швами и заклёпками, большой глаз-объектив с ирисом (EyeGlow), антенна с красным огоньком,
+    антигравитационное кольцо снизу (NullGlow), две маленькие руки — в правой старый микрофон; поверх старой промышленной
+    окраски — свежая ливрея лиги (оранжевая шапка, бирюзовая полоса). Origin — центр шара, глаз смотрит в −Y (Godot +Z)."""
+    a = Asset(name)
+    R = 0.15
+    a.add(bm_sphere(R, (0, 0, 0), segs=28, rings=16, scale=(1, 1, 0.94)), "PaintCream", smooth=True)
+    a.add(bm_torus(R + 0.002, 0.012, (0, 0, 0), segs=36, rsegs=6), "Brass", smooth=True)
+    rivets(a, [(math.cos(t) * (R + 0.012), math.sin(t) * (R + 0.012), 0.0) for t in [k * math.pi / 6 for k in range(12)]], 0.008, axis='Z')
+    cap = bm_lathe([(0.0, R * 0.94), (0.06, R * 0.92), (0.1, R * 0.8), (0.112, R * 0.74)], 28, cap_bottom=False)
+    a.add(cap, "LiveryOrange", smooth=True)
+    a.add(bm_torus(R * 0.86, 0.01, (0, 0, R * 0.48), segs=36, rsegs=5), "LiveryTeal", smooth=True)
+    a.add(bm_box((0.07, 0.01, 0.035), loc=(R * 0.72, R * 0.62, -0.02), rot=(0, 0, 40)), "Iron")       # старая табличка сбоку
+    # глаз: корпус объектива, стекло, ирис, зрачок
+    a.add(bm_cyl(0.078, 0.07, (0, -R + 0.01, 0.01), (90, 0, 0), segs=28, bevel=0.008), "Iron")
+    a.add(bm_torus(0.072, 0.008, (0, -R - 0.026, 0.01), (90, 0, 0), segs=28, rsegs=6), "Brass", smooth=True)
+    a.add(bm_cyl(0.064, 0.012, (0, -R - 0.022, 0.01), (90, 0, 0), segs=28), "Grille")
+    a.add(bm_torus(0.04, 0.009, (0, -R - 0.03, 0.01), (90, 0, 0), segs=24, rsegs=6), "EyeGlow", smooth=True)
+    a.add(bm_sphere(0.018, (0, -R - 0.03, 0.01), segs=12, rings=8), "Rubber", smooth=True)
+    # антенна
+    a.add(bm_cyl(0.005, 0.12, (0.04, 0.02, R + 0.05), (0, 15, 0), segs=6), "Steel")
+    a.add(bm_sphere(0.012, (0.055, 0.02, R + 0.11), segs=8, rings=6), "LampRed")
+    # антигравитационное кольцо и три стойки
+    a.add(bm_torus(0.1, 0.012, (0, 0, -R - 0.05), segs=32, rsegs=6), "NullGlow", smooth=True)
+    for k in range(3):
+        t = 2 * math.pi * k / 3
+        a.add(bm_cyl(0.006, 0.07, (math.cos(t) * 0.08, math.sin(t) * 0.08, -R - 0.015), segs=6), "Brass")
+    # руки: плечо-шар, плечо, предплечье, кисть; в правой микрофон
+    for sx in (-1, 1):
+        sh = Vector((sx * (R + 0.005), -0.02, -0.03))
+        a.add(bm_sphere(0.022, sh, segs=10, rings=6), "Brass", smooth=True)
+        el = sh + Vector((sx * 0.06, -0.04, -0.05))
+        wr = el + Vector((sx * 0.01, -0.07, 0.02 if sx > 0 else -0.03))
+        for p0, p1, r in ((sh, el, 0.012), (el, wr, 0.01)):
+            d = p1 - p0
+            bm = bm_cyl(r, d.length, segs=8)
+            q = Vector((0, 0, 1)).rotation_difference(d.normalized())
+            bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=q.to_matrix(), verts=bm.verts)
+            _xform(bm, (p0 + p1) * 0.5)
+            a.add(bm, "Steel")
+        a.add(bm_sphere(0.018, wr, segs=10, rings=6), "PaintCream", smooth=True)
+        if sx > 0:
+            a.add(bm_cyl(0.011, 0.09, (wr.x, wr.y - 0.02, wr.z + 0.03), (-20, 0, 0), segs=10), "Rubber")
+            a.add(bm_sphere(0.024, (wr.x, wr.y - 0.035, wr.z + 0.08), segs=12, rings=8), "Grille", smooth=True)
+            a.add(bm_torus(0.024, 0.004, (wr.x, wr.y - 0.035, wr.z + 0.07), segs=16, rsegs=4), "Brass")
+    return a.finish()
+
+
 MODULES = [
     ("TV", build_TV), ("Sideboard", build_Sideboard), ("Crate", build_Crate), ("Crate_Small", build_Crate_Small),
     ("Mug", build_Mug), ("Stand", build_Stand),
@@ -1160,7 +1211,7 @@ MODULES = [
     ("Tire", build_Tire), ("Cone", build_Cone), ("Jerrycan", build_Jerrycan),
     ("Wall", build_Wall), ("Wall_Short", build_Wall_Short), ("Post", build_Post), ("Post_Hazard", build_Post_Hazard),
     ("Beam", build_Beam), ("Ceiling", build_Ceiling), ("Floor", build_Floor), ("HazardSquare", build_HazardSquare),
-    ("Rug", build_Rug),
+    ("Rug", build_Rug), ("N0", build_N0),
 ] + [(n, (lambda nm, w=w, h=h, r=r, p=p: build_Card(nm, w, h, r, p))) for n, w, h, r, p in CARDS]
 
 

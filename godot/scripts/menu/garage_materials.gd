@@ -47,6 +47,9 @@ const SPEC := {
 	"LampAmber": {"color": Color(0, 0, 0), "emi": [Color(1.0, 0.6, 0.2), 1.6]},
 	"LampGreen": {"color": Color(0, 0, 0), "emi": [Color(0.25, 1.0, 0.35), 4.0]},
 	"Leaves": {"tex": GAR + "leaves.png", "rough": 0.7, "scissor": true},
+	"LiveryOrange": {"set": GAR + "paint_metal/", "ext": "png", "tint": Color(0.95, 0.45, 0.1)},
+	"LiveryTeal": {"set": GAR + "paint_metal/", "ext": "png", "tint": Color(0.16, 0.6, 0.6)},
+	"EyeGlow": {"color": Color(0, 0, 0), "emi": [Color(0.35, 0.9, 1.0), 4.0]},
 	# картинки на моделях с UV 0..1 (tools/gen_garage_textures.py)
 	"Blueprint": {"tex": GAR + "blueprint.png", "rough": 0.85},
 	"BannerCloth": {"tex": GAR + "banner.png", "rough": 0.95},

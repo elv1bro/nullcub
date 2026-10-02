@@ -153,6 +153,24 @@ func _run() -> void:
 		await get_tree().create_timer(1.5).timeout
 		var yaw_s := pd._look_yaw
 		_check("doll_looks", yaw_q * yaw_s < 0.0 and absf(yaw_q - yaw_s) > 30.0, [snappedf(yaw_q, 0.1), snappedf(yaw_s, 0.1)])
+	# 3в. «Трофеи»: Enter — витрина, → следующий предмет (камера подъезжает к магнитоле), Esc — к списку
+	await _key(KEY_4)
+	await _settle()
+	await _key(KEY_ENTER)
+	await _settle()
+	await _key(KEY_RIGHT)
+	await _settle()
+	# камера стоит в кадре второго предмета (магнитола) и смотрит на него: предмет перед камерой, в поле зрения
+	var bx := menu.get_node_or_null("Props/Boombox") as Node3D
+	var want := menu.exhibit_transform(1)
+	var dpos := menu.cam.global_transform.origin.distance_to(want.origin)
+	var seen := bx != null and not menu.cam.is_position_behind(bx.global_position) \
+		and Rect2(Vector2.ZERO, menu.get_viewport().get_visible_rect().size).has_point(menu.cam.unproject_position(bx.global_position))
+	_check("trophies_browse", menu.state == "trophies" and menu.trophies_ui.index == 1 and dpos < 0.01 and seen,
+		[menu.state, menu.trophies_ui.index, snappedf(dpos, 0.001), seen])
+	await _key(KEY_ESCAPE)
+	await _settle()
+	_check("trophies_back", menu.state == "menu" and menu.focus == 3 and not menu.trophies_ui.visible, [menu.state, menu.focus])
 	# 4. цифра 3 → «Мастерская», Esc → «Выход»
 	await _key(KEY_3)
 	_check("digit_jump", menu.focus == 2, menu.focus, 2)
