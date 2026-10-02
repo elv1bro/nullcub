@@ -414,3 +414,7 @@ const JUICE_TIME_ORDER := ["stop", "cinema", "web", "off"]
 const JUICE_TIME_DEFAULT := "stop"
 # табло (N0_VOICE.md п. 3, решение автора 30.09): крит пишет силу удара — «IMPACT 18.4G» (score крита) вместо CRUSHING BLOW!
 const JUICE_IMPACT_CAPTION := true
+# стиль вспышки удара (автор 02.10: «вспышка — детская ерунда, надо серьёзнее»): "serious" — горячее пятно 2–3 кадра, короткий свет
+# в точке удара, на heavy/ko волна воздуха (искажение) и плотная пыль, без белого кадра, цветных колец, искр цвета атакующего, инверсии,
+# послеобразов и линий скорости; "cartoon" — прежний стиль RM (звезда-блик, кольца). Клавиша «=» в бою (HitJuice.impact_style).
+const JUICE_IMPACT_STYLE_DEFAULT := "serious"

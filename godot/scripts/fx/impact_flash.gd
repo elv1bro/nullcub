@@ -17,6 +17,7 @@ const COLLAPSE_SCALE := 0.25
 const COLLAPSE_POP := 0.3          # доля collapse на доигрывание хлопка до полного размера
 
 var _t := 0.0
+var _life := LIFE_S               # затухание (стиль «серьёзный» — короче, HIT_FX.md §13)
 var _quads: Array[MeshInstance3D] = []
 var _alpha := 1.0                 # множитель яркости (пресет FX: FxPreset.flash())
 var _collapse_ms := -1.0
@@ -42,13 +43,14 @@ func collapsing() -> bool:
 	return _collapse_ms > 0.0
 
 
-func setup(mat: Material, size: float, alpha: float = 1.0) -> void:
+## rays = false — только мягкий диск без лучей (горячее пятно стиля «серьёзный», HIT_FX.md §13); life_s — затухание.
+func setup(mat: Material, size: float, alpha: float = 1.0, rays: bool = true, life_s: float = LIFE_S) -> void:
 	_alpha = clampf(alpha, 0.0, 1.0)
-	var specs: Array = [
-		[Vector2(size, size), 0.0],
-		[Vector2(size * 2.2, size * 0.16), deg_to_rad(randf_range(-14.0, 14.0))],
-		[Vector2(size * 0.16, size * 2.2), deg_to_rad(randf_range(-14.0, 14.0))],
-	]
+	_life = maxf(life_s, 0.01)
+	var specs: Array = [[Vector2(size, size), 0.0]]
+	if rays:
+		specs.append([Vector2(size * 2.2, size * 0.16), deg_to_rad(randf_range(-14.0, 14.0))])
+		specs.append([Vector2(size * 0.16, size * 2.2), deg_to_rad(randf_range(-14.0, 14.0))])
 	for spec in specs:
 		var q := QuadMesh.new()
 		q.size = spec[0]
@@ -87,8 +89,8 @@ func _process(delta: float) -> void:
 	var pop := clampf(_t / POP_S, 0.0, 1.0)
 	var s := lerpf(START_SCALE, 1.0, 1.0 - pow(1.0 - pop, 3.0))
 	scale = Vector3.ONE * s
-	var fade := clampf((_t - POP_S) / LIFE_S, 0.0, 1.0)
+	var fade := clampf((_t - POP_S) / _life, 0.0, 1.0)
 	for mi in _quads:
 		mi.transparency = 1.0 - _alpha * (1.0 - fade * fade)
-	if _t >= POP_S + LIFE_S:
+	if _t >= POP_S + _life:
 		queue_free()

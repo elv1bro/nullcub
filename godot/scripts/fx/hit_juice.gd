@@ -6,7 +6,8 @@
 ##   • поводы N0 — сигнал juice_event(event, args): digit_big (большая цифра), metal (сильный удар по железу), worn (деталь вся
 ##     в сколах), digits_pile (цифр на полу много). N0Host слушает и решает, говорить ли (мелкие поводы — N0Lines).
 ## Замедление — варианты Tuning.JUICE_TIME_VARIANTS: статический time_variant читает Match._juice_time. Клавиши (автор 02.10: без F1–F12,
-## на обычных цифрах; 1–9 уже меняют площадку): 0 — следующий вариант замедления, «−» (минус рядом с нулём) — цифры вкл/выкл.
+## на обычных цифрах; 1–9 уже меняют площадку): 0 — следующий вариант замедления, «−» (минус рядом с нулём) — цифры вкл/выкл,
+## «=» — стиль вспышки удара: серьёзный (свет, пыль, волна воздуха) / мульт (прежние звезда RM и цветные кольца).
 ## Физические клавиши — работают в любой раскладке. Тост внизу экрана; на первом FIGHT! сессии — подсказка с клавишами.
 ## Говорят только N0 и табло (LORE_NULL.md «Голоса и тон»).
 class_name HitJuice
@@ -18,11 +19,15 @@ const TOAST_S := 1.6
 const HINT_S := 4.0
 const KEY_VARIANT := KEY_0
 const KEY_DIGITS := KEY_MINUS
+const KEY_STYLE := KEY_EQUAL
+const STYLE_TITLES := {"serious": "серьёзный (свет, пыль, волна воздуха)", "cartoon": "мульт (звезда и кольца, как было)"}
 const PILE_N := 8
 const PILE_GAP_S := 20.0
 
 ## Вариант замедления (ключ Tuning.JUICE_TIME_VARIANTS) — общий на все площадки, переживает смену арены.
 static var time_variant: String = Tuning.JUICE_TIME_DEFAULT
+## Стиль вспышки удара (Tuning.JUICE_IMPACT_STYLES): "serious" — короткий жар, свет и пыль; "cartoon" — прежняя звезда RM и кольца.
+static var impact_style: String = Tuning.JUICE_IMPACT_STYLE_DEFAULT
 ## Цифры-обломки включены (клавиша «−») — общий флаг.
 static var digits_on: bool = Tuning.JUICE_DIGITS
 
@@ -106,7 +111,8 @@ func _on_phase_changed(p: int) -> void:
 
 ## Подсказка клавиш сока удара (первый FIGHT! сессии).
 static func hint_text() -> String:
-	return "0 — замедление: %s    −  — цифры урона: %s" % [String(variant().get("title", time_variant)), "вкл" if digits_on else "выкл"]
+	return "0 — замедление: %s    −  — цифры: %s    =  — удар: %s" % [String(variant().get("title", time_variant)),
+		"вкл" if digits_on else "выкл", "серьёзный" if impact_style == "serious" else "мульт"]
 
 
 func _on_hit_fx(ctx: Dictionary) -> void:
@@ -162,6 +168,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			cycle_time_variant()
 			show_toast("Замедление: %s   (0 — следующее)" % String(variant().get("title", time_variant)))
 			get_viewport().set_input_as_handled()
+		KEY_STYLE:
+			impact_style = "cartoon" if impact_style == "serious" else "serious"
+			show_toast("Удар: %s   (= — переключить)" % String(STYLE_TITLES.get(impact_style, impact_style)))
+			get_viewport().set_input_as_handled()
 		KEY_DIGITS:
 			digits_on = not digits_on
 			if not digits_on:
@@ -181,8 +191,8 @@ func show_toast(text: String, secs: float = TOAST_S) -> void:
 		_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_toast.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-		_toast.offset_left = -420.0
-		_toast.offset_right = 420.0
+		_toast.offset_left = -560.0
+		_toast.offset_right = 560.0
 		_toast.offset_top = -170.0
 		_toast.offset_bottom = -130.0
 		_toast.add_theme_font_size_override("font_size", 26)

@@ -10,6 +10,10 @@ var _i := 0
 var _spawned := false
 
 
+func _ready() -> void:
+	HitJuice.impact_style = "cartoon"   # проба снимает звёзды-вспышки стиля «мульт»; «серьёзный» — juice_probe / impact_look_snapshot (§13)
+
+
 func _process(delta: float) -> void:
 	if not _spawned:
 		_spawned = true

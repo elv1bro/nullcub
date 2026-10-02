@@ -20,6 +20,15 @@ const STRENGTH_REF := 8.0
 const MAX_LIFE_S := 3.0
 const FLASH_SIZE_MIN := 0.42
 const FLASH_SIZE_PER_K := 0.38
+# стиль «серьёзный» (HIT_FX.md §13): горячее пятно и свет удара; k = сила удара / STRENGTH_REF (0.25…2)
+const CORE_SIZE_MIN := 0.1
+const CORE_SIZE_PER_K := 0.07
+const CORE_LIFE_S := 0.04
+const LIGHT_ENERGY_MIN := 1.5
+const LIGHT_ENERGY_PER_K := 2.5
+const LIGHT_RANGE_MIN := 1.6
+const LIGHT_RANGE_PER_K := 0.7
+const LIGHT_LIFE_S := 0.07
 const FLASH_COLOURS := {
 	"body": Color(1.0, 1.0, 1.0),
 	"head": Color(1.0, 0.42, 0.22),
@@ -125,6 +134,7 @@ static func flash_material(kind: String) -> StandardMaterial3D:
 static func prewarm(parent: Node) -> void:
 	for kind in FLASH_COLOURS.keys():
 		flash_material(kind)
+	core_material()
 	if parent == null or not parent.is_inside_tree():
 		return
 	for m in ["", "iron", "bone"]:   # щепки и пыль; искры металла; серые осколки (HIT_FX.md §13)
@@ -134,9 +144,20 @@ static func prewarm(parent: Node) -> void:
 
 
 ## Вспышка: ImpactFlash (диск + два луча) к камере (+Z), чуть перед точкой контакта; размер по силе удара.
+## Стиль «серьёзный» (HitJuice.impact_style, HIT_FX.md §13): вместо звезды — маленькое горячее пятно без лучей на 2–3 кадра и короткий
+## тёплый свет ImpactLight, который освещает куклы и пол (сила удара читается светом, а не наклейкой).
 static func _spawn_flash(root: Node3D, position: Vector3, k: float, kind: String) -> void:
 	var alpha := FxPreset.flash()   # пресет FX игрока (HIT_FX.md §11.2): reduced — тусклее, off — без звезды
 	if alpha <= 0.001:
+		return
+	if HitJuice.impact_style == "serious":
+		var core := ImpactFlash.new()
+		core.name = "Flash"
+		root.add_child(core)
+		core.global_transform = Transform3D(Basis.IDENTITY, position + Vector3(0.0, 0.0, 0.18))
+		core.setup(core_material(), CORE_SIZE_MIN + CORE_SIZE_PER_K * k, alpha * 0.85, false, CORE_LIFE_S)
+		ImpactLight.flash(root, position, LIGHT_ENERGY_MIN + LIGHT_ENERGY_PER_K * k, LIGHT_RANGE_MIN + LIGHT_RANGE_PER_K * k,
+			LIGHT_LIFE_S, ImpactLight.WARM)
 		return
 	var size := FLASH_SIZE_MIN + FLASH_SIZE_PER_K * k
 	var flash := ImpactFlash.new()
@@ -144,6 +165,18 @@ static func _spawn_flash(root: Node3D, position: Vector3, k: float, kind: String
 	root.add_child(flash)
 	flash.global_transform = Transform3D(Basis.IDENTITY, position + Vector3(0.0, 0.0, 0.18))
 	flash.setup(flash_material(kind), size, alpha)
+
+
+static var _core_mat: StandardMaterial3D
+
+
+## Горячее пятно стиля «серьёзный»: тёплый белый, аддитивно, без теста глубины (как звезда), один на все типы удара.
+static func core_material() -> StandardMaterial3D:
+	if _core_mat == null:
+		var m := flash_material("body").duplicate() as StandardMaterial3D
+		m.albedo_color = Color(1.0, 0.86, 0.66)
+		_core_mat = m
+	return _core_mat
 
 
 static func _on_finished(root: Node3D) -> void:

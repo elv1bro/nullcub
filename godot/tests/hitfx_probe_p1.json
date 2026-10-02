@@ -282,8 +282,8 @@
     {
       "id": "crit_camera_restored",
       "ok": true,
-      "value": "Camera:<Camera3D#153377311299>",
-      "limit": "Camera:<Camera3D#153377311299>"
+      "value": "Camera:<Camera3D#154484607558>",
+      "limit": "Camera:<Camera3D#154484607558>"
     },
     {
       "id": "crit_no_time_tags",
@@ -474,8 +474,8 @@
     {
       "id": "final_camera_game",
       "ok": true,
-      "value": "Camera:<Camera3D#153377311299>",
-      "limit": "Camera:<Camera3D#153377311299>"
+      "value": "Camera:<Camera3D#154484607558>",
+      "limit": "Camera:<Camera3D#154484607558>"
     },
     {
       "id": "final_match_fx_children",

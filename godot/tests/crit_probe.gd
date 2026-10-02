@@ -40,6 +40,7 @@ var _phase_seen: Dictionary = {}
 
 
 func _ready() -> void:
+	HitJuice.impact_style = "cartoon"   # проба проверяет стиль «мульт» (звезда, кольца, послеобразы); «серьёзный» — juice_probe (§13)
 	pg = (load(SCENE) as PackedScene).instantiate()
 	add_child(pg)
 	pg.set_process_unhandled_input(false)

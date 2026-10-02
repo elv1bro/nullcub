@@ -66,6 +66,7 @@ func _run() -> void:
 	await _spawn_mdolls()
 	_material_checks(p1, p2)
 	await _debris_checks(p1)
+	await _style_checks(p1, p2)
 	await _mark_checks(p1, p2)
 	await _digit_checks(p1, p2)
 	await _time_checks(p1, p2)
@@ -252,6 +253,49 @@ func _debris_checks(p1: Doll) -> void:
 		and kinds["rust"] == ["Chips", "DustPuff", "Sparks"] and kinds["bone"] == ["Chips", "DustPuff"], kinds,
 		{"maple": ["Chips", "DustPuff"], "iron": ["DustPuff", "Sparks"], "rubber": ["DustPuff"], "rust": ["Chips", "DustPuff", "Sparks"]})
 	await _frames(1)
+
+
+# ------------------------------------------------------------------ стиль удара
+
+## «Серьёзный» (по умолчанию): у ImpactFx — горячее пятно без лучей и свет ImpactLight; heavy директора — свет и волна воздуха, без колец,
+## послеобразов, лент, линий и белого кадра; клавиша «=» — «мульт» (прежние звезда и кольца) и обратно.
+func _style_checks(p1: Doll, p2: Doll) -> void:
+	HitJuice.impact_style = Tuning.JUICE_IMPACT_STYLE_DEFAULT
+	var root := ImpactFx.spawn_impact(match_node, Vector3(0.0, -40.0, 0.0), Vector3.UP, 8.0, "body", "maple")
+	var flash := root.get_node_or_null("Flash")
+	var quads := flash.get_child_count() if flash != null else -1
+	var light := root.find_children("*", "ImpactLight", true, false).size()
+	_check("style_serious_light_hit", Tuning.JUICE_IMPACT_STYLE_DEFAULT == "serious" and quads == 1 and light == 1, [Tuning.JUICE_IMPACT_STYLE_DEFAULT, quads, light],
+		["serious", 1, 1], "hot core without rays + ImpactLight")
+	root.queue_free()
+	var dir := match_node.get_node("HitFxDirector") as HitFxDirector
+	var st0: Dictionary = dir.stats.duplicate()
+	var ctx := match_node.make_hit_ctx(p2, p1, 12.0, "body", p2.torso().global_position, 1, false, "", 8.0)
+	ctx["tier"] = "heavy"
+	ctx["score"] = 12.0
+	dir.play(ctx)
+	await _frames(2)
+	var d := func(k: String) -> int: return int(dir.stats.get(k, 0)) - int(st0.get(k, 0))
+	_check("style_serious_heavy", d.call("lights") == 1 and d.call("air_shocks") == 1 and d.call("waves") == 0 and d.call("afterimages") == 0
+		and d.call("trails") == 0 and d.call("lines") == 0 and d.call("flashes") == 0 and d.call("sparks") == 0,
+		[d.call("lights"), d.call("air_shocks"), d.call("waves"), d.call("afterimages"), d.call("trails"), d.call("lines"), d.call("flashes"), d.call("sparks")],
+		"lights 1, air_shocks 1, waves/afterimages/trails/lines/flashes/sparks 0")
+	await _wait_time_clear()
+	var ke := InputEventKey.new()
+	ke.physical_keycode = KEY_EQUAL
+	ke.pressed = true
+	juice._unhandled_input(ke)
+	var s1 := HitJuice.impact_style
+	var st1: Dictionary = dir.stats.duplicate()
+	dir.play(ctx)
+	await _frames(2)
+	var waves := int(dir.stats.get("waves", 0)) - int(st1.get("waves", 0))
+	juice._unhandled_input(ke)
+	_check("style_key_cartoon", s1 == "cartoon" and waves >= 1 and HitJuice.impact_style == "serious", [s1, waves, HitJuice.impact_style],
+		["cartoon", ">= 1 ring", "serious"], "key = toggles; cartoon keeps the old rings")
+	await _wait_time_clear()
+	await _wait_real(0.6)
+	_heal([p1, p2])
 
 
 # ------------------------------------------------------------------ следы
