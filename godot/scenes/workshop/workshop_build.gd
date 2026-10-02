@@ -39,6 +39,8 @@ signal dummy_hit(amount: float, position: Vector3, part: String, kind: String)
 ## Выбор (UI v0.2, контекстная правая панель): {} — ничего; {"source": "shelf", "part": id} — деталь каталога;
 ## {"source": "stand", "target": "body" | "weapon", "uid": uid} — деталь на кукле / верстаке.
 signal selection_changed
+## Встроенная мастерская (в гараже меню, scenes/menu/garage_workshop.gd): двойной Esc просит гараж забрать управление.
+signal exit_requested
 
 enum Mode { BUILD, TEST }
 enum View { BODY, WEAPON }
@@ -93,6 +95,14 @@ class _PreviewBlueprint extends BodyBlueprint:
 @export var autosave_on_test := true
 ## Имя файла автосейва в user://blueprints (проба ставит своё).
 @export var autosave_name := CraftEdit.AUTOSAVE
+## Арена, чьи bounds() ограничивают камеру испытания: в отдельной сцене — комната «Workshop», в гараже — невидимая сцена-коробка Stage.
+@export var test_arena_path := NodePath("../Workshop")
+## Наименьшая полувысота кадра камеры испытания, м: в гараже (потолок 3.4 м) меньше, чем в большой комнате мастерской.
+@export var test_min_half_height := 1.9
+## Встроенная мастерская (в гараже меню): своей комнаты нет (арены $Workshop нет), выход из мастерской — сигналом exit_requested,
+## а не сменой сцены. Пока мастерская не активна (set_active(false)), она спит: ввод, процессы, UI и 3D скрыты.
+var embedded := false
+var active := true
 
 var blueprint: BodyBlueprint
 var weapon_bp: WeaponBlueprint
@@ -182,7 +192,7 @@ var _autosave_at := 0.0
 ## Автосейв правок: пауза после последней правки (серия мазков / колёсиком — одна запись).
 const AUTOSAVE_DELAY_S := 2.0
 
-@onready var arena: Node3D = $Workshop
+@onready var arena: Node3D = get_node_or_null("Workshop") as Node3D
 @onready var build_cam: Camera3D = $BuildCamera
 @onready var stand_root: Node3D = $Stand
 @onready var bench_spot: Node3D = $BenchSpot
@@ -190,6 +200,7 @@ const AUTOSAVE_DELAY_S := 2.0
 @onready var crate_spot: Node3D = $CrateSpot
 @onready var barrel_spot: Node3D = $BarrelSpot
 @onready var test_root: Node3D = $TestRoot
+@onready var test_spot: Node3D = get_node_or_null("TestSpot") as Node3D   # где оживает кукла испытания (есть — встроенная мастерская)
 @onready var ui: Node = $UI
 
 
@@ -199,17 +210,20 @@ const CLEAR_ARENA_PROPS := ["Props/Barrel_2", "Props/Sawhorse_1"]
 
 func _ready() -> void:
 	build_cam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # ездит в _process
-	for p in CLEAR_ARENA_PROPS:
-		var n := arena.get_node_or_null(p)
-		if n != null:
-			n.queue_free()
+	embedded = arena == null
+	if arena != null:
+		for p in CLEAR_ARENA_PROPS:
+			var n := arena.get_node_or_null(p)
+			if n != null:
+				n.queue_free()
 	_make_materials()
 	paint = WorkshopPaint.new()
 	paint.name = "Paint"
 	paint.ws = self
 	add_child(paint)
 	build_cam.fov = CAM_FOV
-	build_cam.make_current()
+	if not embedded:
+		build_cam.make_current()
 	sfx = WsSfx.new()
 	sfx.name = "Sfx"
 	add_child(sfx)
@@ -1052,6 +1066,7 @@ func _rebuild_stand() -> void:
 				_set_material_override(m, _mats["mirror_ghost"])
 	_update_pole()
 	_make_held_weapon()
+	_sync_embedded_view()
 
 
 func _rebuild_bench() -> void:
@@ -2335,7 +2350,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				if not cancel_mirror() and not clear_tools() and not clear_selection():   # иначе двойной Esc — в гараж (Flow)
 					if _time < _esc_armed_until:
 						_flush_autosave(true)
-						Flow.to_menu()
+						if embedded:
+							exit_requested.emit()
+						else:
+							Flow.to_menu()
 					else:
 						_esc_armed_until = _time + 1.5
 						_say("Esc ещё раз — в гараж", COL_INFO)
@@ -2414,8 +2432,71 @@ func set_view(v: int) -> void:
 		if paint != null:
 			paint.reset_turn()
 	set_hover({})
+	_sync_embedded_view()
 	view_changed.emit(view)
 	changed.emit()
+
+
+# =================================================================== встроенная мастерская (гараж меню)
+
+## Свет комнаты испытаний во встроенной мастерской (узел TestLights: у гаража лампы расставлены по зонам, а бой идёт посреди комнаты).
+func _set_test_lights(on: bool) -> void:
+	var tl := get_node_or_null("TestLights") as Node3D
+	if tl != null:
+		tl.visible = on
+
+
+## В гараже стенд стоит между камерой и верстаком: в виде «Оружие» кукла со стендом прячутся, чтобы не закрывать оружие.
+func _sync_embedded_view() -> void:
+	if not embedded:
+		return
+	var body_view := view == View.BODY
+	stand_root.visible = body_view
+	if stand != null:
+		stand.visible = body_view
+
+
+## Где оживает кукла испытания: у встроенной мастерской это точка TestSpot на плоскости боя z = 0 (стенд гаража стоит у задней
+## стены, а бой 2.5D идёт в плоскости z = 0), иначе — место стенда.
+func test_origin() -> Vector3:
+	return test_spot.global_position if test_spot != null else stand_root.global_position
+
+
+## Поза камеры сборки «с нуля» (ни перетаскивания, ни орбиты): куда гаражу вести свою камеру, чтобы передать её мастерской без скачка.
+func snap_camera_pose() -> Transform3D:
+	_frame_h = 0.0
+	var g := _camera_goal()
+	return cam_transform(g["pivot"] as Vector3, float(g["h"]), cam_yaw, cam_pitch, cam_zoom)
+
+
+## Камера сборки встаёт на место камеры гаража (from_cam; null — остаётся где была) и кадр «приклеивается» к бойцу.
+func take_camera_from(from_cam: Camera3D) -> void:
+	if from_cam != null:
+		build_cam.global_transform = from_cam.global_transform
+	_cam_snap = true
+	build_cam.make_current()
+
+
+## Включить / усыпить встроенную мастерскую. Включённая берёт камеру (поза — как была у гаража, кадр сразу «приклеивается»),
+## спящая не слушает ввод, не считает кадры и не рисуется; автосейв при засыпании пишется сразу.
+func set_active(on: bool, take_camera := true) -> void:
+	if on == active:
+		return
+	active = on
+	process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
+	set_process_unhandled_input(on)
+	set_process_input(on)
+	visible = on
+	if ui is CanvasLayer:
+		(ui as CanvasLayer).visible = on
+	if on:
+		if take_camera:
+			take_camera_from(null)
+	else:
+		if mode == Mode.TEST:
+			stop_test()
+		cancel_drag()
+		_flush_autosave(true)
 
 
 # =================================================================== испытание
@@ -2457,7 +2538,7 @@ func start_test() -> bool:
 	d.player_index = 0
 	d.input_prefix = "p1"
 	d.external_input = probe_input
-	d.position = stand_root.global_position + Vector3(0, 0.02, 0)
+	d.position = test_origin() + Vector3(0, 0.02, 0)
 	test_root.add_child(d)
 	d.add_to_group(TEST_GROUP)
 	test_doll = d
@@ -2497,15 +2578,16 @@ func start_test() -> bool:
 	test_cam.name = "TestCamera"
 	test_cam.fov = 45.0
 	test_cam.target_group = TEST_GROUP
-	test_cam.arena_path = NodePath("../Workshop")
+	test_cam.arena_path = test_arena_path
 	test_cam.floor_inset = 0.0
-	test_cam.min_half_height = 1.9
+	test_cam.min_half_height = test_min_half_height
 	test_cam.padding = 1.5
 	test_cam.padding_y = 1.0
 	add_child(test_cam)
 	test_cam.make_current()
 	test_cam.snap()
 	feel.camera = test_cam
+	_set_test_lights(true)
 	mode_changed.emit(mode)
 	changed.emit()
 	_say("Испытание! Esc / Tab — назад к сборке", COL_OK)
@@ -2547,6 +2629,7 @@ func stop_test() -> void:
 	build_cam.make_current()
 	_cam_snap = true
 	mode = Mode.BUILD
+	_set_test_lights(false)
 	_rebuild()
 	mode_changed.emit(mode)
 	_say("Назад к сборке", COL_INFO)
