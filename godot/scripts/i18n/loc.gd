@@ -16,7 +16,7 @@ const SOURCE := "ru"
 const REFERENCE := "en"
 const BUILTIN := ["ru", "en"]     # если файлы языков не попали в экспорт (нужен include_filter="*.json") — меню всё равно живёт
 
-var codes: Array[String] = []    # SOURCE первым, дальше по алфавиту
+var codes: Array[String] = []    # ru, en, дальше остальные по алфавиту
 var names := {}                  # код → родное название («Русский», «English», «Deutsch»)
 var current := SOURCE
 var _loaded := {}                # код → Translation, уже отданный TranslationServer
@@ -42,9 +42,10 @@ func scan() -> void:
 		if not found.has(c):
 			found.append(c)
 	found.sort()
-	if found.has(SOURCE):
-		found.erase(SOURCE)
+	found.erase(SOURCE)
+	found.erase(REFERENCE)
 	codes.append(SOURCE)
+	codes.append(REFERENCE)
 	codes.append_array(found)
 	var base := _read(REFERENCE)
 	for c in codes:
