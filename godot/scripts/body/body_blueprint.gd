@@ -16,7 +16,10 @@ extends Resource
 const PARTS_DIR := "res://data/body/parts/"
 
 @export var id := ""
-@export var title := ""
+@export var title := "":
+	get:
+		# в .tres лежит русский ключ перевода; " *" — пометка «не сохранено» мастерской (CraftEdit), её не переводим
+		return tr(title.trim_suffix(" *")) + (" *" if title.ends_with(" *") else "")
 @export var energy_budget := 100
 @export var nodes: Array[Dictionary] = []
 ## Тяги (WORKSHOP_V3.md §3): uid деталей, которые мышь / стик тянут к цели, ≤ MAX_PULLS. control[0] — главная рука (захват,
@@ -187,6 +190,108 @@ static func _socket_xf(d: PartDef) -> Transform3D:
 	return _socket_cache[key]
 
 
+# --- тексты ошибок validate() / mat_error / joint_error: русские и СТАБИЛЬНЫЕ (мастерская сопоставляет их по началу и по словам —
+# CraftEdit._friendly, joint_error.contains("нет мышцы")), поэтому здесь не tr(). Игроку их показывает localize_error(). ---
+const E_UID_LEN := "uid «%s»: нужен ровно один символ"
+const E_UID_DUP := "uid «%s» повторяется"
+const E_NO_PART := "нет детали «%s»"
+const E_ROOT_CORE := "корень должен быть ядром, а не «%s»"
+const E_NO_PARENT := "у «%s» нет родителя «%s»"
+const E_ROOTS := "корней %d, нужен один (ядро)"
+const E_HEADS := "голов %d, нужна ровно одна"
+const E_ENERGY := "энергия %d > бюджета %d"
+const E_CTRL_MISSING := "управляемая деталь «%s» не найдена"
+const E_CTRL_FIXED := "рука мышью на «%s» — у детали нет своего тела (fixed), отметь тело-хозяина"
+const E_MAT_UNKNOWN := "у «%s» неизвестный материал «%s»"
+const E_MAT_NOPAINT := "«%s» (%s) не красится: материал «%s» — только для деталей кита"
+const E_JT_UNKNOWN := "у «%s» неизвестный тип шарнира «%s»"
+const E_JT_ROOT := "у корня «%s» нет сустава — шарнир «%s» ставить некуда"
+const E_JT_FIXED := "«%s» (%s) крепится намертво — шарнир «%s» к ней не ставится"
+const E_JT_NOMUSCLE := "у сустава «%s» (%s) нет мышцы — шарнир «%s» ничего не усилит"
+const E_WELD_HEAD := "голову «%s» нельзя приварить: она держится на своём суставе Neck"
+const E_WELD_CTRL := "управляемую деталь «%s» нельзя приварить: рука мышью тянет её собственное тело"
+const E_WELD_AUTO := "«%s» нельзя приварить: сустав «%s» на её якоре «%s» берёт группу от неё (auto)"
+const E_CYCLE := "цикл или обрыв в цепочке родителей (собрать можно %d из %d деталей)"
+const E_UID_CHARS := "uid «%s»: только 0-9A-Z"
+const E_NO_ANCHOR := "у «%s» (%s) нет якоря «%s» для «%s»"
+const E_ANCHOR_KIND := "якорь «%s» у «%s» не принимает вид «%s» (%s)"
+const E_ANCHOR_TWO := "на якорь «%s» у «%s» повешены две детали: «%s» и «%s»"
+const E_HEAD_NECK := "голова «%s» должна висеть на Anchor_Neck ядра"
+const E_BODY_DUP := "имя тела «%s» повторяется (%s и %s)"
+const E_GROUP_UNKNOWN := "у сустава «%s» неизвестная группа мышц «%s»"
+const E_JOINT_DUP := "имя сустава «%s» повторяется (%s и %s)"
+const E_PULLS := "тяг %d, можно не больше %d"
+const E_RMB := "тяга ПКМ «%s» не среди тяг (control)"
+## Все форматы ошибок для localize_error().
+const ERROR_FORMATS := [
+	E_UID_LEN,
+	E_UID_DUP,
+	E_NO_PART,
+	E_ROOT_CORE,
+	E_NO_PARENT,
+	E_ROOTS,
+	E_HEADS,
+	E_ENERGY,
+	E_CTRL_MISSING,
+	E_CTRL_FIXED,
+	E_MAT_UNKNOWN,
+	E_MAT_NOPAINT,
+	E_JT_UNKNOWN,
+	E_JT_ROOT,
+	E_JT_FIXED,
+	E_JT_NOMUSCLE,
+	E_WELD_HEAD,
+	E_WELD_CTRL,
+	E_WELD_AUTO,
+	E_CYCLE,
+	E_UID_CHARS,
+	E_NO_ANCHOR,
+	E_ANCHOR_KIND,
+	E_ANCHOR_TWO,
+	E_HEAD_NECK,
+	E_BODY_DUP,
+	E_GROUP_UNKNOWN,
+	E_JOINT_DUP,
+	E_PULLS,
+	E_RMB,
+]
+static var _error_rx: Array = []
+
+
+## Ошибка validate() на языке игрока (запасной показ в мастерской, где нет «человеческой» формулировки): по сообщению находим формат,
+## переводим его и подставляем те же значения (uid, id, числа; названия — тоже через перевод). Неизвестная строка — как есть.
+static func localize_error(e: String) -> String:
+	if _error_rx.is_empty():
+		for f in ERROR_FORMATS:
+			var fs := String(f)
+			var pat := "^"
+			var kinds: Array = []
+			var i := 0
+			while i < fs.length():
+				var ch := fs[i]
+				if ch == "%" and i + 1 < fs.length() and (fs[i + 1] == "s" or fs[i + 1] == "d"):
+					kinds.append(fs[i + 1])
+					pat += "(.*?)" if fs[i + 1] == "s" else "(-?\\d+)"
+					i += 2
+					continue
+				if "\\.+*?()[]{}|^$-".contains(ch):
+					pat += "\\"
+				pat += ch
+				i += 1
+			_error_rx.append([fs, RegEx.create_from_string(pat + "$"), kinds])
+	for entry in _error_rx:
+		var m: RegExMatch = (entry[1] as RegEx).search(e)
+		if m == null:
+			continue
+		var kinds2: Array = entry[2]
+		var args: Array = []
+		for k in range(kinds2.size()):
+			var v := m.get_string(k + 1)
+			args.append(int(v) if kinds2[k] == "d" else TranslationServer.translate(v))
+		return TranslationServer.translate(String(entry[0])) % args
+	return e
+
+
 ## Пустой массив = чертёж корректен; иначе — список ошибок по-русски.
 func validate() -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -196,18 +301,18 @@ func validate() -> PackedStringArray:
 	for n in nodes:
 		var uid := String(n.get("uid", ""))
 		if uid.length() != 1:
-			errors.append("uid «%s»: нужен ровно один символ" % uid)
+			errors.append(E_UID_LEN % uid)
 		if uids.has(uid):
-			errors.append("uid «%s» повторяется" % uid)
+			errors.append(E_UID_DUP % uid)
 		uids[uid] = n
 		var d := part_def(String(n.get("part", "")))
 		if d == null:
-			errors.append("нет детали «%s»" % n.get("part", ""))
+			errors.append(E_NO_PART % n.get("part", ""))
 			continue
 		if String(n.get("parent", "")) == "":
 			roots += 1
 			if d.kind != "core":
-				errors.append("корень должен быть ядром, а не «%s»" % d.id)
+				errors.append(E_ROOT_CORE % d.id)
 		if d.kind == "head":
 			heads += 1
 		var mid := String(n.get("mat", ""))
@@ -223,19 +328,19 @@ func validate() -> PackedStringArray:
 	for n in nodes:
 		var p := String(n.get("parent", ""))
 		if p != "" and not uids.has(p):
-			errors.append("у «%s» нет родителя «%s»" % [n.get("uid", ""), p])
+			errors.append(E_NO_PARENT % [n.get("uid", ""), p])
 	if roots != 1:
-		errors.append("корней %d, нужен один (ядро)" % roots)
+		errors.append(E_ROOTS % roots)
 	if heads != 1:
-		errors.append("голов %d, нужна ровно одна" % heads)
+		errors.append(E_HEADS % heads)
 	if energy_used() > energy_budget:
-		errors.append("энергия %d > бюджета %d" % [energy_used(), energy_budget])
+		errors.append(E_ENERGY % [energy_used(), energy_budget])
 	for c in control:
 		if not uids.has(c):
-			errors.append("управляемая деталь «%s» не найдена" % c)
+			errors.append(E_CTRL_MISSING % c)
 		elif _is_fixed_n(uids[c]):
 			# своего тела нет (навершие вместо кисти, декор, сварка): ArmAssist искал бы тело, которого нет, — рука мышью молча пропала бы
-			errors.append("рука мышью на «%s» — у детали нет своего тела (fixed), отметь тело-хозяина" % c)
+			errors.append(E_CTRL_FIXED % c)
 	if errors.is_empty():
 		errors.append_array(_validate_assembly())
 	return errors
@@ -502,16 +607,16 @@ func mat_error(uid: String, mat_id: String) -> String:
 	var n := find_node(uid)
 	var d := part_def(String(n.get("part", "")))
 	if n.is_empty() or d == null:
-		return "нет детали «%s»" % uid
+		return E_NO_PART % uid
 	return _mat_error(n, d, mat_id)
 
 
 static func _mat_error(n: Dictionary, d: PartDef, mat_id: String) -> String:
 	var uid := String(n.get("uid", ""))
 	if MaterialDef.get_def(mat_id) == null:
-		return "у «%s» неизвестный материал «%s»" % [uid, mat_id]
+		return E_MAT_UNKNOWN % [uid, mat_id]
 	if d.base_mat == "":
-		return "«%s» (%s) не красится: материал «%s» — только для деталей кита" % [uid, d.id, mat_id]
+		return E_MAT_NOPAINT % [uid, d.id, mat_id]
 	return ""
 
 
@@ -520,18 +625,18 @@ func joint_error(uid: String, jt: String) -> String:
 	var n := find_node(uid)
 	var d := part_def(String(n.get("part", "")))
 	if n.is_empty() or d == null:
-		return "нет детали «%s»" % uid
+		return E_NO_PART % uid
 	return _joint_error(n, d, jt)
 
 
 func _joint_error(n: Dictionary, d: PartDef, jt: String) -> String:
 	var uid := String(n.get("uid", ""))
 	if not KitJoint.is_type(jt):
-		return "у «%s» неизвестный тип шарнира «%s»" % [uid, jt]
+		return E_JT_UNKNOWN % [uid, jt]
 	if String(n.get("parent", "")) == "":
-		return "у корня «%s» нет сустава — шарнир «%s» ставить некуда" % [uid, jt]
+		return E_JT_ROOT % [uid, jt]
 	if is_fixed_part(d):
-		return "«%s» (%s) крепится намертво — шарнир «%s» к ней не ставится" % [uid, d.id, jt]
+		return E_JT_FIXED % [uid, d.id, jt]
 	if not KitJoint.is_weld(jt):
 		# мотор / пружина множат мышцу группы (ModularDoll._update_pair_gains): у группы без мышцы (k = 0 в Tuning.MUSCLE_GROUPS —
 		# Ankle: стопы, третий сегмент ноги, «прочие» якоря) они стоили бы энергию и ничего не давали. Группа — по якорю
@@ -541,19 +646,19 @@ func _joint_error(n: Dictionary, d: PartDef, jt: String) -> String:
 			var g := _anchor_group(uid, 0)
 			var G: Dictionary = Tuning.MUSCLE_GROUPS.get(g, {})
 			if not G.is_empty() and float(G["k"]) <= 0.0:
-				return "у сустава «%s» (%s) нет мышцы — шарнир «%s» ничего не усилит" % [uid, g, KitJoint.info(jt)["title"]]
+				return E_JT_NOMUSCLE % [uid, g, KitJoint.info(jt)["title"]]
 		return ""
 	if d.kind == "head":
-		return "голову «%s» нельзя приварить: она держится на своём суставе Neck" % uid
+		return E_WELD_HEAD % uid
 	if control.has(uid):
-		return "управляемую деталь «%s» нельзя приварить: рука мышью тянет её собственное тело" % uid
+		return E_WELD_CTRL % uid
 	var anchors := part_anchors(d)
 	for c in nodes:
 		if String(c.get("parent", "")) != uid or _is_fixed_n(c):
 			continue
 		var an := String(c.get("anchor", ""))
 		if String((anchors.get(an, {}) as Dictionary).get("joint_group", "")) == "auto":
-			return "«%s» нельзя приварить: сустав «%s» на её якоре «%s» берёт группу от неё (auto)" % [uid, c.get("uid", ""), an]
+			return E_WELD_AUTO % [uid, c.get("uid", ""), an]
 	return ""
 
 
@@ -564,7 +669,7 @@ func _validate_assembly() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var sorted := sorted_nodes()
 	if sorted.size() != nodes.size():
-		errors.append("цикл или обрыв в цепочке родителей (собрать можно %d из %d деталей)" % [sorted.size(), nodes.size()])
+		errors.append(E_CYCLE % [sorted.size(), nodes.size()])
 		return errors
 	var used_anchor := {}
 	var body_names := {}
@@ -573,7 +678,7 @@ func _validate_assembly() -> PackedStringArray:
 	for n in sorted:
 		var uid := String(n.get("uid", ""))
 		if not UID_CHARS.contains(uid):
-			errors.append("uid «%s»: только 0-9A-Z" % uid)
+			errors.append(E_UID_CHARS % uid)
 		var d := part_def(String(n.get("part", "")))
 		var p := String(n.get("parent", ""))
 		if p == "":
@@ -583,34 +688,34 @@ func _validate_assembly() -> PackedStringArray:
 			var an := String(n.get("anchor", ""))
 			var anchors := part_anchors(pd)
 			if not anchors.has(an):
-				errors.append("у «%s» (%s) нет якоря «%s» для «%s»" % [p, pd.id, an, uid])
+				errors.append(E_NO_ANCHOR % [p, pd.id, an, uid])
 			else:
 				var acc: PackedStringArray = anchors[an]["accepts"]
 				if not acc.is_empty() and not acc.has(d.kind):
-					errors.append("якорь «%s» у «%s» не принимает вид «%s» (%s)" % [an, p, d.kind, d.id])
+					errors.append(E_ANCHOR_KIND % [an, p, d.kind, d.id])
 			var key := p + "/" + an
 			if used_anchor.has(key):
-				errors.append("на якорь «%s» у «%s» повешены две детали: «%s» и «%s»" % [an, p, used_anchor[key], uid])
+				errors.append(E_ANCHOR_TWO % [an, p, used_anchor[key], uid])
 			used_anchor[key] = uid
 			if d.kind == "head" and (p != root_uid or an != "Anchor_Neck"):
-				errors.append("голова «%s» должна висеть на Anchor_Neck ядра" % uid)
+				errors.append(E_HEAD_NECK % uid)
 		if is_fixed(uid):
 			continue
 		var bn := body_name_of(uid)
 		if body_names.has(bn):
-			errors.append("имя тела «%s» повторяется (%s и %s)" % [bn, body_names[bn], uid])
+			errors.append(E_BODY_DUP % [bn, body_names[bn], uid])
 		body_names[bn] = uid
 		if p != "":
 			var g := joint_group_of(uid)
 			if g == "" or not AUTO_NEXT.has(g):
-				errors.append("у сустава «%s» неизвестная группа мышц «%s»" % [uid, g])
+				errors.append(E_GROUP_UNKNOWN % [uid, g])
 			var jn := joint_name_of(uid)
 			if joint_names.has(jn):
-				errors.append("имя сустава «%s» повторяется (%s и %s)" % [jn, joint_names[jn], uid])
+				errors.append(E_JOINT_DUP % [jn, joint_names[jn], uid])
 			joint_names[jn] = uid
 	if control.size() > MAX_PULLS:
-		errors.append("тяг %d, можно не больше %d" % [control.size(), MAX_PULLS])
+		errors.append(E_PULLS % [control.size(), MAX_PULLS])
 	for u in control_rmb:
 		if not control.has(u):
-			errors.append("тяга ПКМ «%s» не среди тяг (control)" % u)
+			errors.append(E_RMB % u)
 	return errors

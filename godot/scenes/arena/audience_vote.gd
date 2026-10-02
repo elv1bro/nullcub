@@ -16,7 +16,7 @@ signal vote_started(options: Array)
 signal vote_finished(result: Dictionary)
 signal effect_ended
 
-## Пул вариантов: title — строка табло, g / dir — поле (сила в G, направление экрана), debris — обломки, chaos — насколько вариант
+## Пул вариантов: title — английский ключ строки табло (на экран идёт через title_of()), g / dir — поле (сила в G, направление экрана), debris — обломки, chaos — насколько вариант
 ## любит разогретая толпа (0..1). SIDE PULL — сторона случайная.
 const OPTIONS := {
 	"low_gravity": {"title": "LOW GRAVITY", "g": 0.10, "dir": Vector2(0.0, -1.0), "chaos": 0.1},
@@ -71,8 +71,7 @@ func _ready() -> void:
 	_rng.seed = rng_seed if rng_seed != 0 else int(Time.get_ticks_usec())
 	if arena != null:
 		_board = arena.find_child("Text_NULL_FIELD", true, false) as Label3D
-		if _board != null:
-			_board_text = _board.text
+		_board_text = tr("NULL FIELD")
 	if match_node != null:
 		match_node.phase_changed.connect(_on_phase)
 		match_node.hit_fx.connect(func(ctx: Dictionary) -> void:
@@ -148,7 +147,7 @@ func start_vote() -> void:
 	t = 0.0
 	if arena.has_method("excite"):
 		arena.call("excite", 0.6)
-	_set_board("AUDIENCE EVENT")
+	_set_board(tr("AUDIENCE EVENT"))
 	if panel != null:
 		panel.call("show_vote", options, _panel_n0_line("start"))
 	vote_started.emit(options)
@@ -162,10 +161,12 @@ func _finish_vote() -> void:
 	var winner: Dictionary = options[wi]
 	var mismatch := anomaly == "vote_mismatch" and votes_done == 0
 	var applied: Dictionary = INVERSION if mismatch else winner
+	var winner_title := String(winner["title"])
+	var applied_title := title_of("inversion") if mismatch else winner_title
 	votes_done += 1
 	result = {"options": options.map(func(o: Dictionary) -> String: return String(o["id"])), "pct": target_pct.duplicate(),
-		"winner": String(winner["id"]), "winner_title": String(winner["title"]), "applied": String(applied["id"]),
-		"applied_title": String(applied["title"]), "anomaly": mismatch, "fight_time": snappedf(match_node.fight_time, 0.01)}
+		"winner": String(winner["id"]), "winner_title": winner_title, "applied": String(applied["id"]),
+		"applied_title": applied_title, "anomaly": mismatch, "fight_time": snappedf(match_node.fight_time, 0.01)}
 	history.append(result)
 	_apply(applied)
 	state = "effect"
@@ -173,13 +174,13 @@ func _finish_vote() -> void:
 	chaos = 0.0
 	if arena.has_method("excite"):
 		arena.call("excite", 1.0)
-	_set_board("%s WINS" % String(winner["title"]))
+	_set_board(tr("%s WINS") % winner_title)
 	if panel != null:
 		panel.call("set_percents", target_pct)
-		panel.call("show_result", String(winner["title"]), String(applied["title"]) if mismatch else "",
+		panel.call("show_result", winner_title, applied_title if mismatch else "",
 			_panel_n0_line("anomaly") if mismatch else "")
 	if mismatch:
-		_glitch_board(String(winner["title"]), String(applied["title"]))
+		_glitch_board(winner_title, applied_title)
 		var n0 := get_parent().get_node_or_null("N0")
 		if n0 != null and n0.has_method("flash_expression"):
 			n0.call("flash_expression", "glitch", 2.5)
@@ -189,7 +190,7 @@ func _finish_vote() -> void:
 ## Субтитр N0 в панели — только если на площадке нет N0 с облачком (scripts/n0/n0_host.gd сам говорит на vote_started / vote_finished).
 func _panel_n0_line(key: String) -> String:
 	var host := get_parent().get_node_or_null("N0/Host")
-	return "" if host != null and host.has_method("say") else String(N0_LINES[key])
+	return "" if host != null and host.has_method("say") else tr(String(N0_LINES[key]))
 
 
 ## Конец действия: поле по регламенту, обломки убрать, табло — как было.
@@ -231,10 +232,24 @@ func _restore_field() -> void:
 func _option(id: String) -> Dictionary:
 	var o: Dictionary = OPTIONS[id].duplicate()
 	o["id"] = id
+	o["title"] = title_of(id)
 	if id == "side_pull":
 		o["dir"] = Vector2(1.0 if _rng.randf() < 0.5 else -1.0, 0.0)
-		o["title"] = "SIDE PULL %s" % ("→" if (o["dir"] as Vector2).x > 0.0 else "←")
+		o["title"] = tr("SIDE PULL %s") % ("→" if (o["dir"] as Vector2).x > 0.0 else "←")
 	return o
+
+
+## Название варианта на табло (id из OPTIONS / "inversion"); литералы — ключи перевода.
+static func title_of(id: String) -> String:
+	match id:
+		"low_gravity": return TranslationServer.translate("LOW GRAVITY")
+		"heavy": return TranslationServer.translate("HEAVY FIELD")
+		"flip": return TranslationServer.translate("GRAVITY FLIP")
+		"side_pull": return TranslationServer.translate("SIDE PULL")
+		"zero_g": return TranslationServer.translate("ZERO G")
+		"debris": return TranslationServer.translate("DEBRIS DROP")
+		"inversion": return TranslationServer.translate("GRAVITY INVERSION")
+	return id
 
 
 ## Веса → целые проценты с суммой ровно 100 (остаток — самым большим долям).
@@ -299,7 +314,7 @@ func _set_board(text: String) -> void:
 ## Аномалия на табло: «LOW GRAVITY WINS» мигает с «GRAVITY INVERSION» и остаётся на нём (реальное время).
 func _glitch_board(said: String, did: String) -> void:
 	for i in 6:
-		var txt := ("%s WINS" % said) if i % 2 == 0 else did
+		var txt := (tr("%s WINS") % said) if i % 2 == 0 else did
 		get_tree().create_timer(0.25 * (i + 1), true, false, true).timeout.connect(func() -> void:
 			if state == "effect":
 				_set_board(txt))

@@ -1,106 +1,99 @@
 ## Реплики N0 в бою (docs/plan-demo/N0_VOICE.md; автор 02.10.2026: «выдавать комментарии хотя бы субтитрами пока»).
-## Таблица «повод → варианты»: ru показывается сейчас, en лежит рядом для перевода (этап 14, п. 5 — tr() и файлы языков).
+## Таблица «повод → варианты»: русские строки — ключи перевода (tr()), английские — locale/en.json (этап 14, п. 5; docs/plan-demo/I18N.md).
 ## Строки из N0_VOICE.md (п. 10–17) приняты автором по направлению; поводы с пометкой «предложение» — новые, ждут автора.
 ## Правила подачи (N0_VOICE.md, «Правила подачи»): важные поводы (MAJOR) — всегда и перебивают текущую реплику; мелкие —
 ## только когда N0 молчит, не чаще minor_gap_s и с шансом minor_chance. Подряд один и тот же вариант не повторяется.
 class_name N0Lines
 extends RefCounted
 
-const LANG := "ru"
 const MAJOR: Array[String] = ["fight", "crit", "ko", "ko_player", "sudden_death", "draw", "decision",
 	"vote_start", "vote_result", "vote_anomaly"]
 const LINES := {
 	# отсчёт перед FIGHT! (N0_VOICE п. 10)
 	"fight": [
-		{"ru": "Мембрана держит, стадион орёт, я вне зоны брызг. Поехали!",
-			"en": "Membrane's holding, crowd's screaming, and I'm out of the splash zone. Go!"},
-		{"ru": "Гравитация выставлена, конечности парят. Ну, кто-нибудь, ударьте кого-нибудь!",
-			"en": "Gravity's set, limbs are floating. Somebody hit something!"},
+		"Мембрана держит, стадион орёт, я вне зоны брызг. Поехали!",
+		"Гравитация выставлена, конечности парят. Ну, кто-нибудь, ударьте кого-нибудь!",
 	],
 	# крит IMPACT (п. 11)
 	"crit": [
-		{"ru": "Это я почувствовал корпусом.", "en": "I felt that one in my casing."},
-		{"ru": "Это покажут на большом экране. Дважды.", "en": "That's going on the big screen. Twice."},
+		"Это я почувствовал корпусом.",
+		"Это покажут на большом экране. Дважды.",
 	],
 	# HEAD BLOW! (п. 12)
 	"head": [
-		{"ru": "Прямо в лицо! А лицо-то хорошее.", "en": "Right in the face! And it's a nice face."},
+		"Прямо в лицо! А лицо-то хорошее.",
 	],
 	# отлетела деталь (п. 13)
 	"part": [
-		{"ru": "Это ваше? Кто-то захочет это вернуть.", "en": "Is that yours? Somebody's going to want that back."},
+		"Это ваше? Кто-то захочет это вернуть.",
 	],
 	# KO соперника (п. 14) + вариант — предложение
 	"ko": [
-		{"ru": "И всё! Детали по всей арене. Уборщики, ваш выход.",
-			"en": "And down they go! Parts everywhere. Cleanup crew, you're up."},
-		{"ru": "Табло пишет FIGHTER OFFLINE. Я с табло согласен.", "en": "The board says FIGHTER OFFLINE. I agree with the board."},
+		"И всё! Детали по всей арене. Уборщики, ваш выход.",
+		"Табло пишет FIGHTER OFFLINE. Я с табло согласен.",
 	],
 	# KO игрока — предложение
 	"ko_player": [
-		{"ru": "Ой. Вставай… то есть собирайся обратно.", "en": "Ouch. Get up… I mean, get yourself back together."},
-		{"ru": "Это мы в повторе не покажем. Ладно, покажем.", "en": "We won't show that in the replay. Fine, we will."},
+		"Ой. Вставай… то есть собирайся обратно.",
+		"Это мы в повторе не покажем. Ладно, покажем.",
 	],
 	# комбо 4+ (п. 15)
 	"combo": [
-		{"ru": "Остановите это… нет, стойте, не надо. Рейтинги!", "en": "Somebody stop this— no, wait, don't. The ratings!"},
+		"Остановите это… нет, стойте, не надо. Рейтинги!",
 	],
 	# Sudden Death (п. 16)
 	"sudden_death": [
-		{"ru": "Время вышло, а все ещё целы. По правилам Лиги кто-то должен лечь.",
-			"en": "Time's up and nobody's down. League rules: now somebody has to be."},
+		"Время вышло, а все ещё целы. По правилам Лиги кто-то должен лечь.",
 	],
 	# ничья (п. 17)
 	"draw": [
-		{"ru": "Ничья! Лига ненавидит ничьи. Сегодня без трофеев.",
-			"en": "A draw! The League hates draws. Nobody takes a trophy home tonight."},
+		"Ничья! Лига ненавидит ничьи. Сегодня без трофеев.",
 	],
 	# победа по таймеру без KO — предложение
 	"decision": [
-		{"ru": "Время! Табло считает урон — без нокаута, зато честно.", "en": "Time! The board counts the damage — no KO, but fair."},
+		"Время! Табло считает урон — без нокаута, зато честно.",
 	],
 	# голосование зрителей (AudienceVote, этап 15)
 	"vote_start": [
-		{"ru": "Зрители, ваш ход! Табло принимает голоса.", "en": "Audience, your move! The board is taking votes."},
+		"Зрители, ваш ход! Табло принимает голоса.",
 	],
 	"vote_result": [
-		{"ru": "Зрители решили: %s. Держитесь за что-нибудь.", "en": "The crowd has spoken: %s. Hold on to something."},
+		"Зрители решили: %s. Держитесь за что-нибудь.",
 	],
 	"vote_anomaly": [
-		{"ru": "Эм… это не то, за что голосовали. Технический сбой! Наверное.",
-			"en": "Uh… that's not what they voted for. Technical difficulties! Probably."},
+		"Эм… это не то, за что голосовали. Технический сбой! Наверное.",
 	],
 	# мелкие поводы — предложение
 	"membrane": [
-		{"ru": "Мембрана держит! Пока что.", "en": "Membrane's holding! For now."},
-		{"ru": "Отскок от мембраны — так и задумано.", "en": "Bounced off the membrane — totally intended."},
+		"Мембрана держит! Пока что.",
+		"Отскок от мембраны — так и задумано.",
 	],
 	"ouch": [
-		{"ru": "Ох. Даже смотреть было больно.", "en": "Oof. That hurt to watch."},
+		"Ох. Даже смотреть было больно.",
 	],
 	"quiet": [
-		{"ru": "Это бой или медитация? Спрашиваю для трансляции.", "en": "Is this a fight or a meditation? Asking for the broadcast."},
-		{"ru": "Зрители скучают. Я тоже.", "en": "The crowd's getting bored. So am I."},
+		"Это бой или медитация? Спрашиваю для трансляции.",
+		"Зрители скучают. Я тоже.",
 	],
 	# сок удара (HIT_FX.md §13, 02.10; поводы шлёт HitJuice.juice_event) — предложение
 	# большая цифра-обломок урона упала (≥ JUICE_DIGIT_BIG, не крит)
 	"digit_big": [
-		{"ru": "%d! Это число теперь лежит на полу. Буквально.", "en": "%d! That number is on the floor now. Literally."},
-		{"ru": "Минус %d. Табло записало, пол подобрал.", "en": "Minus %d. The board logged it, the floor caught it."},
+		"%d! Это число теперь лежит на полу. Буквально.",
+		"Минус %d. Табло записало, пол подобрал.",
 	],
 	# сильный удар по железной детали
 	"metal": [
-		{"ru": "Звенит! Значит, железо настоящее.", "en": "It rings! So the metal's real."},
-		{"ru": "Искры! Мембрана, не бойся, это не тебе.", "en": "Sparks! Relax, membrane, that wasn't for you."},
+		"Звенит! Значит, железо настоящее.",
+		"Искры! Мембрана, не бойся, это не тебе.",
 	],
 	# деталь вся в сколах (сумма следов ≥ JUICE_WORN_POWER)
 	"worn": [
-		{"ru": "Эта деталь уже вся в сколах. Как трофей — так себе.", "en": "That part's all chipped up. Not much of a trophy anymore."},
-		{"ru": "По этой детали теперь можно читать историю боя.", "en": "You can read the whole fight off that part now."},
+		"Эта деталь уже вся в сколах. Как трофей — так себе.",
+		"По этой детали теперь можно читать историю боя.",
 	],
 	# цифр урона на полу много
 	"digits_pile": [
-		{"ru": "Цифры уже по щиколотку. Уборщики, вы где?", "en": "The numbers are ankle-deep. Cleanup crew, anyone?"},
+		"Цифры уже по щиколотку. Уборщики, вы где?",
 	],
 }
 
@@ -132,8 +125,8 @@ func pick(event: String, t: float, speaking: bool, args: Array = []) -> String:
 	if vs.size() > 1 and int(_last_idx.get(event, -1)) == i:
 		i = (i + 1) % vs.size()
 	_last_idx[event] = i
-	var v: Dictionary = vs[i]
-	var text := String(v.get(LANG, v["en"]))
+	var v: String = vs[i]
+	var text := tr(String(v))
 	if text.contains("%"):
 		text = text % args if not args.is_empty() else text.replace("%d", "?").replace("%s", "?")
 	said.append({"event": event, "text": text, "t": t, "major": major})

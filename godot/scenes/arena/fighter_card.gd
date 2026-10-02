@@ -18,14 +18,14 @@ func _ready() -> void:
 func show_fighter(f: Dictionary, i: int) -> void:
 	box.visible = true
 	%Skip.visible = true
-	%Name.text = String(f.get("name", "FIGHTER")).to_upper()
+	%Name.text = String(f.get("name", tr("FIGHTER"))).to_upper()
 	var bits: PackedStringArray = []
 	if String(f.get("build", "")) != "":
 		bits.append(String(f["build"]))
 	if float(f.get("mass", 0.0)) > 0.0:
-		bits.append("%.1f кг" % float(f["mass"]))
+		bits.append(tr("%.1f кг") % float(f["mass"]))
 	if int(f.get("parts", 0)) > 0:
-		bits.append("деталей %d" % int(f["parts"]))
+		bits.append(tr("деталей %d") % int(f["parts"]))
 	%Build.text = " · ".join(bits)
 	%Record.text = String(f.get("record", ""))
 	stripe.color = COLORS[i % COLORS.size()]

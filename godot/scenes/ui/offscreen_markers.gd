@@ -83,7 +83,7 @@ func _draw_markers() -> void:
 
 
 func _text(m: Dictionary) -> String:
-	return "P%d · %d м" % [int(m["player"]) + 1, int(round(float(m["dist"])))]
+	return tr("P%d · %d м") % [int(m["player"]) + 1, int(round(float(m["dist"])))]
 
 
 func _colour(m: Dictionary) -> Color:

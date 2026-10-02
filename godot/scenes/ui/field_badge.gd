@@ -79,4 +79,4 @@ func _refresh() -> void:
 	value.text = parts[1] if parts.size() == 2 else g
 	var field: Variant = _arena.get("field")
 	var shifting := field is Object and (field as Object).has_method("is_shifting") and bool((field as Object).call("is_shifting"))
-	membrane.text = "FIELD: SHIFTING" if shifting else "MEMBRANE %d%%" % int(_arena.get("membrane_pct"))
+	membrane.text = tr("FIELD: SHIFTING") if shifting else tr("MEMBRANE %d%%") % int(_arena.get("membrane_pct"))

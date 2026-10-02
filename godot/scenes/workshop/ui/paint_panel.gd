@@ -69,7 +69,7 @@ func setup(c: WorkshopBuild) -> void:
 	custom_minimum_size = Vector2(W, 0)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 7)
-	add_child(_caption("Инструмент"))
+	add_child(_caption(tr("Инструмент")))
 	var tools := GridContainer.new()
 	tools.columns = 4
 	tools.add_theme_constant_override("h_separation", 6)
@@ -77,27 +77,27 @@ func setup(c: WorkshopBuild) -> void:
 	add_child(tools)
 	for t in WorkshopPaint.TOOLS:
 		var b := ToolTile.new()
-		b.setup(String(t), String(TOOL_SHORT[t]), String(TOOL_TIPS[t]))
+		b.setup(String(t), tr(String(TOOL_SHORT[t])), tr(String(TOOL_TIPS[t])))
 		b.chosen.connect(func(id: String) -> void: paint.set_tool(id))
 		tools.add_child(b)
 		_tool_buttons[t] = b
 	# цвет
-	add_child(_caption("Цвет   ·   ЛКМ — цвет, ПКМ — второй"))
+	add_child(_caption(tr("Цвет   ·   ЛКМ — цвет, ПКМ — второй")))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	add_child(row)
 	_cur = Swatch.new()
 	_cur.setup(paint.color, Vector2(84, 44), 8)
-	_cur.tooltip_text = "Цвет краски — клик: свой цвет (круг)"
+	_cur.tooltip_text = tr("Цвет краски — клик: свой цвет (круг)")
 	_cur.chosen.connect(func(_c: Color, _b: int) -> void: _open_picker())
 	row.add_child(_cur)
 	_sec = Swatch.new()
 	_sec.setup(paint.color2, Vector2(46, 30), 6)
 	_sec.size_flags_vertical = Control.SIZE_SHRINK_END
-	_sec.tooltip_text = "Второй цвет (раскраски «своими цветами») — клик: поменять местами  [X]"
+	_sec.tooltip_text = tr("Второй цвет (раскраски «своими цветами») — клик: поменять местами  [X]")
 	_sec.chosen.connect(func(_c: Color, _b: int) -> void: paint.swap_colors())
 	row.add_child(_sec)
-	var own_pick := _button("Свой цвет…", 17, 40)
+	var own_pick := _button(tr("Свой цвет…"), 17, 40)
 	own_pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	own_pick.pressed.connect(_open_picker)
 	row.add_child(own_pick)
@@ -117,7 +117,7 @@ func setup(c: WorkshopBuild) -> void:
 	rrow.add_theme_constant_override("separation", 4)
 	add_child(rrow)
 	var rl := Label.new()
-	rl.text = "Недавние"
+	rl.text = tr("Недавние")
 	rl.custom_minimum_size = Vector2(70, 0)
 	rl.add_theme_font_size_override("font_size", 16)
 	rl.add_theme_color_override("font_color", DIM)
@@ -139,31 +139,31 @@ func setup(c: WorkshopBuild) -> void:
 	var trow := HBoxContainer.new()
 	trow.add_theme_constant_override("separation", 8)
 	add_child(trow)
-	_sym = _button("Симметрия: вкл", 16, 40)
+	_sym = _button(tr("Симметрия: вкл"), 16, 40)
 	_sym.clip_text = true
 	_sym.toggle_mode = true
 	_sym.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_sym.tooltip_text = "Краска и наклейки — сразу на обе стороны куклы"
+	_sym.tooltip_text = tr("Краска и наклейки — сразу на обе стороны куклы")
 	_sym.add_theme_stylebox_override("pressed", _gold())
 	_sym.toggled.connect(func(on: bool) -> void: paint.set_symmetry(on))
 	trow.add_child(_sym)
-	_turn = _button("Стенд 0°   R", 16, 40)
+	_turn = _button(tr("Стенд 0°   R"), 16, 40)
 	_turn.clip_text = true
 	_turn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_turn.tooltip_text = "Повернуть стенд на 90° — красить бока и спину (R, Shift+R — назад)"
+	_turn.tooltip_text = tr("Повернуть стенд на 90° — красить бока и спину (R, Shift+R — назад)")
 	_turn.pressed.connect(func() -> void: paint.turn_stand(1))
 	trow.add_child(_turn)
 	var crow := HBoxContainer.new()
 	crow.add_theme_constant_override("separation", 8)
 	add_child(crow)
-	_clear_part = _button("Очистить деталь", 15, 38)
+	_clear_part = _button(tr("Очистить деталь"), 15, 38)
 	_clear_part.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_clear_part.clip_text = true
 	_clear_part.pressed.connect(func() -> void: paint.clear_part())
 	crow.add_child(_clear_part)
-	_clear_all = _button("Очистить всё", 15, 38)
+	_clear_all = _button(tr("Очистить всё"), 15, 38)
 	_clear_all.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_clear_all.tooltip_text = "Снять всю краску, наклейки и фото (Ctrl+Z вернёт)"
+	_clear_all.tooltip_text = tr("Снять всю краску, наклейки и фото (Ctrl+Z вернёт)")
 	_clear_all.pressed.connect(func() -> void: paint.clear_all())
 	crow.add_child(_clear_all)
 	paint.changed.connect(refresh)
@@ -205,7 +205,7 @@ func refresh() -> void:
 			_recent_box.add_child(sw)
 		if paint.recent.is_empty():
 			var l := Label.new()
-			l.text = "— красишь, и цвет появится тут"
+			l.text = tr("— красишь, и цвет появится тут")
 			l.add_theme_font_size_override("font_size", 15)
 			l.add_theme_color_override("font_color", Color(0.62, 0.58, 0.52))
 			_recent_box.add_child(l)
@@ -217,13 +217,13 @@ func refresh() -> void:
 	else:
 		_update_options()
 	_sym.set_pressed_no_signal(paint.symmetry)
-	_sym.text = "Симметрия: вкл" if paint.symmetry else "Симметрия: выкл"
-	_turn.text = "Стенд %d°   R" % paint.turn_degrees()
+	_sym.text = tr("Симметрия: вкл") if paint.symmetry else tr("Симметрия: выкл")
+	_turn.text = tr("Стенд %d°   R") % paint.turn_degrees()
 	var fu := paint.focus_uid
 	var has_focus := fu != "" and not CraftEdit.find(ctl.blueprint, fu).is_empty() and paint.has_paint(fu)
 	_clear_part.disabled = not has_focus
-	_clear_part.text = ("Очистить: %s" % PartNames.of(CraftEdit.def_of(ctl.blueprint, fu))) if has_focus and CraftEdit.def_of(ctl.blueprint, fu) != null else "Очистить деталь"
-	_clear_part.tooltip_text = "Снять краску, наклейки и фото с последней детали, которую красил (и с её пары при симметрии)"
+	_clear_part.text = (tr("Очистить: %s") % PartNames.of(CraftEdit.def_of(ctl.blueprint, fu))) if has_focus and CraftEdit.def_of(ctl.blueprint, fu) != null else tr("Очистить деталь")
+	_clear_part.tooltip_text = tr("Снять краску, наклейки и фото с последней детали, которую красил (и с её пары при симметрии)")
 	_clear_all.disabled = not paint.has_paint()
 
 
@@ -246,29 +246,29 @@ func _build_options() -> void:
 	_own = null
 	match paint.tool:
 		"":
-			_options.add_child(_note("Выбери инструмент. Краска — только вид: масса и удар — у материала. Цвет игрока (пояса, шары суставов) не закрашивается."))
+			_options.add_child(_note(tr("Выбери инструмент. Краска — только вид: масса и удар — у материала. Цвет игрока (пояса, шары суставов) не закрашивается.")))
 		"spray":
-			_options.add_child(_caption("Баллончик"))
+			_options.add_child(_caption(tr("Баллончик")))
 			_add_size_slider()
-			_add_slider("pressure", "Нажим", 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
+			_add_slider("pressure", tr("Нажим"), 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
 				func(v: float) -> void: paint.set_pressure(v / 100.0))
-			_add_slider("hardness", "Жёсткость", 0, 100, 5, paint.hardness * 100.0,
-				func(v: float) -> String: return "мягкий" if v < 25 else ("%d%%" % roundi(v) if v < 80 else "чёткий"),
+			_add_slider("hardness", tr("Жёсткость"), 0, 100, 5, paint.hardness * 100.0,
+				func(v: float) -> String: return tr("мягкий") if v < 25 else ("%d%%" % roundi(v) if v < 80 else tr("чёткий")),
 				func(v: float) -> void: paint.set_hardness(v / 100.0))
-			_options.add_child(_note("Зажми ЛКМ и веди по кукле. Колесо / [ ] — размер, Alt+клик — пипетка, X — второй цвет."))
+			_options.add_child(_note(tr("Зажми ЛКМ и веди по кукле. Колесо / [ ] — размер, Alt+клик — пипетка, X — второй цвет.")))
 		"erase":
-			_options.add_child(_caption("Ластик"))
+			_options.add_child(_caption(tr("Ластик")))
 			_add_size_slider()
-			_add_slider("pressure", "Сила", 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
+			_add_slider("pressure", tr("Сила"), 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
 				func(v: float) -> void: paint.set_pressure(v / 100.0))
-			_options.add_child(_note("Стирает краску баллончика и раскрасок. Наклейки снимает ПКМ трафаретом или наклейкой."))
+			_options.add_child(_note(tr("Стирает краску баллончика и раскрасок. Наклейки снимает ПКМ трафаретом или наклейкой.")))
 		"fill":
-			_options.add_child(_caption("Заливка"))
-			_add_slider("pressure", "Плотность", 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
+			_options.add_child(_caption(tr("Заливка")))
+			_add_slider("pressure", tr("Плотность"), 5, 100, 5, paint.pressure * 100.0, func(v: float) -> String: return "%d%%" % roundi(v),
 				func(v: float) -> void: paint.set_pressure(v / 100.0))
-			_options.add_child(_note("Клик по детали — вся деталь в цвет (с симметрией — и парная). Неполная плотность — тонировка поверх."))
+			_options.add_child(_note(tr("Клик по детали — вся деталь в цвет (с симметрией — и парная). Неполная плотность — тонировка поверх.")))
 		"pattern":
-			_options.add_child(_caption("Раскраски   ·   Shift+клик — вся кукла"))
+			_options.add_child(_caption(tr("Раскраски   ·   Shift+клик — вся кукла")))
 			var g := GridContainer.new()
 			g.columns = 3
 			g.add_theme_constant_override("h_separation", 6)
@@ -276,25 +276,25 @@ func _build_options() -> void:
 			_options.add_child(g)
 			for k in WorkshopPaint.PATTERNS:
 				var t := Tile.new()
-				t.setup(String(k), null, Vector2(120, 86), String(WorkshopPaint.PATTERN_TITLES[k]))
+				t.setup(String(k), null, Vector2(120, 86), tr(String(WorkshopPaint.PATTERN_TITLES[k])))
 				t.cover = true
 				t.chosen.connect(func(key: String, _b: int) -> void: paint.set_pattern_kind(key))
 				g.add_child(t)
 				_tiles[String(k)] = t
-			_own = _button("Своими цветами", 17, 38)
+			_own = _button(tr("Своими цветами"), 17, 38)
 			_own.toggle_mode = true
 			_own.add_theme_stylebox_override("pressed", _gold())
-			_own.tooltip_text = "Раскраска цветом и вторым цветом вместо родной палитры узора"
+			_own.tooltip_text = tr("Раскраска цветом и вторым цветом вместо родной палитры узора")
 			_own.toggled.connect(func(on: bool) -> void: paint.set_own_colors(on))
 			_options.add_child(_own)
-			_options.add_child(_note("Клик по детали — узор на неё (и пару). Ещё клик — новый вариант. Раскраска заменяет краску детали; баллончик — поверх."))
+			_options.add_child(_note(tr("Клик по детали — узор на неё (и пару). Ещё клик — новый вариант. Раскраска заменяет краску детали; баллончик — поверх.")))
 			_pattern_key = ""
 			_update_pattern_previews()
 		"pick":
-			_options.add_child(_caption("Пипетка"))
-			_options.add_child(_note("Клик по детали — её цвет в кисть (краска, а где её нет — цвет материала). Потом — снова прежний инструмент. Alt+клик баллончиком — то же самое."))
+			_options.add_child(_caption(tr("Пипетка")))
+			_options.add_child(_note(tr("Клик по детали — её цвет в кисть (краска, а где её нет — цвет материала). Потом — снова прежний инструмент. Alt+клик баллончиком — то же самое.")))
 		"stencil":
-			_options.add_child(_caption("Трафарет — цветом краски"))
+			_options.add_child(_caption(tr("Трафарет — цветом краски")))
 			_add_sticker_slider()
 			var g2 := GridContainer.new()
 			g2.columns = 5
@@ -304,26 +304,27 @@ func _build_options() -> void:
 			for nm in KitImages.stencils():
 				var t2 := Tile.new()
 				t2.setup(String(nm), KitImages.texture(KitImages.STENCIL_PREFIX + String(nm)), Vector2(71, 58), "")
-				t2.tooltip_text = String(WorkshopPaint.STENCIL_TITLES.get(nm, String(nm).replace("digit_", "цифра ")))
+				t2.tooltip_text = tr(String(WorkshopPaint.STENCIL_TITLES[nm])) if WorkshopPaint.STENCIL_TITLES.has(nm) \
+						else (tr("цифра %s") % String(nm).trim_prefix("digit_") if String(nm).begins_with("digit_") else String(nm))
 				t2.chosen.connect(func(key: String, _b: int) -> void: paint.set_stencil(key))
 				g2.add_child(t2)
 				_tiles[String(nm)] = t2
 			_info = _note("")
 			_options.add_child(_info)
 		"sticker", "face":
-			_options.add_child(_caption("Мои картинки   ·   ПКМ — удалить" if paint.tool == "sticker" else "Фото на голову — выбери картинку"))
+			_options.add_child(_caption(tr("Мои картинки   ·   ПКМ — удалить") if paint.tool == "sticker" else tr("Фото на голову — выбери картинку")))
 			if paint.tool == "sticker":
 				_add_sticker_slider()
 			var ib := HBoxContainer.new()
 			ib.add_theme_constant_override("separation", 8)
 			_options.add_child(ib)
-			var imp := _button("ИМПОРТ…", 20, 44)
+			var imp := _button(tr("ИМПОРТ…"), 20, 44)
 			imp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			imp.tooltip_text = "Картинка с диска: png, jpg, webp, bmp, tga, svg (большие уменьшаются до 512 px; HEIC с iPhone — сохрани как JPG)"
+			imp.tooltip_text = tr("Картинка с диска: png, jpg, webp, bmp, tga, svg (большие уменьшаются до 512 px; HEIC с iPhone — сохрани как JPG)")
 			imp.pressed.connect(open_import)
 			ib.add_child(imp)
 			if paint.tool == "face":
-				var cf := _button("СНЯТЬ ФОТО", 18, 44)
+				var cf := _button(tr("СНЯТЬ ФОТО"), 18, 44)
 				cf.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				cf.pressed.connect(func() -> void: paint.clear_face())
 				ib.add_child(cf)
@@ -365,7 +366,7 @@ func _update_options() -> void:
 				t.set_selected(String(k) == paint.stencil)
 				t.queue_redraw()
 			if _info != null:
-				_info.text = "Клик по кукле — поставить (поворот %d°). Колесо / [ ] — размер, Q / E — поворот. Над наклейкой: тащи — переставить, ПКМ — снять. Пояса и шары суставов (цвет игрока) наклейка не закрывает." \
+				_info.text = tr("Клик по кукле — поставить (поворот %d°). Колесо / [ ] — размер, Q / E — поворот. Над наклейкой: тащи — переставить, ПКМ — снять. Пояса и шары суставов (цвет игрока) наклейка не закрывает.") \
 					% roundi(paint.sticker_rot)
 		"sticker", "face":
 			var g := _options.get_node_or_null("Images") as GridContainer
@@ -375,11 +376,11 @@ func _update_options() -> void:
 				(_tiles[k] as Tile).set_selected(String(k) == paint.image)
 			if _info != null:
 				if paint.tool == "face":
-					_info.text = "Клик по картинке — фото на лицо головы (клик по голове — то же). Перетащи файл в окно — тоже."
+					_info.text = tr("Клик по картинке — фото на лицо головы (клик по голове — то же). Перетащи файл в окно — тоже.")
 				elif KitImages.list_images().is_empty():
-					_info.text = "Картинок пока нет: «Импорт…» или просто перетащи файл в окно игры."
+					_info.text = tr("Картинок пока нет: «Импорт…» или просто перетащи файл в окно игры.")
 				else:
-					_info.text = "Выбери картинку и кликни по кукле (поворот %d°). Колесо / [ ], Q / E, ПКМ — как у трафарета. Файл можно перетащить в окно; ПКМ по картинке — удалить её." \
+					_info.text = tr("Выбери картинку и кликни по кукле (поворот %d°). Колесо / [ ], Q / E, ПКМ — как у трафарета. Файл можно перетащить в окно; ПКМ по картинке — удалить её.") \
 						% roundi(paint.sticker_rot)
 
 
@@ -396,7 +397,7 @@ func _fill_images(g: GridContainer) -> void:
 	for id in ids:
 		var t := Tile.new()
 		t.setup(String(id), KitImages.texture(String(id)), Vector2(89, 89), "")
-		t.tooltip_text = "ЛКМ — выбрать, ПКМ — удалить из «Моих картинок»"
+		t.tooltip_text = tr("ЛКМ — выбрать, ПКМ — удалить из «Моих картинок»")
 		t.chosen.connect(func(key: String, b: int) -> void:
 			if b == MOUSE_BUTTON_RIGHT:
 				_ask_delete(key)
@@ -407,15 +408,15 @@ func _fill_images(g: GridContainer) -> void:
 
 
 func _add_size_slider() -> void:
-	_add_slider("size", "Размер", WorkshopPaint.SIZE_CM.x, WorkshopPaint.SIZE_CM.y, 0.5, paint.size_cm,
-		func(v: float) -> String: return "%s см" % String.num(snappedf(v, 0.5)),
+	_add_slider("size", tr("Размер"), WorkshopPaint.SIZE_CM.x, WorkshopPaint.SIZE_CM.y, 0.5, paint.size_cm,
+		func(v: float) -> String: return tr("%s см") % String.num(snappedf(v, 0.5)),
 		func(v: float) -> void: paint.set_size_cm(v))
 
 
 ## Размер следующей наклейки / трафарета (большая сторона): на трекпаде без колеса — главный способ.
 func _add_sticker_slider() -> void:
-	_add_slider("sticker", "Размер", WorkshopPaint.STICKER_CM.x, WorkshopPaint.STICKER_CM.y, 1.0, paint.sticker_cm,
-		func(v: float) -> String: return "%d см" % roundi(v),
+	_add_slider("sticker", tr("Размер"), WorkshopPaint.STICKER_CM.x, WorkshopPaint.STICKER_CM.y, 1.0, paint.sticker_cm,
+		func(v: float) -> String: return tr("%d см") % roundi(v),
 		func(v: float) -> void: paint.set_sticker_cm(v))
 
 
@@ -509,8 +510,8 @@ func open_import() -> void:
 	fd.use_native_dialog = true
 	fd.access = FileDialog.ACCESS_FILESYSTEM
 	fd.file_mode = FileDialog.FILE_MODE_OPEN_FILES
-	fd.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.jfif, *.jpe, *.webp, *.bmp, *.tga, *.svg ; Картинки"])
-	fd.title = "Импорт картинки"
+	fd.filters = PackedStringArray([tr("*.png, *.jpg, *.jpeg, *.jfif, *.jpe, *.webp, *.bmp, *.tga, *.svg ; Картинки")])
+	fd.title = tr("Импорт картинки")
 	fd.files_selected.connect(func(paths: PackedStringArray) -> void:
 		_imported(paths)
 		fd.queue_free())
@@ -540,10 +541,10 @@ func _ask_delete(id: String) -> void:
 		paint.delete_image(id)   # откажет с подсказкой
 		return
 	var dlg := ConfirmationDialog.new()
-	dlg.title = "Удалить картинку"
-	dlg.dialog_text = "Удалить картинку из «Моих картинок»?\nВ сохранённых сборках с ней наклейка тоже пропадёт."
-	dlg.ok_button_text = "Удалить"
-	dlg.cancel_button_text = "Оставить"
+	dlg.title = tr("Удалить картинку")
+	dlg.dialog_text = tr("Удалить картинку из «Моих картинок»?\nВ сохранённых сборках с ней наклейка тоже пропадёт.")
+	dlg.ok_button_text = tr("Удалить")
+	dlg.cancel_button_text = tr("Оставить")
 	dlg.confirmed.connect(func() -> void:
 		paint.delete_image(id)
 		dlg.queue_free())

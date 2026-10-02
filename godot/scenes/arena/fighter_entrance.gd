@@ -148,7 +148,7 @@ func _one(i: int) -> void:
 	_mark(i, "start")
 	d.visible = true
 	if _board != null:
-		_board.text = String(f.get("name", "FIGHTER")).to_upper()
+		_board.text = String(f.get("name", tr("FIGHTER"))).to_upper()
 	if card != null:
 		card.call("show_fighter", f, i)
 	var gate := _gate_pos(i)

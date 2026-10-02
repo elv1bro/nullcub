@@ -300,7 +300,7 @@ func set_image(id: String) -> void:
 
 func set_symmetry(on: bool) -> void:
 	symmetry = on
-	ws._say("Симметрия: %s" % ("вкл — краска и наклейки на обе стороны" if on else "выкл"), WorkshopBuild.COL_INFO)
+	ws._say(tr("Симметрия: вкл — краска и наклейки на обе стороны") if on else tr("Симметрия: выкл"), WorkshopBuild.COL_INFO)
 	changed.emit()
 
 
@@ -790,13 +790,13 @@ func _press(p: Vector2, shift: bool, alt: bool) -> void:
 			if _paint_hit(h):
 				fill_part(String(h["uid"]))
 			else:
-				ws._say("Заливка: кликни по детали куклы", WorkshopBuild.COL_WARN)
+				ws._say(tr("Заливка: кликни по детали куклы"), WorkshopBuild.COL_WARN)
 		"pattern":
 			var h2 := surface_hit(p)
 			if _paint_hit(h2):
 				apply_pattern(String(h2["uid"]), shift)
 			else:
-				ws._say("Раскраска: кликни по детали (Shift+клик — вся кукла)", WorkshopBuild.COL_WARN)
+				ws._say(tr("Раскраска: кликни по детали (Shift+клик — вся кукла)"), WorkshopBuild.COL_WARN)
 		"pick":
 			pick_color_at(p)
 		"stencil", "sticker":
@@ -808,11 +808,11 @@ func _press(p: Vector2, shift: bool, alt: bool) -> void:
 		"face":
 			var hf := surface_hit(p)
 			if image == "":
-				ws._say("Выбери картинку на полке или нажми «Импорт…»", WorkshopBuild.COL_WARN)
+				ws._say(tr("Выбери картинку на полке или нажми «Импорт…»"), WorkshopBuild.COL_WARN)
 			elif _paint_hit(hf) and String(hf["uid"]) == head_uid():
 				set_face_image(image)
 			else:
-				ws._say("Фото: кликни по голове (или по картинке на полке — встанет сразу)", WorkshopBuild.COL_WARN)
+				ws._say(tr("Фото: кликни по голове (или по картинке на полке — встанет сразу)"), WorkshopBuild.COL_WARN)
 
 
 func _release() -> void:
@@ -1121,11 +1121,11 @@ func fill_part(uid: String) -> bool:
 		done.append(u)
 		_puff(String(u), color)
 	if done.is_empty():
-		ws._say("Эта деталь не красится", WorkshopBuild.COL_WARN)
+		ws._say(tr("Эта деталь не красится"), WorkshopBuild.COL_WARN)
 		return false
 	_commit_paint(done)
 	remember_color(color)
-	ws._say("Заливка: %s%s" % [ws.uid_title("body", uid), " и пара" if done.size() > 1 else ""], _toast_col(color))
+	ws._say(tr("Заливка: %s") % _with_pair(ws.uid_title("body", uid), done.size() > 1), _toast_col(color))
 	return true
 
 
@@ -1165,7 +1165,7 @@ func apply_pattern(uid: String, whole := false, kind := "") -> int:
 	_pattern_total = list.size()
 	_pattern_kind_now = kind
 	if whole:
-		ws._say("%s — вся кукла…" % PATTERN_TITLES.get(kind, kind), _toast_col(color if own_colors else Color(1.0, 0.8, 0.45)))
+		ws._say(tr("%s — вся кукла…") % _pattern_title(kind), _toast_col(color if own_colors else Color(1.0, 0.8, 0.45)))
 	focus_uid = uid if uid != "" else String(list[0])
 	return list.size()
 
@@ -1220,8 +1220,8 @@ func _pattern_step(budget_us := PATTERN_BUDGET_US) -> void:
 	if _pattern_queue.is_empty() and _pattern_job.is_empty() and _pattern_total > 0:
 		var kind := _pattern_kind_now
 		ws._name_custom_body()
-		ws._say("%s: %s" % [PATTERN_TITLES.get(kind, kind), "вся кукла" if _pattern_total > 2 else ws.uid_title("body", focus_uid)
-			+ (" и пара" if _pattern_total == 2 else "")], _toast_col(color if own_colors else Color(1.0, 0.8, 0.45)))
+		var what := tr("вся кукла") if _pattern_total > 2 else _with_pair(ws.uid_title("body", focus_uid), _pattern_total == 2)
+		ws._say("%s: %s" % [_pattern_title(kind), what], _toast_col(color if own_colors else Color(1.0, 0.8, 0.45)))
 		_pattern_total = 0
 		changed.emit()
 		ws.changed.emit()
@@ -1237,11 +1237,11 @@ func _finish_patterns() -> void:
 func pick_color_at(p: Vector2) -> bool:
 	var hit := surface_hit(p)
 	if not _paint_hit(hit):
-		ws._say("Пипетка: кликни по детали куклы", WorkshopBuild.COL_WARN)
+		ws._say(tr("Пипетка: кликни по детали куклы"), WorkshopBuild.COL_WARN)
 		return false
 	var c := surface_color(hit)
 	set_color(c)
-	ws._say("Пипетка: цвет взят", _toast_col(c))
+	ws._say(tr("Пипетка: цвет взят"), _toast_col(c))
 	if tool == "pick" and _tool_before_pick != "" and _tool_before_pick != "pick":
 		set_tool(_tool_before_pick)
 	return true
@@ -1360,18 +1360,18 @@ func place_sticker(p: Vector2, img := "") -> Dictionary:
 	if img == "":
 		img = current_img()
 	if img == "":
-		ws._say("Сначала выбери картинку: «Импорт…» или перетащи файл в окно", WorkshopBuild.COL_WARN)
+		ws._say(tr("Сначала выбери картинку: «Импорт…» или перетащи файл в окно"), WorkshopBuild.COL_WARN)
 		return {"ok": false}
 	var tex := KitImages.texture(img)
 	if tex == null:
-		ws._say("Картинка не читается", WorkshopBuild.COL_BAD)
+		ws._say(tr("Картинка не читается"), WorkshopBuild.COL_BAD)
 		return {"ok": false}
 	var r := _cam_ray(p)
 	if r.is_empty():
 		return {"ok": false}
 	var hit := ray_hit(r[0], r[1])
 	if not _paint_hit(hit):
-		ws._say("Мимо: наклейка ставится на деталь куклы", WorkshopBuild.COL_WARN)
+		ws._say(tr("Мимо: наклейка ставится на деталь куклы"), WorkshopBuild.COL_WARN)
 		return {"ok": false}
 	var side := sticker_cm * 0.01
 	hit = smoothed_hit(hit, r[1], side * 0.3)
@@ -1397,8 +1397,8 @@ func place_sticker(p: Vector2, img := "") -> Dictionary:
 	_puff_at(hit["point"], hit["normal"], col if col != Color.WHITE else Color(1.0, 0.95, 0.8))
 	if img.begins_with(KitImages.STENCIL_PREFIX):
 		remember_color(color)
-	ws._say("%s: %s%s" % ["Трафарет" if img.begins_with(KitImages.STENCIL_PREFIX) else "Наклейка", ws.uid_title("body", out["uid"]),
-		" и пара" if String(out["twin_uid"]) != "" else ""], _toast_col(col))
+	ws._say("%s: %s" % [tr("Трафарет") if img.begins_with(KitImages.STENCIL_PREFIX) else tr("Наклейка"),
+		_with_pair(ws.uid_title("body", out["uid"]), String(out["twin_uid"]) != "")], _toast_col(col))
 	changed.emit()
 	ws.changed.emit()
 	return out
@@ -1587,7 +1587,7 @@ func remove_sticker(ref: Dictionary) -> bool:
 		_drop_sticker(r)
 	ws._name_custom_body()
 	_play(_click, 0.8)
-	ws._say("Наклейка снята%s" % (" (и пара)" if refs.size() > 1 else ""), WorkshopBuild.COL_WARN)
+	ws._say(tr("Наклейка снята (и пара)") if refs.size() > 1 else tr("Наклейка снята"), WorkshopBuild.COL_WARN)
 	changed.emit()
 	ws.changed.emit()
 	return true
@@ -1718,12 +1718,12 @@ func set_face_image(id: String, push := true) -> Dictionary:
 	var hu := head_uid()
 	if hu == "" or ws.stand == null:
 		if push:
-			ws._say("Фото некуда: у куклы нет головы", WorkshopBuild.COL_BAD)
+			ws._say(tr("Фото некуда: у куклы нет головы"), WorkshopBuild.COL_BAD)
 		return {"ok": false}
 	var tex := KitImages.texture(id)
 	if tex == null:
 		if push:
-			ws._say("Картинка не читается", WorkshopBuild.COL_BAD)
+			ws._say(tr("Картинка не читается"), WorkshopBuild.COL_BAD)
 		return {"ok": false}
 	image = id
 	var d := CraftEdit.def_of(ws.blueprint, hu)
@@ -1732,26 +1732,26 @@ func set_face_image(id: String, push := true) -> Dictionary:
 	if BodyPaint.face_plate_ok(d) and root != null:
 		if String(node.get("face", "")) == id:
 			if push:
-				ws._say("Это фото уже на голове", WorkshopBuild.COL_INFO)
+				ws._say(tr("Это фото уже на голове"), WorkshopBuild.COL_INFO)
 			return {"ok": true, "mode": "face", "uid": hu, "same": true}
 		if push:
 			_push()
 		node["face"] = id
 		if not BodyPaint.set_face(root, tex):
 			ws._rebuild()
-		_face_done(hu, push, "Фото на голове!")
+		_face_done(hu, push, tr("Фото на голове!"))
 		return {"ok": true, "mode": "face", "uid": hu}
 	# старая голова: наклейкой по центру лица (луч спереди куклы в голову), прежняя фото-наклейка — долой
 	var old := _face_stickers(hu)
 	for r in old:
 		if String(((r["node"] as Node).get_meta(BodyPaint.STICKER_META, {}) as Dictionary).get("img", "")) == id:
 			if push:
-				ws._say("Это фото уже на голове", WorkshopBuild.COL_INFO)
+				ws._say(tr("Это фото уже на голове"), WorkshopBuild.COL_INFO)
 			return {"ok": true, "mode": "sticker", "uid": hu, "same": true}
 	var hit := _face_hit(hu)
 	if not _paint_hit(hit):
 		if push:
-			ws._say("Не нашлось лицо у этой головы", WorkshopBuild.COL_BAD)
+			ws._say(tr("Не нашлось лицо у этой головы"), WorkshopBuild.COL_BAD)
 		return {"ok": false}
 	var box := WorkshopBuild._visual_aabb(root) if root != null else AABB(part_center(hu), Vector3.ONE * 0.2)
 	if push:
@@ -1761,7 +1761,7 @@ func set_face_image(id: String, push := true) -> Dictionary:
 	var st := _make_sticker(hit, id, tex, ws.stand.global_basis.y, clampf(minf(box.size.x, box.size.y) * 0.6, 0.05, 0.3), Color.WHITE)
 	st["face"] = true
 	_add_sticker_live(hu, st)
-	_face_done(hu, push, "У этой головы плашка утоплена — фото наклейкой на лицо")
+	_face_done(hu, push, tr("У этой головы плашка утоплена — фото наклейкой на лицо"))
 	return {"ok": true, "mode": "sticker", "uid": hu}
 
 
@@ -1804,7 +1804,7 @@ func clear_face() -> bool:
 	var hu := head_uid()
 	var n := CraftEdit.find(ws.blueprint, hu)
 	if n.is_empty():
-		ws._say("У куклы нет головы", WorkshopBuild.COL_INFO)
+		ws._say(tr("У куклы нет головы"), WorkshopBuild.COL_INFO)
 		return false
 	var refs := _face_stickers(hu)
 	if refs.is_empty() and ws.stand != null:
@@ -1818,7 +1818,7 @@ func clear_face() -> bool:
 					if idx >= 0:
 						refs.append({"uid": hu, "node": sn, "index": idx})
 	if not n.has("face") and refs.is_empty():
-		ws._say("Фото на голове нет", WorkshopBuild.COL_INFO)
+		ws._say(tr("Фото на голове нет"), WorkshopBuild.COL_INFO)
 		return false
 	_push()
 	var had_face := n.has("face")
@@ -1829,7 +1829,7 @@ func clear_face() -> bool:
 	if had_face:
 		ws._rebuild()
 	ws._name_custom_body()
-	ws._say("Фото снято", WorkshopBuild.COL_WARN)
+	ws._say(tr("Фото снято"), WorkshopBuild.COL_WARN)
 	changed.emit()
 	ws.changed.emit()
 	return true
@@ -1847,7 +1847,7 @@ func import_files(paths: PackedStringArray) -> PackedStringArray:
 func import_files_async(paths: PackedStringArray, done := Callable()) -> void:
 	if paths.is_empty():
 		return
-	ws._say("Импорт картинки…" if paths.size() == 1 else "Импорт картинок: %d…" % paths.size(), COL_IMPORT)
+	ws._say(tr("Импорт картинки…") if paths.size() == 1 else tr("Импорт картинок: %d…") % paths.size(), COL_IMPORT)
 	var list := paths.duplicate()
 	var task := WorkerThreadPool.add_task(func() -> void:
 		var res: Array = []
@@ -1888,7 +1888,7 @@ func _import_report(res: Array) -> PackedStringArray:
 			ids.append(id)
 	if not ids.is_empty():
 		image = ids[ids.size() - 1]
-		ws._say("Картинка добавлена" if ids.size() == 1 else "Картинок добавлено: %d" % ids.size(), COL_IMPORT)
+		ws._say(tr("Картинка добавлена") if ids.size() == 1 else tr("Картинок добавлено: %d") % ids.size(), COL_IMPORT)
 		images_changed.emit()
 		changed.emit()
 	for why in bad:
@@ -1901,16 +1901,16 @@ static func import_error_text(why: String, names: Array) -> String:
 	var f := ", ".join(PackedStringArray(names))
 	match why:
 		KitImages.ERR_NOT_FOUND, KitImages.ERR_UNREADABLE:
-			return "Не прочитать файл: %s" % f
+			return TranslationServer.translate("Не прочитать файл: %s") % f
 		KitImages.ERR_TOO_BIG_FILE:
-			return "Слишком большой файл (больше %d МБ): %s" % [KitImages.MAX_FILE_BYTES / (1024 * 1024), f]
+			return TranslationServer.translate("Слишком большой файл (больше %d МБ): %s") % [KitImages.MAX_FILE_BYTES / (1024 * 1024), f]
 		KitImages.ERR_TOO_BIG_PIXELS:
-			return "Слишком большая картинка (больше %d Мп): %s — уменьши её" % [KitImages.MAX_PIXELS / 1000000, f]
+			return TranslationServer.translate("Слишком большая картинка (больше %d Мп): %s — уменьши её") % [KitImages.MAX_PIXELS / 1000000, f]
 		KitImages.ERR_HEIC:
-			return "HEIC с iPhone не читается — сохрани как JPG: %s" % f
+			return TranslationServer.translate("HEIC с iPhone не читается — сохрани как JPG: %s") % f
 		KitImages.ERR_WRITE:
-			return "Не записать картинку на диск: %s" % f
-	return "Не картинка: %s (нужен png, jpg, webp, bmp, tga или svg)" % f
+			return TranslationServer.translate("Не записать картинку на диск: %s") % f
+	return TranslationServer.translate("Не картинка: %s (нужен png, jpg, webp, bmp, tga или svg)") % f
 
 
 const COL_IMPORT := Color(0.6, 0.95, 1.0)
@@ -1932,14 +1932,14 @@ func image_used(id: String) -> bool:
 ## Удалить импортированную картинку id из «Моих картинок» (файл). Картинку на кукле — нельзя (кукла потеряла бы наклейку). false — нет.
 func delete_image(id: String) -> bool:
 	if image_used(id):
-		ws._say("Эта картинка на кукле — сначала сними её наклейки и фото", WorkshopBuild.COL_WARN)
+		ws._say(tr("Эта картинка на кукле — сначала сними её наклейки и фото"), WorkshopBuild.COL_WARN)
 		return false
 	if not KitImages.delete_image(id):
-		ws._say("Картинку не удалить", WorkshopBuild.COL_BAD)
+		ws._say(tr("Картинку не удалить"), WorkshopBuild.COL_BAD)
 		return false
 	if image == id:
 		image = ""
-	ws._say("Картинка удалена", WorkshopBuild.COL_WARN)
+	ws._say(tr("Картинка удалена"), WorkshopBuild.COL_WARN)
 	images_changed.emit()
 	changed.emit()
 	return true
@@ -1980,7 +1980,7 @@ func clear_part(uid := "") -> bool:
 		var n := CraftEdit.find(ws.blueprint, String(u))
 		any = any or n.has("paint") or n.has("stickers") or n.has("face")
 	if not any:
-		ws._say("На этой детали нет краски", WorkshopBuild.COL_INFO)
+		ws._say(tr("На этой детали нет краски"), WorkshopBuild.COL_INFO)
 		return false
 	_push()
 	for u in uids:
@@ -1988,7 +1988,7 @@ func clear_part(uid := "") -> bool:
 		for k in ["paint", "stickers", "face"]:
 			n2.erase(k)
 	ws._rebuild()
-	ws._say("Очищено: %s%s" % [ws.uid_title("body", uid), " и пара" if uids.size() > 1 else ""], WorkshopBuild.COL_WARN)
+	ws._say(tr("Очищено: %s") % _with_pair(ws.uid_title("body", uid), uids.size() > 1), WorkshopBuild.COL_WARN)
 	return true
 
 
@@ -1998,14 +1998,14 @@ func clear_all() -> bool:
 	for n in ws.blueprint.nodes:
 		any = any or n.has("paint") or n.has("stickers") or n.has("face")
 	if not any:
-		ws._say("Кукла и так чистая", WorkshopBuild.COL_INFO)
+		ws._say(tr("Кукла и так чистая"), WorkshopBuild.COL_INFO)
 		return false
 	_push()
 	for n in ws.blueprint.nodes:
 		for k in ["paint", "stickers", "face"]:
 			n.erase(k)
 	ws._rebuild()
-	ws._say("Вся покраска снята — Ctrl+Z вернёт", WorkshopBuild.COL_WARN)
+	ws._say(tr("Вся покраска снята — Ctrl+Z вернёт"), WorkshopBuild.COL_WARN)
 	return true
 
 
@@ -2021,37 +2021,48 @@ func has_paint(uid := "") -> bool:
 
 # =================================================================== подсказка
 
+## Название раскраски для игрока.
+static func _pattern_title(kind: String) -> String:
+	return TranslationServer.translate(String(PATTERN_TITLES.get(kind, kind)))
+
+
+## «Рука» или «Рука и пара» (симметрия) — для сообщений.
+static func _with_pair(title: String, pair: bool) -> String:
+	return TranslationServer.translate("%s и пара") % title if pair else title
+
+
 func hint_text() -> String:
-	var turn := "R — повернуть стенд (%d°)" % turn_degrees()
+	var turn := tr("R — повернуть стенд (%d°)") % turn_degrees()
 	if tool in ["spray", "erase"] and _paint_hit(_hover_hit) and protected_hit(_hover_hit):
-		return "Тут цвет игрока (пояс, шары суставов, лицо) — он не закрашивается   ·   %s" % turn
+		return tr("Тут цвет игрока (пояс, шары суставов, лицо) — он не закрашивается   ·   %s") % turn
 	match tool:
 		"spray", "erase":
-			var sz := "%s см" % String.num(snappedf(size_cm, 0.5))
+			var sz := tr("%s см") % String.num(snappedf(size_cm, 0.5))
 			if _paint_hit(_hover_hit):
 				var eff := eff_radius(String(_hover_hit["uid"])) * 200.0
 				if eff > size_cm + 0.05:
-					sz += " (тут не мельче %s)" % String.num(snappedf(eff, 0.1))
+					sz = tr("%s см (тут не мельче %s)") % [String.num(snappedf(size_cm, 0.5)), String.num(snappedf(eff, 0.1))]
 			if tool == "spray":
-				return "Зажми ЛКМ — красить · колесо / [ ] — размер %s · Alt+клик — пипетка · %s · Esc — положить" % [sz, turn]
-			return "Зажми ЛКМ — стирать краску · колесо / [ ] — размер %s · %s · Esc — положить" % [sz, turn]
+				return tr("Зажми ЛКМ — красить · колесо / [ ] — размер %s · Alt+клик — пипетка · %s · Esc — положить") % [sz, turn]
+			return tr("Зажми ЛКМ — стирать краску · колесо / [ ] — размер %s · %s · Esc — положить") % [sz, turn]
 		"fill":
-			return "Клик по детали — залить целиком%s · нажим = плотность · %s" % [" (и пару)" if symmetry else "", turn]
+			return (tr("Клик по детали — залить целиком (и пару) · нажим = плотность · %s") if symmetry \
+				else tr("Клик по детали — залить целиком · нажим = плотность · %s")) % turn
 		"pattern":
-			return "Клик — «%s» на деталь%s · Shift+клик — вся кукла · ещё клик — новый вариант · %s" % [
-				PATTERN_TITLES.get(pattern_kind, pattern_kind), " и пару" if symmetry else "", turn]
+			return (tr("Клик — «%s» на деталь и пару · Shift+клик — вся кукла · ещё клик — новый вариант · %s") if symmetry \
+				else tr("Клик — «%s» на деталь · Shift+клик — вся кукла · ещё клик — новый вариант · %s")) % [_pattern_title(pattern_kind), turn]
 		"pick":
-			return "Клик по детали — взять её цвет · Esc — отмена"
+			return tr("Клик по детали — взять её цвет · Esc — отмена")
 		"stencil", "sticker":
 			if tool == "sticker" and image == "":
-				return "Нажми «Импорт…» на полке или перетащи картинку в окно игры"
+				return tr("Нажми «Импорт…» на полке или перетащи картинку в окно игры")
 			var s := sticker_at(_mouse) if _mouse.x >= 0.0 else {}
 			if not s.is_empty():
-				return "Над наклейкой: колесо / [ ] — размер · Q / E — поворот · тащи — переставить · ПКМ / Delete — снять"
-			return "Клик — поставить (%d см, %d°) · колесо / [ ] — размер · Q / E — поворот · %s · Esc — положить" % [roundi(sticker_cm),
+				return tr("Над наклейкой: колесо / [ ] — размер · Q / E — поворот · тащи — переставить · ПКМ / Delete — снять")
+			return tr("Клик — поставить (%d см, %d°) · колесо / [ ] — размер · Q / E — поворот · %s · Esc — положить") % [roundi(sticker_cm),
 				roundi(sticker_rot), turn]
 		"face":
-			return "Кликни по картинке на полке (или по голове) — фото на лицо · «Импорт…» или перетащи файл в окно"
+			return tr("Кликни по картинке на полке (или по голове) — фото на лицо · «Импорт…» или перетащи файл в окно")
 	return ""
 
 

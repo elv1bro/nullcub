@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Loc="*res://scripts/i18n/loc.gd"
 Tuning="*res://scripts/tuning.gd"
 InputSetup="*res://scripts/input/input_setup.gd"
 GameAudio="*res://scripts/audio/game_audio.gd"
@@ -29,6 +30,10 @@ Flow="*res://scripts/menu/flow.gd"
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
+
+[internationalization]
+
+locale/fallback="ru"
 
 [physics]
 

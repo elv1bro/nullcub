@@ -322,12 +322,12 @@ func _start_fight() -> void:
 	_set_phase(Phase.FIGHT)
 	for d in dolls():
 		hp_changed.emit(d, (d as Doll).hp, (d as Doll).max_hp)
-	announce.emit("FIGHT!", ANNOUNCE_COLORS["fight"], "fight")
+	announce.emit(tr("FIGHT!"), ANNOUNCE_COLORS["fight"], "fight")
 
 
 func _enter_sudden_death() -> void:
 	_set_phase(Phase.SUDDEN_DEATH)
-	announce.emit("SUDDEN DEATH", ANNOUNCE_COLORS["sudden_death"], "sudden_death")
+	announce.emit(tr("SUDDEN DEATH"), ANNOUNCE_COLORS["sudden_death"], "sudden_death")
 	_apply_sd_step(0)
 
 
@@ -432,13 +432,13 @@ func on_hit(victim: Doll, attacker: Node, damage: float, kind: String, position:
 	if damage >= Tuning.ANNOUNCE_MIN_DAMAGE and kind != "environment":
 		var part: String = String(victim.last_hit.get("part", ""))
 		if double_blow:
-			announce.emit("DOUBLE BLOW!", ANNOUNCE_COLORS["double"], "double")
+			announce.emit(tr("DOUBLE BLOW!"), ANNOUNCE_COLORS["double"], "double")
 		elif part.begins_with("Head"):
-			announce.emit("HEAD BLOW!", ANNOUNCE_COLORS["head"], "head")
+			announce.emit(tr("HEAD BLOW!"), ANNOUNCE_COLORS["head"], "head")
 		else:
-			announce.emit("BODY BLOW!", ANNOUNCE_COLORS["body"], "body")
+			announce.emit(tr("BODY BLOW!"), ANNOUNCE_COLORS["body"], "body")
 		if combo_n >= 2:
-			announce.emit("%d HIT COMBO!" % combo_n, COMBO_COLORS[clampi(combo_n - 2, 0, COMBO_COLORS.size() - 1)], "combo")
+			announce.emit(tr("%d HIT COMBO!") % combo_n, COMBO_COLORS[clampi(combo_n - 2, 0, COMBO_COLORS.size() - 1)], "combo")
 	hit_feel(damage, position)
 	_emit_hit_fx(victim, attacker, damage, kind, position, combo_n, double_blow, _weapon_id, _speed)
 
@@ -470,7 +470,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	victim.stats["kos_taken"] = maxi(int(victim.stats["kos_taken"]), 1)
 	hp_changed.emit(victim, 0.0, victim.max_hp)
 	combo_changed.emit(victim, 0)
-	announce.emit("KO!", ANNOUNCE_COLORS["ko"], "ko")
+	announce.emit(tr("KO!"), ANNOUNCE_COLORS["ko"], "ko")
 	ko.emit(victim, attacker, rec)
 	if feel_enabled:
 		var pos: Vector3 = rec.get("position", victim.centre_of_mass())

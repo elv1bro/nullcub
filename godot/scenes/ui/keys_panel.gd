@@ -29,7 +29,7 @@ func _ready() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 	_tag = Label.new()
-	_tag.text = "L — клавиши"
+	_tag.text = tr("L — клавиши")
 	_tag.add_theme_font_size_override("font_size", 16)
 	_tag.add_theme_color_override("font_color", Color(1, 1, 1, 0.55))
 	_tag.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))

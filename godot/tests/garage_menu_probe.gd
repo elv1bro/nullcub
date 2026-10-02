@@ -1,7 +1,7 @@
 ## Проба главного меню-гаража (scenes/menu/garage_menu.tscn) без окна:
 ##   godot --headless --path godot res://tests/garage_menu_probe.tscn
 ## Сценарий через настоящий ввод (Input.parse_input_event): титул → любая клавиша → ↓ по всем пунктам → цифра 3 → Esc →
-## Enter на «Истории» (dry_run: сцена не меняется, ловим сигнал navigated). Проверки: точки камер и цели пунктов существуют,
+## Enter на «Истории» (кампания открывается в эфире ТВ, сцена не меняется; сигнал navigated остаётся для «Быстрого боя» и «Всех режимов»). Проверки: точки камер и цели пунктов существуют,
 ## камера доезжает до точки пункта за ≤ 1.5 × move_time, телевизор переключается на канал пункта, лампы зоны пункта ярче
 ## базы, а чужих зон — тусклее, Esc ведёт к «Выходу», до боя ≤ 2 нажатий, выход гасит свет и шлёт navigated("quit").
 ## В stdout «=== GARAGE MENU PROBE ===» и JSON; exit 0 — всё ок.
@@ -135,6 +135,7 @@ func _run() -> void:
 	var flow := get_node_or_null("/root/Flow")
 	var at_s := _at_spot("SettingsClose")
 	_check("settings_open", menu.state == "settings" and menu.settings_ui.visible and at_s[0] < 0.01, [menu.state, snappedf(at_s[0], 0.001)])
+	await _key(KEY_DOWN)   # строка 0 — «ЯЗЫК» (смена языка перезагружает гараж), громкость — строка 1
 	var v0: float = float(flow.get_setting("volume")) if flow != null else 0.8
 	await _key(KEY_RIGHT)
 	var v1: float = float(flow.get_setting("volume")) if flow != null else 0.0
@@ -149,7 +150,7 @@ func _run() -> void:
 	var g1: String = String(gfx.preset) if gfx != null else ""
 	await _key(KEY_LEFT)
 	var g2: String = String(gfx.preset) if gfx != null else ""
-	_check("settings_gfx", gfx != null and menu.settings_ui.row == 1 and g1 != g0 and g2 == g0, [g0, g1, g2])
+	_check("settings_gfx", gfx != null and menu.settings_ui.row == 2 and g1 != g0 and g2 == g0, [g0, g1, g2])
 	await _key(KEY_ESCAPE)
 	await _settle()
 	_check("settings_back", menu.state == "menu" and menu.focus == 4 and not menu.settings_ui.visible, [menu.state, menu.focus])
@@ -185,17 +186,16 @@ func _run() -> void:
 	_check("digit_jump", menu.focus == 2, menu.focus, 2)
 	await _key(KEY_ESCAPE)
 	_check("esc_to_exit", menu.focus == GarageMenu.ITEMS.size() - 1, menu.focus)
-	# 5. до боя: «1» → Enter (2 нажатия), нырок в телевизор, сигнал navigated с целью «Истории»
+	# 5. до боя: «1» → Enter (2 нажатия), нырок в телевизор и эфир кампании без смены сцены (garage_campaign.gd)
 	await _key(KEY_1)
 	await _settle()
 	var t0 := Time.get_ticks_msec()
 	await _key(KEY_ENTER)
-	while nav.is_empty() and Time.get_ticks_msec() - t0 < 4000:
+	_check("enter_story_opens_campaign", menu.state == "campaign" and nav.is_empty(), [menu.state, nav.size()])
+	while menu.campaign.screen != GarageCampaign.Screen.LADDER and Time.get_ticks_msec() - t0 < 4000:
 		await get_tree().process_frame
 	var dt := (Time.get_ticks_msec() - t0) / 1000.0
-	var tgt := String(nav[0]["target"]) if not nav.is_empty() else ""
-	_check("enter_story_navigates", tgt == String(GarageMenu.ITEMS[0]["go"]), tgt)
-	_check("enter_to_scene_s", dt <= 1.6, snappedf(dt, 0.01), 1.6)
+	_check("enter_to_ladder_s", menu.campaign.screen == GarageCampaign.Screen.LADDER and dt <= 1.8, snappedf(dt, 0.01), 1.8)
 	_check("presses_to_fight_from_title", true, 2, 2)
 
 

@@ -34,6 +34,11 @@ var _crowd_mat: ShaderMaterial
 
 
 func _ready() -> void:
+	# подписи табло в сцене — английские (ключи перевода); Label3D сам их не переводит
+	for pair in [["Text_NULL_FIELD", tr("NULL FIELD")], ["Text_GRAVITY", tr("GRAVITY")]]:
+		var board := find_child(pair[0], true, false) as Label3D
+		if board != null:
+			board.text = pair[1]
 	_update_boards()
 	for mmi in find_children("*", "MultiMeshInstance3D", true, false):
 		if (mmi as MultiMeshInstance3D).material_override is ShaderMaterial and mmi.is_in_group("null_hall_crowd"):
@@ -156,4 +161,4 @@ func _update_boards() -> void:
 			(lbl as Label3D).text = g
 	for lbl in get_tree().get_nodes_in_group("null_hall_membrane"):
 		if is_ancestor_of(lbl):
-			(lbl as Label3D).text = "FIELD: SHIFTING" if shifting else "MEMBRANE %d%%" % membrane_pct
+			(lbl as Label3D).text = tr("FIELD: SHIFTING") if shifting else tr("MEMBRANE %d%%") % membrane_pct

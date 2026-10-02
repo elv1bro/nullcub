@@ -52,7 +52,7 @@ func _ready() -> void:
 	root.move_child(bg_dim, 0)
 	hit_marker = _full_rect("HitMarker", MARKER_SHADER)
 	root.move_child(hit_marker, caption.get_index())
-	caption.text = CAPTION_TEXT
+	caption.text = tr("CRUSHING BLOW!")   # = CAPTION_TEXT; литерал — ключ перевода
 	caption.add_theme_color_override("font_color", CAPTION_COLOUR)
 	caption.add_theme_color_override("font_outline_color", CAPTION_OUTLINE)
 	caption.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))

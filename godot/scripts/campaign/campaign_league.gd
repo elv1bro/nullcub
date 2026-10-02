@@ -39,7 +39,7 @@ static func ladder(tier: String = LOCAL) -> Array:
 
 
 static func tier_title(tier: String) -> String:
-	return String(TIER_TITLES.get(tier, tier))
+	return TranslationServer.translate(String(TIER_TITLES.get(tier, tier)))
 
 
 ## Соперник шага step ({} — лестница пройдена).

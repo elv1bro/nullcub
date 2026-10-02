@@ -584,7 +584,7 @@ func _n0_checks() -> void:
 		if vs.is_empty():
 			missing.append(ev)
 		for v in vs:
-			if not (v as Dictionary).has("ru") or not (v as Dictionary).has("en"):
+			if String(Loc.table("en").get(v, "")) == "":   # ru — ключ в коде, en — в locale/en.json
 				missing.append(ev + ":lang")
 	_check("n0_lines", missing.is_empty() and not N0Lines.is_major("digit_big"), missing, [], "ru + en, minor")
 	var l := N0Lines.new()
