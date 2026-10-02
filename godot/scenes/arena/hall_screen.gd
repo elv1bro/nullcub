@@ -118,8 +118,8 @@ func _rect(pos: Vector2, size: Vector2, c: Color) -> ColorRect:
 
 
 func _titles() -> Dictionary:
-	return {"speed": ["СКОРОСТЬ", "ТВОЙ ПОЛЁТ · М/С"], "impact": ["СИЛА УДАРА", "ГРУША · ПИК ЗА КАСАНИЕ"],
-		"dummy": ["МАНЕКЕН", "СТЕНД ИСПЫТАНИЙ · УРОН"]}
+	return {"speed": [tr("СКОРОСТЬ"), tr("ТВОЙ ПОЛЁТ · М/С")], "impact": [tr("СИЛА УДАРА"), tr("ГРУША · ПИК ЗА КАСАНИЕ")],
+		"dummy": [tr("МАНЕКЕН"), tr("СТЕНД ИСПЫТАНИЙ · УРОН")]}
 
 
 func _build() -> void:
@@ -165,10 +165,10 @@ func _light_segments(frac: float) -> void:
 
 func _build_speed() -> void:
 	_text("0.0", Vector2(40, 96), 230, Color.WHITE, _f_head, "big")
-	_text("М/С", Vector2(560, 196), 56, COL_AMBER, _f_head)
-	_text("0 КМ/Ч", Vector2(560, 120), 44, COL_CYAN, _f_mono, "kmh")
+	_text(tr("М/С"), Vector2(560, 196), 56, COL_AMBER, _f_head)
+	_text(tr("0 КМ/Ч"), Vector2(560, 120), 44, COL_CYAN, _f_mono, "kmh")
 	_segment_bar(330)
-	_text("МАКС 0.0 М/С", Vector2(32, 372), 34, COL_AMBER, _f_mono, "max")
+	_text(tr("МАКС 0.0 М/С"), Vector2(32, 372), 34, COL_AMBER, _f_mono, "max")
 	_bars = Control.new()
 	_bars.position = Vector2(28, 420)
 	_bars.size = Vector2(968, 130)
@@ -178,11 +178,11 @@ func _build_speed() -> void:
 
 func _build_impact() -> void:
 	_text("—", Vector2(40, 96), 230, Color.WHITE, _f_head, "big")
-	_text("кН", Vector2(560, 196), 56, COL_AMBER, _f_head)
-	_text("ЖДУ УДАР", Vector2(560, 112), 56, COL_CYAN, _f_head, "word")
+	_text(tr("кН"), Vector2(560, 196), 56, COL_AMBER, _f_head)
+	_text(tr("ЖДУ УДАР"), Vector2(560, 112), 56, COL_CYAN, _f_head, "word")
 	_segment_bar(330)
-	_text("СКОРОСТЬ УДАРА —", Vector2(32, 372), 30, COL_CYAN, _f_mono, "spd")
-	_text("УДАРОВ 0 · РЕКОРД —", Vector2(32, 412), 30, COL_AMBER, _f_mono, "rec")
+	_text(tr("СКОРОСТЬ УДАРА —"), Vector2(32, 372), 30, COL_CYAN, _f_mono, "spd")
+	_text(tr("УДАРОВ 0 · РЕКОРД —"), Vector2(32, 412), 30, COL_AMBER, _f_mono, "rec")
 	_bars = Control.new()
 	_bars.position = Vector2(560, 372)
 	_bars.size = Vector2(436, 180)
@@ -195,10 +195,10 @@ func _build_dummy() -> void:
 	_rect(Vector2(130, 124), Vector2(866, 52), Color(0.12, 0.13, 0.18))
 	_hp_fill = _rect(Vector2(134, 128), Vector2(858, 44), Color(0.25, 0.85, 0.5))
 	_text("100 / 100", Vector2(140, 188), 56, Color.WHITE, _f_head, "hp")
-	_text("ПОСЛЕДНИЙ УДАР  —", Vector2(40, 300), 46, COL_CYAN, _f_head, "last")
-	_text("ВСЕГО УРОНА  0", Vector2(40, 372), 46, COL_AMBER, _f_head, "total")
-	_text("УДАРОВ  0", Vector2(40, 444), 46, Color.WHITE, _f_head, "hits")
-	_text("НОКАУТОВ  0", Vector2(540, 444), 46, Color(0.95, 0.35, 0.3), _f_head, "kos")
+	_text(tr("ПОСЛЕДНИЙ УДАР  —"), Vector2(40, 300), 46, COL_CYAN, _f_head, "last")
+	_text(tr("ВСЕГО УРОНА  0"), Vector2(40, 372), 46, COL_AMBER, _f_head, "total")
+	_text(tr("УДАРОВ  0"), Vector2(40, 444), 46, Color.WHITE, _f_head, "hits")
+	_text(tr("НОКАУТОВ  0"), Vector2(540, 444), 46, Color(0.95, 0.35, 0.3), _f_head, "kos")
 
 
 # ---------------------------------------------------------------- данные → экран
@@ -219,8 +219,8 @@ func _refresh() -> void:
 func update_speed() -> void:
 	var v := float(_data.get("v", 0.0))
 	(_l["big"] as Label).text = "%.1f" % v
-	(_l["kmh"] as Label).text = "%d КМ/Ч" % roundi(v * 3.6)
-	(_l["max"] as Label).text = "МАКС %.1f М/С" % float(_data.get("vmax", 0.0))
+	(_l["kmh"] as Label).text = tr("%d КМ/Ч") % roundi(v * 3.6)
+	(_l["max"] as Label).text = tr("МАКС %.1f М/С") % float(_data.get("vmax", 0.0))
 	_light_segments(v / Tuning.HALL_SPEED_SCALE_MS)
 	_hist = _data.get("hist", [])
 
@@ -230,19 +230,19 @@ func update_impact() -> void:
 	var f := float(_data.get("f_n", 0.0)) / 1000.0
 	var any := float(_data.get("f_n", 0.0)) > 0.0
 	(_l["big"] as Label).text = "%.1f" % f if any else "—"
-	var word := "ЖДУ УДАР"
+	var word := tr("ЖДУ УДАР")
 	var col := COL_CYAN
 	if any:
 		for w in Tuning.HALL_FORCE_WORDS:
 			if f < float(w[0]):
-				word = String(w[1])
+				word = tr(String(w[1]))
 				break
 		col = Color(0.35, 0.9, 0.55) if f < 1.5 else (COL_AMBER if f < 4.0 else (Color(1.0, 0.55, 0.2) if f < 8.0 else Color(1.0, 0.25, 0.2)))
 	(_l["word"] as Label).text = word
 	(_l["word"] as Label).add_theme_color_override("font_color", col)
 	_light_segments(f / Tuning.HALL_FORCE_SCALE_KN if any else 0.0)
-	(_l["spd"] as Label).text = "СКОРОСТЬ УДАРА %.1f М/С · ИМПУЛЬС %d Н·С" % [float(_data.get("speed", 0.0)), roundi(float(_data.get("impulse", 0.0)))] if any else "СКОРОСТЬ УДАРА —"
-	(_l["rec"] as Label).text = "УДАРОВ %d · РЕКОРД %.1f кН" % [int(_data.get("hits", 0)), float(_data.get("best_n", 0.0)) / 1000.0] if int(_data.get("hits", 0)) > 0 else "УДАРОВ 0 · РЕКОРД —"
+	(_l["spd"] as Label).text = tr("СКОРОСТЬ УДАРА %.1f М/С · ИМПУЛЬС %d Н·С") % [float(_data.get("speed", 0.0)), roundi(float(_data.get("impulse", 0.0)))] if any else tr("СКОРОСТЬ УДАРА —")
+	(_l["rec"] as Label).text = tr("УДАРОВ %d · РЕКОРД %.1f кН") % [int(_data.get("hits", 0)), float(_data.get("best_n", 0.0)) / 1000.0] if int(_data.get("hits", 0)) > 0 else tr("УДАРОВ 0 · РЕКОРД —")
 	_hist = _data.get("hist", [])
 
 
@@ -253,12 +253,12 @@ func update_dummy() -> void:
 	var k := clampf(hp / mx, 0.0, 1.0)
 	_hp_fill.size.x = 858.0 * k
 	_hp_fill.color = Color(0.25, 0.85, 0.5).lerp(Color(0.95, 0.25, 0.2), 1.0 - k)
-	(_l["hp"] as Label).text = ("%d / %d" % [roundi(hp), roundi(mx)]) if bool(_data.get("alive", true)) else "НОКАУТ — ВСТАЁТ…"
+	(_l["hp"] as Label).text = ("%d / %d" % [roundi(hp), roundi(mx)]) if bool(_data.get("alive", true)) else tr("НОКАУТ — ВСТАЁТ…")
 	var last := float(_data.get("last", 0.0))
-	(_l["last"] as Label).text = "ПОСЛЕДНИЙ УДАР  %s" % ("%d" % roundi(last) if last > 0.0 else "—")
-	(_l["total"] as Label).text = "ВСЕГО УРОНА  %d" % roundi(float(_data.get("total", 0.0)))
-	(_l["hits"] as Label).text = "УДАРОВ  %d" % int(_data.get("hits", 0))
-	(_l["kos"] as Label).text = "НОКАУТОВ  %d" % int(_data.get("kos", 0))
+	(_l["last"] as Label).text = tr("ПОСЛЕДНИЙ УДАР  %s") % ("%d" % roundi(last) if last > 0.0 else "—")
+	(_l["total"] as Label).text = tr("ВСЕГО УРОНА  %d") % roundi(float(_data.get("total", 0.0)))
+	(_l["hits"] as Label).text = tr("УДАРОВ  %d") % int(_data.get("hits", 0))
+	(_l["kos"] as Label).text = tr("НОКАУТОВ  %d") % int(_data.get("kos", 0))
 
 
 func _draw_graph() -> void:

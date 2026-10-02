@@ -85,9 +85,9 @@ func _build() -> void:
 	wm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# красная плашка и строка заголовка
 	_rect(Vector2(160, 330), Vector2(250, 66), Color(0.8, 0.1, 0.1))
-	_dots = _label("● ЭФИР", Vector2(180, 332), 44, Color.WHITE, _f_head)
+	_dots = _label(tr("● ЭФИР"), Vector2(180, 332), 44, Color.WHITE, _f_head)
 	_rect(Vector2(410, 330), Vector2(1350, 66), Color(0.05, 0.05, 0.07, 0.9))
-	_title = _label("ЗАГРУЗКА", Vector2(436, 334), 44, Color.WHITE, _f_head)
+	_title = _label(tr("ЗАГРУЗКА"), Vector2(436, 334), 44, Color.WHITE, _f_head)
 	_sub = _label("", Vector2(164, 420), 30, Color(1.0, 0.9, 0.55), _f_mono)
 	# полоса прогресса: рамка + заливка
 	var frame := Panel.new()
@@ -123,7 +123,7 @@ func _build() -> void:
 	clip.clip_contents = true
 	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(clip)
-	var one := "NULL FIGHTING · БОКС 07 · НЕ ВЫКЛЮЧАЙТЕ ТЕЛЕВИЗОР · СИГНАЛ ПОДХОДИТ      ●      "
+	var one := tr("NULL FIGHTING · БОКС 07 · НЕ ВЫКЛЮЧАЙТЕ ТЕЛЕВИЗОР · СИГНАЛ ПОДХОДИТ   ") + "   ●   "
 	_ticker = Label.new()
 	_ticker.text = one + one + one + one
 	_ticker.add_theme_font_override("font", _f_head)
@@ -179,9 +179,9 @@ func begin(title := "ЗАГРУЗКА", sub := "") -> void:
 		_tip_i = randi() % TIPS.size()
 		_layer.visible = true
 		_root.modulate.a = 1.0
-	_title.text = title
-	_sub.text = sub
-	_tip.text = "СОВЕТ · " + String(TIPS[_tip_i])
+	_title.text = tr(title)
+	_sub.text = tr(sub) if sub != "" else ""
+	_tip.text = tr("СОВЕТ · ") + tr(String(TIPS[_tip_i]))
 	_apply_progress()
 	set_process(true)
 
@@ -189,8 +189,8 @@ func begin(title := "ЗАГРУЗКА", sub := "") -> void:
 ## Подписать / сменить подпись, не трогая прогресс.
 func describe(title: String, sub := "") -> void:
 	if _title != null:
-		_title.text = title
-		_sub.text = sub
+		_title.text = tr(title)
+		_sub.text = tr(sub) if sub != "" else ""
 
 
 func set_progress(p: float) -> void:
@@ -260,7 +260,7 @@ func _process(delta: float) -> void:
 	if tip_now != _tip_tick:
 		_tip_tick = tip_now
 		_tip_i = (_tip_i + 1) % TIPS.size()
-		_tip.text = "СОВЕТ · " + String(TIPS[_tip_i])
+		_tip.text = tr("СОВЕТ · ") + tr(String(TIPS[_tip_i]))
 
 
 func _apply_progress() -> void:
