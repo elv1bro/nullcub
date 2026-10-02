@@ -70,8 +70,16 @@ func _step(name: String, frames: int, call_ms := -1.0) -> void:
 
 
 func _run() -> void:
-	for i in range(60):
+	# открытие мастерской: первые секунды — иконки библиотеки рендерятся очередью (part_icons.gd), поток ресурсов испытания
+	cur_max = 0.0
+	var slow := 0
+	var t_end := Time.get_ticks_msec() + 8000
+	while Time.get_ticks_msec() < t_end:
 		await get_tree().process_frame
+		if float(Time.get_ticks_usec() - last_us) / 1000.0 > 40.0:
+			slow += 1
+	results.append({"name": "открытие мастерской (8 с)", "max_ms": snappedf(cur_max, 0.1), "pipes": []})
+	print("COLDWS %-34s худший кадр %7.1f мс, кадров > 40 мс: %d" % ["открытие мастерской (8 с)", cur_max, slow])
 	cur_max = 0.0
 	ws.set_preset("kit_human")
 	await _step("загрузка пресета", 30)
