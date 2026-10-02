@@ -10,7 +10,8 @@
 ## Печатает JSON и пишет tests/hud_report.json (панели = игроки, таймер, карточка скрыта к итогам, итоги видны,
 ## REMATCH зовёт restart() стаба). Exit 0/1.
 ## Запуск: godot --path . --resolution 1280x720 --always-on-top res://tests/hud_snapshot.tscn -- "players=2,out=res://tests/"
-##   players=2|3|4, out=<папка>, suffix=<строка к именам файлов>, hold=1 — не выходить (смотреть глазами).
+##   players=2|3|4, out=<папка>, suffix=<строка к именам файлов>, skin=broadcast|neon|led — скин HUD, hold=1 — не выходить
+##   (смотреть глазами).
 extends Node
 
 const HudScene: PackedScene = preload("res://scenes/ui/hud.tscn")
@@ -64,6 +65,8 @@ func _ready() -> void:
 				out_dir = p[1]
 			elif p[0] == "suffix":
 				suffix = p[1]
+			elif p[0] == "skin":   # скин HUD (HudSkin: broadcast / neon / led) на время снимка, без записи в настройки
+				HudSkin.set_skin(p[1], false)
 			elif cfg.has(p[0]):
 				cfg[p[0]] = float(p[1])
 	_background()

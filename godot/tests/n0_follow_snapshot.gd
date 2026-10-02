@@ -3,6 +3,7 @@
 ## Бой кампании без выхода бойцов, соперник — бот. Кадры: <out>_1.png — отсчёт, реплика N0 облачком; <out>_2.png — бой, P1 летит
 ## вправо; <out>_3.png — соперник в 14 м: стрелка «P2 · N м». Склейка трёх кадров — <out>_sheet.png.
 ## clean=1 — без интерфейса (HUD, стрелки, облачко N0, подсказка): подложка для макетов HUD.
+## skin=broadcast|neon|led — скин HUD (HudSkin) на время снимка, без записи в настройки.
 extends Node
 
 const FIGHT := preload("res://scenes/campaign/campaign_fight.tscn")
@@ -18,6 +19,8 @@ func _ready() -> void:
 			out = p[1]
 		if p.size() == 2 and p[0] == "clean":
 			clean = p[1] == "1"
+		if p.size() == 2 and p[0] == "skin":
+			HudSkin.set_skin(p[1], false)
 	var r: Dictionary = CampaignLeague.rival(CampaignLeague.LOCAL, 1)
 	var f := FIGHT.instantiate()
 	f.call("setup", CampaignLeague.start_blueprint(), CampaignLeague.rival_blueprint(CampaignLeague.LOCAL, r), r,

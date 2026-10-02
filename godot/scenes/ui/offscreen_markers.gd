@@ -68,26 +68,98 @@ func _process(_delta: float) -> void:
 	_canvas.queue_redraw()
 
 
+## Вид по скину HUD (scripts/ui/hud_skin.gd): трансляция — тёмная косая плашка с полосой цвета игрока со стороны соперника,
+## внутри треугольник и метры; неон — светящийся шеврон цвета игрока и метры с ореолом; LED — шеврон из светодиодов и метры
+## табло. Метры под стрелкой (у нижнего края экрана — над ней).
 func _draw_markers() -> void:
-	var font := ThemeDB.fallback_font
 	for m in markers:
-		var idx: int = m["player"]
-		var col: Color = Tuning.PLAYER_COLORS[idx % Tuning.PLAYER_COLORS.size()]
-		var p: Vector2 = m["pos"]
-		var d: Vector2 = m["dir"]
-		var side := Vector2(-d.y, d.x)
-		var tip := p + d * 26.0
-		var pts := PackedVector2Array([tip, p - d * 12.0 + side * 18.0, p - d * 4.0, p - d * 12.0 - side * 18.0])
-		_canvas.draw_colored_polygon(pts, Color(0, 0, 0, 0.6))
-		var inner := PackedVector2Array()
-		for q in pts:
-			inner.append(p + (q - p) * 0.8)
-		_canvas.draw_colored_polygon(inner, col)
-		var label := "P%d · %d м" % [idx + 1, int(round(float(m["dist"])))]
-		var ls := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
-		# метры под стрелкой; стрелка у нижнего края (смотрит вниз) — над ней
-		var below := d.y < 0.6 and p.y + 48.0 < _canvas.size.y
-		var lp := Vector2(p.x - ls.x * 0.5, p.y + 44.0 if below else p.y - 26.0)
-		lp.x = clampf(lp.x, 6.0, _canvas.size.x - ls.x - 6.0)
-		_canvas.draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 7, Color(0, 0, 0, 0.85))
-		_canvas.draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, col.lightened(0.35))
+		match HudSkin.id():
+			"neon":
+				_draw_neon(m)
+			"led":
+				_draw_led(m)
+			_:
+				_draw_plate(m)
+
+
+func _text(m: Dictionary) -> String:
+	return "P%d · %d м" % [int(m["player"]) + 1, int(round(float(m["dist"])))]
+
+
+func _colour(m: Dictionary) -> Color:
+	return Tuning.PLAYER_COLORS[int(m["player"]) % Tuning.PLAYER_COLORS.size()]
+
+
+## Позиция подписи: под стрелкой, у нижнего края — над ней; x — по центру, в пределах экрана.
+func _label_pos(p: Vector2, d: Vector2, ls: Vector2) -> Vector2:
+	var below := d.y < 0.6 and p.y + 48.0 < _canvas.size.y
+	var lp := Vector2(p.x - ls.x * 0.5, p.y + 44.0 if below else p.y - 26.0)
+	lp.x = clampf(lp.x, 6.0, _canvas.size.x - ls.x - 6.0)
+	return lp
+
+
+func _draw_plate(m: Dictionary) -> void:
+	var font := HudSkin.font("display")
+	var col := _colour(m)
+	var p: Vector2 = m["pos"]
+	var d: Vector2 = m["dir"]
+	var label := _text(m)
+	var ls := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+	var below := d.y < 0.6 and p.y + 48.0 < _canvas.size.y
+	var w := maxf(ls.x, 44.0) + 52.0
+	var h := 44.0 + ls.y + 10.0
+	var top := p.y - 26.0 if below else p.y - (h - 26.0)
+	var r := Rect2(Vector2(clampf(p.x - w * 0.5, 4.0, _canvas.size.x - w - 4.0), clampf(top, 4.0, _canvas.size.y - h - 4.0)), Vector2(w, h))
+	var st := Broadcast.plate()
+	st.edge_color = col
+	st.edge_w = 8.0
+	st.edge_side = 1 if d.x >= 0.0 else -1
+	st.draw_in(_canvas.get_canvas_item(), r)
+	var c := Vector2(r.get_center().x, r.position.y + 24.0 if below else r.end.y - 24.0)
+	var side := Vector2(-d.y, d.x)
+	_canvas.draw_colored_polygon(PackedVector2Array([c + d * 16.0, c - d * 10.0 + side * 13.0, c - d * 10.0 - side * 13.0]), col)
+	var ly := r.end.y - 12.0 if below else r.position.y + ls.y * 0.8 + 6.0
+	_canvas.draw_string(font, Vector2(r.get_center().x - ls.x * 0.5, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Broadcast.TEXT)
+
+
+func _chevron(p: Vector2, d: Vector2) -> PackedVector2Array:
+	var side := Vector2(-d.y, d.x)
+	return PackedVector2Array([p - d * 8.0 + side * 16.0, p + d * 16.0, p - d * 8.0 - side * 16.0])
+
+
+func _draw_neon(m: Dictionary) -> void:
+	var font := HudSkin.font("plate")
+	var col := _colour(m)
+	var p: Vector2 = m["pos"]
+	var d: Vector2 = m["dir"]
+	var ch := _chevron(p, d)
+	_canvas.draw_polyline(ch, Color(col, 0.16), 14.0, true)
+	_canvas.draw_polyline(ch, Color(col, 0.32), 8.0, true)
+	_canvas.draw_polyline(ch, col.lerp(Color.WHITE, 0.45), 3.5, true)
+	var label := _text(m)
+	var ls := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+	var lp := _label_pos(p, d, ls)
+	_canvas.draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 10, Color(col, 0.4))
+	_canvas.draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, col.lerp(Color.WHITE, 0.6))
+
+
+func _draw_led(m: Dictionary) -> void:
+	var font := HudSkin.font("digits")
+	var p: Vector2 = m["pos"]
+	var d: Vector2 = m["dir"]
+	var ch := _chevron(p, d)
+	for k in 2:
+		var a: Vector2 = ch[k]
+		var b: Vector2 = ch[k + 1]
+		var n := maxi(int(a.distance_to(b) / 5.5), 1)
+		for i in n + 1:
+			var q := a.lerp(b, float(i) / float(n))
+			_canvas.draw_circle(q, 4.2, Color(HudSkin.LED_RED, 0.25))
+			_canvas.draw_circle(q, 2.3, HudSkin.LED_RED)
+	var label := _text(m)
+	var ls := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size + 2)
+	var lp := _label_pos(p, d, ls)
+	var bg := Rect2(lp + Vector2(-10.0, -ls.y * 0.85), ls + Vector2(20.0, 8.0))
+	HudSkin.led_box(0.0, 0.0).draw(_canvas.get_canvas_item(), bg)
+	_canvas.draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size + 2, 6, Color(HudSkin.LED, 0.35))
+	_canvas.draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size + 2, HudSkin.LED)

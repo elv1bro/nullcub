@@ -1,9 +1,10 @@
-## Диктор (INSPIRATION_GAMES.md, Ragdoll Masters): надписи по центру экрана крупным «кистевым» шрифтом
-## (SystemFont Impact/Arial Black, курсив, тёмная обводка — hud_theme.tres, тип AnnounceLabel).
-## announce(text, color, kind): цвет — переданный, иначе по kind/тексту: FIGHT! белый, HEAD BLOW! красно-оранжевый,
-## BODY BLOW! зелёный, DOUBLE BLOW! бело-жёлтый, N HIT COMBO! синий → фиолетовый с ростом n, KO! красный,
-## SUDDEN DEATH оранжевый. Появление scale-in 0.1 с, удержание 0.5 с, затухание 0.2 с; в стеке не больше двух
-## (старая уходит сразу). Одинаковый текст в окне DEDUPE_S (взаимный удар: HEAD BLOW! у обоих в один кадр) не дублируется —
+## Диктор / строки табло (INSPIRATION_GAMES.md; вид по скину HUD — scripts/ui/hud_skin.gd): надпись по центру экрана.
+## Группы: gold — отсчёт и FIGHT!, alert — KO! и SUDDEN DEATH, event — HEAD / BODY / DOUBLE BLOW!, N HIT COMBO!, свои строки
+## (цвет события — переданный, иначе по kind/тексту: HEAD BLOW! красно-оранжевый, BODY BLOW! зелёный, DOUBLE BLOW! бело-жёлтый,
+## N HIT COMBO! синий → фиолетовый с ростом n). Трансляция — косая плашка (gold — янтарная, alert — красная, event — тёмная
+## с полосой цвета события) и вход «выезжает слева»; неон — светящийся текст без плашки, вход с отскоком; LED — чёрная панель
+## табло и точки светодиодов, вход с миганием. Удержание 0.5 с, затухание 0.2 с; в стеке не больше двух (старая уходит
+## сразу). Дети Stack — PanelContainer (meta "text" — строка), внутри Label. Одинаковый текст в окне DEDUPE_S (взаимный удар: HEAD BLOW! у обоих в один кадр) не дублируется —
 ## существующая надпись только «подпрыгивает». Анимации по реальному времени (Tween.set_ignore_time_scale) — hit-stop их не тормозит.
 ## Узел Stack (VBoxContainer по центру) живёт в scenes/ui/hud.tscn.
 class_name Announcer
@@ -80,49 +81,80 @@ static func colour_for(kind: String, text: String, given: Color) -> Color:
 static func font_size_for(kind: String, text: String) -> int:
 	var k := kind_of(kind, text)
 	if k == "ko":
-		return 128
-	if k == "fight" or k == "sudden":
 		return 116
+	if k == "fight" or k == "sudden":
+		return 104
 	if k == "countdown":
-		return 140
-	return 96
+		return 128
+	return 80
+
+
+## Группа надписи для скина: gold / alert / event.
+static func group_of(kind: String, text: String) -> String:
+	var k := kind_of(kind, text)
+	if k == "countdown" or k == "fight":
+		return "gold"
+	if k == "ko" or k == "sudden":
+		return "alert"
+	return "event"
 
 
 func announce(text: String, color: Color = Color(0, 0, 0, 0), kind: String = "") -> void:
 	var now := Time.get_ticks_msec()
 	for c in stack.get_children():
-		var same := c as Label
-		if same == null or same.text != text:
+		var same := c as Control
+		if same == null or String(same.get_meta("text", "")) != text:
 			continue
 		if now - int(same.get_meta("born_ms", 0)) > int(DEDUPE_S * 1000.0):
 			continue
 		var pulse := same.create_tween().set_ignore_time_scale(true)
-		pulse.tween_property(same, "scale", Vector2(1.18, 1.18), 0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		pulse.tween_property(same, "scale", Vector2(1.08, 1.08), 0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		pulse.tween_property(same, "scale", Vector2.ONE, 0.08)
 		return
 	while stack.get_child_count() >= MAX_STACK:
 		var old := stack.get_child(0)
 		stack.remove_child(old)
 		old.queue_free()
+	var group := group_of(kind, text)
+	var ev := colour_for(kind, text, color)
+	var fs := font_size_for(kind, text)
+	var plate := PanelContainer.new()
+	plate.add_theme_stylebox_override("panel", HudSkin.panel("announce", ev, false, group))
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.set_meta("text", text)
+	plate.set_meta("born_ms", now)
 	var l := Label.new()
-	l.theme_type_variation = &"AnnounceLabel"
 	l.text = text
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	l.add_theme_color_override("font_color", colour_for(kind, text, color))
-	l.add_theme_font_size_override("font_size", font_size_for(kind, text))
-	l.rotation = deg_to_rad(randf_range(-3.0, 3.0))
-	l.set_meta("born_ms", now)
-	stack.add_child(l)
-	l.pivot_offset = l.get_minimum_size() * 0.5
-	l.scale = Vector2(0.2, 0.2)
-	var tw := l.create_tween().set_ignore_time_scale(true)
-	tw.tween_property(l, "scale", Vector2(1.12, 1.12), SCALE_IN_S * 0.7).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(l, "scale", Vector2.ONE, SCALE_IN_S * 0.3)
+	HudSkin.style_label(l, "display", fs, HudSkin.text_for(group, ev), ev)
+	plate.add_child(l)
+	stack.add_child(plate)
+	var tw := plate.create_tween().set_ignore_time_scale(true)
+	match HudSkin.id():
+		"neon":   # вспышка с отскоком
+			plate.pivot_offset = plate.get_minimum_size() * 0.5
+			plate.scale = Vector2(0.4, 0.4)
+			plate.modulate.a = 0.0
+			tw.set_parallel(true)
+			tw.tween_property(plate, "scale", Vector2(1.08, 1.08), SCALE_IN_S * 0.8).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tw.tween_property(plate, "modulate:a", 1.0, SCALE_IN_S * 0.5)
+			tw.set_parallel(false)
+			tw.tween_property(plate, "scale", Vector2.ONE, SCALE_IN_S * 0.4)
+		"led":    # табло загорается с миганием
+			plate.modulate.a = 0.0
+			tw.tween_property(plate, "modulate:a", 1.0, 0.02)
+			tw.tween_property(plate, "modulate:a", 0.35, 0.03)
+			tw.tween_property(plate, "modulate:a", 1.0, 0.03)
+		_:        # плашка «выезжает» слева
+			plate.pivot_offset = Vector2(0.0, plate.get_minimum_size().y * 0.5)
+			plate.scale = Vector2(0.05, 1.0)
+			tw.tween_property(plate, "scale", Vector2(1.04, 1.0), SCALE_IN_S * 0.7).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+			tw.tween_property(plate, "scale", Vector2.ONE, SCALE_IN_S * 0.3)
 	tw.tween_interval(HOLD_S)
-	tw.tween_property(l, "modulate:a", 0.0, FADE_S)
-	tw.tween_callback(l.queue_free)
+	tw.tween_property(plate, "modulate:a", 0.0, FADE_S)
+	tw.tween_callback(plate.queue_free)
 
 
 func clear() -> void:

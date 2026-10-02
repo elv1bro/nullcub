@@ -1,9 +1,11 @@
 ## Панель голосования зрителей (docs/plan-demo/15-audience-vote.md): «AUDIENCE EVENT», три строки — вариант, полоса, проценты,
 ## итог «… WINS» (при аномалии §14 — зачёркнутый итог и то, что включило поле) и субтитр N0 (заглушка до этапа 14).
 ## Узел — scenes/arena/audience_vote_panel.tscn (CanvasLayer), им управляет AudienceVote (show_vote / set_percents / show_result).
+## Вид — по скину HUD (scripts/ui/hud_skin.gd: трансляция / неон / LED); стили ставятся поверх сцены в _apply_skin
+## (в _ready и при смене скина).
 extends CanvasLayer
 
-const COL_WIN := Color(1.0, 0.85, 0.3)
+const COL_WIN := Color(1.0, 0.75, 0.25)
 const COL_ROW := Color(0.92, 0.94, 1.0)
 const COL_BAD := Color(1.0, 0.35, 0.3)
 
@@ -19,6 +21,26 @@ var _hide_t: SceneTreeTimer = null
 func _ready() -> void:
 	box.visible = false
 	n0.visible = false
+	title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_apply_skin()
+	HudSkin.events.changed.connect(func(_id: String) -> void: _apply_skin())
+
+
+func _apply_skin() -> void:
+	box.add_theme_stylebox_override("panel", HudSkin.panel("vote_box"))
+	title.add_theme_stylebox_override("normal", HudSkin.panel("vote_title"))
+	HudSkin.style_label(title, "display", 30, HudSkin.text_for("gold"))
+	var track := StyleBoxFlat.new()
+	track.bg_color = Broadcast.PLATE_LIGHT if HudSkin.id() == "broadcast" else Color(HudSkin.accent(), 0.12)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = HudSkin.accent()
+	for r in rows:
+		var row := r as Control
+		(row.get_node("Name") as Label).add_theme_font_override("font", HudSkin.font("plate"))
+		(row.get_node("Pct") as Label).add_theme_font_override("font", HudSkin.font("digits"))
+		(row.get_node("Bar") as ProgressBar).add_theme_stylebox_override("background", track)
+		(row.get_node("Bar") as ProgressBar).add_theme_stylebox_override("fill", fill)
+	result.add_theme_font_override("font", HudSkin.font("display"))
 
 
 func show_vote(options: Array, n0_line: String = "") -> void:
