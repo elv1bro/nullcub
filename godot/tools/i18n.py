@@ -164,7 +164,7 @@ def placeholders(s):
 def cmd_check():
     keys = collect()
     langs = lang_files()
-    errors, warns = [], []
+    errors, warns, longer = [], [], []
     if "en" not in langs:
         errors.append("нет locale/en.json")
     for code, path in langs.items():
@@ -183,9 +183,15 @@ def cmd_check():
                 errors.append("%s: подстановки не совпадают «%s» → «%s»" % (code, k[:50], v[:50]))
             if CYR.search(v) and code != "ru":
                 warns.append("%s: русские буквы в переводе «%s»" % (code, v[:60]))
+            # интерфейс рисовался под русский: перевод заметно длиннее русской строки — риск, что не влезет (смотреть tests/i18n_layout_probe)
+            if CYR.search(k) and len(k) <= 40 and len(v) > len(k) * 1.3 + 4:
+                longer.append((len(v) / max(len(k), 1), code, k, v))
         for k in tbl:
             if not k.startswith("@") and k not in keys:
                 warns.append("%s: висячий ключ «%s»" % (code, k[:70]))
+    longer.sort(reverse=True)
+    for ratio, code, k, v in longer[:25]:
+        warns.append("%s: длиннее русского в %.1f× «%s» → «%s»" % (code, ratio, k[:40], v[:60]))
     for w in warns[:60]:
         print("warn:", w)
     for e in errors[:120]:
