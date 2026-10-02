@@ -9,8 +9,8 @@ extends Node
 const MENU := "res://scenes/menu/garage_menu.tscn"
 const SETTINGS_PATH := "user://settings.cfg"
 ## Громкость — линейная доля 0..1 на шину Master (linear_to_db), fx — пресет FxPreset (full / reduced / off),
-## subtitles — субтитры реплик N0 в гараже.
-const DEFAULTS := {"volume": 0.8, "fullscreen": false, "vsync": true, "fx": "full", "subtitles": true}
+## subtitles — субтитры реплик N0 в гараже, hud_skin — скин HUD боя (HudSkin: broadcast / neon / led, docs/plan-demo/HUD_SKINS.md).
+const DEFAULTS := {"volume": 0.8, "fullscreen": false, "vsync": true, "fx": "full", "subtitles": true, "hud_skin": "broadcast"}
 const ACCENT := Color(1.0, 0.55, 0.2)
 
 var returning := false
@@ -172,6 +172,7 @@ func get_setting(key: String) -> Variant:
 func apply_settings() -> void:
 	_bus_volume("Master", float(settings["volume"]))
 	FxPreset.set_preset(String(settings["fx"]), get_tree())
+	HudSkin.set_skin(String(settings["hud_skin"]), false)
 	if DisplayServer.get_name() != "headless":
 		var fs := bool(settings["fullscreen"])
 		var mode := DisplayServer.window_get_mode()

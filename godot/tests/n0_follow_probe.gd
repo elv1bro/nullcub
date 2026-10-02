@@ -16,6 +16,7 @@
 ##   lines_rules        N0Lines: мелкий повод не чаще 8 с и не поверх реплики, важный — всегда; повода «соперник далеко» нет
 ##                      (где соперник — только стрелка HUD, автор 02.10)
 ##   line_countdown     на отсчёте N0 сказал реплику «fight», облачко видно и не залезает на полосу HUD
+##   bubble_size        облачко на экране ни в одном кадре не выше 160 px (баг: в первый кадр строки — огромная панель)
 ##   line_events        KO соперника, Sudden Death и голосование зрителей — реплики N0; субтитра N0 в панели голосования нет
 ##   hotseat_join       Быстрый бой: P2-человек не в кадре, пока не нажал клавиш; нажал стрелку — кадр держит обоих
 ## Тело N0 (n0_drone.gd, «Тело»; отдельный дрон без боя):
@@ -33,6 +34,8 @@ const ROUTE := [
 	[["p1_right"], 2.5], [["p1_up"], 1.5], [["p1_left"], 3.0], [["p1_left", "p1_up"], 1.5], [[], 1.0],
 	[["p1_right", "p1_down"], 2.0], [["p1_right"], 2.5], [["p1_left"], 4.0], [[], 2.0],
 ]
+
+const EXPECTED_CHECKS := 16
 
 var checks: Array = []
 var info := {}
@@ -75,6 +78,7 @@ func _campaign() -> void:
 	var speech: N0Speech = host.get("speech")
 	# отсчёт: реплика «fight», облачко
 	var said_fight := false
+	var bubble_max_h := 0.0
 	var bubble_ok := false
 	var bubble_rect := Rect2()
 	for i in int(Tuning.COUNTDOWN_S / DT) + 30:
@@ -82,6 +86,8 @@ func _campaign() -> void:
 		if not said_fight:
 			for e in (host.get("lines") as N0Lines).said:
 				said_fight = said_fight or String(e["event"]) == "fight"
+		if speech.shown():
+			bubble_max_h = maxf(bubble_max_h, speech.bubble.size.y)
 		if speech.shown() and speech.bubble.size.x > 10.0:
 			bubble_rect = Rect2(speech.bubble.position, speech.bubble.size)
 			var vs := get_viewport().get_visible_rect().size
@@ -112,6 +118,8 @@ func _campaign() -> void:
 		for i in int(float(leg[1]) / DT):
 			await get_tree().physics_frame
 			await get_tree().process_frame
+			if speech.shown():
+				bubble_max_h = maxf(bubble_max_h, speech.bubble.size.y)
 			var c1 := p1.centre_of_mass()
 			var c2 := p2.centre_of_mass()
 			var np := n0.global_position
@@ -154,6 +162,7 @@ func _campaign() -> void:
 		"z_max": snappedf(z_max, 0.01), "side": [side_ok, side_n], "side_slow": [slow_ok, slow_n], "in_frame": [in_frame, frames], "hh": [snappedf(hh_min, 0.01),
 		snappedf(hh_max, 0.01)], "cam_cx_err": snappedf(cx_err, 0.01), "opp_p3": snappedf(opp_p3, 0.01),
 		"opp_min": snappedf(opp_d[0], 0.01)}
+	_check("bubble_size", bubble_max_h > 20.0 and bubble_max_h <= 160.0, "наибольшая высота облачка %.0f px" % bubble_max_h)
 	_check("camera_on_player", follow_only_p1 and hh_min >= 3.6 - 0.01 and hh_max <= 5.5 and cx_err <= 2.0,
 		"только P1 %s, полувысота %.2f…%.2f, центр от P1 до %.2f м" % [follow_only_p1, hh_min, hh_max, cx_err])
 	_check("n0_near", p95 <= 3.5 and near[near.size() - 1] <= 6.0, "p95 %.2f м, max %.2f м" % [p95, near[near.size() - 1]])
@@ -326,7 +335,9 @@ func _check(id: String, ok: bool, text: String) -> void:
 
 
 func _finish() -> void:
-	var ok := true
+	var ok := checks.size() == EXPECTED_CHECKS   # упавший скрипт сцены пропускает проверки — это провал, а не OK
+	if not ok:
+		print("FAIL checks_count — %d из %d" % [checks.size(), EXPECTED_CHECKS])
 	for c in checks:
 		ok = ok and bool(c["ok"])
 	var fa := FileAccess.open("res://tests/n0_follow_probe_report.json", FileAccess.WRITE)

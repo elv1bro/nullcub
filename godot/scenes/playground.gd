@@ -14,6 +14,7 @@
 ## Щепки/пыль (ImpactFx) и урон считает DollCombat — ребёнок каждой куклы, его добавляет Match.register.
 ## P1: WASD, Shift ускорение (держать, за Заряд), Space + A/D раскрутка. P2: стрелки, правый Ctrl ускорение, Enter раскрутка.
 ## F10 — пресет эффектов ударов full → reduced → off (FxPreset, HIT_FX.md §11.2), тост «FX: …» внизу экрана на FX_TOAST_S.
+## H — скин HUD трансляция → неон → LED (HudSkin, сохраняется в настройках), тост «HUD: …» (F9 — качество графики, Gfx).
 extends Node3D
 
 const SCENES := {
@@ -130,6 +131,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				_show_fx_toast(get_node("/root/GameAudio").toggle_music())   # музыка вкл/выкл (user://audio.cfg, docs/plan-demo/AUDIO.md §5)
 			KEY_N:
 				_show_fx_toast(get_node("/root/GameAudio").toggle_crowd())   # толпа вкл/выкл
+			KEY_H:
+				cycle_hud_skin()
+
+
+## H: следующий скин HUD (HudSkin: трансляция / неон / LED) и тост. Возвращает подпись скина.
+func cycle_hud_skin() -> String:
+	var l := HudSkin.cycle()
+	_show_fx_toast("HUD: " + l)
+	return l
 
 
 ## F10: следующий пресет FX (применяется ко всем HitFxDirector сразу) и тост. Возвращает имя пресета.

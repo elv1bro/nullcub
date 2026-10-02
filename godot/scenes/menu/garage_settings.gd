@@ -1,6 +1,7 @@
 ## Экран «Настройки» в гараже (scenes/menu/garage_menu.gd открывает его на пункте НАСТРОЙКИ, камера едет к радио и щитку).
 ## Строки: громкость, качество графики (пресет автозагрузки Gfx — то же, что F9; хранит его сам Gfx в user://gfx.cfg), эффекты
-## ударов (FxPreset), полный экран, вертикальная синхронизация, субтитры N0, НАЗАД; ниже — схема управления (только показ).
+## ударов (FxPreset), интерфейс боя (HudSkin: трансляция / неон / LED — то же, что H в бою), полный экран, вертикальная
+## синхронизация, субтитры N0, НАЗАД; ниже — схема управления (только показ).
 ## Остальные значения живут в Flow (scripts/menu/flow.gd → user://settings.cfg) и применяются сразу.
 ## Ввод: ↑↓ строка, ←→ / Enter изменить, Esc — назад; мышь: наведение выбирает строку, клик по ◀ ▶ или по строке меняет.
 class_name GarageSettings
@@ -14,6 +15,7 @@ const ROWS := [
 	{"key": "gfx", "title": "ГРАФИКА", "kind": "choice", "values": ["low", "medium", "high", "ultra"], "labels": ["НИЗКАЯ", "СРЕДНЯЯ", "ВЫСОКАЯ", "УЛЬТРА"]},
 	{"key": "auto_scale", "title": "АВТО-МАСШТАБ", "kind": "bool"},
 	{"key": "fx", "title": "ЭФФЕКТЫ УДАРОВ", "kind": "choice", "values": ["full", "reduced", "off"], "labels": ["ПОЛНЫЕ", "СПОКОЙНЕЕ", "ВЫКЛ"]},
+	{"key": "hud_skin", "title": "ИНТЕРФЕЙС БОЯ", "kind": "choice", "values": ["broadcast", "neon", "led"], "labels": ["ТРАНСЛЯЦИЯ", "НЕОН", "LED-ТАБЛО"]},
 	{"key": "fullscreen", "title": "ПОЛНЫЙ ЭКРАН", "kind": "bool"},
 	{"key": "vsync", "title": "V-SYNC", "kind": "bool"},
 	{"key": "subtitles", "title": "СУБТИТРЫ N0", "kind": "bool"},
@@ -140,7 +142,8 @@ func get_value(key: String) -> Variant:
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null:
 		return flow.get_setting(key)
-	return _local.get(key, {"volume": 0.8, "gfx": "high", "fx": "full", "fullscreen": false, "vsync": true, "subtitles": true}.get(key))
+	return _local.get(key, {"volume": 0.8, "gfx": "high", "fx": "full", "fullscreen": false, "vsync": true, "subtitles": true,
+		"hud_skin": "broadcast"}.get(key))
 
 
 func _set_value(key: String, v: Variant) -> void:

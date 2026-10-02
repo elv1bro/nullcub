@@ -1,6 +1,10 @@
-## HUD боя (R20 IN-GAME HUD, план 06 «HUD», 09 итоги). CanvasLayer поверх площадки; дерево — scenes/ui/hud.tscn:
+## HUD боя (R20 IN-GAME HUD, план 06 «HUD», 09 итоги). CanvasLayer поверх площадки; дерево — scenes/ui/hud.tscn.
+## Вид — скин HUD (scripts/ui/hud_skin.gd): «Трансляция Лиги» (по умолчанию), «Неон NULL» или «LED-табло»; тема Root
+## строится в коде (HudSkin.theme()), при смене скина (F9 в бою, экран настроек) HUD перекрашивается на лету.
 ##   Root/Players   — панели игроков (scenes/ui/player_panel.tscn), P1/P2 по верхним углам, P3/P4 под ними;
-##   Root/TimerBox  — таймер mm:ss по центру сверху в тёмной панели, под ним красная «SUDDEN DEATH» (пульсирует);
+##   Root/TimerBox  — таймер mm:ss по центру сверху (трансляция — на янтарной плашке, в Sudden Death — на красной), под ним
+##                    «SUDDEN DEATH»;
+##   Root/Field     — индикатор поля NULL слева снизу (field_badge.gd; на аренах без поля скрыт);
 ##   Root/Announcer — диктор (announcer.gd): FIGHT!, HEAD BLOW!, N HIT COMBO!, KO!, SUDDEN DEATH;
 ##   Root/KoCard    — карточка KO (ko_card.tscn), 1.2 с; пока она видна, стек диктора пуст и новые надписи не
 ##                    показываются (карточка сама пишет KO!; раньше KO!/BODY BLOW! просвечивали под брызгами «призраками»);
@@ -20,7 +24,7 @@ enum Phase { COUNTDOWN, FIGHT, SUDDEN_DEATH, OVER }
 
 const PlayerPanelScene: PackedScene = preload("res://scenes/ui/player_panel.tscn")
 const PANEL_SIZE := Vector2(500, 136)
-const PANEL_MARGIN := Vector2(24, 18)
+const PANEL_MARGIN := Vector2(20, 16)
 const PANEL_ROW_GAP := 10.0
 const SIGNALS := ["phase_changed", "time_left", "announce", "hp_changed", "combo_changed", "ko", "match_over"]
 const RESULTS_MIN_DELAY_S := 0.3
@@ -44,6 +48,8 @@ var _cinematic_hidden: Array = []   # [[CanvasItem, was_visible]] — HIT_FX §3
 @onready var players_root: Control = $Root/Players
 @onready var timer_label: Label = $Root/TimerBox/TimerPanel/TimerLabel
 @onready var sudden_death_label: Label = $Root/TimerBox/SuddenDeath
+@onready var timer_panel: PanelContainer = $Root/TimerBox/TimerPanel
+@onready var field_badge: Control = $Root/Field
 @onready var announcer: Announcer = $Root/Announcer
 @onready var ko_card: KoCard = $Root/KoCard
 @onready var results: ResultsPanel = $Root/Results
@@ -51,6 +57,8 @@ var _cinematic_hidden: Array = []   # [[CanvasItem, was_visible]] — HIT_FX §3
 
 func _ready() -> void:
 	add_to_group("hud")   # HIT_FX §4.1: CritCinematic находит HUD по группе
+	_apply_skin()
+	HudSkin.events.changed.connect(func(_id: String) -> void: _apply_skin())
 	sudden_death_label.visible = false
 	if ko_splatter_alpha >= 0.0:
 		ko_card.set_splatter_alpha(ko_splatter_alpha)
@@ -64,6 +72,7 @@ func _ready() -> void:
 func _on_results_visibility() -> void:
 	players_root.visible = not results.visible
 	$Root/TimerBox.visible = not results.visible
+	field_badge.modulate.a = 0.0 if results.visible else 1.0
 
 
 ## Подписка на Match (или любой узел с теми же сигналами и dolls()). Повторный bind переподписывает.
@@ -148,6 +157,31 @@ func set_round_wins(index: int, n: int) -> void:
 		p.set_wins(n)
 
 
+## Тема, таймер и SUDDEN DEATH по текущему скину (панели игроков, поле, диктор, карточка KO перекрашиваются сами).
+func _apply_skin() -> void:
+	root.theme = HudSkin.theme()
+	HudSkin.style_label(sudden_death_label, "display", 30, HudSkin.text_for("alert"))
+	sudden_death_label.add_theme_stylebox_override("normal", HudSkin.panel("timer_sd"))
+	_style_timer()
+
+
+func _style_timer() -> void:
+	var sd := phase == Phase.SUDDEN_DEATH
+	timer_panel.add_theme_stylebox_override("panel", HudSkin.panel("timer_sd" if sd else "timer"))
+	var neon := HudSkin.id() == "neon"
+	var c: Color = HudSkin.text_for("alert") if sd else (HudSkin.text_colour() if neon else HudSkin.text_for("gold"))
+	if sd and HudSkin.id() == "broadcast":
+		c = Color.WHITE
+	HudSkin.style_label(timer_label, "digits", 58, c, HudSkin.NEON if neon and not sd else Color(0, 0, 0, 0))
+
+
+## Имя на плашке игрока вместо «P1» (кампания: имя игрока, титул соперника); "" — снова «P1».
+func set_player_name(index: int, text: String) -> void:
+	var p := panel_for(index)
+	if p != null:
+		p.set_display_name(text)
+
+
 ## Фото игрока на портрет (этап 10); null — обратно инициалы.
 func set_photo(index: int, tex: Texture2D) -> void:
 	var p := panel_for(index)
@@ -166,7 +200,7 @@ static func format_time(seconds: float) -> String:
 func _on_phase_changed(p: int) -> void:
 	phase = p
 	sudden_death_label.visible = p == Phase.SUDDEN_DEATH
-	timer_label.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35) if p == Phase.SUDDEN_DEATH else Color(0.96, 0.94, 0.9))
+	_style_timer()
 	if p == Phase.COUNTDOWN:
 		results.hide_panel()
 		ko_card.visible = false
@@ -234,7 +268,7 @@ func set_cinematic(on: bool) -> void:
 	if on:
 		if not _cinematic_hidden.is_empty():
 			return
-		for n: CanvasItem in [players_root, $Root/TimerBox as CanvasItem, announcer]:
+		for n: CanvasItem in [players_root, $Root/TimerBox as CanvasItem, field_badge, announcer]:
 			_cinematic_hidden.append([n, n.visible])
 			n.visible = false
 	else:

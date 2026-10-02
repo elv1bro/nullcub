@@ -203,7 +203,7 @@ func _process(delta: float) -> void:
 		var st: Node = hud.announcer.stack
 		var l0: Control = st.get_child(0) as Control if st.get_child_count() > 0 else null
 		print("dbg real+%d ms t=%.2f ts=%.2f stack=%d %s ko_card=%s a=%.2f rem=%.2f results=%s busy=%s" % [now - (first_hit_ms if first_hit_ms >= 0 else ko_ms), t, Engine.time_scale, st.get_child_count(),
-			("'%s' s=%.2f a=%.2f pos=%s size=%s" % [(l0 as Label).text, l0.scale.x, l0.modulate.a, l0.global_position, l0.size]) if l0 != null else "-",
+			("'%s' s=%.2f a=%.2f pos=%s size=%s" % [String(l0.get_meta("text", "")), l0.scale.x, l0.modulate.a, l0.global_position, l0.size]) if l0 != null else "-",
 			hud.ko_card.visible, hud.ko_card.modulate.a, hud.ko_card.remaining_s(), hud.results.visible, busy])
 	if busy:
 		return

@@ -4,7 +4,7 @@
 ## P2 (орех, стрелки) — кооп: в сцене есть, по умолчанию убирается; F2 — включить/выключить и начать заново.
 ## Эффекты удара (HitFxDirector, SfxDirector, крит) создаёт сам Match — WaveDirector его наследник; F10 — пресет FX по кругу
 ## (FxPreset: full / reduced / off, как на PvP-площадке), подпись — дикторской надписью HUD.
-## Здесь только поведение: R — заново (WaveDirector.restart), F2 — кооп, F10 — FX, Esc — пауза (Flow); пропасть (ScrapArena.body_fell) — KO куклы,
+## Здесь только поведение: R — заново (WaveDirector.restart), F2 — кооп, F10 — FX, H — скин HUD, Esc — пауза (Flow); пропасть (ScrapArena.body_fell) — KO куклы,
 ## чья часть упала (игрока или врага; оторванные детали и оружие падают дальше, их хозяин не страдает).
 class_name PvePlayground
 extends Node3D
@@ -52,6 +52,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				hud.announcer.announce(get_node("/root/GameAudio").toggle_music(), Color(0.9, 0.9, 0.95), "")
 			KEY_N:
 				hud.announcer.announce(get_node("/root/GameAudio").toggle_crowd(), Color(0.9, 0.9, 0.95), "")
+			KEY_H:   # скин HUD (HudSkin): в PvE перекрашивает диктора
+				hud.announcer.announce("HUD: " + HudSkin.cycle(), Color(0.9, 0.9, 0.95), "")
 			KEY_ESCAPE:
 				Flow.toggle_pause(director.restart)   # пауза: продолжить / заново / в гараж (scripts/menu/flow.gd)
 			_:

@@ -1,12 +1,11 @@
-## Субтитр N0 — облачко у самого дрона (N0_VOICE.md, «Реплика»: позиция дрона на экране, прижата к краям, текст набирается
-## по буквам). Слой создаёт scripts/n0/n0_host.gd. Время реальное (не тормозит в стоп-кадре и замедлении удара).
+## Субтитр N0 — плашка у самого дрона (N0_VOICE.md, «Реплика»: позиция дрона на экране, прижата к краям, текст набирается
+## по буквам). Вид по скину HUD (scripts/ui/hud_skin.gd): трансляция — «нижняя плашка» эфира с янтарным ярлыком «N0», неон —
+## голубое стекло, LED — экран самого N0 (голубой текст). Слой создаёт scripts/n0/n0_host.gd. Время реальное (не тормозит
+## в стоп-кадре и замедлении удара).
 ## Облачко над дроном; если над ним полоса HUD (верх top_band кадра) — под дроном. Прячется, пока скрыт HUD (выход бойца),
 ## в кинематографе крита (Hud.is_cinematic) и на итогах матча.
 class_name N0Speech
 extends CanvasLayer
-
-const ACCENT := Color8(236, 168, 34)     # акцент ливреи N0 (N0Drone.LIVERIES default)
-const BG := Color(0.05, 0.055, 0.07, 0.86)
 
 @export var chars_per_s := 45.0
 @export var hold_s := 1.8
@@ -25,6 +24,7 @@ var text := ""
 var drone: Node3D
 var hud: Node
 var bubble: PanelContainer
+var tag: Label
 var label: Label
 var tail: Polygon2D
 var _t := 0.0          # с начала реплики (реальные секунды)
@@ -32,6 +32,8 @@ var _dur := 0.0        # набор + держать
 var _last_ms := 0
 var _placed := false
 var _below := false
+var _settle := 0          # кадров до показа новой строки
+const SETTLE_FRAMES := 2
 
 
 func _ready() -> void:
@@ -39,41 +41,54 @@ func _ready() -> void:
 	bubble = PanelContainer.new()
 	bubble.name = "Bubble"
 	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = BG
-	sb.set_corner_radius_all(10)
-	sb.border_color = ACCENT
-	sb.border_width_left = 3
-	sb.content_margin_left = 14.0
-	sb.content_margin_right = 14.0
-	sb.content_margin_top = 8.0
-	sb.content_margin_bottom = 9.0
-	bubble.add_theme_stylebox_override("panel", sb)
 	add_child(bubble)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 14)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bubble.add_child(row)
-	var tag := Label.new()
+	tag = Label.new()
 	tag.name = "Tag"
 	tag.text = "N0"
-	tag.add_theme_color_override("font_color", ACCENT)
-	tag.add_theme_font_size_override("font_size", font_size)
-	tag.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	tag.size_flags_vertical = Control.SIZE_FILL
+	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(tag)
 	label = Label.new()
 	label.name = "Text"
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF   # строки разбивает say() (wrap): размер облачка не ждёт раскладки
 	label.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", Color(0.96, 0.95, 0.92))
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var lm := StyleBoxEmpty.new()
+	lm.content_margin_top = 8.0
+	lm.content_margin_bottom = 9.0
+	label.add_theme_stylebox_override("normal", lm)
 	row.add_child(label)
 	tail = Polygon2D.new()
 	tail.name = "Tail"
-	tail.color = BG
 	add_child(tail)
+	_apply_skin()
+	HudSkin.events.changed.connect(func(_id: String) -> void: _apply_skin())
 	_hide()
 	_last_ms = Time.get_ticks_msec()
+
+
+## Панель, ярлык, текст и хвостик по текущему скину HUD.
+func _apply_skin() -> void:
+	bubble.add_theme_stylebox_override("panel", HudSkin.panel("n0"))
+	tag.add_theme_stylebox_override("normal", HudSkin.panel("n0_tag"))
+	match HudSkin.id():
+		"neon":
+			HudSkin.style_label(tag, "display", font_size + 4, HudSkin.NEON_AMBER)
+			HudSkin.style_label(label, "body", font_size, Color(0.92, 0.99, 1.0), HudSkin.NEON)
+		"led":   # экран N0: голубые строки
+			HudSkin.style_label(tag, "display", font_size + 6, HudSkin.LED_CYAN)
+			HudSkin.style_label(label, "body", font_size, HudSkin.LED_CYAN)
+		_:
+			HudSkin.style_label(tag, "display", font_size + 4, Broadcast.INK)
+			HudSkin.style_label(label, "body", font_size, Broadcast.TEXT)
+	tail.color = HudSkin.panel_bg("n0")
+	if text != "":
+		label.text = wrap_lines(text, label.get_theme_font("font"), font_size, max_width)
+		bubble.reset_size()
 
 
 ## Сказать реплику: перебивает текущую.
@@ -81,15 +96,30 @@ func say(line: String) -> void:
 	text = line
 	_t = 0.0
 	_dur = float(line.length()) / chars_per_s + hold_s + hold_per_char_s * line.length()
-	label.text = line
+	label.text = wrap_lines(line, label.get_theme_font("font"), font_size, max_width)
 	label.visible_characters = 0
-	var font := label.get_theme_font("font")
-	var w := font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x if font != null else max_width
-	label.custom_minimum_size = Vector2(minf(w + 2.0, max_width), 0.0)
 	bubble.reset_size()
 	bubble.modulate.a = 1.0
 	tail.modulate.a = 1.0
 	_placed = false
+	_settle = SETTLE_FRAMES
+	_hide()   # до пересчёта размеров не показывать (иначе прошлое облачко на кадр раздувается под новую строку)
+
+
+## Разбить строку по словам на строки не шире width (px) — с явными переносами: у Label с автопереносом высота считается
+## от ширины после раскладки контейнера, и в первый кадр облачко бывало огромным (отчёт сессии эффектов 02.10).
+static func wrap_lines(line: String, font: Font, size: int, width: float) -> String:
+	if font == null:
+		return line
+	var para := TextParagraph.new()
+	para.add_string(line, font, size)
+	para.width = width
+	para.break_flags = TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND
+	var out := PackedStringArray()
+	for i in para.get_line_count():
+		var r := para.get_line_range(i)
+		out.append(line.substr(r.x, r.y - r.x).strip_edges())
+	return "\n".join(out)
 
 
 ## N0 ещё говорит (набирает или держит реплику).
@@ -124,6 +154,11 @@ func _process(_delta: float) -> void:
 	var a := 1.0 - clampf((_t - _dur) / fade_s, 0.0, 1.0)
 	bubble.modulate.a = a
 	tail.modulate.a = a
+	if _settle > 0:   # новая строка: контейнер ещё не пересчитал размер — первый кадр облачко было огромным (отчёт сессии эффектов)
+		_settle -= 1
+		bubble.reset_size()
+		_hide()
+		return
 	if _suppressed():
 		bubble.visible = false
 		tail.visible = false

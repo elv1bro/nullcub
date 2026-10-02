@@ -39,6 +39,8 @@ func setup(player_bp: BodyBlueprint, rival_bp: BodyBlueprint, r: Dictionary, riv
 
 func _ready() -> void:
 	super._ready()
+	hud.set_player_name(0, String(info.get("player_name", "Игрок")))
+	hud.set_player_name(1, String(info.get("rival_title", "")))
 	ArmAssist.attach_to(p1)
 	for d in [p1, p2]:
 		_equip_crafted(d as ModularDoll)
@@ -70,6 +72,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					fight_abandoned.emit()
 			KEY_F10:
 				cycle_fx_preset()
+			KEY_H:
+				cycle_hud_skin()
 
 
 func player_won(winner: Doll) -> bool:

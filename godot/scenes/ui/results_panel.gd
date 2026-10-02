@@ -46,8 +46,40 @@ const GOLD := Color(1.0, 0.85, 0.4, 1.0)
 
 func _ready() -> void:
 	visible = false
+	_apply_skin()
+	HudSkin.events.changed.connect(func(_id: String) -> void: _apply_skin())
 	rematch_btn.pressed.connect(func() -> void: rematch.emit())
 	menu_btn.pressed.connect(func() -> void: main_menu.emit())
+
+
+## REMATCH — главная кнопка по скину HUD (scripts/ui/hud_skin.gd; в сцене — старые доски): трансляция — янтарная плашка,
+## неон — янтарное стекло, LED — панель с янтарной рамкой.
+func _apply_skin() -> void:
+	var normal: StyleBox
+	var hover: StyleBox
+	var ink: Color
+	match HudSkin.id():
+		"neon":
+			normal = HudSkin.glass(HudSkin.NEON_AMBER, 34.0, 10.0)
+			hover = HudSkin.glass(Color.WHITE, 34.0, 10.0)
+			ink = HudSkin.NEON_AMBER.lerp(Color.WHITE, 0.4)
+		"led":
+			normal = HudSkin.led_box(34.0, 10.0, HudSkin.LED)
+			hover = HudSkin.led_box(34.0, 10.0, Color.WHITE)
+			ink = HudSkin.LED
+		_:
+			normal = Broadcast.plate(Broadcast.AMBER, Broadcast.SKEW, 34.0, 10.0)
+			var h := Broadcast.plate(Broadcast.AMBER.lightened(0.15), Broadcast.SKEW, 34.0, 10.0)
+			h.edge_color = Color.WHITE
+			h.edge_w = 8.0
+			hover = h
+			ink = Broadcast.INK
+	rematch_btn.add_theme_stylebox_override("normal", normal)
+	rematch_btn.add_theme_stylebox_override("hover", hover)
+	rematch_btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	rematch_btn.add_theme_stylebox_override("pressed", normal)
+	for c in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color"]:
+		rematch_btn.add_theme_color_override(c, ink)
 
 
 static func player_of(doll: Object) -> int:
