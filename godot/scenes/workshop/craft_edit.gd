@@ -479,7 +479,7 @@ static func warnings(bp: BodyBlueprint) -> PackedStringArray:
 	if bp == null:
 		return out
 	if bp.control.is_empty():
-		out.append("Нет детали для руки мышью — нажми «Рука мышью» и кликни по детали")
+		out.append("Нет тяги: выбери деталь → «Настроить» → тяга ЛКМ (или Q)")
 	if bp.weapon != null:
 		var m := weapon_mount(bp)
 		if String(m["uid"]) == "":
@@ -497,9 +497,9 @@ static func _friendly(e: String) -> String:
 		if nums.size() >= 2:
 			return "Перебор энергии: %d из %d" % [nums[0], nums[1]]
 	if e.begins_with("управляемая деталь"):
-		return "Деталь руки мышью снята — выбери новую"
+		return "Деталь с тягой снята — выбери новую"
 	if e.begins_with("рука мышью на"):
-		return "Рука мышью стоит на детали без своего тела — отметь конечность заново"
+		return "Тяга стоит на детали без своего тела — поставь её на конечность заново"
 	if e.begins_with("корн") or e.begins_with("корень"):
 		return "В центре должно быть ядро"
 	if e.begins_with("голова «"):
@@ -582,7 +582,7 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 		var pd := def_of(bp, parent_uid)
 		r["code"] = "welded"
 		r["reason"] = "Деталь «%s» приварена: на её конец встанет только навершие, щиток или мод — верни ей шарнир «Ось»" \
-			% (pd.title if pd != null else parent_uid)
+			% (PartNames.of(pd) if pd != null else parent_uid)
 		return r
 	var trial: Resource = dup_body(bp as BodyBlueprint) if bp is BodyBlueprint else dup_weapon(bp as WeaponBlueprint)
 	var res := _apply_attach(trial, part_id, parent_uid, an)
@@ -598,7 +598,7 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 		r["energy_after"] = after
 		if after > (bp as BodyBlueprint).energy_budget and after > energy_used(bp):
 			r["code"] = "energy"
-			r["reason"] = energy_reason(d.title, after, (bp as BodyBlueprint).energy_budget)
+			r["reason"] = energy_reason("«%s»" % PartNames.of(d), after, (bp as BodyBlueprint).energy_budget)
 			return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():
@@ -907,7 +907,7 @@ static func weapon_mount(bp: BodyBlueprint) -> Dictionary:
 		var d := def_of(bp, ctrl)
 		if d != null and not is_fixed(bp, ctrl):
 			return {"uid": ctrl, "kind": "end", "reason": ""}
-	return {"uid": "", "kind": "", "reason": "Оружие некуда взять: поставь кисть или отметь деталь для руки мышью"}
+	return {"uid": "", "kind": "", "reason": "Оружие некуда взять: поставь кисть или дай детали тягу"}
 
 
 static func _kind(bp: Resource, uid: String) -> String:
@@ -970,7 +970,7 @@ static func check_material(bp: Resource, uid: String, mat_id: String) -> Diction
 		return r
 	if d.base_mat == "":
 		r["code"] = "paint"
-		r["reason"] = "%s не красится: материал меняется только у деталей кита" % d.title
+		r["reason"] = "%s не красится: материал меняется только у деталей кита" % PartNames.of(d)
 		return r
 	var err := body.mat_error(uid, mat_id)
 	if err != "":
@@ -1027,11 +1027,11 @@ static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
 		return r
 	if String(n.get("parent", "")) == "":
 		r["code"] = "root"
-		r["reason"] = "%s — корень тела, сустава с родителем нет" % d.title
+		r["reason"] = "%s — корень тела, сустава с родителем нет" % PartNames.of(d)
 		return r
 	if BodyBlueprint.is_fixed_part(d):
 		r["code"] = "fixed"
-		r["reason"] = "Деталь «%s» крепится намертво — шарнира нет (%s)" % [d.title, KIND_TITLES.get(d.kind, d.kind)]
+		r["reason"] = "Деталь «%s» крепится намертво — шарнира нет (%s)" % [PartNames.of(d), KIND_TITLES.get(d.kind, d.kind)]
 		return r
 	var cur := String(n.get("joint", ""))
 	r["joint_before"] = cur if cur != "" else KitJoint.DEFAULT
@@ -1071,7 +1071,7 @@ static func _joint_refusal(body: BodyBlueprint, uid: String, d: PartDef, jt: Str
 		if d.kind == "head":
 			return "Голову не приварить — она держится на шее"
 		if body.control.has(uid):
-			return "Деталь «%s» ведёт рука мышью — сначала сними пометку (Q), потом приваривай" % d.title
+			return "Деталь «%s» ведёт тяга — сначала сними её (Q), потом приваривай" % PartNames.of(d)
 		var anchors := BodyBlueprint.part_anchors(d)
 		for c in children_of(body, uid):
 			if body.is_fixed(String(c.get("uid", ""))):
@@ -1080,10 +1080,10 @@ static func _joint_refusal(body: BodyBlueprint, uid: String, d: PartDef, jt: Str
 			if String(a.get("joint_group", "")) == "auto":
 				var cd := part(String(c.get("part", "")))
 				return "Деталь «%s» не приварить: на её конце держится «%s» на своём суставе — сначала сними или приварь ту деталь" \
-					% [d.title, cd.title if cd != null else "деталь"]
+					% [PartNames.of(d), PartNames.of(cd) if cd != null else "деталь"]
 	elif err.contains("нет мышцы"):
 		var g := body.anchor_group_of(uid)
-		return "Деталь «%s» висит на суставе без мышцы (%s): шарнир «%s» ничего не усилит" % [d.title, GROUP_TITLES.get(g, g),
+		return "Деталь «%s» висит на суставе без мышцы (%s): шарнир «%s» ничего не усилит" % [PartNames.of(d), GROUP_TITLES.get(g, g),
 			joint_title(jt)]
 	return _friendly(err)
 
@@ -1236,7 +1236,7 @@ static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 		if not bool(c["ok"]):
 			var d := part(part_id)
 			return {"ok": false, "code": String(c["code"]), "reason": energy_reason("зеркальную копию", int(c["energy_after"]), bp.energy_budget)
-				if String(c["code"]) == "energy" else "Зеркально не встаёт «%s»: %s" % [d.title if d != null else part_id, c["reason"]]}
+				if String(c["code"]) == "energy" else "Зеркально не встаёт «%s»: %s" % [PartNames.of(d) if d != null else part_id, c["reason"]]}
 		var res := _apply_attach(bp, part_id, String(q[1]), String(q[2]))
 		var nu := String(res.get("uid", ""))
 		var dst := find(bp, nu)
@@ -1271,11 +1271,16 @@ static func graft_subtree(dst: BodyBlueprint, src: BodyBlueprint, src_uid: Strin
 		if not bool(c["ok"]):
 			var d := part(part_id)
 			return {"ok": false, "code": String(c["code"]), "map": map,
-				"reason": energy_reason("«%s»" % (d.title if d != null else part_id), int(c["energy_after"]), dst.energy_budget)
+				"reason": energy_reason("«%s»" % (PartNames.of(d) if d != null else part_id), int(c["energy_after"]), dst.energy_budget)
 				if String(c["code"]) == "energy" else String(c["reason"])}
 		var res := _apply_attach(dst, part_id, String(q[1]), String(q[2]))
 		var nu := String(res.get("uid", ""))
 		var dn := find(dst, nu)
+		# на занятом разъёме _apply_attach меняет деталь на месте и оставляет свойства прежней (краска, шарнир, угол покоя) —
+		# копия / перенос несут только свои
+		for k in dn.keys():
+			if not String(k) in ["uid", "parent", "anchor", "name", "part"] and not sn.has(k):
+				dn.erase(k)
 		for k in sn:
 			if not String(k) in ["uid", "parent", "anchor", "name", "part"]:
 				var v: Variant = sn[k]
@@ -1305,21 +1310,30 @@ static func move_subtree(bp: BodyBlueprint, uid: String, parent: String, anchor:
 	var r := graft_subtree(trial, bp, uid, parent, anchor)
 	if not bool(r["ok"]):
 		return r
+	# тяги и держатель оружия: переехавшие — по map, остальные — только если пережили пересадку (замена на разъёме снимает
+	# несовместимых детей вместе с их тягами; их uid могли уже раздать новым деталям)
 	var m: Dictionary = r["map"]
 	var ctrl: PackedStringArray = []
 	for c in bp.control:
-		var nc := String(m.get(c, c))
-		if not find(trial, nc).is_empty() and not ctrl.has(nc):
+		var nc := String(m[c]) if m.has(c) else (String(c) if trial.control.has(c) else "")
+		if nc != "" and not find(trial, nc).is_empty() and not is_fixed(trial, nc) and not ctrl.has(nc):
 			ctrl.append(nc)
+	for c in trial.control:
+		if not ctrl.has(c) and not m.values().has(c):
+			ctrl.append(c)
 	trial.control = ctrl
 	var rmb: PackedStringArray = []
 	for c in bp.control_rmb:
-		var nc := String(m.get(c, c))
-		if ctrl.has(nc):
+		var nc := String(m[c]) if m.has(c) else (String(c) if trial.control_rmb.has(c) else "")
+		if ctrl.has(nc) and not rmb.has(nc):
 			rmb.append(nc)
 	trial.control_rmb = rmb
 	if bp.weapon_on != "":
-		trial.weapon_on = String(m.get(bp.weapon_on, bp.weapon_on))
+		trial.weapon_on = String(m[bp.weapon_on]) if m.has(bp.weapon_on) else trial.weapon_on
+	# энергия — с тягами на новом выносе (graft считал без них: detach снял их вместе с веткой)
+	var after := trial.energy_used()
+	if after > trial.energy_budget and after > bp.energy_used():
+		return {"ok": false, "code": "energy", "map": m, "reason": energy_reason("перенос", after, trial.energy_budget)}
 	r["bp"] = trial
 	return r
 

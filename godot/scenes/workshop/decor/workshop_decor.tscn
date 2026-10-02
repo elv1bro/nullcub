@@ -1,0 +1,254 @@
+[gd_scene format=3 uid="uid://wsdecor00001"]
+
+[ext_resource type="Script" path="res://scenes/workshop/decor/workshop_decor.gd" id="1_dc"]
+[ext_resource type="Shader" path="res://scenes/workshop/decor/blueprint_sheet.gdshader" id="2_bp"]
+[ext_resource type="PackedScene" path="res://assets/models/props/Chain_Link.glb" id="3_ch"]
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_Robotic_L.glb" id="4_arm"]
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Hand_Claw.glb" id="5_claw"]
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Head_Can.glb" id="6_head"]
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_Piston_L.glb" id="7_leg"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Gear_Medium.glb" id="8_gm"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Gear_Small.glb" id="9_gs"]
+[ext_resource type="Texture2D" path="res://assets/textures/kit/kit_wood.jpg" id="10_wood"]
+[ext_resource type="Texture2D" path="res://assets/textures/kit/kit_stone.jpg" id="11_stone"]
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Head_Bot.glb" id="12_bot"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/bits/Bolt.glb" id="13_bolt"]
+
+[sub_resource type="StandardMaterial3D" id="wood_dark"]
+albedo_color = Color(0.42, 0.33, 0.26, 1)
+albedo_texture = ExtResource("10_wood")
+roughness = 0.85
+uv1_triplanar = true
+uv1_scale = Vector3(2.5, 2.5, 2.5)
+
+[sub_resource type="StandardMaterial3D" id="wood_sample"]
+albedo_color = Color(0.72, 0.6, 0.46, 1)
+albedo_texture = ExtResource("10_wood")
+roughness = 0.8
+uv1_triplanar = true
+uv1_scale = Vector3(6, 6, 6)
+
+[sub_resource type="StandardMaterial3D" id="stone_sample"]
+albedo_color = Color(0.6, 0.6, 0.6, 1)
+albedo_texture = ExtResource("11_stone")
+roughness = 0.9
+uv1_triplanar = true
+uv1_scale = Vector3(6, 6, 6)
+
+[sub_resource type="StandardMaterial3D" id="iron_sample"]
+albedo_color = Color(0.2, 0.2, 0.21, 1)
+metallic = 0.7
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="brass_sample"]
+albedo_color = Color(0.42, 0.32, 0.16, 1)
+metallic = 0.8
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="paper"]
+albedo_color = Color(0.56, 0.52, 0.44, 1)
+roughness = 0.95
+
+[sub_resource type="ShaderMaterial" id="blueprint_mat"]
+shader = ExtResource("2_bp")
+
+[sub_resource type="QuadMesh" id="sheet_mesh"]
+material = SubResource("blueprint_mat")
+size = Vector2(0.46, 0.34)
+
+[sub_resource type="SphereMesh" id="pin_mesh"]
+material = SubResource("brass_sample")
+radius = 0.006
+height = 0.012
+radial_segments = 8
+rings = 4
+
+[sub_resource type="BoxMesh" id="crate_side_mesh"]
+material = SubResource("wood_dark")
+size = Vector3(0.46, 0.26, 0.02)
+
+[sub_resource type="BoxMesh" id="crate_end_mesh"]
+material = SubResource("wood_dark")
+size = Vector3(0.02, 0.26, 0.3)
+
+[sub_resource type="BoxMesh" id="crate_bottom_mesh"]
+material = SubResource("wood_dark")
+size = Vector3(0.46, 0.02, 0.3)
+
+[sub_resource type="BoxMesh" id="sample_wood_mesh"]
+material = SubResource("wood_sample")
+size = Vector3(0.07, 0.07, 0.07)
+
+[sub_resource type="BoxMesh" id="sample_stone_mesh"]
+material = SubResource("stone_sample")
+size = Vector3(0.075, 0.06, 0.07)
+
+[sub_resource type="CylinderMesh" id="sample_iron_mesh"]
+material = SubResource("iron_sample")
+top_radius = 0.03
+bottom_radius = 0.03
+height = 0.08
+radial_segments = 16
+rings = 1
+
+[sub_resource type="BoxMesh" id="sample_brass_mesh"]
+material = SubResource("brass_sample")
+size = Vector3(0.06, 0.03, 0.05)
+
+[sub_resource type="BoxMesh" id="shelf_board_mesh"]
+material = SubResource("wood_dark")
+size = Vector3(0.46, 0.022, 0.13)
+
+[sub_resource type="BoxMesh" id="bracket_mesh"]
+material = SubResource("iron_sample")
+size = Vector3(0.012, 0.1, 0.07)
+
+[sub_resource type="QuadMesh" id="label_mesh"]
+material = SubResource("paper")
+size = Vector2(0.05, 0.022)
+
+[node name="WorkshopDecor" type="Node3D"]
+script = ExtResource("1_dc")
+
+[node name="HangingArm" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.6, 0, -0.95)
+
+[node name="Link0" parent="HangingArm" instance=ExtResource("3_ch")]
+transform = Transform3D(0.55, 0, 0, 0, 0.55, 0, 0, 0, 0.55, 0, 3.8554, 0)
+
+[node name="Link1" parent="HangingArm" instance=ExtResource("3_ch")]
+transform = Transform3D(0, 0, 0.55, 0, 0.55, 0, -0.55, 0, 0, 0, 3.7608, 0)
+
+[node name="Link2" parent="HangingArm" instance=ExtResource("3_ch")]
+transform = Transform3D(0.55, 0, 0, 0, 0.55, 0, 0, 0, 0.55, 0, 3.6662, 0)
+
+[node name="Link3" parent="HangingArm" instance=ExtResource("3_ch")]
+transform = Transform3D(0, 0, 0.55, 0, 0.55, 0, -0.55, 0, 0, 0, 3.5716, 0)
+
+[node name="Link4" parent="HangingArm" instance=ExtResource("3_ch")]
+transform = Transform3D(0.55, 0, 0, 0, 0.55, 0, 0, 0, 0.55, 0, 3.477, 0)
+
+[node name="Link5" parent="HangingArm" instance=ExtResource("3_ch")]
+transform = Transform3D(0, 0, 0.55, 0, 0.55, 0, -0.55, 0, 0, 0, 3.3824, 0)
+
+[node name="Link6" parent="HangingArm" instance=ExtResource("3_ch")]
+transform = Transform3D(0.55, 0, 0, 0, 0.55, 0, 0, 0, 0.55, 0, 3.2878, 0)
+
+[node name="ProtoArm" parent="HangingArm" instance=ExtResource("4_arm")]
+transform = Transform3D(0.876003, -0.052623, 0.479426, 0.059964, 0.998201, 0, -0.478563, 0.028748, 0.877583, 0, 3.2978, 0)
+
+[node name="ProtoClaw" parent="HangingArm" instance=ExtResource("5_claw")]
+transform = Transform3D(0.873198, -0.087612, 0.479426, 0.099833, 0.995004, 0, -0.47703, 0.047863, 0.877583, 0.02, 2.9178, 0)
+
+[node name="Blueprint" type="Node3D" parent="."]
+transform = Transform3D(0.998988, -0.044985, 0, 0.044985, 0.998988, 0, 0, 0, 1, 4.52, 0.66, -1.148)
+
+[node name="Sheet" type="MeshInstance3D" parent="Blueprint"]
+mesh = SubResource("sheet_mesh")
+
+[node name="Pin0" type="MeshInstance3D" parent="Blueprint"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.215, 0.155, 0.003)
+mesh = SubResource("pin_mesh")
+
+[node name="Pin1" type="MeshInstance3D" parent="Blueprint"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.215, 0.155, 0.003)
+mesh = SubResource("pin_mesh")
+
+[node name="Pin2" type="MeshInstance3D" parent="Blueprint"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.215, -0.155, 0.003)
+mesh = SubResource("pin_mesh")
+
+[node name="Pin3" type="MeshInstance3D" parent="Blueprint"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.215, -0.155, 0.003)
+mesh = SubResource("pin_mesh")
+
+[node name="Samples" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.43, 0.93, -1.085)
+
+[node name="Board" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.011, 0)
+mesh = SubResource("shelf_board_mesh")
+
+[node name="BracketL" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, -0.06, -0.03)
+mesh = SubResource("bracket_mesh")
+
+[node name="BracketR" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, -0.06, -0.03)
+mesh = SubResource("bracket_mesh")
+
+[node name="Wood" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(0.992809, 0, 0.119712, 0, 1, 0, -0.119712, 0, 0.992809, -0.15, 0.035, 0.005)
+mesh = SubResource("sample_wood_mesh")
+
+[node name="Stone" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(0.980067, 0, -0.198669, 0, 1, 0, 0.198669, 0, 0.980067, -0.055, 0.03, 0.01)
+mesh = SubResource("sample_stone_mesh")
+
+[node name="Iron" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.045, 0.04, 0)
+mesh = SubResource("sample_iron_mesh")
+
+[node name="Brass" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(0.955336, 0, 0.29552, 0, 1, 0, -0.29552, 0, 0.955336, 0.14, 0.015, 0.015)
+mesh = SubResource("sample_brass_mesh")
+
+[node name="Label0" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(0.992809, 0, 0.119712, 0, 1, 0, -0.119712, 0, 0.992809, -0.146, 0.028, 0.0405)
+mesh = SubResource("label_mesh")
+
+[node name="Label1" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(0.980067, 0, -0.198669, 0, 1, 0, 0.198669, 0, 0.980067, -0.048, 0.025, 0.0455)
+mesh = SubResource("label_mesh")
+
+[node name="Label2" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.045, 0.03, 0.031)
+mesh = SubResource("label_mesh")
+
+[node name="Label3" type="MeshInstance3D" parent="Samples"]
+transform = Transform3D(0.955336, 0, 0.29552, 0, 1, 0, -0.29552, 0, 0.955336, 0.148, 0.015, 0.041)
+mesh = SubResource("label_mesh")
+
+[node name="PartsCrate" type="Node3D" parent="."]
+transform = Transform3D(0.983844, 0, 0.17903, 0, 1, 0, -0.17903, 0, 0.983844, 3.75, 0, -0.82)
+
+[node name="SideF" type="MeshInstance3D" parent="PartsCrate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.13, 0.14)
+mesh = SubResource("crate_side_mesh")
+
+[node name="SideB" type="MeshInstance3D" parent="PartsCrate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.13, -0.14)
+mesh = SubResource("crate_side_mesh")
+
+[node name="EndL" type="MeshInstance3D" parent="PartsCrate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 0.13, 0)
+mesh = SubResource("crate_end_mesh")
+
+[node name="EndR" type="MeshInstance3D" parent="PartsCrate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.13, 0)
+mesh = SubResource("crate_end_mesh")
+
+[node name="Bottom" type="MeshInstance3D" parent="PartsCrate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("crate_bottom_mesh")
+
+[node name="SpareHead" parent="PartsCrate" instance=ExtResource("6_head")]
+transform = Transform3D(0.620238, -0.226405, -0.451714, 0.274318, 0.751498, 0, 0.424328, -0.154892, 0.660268, -0.08, 0.1, 0)
+
+[node name="SpareLeg" parent="PartsCrate" instance=ExtResource("7_leg")]
+transform = Transform3D(-0.801144, -0.579867, 0.148064, 0.598472, -0.776238, 0.198206, 0, 0.247404, 0.968912, 0.12, 0.08, 0.02)
+
+[node name="SpareBot" parent="PartsCrate" instance=ExtResource("12_bot")]
+transform = Transform3D(0.614308, -0.327451, 0.073498, 0, 0.153305, 0.683006, -0.335598, -0.599394, 0.134538, -0.52, 0, 0.08)
+
+[node name="Gears" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.15, 0, -1.08)
+
+[node name="GearM" parent="Gears" instance=ExtResource("8_gm")]
+transform = Transform3D(1, 0, 0, 0, 0.992809, 0.119712, 0, -0.119712, 0.992809, 0, 0.25, 0)
+
+[node name="GearS" parent="Gears" instance=ExtResource("9_gs")]
+transform = Transform3D(0.955336, -0.073113, 0.286333, 0, 0.968912, 0.247404, -0.29552, -0.236354, 0.925637, 0.3, 0.12, 0.05)
+
+[node name="Bolt" parent="Gears" instance=ExtResource("13_bolt")]
+transform = Transform3D(0.070737, -0.997495, 0, 0.997495, 0.070737, 0, 0, 0, 1, -0.3, 0.025, 0.12)

@@ -13,7 +13,7 @@ signal hovered(part_id: String, on: bool)
 const ICON := 148
 const W := 184.0
 const H := 232.0
-const DRAG_PX := 8.0
+const DRAG_PX := WorkshopBuild.DRAG_MOVE_PX   # тот же порог, что у протяжки: «клик» и «потянул» не спорят
 const LIFT := 1.035
 ## Чем бьёт форма детали (PartDef.hit_mult ≠ 1) — слово для подсказки по префиксу id; нет в таблице — «форма».
 const HIT_WORDS := {
@@ -140,6 +140,12 @@ func set_live(tex: Texture2D) -> void:
 	_kind.visible = _icon.texture == null
 
 
+## Цена у ближайшего свободного подходящего разъёма (WorkshopBuild.cheapest_cost; дальше от ядра — дороже); -1 — некуда.
+func set_cost(cost: int) -> void:
+	if _energy != null:
+		_energy.text = str(cost) if cost >= 0 else "—"
+
+
 ## Влезает ли по энергии (хотя бы на свободный якорь): нет — энергия красная, карточка тусклее (но тащить можно — на замену).
 func set_fits(fits: bool) -> void:
 	if fits == _fits:
@@ -201,6 +207,7 @@ func _gui_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		if mb.pressed:
 			_press = get_viewport().get_mouse_position()
+			get_viewport().gui_release_focus()   # поле поиска отдаёт клавиши: D / Del / T снова мастерской
 		elif _press.x >= 0.0:
 			_press = Vector2(-1, -1)
 			picked.emit(part_id)

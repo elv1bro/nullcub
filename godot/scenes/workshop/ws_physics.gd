@@ -382,7 +382,7 @@ static func _bodies(doll: Node) -> Array:
 	if not p is Dictionary:
 		return out
 	for b in (p as Dictionary).values():
-		if b is RigidBody3D and is_instance_valid(b) and (b as Node).is_inside_tree():
+		if is_instance_valid(b) and b is RigidBody3D and (b as Node).is_inside_tree():   # сначала «жив ли»: освобождённое тело не проверяют на тип
 			out.append(b)
 	return out
 
@@ -400,9 +400,11 @@ static func _links(doll: Node) -> Array:
 	var pairs: Variant = doll.get("_muscle_pairs")
 	if pairs is Array:
 		for e: Array in pairs:
+			if not is_instance_valid(e[0]) or not is_instance_valid(e[1]):
+				continue
 			var a := e[0] as RigidBody3D
 			var b := e[1] as RigidBody3D
-			if a == null or b == null or not is_instance_valid(a) or not is_instance_valid(b) or not a.is_inside_tree() or not b.is_inside_tree():
+			if a == null or b == null or not a.is_inside_tree() or not b.is_inside_tree():
 				continue
 			var jn := String(e[Doll.MP_NAME])
 			seen[jn] = true
