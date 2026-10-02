@@ -65,11 +65,14 @@ func _ready() -> void:
 	results.rematch.connect(_on_rematch)
 	results.main_menu.connect(func() -> void: Flow.to_menu())   # MAIN MENU в итогах → гараж (scripts/menu/flow.gd)
 	results.visibility_changed.connect(_on_results_visibility)
+	get_tree().create_timer(0.5, true, false, true).timeout.connect(results.prewarm)   # первый показ итогов — заранее, под обратный отсчёт
 	_last_ms = Time.get_ticks_msec()
 
 
 ## Пока открыты итоги, боевой HUD (панели, таймер) спрятан — экран итогов чистый, как на R20.
 func _on_results_visibility() -> void:
+	if results.warming:
+		return   # прогрев панели итогов (results.prewarm) боевой HUD не трогает
 	players_root.visible = not results.visible
 	$Root/TimerBox.visible = not results.visible
 	field_badge.modulate.a = 0.0 if results.visible else 1.0
@@ -276,7 +279,7 @@ func set_cinematic(on: bool) -> void:
 			return
 		for e: Array in _cinematic_hidden:
 			if is_instance_valid(e[0]):
-				(e[0] as CanvasItem).visible = bool(e[1]) and not (results.visible and e[0] != announcer)
+				(e[0] as CanvasItem).visible = bool(e[1]) and not (results.visible and not results.warming and e[0] != announcer)
 		_cinematic_hidden.clear()
 		announcer.clear()
 
