@@ -24,6 +24,7 @@ var combo := 0
 @onready var name_label: Label = $Row/PortraitCol/Name
 @onready var crowns: HBoxContainer = $Row/BarCol/Crowns
 @onready var hp_bar: HpBar = $Row/BarCol/HpBar
+@onready var charge_bar: ChargeBar = $Row/BarCol/ChargeBar
 @onready var combo_row: HBoxContainer = $Row/BarCol/ComboRow
 @onready var combo_label: Label = $Row/BarCol/ComboRow/Combo
 
@@ -52,11 +53,18 @@ func set_side(right: bool) -> void:
 	combo_row.alignment = BoxContainer.ALIGNMENT_END if right else BoxContainer.ALIGNMENT_BEGIN
 	hp_bar.fill_from_right = right
 	hp_bar.queue_redraw()
+	charge_bar.fill_from_right = right
+	charge_bar.queue_redraw()
 
 
 func set_hp(hp: float, max_hp: float = Tuning.MAX_HP, animate: bool = true) -> void:
 	hp_bar.max_hp = max_hp
 	hp_bar.set_hp(hp, animate)
+
+
+## Заряд бойца (COMBAT_CHARGE.md): значение и «выдохся»; зовёт Hud каждый кадр из Doll.charge / charge_locked.
+func set_charge(value: float, locked: bool) -> void:
+	charge_bar.set_charge(value, locked)
 
 
 func set_combo(n: int) -> void:
@@ -87,6 +95,7 @@ func reset() -> void:
 	set_ko(false)
 	set_combo(0)
 	hp_bar.set_hp(hp_bar.max_hp, false)
+	charge_bar.snap(Tuning.CHARGE_MAX)
 
 
 func set_round_slots(n: int) -> void:

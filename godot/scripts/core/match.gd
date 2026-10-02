@@ -698,6 +698,9 @@ func _emit_hit_fx(victim: Doll, attacker: Node, damage: float, kind: String, pos
 	if tier == HitTier.HEAVY and damage < Tuning.HIT_STOP_DAMAGE_1:
 		request_time_scale(Tuning.HIT_STOP_TIME_SCALE, Tuning.HITFX_HEAVY_STOP_S, "heavy_stop")
 	hit_fx_count += 1
+	var charge_got := Charge.apply_hit(ctx)   # Заряд (COMBAT_CHARGE.md): атакующему за удар, жертве — доля урона
+	ctx["charge_attacker"] = float(charge_got[0])
+	ctx["charge_victim"] = float(charge_got[1])
 	hit_fx.emit(ctx)
 
 

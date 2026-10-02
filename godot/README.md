@@ -4,7 +4,7 @@
 
 Главная сцена — заставка-комикс `scenes/intro/intro_comic.tscn` (13 панелей, 3D-кадры на арене «Свалка», звук; пробел — дальше, удерживать или Esc — пропустить), после неё `scenes/playground_scrap.tscn`. Устройство, раскадровка и правка — `../docs/plan-demo/INTRO_COMIC.md`, пересборка: `-s res://tools/build_intro_comic.gd`.
 
-Площадка `scenes/playground.tscn`: арена «Руины» + две куклы + оружие + динамическая камера + `Match` (бой: HP, урон, KO, Sudden Death, итоги) + `HUD`. `scenes/playground_workshop.tscn` — то же на арене «Мастерская», `scenes/playground_void.tscn` — пустое чёрное поле «Void» как в Ragdoll Masters (без оружия, для проверки механики). P1 WASD + Shift (рывок) + Space (переворот), P2 стрелки + правый Ctrl + Enter, R заново (`Match.restart()`), 1 / 2 / 3 — Руины / Мастерская / Void, F10 — эффекты ударов full / reduced / off (`FxPreset`, тост «FX: …»), M / N — музыка / толпа вкл-выкл (`user://audio.cfg`), Esc выход.
+Площадка `scenes/playground.tscn`: арена «Руины» + две куклы + оружие + динамическая камера + `Match` (бой: HP, урон, KO, Sudden Death, итоги) + `HUD`. `scenes/playground_workshop.tscn` — то же на арене «Мастерская», `scenes/playground_void.tscn` — пустое чёрное поле «Void» как в Ragdoll Masters (без оружия, для проверки механики). P1 WASD + Shift (ускорение: держать, тратит Заряд) + Space (раскрутка: держать вместе с A/D, тратит Заряд), P2 стрелки + правый Ctrl + Enter, R заново (`Match.restart()`), 1 / 2 / 3 — Руины / Мастерская / Void, F10 — эффекты ударов full / reduced / off (`FxPreset`, тост «FX: …»), M / N — музыка / толпа вкл-выкл (`user://audio.cfg`), Esc выход.
 
 ## Структура
 

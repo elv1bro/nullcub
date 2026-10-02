@@ -12,7 +12,8 @@
 ##   • пропасть арены (pit_rect) — сам в неё не лезет: над провалом ниже PIT_SAFE_Y держит тягу вверх (выбить туда — можно).
 ## Поведение — наследники (sweeper_brain.gd, scrapling_brain.gd): state + state_t, _think(delta) пишет want (желаемый ввод),
 ## телеграф через EnemyLook: поза + свет глаз + звук-заглушка + надпись над головой (HUD) не короче telegraph_s.
-## Хуки куклы (сессия настройки куклы, 29.09): Doll.request_dash() — через has_method, без него рывка нет (наскок тягой);
+## Хуки куклы (сессия настройки куклы, 29.09): Doll.request_dash() — через has_method, без него рывка нет (наскок тягой); с 02.10 это
+## «удерживать ускорение на этот тик» за Заряд (COMBAT_CHARGE.md): бот держит его DASH_HOLD_S, пока есть Заряд, и не стартует без DASH_START_CHARGE;
 ## Doll.team — ставит WaveDirector ("tower"): урон по своим × Tuning.TEAM_DAMAGE_MULT, толчки полные.
 class_name EnemyBrain
 extends Node
@@ -31,6 +32,9 @@ const STUCK_SPEED := 0.35
 const STUCK_S := 0.8
 const UNSTICK_S := 0.6
 const DASH_REQ_S := 0.6
+const DASH_HOLD_S := 1.0                # сколько бот держит ускорение после старта (≈ 35 Заряда при CHARGE_DRAIN_PER_S)
+const DASH_START_CHARGE := 40.0         # без такого Заряда ускорение не начинает (иначе выдохнется через полсекунды — пустой запор)
+const DASH_KEEP_CHARGE := 5.0           # ниже этого держать перестаёт (не уходит в запор)
 const FAR_M := 6.0                      # метрика stat.far_s: дальше этого от цели — «не охотится»
 const DASH_ALIGN := 0.8                 # рывок — только когда ввод уже смотрит, куда надо (иначе рывок несёт по старому курсу)
 ## Разнос врагов (boids-separation): свои ближе SEP_R_M отталкивают с весом до SEP_GAIN — иначе двое, бегущие к одному игроку,
@@ -80,6 +84,7 @@ var _stuck_t := 0.0
 var _unstick_until := -1.0
 var _unstick_dir := Vector2.UP
 var _dash_want_until := -1.0
+var _dash_hold_until := -1.0
 var _snap_until := -1.0
 
 
@@ -397,8 +402,9 @@ func pit_dir_from(p: Vector2) -> float:
 	return -1.0 if p.x - b.position.x < b.end.x - p.x else 1.0
 
 
-## Рывок (хук Doll.request_dash: флаг на один тик, правила кнопки — кулдаун, не в стане, не в отдаче). Запрос держится DASH_REQ_S:
-## в тик отдачи после удара рывок не пропадает. Без хука — false (наскок просто тягой).
+## Ускорение (хук Doll.request_dash: «держать» на один тик, правила Shift — тратит Заряд, не в стане, не в отдаче). Запрос живёт
+## DASH_REQ_S: пока ввод не развернулся куда надо или Заряда мало, он ждёт; стартовав, бот держит ускорение DASH_HOLD_S и сам отпускает
+## ниже DASH_KEEP_CHARGE. Без хука — false (наскок просто тягой).
 func dash() -> bool:
 	if not doll.has_method("request_dash"):
 		return false
@@ -408,14 +414,19 @@ func dash() -> bool:
 
 
 func _tick_dash() -> void:
-	if _time >= _dash_want_until:
+	if _time < _dash_hold_until:
+		if doll.charge > DASH_KEEP_CHARGE:
+			doll.call("request_dash")
+		else:
+			_dash_hold_until = -1.0
 		return
-	if doll.is_dashing():
-		_dash_want_until = -1.0
-		counters["dash"] = int(counters.get("dash", 0)) + 1
+	if _time >= _dash_want_until or doll.charge < DASH_START_CHARGE or doll.charge_locked:
 		return
 	var iv := doll.input_vec
 	if want.length() > 0.3 and iv.length() > 0.5 and iv.normalized().dot(want.normalized()) >= DASH_ALIGN:
+		_dash_want_until = -1.0
+		_dash_hold_until = _time + DASH_HOLD_S
+		counters["dash"] = int(counters.get("dash", 0)) + 1
 		doll.call("request_dash")
 
 

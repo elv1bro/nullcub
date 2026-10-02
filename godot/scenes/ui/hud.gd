@@ -271,3 +271,18 @@ func _process(_delta: float) -> void:
 		sudden_death_label.modulate = Color(1, 1, 1, 0.7 + 0.3 * sin(_pulse))
 		sudden_death_label.scale = Vector2.ONE * (1.0 + 0.04 * sin(_pulse))
 		sudden_death_label.pivot_offset = sudden_death_label.size * 0.5
+	_poll_charge()
+
+
+## Заряд (COMBAT_CHARGE.md) не сигналом, а опросом: меняется каждый физический тик. Куклы — у Match (или стаба с dolls()); у стаба
+## без свойства charge панель остаётся полной.
+func _poll_charge() -> void:
+	if match_node == null or not is_instance_valid(match_node) or not match_node.has_method("dolls"):
+		return
+	for d in match_node.dolls():
+		var c: Variant = d.get("charge")
+		if c == null:
+			continue
+		var p := panel_for(player_of(d))
+		if p != null:
+			p.set_charge(float(c), bool(d.get("charge_locked")))

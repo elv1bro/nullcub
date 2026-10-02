@@ -2589,7 +2589,7 @@ func weapon_stats() -> Dictionary:
 ## Подсказка внизу экрана по состоянию.
 func hint_text() -> String:
 	if mode == Mode.TEST:
-		return "WASD — лететь · Shift — рывок · Space — кувырок · ЛКМ / ПКМ — тяги · E — схватить / бросить · R — заново · Esc — к сборке"
+		return "WASD — лететь · Shift — ускорение · Space + A/D — раскрутка · ЛКМ / ПКМ — тяги · E — схватить / бросить · R — заново · Esc — к сборке"
 	if paint_tool != "":
 		return paint.hint_text()
 	if paint != null and paint.tab_open and view == View.BODY:

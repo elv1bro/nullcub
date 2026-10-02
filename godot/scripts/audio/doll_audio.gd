@@ -1,7 +1,8 @@
 ## Звук тела куклы (docs/plan-demo/AUDIO.md §4.4): ребёнок «DollAudio» каждой куклы Match (создаёт SfxDirector._sync_doll_audio).
 ##   Ветер полёта — петля loops/wind_flight.ogg на AudioStreamPlayer3D (затухание по расстоянию выключено, панорама — от камеры):
 ##     громкость, питч и срез по скорости ЦМ (WIND_MIN_SPEED → тишина, WIND_FULL_SPEED → WIND_MAX_DB), в slow-mo ниже питч.
-##   Рывок (Doll.dashed) — dash; переворот (Doll.flipped) — flip; стан — stun; отрыв / возврат детали — detach / attach.
+##   Ускорение (Doll.dashed, передний фронт) — dash; раскрутка / переворот (Doll.flipped) — flip; Заряд кончился (charge_locked,
+##     COMBAT_CHARGE.md) — глухой «дзынь» stun ниже; стан — stun; отрыв / возврат детали — detach / attach.
 ##   Замах: конец оружия быстрее SWING_WEAPON_SPEED (передний фронт, не чаще SWING_GAP_MS) — swing_h (тяжёлое) / swing_l;
 ##     кисть без оружия быстрее SWING_HAND_SPEED — swing_l тише.
 ##   Скрип суставов: относительная угловая скорость частей сустава выше CREAK_REL_W (передний фронт, шанс CREAK_CHANCE, не чаще
@@ -44,6 +45,7 @@ var _creak_ms := -1.0e9
 var _held: Array = []                   # оружие в руках (Weapon)
 var _scan_ms := -1.0e9
 var _arm: Node
+var _was_locked := false
 
 
 func _ready() -> void:
@@ -141,6 +143,10 @@ func _physics_process(delta: float) -> void:
 	if not doll.alive or crit:
 		return
 	var now := _clock()
+	var locked := bool(doll.get("charge_locked")) if "charge_locked" in doll else false
+	if locked and not _was_locked:
+		_play("stun", -6.0, 0.72, _com())   # выдохся: Заряд на нуле
+	_was_locked = locked
 	if now - _scan_ms >= WEAPON_SCAN_MS:
 		_scan_ms = now
 		_scan_weapons()

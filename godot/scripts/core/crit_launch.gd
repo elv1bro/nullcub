@@ -80,7 +80,7 @@ static func stop_attacker(attacker: Variant, victim: Doll, kb_dir: Vector3) -> f
 		dirs.append(Vector3(signf(kb_dir.x), 0.0, 0.0))
 	var cut := _clamp_along(bodies, dirs)
 	if a.is_dashing():
-		a.dash_until = a._time
+		a.cancel_boost()   # Заряд не возвращается; до конца CRIT_ATTACKER_LOCK_S тяги и ускорения нет, потом зажатый Shift снова включит
 	a.thrust_lock_until = maxf(a.thrust_lock_until, a._time + Tuning.CRIT_ATTACKER_LOCK_S)
 	var old := a.get_node_or_null(AttackerHold.NODE_NAME)
 	if old != null:
