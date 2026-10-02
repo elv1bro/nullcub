@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bdm6lfk0556si"
-path="res://.godot/imported/Doll_Torso_Shell_albedo_10.webp-5deeb41ca3b0de43115afbe67f7ea0c2.ctex"
+path.s3tc="res://.godot/imported/Doll_Torso_Shell_albedo_10.webp-5deeb41ca3b0de43115afbe67f7ea0c2.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "7ebebd3bffbbb39a2048d41748c4fa59"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Doll_Torso_Shell_albedo_10.webp"
-dest_files=["res://.godot/imported/Doll_Torso_Shell_albedo_10.webp-5deeb41ca3b0de43115afbe67f7ea0c2.ctex"]
+dest_files=["res://.godot/imported/Doll_Torso_Shell_albedo_10.webp-5deeb41ca3b0de43115afbe67f7ea0c2.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

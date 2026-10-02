@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://3x7e4uuhnsb0"
-path="res://.godot/imported/Crate_roughness.webp-799ee019b3fcd7a0f688ff5b4922717a.ctex"
+path.s3tc="res://.godot/imported/Crate_roughness.webp-799ee019b3fcd7a0f688ff5b4922717a.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "98d8e8594588b237f213f1f137c02d06"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Crate_roughness.webp"
-dest_files=["res://.godot/imported/Crate_roughness.webp-799ee019b3fcd7a0f688ff5b4922717a.ctex"]
+dest_files=["res://.godot/imported/Crate_roughness.webp-799ee019b3fcd7a0f688ff5b4922717a.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

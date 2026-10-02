@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://sew5ecd071sn"
-path.bptc="res://.godot/imported/ClothBlue_metal_rough_1024.webp-fdac49d781ab783ff1e5715698b3aa1b.bptc.ctex"
+path.s3tc="res://.godot/imported/ClothBlue_metal_rough_1024.webp-fdac49d781ab783ff1e5715698b3aa1b.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -12,12 +12,12 @@ metadata={
 [deps]
 
 source_file="res://assets/models/scrap/shared_tex/ClothBlue_metal_rough_1024.webp"
-dest_files=["res://.godot/imported/ClothBlue_metal_rough_1024.webp-fdac49d781ab783ff1e5715698b3aa1b.bptc.ctex"]
+dest_files=["res://.godot/imported/ClothBlue_metal_rough_1024.webp-fdac49d781ab783ff1e5715698b3aa1b.s3tc.ctex"]
 
 [params]
 
 compress/mode=2
-compress/high_quality=true
+compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0

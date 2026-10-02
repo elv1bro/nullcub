@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bm4uhwoftu7aw"
-path="res://.godot/imported/Hook_roughness.webp-e6e284e580c9f5b2e4ebb6fe1daa6455.ctex"
+path.s3tc="res://.godot/imported/Hook_roughness.webp-e6e284e580c9f5b2e4ebb6fe1daa6455.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "5c8f93c131a66a887de2e075559f7a14"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Hook_roughness.webp"
-dest_files=["res://.godot/imported/Hook_roughness.webp-e6e284e580c9f5b2e4ebb6fe1daa6455.ctex"]
+dest_files=["res://.godot/imported/Hook_roughness.webp-e6e284e580c9f5b2e4ebb6fe1daa6455.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

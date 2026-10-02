@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ci6sg3sad6j3j"
-path="res://.godot/imported/Axe_Old_albedo.webp-d947e988181abfe91e6f56ffa87b33f9.ctex"
+path.s3tc="res://.godot/imported/Axe_Old_albedo.webp-d947e988181abfe91e6f56ffa87b33f9.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "ae6428fbd78fd801af49fa145004d023"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Axe_Old_albedo.webp"
-dest_files=["res://.godot/imported/Axe_Old_albedo.webp-d947e988181abfe91e6f56ffa87b33f9.ctex"]
+dest_files=["res://.godot/imported/Axe_Old_albedo.webp-d947e988181abfe91e6f56ffa87b33f9.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

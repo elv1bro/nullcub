@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://r3rql3mmpdk7"
-path="res://.godot/imported/Metal_Head_roughness.webp-b32d568cb88351c7a80b9dc462f9a42c.ctex"
+path.s3tc="res://.godot/imported/Metal_Head_roughness.webp-b32d568cb88351c7a80b9dc462f9a42c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "12b7b32d53ab061eb0b562aa3b9c6264"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Metal_Head_roughness.webp"
-dest_files=["res://.godot/imported/Metal_Head_roughness.webp-b32d568cb88351c7a80b9dc462f9a42c.ctex"]
+dest_files=["res://.godot/imported/Metal_Head_roughness.webp-b32d568cb88351c7a80b9dc462f9a42c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

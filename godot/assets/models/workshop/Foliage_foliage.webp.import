@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cq7iuusbbbgpt"
-path="res://.godot/imported/Foliage_foliage.webp-9acf275dfb0cc05ea9bbf70f2ad2cc98.ctex"
+path.s3tc="res://.godot/imported/Foliage_foliage.webp-9acf275dfb0cc05ea9bbf70f2ad2cc98.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "a39cd96d3fe998e8a5f84bba07d85025"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Foliage_foliage.webp"
-dest_files=["res://.godot/imported/Foliage_foliage.webp-9acf275dfb0cc05ea9bbf70f2ad2cc98.ctex"]
+dest_files=["res://.godot/imported/Foliage_foliage.webp-9acf275dfb0cc05ea9bbf70f2ad2cc98.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

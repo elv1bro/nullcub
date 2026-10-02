@@ -8,6 +8,10 @@
 class_name AfterimageTrail
 extends Node3D
 
+
+func _init() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
+
 const GHOST_SHADER: Shader = preload("res://scenes/fx/shaders/ghost.gdshader")
 const MAX_SNAPSHOTS := 40          # v3: крит-полёт — снимки на всё окно (живых одновременно ≤ fade / interval + 1)
 const FORCE_AFTER_INTERVALS := 3.0   # снимок и без сдвига ЦМ, если ждали столько интервалов
@@ -17,6 +21,8 @@ static var _debug_meshes: Dictionary = {}  # Shape3D -> Mesh
 
 var snapshots := 0          # сколько снимков сделано (пробы)
 var from_collision := false # хотя бы одна часть взята из коллизии
+## Без лимита снимков (BoostFx: пока идёт ускорение): окно закрывает finish().
+var endless := false
 
 var _doll: WeakRef
 var _count := 3
@@ -116,8 +122,8 @@ func _doll_ref() -> Doll:
 func _process(delta: float) -> void:
 	_t += FxClock.real_delta(delta) * 1000.0
 	var d := _doll_ref()
-	if d != null and snapshots < _count and _t <= _window_ms and _t - _last_ms >= _interval_ms:
-		var com := d.centre_of_mass()
+	if d != null and (endless or snapshots < _count) and _t <= _window_ms and _t - _last_ms >= _interval_ms:
+		var com := d.centre_of_mass(true)
 		if snapshots == 0 or com.distance_to(_last_com) >= _min_step or _t - _last_ms >= _interval_ms * FORCE_AFTER_INTERVALS:
 			_snapshot()
 			_last_ms = _t
@@ -134,7 +140,7 @@ func _process(delta: float) -> void:
 		for c in g.get_children():
 			(c as GeometryInstance3D).transparency = u * u
 		i += 1
-	var done_spawning := d == null or snapshots >= _count or _t > _window_ms
+	var done_spawning := d == null or (snapshots >= _count and not endless) or _t > _window_ms
 	if done_spawning and _ghosts.is_empty():
 		queue_free()
 
@@ -156,6 +162,11 @@ func _snapshot() -> void:
 		mi.global_transform = src.global_transform
 	snapshots += 1
 	_ghosts.append([g, _t])
+
+
+## Мягкий конец (BoostFx): новые снимки не снимаются, живые гаснут сами, узел уходит после последнего.
+func finish() -> void:
+	_window_ms = _t
 
 
 ## Снять всё сразу (abort директора).

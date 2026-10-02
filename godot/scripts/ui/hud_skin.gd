@@ -4,7 +4,7 @@
 ##   neon      — «Неон NULL» (A): тёмное стекло с неоновым краем и свечением, светящийся текст, голубой цвет поля;
 ##   led       — «LED-табло» (C): чёрные панели табло, янтарные надписи, крупные строки — точками светодиодов (led_dots.gdshader).
 ## Выбор хранится в user://settings.cfg, [player] hud_skin — тот же файл и раздел, что у Flow (scripts/menu/flow.gd в ветке
-## меню-гаража; строка экрана настроек — в HUD_SKINS.md). Меняется set_skin() или F9 в бою (cycle()); элементы HUD слушают
+## меню-гаража; строка экрана настроек — в HUD_SKINS.md). Меняется set_skin() или H в бою (cycle(); F9 занята качеством графики Gfx); элементы HUD слушают
 ## events.changed и перекрашиваются на лету. Элементы берут у скина font(role), panel(role, …), style_label(…), theme(), цвета;
 ## рисованные (полоса HP, портрет, стрелки за экраном) смотрят id() сами.
 class_name HudSkin
@@ -68,7 +68,7 @@ static func set_skin(new_id: String, save: bool = true) -> void:
 		events.changed.emit(new_id)
 
 
-## Следующий скин по кругу (F9 в бою). Возвращает его подпись.
+## Следующий скин по кругу (H в бою). Возвращает его подпись.
 static func cycle() -> String:
 	set_skin(IDS[(IDS.find(id()) + 1) % IDS.size()])
 	return label()

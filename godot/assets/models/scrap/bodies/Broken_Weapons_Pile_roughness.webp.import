@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dh4jbu1fdacsq"
-path="res://.godot/imported/Broken_Weapons_Pile_roughness.webp-40c8efe869fa96b1fefa049c19604fee.ctex"
+path.s3tc="res://.godot/imported/Broken_Weapons_Pile_roughness.webp-40c8efe869fa96b1fefa049c19604fee.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "bfe144c21d65ff84804c4dfad88a7255"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bodies/Broken_Weapons_Pile_roughness.webp"
-dest_files=["res://.godot/imported/Broken_Weapons_Pile_roughness.webp-40c8efe869fa96b1fefa049c19604fee.ctex"]
+dest_files=["res://.godot/imported/Broken_Weapons_Pile_roughness.webp-40c8efe869fa96b1fefa049c19604fee.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

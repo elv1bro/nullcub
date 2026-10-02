@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dh23tfemcjo8x"
-path="res://.godot/imported/Beam_3m_roughness.webp-2ac3cb7c45ceebb2b1ffa3e8e1225c69.ctex"
+path.s3tc="res://.godot/imported/Beam_3m_roughness.webp-2ac3cb7c45ceebb2b1ffa3e8e1225c69.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "98d8e8594588b237f213f1f137c02d06"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Beam_3m_roughness.webp"
-dest_files=["res://.godot/imported/Beam_3m_roughness.webp-2ac3cb7c45ceebb2b1ffa3e8e1225c69.ctex"]
+dest_files=["res://.godot/imported/Beam_3m_roughness.webp-2ac3cb7c45ceebb2b1ffa3e8e1225c69.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

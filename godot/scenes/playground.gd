@@ -12,9 +12,9 @@
 ##   SUDDEN_DEATH_BREAK_PLATFORMS_STEP — верёвочные мосты арены (RopeBridge.break_apart) обрываются;
 ##   камера: snap на отсчёте (после рестарта куклы стоят на новых местах); меши оружия → gi_mode DYNAMIC (SDFGI в окружении).
 ## Щепки/пыль (ImpactFx) и урон считает DollCombat — ребёнок каждой куклы, его добавляет Match.register.
-## P1: WASD, Shift рывок, Space переворот. P2: стрелки, правый Ctrl рывок, Enter переворот.
+## P1: WASD, Shift ускорение (держать, за Заряд), Space + A/D раскрутка. P2: стрелки, правый Ctrl ускорение, Enter раскрутка.
 ## F10 — пресет эффектов ударов full → reduced → off (FxPreset, HIT_FX.md §11.2), тост «FX: …» внизу экрана на FX_TOAST_S.
-## F9 — скин HUD трансляция → неон → LED (HudSkin, сохраняется в настройках), тост «HUD: …».
+## H — скин HUD трансляция → неон → LED (HudSkin, сохраняется в настройках), тост «HUD: …» (F9 — качество графики, Gfx).
 extends Node3D
 
 const SCENES := {
@@ -127,11 +127,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				switch_arena("campaign")
 			KEY_F10:
 				cycle_fx_preset()
-			KEY_F9:
+			KEY_M:
+				_show_fx_toast(get_node("/root/GameAudio").toggle_music())   # музыка вкл/выкл (user://audio.cfg, docs/plan-demo/AUDIO.md §5)
+			KEY_N:
+				_show_fx_toast(get_node("/root/GameAudio").toggle_crowd())   # толпа вкл/выкл
+			KEY_H:
 				cycle_hud_skin()
 
 
-## F9: следующий скин HUD (HudSkin: трансляция / неон / LED) и тост. Возвращает подпись скина.
+## H: следующий скин HUD (HudSkin: трансляция / неон / LED) и тост. Возвращает подпись скина.
 func cycle_hud_skin() -> String:
 	var l := HudSkin.cycle()
 	_show_fx_toast("HUD: " + l)

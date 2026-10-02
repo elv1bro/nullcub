@@ -117,6 +117,8 @@ var _joined := {}   # input_prefix → true: этот человек уже на
 
 func _ready() -> void:
 	current = true
+	# камера двигается в _process по уже интерполированным целям — своя интерполяция физики дала бы запаздывание на тик
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 
 
 ## Сброс сглаживания: следующий кадр камера встаёт точно на цель (после респавна/рестарта).
@@ -223,7 +225,7 @@ func _targets() -> Array:
 	var alive_pts: Array = []
 	var all_pts: Array = []
 	for n in followed_dolls():
-		var com: Vector3 = n.centre_of_mass()
+		var com: Vector3 = n.centre_of_mass(true) if n is Doll else n.centre_of_mass()   # видимое положение, не физическое
 		var v := Vector3.ZERO
 		if n.has_method("torso"):
 			var t = n.torso()
@@ -433,13 +435,13 @@ func target_rect(n: Node3D, only: Array = []) -> Rect2:
 			var m := mi as MeshInstance3D
 			if m.mesh == null or not m.visible or m.has_meta("hitfx"):
 				continue
-			var ab := m.global_transform * m.get_aabb()
+			var ab := m.get_global_transform_interpolated() * m.get_aabb()
 			var rr := Rect2(Vector2(ab.position.x, ab.position.y), Vector2(ab.size.x, ab.size.y))
 			r = rr if not have else r.merge(rr)
 			have = true
 			got = true
 		if not got:
-			var p := body.global_position
+			var p := body.get_global_transform_interpolated().origin
 			var rr := Rect2(Vector2(p.x, p.y) - Vector2.ONE * safe_part_pad, Vector2.ONE * safe_part_pad * 2.0)
 			r = rr if not have else r.merge(rr)
 			have = true
@@ -629,7 +631,7 @@ func _fx_centre(c: Vector2) -> Vector2:
 		out = out.lerp(_punch_pos, _punch_pull * _punch_env())
 	var ft := _focus_target()
 	if _focus_s > 0.0 and ft != null:
-		var p: Vector3 = ft.call("centre_of_mass") if ft.has_method("centre_of_mass") else ft.global_position
+		var p: Vector3 = (ft as Doll).centre_of_mass(true) if ft is Doll else (ft.call("centre_of_mass") if ft.has_method("centre_of_mass") else ft.global_position)
 		out = out.lerp(Vector2(p.x, p.y) + _focus_lead, _focus_w * _focus_env())
 	if _kick_s > 0.0:
 		var k := 1.0 - clampf(_kick_t / _kick_s, 0.0, 1.0)

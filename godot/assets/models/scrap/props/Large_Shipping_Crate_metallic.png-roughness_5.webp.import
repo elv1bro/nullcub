@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cj8wk5hsdbut1"
-path="res://.godot/imported/Large_Shipping_Crate_metallic.png-roughness_5.webp-7568bb8428af03bb91b787b26d4ea221.ctex"
+path.s3tc="res://.godot/imported/Large_Shipping_Crate_metallic.png-roughness_5.webp-7568bb8428af03bb91b787b26d4ea221.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "d6deab6549307a79e877ec36be0f1898"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Large_Shipping_Crate_metallic.png-roughness_5.webp"
-dest_files=["res://.godot/imported/Large_Shipping_Crate_metallic.png-roughness_5.webp-7568bb8428af03bb91b787b26d4ea221.ctex"]
+dest_files=["res://.godot/imported/Large_Shipping_Crate_metallic.png-roughness_5.webp-7568bb8428af03bb91b787b26d4ea221.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

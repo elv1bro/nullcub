@@ -7,7 +7,7 @@
 class_name PlayerPanel
 extends Control
 
-const PLATE_H := 102.0
+const PLATE_H := 112.0
 const PIP_SIZE := Vector2(26, 10)
 const NAME_SIZE := 28
 
@@ -28,6 +28,7 @@ var display_name := ""
 @onready var name_label: Label = $Row/BarCol/Top/Name
 @onready var crowns: HBoxContainer = $Row/BarCol/Top/Crowns
 @onready var hp_bar: HpBar = $Row/BarCol/HpBar
+@onready var charge_bar: ChargeBar = $Row/BarCol/ChargeBar
 @onready var combo_row: HBoxContainer = $ComboRow
 @onready var combo_label: Label = $ComboRow/Combo
 
@@ -86,6 +87,8 @@ func set_side(right: bool) -> void:
 	portrait.queue_redraw()
 	hp_bar.fill_from_right = right
 	hp_bar.queue_redraw()
+	charge_bar.fill_from_right = right
+	charge_bar.queue_redraw()
 	set_wins(wins)
 	queue_redraw()
 
@@ -93,6 +96,11 @@ func set_side(right: bool) -> void:
 func set_hp(hp: float, max_hp: float = Tuning.MAX_HP, animate: bool = true) -> void:
 	hp_bar.max_hp = max_hp
 	hp_bar.set_hp(hp, animate)
+
+
+## Заряд бойца (COMBAT_CHARGE.md): значение и «выдохся»; зовёт Hud каждый кадр из Doll.charge / charge_locked.
+func set_charge(value: float, locked: bool) -> void:
+	charge_bar.set_charge(value, locked)
 
 
 func set_combo(n: int) -> void:
@@ -122,6 +130,7 @@ func reset() -> void:
 	set_ko(false)
 	set_combo(0)
 	hp_bar.set_hp(hp_bar.max_hp, false)
+	charge_bar.snap(Tuning.CHARGE_MAX)
 
 
 func set_round_slots(n: int) -> void:

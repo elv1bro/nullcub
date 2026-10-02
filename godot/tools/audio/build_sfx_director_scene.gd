@@ -1,7 +1,7 @@
-## Собирает scenes/audio/sfx_director.tscn (docs/plan-demo/HIT_FX.md §4.4): узел SfxDirector (scripts/audio/sfx_director.gd),
-## VOICES голосов AudioStreamPlayer (Voice00…) и слои — AudioStreamRandomizer из папок assets/audio/sfx/<слой>/*.ogg
-## (питч ±8 %, громкость ±1.5 dB, без повторов подряд). Звуки добавляются файлом в папку слоя и перезапуском:
-##   python3 godot/tools/audio/gen_hitfx_audio.py   (ассеты) → godot --headless --path godot --import
+## Собирает scenes/audio/sfx_director.tscn (docs/plan-demo/AUDIO.md §4.2): узел SfxDirector (scripts/audio/sfx_director.gd),
+## VOICES голосов AudioStreamPlayer (Voice00…) и слои — AudioStreamRandomizer из папок assets/audio/sfx/<слой>/*.ogg и
+## assets/audio/ui/<слой>/*.ogg (питч ±6 %, громкость ±1.5 dB, без повторов подряд). Звуки добавляются файлом в папку слоя:
+##   python3 godot/tools/audio/build_audio.py   (ассеты) → godot --headless --path godot --import
 ##   godot --headless --path godot -s res://tools/audio/build_sfx_director_scene.gd
 extends SceneTree
 
@@ -18,7 +18,7 @@ func _init() -> void:
 	for layer in SfxDirector.LAYER_ORDER:
 		var rs := SfxDirector.make_layer(layer)
 		if rs.streams_count == 0:
-			push_error("sfx: слой %s пуст (%s/%s)" % [layer, SfxDirector.SFX_DIR, layer])
+			push_error("sfx: слой %s пуст (%s)" % [layer, SfxDirector.layer_dir(layer)])
 			continue
 		layers[layer] = rs
 		total += rs.streams_count

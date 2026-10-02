@@ -77,6 +77,7 @@ var _arm_dir := {}               # рука → направление в пок
 
 
 func _ready() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
 	for n in ["N0_Body", "N0_Screen", "N0_Ear_L", "N0_Ear_R", "N0_Legs_L", "N0_Legs_R", "N0_Arm_L", "N0_Arm_R", "N0_Mic"]:
 		var node := model.get_node_or_null(n) as Node3D
 		if node != null:

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://chargehudsnap01"]
+
+[ext_resource type="Script" path="res://tests/charge_hud_snapshot.gd" id="1_snap"]
+
+[node name="ChargeHudSnapshot" type="Node"]
+script = ExtResource("1_snap")

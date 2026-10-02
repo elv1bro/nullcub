@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://df3pngc5eaapx"
-path="res://.godot/imported/Gate_Arch_roughness.webp-3e727a27a5a095b1d2a0f8d2e4579d51.ctex"
+path.s3tc="res://.godot/imported/Gate_Arch_roughness.webp-3e727a27a5a095b1d2a0f8d2e4579d51.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "780c207d2722a4bb910b0d8cbcf3ea48"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Gate_Arch_roughness.webp"
-dest_files=["res://.godot/imported/Gate_Arch_roughness.webp-3e727a27a5a095b1d2a0f8d2e4579d51.ctex"]
+dest_files=["res://.godot/imported/Gate_Arch_roughness.webp-3e727a27a5a095b1d2a0f8d2e4579d51.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

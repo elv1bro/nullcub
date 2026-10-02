@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmkmwh7ch7cpa"
-path="res://.godot/imported/Shelf_normal.webp-cdf07caa09f9dd5e7f84cb72ccec3dff.ctex"
+path.s3tc="res://.godot/imported/Shelf_normal.webp-cdf07caa09f9dd5e7f84cb72ccec3dff.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "dbe32cbc98fc9dded23677a89c1b30a3"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/workshop/Shelf_normal.webp"
-dest_files=["res://.godot/imported/Shelf_normal.webp-cdf07caa09f9dd5e7f84cb72ccec3dff.ctex"]
+dest_files=["res://.godot/imported/Shelf_normal.webp-cdf07caa09f9dd5e7f84cb72ccec3dff.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

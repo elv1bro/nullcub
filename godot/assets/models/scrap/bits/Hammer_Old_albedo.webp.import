@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cmairaj8w8g7w"
-path="res://.godot/imported/Hammer_Old_albedo.webp-f3e0366b1a095ef597fc5ccd85f70ee9.ctex"
+path.s3tc="res://.godot/imported/Hammer_Old_albedo.webp-f3e0366b1a095ef597fc5ccd85f70ee9.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "ae6428fbd78fd801af49fa145004d023"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Hammer_Old_albedo.webp"
-dest_files=["res://.godot/imported/Hammer_Old_albedo.webp-f3e0366b1a095ef597fc5ccd85f70ee9.ctex"]
+dest_files=["res://.godot/imported/Hammer_Old_albedo.webp-f3e0366b1a095ef597fc5ccd85f70ee9.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

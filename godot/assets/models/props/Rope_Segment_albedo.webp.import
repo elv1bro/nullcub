@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cpyci47em83fu"
-path="res://.godot/imported/Rope_Segment_albedo.webp-0ca6efe43f27288e957ad79d3acea89c.ctex"
+path.s3tc="res://.godot/imported/Rope_Segment_albedo.webp-0ca6efe43f27288e957ad79d3acea89c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "e8cb02c6e3434f36d41bdeed0d59bdaf"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/Rope_Segment_albedo.webp"
-dest_files=["res://.godot/imported/Rope_Segment_albedo.webp-0ca6efe43f27288e957ad79d3acea89c.ctex"]
+dest_files=["res://.godot/imported/Rope_Segment_albedo.webp-0ca6efe43f27288e957ad79d3acea89c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

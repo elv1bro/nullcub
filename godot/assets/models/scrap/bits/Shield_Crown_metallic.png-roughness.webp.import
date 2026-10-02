@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://l2cgmd74ge5q"
-path="res://.godot/imported/Shield_Crown_metallic.png-roughness.webp-7ed31936016336cc7b966b6594001a95.ctex"
+path.s3tc="res://.godot/imported/Shield_Crown_metallic.png-roughness.webp-7ed31936016336cc7b966b6594001a95.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "f45b86f9acb1eec755db3cf332c49bd5"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/bits/Shield_Crown_metallic.png-roughness.webp"
-dest_files=["res://.godot/imported/Shield_Crown_metallic.png-roughness.webp-7ed31936016336cc7b966b6594001a95.ctex"]
+dest_files=["res://.godot/imported/Shield_Crown_metallic.png-roughness.webp-7ed31936016336cc7b966b6594001a95.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

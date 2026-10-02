@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://26f1or1lawl8"
-path="res://.godot/imported/Floor_Slab_void_floor_noise.png-a10120cb5b5706d60257c8e337a92874.ctex"
+path.s3tc="res://.godot/imported/Floor_Slab_void_floor_noise.png-a10120cb5b5706d60257c8e337a92874.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "032ac5560512122fa5c3f142305bfd2f"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/arena/void/Floor_Slab_void_floor_noise.png"
-dest_files=["res://.godot/imported/Floor_Slab_void_floor_noise.png-a10120cb5b5706d60257c8e337a92874.ctex"]
+dest_files=["res://.godot/imported/Floor_Slab_void_floor_noise.png-a10120cb5b5706d60257c8e337a92874.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

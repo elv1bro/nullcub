@@ -8,6 +8,10 @@
 class_name ImpactFlash
 extends Node3D
 
+
+func _init() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
+
 const POP_S := 0.05
 const LIFE_S := 0.18
 const MAX_STEP_S := 1.0 / 30.0

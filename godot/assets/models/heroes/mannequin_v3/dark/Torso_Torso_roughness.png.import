@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b72w7hu2e84rv"
-path="res://.godot/imported/Torso_Torso_roughness.png-3629d2d9b5c71ef222f8732ca1c7b6cc.ctex"
+path.s3tc="res://.godot/imported/Torso_Torso_roughness.png-3629d2d9b5c71ef222f8732ca1c7b6cc.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "09ee6c6cc8accdccbc90de6e546709d8"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/dark/Torso_Torso_roughness.png"
-dest_files=["res://.godot/imported/Torso_Torso_roughness.png-3629d2d9b5c71ef222f8732ca1c7b6cc.ctex"]
+dest_files=["res://.godot/imported/Torso_Torso_roughness.png-3629d2d9b5c71ef222f8732ca1c7b6cc.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

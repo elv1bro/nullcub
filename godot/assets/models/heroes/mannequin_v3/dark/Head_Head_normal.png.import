@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ctmx11ftxx422"
-path="res://.godot/imported/Head_Head_normal.png-fc22a324e11f6bf7d72e4eaa1c920fdf.ctex"
+path.s3tc="res://.godot/imported/Head_Head_normal.png-fc22a324e11f6bf7d72e4eaa1c920fdf.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "e0d77c3e2832d06f57288f32fda774d3"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/heroes/mannequin_v3/dark/Head_Head_normal.png"
-dest_files=["res://.godot/imported/Head_Head_normal.png-fc22a324e11f6bf7d72e4eaa1c920fdf.ctex"]
+dest_files=["res://.godot/imported/Head_Head_normal.png-fc22a324e11f6bf7d72e4eaa1c920fdf.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

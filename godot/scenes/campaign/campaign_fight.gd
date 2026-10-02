@@ -72,7 +72,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					fight_abandoned.emit()
 			KEY_F10:
 				cycle_fx_preset()
-			KEY_F9:
+			KEY_H:
 				cycle_hud_skin()
 
 

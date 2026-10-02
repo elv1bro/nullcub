@@ -17,6 +17,9 @@
 ##   HIT_FX (29.09): fx_directors — Match создал HitFxDirector и SfxDirector; hitfx_env_kind — ударов kind environment с уровнем 0;
 ##   info.hitfx — гистограмма уровней Match.hit_fx, crits[] (t, tier, score, damage), env_slam, fight_s_per_crit.
 ## Запуск: godot --headless --path . --fixed-fps 60 res://tests/match_probe.tscn -- "scene=ruins,max_s=120" (scene=ruins|workshop|void|scrap)
+##   perf=1 (perf-pass, docs/plan-demo/PERF_PASS.md) — детектор рывков: реальные часы между кадрами (в headless --fixed-fps 60 это цена кадра
+##   на CPU), узлы, добавленные в кадр (ADDED{класс:имя×N}), события удара рядом; проверки perf_frame_p99_ms / perf_frame_max_ms /
+##   perf_nodes_per_frame (limits p99_ms= max_ms= max_nodes=), info.perf; spikes=1 — то же, но только печать рывков > spike_ms (окно).
 ##   retreat=<с> — отход наскока вместо RUSH_RETREAT_S (retreat=1.0 в Void — клинч голова-о-голову, двойной KO → ничья).
 ## Отчёт tests/match_probe_report.json (или out=res://…), exit 0/1.
 extends Node3D
@@ -30,7 +33,9 @@ const RUSH_RETREAT_S := 1.2             # отход полной тягой: р
                                         # KO обоих в одном тике (42.5 с) → Match.winner мёртв, match_winner = 0 (3 прогона одинаково);
                                         # 1.2 и 0.9 — KO одного на всех трёх площадках. 29.09: двойной KO — ничья (Match.build_results),
                                         # match_winner её принимает; 1.2 оставлен — проба проверяет обычный KO
-const DASH_FROM_M := 2.0                 # рывок, если до соперника дальше (кулдаун Tuning.DASH_COOLDOWN_S)
+const DASH_FROM_M := 2.0                 # ускорение (Shift за Заряд), если до соперника дальше; legacy=1 — старый рывок с кулдауном DASH_COOLDOWN_S
+const BOOST_START_CHARGE := 40.0         # как у ботов EnemyBrain.DASH_START_CHARGE: ниже ускорение не начинают, ниже BOOST_KEEP_CHARGE — отпускают
+const BOOST_KEEP_CHARGE := 5.0
 const STUCK_S := 6.0                 # без ударов столько секунд — куклы заклинило геометрией (полка, станок): прыжок врозь
 const UNSTICK_S := 1.2
 const RESULTS_WAIT_REAL_MS := 6000
@@ -44,6 +49,8 @@ var env_slams := 0
 var max_s := 120.0
 var sd_mode := false
 var rush_retreat_s := RUSH_RETREAT_S
+var legacy_dash := false             # legacy=1: старый рывок без Заряда (dash_until + кулдаун 10 с) — сравнение с экономикой Заряда
+var rush_boost: Dictionary = {}      # Doll -> true, пока бот держит ускорение
 const SD_TIME_LIMIT_S := 3.0
 const SD_SETTLE_S := 2.0             # после шага обрыва мостов ждём столько: доски должны упасть
 var plank_y_at_break: Dictionary = {}   # RopeBridge -> Array[float] высоты досок в момент break_apart
@@ -80,6 +87,101 @@ var unstick_until := -1.0
 var unstick_n := 0                     # номер попытки расклинивания (чередование врозь / через препятствие)
 var fight_seen := false               # фаза FIGHT наступала (до неё Match.phase == OVER — начальное значение)
 var report := {"ok": true, "checks": [], "info": {}}
+# --- perf=1 / spikes=1: рывки кадра по реальным часам и узлы, добавленные в кадр ---
+var perf := false
+var spikes := false
+var spike_ms := 28.0
+var limit_p99_ms := 60.0
+var limit_max_ms := 500.0
+var limit_nodes := 250
+var _last_us := 0
+var _frame_ms: Array = []
+var _ctx: Array = []   # [{us, text}]
+var _spike_lines: Array = []
+var _added: Dictionary = {}
+var _added_n := 0
+var _max_added := 0
+var _max_added_top := ""
+
+
+func _ctx_add(txt: String) -> void:
+	_ctx.append({"us": Time.get_ticks_usec(), "text": txt})
+	if _ctx.size() > 60:
+		_ctx.pop_front()
+
+
+func _on_node_added(n: Node) -> void:
+	_added_n += 1
+	var nm := String(n.name)
+	var i := nm.length()
+	while i > 0 and (nm[i - 1] >= "0" and nm[i - 1] <= "9" or nm[i - 1] == "@"):
+		i -= 1
+	var key := "%s:%s" % [n.get_class(), nm.substr(0, i)]
+	_added[key] = int(_added.get(key, 0)) + 1
+
+
+func _top_added() -> String:
+	var ks: Array = _added.keys()
+	ks.sort_custom(func(a: Variant, b: Variant) -> bool: return int(_added[a]) > int(_added[b]))
+	var parts: PackedStringArray = []
+	for k in ks.slice(0, 6):
+		parts.append("%s×%d" % [k, int(_added[k])])
+	return ", ".join(parts)
+
+
+func _process(_d: float) -> void:
+	if not (perf or spikes):
+		return
+	var now := Time.get_ticks_usec()
+	if _last_us == 0:
+		_last_us = now
+		return
+	var ms := float(now - _last_us) / 1000.0
+	_last_us = now
+	# мерим только активный бой до KO: отсчёт, рестарт кукол и панель итогов — штатные всплески (одноразовые построения)
+	var in_fight := stage == 0 and fight_seen and not ko_fired and match_node.combat_active()
+	if in_fight and _added_n > _max_added:
+		_max_added = _added_n
+		_max_added_top = _top_added()
+	var top := _top_added() if (ms > spike_ms and not _added.is_empty()) else ""
+	_added.clear()
+	_added_n = 0
+	if not in_fight or t < 1.0:   # прогрев: компиляция пайплайнов, загрузка — отдельная история
+		return
+	_frame_ms.append(ms)
+	if ms > spike_ms:
+		var near: PackedStringArray = []
+		for c in _ctx:
+			if now - int(c["us"]) < 400000:
+				near.append("%s(-%dms)" % [c["text"], (now - int(c["us"])) / 1000])
+		_spike_lines.append("SPIKE t=%.2f fight=%.2f dt=%.1f ms [%s%s]" % [t, match_node.fight_time, ms, ", ".join(near), (" ADDED{" + top + "}") if top != "" else ""])
+
+
+func _perf_summary() -> void:
+	if _frame_ms.is_empty():
+		return
+	var a: Array = _frame_ms.duplicate()
+	a.sort()
+	var sum := 0.0
+	for v in a:
+		sum += float(v)
+	var over := 0
+	for v in a:
+		if float(v) > spike_ms:
+			over += 1
+	var p99: float = a[int(a.size() * 0.99)]
+	var mx: float = a[a.size() - 1]
+	report["info"]["perf"] = {"frames": a.size(), "avg_ms": snappedf(sum / a.size(), 0.01), "p50_ms": snappedf(a[a.size() / 2], 0.01),
+		"p95_ms": snappedf(a[int(a.size() * 0.95)], 0.01), "p99_ms": snappedf(p99, 0.01), "max_ms": snappedf(mx, 0.01), "over_ms": spike_ms, "over_n": over,
+		"max_nodes_added_frame": _max_added, "max_nodes_added_top": _max_added_top, "spikes": _spike_lines.slice(0, 12)}
+	print("PERF scene=%s frames=%d avg=%.1f p50=%.1f p95=%.1f p99=%.1f max=%.1f over_%dms=%d max_nodes_frame=%d {%s}" % [scene_id, a.size(), sum / a.size(),
+		a[a.size() / 2], a[int(a.size() * 0.95)], p99, mx, int(spike_ms), over, _max_added, _max_added_top])
+	for l in _spike_lines:
+		print("  ", l)
+	if perf:
+		_check("perf_frame_p99_ms", p99, limit_p99_ms, "lte", "p99 времени кадра (реальные часы)")
+		_check("perf_frame_max_ms", mx, limit_max_ms, "lte", "худший кадр")
+		_check("perf_nodes_per_frame", float(_max_added), float(limit_nodes), "lte", "узлов, добавленных в один кадр: %s" % _max_added_top)
 
 
 func _ready() -> void:
@@ -94,6 +196,13 @@ func _ready() -> void:
 				"sd": sd_mode = p[1] != "0"
 				"out": out_path = p[1]
 				"retreat": rush_retreat_s = float(p[1])
+				"legacy": legacy_dash = p[1] != "0"
+				"perf": perf = p[1] != "0"
+				"spikes": spikes = p[1] != "0"
+				"spike_ms": spike_ms = float(p[1])
+				"p99_ms": limit_p99_ms = float(p[1])
+				"max_ms": limit_max_ms = float(p[1])
+				"max_nodes": limit_nodes = int(p[1])
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
 	add_child(pg)
 	p1 = pg.get_node("P1")
@@ -114,9 +223,13 @@ func _ready() -> void:
 					plank_y_at_break[rb] = ys)
 	else:
 		p2.position = p1.position + P2_OFFSET
+	if perf or spikes:
+		get_tree().node_added.connect(_on_node_added)
 	match_node.announce.connect(func(text: String, _c: Color, kind: String) -> void:
+		_ctx_add("announce:" + kind)
 		events.append({"announce": text, "kind": kind, "t": snappedf(t, 0.01)}))
 	match_node.phase_changed.connect(func(p: int) -> void:
+		_ctx_add("phase:%d" % p)
 		if p == Match.Phase.FIGHT:
 			fight_seen = true
 			last_hit_t = t
@@ -130,11 +243,13 @@ func _ready() -> void:
 		if panel == null or not is_equal_approx(panel.hp_bar.hp, victim.hp):
 			hp_synced = false)
 	match_node.ko.connect(func(victim: Doll, _a: Node, _r: Dictionary) -> void:
+		_ctx_add("KO")
 		ko_fired = true
 		ko_t = t
 		ko_victim = victim
 		ko_card_seen = ko_card_seen or hud.ko_card.visible)
 	match_node.match_over.connect(func(winner: Doll, results: Dictionary) -> void:
+		_ctx_add("match_over")
 		over_fired = true
 		over_winner = winner
 		over_results = results
@@ -144,6 +259,7 @@ func _ready() -> void:
 			if stage != 0:
 				return
 			var tier := String(ctx.get("tier", ""))
+			_ctx_add("hit:%s/%s" % [tier, String(ctx.get("kind", ""))])
 			hitfx_tiers[tier] = int(hitfx_tiers.get(tier, 0)) + 1
 			if String(ctx.get("kind", "")) == "environment":
 				hitfx_env_kind += 1
@@ -189,9 +305,18 @@ func _rush(d: Doll, other: Doll) -> void:
 	else:
 		# с отбросом RM (FEEL_TARGET §9: 1–2 H/с вместо 4) куклы после удара остаются рядом и толкаются по 0.1–3 HP:
 		# отход полной тягой RUSH_RETREAT_S и рывок (как Shift, DASH_COOLDOWN_S) с разбега ≥ DASH_FROM_M — удары 8–20 HP
-		if absf(dx) > DASH_FROM_M and d._time >= d.dash_ready_at and not d.is_stunned():
-			d.dash_until = d._time + Tuning.DASH_DURATION_S
-			d.dash_ready_at = d._time + Tuning.DASH_COOLDOWN_S
+		if legacy_dash:
+			if absf(dx) > DASH_FROM_M and d._time >= d.dash_ready_at and not d.is_stunned():
+				d.dash_until = d._time + Tuning.DASH_DURATION_S
+				d.dash_ready_at = d._time + Tuning.DASH_COOLDOWN_S
+		else:
+			# Заряд (COMBAT_CHARGE.md): как игрок, держащий Shift на разбеге; начинает с BOOST_START_CHARGE, отпускает у BOOST_KEEP_CHARGE
+			var holding := bool(rush_boost.get(d, false))
+			if absf(dx) > DASH_FROM_M and not d.is_stunned() and (d.charge >= BOOST_START_CHARGE or (holding and d.charge > BOOST_KEEP_CHARGE)):
+				rush_boost[d] = true
+				d.request_dash()
+			else:
+				rush_boost[d] = false
 		d.input_vec = Vector2(sgn, vy)
 
 
@@ -370,6 +495,16 @@ func _checks_ko() -> void:
 	report["info"]["hp"] = {"p1": p1.hp, "p2": p2.hp}
 	report["info"]["stats_p1"] = p1.stats.duplicate()
 	report["info"]["stats_p2"] = p2.stats.duplicate()
+	var ch := {}
+	for pair in [["p1", p1], ["p2", p2]]:
+		var st: Dictionary = (pair[1] as Doll).stats
+		var inc := float(st["charge_from_hits"]) + float(st["charge_from_regen"])
+		ch[pair[0]] = {"from_hits": snappedf(float(st["charge_from_hits"]), 0.1), "from_regen": snappedf(float(st["charge_from_regen"]), 0.1),
+			"hit_share": snappedf(float(st["charge_from_hits"]) / inc, 0.01) if inc > 0.0 else 0.0, "spent": snappedf(float(st["charge_spent"]), 0.1),
+			"boost_s": snappedf(float(st["boost_s"]), 0.01), "spin_s": snappedf(float(st["spin_s"]), 0.01), "empty": int(st["charge_empty"]),
+			"charge_end": snappedf((pair[1] as Doll).charge, 0.1)}
+	report["info"]["charge"] = ch
+	report["info"]["legacy_dash"] = legacy_dash
 
 
 func _checks_over() -> void:
@@ -435,6 +570,7 @@ func _record_summary(r: Dictionary) -> Dictionary:
 
 
 func _finish() -> void:
+	_perf_summary()
 	report["info"]["godot"] = Engine.get_version_info()["string"]
 	var js := JSON.stringify(report, "  ")
 	print("=== MATCH PROBE ===")

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://j41vqas83htl"
-path="res://.godot/imported/Rail_Scrap_Wagon_metallic.png-roughness.webp-0f44436b1bee8876cd43b6cba16549bb.ctex"
+path.s3tc="res://.godot/imported/Rail_Scrap_Wagon_metallic.png-roughness.webp-0f44436b1bee8876cd43b6cba16549bb.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "60860102ddb371a2af2a891e822e43ec"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Rail_Scrap_Wagon_metallic.png-roughness.webp"
-dest_files=["res://.godot/imported/Rail_Scrap_Wagon_metallic.png-roughness.webp-0f44436b1bee8876cd43b6cba16549bb.ctex"]
+dest_files=["res://.godot/imported/Rail_Scrap_Wagon_metallic.png-roughness.webp-0f44436b1bee8876cd43b6cba16549bb.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

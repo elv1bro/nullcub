@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/interp_probe.gd" id="1_i"]
+
+[node name="InterpProbe" type="Node"]
+script = ExtResource("1_i")

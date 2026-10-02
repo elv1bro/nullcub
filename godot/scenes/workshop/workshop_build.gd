@@ -102,6 +102,13 @@ var stand: ModularDoll
 var bench_weapon: CraftedWeapon
 var held_weapon: CraftedWeapon          # оружие в кисти куклы на стенде (только показ)
 var drag: Dictionary = {}                # {part, targets, index, sticky, start, pos, moved}
+## Пробные сборки по разъёмам (ветка / копия: решает сборка целиком, ~3–5 мс на разъём) считаются порциями: первые TRIAL_FIRST_MS — в кадре
+## захвата, остальное по TRIAL_FRAME_MS за кадр (раньше все разом: 60–130 мс на захват ветки). Пока не досчитано, разъём показывается
+## по проверке одной детали; под курсором пробу считаем сразу (_ensure_trial). В пробах (probe_input) — синхронно.
+const TRIAL_FIRST_MS := 6.0
+const TRIAL_FRAME_MS := 3.0
+var _trial_queue: Array = []             # индексы drag["targets"], чья проба впереди
+var _trial_hint := false                 # после очереди пересказать «некуда поставить / не хватает энергии»
 var control_pick := false
 ## Цвета тяг: ЛКМ — золото (как прежняя рука мышью), ПКМ — голубой.
 const PULL_COLOURS := {"lmb": Color(1.0, 0.78, 0.2), "rmb": Color(0.35, 0.8, 1.0)}
@@ -191,6 +198,7 @@ const CLEAR_ARENA_PROPS := ["Props/Barrel_2", "Props/Sawhorse_1"]
 
 
 func _ready() -> void:
+	build_cam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # ездит в _process
 	for p in CLEAR_ARENA_PROPS:
 		var n := arena.get_node_or_null(p)
 		if n != null:
@@ -1288,13 +1296,12 @@ func begin_drag(part_id: String, screen_pos: Vector2, opts := {}) -> void:
 	drag = {"part": part_id, "targets": targets, "index": -1, "sticky": bool(opts.get("sticky", false)), "start": opts.get("start", screen_pos),
 		"pos": screen_pos, "moved": false, "copy_of": String(opts.get("copy_of", "")), "branch": bool(opts.get("branch", false)),
 		"move": move, "trials": {}, "rev": _rev}
+	_trial_queue.clear()
 	if move != "" or bool(drag["branch"]) or String(drag["copy_of"]) != "":   # ветка / копия: решает пробная сборка целиком
-		for t in targets:
-			if bool(t["accepts"]):
-				var tr := drag_trial(t)
-				t["ok"] = bool(tr.get("ok", false))
-				t["code"] = String(tr.get("code", ""))
-				t["reason"] = String(tr.get("reason", ""))
+		for i in range(targets.size()):
+			if bool((targets[i] as Dictionary)["accepts"]):
+				_trial_queue.append(i)
+		_run_trials(1e9 if probe_input else TRIAL_FIRST_MS, false)
 	for u in _hidden_uids:
 		for m in part_meshes("body", u):
 			(m as Node3D).visible = false
@@ -1302,9 +1309,22 @@ func begin_drag(part_id: String, screen_pos: Vector2, opts := {}) -> void:
 		held_weapon.visible = false
 	_make_carry(part_id)
 	_apply_highlights()
+	_trial_hint = true
+	if _trial_queue.is_empty():
+		_say_drag_dead_end()
+	_play_sfx("grab", d)
+	update_drag(screen_pos)
+	changed.emit()
+
+
+## «Некуда поставить» / «не хватает энергии» — когда ни один разъём не принимает деталь в руке.
+func _say_drag_dead_end() -> void:
+	_trial_hint = false
+	if drag.is_empty():
+		return
 	var any_ok := false
 	var energy_block := false
-	for t in targets:
+	for t in (drag["targets"] as Array):
 		if bool(t["accepts"]) and bool(t["ok"]):
 			any_ok = true
 		elif bool(t["accepts"]) and String(t["code"]) == "energy":
@@ -1313,9 +1333,50 @@ func begin_drag(part_id: String, screen_pos: Vector2, opts := {}) -> void:
 		_say("Не хватает энергии — дальше от ядра дороже, свободно ⚡%d" % energy_free(), COL_BAD)
 	elif not any_ok:
 		_say("Некуда поставить: нет свободного подходящего разъёма", COL_WARN)
-	_play_sfx("grab", d)
-	update_drag(screen_pos)
-	changed.emit()
+
+
+## Посчитать пробу разъёма t и записать итог в его флаги (ok / code / reason).
+func _apply_trial(t: Dictionary) -> void:
+	var tr := drag_trial(t)
+	t["ok"] = bool(tr.get("ok", false))
+	t["code"] = String(tr.get("code", ""))
+	t["reason"] = String(tr.get("reason", ""))
+
+
+## Порция очереди проб в бюджет budget_ms. Очередь кончилась — подсветка пересчитывается и (если просили) говорим, что некуда ставить.
+func _run_trials(budget_ms: float, notify := true) -> void:
+	if drag.is_empty():
+		_trial_queue.clear()
+		return
+	var t0 := Time.get_ticks_usec()
+	var targets: Array = drag["targets"]
+	var did := false
+	while not _trial_queue.is_empty() and float(Time.get_ticks_usec() - t0) / 1000.0 < budget_ms:
+		var i := int(_trial_queue.pop_front())
+		if i < targets.size():
+			_apply_trial(targets[i])
+			did = true
+	if did and notify:
+		_apply_highlights()
+		changed.emit()   # UI: энергия «станет» и подсказка — по досчитанным разъёмам
+	if _trial_queue.is_empty() and _trial_hint and notify:
+		_say_drag_dead_end()
+
+
+## Проба под курсором — сразу, не дожидаясь очереди (иначе деталь встала бы по неточной проверке одной детали).
+func _ensure_trial(t: Dictionary) -> void:
+	if _trial_queue.is_empty() or drag.is_empty() or not bool(t["accepts"]):
+		return
+	var targets: Array = drag["targets"]
+	var i := targets.find(t)
+	if i >= 0 and _trial_queue.has(i):
+		_trial_queue.erase(i)
+		_apply_trial(t)
+
+
+## Доделать все пробы разом (пробы, откат на старую семантику).
+func flush_trials() -> void:
+	_run_trials(1e9)
 
 
 func update_drag(screen_pos: Vector2) -> void:
@@ -1343,6 +1404,8 @@ func update_drag(screen_pos: Vector2) -> void:
 		best = -1   # над панелью разъёмы не ловятся (деталь не встанет «сквозь» библиотеку)
 	if best != int(drag["index"]):
 		drag["index"] = best
+		if best >= 0:
+			_ensure_trial(targets[best])
 		_update_ghost()
 		_apply_highlights()
 		changed.emit()   # UI: энергия «станет» и подсказка
@@ -1466,6 +1529,8 @@ func cancel_drag() -> void:
 	if drag.is_empty():
 		return
 	drag = {}
+	_trial_queue.clear()
+	_trial_hint = false
 	for u in _hidden_uids:
 		for m in part_meshes("body", u):
 			(m as Node3D).visible = true
@@ -1509,6 +1574,7 @@ func _make_carry(part_id: String, mirror := false) -> void:
 		_set_overlay_recursive(mesh, _mats["carry_rim"])
 	add_child(root)
 	_carry = root
+	_carry.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # едет за курсором в _process
 	_carry_mirror = mirror
 	_carry_see = false
 	_carry_xf = Transform3D.IDENTITY
@@ -2625,7 +2691,7 @@ func weapon_stats() -> Dictionary:
 ## Подсказка внизу экрана по состоянию.
 func hint_text() -> String:
 	if mode == Mode.TEST:
-		return "WASD — лететь · Shift — рывок · Space — кувырок · ЛКМ / ПКМ — тяги · E — схватить / бросить · R — заново · Esc — к сборке"
+		return "WASD — лететь · Shift — ускорение · Space + A/D — раскрутка · ЛКМ / ПКМ — тяги · E — схватить / бросить · R — заново · Esc — к сборке"
 	if paint_tool != "":
 		return paint.hint_text()
 	if paint != null and paint.tab_open and view == View.BODY:
@@ -2902,6 +2968,8 @@ func _process(delta: float) -> void:
 	if _autosave_dirty and _time >= _autosave_at:
 		_flush_autosave()
 	_prune_fx()
+	if not _trial_queue.is_empty():
+		_run_trials(TRIAL_FRAME_MS)
 	_edge_pan(delta)
 	_update_carry(delta)
 	var g := _camera_goal()

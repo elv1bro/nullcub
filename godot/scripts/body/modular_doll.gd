@@ -536,11 +536,16 @@ func _swap_base_surfaces(n: Node, surface: Material) -> void:
 ## сустава (local — кадр якоря родителя в осях тела: у зеркальной детали точка уже зеркальная, сам шар симметричен и не отражается),
 ## масштаб — meta joint_r якоря, иначе KitJoint.RADIUS группы. Без коллизий, meta rig_mesh; ставится до Doll._ready (_recolor
 ## красит Shirt_Kit в цвет игрока). Сцены пишет tools/build_body_kit.gd — пока файла нет, шара нет.
+static var _connector_scenes: Dictionary = {}   # путь -> PackedScene (null — файла нет): сцену не перечитывать с диска на каждый сустав
+
+
 func _add_connector(body: RigidBody3D, uid: String, jt: String, local: Transform3D, a: Dictionary, group: String) -> void:
 	var path := KitJoint.connector_scene(jt)
-	if path == "" or not ResourceLoader.exists(path):
+	if path == "":
 		return
-	var ps := load(path) as PackedScene
+	if not _connector_scenes.has(path):
+		_connector_scenes[path] = load(path) as PackedScene if ResourceLoader.exists(path) else null
+	var ps: PackedScene = _connector_scenes[path]
 	if ps == null:
 		return
 	var c := ps.instantiate()

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://gf7oke430q6r"
-path="res://.godot/imported/Metal_Plate_albedo.webp-9da5a971eae3170c1f1b6a89f09ff64f.ctex"
+path.s3tc="res://.godot/imported/Metal_Plate_albedo.webp-9da5a971eae3170c1f1b6a89f09ff64f.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "8ea57410caff29de17a4ac77873e163d"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/scrap/props/Metal_Plate_albedo.webp"
-dest_files=["res://.godot/imported/Metal_Plate_albedo.webp-9da5a971eae3170c1f1b6a89f09ff64f.ctex"]
+dest_files=["res://.godot/imported/Metal_Plate_albedo.webp-9da5a971eae3170c1f1b6a89f09ff64f.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

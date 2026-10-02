@@ -5,7 +5,7 @@
 ##   skin_<id>      после смены: тема Root — HudSkin.theme(), таймер — панель своего скина (трансляция — косая плашка BcStyle,
 ##                  неон и LED — StyleBoxFlat; у неона — свечение-тень, у LED — нет), имя на панели P1 — шрифт скина «plate»,
 ##                  надпись диктора — плашка скина, облачко N0 — панель скина, у LED крупный текст KO — материал точек
-##   skin_order     порядок F9 (как cycle(), без записи в настройки): трансляция → неон → LED → трансляция, подписи из LABELS
+##   skin_order     порядок H (как cycle(), без записи в настройки): трансляция → неон → LED → трансляция, подписи из LABELS
 extends Node
 
 const FIGHT := preload("res://scenes/campaign/campaign_fight.tscn")

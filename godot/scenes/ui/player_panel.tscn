@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://uiplayerpanel1"]
+[gd_scene load_steps=5 format=3 uid="uid://uiplayerpanel1"]
 
 [ext_resource type="Script" path="res://scenes/ui/player_panel.gd" id="1_panel"]
 [ext_resource type="PackedScene" uid="uid://uiportrait01" path="res://scenes/ui/portrait.tscn" id="2_portrait"]
 [ext_resource type="Script" path="res://scenes/ui/hp_bar.gd" id="3_hpbar"]
+[ext_resource type="Script" path="res://scenes/ui/charge_bar.gd" id="4_chargebar"]
 
 [node name="PlayerPanel" type="Control"]
 custom_minimum_size = Vector2(500, 136)
@@ -17,9 +18,9 @@ script = ExtResource("1_panel")
 layout_mode = 1
 anchor_right = 1.0
 offset_left = 28.0
-offset_top = 9.0
+offset_top = 10.0
 offset_right = -28.0
-offset_bottom = 93.0
+offset_bottom = 104.0
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_constants/separation = 14
@@ -37,7 +38,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 alignment = 1
 
 [node name="Top" type="HBoxContainer" parent="Row/BarCol"]
@@ -59,16 +60,22 @@ mouse_filter = 2
 theme_override_constants/separation = 6
 
 [node name="HpBar" type="Control" parent="Row/BarCol"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("3_hpbar")
+
+[node name="ChargeBar" type="Control" parent="Row/BarCol"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("4_chargebar")
 
 [node name="ComboRow" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchor_right = 1.0
 offset_left = 20.0
-offset_top = 102.0
+offset_top = 112.0
 offset_right = -20.0
 offset_bottom = 136.0
 grow_horizontal = 2

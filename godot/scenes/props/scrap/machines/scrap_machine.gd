@@ -69,6 +69,12 @@ func _ready() -> void:
 	_sfx = get_node_or_null(sfx_path) as AudioStreamPlayer3D
 	if _sfx != null:
 		_sfx.volume_db = sfx_volume_db
+		# общий микс (глушение крита, лимитер) и мягкое затухание: камера стоит в 10–24 м от плоскости боя (AUDIO.md §4.8)
+		if AudioServer.get_bus_index("SFX") >= 0:
+			_sfx.bus = "SFX"
+		_sfx.unit_size = maxf(_sfx.unit_size, 20.0)
+		_sfx.max_distance = maxf(_sfx.max_distance, 80.0)
+		_sfx.panning_strength = 0.7
 	_bind_lamps(self)
 	_update_lamps()
 	_machine_ready()
@@ -224,17 +230,29 @@ func _coil_level() -> float:
 	return lamp_level()
 
 
-# --- звук-заглушка ---
+# --- звук ---
 
 func play_sfx(kind: String, pitch := 1.0) -> void:
 	if _sfx == null or not is_inside_tree():
 		return
-	_sfx.stream = synth(kind)
+	_sfx.stream = sound(kind)
 	_sfx.pitch_scale = pitch
 	_sfx.play()
 
 
-## Короткие синтетические звуки (моно 16 бит): beep — двойной гудок, hiss — шипение, thud — удар, hum — гул, rumble — грохот.
+const SFX_ASSET_DIR := "res://assets/audio/machines/"
+
+
+## Звук машины по kind: записанный ассет assets/audio/machines/<kind>.ogg (tools/audio/build_audio.py), иначе синтез ниже.
+static func sound(kind: String) -> AudioStream:
+	var path := SFX_ASSET_DIR + kind + ".ogg"
+	if ResourceLoader.exists(path):
+		return load(path) as AudioStream
+	return synth(kind)
+
+
+## Короткие синтетические звуки (моно 16 бит, запасной путь без ассетов): beep — двойной гудок, hiss — шипение, thud — удар,
+## hum — гул, rumble — грохот.
 static func synth(kind: String) -> AudioStreamWAV:
 	if _wav_cache.has(kind):
 		return _wav_cache[kind]

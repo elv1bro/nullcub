@@ -6,6 +6,10 @@
 class_name Shockwave
 extends MeshInstance3D
 
+
+func _init() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF   # двигается в _process (не в физическом тике) — своя интерполяция физики дала бы запаздывание / дрожь
+
 const Z_OFFSET := 0.25
 
 var _r0 := 0.25

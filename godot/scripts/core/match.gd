@@ -145,6 +145,7 @@ func register(d: Doll) -> void:
 		d.add_child(c)
 	else:
 		c.match_ref = self
+	BoostFx.attach(d)   # эффекты ускорения / раскрутки (COMBAT_CHARGE.md), пресет — F11
 	d.knocked_out.connect(_on_doll_ko.bind(d))
 	d.damaged.connect(_on_doll_damaged.bind(d))
 	d.tree_exiting.connect(_unregister.bind(d))
@@ -666,6 +667,13 @@ func _ensure_fx_directors() -> void:
 		add_child(n)
 		if n.is_in_group(FxPreset.DIRECTOR_GROUP):
 			FxPreset.apply(n)   # пресет FX игрока (F10, HIT_FX.md §11.2)
+	# мир звука (docs/plan-demo/AUDIO.md §4): толпа, стук столкновений, фон арены и музыка боя
+	if Tuning.AUDIO_WORLD_ENABLED:
+		for e in [["CrowdDirector", CrowdDirector], ["ImpactAudio", ImpactAudio], ["ArenaAmbience", ArenaAmbience]]:
+			if get_node_or_null(String(e[0])) == null:
+				var a: Node = (e[1] as GDScript).new()
+				a.name = String(e[0])
+				add_child(a)
 
 
 ## COUNTDOWN (begin / restart): кулдауны крита заново; захваченная камера возвращается. OVER без KO (таймаут) — тоже;
@@ -691,6 +699,9 @@ func _emit_hit_fx(victim: Doll, attacker: Node, damage: float, kind: String, pos
 	if tier == HitTier.HEAVY and damage < Tuning.HIT_STOP_DAMAGE_1:
 		request_time_scale(Tuning.HIT_STOP_TIME_SCALE, Tuning.HITFX_HEAVY_STOP_S, "heavy_stop")
 	hit_fx_count += 1
+	var charge_got := Charge.apply_hit(ctx)   # Заряд (COMBAT_CHARGE.md): атакующему за удар, жертве — доля урона
+	ctx["charge_attacker"] = float(charge_got[0])
+	ctx["charge_victim"] = float(charge_got[1])
 	hit_fx.emit(ctx)
 
 

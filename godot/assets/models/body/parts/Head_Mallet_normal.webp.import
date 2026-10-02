@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cfm82b2estp85"
-path="res://.godot/imported/Head_Mallet_normal.webp-9c2ca90c62f5862160a9b09dd8655fa9.ctex"
+path.s3tc="res://.godot/imported/Head_Mallet_normal.webp-9c2ca90c62f5862160a9b09dd8655fa9.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "ef60bcf0ef604bd6b5323248572a5504"
@@ -14,17 +15,17 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/body/parts/Head_Mallet_normal.webp"
-dest_files=["res://.godot/imported/Head_Mallet_normal.webp-9c2ca90c62f5862160a9b09dd8655fa9.ctex"]
+dest_files=["res://.godot/imported/Head_Mallet_normal.webp-9c2ca90c62f5862160a9b09dd8655fa9.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1
