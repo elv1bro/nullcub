@@ -139,8 +139,12 @@ func _room(g: Node3D) -> void:
 	put(g, "Post_Hazard", Vector3(-2.24, 0, -2.86), 0.0, "PostGateR")
 	put(g, "Post", Vector3(-4.56, 0, -0.66), 90.0, "PostGateL")
 	# левая стена (x = −4.7, лицом в +X) и правая (x = 4.7, лицом в −X)
-	for z in [0.4, 2.4]:
-		put(g, "Wall", Vector3(-4.7, 0, z), 90.0, "WallLeft")
+	# вместо двух секций стены (z −0.6…3.4) — двустворчатые ворота в тренировочный зал (scenes/menu/garage_hall_gate.gd): модуль
+	# Fighter_Gate кита Old NULL Hall × 0.58 (проём 2.9 × 2.9), лицом в +X; на время испытания мастерской створки открываются в зал
+	var hg := put(g, "HallGate", Vector3(-4.7, 0, 1.2), 90.0, "HallGate", Vector3.ZERO, "res://assets/models/arena/null_hall/Fighter_Gate.glb")
+	if hg != null:
+		hg.scale = Vector3.ONE * 0.58
+		hg.set_script(load("res://scenes/menu/garage_hall_gate.gd"))
 	put(g, "Wall_Short", Vector3(-4.7, 0, 3.9), 90.0, "WallLeft")
 	for z in [-2.0, 0.0, 2.0]:
 		put(g, "Wall", Vector3(4.7, 0, z), -90.0, "WallRight")
@@ -202,15 +206,15 @@ func _props(g: Node3D) -> void:
 		["D", Vector3(-0.31, 2.18, BACK), -4.0], ["E", Vector3(0.66, 1.72, BACK), 6.0], ["F", Vector3(0.7, 2.06, BACK), -3.0]]
 	for ph in photos:
 		put(g, "Card_Photo_" + String(ph[0]), ph[1], 0.0, "Photo", Vector3(0, 0, float(ph[2])))
-	put(g, "Card_Poster_C", Vector3(-4.69, 1.7, 1.6), 90.0, "Poster")
-	put(g, "Card_Poster_A", Vector3(-4.69, 1.75, 2.4), 90.0, "Poster")
+	put(g, "Card_Poster_A", Vector3(-4.69, 1.75, 3.9), 90.0, "Poster")
 	put(g, "Card_Poster_B", Vector3(4.69, 1.8, -1.9), -90.0, "Poster")
 	# БЫСТРЫЙ БОЙ: пульт лифта, ящики и бочка у ворот
 	put(g, "ControlBox", Vector3(-1.98, 1.12, BACK))
-	put(g, "Crate", Vector3(-4.15, 0, 0.35), 25.0, "CrateGate")
-	put(g, "Crate_Small", Vector3(-4.1, 0.5, 0.3), 10.0, "CrateGate")
-	put(g, "Jerrycan", Vector3(-3.9, 0, 1.15), -30.0)
-	put(g, "Metal_Barrel", Vector3(-4.2, 0, 1.75), 0.0, "Barrel", Vector3.ZERO, "res://assets/models/scrap/props/Metal_Barrel.glb")
+	# (левая стена теперь с воротами в зал — ящики и бочка переехали к переднему левому углу)
+	put(g, "Crate", Vector3(-4.1, 0, 3.55), 25.0, "CrateGate")
+	put(g, "Crate_Small", Vector3(-4.05, 0.5, 3.5), 10.0, "CrateGate")
+	put(g, "Jerrycan", Vector3(-3.4, 0, 3.85), -30.0)
+	put(g, "Metal_Barrel", Vector3(-3.5, 0, 3.0), 0.0, "Barrel", Vector3.ZERO, "res://assets/models/scrap/props/Metal_Barrel.glb")
 	# правый тёмный угол: шкафчики, стеллаж, лестница, кейсы, покрышка, конус
 	put(g, "Lockers", Vector3(4.05, 0, -2.72))
 	put(g, "Ladder", Vector3(3.45, 0, -2.75), 0.0, "Ladder", Vector3(-14, 0, 0), "res://assets/models/scrap/kit/Ladder.glb")

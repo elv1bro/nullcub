@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ragdoll Master — тестовая сборка 0.0.1: запуск на Mac из исходников (docs/plan-demo/RELEASE_0.0.1.md).
+# NULL GRAVITY — тестовая сборка 0.0.1: запуск на Mac из исходников (docs/plan-demo/RELEASE_0.0.1.md).
 # Нужен Godot 4.7.2 (godotengine.org → Download → macOS). Двойной клик по этому файлу или ./play-mac.command в терминале.
 # Свой путь к Godot: GODOT=/путь/к/Godot ./play-mac.command
 cd "$(dirname "$0")" || exit 1

@@ -1,11 +1,13 @@
 ## Проба потока экранов (scripts/menu/flow.gd, гараж — главная сцена) без окна:
 ##   godot --headless --path godot --fixed-fps 60 res://tests/flow_probe.tscn
+## Главная сцена — boot.tscn (лоадер), гараж грузится под ним; ввод в гараже ждёт ухода лоадера.
 ## Наблюдатель висит под root и переживает смену сцен. Путь настоящим вводом: гараж (титул) → Space → «2» (Быстрый бой) →
 ## Enter → купол playground_null_hall.tscn → Esc (пауза, дерево на паузе) → Esc (продолжить) → Esc → «В ГАРАЖ» → гараж сразу списком на
 ## «Быстром бое» → снова в бой → MAIN MENU в итогах (сигнал панели) → гараж → мастерская → двойной Esc → гараж на «Мастерской».
 ## Плюс настройки: громкость пишется в user://settings.cfg и ставится на шину Master. В stdout «=== FLOW PROBE ===» + JSON.
 extends Node
 
+const BOOT := "res://scenes/boot.tscn"
 const MENU := "res://scenes/menu/garage_menu.tscn"
 const RUINS := "res://scenes/playground.tscn"
 const QUICK := "res://scenes/playground_null_hall.tscn"   # БЫСТРЫЙ БОЙ гаража
@@ -57,8 +59,14 @@ class Watcher extends Node:
 
 	func _run() -> void:
 		var flow := get_node("/root/Flow")
-		_check("main_scene_is_garage", ProjectSettings.get_setting("application/run/main_scene") == MENU)
+		_check("main_scene_is_boot_then_garage", ProjectSettings.get_setting("application/run/main_scene") == BOOT)
 		_check("garage_loaded", await _wait_scene(MENU))
+		# лоадер держит гараж, пока в фоне ставится мастерская: ввод до его ухода игнорируется
+		var lt := 0.0
+		while Loading.showing and lt < 30.0:
+			await _sec(0.1)
+			lt += 0.1
+		_check("loader_hides_after_garage_ready", not Loading.showing, snappedf(lt, 0.1))
 		var menu := get_tree().current_scene
 		_check("title_first", String(menu.get("state")) == "title", menu.get("state"))
 		await _key(KEY_SPACE)

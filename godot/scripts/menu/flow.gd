@@ -39,8 +39,8 @@ func to_menu(item := -1) -> void:
 	close_pause()
 	get_tree().paused = false
 	Engine.time_scale = 1.0
-	# отложенно: вызывающий (обработчик ввода мастерской, кнопка итогов) ещё доработает в этом кадре
-	get_tree().call_deferred("change_scene_to_file", MENU)
+	# отложенно: вызывающий (обработчик ввода мастерской, кнопка итогов) ещё доработает в этом кадре; сцена грузится под лоадером
+	Loading.change_scene.call_deferred(MENU, "БОКС 07", "возвращаемся в гараж…")
 
 
 ## Пауза поверх боя. restart — что делать на «Заново» (Match.restart / WaveDirector.restart); пустой — пункта нет.

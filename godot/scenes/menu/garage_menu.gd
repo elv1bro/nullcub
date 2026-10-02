@@ -130,6 +130,9 @@ func _ready() -> void:
 	workshop.name = "GarageWorkshop"
 	add_child(workshop)
 	workshop.preload_scene()
+	if not dry_run:       # пробы лоадер не показывают; в игре он держится, пока в фоне ставится мастерская
+		Loading.hold("garage", "БОКС 07", "ставим мастерскую…")
+		workshop.instantiated.connect(func() -> void: Loading.release("garage"))
 	campaign = GarageCampaign.new(self)
 	campaign.name = "GarageCampaign"
 	add_child(campaign)
@@ -343,13 +346,21 @@ func refresh_story() -> void:
 		_build_tv("opponent")
 
 
+func _scene_label(path: String) -> String:
+	if path.contains("null_hall"):
+		return "купол Old NULL Hall"
+	if path.contains("test_menu"):
+		return "тестовая сборка: все режимы"
+	return path.get_file().get_basename()
+
+
 func _go(target: String) -> void:
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null:
 		flow.last_item = focus
 	navigated.emit(target)
 	if not dry_run:
-		get_tree().change_scene_to_file(target)
+		Loading.change_scene(target, "ПОДКЛЮЧЕНИЕ", _scene_label(target))
 
 
 func _exit_sequence() -> void:
@@ -372,6 +383,8 @@ func _exit_sequence() -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
+	if Loading.showing:
+		return
 	if state == "leaving" or state == "workshop" or state == "campaign":   # в мастерской и в эфире ввод — их собственный
 		return
 	if state == "settings":
@@ -479,7 +492,10 @@ func _set_zone_mult(focus_zone: String, dur: float, boost := 1.0) -> void:
 
 func _setup_tv() -> void:
 	tv_vp = SubViewport.new()
-	tv_vp.size = SCREEN
+	# экран ТВ рисуется в 1.5× разрешении при логических 768×576: вёрстка та же, а мелкий текст читается («AT STAKE», а не «AT STARE»)
+	tv_vp.size = Vector2i(SCREEN * 3 / 2)
+	tv_vp.size_2d_override = SCREEN
+	tv_vp.size_2d_override_stretch = true
 	tv_vp.disable_3d = not live_tv
 	tv_vp.own_world_3d = true
 	tv_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
@@ -774,8 +790,17 @@ func _build_ui() -> void:
 	ui.add_child(shade)
 	var x0 := 1920 * 0.655
 	_label(ui, tr("NULL FIGHTING  ·  BAY 07"), Vector2(x0, 80), 18, Color(1.0, 0.7, 0.35, 0.9), f_mono)
-	_label(ui, "RAGDOLL", Vector2(x0 - 4, 104), 82, Color(1, 1, 1), f_head)
-	_label(ui, "MASTER", Vector2(x0 - 4, 184), 82, ACCENT, f_head)
+	_label(ui, "NULL", Vector2(x0 - 4, 104), 82, Color(1, 1, 1), f_head)
+	_label(ui, "GRAVITY", Vector2(x0 - 4, 184), 82, ACCENT, f_head)
+	# знак игры — дрон N0 на орбите (docs/plan-demo/BRAND.md); справа от слов, на высоте обоих строк
+	var mark := TextureRect.new()
+	mark.texture = load("res://assets/ui/brand/null_gravity_mark.png")
+	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	mark.position = Vector2(x0 + 318, 88)
+	mark.size = Vector2(200, 200)
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.add_child(mark)
 	title_box = Control.new()
 	title_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(title_box)

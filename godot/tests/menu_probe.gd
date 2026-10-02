@@ -1,7 +1,7 @@
 ## Проба тестового меню сборки (docs/plan-demo/RELEASE_0.0.1.md):
 ##   godot --headless --path godot --fixed-fps 60 res://tests/menu_probe.tscn
 ##   menu_items    — пункты меню ведут к существующим сценам, есть «В гараж», первый пункт в фокусе
-##   menu_version  — строка версии = application/config/version (0.0.1); главная сцена проекта — гараж
+##   menu_version  — строка версии = application/config/version (0.0.1); главная сцена проекта — boot.tscn (лоадер, под ним грузится гараж)
 ##                   (scenes/menu/garage_menu.tscn), в нём есть пункт, ведущий сюда (ВСЕ РЕЖИМЫ)
 ##   menu_open     — каждый пункт открывается (сцена грузится и живёт 1 с без ошибок скрипта)
 ##   menu_back     — Esc на площадке купола ставит паузу Flow, «В ГАРАЖ» в ней — в гараж
@@ -42,7 +42,7 @@ func _run() -> void:
 	var v := String(ProjectSettings.get_setting("application/config/version", ""))
 	var from_garage := GarageMenu.ITEMS.any(func(it: Dictionary) -> bool: return String(it["go"]) == MENU)
 	_check("menu_version", v == "0.0.1" and String(menu.get_node("%Version").text).contains(v) and from_garage
-		and String(ProjectSettings.get_setting("application/run/main_scene", "")) == GARAGE, "версия «%s», главная сцена %s, пункт гаража сюда %s" % [v,
+		and String(ProjectSettings.get_setting("application/run/main_scene", "")) == "res://scenes/boot.tscn", "версия «%s», главная сцена %s, пункт гаража сюда %s" % [v,
 		ProjectSettings.get_setting("application/run/main_scene", ""), from_garage])
 	var bad: Array = []
 	for it in M.ITEMS:
@@ -88,6 +88,10 @@ func _run() -> void:
 
 func _frames(n: int) -> void:
 	for i in n:
+		await get_tree().process_frame
+	# смена сцены кнопками идёт под лоадером (scripts/menu/loading.gd): ждём, пока он уйдёт
+	var t0 := Time.get_ticks_msec()
+	while Loading.showing and Time.get_ticks_msec() - t0 < 25000:
 		await get_tree().process_frame
 
 

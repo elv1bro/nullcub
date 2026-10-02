@@ -125,6 +125,18 @@
   ],
   "markers": []
  },
+ "Chain_Link": {
+  "tris": 576,
+  "budget": 3000,
+  "bytes": 25196,
+  "materials": [
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Chain_Link"
+  ],
+  "markers": []
+ },
  "Crate": {
   "tris": 1056,
   "budget": 3000,
@@ -202,6 +214,34 @@
   ],
   "nodes": [
    "Floor_Seam"
+  ],
+  "markers": []
+ },
+ "Hang_Beam": {
+  "tris": 2032,
+  "budget": 3000,
+  "bytes": 84212,
+  "materials": [
+   "Hall_Steel",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Hang_Beam"
+  ],
+  "markers": []
+ },
+ "Heavy_Bag": {
+  "tris": 2312,
+  "budget": 3000,
+  "bytes": 95116,
+  "materials": [
+   "Hall_ClothRed",
+   "Hall_Steel",
+   "Hall_SteelDark"
+  ],
+  "nodes": [
+   "Heavy_Bag"
   ],
   "markers": []
  },
@@ -396,6 +436,21 @@
   ],
   "nodes": [
    "Tech_Box"
+  ],
+  "markers": []
+ },
+ "Tire_Column": {
+  "tris": 1884,
+  "budget": 3000,
+  "bytes": 88340,
+  "materials": [
+   "Hall_Plate",
+   "Hall_Rubber",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Tire_Column"
   ],
   "markers": []
  },
