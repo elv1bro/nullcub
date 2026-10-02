@@ -84,6 +84,9 @@ func _connect() -> void:
 	if vote != null and vote.has_signal("vote_started"):
 		vote.connect("vote_started", func(_o: Array) -> void: say("vote_start"))
 		vote.connect("vote_finished", _on_vote_finished)
+	var juice := _match.get_node_or_null("HitJuice") if _match != null else null
+	if juice != null and juice.has_signal("juice_event"):
+		juice.connect("juice_event", _on_juice_event)
 
 
 ## Повод → реплика (N0Lines решает, говорить ли) → облачко. Возвращает сказанный текст или "".
@@ -331,3 +334,16 @@ func _hook_parts() -> void:
 			continue
 		_parts_hooked[id] = true
 		d.connect("part_detached", _on_part_detached.bind(d))
+
+
+## Поводы сока удара (HitJuice.juice_event, HIT_FX.md §13): большая цифра-обломок, искры железа, деталь в сколах, гора цифр.
+## Все мелкие — частоту решает N0Lines; выражение и жест — на сильные.
+func _on_juice_event(event: String, args: Array) -> void:
+	match event:
+		"digit_big":
+			_react("shocked", 1.0)
+		"metal":
+			_react("excited", 1.0)
+		"worn":
+			_react("worried", 1.4)
+	say(event, args)

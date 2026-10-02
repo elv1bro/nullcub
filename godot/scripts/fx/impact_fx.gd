@@ -1,5 +1,6 @@
 ## Ударные эффекты (ART_DIRECTION.md v3 §5, R22; INSPIRATION_GAMES.md): вспышка-блик, щепки + клуб пыли в точке контакта. Без autoload:
-##   ImpactFx.spawn_impact(parent, position, normal, strength, kind)
+##   ImpactFx.spawn_impact(parent, position, normal, strength, kind, mat = "", tint = прозрачный, metal_striker = false)
+## С 02.10 обломки — по материалу ударенной детали (FxMaterial, HIT_FX.md §13): щепки, хлопья краски, искры, сколы кости, пыль.
 ## Вспышка (как в Ragdoll Masters): мягкий диск + два луча из квадов с радиальным градиентом, аддитивно, без теста глубины,
 ## лицом к камере (+Z), цвет по kind — body белая, head красно-оранжевая, weapon жёлтая, environment/self голубоватая;
 ## размер по strength; поведение и время жизни — scripts/fx/impact_flash.gd (ImpactFlash). Яркость × FxPreset.flash() (§11.2), при 0 звезды нет. Материалы вспышки общие на kind
@@ -13,6 +14,8 @@ extends RefCounted
 
 const SPLINTERS: PackedScene = preload("res://scenes/fx/splinters.tscn")
 const DUST_PUFF: PackedScene = preload("res://scenes/fx/dust_puff.tscn")
+const SPARKS: PackedScene = preload("res://scenes/fx/sparks.tscn")
+const CHIPS: PackedScene = preload("res://scenes/fx/chips.tscn")   # серые осколки: цвет — FxMaterial.chip_ramp (краска, кость, ржавчина)
 const STRENGTH_REF := 8.0
 const MAX_LIFE_S := 3.0
 const FLASH_SIZE_MIN := 0.42
@@ -29,7 +32,12 @@ static var _flash_tex: GradientTexture2D
 static var _flash_mats: Dictionary = {}
 
 
-static func spawn_impact(parent: Node, position: Vector3, normal: Vector3, strength: float, kind: String = "") -> Node3D:
+## mat — id материала ударенной детали (FxMaterial.id_of; "" — дерево, как до 02.10), tint — цвет хлопьев краски (FxMaterial.tint_of,
+## a = 0 — без хлопьев), metal_striker — бьёт металл. Обломки по классу материала (HIT_FX.md §13): дерево — щепки своего тона (и хлопья
+## краски tint), краска — хлопья краски и дерево под ней, кость — белые сколы, ржавчина — рыжие хлопья + искры, металл — искры (без щепок;
+## металл о металл — сноп гуще), резина — только пыль. Систем частиц на удар не больше, чем было (щепки или искры + пыль; ржавчина — три).
+static func spawn_impact(parent: Node, position: Vector3, normal: Vector3, strength: float, kind: String = "", mat: String = "",
+		tint: Color = Color(0, 0, 0, 0), metal_striker: bool = false) -> Node3D:
 	if parent == null or not parent.is_inside_tree():
 		return null
 	var k := clampf(strength / STRENGTH_REF, 0.25, 2.0)
@@ -43,7 +51,16 @@ static func spawn_impact(parent: Node, position: Vector3, normal: Vector3, stren
 	var up := Vector3.UP if absf(n.dot(Vector3.UP)) < 0.99 else Vector3.RIGHT
 	root.global_transform = Transform3D(Basis.looking_at(-n, up), position)
 	_spawn_flash(root, position, k, kind)  # после установки transform корня: вспышка ставится в мировых координатах
-	for scene in [SPLINTERS, DUST_PUFF]:
+	var c := FxMaterial.cls(mat) if mat != "" else FxMaterial.WOOD
+	var scenes: Array = []
+	# дерево без краски — щепки с текстурой дерева; всё цветное (краска, мазки цвета игрока, кость, ржавчина) — серые осколки × градиент
+	var chips_scene: PackedScene = SPLINTERS if (c == FxMaterial.WOOD or c == FxMaterial.WOOD_DARK) and tint.a <= 0.0 else CHIPS
+	if c != FxMaterial.METAL and c != FxMaterial.RUBBER:
+		scenes.append(chips_scene)
+	if FxMaterial.is_metal(c):
+		scenes.append(SPARKS)
+	scenes.append(DUST_PUFF)
+	for scene in scenes:
 		var p := (scene as PackedScene).instantiate() as GPUParticles3D
 		if p == null:
 			continue
@@ -53,8 +70,13 @@ static func spawn_impact(parent: Node, position: Vector3, normal: Vector3, stren
 			pm = pm.duplicate() as ParticleProcessMaterial
 			pm.initial_velocity_min *= k
 			pm.initial_velocity_max *= k
+			if scene == CHIPS or (scene == SPLINTERS and c != FxMaterial.WOOD):
+				pm.color_initial_ramp = FxMaterial.chip_ramp(c, tint)
 			p.process_material = pm
 		p.amount_ratio = clampf(0.5 + 0.5 * k, 0.3, 1.0)
+		if scene == SPARKS:
+			# металл о металл — сноп целиком; по ржавчине и мягким ударом — реже
+			p.amount_ratio = clampf(p.amount_ratio * (1.0 if metal_striker else 0.6) * (0.5 if c == FxMaterial.RUST else 1.0), 0.15, 1.0)
 		p.finished.connect(func() -> void: _on_finished(root))
 		p.restart()
 		p.emitting = true
@@ -105,9 +127,10 @@ static func prewarm(parent: Node) -> void:
 		flash_material(kind)
 	if parent == null or not parent.is_inside_tree():
 		return
-	var root := spawn_impact(parent, Vector3(0.0, -500.0, 0.0), Vector3.UP, 0.1, "body")
-	if root != null:
-		root.visible = false
+	for m in ["", "iron", "bone"]:   # щепки и пыль; искры металла; серые осколки (HIT_FX.md §13)
+		var root := spawn_impact(parent, Vector3(0.0, -500.0, 0.0), Vector3.UP, 0.1, "body", m)
+		if root != null:
+			root.visible = false
 
 
 ## Вспышка: ImpactFlash (диск + два луча) к камере (+Z), чуть перед точкой контакта; размер по силе удара.

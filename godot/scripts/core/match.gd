@@ -16,6 +16,8 @@
 ## не менять сигнатуры без согласования с сессией PvE (или сначала дать виртуальный хук «конец матча / выбор победителя»).
 ## hit_feel(strength, position): тряска и zoom impulse DynamicCamera (camera_path | группа "camera" | текущая камера) и hit stop
 ## через Engine.time_scale (80 мс от 20 HP, 120 мс от 35 HP), KO — slow-mo 0.25× на 1.2 с; таймеры в реальном времени.
+## Сок удара (HIT_FX.md §13, 02.10): ребёнок HitJuice (сколы на деталях, цифры-обломки, поводы N0), _juice_time — замедление
+## варианта HitJuice.time_variant (F9), плавный выход (request_time_scale ramp_s); ctx.mat — материал ударенной детали.
 ## restart(): все куклы инстанцируются заново на точках спавна арены (arena_path | группа "arena" | сосед с spawn_points()),
 ## respawn_doll(old) доступен площадке (пропасть и R).
 class_name Match
@@ -72,7 +74,9 @@ var _spawn: Dictionary = {}     # doll -> Vector3 (позиция при рег�
 var _ko_order: Array = []       # жертвы по порядку KO (API подклассов и камеры; места — по ko_records, _ko_groups)
 var _scan_t := 0.0
 var _started := false
-var _time_effects: Array = []   # [{"scale": float, "left": float}] — hit stop / slow-mo в реальных секундах
+var _time_effects: Array = []   # [{"scale": float, "left": float, "ramp"?: float}] — hit stop / slow-mo в реальных секундах
+var _real_clock := 0.0          # реальные с жизни Match (FxClock): зазор микростопов сока удара
+var _light_stop_at := -INF
 
 # --- эффекты удара и крит (HIT_FX.md §4.1; вся логика — в конце файла) ---
 const HIT_FX_DIRECTOR_SCENE := "res://scenes/fx/hit_fx_director.tscn"
@@ -393,9 +397,10 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	var real := FxClock.real_delta(delta)  # не delta / Engine.time_scale: стоп, поставленный в физике этого кадра, истекал сразу
+	_real_clock += real
 	if _time_effects.is_empty():
 		return
-	var real := FxClock.real_delta(delta)  # не delta / Engine.time_scale: стоп, поставленный в физике этого кадра, истекал сразу
 	var scale := 1.0
 	var i := 0
 	while i < _time_effects.size():
@@ -404,9 +409,19 @@ func _process(delta: float) -> void:
 		if float(e["left"]) <= 0.0:
 			_time_effects.remove_at(i)
 		else:
-			scale = minf(scale, float(e["scale"]))
+			scale = minf(scale, _effect_scale(e))
 			i += 1
 	Engine.time_scale = scale
+
+
+## Масштаб записи времени: последние ramp реальных с (если есть) — линейно от scale к 1, без ступеньки на выходе.
+static func _effect_scale(e: Dictionary) -> float:
+	var s := float(e["scale"])
+	var ramp := float(e.get("ramp", 0.0))
+	var left := float(e["left"])
+	if ramp > 0.0 and left < ramp:
+		return lerpf(1.0, s, left / ramp)
+	return s
 
 
 # --- удары и KO (зовёт DollCombat) ---
@@ -653,6 +668,10 @@ static func _medal_max(medals: Dictionary, medal: String, places: Array, key: St
 func _ensure_fx_directors() -> void:
 	if not phase_changed.is_connected(_on_phase_hitfx):
 		phase_changed.connect(_on_phase_hitfx)
+	if Tuning.JUICE_ENABLED and get_node_or_null("HitJuice") == null:
+		var j := HitJuice.new()   # сколы на деталях, цифры-обломки, поводы N0 (HIT_FX.md §13) — до директоров: его hit_fx идёт первым
+		j.name = "HitJuice"
+		add_child(j)
 	if not Tuning.HITFX_ENABLED:
 		return
 	for e in [[HIT_FX_DIRECTOR_SCENE, "HitFxDirector"], [SFX_DIRECTOR_SCENE, "SfxDirector"]]:
@@ -690,8 +709,36 @@ func _emit_hit_fx(victim: Doll, attacker: Node, damage: float, kind: String, pos
 	if tier == HitTier.HEAVY: ctx["brake_cut"] = CritLaunch.brake_attacker(ctx, Tuning.HEAVY_ATTACKER_BRAKE_SPEED, Tuning.HEAVY_ATTACKER_BRAKE_S)   # HIT_FX §12.2
 	if tier == HitTier.HEAVY and damage < Tuning.HIT_STOP_DAMAGE_1:
 		request_time_scale(Tuning.HIT_STOP_TIME_SCALE, Tuning.HITFX_HEAVY_STOP_S, "heavy_stop")
+	_juice_time(tier, damage)
 	hit_fx_count += 1
 	hit_fx.emit(ctx)
+
+
+## Замедление сока удара (HIT_FX.md §13): вариант HitJuice.variant() (F9: А микростоп / Б кино на сильных / В как в вебе / выкл).
+## light с light_dmg — стоп «light_stop» (если есть) и замедление «light_slow» (не чаще light_gap реального времени); heavy — свой стоп
+## «heavy_stop2» (вариант В) и замедление «heavy_slow» сразу за стоп-кадром (heavy_stop 83 мс или hit stop 80 / 120 мс). Выход плавный
+## (ramp). Пресет FX off и feel_enabled = false их не пускают (request_time_scale).
+func _juice_time(tier: String, damage: float) -> void:
+	if not Tuning.JUICE_ENABLED:
+		return
+	var v := HitJuice.variant()
+	if tier == HitTier.LIGHT:
+		if damage < float(v["light_dmg"]) or float(v["light_s"]) <= 0.0 or _real_clock - _light_stop_at < float(v["light_gap"]):
+			return
+		var stop := float(v["light_stop"])
+		if stop > 0.0 and not request_time_scale(Tuning.HIT_STOP_TIME_SCALE, stop, "light_stop"):
+			return
+		if request_time_scale(float(v["light_scale"]), stop + float(v["light_s"]), "light_slow", float(v["light_ramp"])):
+			_light_stop_at = _real_clock
+	elif tier == HitTier.HEAVY and float(v["heavy_s"]) > 0.0:
+		var stop := Tuning.HITFX_HEAVY_STOP_S
+		if damage >= Tuning.HIT_STOP_DAMAGE_2:
+			stop = Tuning.HIT_STOP_S_2
+		elif damage >= Tuning.HIT_STOP_DAMAGE_1:
+			stop = Tuning.HIT_STOP_S_1
+		if float(v["heavy_stop"]) > 0.0:
+			request_time_scale(Tuning.HIT_STOP_TIME_SCALE, float(v["heavy_stop"]), "heavy_stop2")
+		request_time_scale(float(v["heavy_scale"]), stop + float(v["heavy_s"]), "heavy_slow", float(v["heavy_ramp"]))
 
 
 ## Поля ctx (HIT_FX.md §4.1): victim, attacker, damage, kind, part, part_base, striker, position, normal, dir, speed, weapon_id, combo,
@@ -716,6 +763,7 @@ func make_hit_ctx(victim: Doll, attacker: Node, damage: float, kind: String, pos
 		"part": part, "part_base": Doll.part_base_name(part), "striker": striker, "position": position, "normal": normal, "dir": dir,
 		"speed": speed, "weapon_id": weapon_id, "combo": combo_n, "double_blow": double_blow, "dash": dash, "score": 0.0, "tier": "",
 		"is_ko": not victim.alive, "hp_after": victim.hp, "fight_time": fight_time, "sd_mult": knockback_mult(), "colour": colour,
+		"mat": FxMaterial.id_of(victim, victim.parts.get(part) as Node),   # материал ударенной детали (HIT_FX.md §13)
 	}
 
 
@@ -737,7 +785,8 @@ func _emit_env_slam(ctx: Dictionary) -> void:
 
 ## Замедление/стоп-кадр для эффектов поверх _time_effects (hit stop и KO slow-mo не меняются: действует минимум). scale ≥
 ## HITFX_TIME_SCALE_MIN, real_s — реальные секунды; тот же tag заменяет прежнюю запись. false и ничего — при feel_enabled = false.
-func request_time_scale(scale: float, real_s: float, tag: String = "") -> bool:
+## ramp_s > 0 — последние ramp_s секунд масштаб линейно идёт к 1 (плавный выход замедления, HIT_FX.md §13).
+func request_time_scale(scale: float, real_s: float, tag: String = "", ramp_s: float = 0.0) -> bool:
 	if not feel_enabled or real_s <= 0.0:
 		return false
 	if not FxPreset.time_tag_allowed(tag):
@@ -746,7 +795,7 @@ func request_time_scale(scale: float, real_s: float, tag: String = "") -> bool:
 		_drop_time_tag(tag)
 	var s := clampf(scale, Tuning.HITFX_TIME_SCALE_MIN, 1.0)
 	# −1 мкс: сумма кадров 3 × 1/60 не добирает до 0.05 на ошибку округления, и стоп держался бы лишний кадр
-	_time_effects.append({"scale": s, "left": real_s - 1e-6, "tag": tag})
+	_time_effects.append({"scale": s, "left": real_s - 1e-6, "tag": tag, "ramp": clampf(ramp_s, 0.0, real_s)})
 	Engine.time_scale = minf(Engine.time_scale, s)
 	return true
 
@@ -758,7 +807,7 @@ func cancel_time_scale(tag: String) -> void:
 	_drop_time_tag(tag)
 	var scale := 1.0
 	for e in _time_effects:
-		scale = minf(scale, float(e["scale"]))
+		scale = minf(scale, _effect_scale(e))
 	Engine.time_scale = scale
 
 

@@ -455,7 +455,7 @@ func _crit_fallback(ctx: Dictionary) -> void:
 		_after(CRIT_STOP_S * 1000.0, func() -> void:
 			_time_scale(Tuning.CRIT_SLOWMO_SCALE, CRIT_FALLBACK_SLOWMO_S, "crit_slowmo"))
 	if _match != null and _match.has_signal("announce"):
-		_match.emit_signal("announce", CRIT_CAPTION, CRIT_COLOUR, "crit")
+		_match.emit_signal("announce", HitJuice.impact_caption(ctx, CRIT_CAPTION), CRIT_COLOUR, "crit")   # табло: «IMPACT xG» (§13)
 	_inversion()
 	_wave(pos, KO_WAVE_R, KO_WAVE_MS, CRIT_COLOUR)
 	_burst(SPLINTERS, pos, nrm, KO_SPLINTER_K, 1.0)

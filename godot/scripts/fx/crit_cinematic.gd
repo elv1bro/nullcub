@@ -10,7 +10,7 @@
 ##   120   cut_in   — кат в CritCam (Match.capture_camera(cam, "crit")), рентген, оверлей волокна на ударенной детали (material_overlay
 ##                    инстансов, старый возвращается), остальные детали — голубой обод, Decal-трещина на теле детали, 48 щепок,
 ##                    экранные трещины; time_scale 0.12 (crit_xray); наезд +6 %, крен 0 → 5°, дрейф 0.1 м вдоль удара;
-##   220   caption  — CRUSHING BLOW! (2.0 → 1.0 за 90 мс, дрожь 10 px 200 мс);
+##   220   caption  — CRUSHING BLOW! (2.0 → 1.0 за 90 мс, дрожь 10 px 200 мс); с 02.10 — «IMPACT 18.4G» (HitJuice.impact_caption);
 ##   250 / 400      — стадии трещины; 400 crack_2 — вспышка волокна и второй выброс щепок;
 ##   620   cut_out  — белый кадр, кат назад (Match.release_camera("crit")), рентген и оверлеи сняты; slowmo — time_scale 0.3 на 0.55 с
 ##                    (crit_slowmo) или для ko_crit KO_SLOWMO_SCALE на 1.4 с (ko_crit_slowmo); DynamicCamera.focus / roll_kick;
@@ -560,13 +560,16 @@ func _start() -> void:
 		if _ctx.get("normal") is Vector3 and (_ctx["normal"] as Vector3).length_squared() > 1e-6:
 			nrm = _ctx["normal"]
 		var host: Node = _victim.get_parent() if _victim.get_parent() != null else get_tree().current_scene
-		ImpactFx.spawn_impact(host, _hit_pos, nrm, maxf(float(_ctx.get("speed", 6.0)), 4.0) * IMPACT_MULT, kind)
+		var mat := String(_ctx.get("mat", ""))   # обломки по материалу ударенной детали (HIT_FX.md §13)
+		ImpactFx.spawn_impact(host, _hit_pos, nrm, maxf(float(_ctx.get("speed", 6.0)), 4.0) * IMPACT_MULT, kind, mat, FxMaterial.tint_of(mat, _victim))
 	if _game_cam != null:
 		if _game_cam.has_method("punch"):
 			_game_cam.call("punch", _hit_pos, PUNCH_FRAC * _shake_mult, 0.2, FREEZE_MS / 1000.0)
 		elif _game_cam.has_method("zoom_impulse") and _shake_mult > 0.0:
 			_game_cam.call("zoom_impulse", PUNCH_FRAC * _shake_mult, FREEZE_MS / 1000.0 * FREEZE_SCALE)
 	overlay.begin()
+	# табло меряет силу удара (N0_VOICE.md п. 3, HIT_FX.md §13): «IMPACT 18.4G» вместо CRUSHING BLOW!
+	overlay.caption.text = HitJuice.impact_caption(_ctx, CritOverlay.CAPTION_TEXT)
 	_emit_phase("freeze")
 
 
