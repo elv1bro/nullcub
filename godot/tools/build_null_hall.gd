@@ -648,8 +648,8 @@ func _err(msg: String) -> void:
 
 # --- площадка: зал + две куклы + камера по листу камеры + Match + HUD + стрелки за экраном + N0 ---
 ## Как playground_void.tscn (скрипт scenes/playground.gd, arena_id "null_hall"), но камера по листу камеры (ART_NULL.md, лист 1)
-## с поправкой автора 02.10.2026: камера за игроком (follow_mode "humans" — соперник-бот в кадр не тянет), полувысота кадра 4.2 м
-## (кукла 1.8 м — около 21 % высоты; до 11 м, если в бою двое людей), без fit_bounds; соперник за кадром — стрелка с метрами
+## с поправкой автора 02.10.2026: камера за игроком (follow_mode "humans" — соперник-бот в кадр не тянет), полувысота кадра 3.6 м
+## (кукла 1.8 м — четверть высоты; до 11 м, если в бою двое людей), без fit_bounds; соперник за кадром — стрелка с метрами
 ## от игрока (scenes/ui/offscreen_markers.gd); N0 (scripts/n0/n0_host.gd) летает за плечом игрока, за плоскостью боя, и говорит
 ## реплики облачком.
 func _build_playground() -> void:
@@ -687,7 +687,7 @@ func _build_playground() -> void:
 	cam.set("padding", 3.0)
 	cam.set("padding_y", 2.0)
 	cam.set("follow_mode", "humans")
-	cam.set("min_half_height", 4.2)
+	cam.set("min_half_height", 3.6)
 	cam.set("max_half_height", 11.0)
 	cam.set("fit_bounds", false)
 	cam.set("zoom_out_tau", 0.25)

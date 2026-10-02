@@ -4,7 +4,7 @@
 ## Сцены — бой кампании (scenes/campaign/campaign_fight.tscn, соперник — бот RivalBrain, без выхода бойцов) и Быстрый бой в куполе
 ## (scenes/playground_null_hall.tscn, двое людей). Игрок P1 летает по сценарию клавишами (Input.action_press p1_*).
 ## Проверки (exit 1), отчёт — tests/n0_follow_probe_report.json:
-##   camera_on_player   кадр держит только P1 (бот в кадр не тянет), полувысота 4.2…5.5 м, центр кадра у P1 (≤ 2 м по X от точки,
+##   camera_on_player   кадр держит только P1 (бот в кадр не тянет), полувысота 3.6…5.5 м, центр кадра у P1 (≤ 2 м по X от точки,
 ##                      куда его пускают границы арены — у мембраны кадр упирается в bounds())
 ##   n0_near            N0 рядом с P1: в 95 % кадров ≤ 3.5 м (XY) от ЦМ P1, всегда ≤ 6 м (на быстром полёте отстаёт ~0.3 с)
 ##   n0_behind          N0 всегда за плоскостью боя (z ≤ −0.8): кукла перед ним
@@ -147,7 +147,7 @@ func _campaign() -> void:
 		"z_max": snappedf(z_max, 0.01), "side": [side_ok, side_n], "side_slow": [slow_ok, slow_n], "in_frame": [in_frame, frames], "hh": [snappedf(hh_min, 0.01),
 		snappedf(hh_max, 0.01)], "cam_cx_err": snappedf(cx_err, 0.01), "opp_p3": snappedf(opp_p3, 0.01),
 		"opp_min": snappedf(opp_d[0], 0.01)}
-	_check("camera_on_player", follow_only_p1 and hh_min >= 4.2 - 0.01 and hh_max <= 5.5 and cx_err <= 2.0,
+	_check("camera_on_player", follow_only_p1 and hh_min >= 3.6 - 0.01 and hh_max <= 5.5 and cx_err <= 2.0,
 		"только P1 %s, полувысота %.2f…%.2f, центр от P1 до %.2f м" % [follow_only_p1, hh_min, hh_max, cx_err])
 	_check("n0_near", p95 <= 3.5 and near[near.size() - 1] <= 6.0, "p95 %.2f м, max %.2f м" % [p95, near[near.size() - 1]])
 	_check("n0_behind", z_max <= -0.8, "z max %.2f" % z_max)
