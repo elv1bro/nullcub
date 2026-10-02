@@ -1,5 +1,1005 @@
 [
  {
+  "path": "assets/audio/crowd/loop_calm.ogg",
+  "group": "crowd",
+  "mode": "integrated",
+  "lufs": -20.0,
+  "tp": -6.56,
+  "dur": 31.0
+ },
+ {
+  "path": "assets/audio/crowd/loop_engaged.ogg",
+  "group": "crowd",
+  "mode": "integrated",
+  "lufs": -20.0,
+  "tp": -9.07,
+  "dur": 31.0
+ },
+ {
+  "path": "assets/audio/crowd/loop_roar.ogg",
+  "group": "crowd",
+  "mode": "integrated",
+  "lufs": -20.0,
+  "tp": -7.91,
+  "dur": 27.5
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_01.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -7.59,
+  "dur": 1.327
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_02.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -6.27,
+  "dur": 1.781
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_03.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -9.47,
+  "dur": 1.507
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_04.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.03,
+  "dur": 1.362
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_05.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.78,
+  "dur": 1.586
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_06.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.8,
+  "dur": 1.487
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_07.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -7.66,
+  "dur": 1.711
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_08.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -6.04,
+  "dur": 2.18
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_09.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.5,
+  "dur": 2.81
+ },
+ {
+  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_10.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -9.02,
+  "dur": 2.6
+ },
+ {
+  "path": "assets/audio/crowd/crowd_gasp/crowd_gasp_01.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.01,
+  "dur": 1.6
+ },
+ {
+  "path": "assets/audio/crowd/crowd_gasp/crowd_gasp_02.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -9.42,
+  "dur": 0.95
+ },
+ {
+  "path": "assets/audio/crowd/crowd_gasp/crowd_gasp_03.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.07,
+  "dur": 1.72
+ },
+ {
+  "path": "assets/audio/crowd/crowd_gasp/crowd_gasp_04.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -9.31,
+  "dur": 0.888
+ },
+ {
+  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_01.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -9.79,
+  "dur": 6.5
+ },
+ {
+  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_02.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.69,
+  "dur": 8.0
+ },
+ {
+  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_03.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.16,
+  "dur": 7.5
+ },
+ {
+  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_04.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -5.98,
+  "dur": 7.2
+ },
+ {
+  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_05.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -10.94,
+  "dur": 8.984
+ },
+ {
+  "path": "assets/audio/crowd/crowd_roar/crowd_roar_01.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.2,
+  "dur": 6.493
+ },
+ {
+  "path": "assets/audio/crowd/crowd_roar/crowd_roar_02.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.75,
+  "dur": 6.5
+ },
+ {
+  "path": "assets/audio/crowd/crowd_roar/crowd_roar_03.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -5.93,
+  "dur": 6.5
+ },
+ {
+  "path": "assets/audio/crowd/crowd_applause/crowd_applause_01.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.49,
+  "dur": 5.0
+ },
+ {
+  "path": "assets/audio/crowd/crowd_applause/crowd_applause_02.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.51,
+  "dur": 5.0
+ },
+ {
+  "path": "assets/audio/crowd/crowd_applause/crowd_applause_03.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.57,
+  "dur": 5.0
+ },
+ {
+  "path": "assets/audio/crowd/crowd_applause/crowd_applause_04.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.58,
+  "dur": 5.472
+ },
+ {
+  "path": "assets/audio/crowd/crowd_boo/crowd_boo_01.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -7.13,
+  "dur": 6.0
+ },
+ {
+  "path": "assets/audio/crowd/crowd_boo/crowd_boo_02.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.05,
+  "dur": 4.0
+ },
+ {
+  "path": "assets/audio/crowd/crowd_boo/crowd_boo_03.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -9.08,
+  "dur": 4.0
+ },
+ {
+  "path": "assets/audio/crowd/crowd_boo/crowd_boo_04.ogg",
+  "group": "crowd",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -8.69,
+  "dur": 4.0
+ },
+ {
+  "path": "assets/audio/amb/scrap_wind.ogg",
+  "group": "amb",
+  "mode": "integrated",
+  "lufs": -26.0,
+  "tp": -7.53,
+  "dur": 22.006
+ },
+ {
+  "path": "assets/audio/amb/scrap_industrial.ogg",
+  "group": "amb",
+  "mode": "integrated",
+  "lufs": -28.0,
+  "tp": -17.17,
+  "dur": 39.0
+ },
+ {
+  "path": "assets/audio/amb/ruins_wind.ogg",
+  "group": "amb",
+  "mode": "integrated",
+  "lufs": -27.0,
+  "tp": -10.74,
+  "dur": 19.434
+ },
+ {
+  "path": "assets/audio/amb/void_drone.ogg",
+  "group": "amb",
+  "mode": "integrated",
+  "lufs": -30.0,
+  "tp": -19.48,
+  "dur": 22.0
+ },
+ {
+  "path": "assets/audio/amb/workshop_room.ogg",
+  "group": "amb",
+  "mode": "integrated",
+  "lufs": -32.0,
+  "tp": -20.05,
+  "dur": 22.0
+ },
+ {
+  "path": "assets/audio/amb/amb_clank/amb_clank_01.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -15.46,
+  "tp": -1.49,
+  "dur": 0.23
+ },
+ {
+  "path": "assets/audio/amb/amb_clank/amb_clank_02.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -14.39,
+  "tp": -1.51,
+  "dur": 0.344
+ },
+ {
+  "path": "assets/audio/amb/amb_clank/amb_clank_03.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -15.67,
+  "tp": -1.55,
+  "dur": 0.369
+ },
+ {
+  "path": "assets/audio/amb/amb_clank/amb_clank_04.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -15.77,
+  "tp": -1.38,
+  "dur": 0.259
+ },
+ {
+  "path": "assets/audio/amb/amb_clank/amb_clank_05.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -15.86,
+  "tp": -1.39,
+  "dur": 0.274
+ },
+ {
+  "path": "assets/audio/amb/amb_clank/amb_clank_06.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -14.84,
+  "tp": -1.38,
+  "dur": 0.314
+ },
+ {
+  "path": "assets/audio/amb/amb_clank/amb_clank_07.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -15.56,
+  "tp": -1.0,
+  "dur": 0.274
+ },
+ {
+  "path": "assets/audio/amb/amb_clank/amb_clank_08.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -15.22,
+  "tp": -1.37,
+  "dur": 0.225
+ },
+ {
+  "path": "assets/audio/amb/amb_creak/amb_creak_01.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -14.0,
+  "tp": -2.37,
+  "dur": 2.41
+ },
+ {
+  "path": "assets/audio/amb/amb_creak/amb_creak_02.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -14.08,
+  "tp": -1.25,
+  "dur": 3.176
+ },
+ {
+  "path": "assets/audio/amb/amb_creak/amb_creak_03.ogg",
+  "group": "amb",
+  "mode": "momentary",
+  "lufs": -14.0,
+  "tp": -2.54,
+  "dur": 1.721
+ },
+ {
+  "path": "assets/audio/loops/wind_flight.ogg",
+  "group": "loops",
+  "mode": "integrated",
+  "lufs": -20.0,
+  "tp": -7.79,
+  "dur": 7.0
+ },
+ {
+  "path": "assets/audio/loops/fuse_hiss.ogg",
+  "group": "loops",
+  "mode": "integrated",
+  "lufs": -22.0,
+  "tp": -12.19,
+  "dur": 5.0
+ },
+ {
+  "path": "assets/audio/loops/press_motor.ogg",
+  "group": "loops",
+  "mode": "integrated",
+  "lufs": -22.0,
+  "tp": -3.41,
+  "dur": 4.8
+ },
+ {
+  "path": "assets/audio/loops/magnet_hum.ogg",
+  "group": "loops",
+  "mode": "integrated",
+  "lufs": -22.0,
+  "tp": -10.36,
+  "dur": 7.0
+ },
+ {
+  "path": "assets/audio/machines/beep.ogg",
+  "group": "machines",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -10.55,
+  "dur": 0.32
+ },
+ {
+  "path": "assets/audio/machines/hiss.ogg",
+  "group": "machines",
+  "mode": "momentary",
+  "lufs": -14.0,
+  "tp": -5.21,
+  "dur": 1.6
+ },
+ {
+  "path": "assets/audio/machines/thud.ogg",
+  "group": "machines",
+  "mode": "momentary",
+  "lufs": -13.59,
+  "tp": -1.19,
+  "dur": 0.8
+ },
+ {
+  "path": "assets/audio/machines/hum.ogg",
+  "group": "machines",
+  "mode": "momentary",
+  "lufs": -16.0,
+  "tp": -5.06,
+  "dur": 1.0
+ },
+ {
+  "path": "assets/audio/machines/rumble.ogg",
+  "group": "machines",
+  "mode": "momentary",
+  "lufs": -14.0,
+  "tp": -1.04,
+  "dur": 1.6
+ },
+ {
+  "path": "assets/audio/enemies/warn_sweep.ogg",
+  "group": "enemies",
+  "mode": "momentary",
+  "lufs": -15.0,
+  "tp": -3.1,
+  "dur": 0.65
+ },
+ {
+  "path": "assets/audio/enemies/warn_grab.ogg",
+  "group": "enemies",
+  "mode": "momentary",
+  "lufs": -15.0,
+  "tp": -3.78,
+  "dur": 0.333
+ },
+ {
+  "path": "assets/audio/enemies/ratchet.ogg",
+  "group": "enemies",
+  "mode": "momentary",
+  "lufs": -15.29,
+  "tp": -1.0,
+  "dur": 0.561
+ },
+ {
+  "path": "assets/audio/enemies/yoink.ogg",
+  "group": "enemies",
+  "mode": "momentary",
+  "lufs": -18.31,
+  "tp": -1.0,
+  "dur": 0.321
+ },
+ {
+  "path": "assets/audio/enemies/drop.ogg",
+  "group": "enemies",
+  "mode": "momentary",
+  "lufs": -15.18,
+  "tp": -1.03,
+  "dur": 0.572
+ },
+ {
+  "path": "assets/audio/ui/countdown/countdown_01.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -18.0,
+  "tp": -7.7,
+  "dur": 0.16
+ },
+ {
+  "path": "assets/audio/ui/combo/combo_01.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -18.0,
+  "tp": -5.6,
+  "dur": 0.29
+ },
+ {
+  "path": "assets/audio/ui/combo/combo_02.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -18.0,
+  "tp": -6.94,
+  "dur": 0.539
+ },
+ {
+  "path": "assets/audio/ui/combo/combo_03.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -18.0,
+  "tp": -5.65,
+  "dur": 0.322
+ },
+ {
+  "path": "assets/audio/ui/combo/combo_04.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -18.0,
+  "tp": -8.6,
+  "dur": 0.49
+ },
+ {
+  "path": "assets/audio/ui/callout/callout_01.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -20.0,
+  "tp": -4.8,
+  "dur": 0.267
+ },
+ {
+  "path": "assets/audio/ui/callout/callout_02.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -20.0,
+  "tp": -4.55,
+  "dur": 0.262
+ },
+ {
+  "path": "assets/audio/ui/callout/callout_03.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -21.91,
+  "tp": -1.0,
+  "dur": 0.1
+ },
+ {
+  "path": "assets/audio/ui/tick/tick_01.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -27.84,
+  "tp": -1.0,
+  "dur": 0.09
+ },
+ {
+  "path": "assets/audio/ui/tick/tick_02.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -20.34,
+  "tp": -1.19,
+  "dur": 0.09
+ },
+ {
+  "path": "assets/audio/ui/tick/tick_03.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -24.93,
+  "tp": -1.04,
+  "dur": 0.09
+ },
+ {
+  "path": "assets/audio/ui/heartbeat/heartbeat_01.ogg",
+  "group": "ui",
+  "mode": "momentary",
+  "lufs": -18.0,
+  "tp": -4.41,
+  "dur": 0.7
+ },
+ {
+  "path": "assets/audio/music/battle_01.ogg",
+  "group": "music",
+  "mode": "integrated",
+  "lufs": -16.0,
+  "tp": -6.98,
+  "dur": 115.293
+ },
+ {
+  "path": "assets/audio/music/battle_02.ogg",
+  "group": "music",
+  "mode": "integrated",
+  "lufs": -16.0,
+  "tp": -3.11,
+  "dur": 98.593
+ },
+ {
+  "path": "assets/audio/music/battle_03.ogg",
+  "group": "music",
+  "mode": "integrated",
+  "lufs": -16.0,
+  "tp": -4.55,
+  "dur": 102.4
+ },
+ {
+  "path": "assets/audio/music/battle_04.ogg",
+  "group": "music",
+  "mode": "integrated",
+  "lufs": -16.0,
+  "tp": -5.34,
+  "dur": 95.852
+ },
+ {
+  "path": "assets/audio/music/victory.ogg",
+  "group": "music",
+  "mode": "integrated",
+  "lufs": -16.0,
+  "tp": -1.8,
+  "dur": 3.918
+ },
+ {
+  "path": "assets/audio/music/defeat.ogg",
+  "group": "music",
+  "mode": "integrated",
+  "lufs": -16.0,
+  "tp": -3.15,
+  "dur": 3.184
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_01.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.23,
+  "tp": -1.0,
+  "dur": 0.553
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_02.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.53,
+  "tp": -1.66,
+  "dur": 0.7
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_03.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.31,
+  "tp": -1.45,
+  "dur": 0.599
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_04.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.19,
+  "tp": -1.07,
+  "dur": 0.572
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_05.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.18,
+  "tp": -1.16,
+  "dur": 0.574
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_06.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.5,
+  "tp": -1.27,
+  "dur": 0.488
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_07.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.55,
+  "tp": -1.21,
+  "dur": 0.712
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_08.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.26,
+  "tp": -1.04,
+  "dur": 0.688
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_09.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.06,
+  "tp": -1.34,
+  "dur": 0.447
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_10.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.72,
+  "tp": -1.15,
+  "dur": 0.337
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_11.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.24,
+  "tp": -1.39,
+  "dur": 0.467
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_12.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.4,
+  "tp": -1.31,
+  "dur": 0.421
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_13.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.57,
+  "tp": -1.24,
+  "dur": 0.481
+ },
+ {
+  "path": "assets/audio/sfx/hit_l/hit_l_14.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.79,
+  "tp": -1.12,
+  "dur": 0.407
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_01.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.52,
+  "tp": -1.01,
+  "dur": 0.37
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_02.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.86,
+  "tp": -1.24,
+  "dur": 0.495
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_03.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.55,
+  "tp": -1.1,
+  "dur": 0.441
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_04.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.63,
+  "tp": -1.27,
+  "dur": 0.454
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_05.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.0,
+  "tp": -1.64,
+  "dur": 0.604
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_06.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.9,
+  "tp": -1.0,
+  "dur": 0.75
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_07.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.0,
+  "tp": -1.22,
+  "dur": 0.402
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_08.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.08,
+  "tp": -1.16,
+  "dur": 0.45
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_09.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.0,
+  "tp": -1.0,
+  "dur": 0.372
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_10.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.6,
+  "tp": -1.06,
+  "dur": 0.527
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_11.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.71,
+  "tp": -1.18,
+  "dur": 0.467
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_12.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.76,
+  "tp": -1.61,
+  "dur": 0.388
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_13.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -14.08,
+  "tp": -1.03,
+  "dur": 0.464
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_14.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -14.82,
+  "tp": -1.41,
+  "dur": 0.479
+ },
+ {
+  "path": "assets/audio/sfx/hit_m/hit_m_15.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -16.76,
+  "tp": -1.0,
+  "dur": 0.459
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_01.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.91,
+  "tp": -1.0,
+  "dur": 0.346
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_02.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.72,
+  "tp": -1.0,
+  "dur": 0.346
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_03.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.4,
+  "tp": -1.0,
+  "dur": 0.343
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_04.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -11.92,
+  "tp": -1.03,
+  "dur": 0.409
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_05.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.66,
+  "tp": -1.0,
+  "dur": 0.407
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_06.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -11.86,
+  "tp": -1.03,
+  "dur": 0.437
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_07.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.87,
+  "tp": -1.0,
+  "dur": 0.644
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_08.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.16,
+  "tp": -1.0,
+  "dur": 0.707
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_09.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -12.32,
+  "tp": -1.0,
+  "dur": 0.617
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_10.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -11.66,
+  "tp": -1.05,
+  "dur": 0.646
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_11.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -11.13,
+  "tp": -1.35,
+  "dur": 0.536
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_12.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.75,
+  "tp": -1.02,
+  "dur": 0.454
+ },
+ {
+  "path": "assets/audio/sfx/hit_h/hit_h_13.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.94,
+  "tp": -1.0,
+  "dur": 0.449
+ },
+ {
+  "path": "assets/audio/sfx/ko/ko_01.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -11.13,
+  "tp": -1.35,
+  "dur": 0.536
+ },
+ {
+  "path": "assets/audio/sfx/ko/ko_02.ogg",
+  "group": "sfx",
+  "mode": "momentary",
+  "lufs": -13.94,
+  "tp": -1.0,
+  "dur": 0.449
+ },
+ {
   "path": "assets/audio/sfx/wood_l/wood_l_01.ogg",
   "group": "sfx",
   "mode": "momentary",
@@ -1598,677 +2598,5 @@
   "lufs": -15.96,
   "tp": -1.59,
   "dur": 0.367
- },
- {
-  "path": "assets/audio/crowd/loop_calm.ogg",
-  "group": "crowd",
-  "mode": "integrated",
-  "lufs": -20.0,
-  "tp": -6.56,
-  "dur": 31.0
- },
- {
-  "path": "assets/audio/crowd/loop_engaged.ogg",
-  "group": "crowd",
-  "mode": "integrated",
-  "lufs": -20.0,
-  "tp": -9.07,
-  "dur": 31.0
- },
- {
-  "path": "assets/audio/crowd/loop_roar.ogg",
-  "group": "crowd",
-  "mode": "integrated",
-  "lufs": -20.0,
-  "tp": -7.91,
-  "dur": 27.5
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_01.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -7.59,
-  "dur": 1.327
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_02.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -6.27,
-  "dur": 1.781
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_03.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -9.47,
-  "dur": 1.507
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_04.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.03,
-  "dur": 1.362
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_05.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.78,
-  "dur": 1.586
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_06.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.8,
-  "dur": 1.487
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_07.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -7.66,
-  "dur": 1.711
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_08.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -6.04,
-  "dur": 2.18
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_09.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.5,
-  "dur": 2.81
- },
- {
-  "path": "assets/audio/crowd/crowd_ooh/crowd_ooh_10.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -9.02,
-  "dur": 2.6
- },
- {
-  "path": "assets/audio/crowd/crowd_gasp/crowd_gasp_01.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.01,
-  "dur": 1.6
- },
- {
-  "path": "assets/audio/crowd/crowd_gasp/crowd_gasp_02.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -9.42,
-  "dur": 0.95
- },
- {
-  "path": "assets/audio/crowd/crowd_gasp/crowd_gasp_03.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.07,
-  "dur": 1.72
- },
- {
-  "path": "assets/audio/crowd/crowd_gasp/crowd_gasp_04.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -9.31,
-  "dur": 0.888
- },
- {
-  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_01.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -9.79,
-  "dur": 6.5
- },
- {
-  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_02.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.69,
-  "dur": 8.0
- },
- {
-  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_03.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.16,
-  "dur": 7.5
- },
- {
-  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_04.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -5.98,
-  "dur": 7.2
- },
- {
-  "path": "assets/audio/crowd/crowd_cheer/crowd_cheer_05.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -10.94,
-  "dur": 8.984
- },
- {
-  "path": "assets/audio/crowd/crowd_roar/crowd_roar_01.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.2,
-  "dur": 6.493
- },
- {
-  "path": "assets/audio/crowd/crowd_roar/crowd_roar_02.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.75,
-  "dur": 6.5
- },
- {
-  "path": "assets/audio/crowd/crowd_roar/crowd_roar_03.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -5.93,
-  "dur": 6.5
- },
- {
-  "path": "assets/audio/crowd/crowd_applause/crowd_applause_01.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.49,
-  "dur": 5.0
- },
- {
-  "path": "assets/audio/crowd/crowd_applause/crowd_applause_02.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.51,
-  "dur": 5.0
- },
- {
-  "path": "assets/audio/crowd/crowd_applause/crowd_applause_03.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.57,
-  "dur": 5.0
- },
- {
-  "path": "assets/audio/crowd/crowd_applause/crowd_applause_04.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.58,
-  "dur": 5.472
- },
- {
-  "path": "assets/audio/crowd/crowd_boo/crowd_boo_01.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -7.13,
-  "dur": 6.0
- },
- {
-  "path": "assets/audio/crowd/crowd_boo/crowd_boo_02.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.05,
-  "dur": 4.0
- },
- {
-  "path": "assets/audio/crowd/crowd_boo/crowd_boo_03.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -9.08,
-  "dur": 4.0
- },
- {
-  "path": "assets/audio/crowd/crowd_boo/crowd_boo_04.ogg",
-  "group": "crowd",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -8.69,
-  "dur": 4.0
- },
- {
-  "path": "assets/audio/amb/scrap_wind.ogg",
-  "group": "amb",
-  "mode": "integrated",
-  "lufs": -26.0,
-  "tp": -7.53,
-  "dur": 22.006
- },
- {
-  "path": "assets/audio/amb/scrap_industrial.ogg",
-  "group": "amb",
-  "mode": "integrated",
-  "lufs": -28.0,
-  "tp": -17.17,
-  "dur": 39.0
- },
- {
-  "path": "assets/audio/amb/ruins_wind.ogg",
-  "group": "amb",
-  "mode": "integrated",
-  "lufs": -27.0,
-  "tp": -10.74,
-  "dur": 19.434
- },
- {
-  "path": "assets/audio/amb/void_drone.ogg",
-  "group": "amb",
-  "mode": "integrated",
-  "lufs": -30.0,
-  "tp": -19.48,
-  "dur": 22.0
- },
- {
-  "path": "assets/audio/amb/workshop_room.ogg",
-  "group": "amb",
-  "mode": "integrated",
-  "lufs": -32.0,
-  "tp": -20.05,
-  "dur": 22.0
- },
- {
-  "path": "assets/audio/amb/amb_clank/amb_clank_01.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -15.46,
-  "tp": -1.49,
-  "dur": 0.23
- },
- {
-  "path": "assets/audio/amb/amb_clank/amb_clank_02.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -14.39,
-  "tp": -1.51,
-  "dur": 0.344
- },
- {
-  "path": "assets/audio/amb/amb_clank/amb_clank_03.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -15.67,
-  "tp": -1.55,
-  "dur": 0.369
- },
- {
-  "path": "assets/audio/amb/amb_clank/amb_clank_04.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -15.77,
-  "tp": -1.38,
-  "dur": 0.259
- },
- {
-  "path": "assets/audio/amb/amb_clank/amb_clank_05.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -15.86,
-  "tp": -1.39,
-  "dur": 0.274
- },
- {
-  "path": "assets/audio/amb/amb_clank/amb_clank_06.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -14.84,
-  "tp": -1.38,
-  "dur": 0.314
- },
- {
-  "path": "assets/audio/amb/amb_clank/amb_clank_07.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -15.56,
-  "tp": -1.0,
-  "dur": 0.274
- },
- {
-  "path": "assets/audio/amb/amb_clank/amb_clank_08.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -15.22,
-  "tp": -1.37,
-  "dur": 0.225
- },
- {
-  "path": "assets/audio/amb/amb_creak/amb_creak_01.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -14.0,
-  "tp": -2.37,
-  "dur": 2.41
- },
- {
-  "path": "assets/audio/amb/amb_creak/amb_creak_02.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -14.08,
-  "tp": -1.25,
-  "dur": 3.176
- },
- {
-  "path": "assets/audio/amb/amb_creak/amb_creak_03.ogg",
-  "group": "amb",
-  "mode": "momentary",
-  "lufs": -14.0,
-  "tp": -2.54,
-  "dur": 1.721
- },
- {
-  "path": "assets/audio/loops/wind_flight.ogg",
-  "group": "loops",
-  "mode": "integrated",
-  "lufs": -20.0,
-  "tp": -7.79,
-  "dur": 7.0
- },
- {
-  "path": "assets/audio/loops/fuse_hiss.ogg",
-  "group": "loops",
-  "mode": "integrated",
-  "lufs": -22.0,
-  "tp": -12.19,
-  "dur": 5.0
- },
- {
-  "path": "assets/audio/loops/press_motor.ogg",
-  "group": "loops",
-  "mode": "integrated",
-  "lufs": -22.0,
-  "tp": -3.41,
-  "dur": 4.8
- },
- {
-  "path": "assets/audio/loops/magnet_hum.ogg",
-  "group": "loops",
-  "mode": "integrated",
-  "lufs": -22.0,
-  "tp": -10.36,
-  "dur": 7.0
- },
- {
-  "path": "assets/audio/machines/beep.ogg",
-  "group": "machines",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -10.55,
-  "dur": 0.32
- },
- {
-  "path": "assets/audio/machines/hiss.ogg",
-  "group": "machines",
-  "mode": "momentary",
-  "lufs": -14.0,
-  "tp": -5.21,
-  "dur": 1.6
- },
- {
-  "path": "assets/audio/machines/thud.ogg",
-  "group": "machines",
-  "mode": "momentary",
-  "lufs": -13.59,
-  "tp": -1.19,
-  "dur": 0.8
- },
- {
-  "path": "assets/audio/machines/hum.ogg",
-  "group": "machines",
-  "mode": "momentary",
-  "lufs": -16.0,
-  "tp": -5.06,
-  "dur": 1.0
- },
- {
-  "path": "assets/audio/machines/rumble.ogg",
-  "group": "machines",
-  "mode": "momentary",
-  "lufs": -14.0,
-  "tp": -1.04,
-  "dur": 1.6
- },
- {
-  "path": "assets/audio/enemies/warn_sweep.ogg",
-  "group": "enemies",
-  "mode": "momentary",
-  "lufs": -15.0,
-  "tp": -3.1,
-  "dur": 0.65
- },
- {
-  "path": "assets/audio/enemies/warn_grab.ogg",
-  "group": "enemies",
-  "mode": "momentary",
-  "lufs": -15.0,
-  "tp": -3.78,
-  "dur": 0.333
- },
- {
-  "path": "assets/audio/enemies/ratchet.ogg",
-  "group": "enemies",
-  "mode": "momentary",
-  "lufs": -15.29,
-  "tp": -1.0,
-  "dur": 0.561
- },
- {
-  "path": "assets/audio/enemies/yoink.ogg",
-  "group": "enemies",
-  "mode": "momentary",
-  "lufs": -18.31,
-  "tp": -1.0,
-  "dur": 0.321
- },
- {
-  "path": "assets/audio/enemies/drop.ogg",
-  "group": "enemies",
-  "mode": "momentary",
-  "lufs": -15.18,
-  "tp": -1.03,
-  "dur": 0.572
- },
- {
-  "path": "assets/audio/music/battle_01.ogg",
-  "group": "music",
-  "mode": "integrated",
-  "lufs": -16.0,
-  "tp": -6.98,
-  "dur": 115.293
- },
- {
-  "path": "assets/audio/music/battle_02.ogg",
-  "group": "music",
-  "mode": "integrated",
-  "lufs": -16.0,
-  "tp": -3.11,
-  "dur": 98.593
- },
- {
-  "path": "assets/audio/music/battle_03.ogg",
-  "group": "music",
-  "mode": "integrated",
-  "lufs": -16.0,
-  "tp": -4.55,
-  "dur": 102.4
- },
- {
-  "path": "assets/audio/music/battle_04.ogg",
-  "group": "music",
-  "mode": "integrated",
-  "lufs": -16.0,
-  "tp": -5.34,
-  "dur": 95.852
- },
- {
-  "path": "assets/audio/music/victory.ogg",
-  "group": "music",
-  "mode": "integrated",
-  "lufs": -16.0,
-  "tp": -1.8,
-  "dur": 3.918
- },
- {
-  "path": "assets/audio/music/defeat.ogg",
-  "group": "music",
-  "mode": "integrated",
-  "lufs": -16.0,
-  "tp": -3.15,
-  "dur": 3.184
- },
- {
-  "path": "assets/audio/ui/countdown/countdown_01.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -18.0,
-  "tp": -7.7,
-  "dur": 0.16
- },
- {
-  "path": "assets/audio/ui/combo/combo_01.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -18.0,
-  "tp": -5.6,
-  "dur": 0.29
- },
- {
-  "path": "assets/audio/ui/combo/combo_02.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -18.0,
-  "tp": -6.94,
-  "dur": 0.539
- },
- {
-  "path": "assets/audio/ui/combo/combo_03.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -18.0,
-  "tp": -5.65,
-  "dur": 0.322
- },
- {
-  "path": "assets/audio/ui/combo/combo_04.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -18.0,
-  "tp": -8.6,
-  "dur": 0.49
- },
- {
-  "path": "assets/audio/ui/callout/callout_01.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -20.0,
-  "tp": -4.8,
-  "dur": 0.267
- },
- {
-  "path": "assets/audio/ui/callout/callout_02.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -20.0,
-  "tp": -4.55,
-  "dur": 0.262
- },
- {
-  "path": "assets/audio/ui/callout/callout_03.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -21.91,
-  "tp": -1.0,
-  "dur": 0.1
- },
- {
-  "path": "assets/audio/ui/ko_slam/ko_slam_01.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -15.29,
-  "tp": -1.04,
-  "dur": 0.6
- },
- {
-  "path": "assets/audio/ui/ko_slam/ko_slam_02.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -15.5,
-  "tp": -1.08,
-  "dur": 0.6
- },
- {
-  "path": "assets/audio/ui/ko_slam/ko_slam_03.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -15.33,
-  "tp": -1.27,
-  "dur": 0.6
- },
- {
-  "path": "assets/audio/ui/tick/tick_01.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -27.84,
-  "tp": -1.0,
-  "dur": 0.09
- },
- {
-  "path": "assets/audio/ui/tick/tick_02.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -20.34,
-  "tp": -1.19,
-  "dur": 0.09
- },
- {
-  "path": "assets/audio/ui/tick/tick_03.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -24.93,
-  "tp": -1.04,
-  "dur": 0.09
- },
- {
-  "path": "assets/audio/ui/heartbeat/heartbeat_01.ogg",
-  "group": "ui",
-  "mode": "momentary",
-  "lufs": -18.0,
-  "tp": -4.41,
-  "dur": 0.7
  }
 ]

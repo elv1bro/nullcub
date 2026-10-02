@@ -17,7 +17,7 @@ SR = 44100
 
 def load(path, ss=None, t=None, stereo=False, sr=SR):
     """Файл → float64 (моно (n,) или стерео (n, 2)); ss/t — окно в секундах."""
-    cmd = ["ffmpeg", "-v", "error"]
+    cmd = ["ffmpeg", "-nostdin", "-v", "error"]
     if ss is not None:
         cmd += ["-ss", f"{ss:.4f}"]
     if t is not None:
@@ -42,7 +42,7 @@ def write_ogg(path, x, q="5"):
             w.setsampwidth(2)
             w.setframerate(SR)
             w.writeframes(pcm.tobytes())
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", tmp, "-c:a", "libvorbis", "-q:a", q, path], check=True)
+        subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", tmp, "-c:a", "libvorbis", "-q:a", q, path], check=True)
     finally:
         os.remove(tmp)
 

@@ -3,7 +3,7 @@
 ## Ребёнок Match (Match._ensure_fx_directors) рядом с SfxDirector; звуки — через SfxDirector.play_layer (лимиты, журнал).
 ##
 ## Детектор без контактов: удар — резкое торможение тела за один тик физики (или за два — мягкая посадка на хлам). Δv = v − v_prev −
-## g·gravity_scale·dt; удар, если |Δv| ≥ MIN_DV и Δv направлено против прежней скорости (cos ≤ −OPPOSE_COS): тело остановилось или
+## g·gravity_scale·dt; удар, если |Δv| ≥ MIN_DV (части живой куклы — MIN_DV_DOLL) и Δv направлено против прежней скорости (cos ≤ −OPPOSE_COS): тело остановилось или
 ## отскочило. Разгон с места
 ## (тело толкнули) не звучит — звучит то, что ударило. Части кукол сразу после удара по ним (hit_fx) и рядом с «шлепком» о стену
 ## (env_slam) молчат HIT_QUIET_MS — там свой звук SfxDirector.
@@ -14,7 +14,11 @@ class_name ImpactAudio
 extends Node
 
 const GROUP := "impact_audio"
-const MIN_DV := 1.4                     # м/с за тик
+const MIN_DV := 1.8                     # м/с за тик: пропсы, оружие, хлам, части рассыпавшейся куклы
+## Части ЖИВОЙ куклы — только настоящий удар о пол/стену: v1 щёлкала на каждом касании кукол (за 20 с боя 77 щелчков на
+## 23 удара) — на слух это «слабые удары». Громкость частей живой куклы ниже на DOLL_DB.
+const MIN_DV_DOLL := 3.2
+const DOLL_DB := -4.0
 const FULL_DV := 9.0
 const OPPOSE_COS := 0.3
 const BODY_GAP_MS := 90.0
@@ -171,10 +175,13 @@ func _physics_process(delta: float) -> void:
 		var owner_doll := rb.get_parent() as Doll
 		if owner_doll != null and now < float(_quiet_doll.get(owner_doll.get_instance_id(), -1.0)):
 			continue
-		_play_impact(rb, mag, dv, now)
+		var live := owner_doll != null and owner_doll.alive
+		if live and mag < MIN_DV_DOLL:
+			continue
+		_play_impact(rb, mag, dv, now, DOLL_DB if live else 0.0)
 
 
-func _play_impact(rb: RigidBody3D, mag: float, dv: Vector3, now: float) -> void:
+func _play_impact(rb: RigidBody3D, mag: float, dv: Vector3, now: float, extra_db: float = 0.0) -> void:
 	var mat := SoundMaterial.of_body(rb)
 	var m := rb.mass
 	var k := clampf((mag - MIN_DV) / (FULL_DV - MIN_DV), 0.0, 1.0)
@@ -188,7 +195,7 @@ func _play_impact(rb: RigidBody3D, mag: float, dv: Vector3, now: float) -> void:
 		pitch *= lerpf(1.25, 1.05, clampf(m / LIGHT_MASS, 0.0, 1.0))
 	elif m >= HEAVY_MASS:
 		pitch *= 0.9
-	var db := lerpf(-22.0, -3.0, sqrt(k)) + clampf(log(maxf(m, 0.01)) / log(10.0) * 3.0, -5.0, 3.0)
+	var db := lerpf(-22.0, -3.0, sqrt(k)) + clampf(log(maxf(m, 0.01)) / log(10.0) * 3.0, -5.0, 3.0) + extra_db
 	var layer := SoundMaterial.hit_layer(mat, size)
 	var pan := sfx.pan_for(rb.global_position)
 	if sfx.play_layer(layer, db, pitch, SfxDirector.BUS_SFX, pan) < 0:

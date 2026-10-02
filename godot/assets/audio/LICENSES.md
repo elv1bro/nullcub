@@ -32,15 +32,18 @@
 | `explosion` | Nox_Sound — Explosion Debris Short Stereo, https://freesound.org/s/560510/ (CC0)<br>Kenney — Sci-fi Sounds, https://kenney.nl/assets/sci-fi-sounds (CC0) |
 | `grab` | Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0)<br>Kenney — RPG Audio, https://kenney.nl/assets/rpg-audio (CC0) |
 | `head` | Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0) |
+| `hit_h` | Independent.nu — 37 hits/punches, https://opengameart.org/content/37-hitspunches (CC0)<br>Iwan Gabovitch (qubodup) — Punch, https://opengameart.org/content/punch (CC0) |
+| `hit_l` | Independent.nu — 37 hits/punches, https://opengameart.org/content/37-hitspunches (CC0) |
+| `hit_m` | Independent.nu — 37 hits/punches, https://opengameart.org/content/37-hitspunches (CC0)<br>Iwan Gabovitch (qubodup) — Punch, https://opengameart.org/content/punch (CC0) |
 | `horn` | mcpable — Industrial Air Horn, https://freesound.org/s/131930/ (CC0)<br>SEF7 — Hockey arena goal horn with crowd applause, https://freesound.org/s/702099/ (CC0) |
 | `inhale` | Kinoton — Short Whoosh, 13x, https://freesound.org/s/427979/ (CC0) |
-| `ko_slam` | Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0) |
+| `ko` | Independent.nu — 37 hits/punches, https://opengameart.org/content/37-hitspunches (CC0)<br>Iwan Gabovitch (qubodup) — Punch, https://opengameart.org/content/punch (CC0) |
 | `loops` | craigsmith — G39-23-Steam Hiss, https://freesound.org/s/438640/ (CC0)<br>Nox_Sound — Ambiance Wind Strong Warehouse Loop, https://freesound.org/s/591664/ (CC0)<br>Andriejus — Hydraulic press working and shut down, https://freesound.org/s/866648/ (CC0)<br>Kenney — Sci-fi Sounds, https://kenney.nl/assets/sci-fi-sounds (CC0) |
 | `machines` | craigsmith — G39-23-Steam Hiss, https://freesound.org/s/438640/ (CC0)<br>Nox_Sound — Explosion Debris Short Stereo, https://freesound.org/s/560510/ (CC0)<br>kyles — chain light solid rattle various, https://freesound.org/s/637356/ (CC0)<br>Andriejus — Hydraulic press working and shut down, https://freesound.org/s/866648/ (CC0)<br>Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0)<br>Kenney — Interface Sounds, https://kenney.nl/assets/interface-sounds (CC0)<br>Kenney — Sci-fi Sounds, https://kenney.nl/assets/sci-fi-sounds (CC0) |
 | `metal_h` | AardsReal — Basic Metal Clang Free, https://freesound.org/s/842171/ (CC0)<br>Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0) |
 | `metal_l` | Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0) |
 | `metal_m` | Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0) |
-| `music` | HydroGene — JRPG Epic Rock Battle Theme #1, https://opengameart.org/content/jrpg-epic-rock-battle-theme-1 (CC0)<br>The Real Monoton Artist — Metal Song – Energetic, https://opengameart.org/content/metal-song-energetic (CC0)<br>MintoDog — Trance Boss Battle, https://opengameart.org/content/trance-boss-battle (CC0)<br>cynicmusic / pixelsphere.org — Battle Theme A, https://opengameart.org/content/battle-theme-a (CC0)<br>Spring Enterprises — Fanfares, https://opengameart.org/content/fanfares (CC0)<br>Spring Enterprises — Fanfares, https://opengameart.org/content/fanfares (CC0) |
+| `music` | HydroGene — JRPG Epic Rock Battle Theme #1, https://opengameart.org/content/jrpg-epic-rock-battle-theme-1 (CC0)<br>The Real Monoton Artist — Metal Song – Energetic, https://opengameart.org/content/metal-song-energetic (CC0)<br>MintoDog — Trance Boss Battle, https://opengameart.org/content/trance-boss-battle (CC0)<br>cynicmusic / pixelsphere.org — Battle Theme A, https://opengameart.org/content/battle-theme-a (CC0)<br>Spring Enterprises — Fanfares, https://opengameart.org/content/fanfares (CC0) |
 | `pan` | Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0) |
 | `rubber` | Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0) |
 | `scrape` | qubodup — Short Rusty Metal Scrape, https://freesound.org/s/743259/ (CC0)<br>Kenney — Impact Sounds, https://kenney.nl/assets/impact-sounds (CC0) |

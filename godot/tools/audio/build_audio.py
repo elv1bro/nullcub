@@ -154,6 +154,27 @@ def build_sfx():
     T = -14.0
     G = "sfx"
 
+    # Основа удара — записанные удары JS-версии (src/audio/sfx.ts, автор 02.10: «там было хорошо»): «37 hits/punches»
+    # Independent.nu и Punch qubodup, CC0, те же группы по силе. Обрезана тишина в начале (у части файлов 50–250 мс — удар
+    # запаздывал бы), хвост до 0.75 с; громкость по силе: лёгкие −13, средние −12, тяжёлые и KO −11 LUFS-M.
+    def js_hit(name):
+        x = d.trim(LOCAL(f"public/sounds/combat/{name}.ogg"), -40, 0.002, 0.06)
+        e, h = d.envelope_db(x, 0.002)        # «подлёт» перед ударом (до 70 мс у части файлов) — удар звучал бы позже картинки:
+        on = int(np.argmax(e > e.max() - 20)) * h   # начало за 8 мс до атаки (−20 дБ от пика), вход 3 мс
+        x = x[max(0, on - d.ns(0.008)):]
+        return d.fade(d.fit(x, min(len(x) / d.SR, 0.75)), 0.003, 0.08)
+
+    layer("hit_l")
+    out_layer(G, "hit_l", [js_hit(f"hits/hit-{i:02d}") for i in range(1, 15)], -13)
+    layer("hit_m")
+    out_layer(G, "hit_m", [js_hit(f"hits/hit-{i:02d}") for i in range(15, 27)]
+              + [js_hit(f"qubodup/qubodupPunch0{i}") for i in (1, 2, 3)], -12)
+    layer("hit_h")
+    out_layer(G, "hit_h", [js_hit(f"hits/hit-{i:02d}") for i in range(27, 38)]
+              + [js_hit(f"qubodup/qubodupPunch0{i}") for i in (4, 5)], -11)
+    layer("ko")
+    out_layer(G, "ko", [js_hit("ko-01"), js_hit("ko-02")], -11)
+
     layer("wood_l")
     v = [K("impact", f"impactWood_light_{i:03d}") for i in range(5)]
     v += [d.pitch(K("impact", f"impactPlank_medium_{i:03d}"), 1.18) for i in range(5)]
@@ -563,9 +584,8 @@ def build_ui():
     out_layer(G, "combo", [K("ui", f"confirmation_00{i}") for i in (1, 2, 3, 4)], -18)
     layer("callout")
     out_layer(G, "callout", [K("ui", "select_003"), K("ui", "select_006"), K("ui", "pluck_001")], -20)
-    layer("ko_slam")
-    v = [d.mix([(K("impact", f"impactPlate_heavy_00{i}"), 0, 0), (d.sub_thump(0.6, 60, 30, 0.2, 0.3, 800 + i), 0, -3)]) for i in range(3)]
-    out_layer(G, "ko_slam", [d.fade(x, 0.0005, 0.2) for x in v], -15)
+    if os.path.isdir(os.path.join(OUT, G, "ko_slam")):     # KO теперь — слой sfx/ko (удары JS-версии)
+        shutil.rmtree(os.path.join(OUT, G, "ko_slam"))
     layer("tick")
     out_layer(G, "tick", [d.fade(d.fit(K("ui", n), 0.09), 0.0005, 0.03) for n in ("tick_001", "tick_004", "scroll_002")], -20)
     layer("heartbeat")
@@ -621,7 +641,13 @@ def write_licenses():
                 i = fs.get(s.split(":")[1], {})
                 srcs.append(f"{i.get('user', '?')} — {i.get('title', s)}, https://freesound.org/s/{s.split(':')[1]}/ (CC0)")
             else:
-                srcs.append(SOURCE_TEXT.get(s, s))
+                t = SOURCE_TEXT.get(s, s)
+                if s.startswith("local:public/sounds/combat/hits/") or s == "local:public/sounds/combat/ko-01.ogg":
+                    t = "Independent.nu — 37 hits/punches, https://opengameart.org/content/37-hitspunches (CC0)"
+                elif s.startswith("local:public/sounds/combat/qubodup/") or s == "local:public/sounds/combat/ko-02.ogg":
+                    t = "Iwan Gabovitch (qubodup) — Punch, https://opengameart.org/content/punch (CC0)"
+                if t not in srcs:
+                    srcs.append(t)
         lines.append(f"| `{lay}` | {'<br>'.join(srcs) if srcs else 'синтез (CC0)'} |")
     lines += ["", "Слои без внешних источников (`sub`, `void_drone`, `workshop_room`, `wind_flight` частично, `klaxon`, отсчёт, "
               "сердцебиение) синтезированы в `build_audio.py`."]

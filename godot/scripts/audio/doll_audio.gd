@@ -26,8 +26,8 @@ const SWING_HAND_SPEED := 9.5
 const SWING_GAP_MS := 260.0
 const SWING_HEAVY_MASS := 3.0
 const CREAK_REL_W := 11.0               # рад/с: резкий излом сустава (удар, падение), не работа мышц в полёте
-const CREAK_GAP_MS := 1400.0
-const CREAK_CHANCE := 0.3
+const CREAK_GAP_MS := 2500.0
+const CREAK_CHANCE := 0.15
 const WEAPON_SCAN_MS := 250.0
 
 var sfx: SfxDirector

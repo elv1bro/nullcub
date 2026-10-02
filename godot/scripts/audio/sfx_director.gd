@@ -3,14 +3,16 @@
 ## assets/audio/sfx/<слой>/ и assets/audio/ui/<слой>/; ассеты — tools/audio/build_audio.py, лицензии — assets/audio/LICENSES.md).
 ## Узел «SfxDirector» — ребёнок Match (Match._ensure_fx_directors), TrainingFeel или любой узел с Match в группе "match".
 ##
-## Удар звучит слоями по материалам (SoundMaterial): жертва (дерево / металл / кость / резина) × чем били (сковорода — «БОНГ»,
-## меч и топор — рубящий «чок», молот и булава — металл, часть тела — её материал); голова деревянной куклы — гулкий «бонк».
-##   light — удар материала (+ голова, + звон металла оружия); не чаще раза в 60 мс на жертву.
-##   heavy — тяжёлый удар материала + бьющий + треск дерева (snap) + низ (sub); «вух» отлёта через 70 мс по скорости ЦМ жертвы.
+## Основа удара — записанный удар нужной силы, как в JS-версии (src/audio/sfx.ts; автор 02.10: «там было хорошо»): hit_l / hit_m /
+## hit_h — «37 hits/punches» Independent.nu + Punch qubodup, разброс питча PUNCH_SPREAD полутонов, громкость по урону; тяжёлый
+## приглушает музыку (GameAudio.duck). Материал (SoundMaterial) — тихая подложка: жертва (дерево / металл / кость / резина) ×
+## чем били (сковорода — «БОНГ», меч и топор — «чок», молот и булава — звон); голова деревянной куклы — гулкий «бонк».
+##   light — hit_l (сильнее — hit_m) + подложка материала; не чаще раза в 60 мс на жертву.
+##   heavy — hit_h + бьющий + треск дерева (snap) + низ (sub), тише основы; «вух» отлёта через 70 мс по скорости ЦМ жертвы.
 ##   crit / ko_crit — вдох (inhale) в стоп-кадре → бум + удар + треск + низ + скрип волокна на крупном плане (мир глохнет: low-pass
 ##     на SFX и через GameAudio на толпе, фоне и музыке) → второй треск и щепки («перелом») → вух на выходе, мир открывается.
-##   ko — штамп KO + рассыпание + треск + низ. Толпа — CrowdDirector (сигнал crit_phase этого узла и сигналы Match).
-## Match.env_slam — глухой удар о пол/стену по скорости + стук материала; в крит-полёте ещё crash и треск.
+##   ko — удар KO (ko) + рассыпание + треск + низ, музыка проседает. Толпа — CrowdDirector (crit_phase этого узла и сигналы Match).
+## Match.env_slam — глухой удар о пол/стену + удар (hit_l / hit_m) по скорости; в крит-полёте ещё hit_h, crash и треск.
 ## Match.announce: отсчёт — бип, FIGHT! — горн + колокол, SUDDEN DEATH — два колокола + низкий горн, комбо — нота выше с каждым
 ##   ударом, HEAD / BODY / DOUBLE BLOW — короткий акцент. Match.match_over — три колокола и стингер победы (GameAudio).
 ## Match.phase_changed → COUNTDOWN (restart) / OVER без KO — abort_all(). CritCinematic.phase — синхронизация крита.
@@ -29,31 +31,40 @@ const GameAudioScript := preload("res://scripts/audio/game_audio.gd")
 const GROUP := "sfx_director"
 const SFX_DIR := "res://assets/audio/sfx"
 const UI_DIR := "res://assets/audio/ui"
-const LAYER_ORDER := ["wood_l", "wood_m", "wood_h", "metal_l", "metal_m", "metal_h", "head", "pan", "blade", "bone", "rubber",
+const LAYER_ORDER := ["hit_l", "hit_m", "hit_h", "ko", "wood_l", "wood_m", "wood_h", "metal_l", "metal_m", "metal_h", "head", "pan", "blade", "bone", "rubber",
 	"snap", "splinter", "sub", "thud", "boom", "inhale", "creak", "crash", "shatter", "whoosh", "swing_l", "swing_h", "dash", "flip",
 	"grab", "equip", "detach", "attach", "bell", "horn", "explosion", "clank", "scrape", "stun",
-	"countdown", "combo", "callout", "ko_slam", "tick", "heartbeat"]
-const UI_LAYERS := ["countdown", "combo", "callout", "ko_slam", "tick", "heartbeat"]
+	"countdown", "combo", "callout", "tick", "heartbeat"]
+const UI_LAYERS := ["countdown", "combo", "callout", "tick", "heartbeat"]
 ## Базовая громкость слоя (дБ). Ассеты выровнены по громкости (sfx −14 LUFS-M, ui −18) — здесь только микс.
 const LAYER_DB := {
+	"hit_l": 0.0, "hit_m": 0.0, "hit_h": 1.0, "ko": 1.0,
 	"wood_l": -6.0, "wood_m": -2.0, "wood_h": 2.0, "metal_l": -8.0, "metal_m": -4.0, "metal_h": 0.0, "head": 0.0, "pan": 1.0,
 	"blade": -1.0, "bone": -3.0, "rubber": -4.0, "snap": -3.0, "splinter": -9.0, "sub": -1.0, "thud": -3.0, "boom": 0.0,
 	"inhale": -2.0, "creak": -7.0, "crash": 0.0, "shatter": -1.0, "whoosh": -6.0, "swing_l": -9.0, "swing_h": -7.0, "dash": -6.0,
 	"flip": -9.0, "grab": -9.0, "equip": -7.0, "detach": -3.0, "attach": -7.0, "bell": -3.0, "horn": -5.0, "explosion": 0.0,
 	"clank": -7.0, "scrape": -9.0, "stun": -11.0,
-	"countdown": -2.0, "combo": -3.0, "callout": -6.0, "ko_slam": -1.0, "tick": -8.0, "heartbeat": -6.0,
+	"countdown": -2.0, "combo": -3.0, "callout": -6.0, "tick": -8.0, "heartbeat": -6.0,
 }
 ## Приоритет вытеснения: при занятых голосах новый звук забирает голос с приоритетом не выше своего (самый старый).
 const LAYER_PRIORITY := {
+	"hit_l": 1, "hit_m": 2, "hit_h": 2, "ko": 3,
 	"wood_l": 0, "metal_l": 0, "rubber": 0, "bone": 1, "scrape": 0, "clank": 0, "splinter": 0, "swing_l": 0, "flip": 0, "grab": 0,
 	"creak": 0, "attach": 0, "tick": 0, "stun": 1, "equip": 1, "whoosh": 1, "swing_h": 1, "dash": 1, "wood_m": 1, "metal_m": 1,
 	"thud": 1, "snap": 1, "detach": 2, "wood_h": 2, "metal_h": 2, "head": 2, "pan": 2, "blade": 2, "sub": 2, "crash": 2,
-	"shatter": 3, "explosion": 3, "boom": 3, "inhale": 3, "ko_slam": 3, "bell": 3, "horn": 3, "countdown": 2, "combo": 2,
+	"shatter": 3, "explosion": 3, "boom": 3, "inhale": 3, "bell": 3, "horn": 3, "countdown": 2, "combo": 2,
 	"callout": 2, "heartbeat": 1,
 }
 const RANDOM_PITCH := 1.06              # AudioStreamRandomizer: питч ×[1/1.06, 1.06]
 const RANDOM_VOLUME_DB := 1.5
-const NO_SLOWMO_PITCH := ["bell", "horn", "countdown", "combo", "callout", "ko_slam", "tick", "heartbeat"]
+const NO_SLOWMO_PITCH := ["bell", "horn", "countdown", "combo", "callout", "tick", "heartbeat"]
+## Разброс питча основы удара, ± полутонов (как PITCH_SPREAD в src/audio/sfx.ts).
+const PUNCH_SPREAD := {"hit_l": 2.5, "hit_m": 2.0, "hit_h": 1.5, "ko": 0.8}
+## Подложка материала под основой удара, дБ (материал — характер, удар — тело звука).
+const ACCENT_DB := -10.0
+## Музыка под тяжёлым ударом и KO (GameAudio.duck): [дБ, удержание с] — как duckMusic в JS-версии.
+const DUCK_HEAVY := [-5.0, 0.22]
+const DUCK_KO := [-13.0, 0.8]
 const VOICES := 24
 const LAYER_GAP_MS := 40.0
 const MAX_PER_LAYER := 4
@@ -638,6 +649,17 @@ static func _is_head(ctx: Dictionary) -> bool:
 	return String(ctx.get("part", "")).begins_with("Head")
 
 
+## Питч основы: случайно ± PUNCH_SPREAD[layer] полутонов.
+func _punch_pitch(layer: String) -> float:
+	return pow(2.0, _rng.randf_range(-1.0, 1.0) * float(PUNCH_SPREAD.get(layer, 1.0)) / 12.0)
+
+
+func _duck(d: Array) -> void:
+	var ga := _game_audio()
+	if ga != null:
+		ga.duck(float(d[0]), float(d[1]))
+
+
 func _play_light(ctx: Dictionary, pan: float) -> void:
 	var now := clock_ms()
 	var vid := _victim_id(ctx)
@@ -649,15 +671,16 @@ func _play_light(ctx: Dictionary, pan: float) -> void:
 	var mats := hit_materials(ctx)
 	var vm: String = mats[0]
 	var sm: String = mats[1]
-	var size := 1 if k > 0.6 else 0
+	var punch := "hit_m" if k >= 0.5 else "hit_l"
+	play_layer(punch, lerpf(-6.0, 0.0, k), _punch_pitch(punch), BUS_SFX, pan)
 	if sm == SoundMaterial.PAN:
-		play_layer("pan", lerpf(-12.0, -5.0, k), _rng.randf_range(1.05, 1.2), BUS_SFX, pan)
-	else:
-		play_layer(SoundMaterial.hit_layer(vm, size), lerpf(-6.0, -1.0, k), _rng.randf_range(0.96, 1.1), BUS_SFX, pan)
-	if _is_head(ctx) and vm == SoundMaterial.WOOD:
-		play_layer("head", lerpf(-12.0, -6.0, k), _rng.randf_range(1.0, 1.12), BUS_SFX, pan)
+		play_layer("pan", lerpf(-10.0, -5.0, k), _rng.randf_range(1.05, 1.2), BUS_SFX, pan)
+	elif _is_head(ctx) and vm == SoundMaterial.WOOD:
+		play_layer("head", ACCENT_DB + lerpf(-2.0, 2.0, k), _rng.randf_range(1.0, 1.12), BUS_SFX, pan)
 	elif (sm == SoundMaterial.METAL or sm == SoundMaterial.BLADE) and vm != SoundMaterial.METAL:
-		play_layer("metal_l", lerpf(-14.0, -8.0, k), _rng.randf_range(1.0, 1.15), BUS_SFX, pan)
+		play_layer("metal_l", ACCENT_DB - 2.0, _rng.randf_range(1.0, 1.15), BUS_SFX, pan)
+	elif vm != SoundMaterial.WOOD:
+		play_layer(SoundMaterial.hit_layer(vm, 0), ACCENT_DB, _rng.randf_range(0.96, 1.1), BUS_SFX, pan)
 
 
 func _play_heavy(ctx: Dictionary, pan: float) -> void:
@@ -665,29 +688,33 @@ func _play_heavy(ctx: Dictionary, pan: float) -> void:
 	var mats := hit_materials(ctx)
 	var vm: String = mats[0]
 	var sm: String = mats[1]
-	play_layer(SoundMaterial.hit_layer(vm, 2), lerpf(-3.0, 0.0, k), _rng.randf_range(0.94, 1.04), BUS_SFX, pan)
-	_play_striker(sm, vm, lerpf(-4.0, 0.0, k), pan, BUS_SFX)
+	play_layer("hit_h", lerpf(-1.0, 1.0, k), _punch_pitch("hit_h"), BUS_SFX, pan)
+	_play_striker(sm, vm, ACCENT_DB + 4.0, pan, BUS_SFX)
 	if _is_head(ctx) and vm == SoundMaterial.WOOD:
-		play_layer("head", lerpf(-5.0, -1.0, k), _rng.randf_range(0.9, 1.0), BUS_SFX, pan)
+		play_layer("head", ACCENT_DB + 2.0, _rng.randf_range(0.9, 1.0), BUS_SFX, pan)
+	elif vm != SoundMaterial.WOOD:
+		play_layer(SoundMaterial.hit_layer(vm, 1), ACCENT_DB, _rng.randf_range(0.94, 1.04), BUS_SFX, pan)
 	if vm == SoundMaterial.WOOD or vm == SoundMaterial.BONE:
-		play_layer("snap", lerpf(-9.0, -3.0, k), _rng.randf_range(0.95, 1.15), BUS_SFX, pan)
-	play_layer("sub", lerpf(-6.0, -2.0, k), _rng.randf_range(0.95, 1.05), BUS_SFX, pan)
+		play_layer("snap", ACCENT_DB + lerpf(-2.0, 2.0, k), _rng.randf_range(0.95, 1.15), BUS_SFX, pan)
+	play_layer("sub", lerpf(-9.0, -5.0, k), _rng.randf_range(0.95, 1.05), BUS_SFX, pan)
+	_duck(DUCK_HEAVY)
 	_schedule_call(HEAVY_WHOOSH_MS, "whoosh", "whoosh", ctx.get("victim", null))
 
 
-## Слой бьющего поверх удара по жертве: сковорода — «БОНГ», лезвие — «чок», металл — звон, часть тела — её материал (тише).
+## Слой бьющего поверх основы удара (db — уже уровень подложки): сковорода — «БОНГ» (громче, это её фирменный звук), лезвие —
+## «чок», металл — звон, часть тела — её материал, если отличается от жертвы.
 func _play_striker(sm: String, vm: String, db: float, pan: float, bus: String) -> void:
 	match sm:
 		SoundMaterial.PAN:
-			play_layer("pan", db, _rng.randf_range(0.95, 1.05), bus, pan)
+			play_layer("pan", db + 4.0, _rng.randf_range(0.95, 1.05), bus, pan)
 		SoundMaterial.BLADE:
-			play_layer("blade", db - 1.0, _rng.randf_range(0.95, 1.08), bus, pan)
+			play_layer("blade", db, _rng.randf_range(0.95, 1.08), bus, pan)
 		SoundMaterial.METAL:
 			if vm != SoundMaterial.METAL:
-				play_layer("metal_m", db - 4.0, _rng.randf_range(0.95, 1.08), bus, pan)
+				play_layer("metal_m", db - 2.0, _rng.randf_range(0.95, 1.08), bus, pan)
 		_:
 			if sm != vm:
-				play_layer(SoundMaterial.hit_layer(sm, 1), db - 6.0, _rng.randf_range(0.95, 1.08), bus, pan)
+				play_layer(SoundMaterial.hit_layer(sm, 1), db - 4.0, _rng.randf_range(0.95, 1.08), bus, pan)
 
 
 func _play_ko_hit(ctx: Dictionary, pan: float) -> void:
@@ -698,8 +725,8 @@ func _play_ko_hit(ctx: Dictionary, pan: float) -> void:
 		var v: Variant = ctx.get("victim", null)
 		handle_ko(v as Doll if is_instance_valid(v) and v is Doll else null, ctx.get("attacker", null), {"position": ctx.get("position", Vector3.ZERO)})
 	var mats := hit_materials(ctx)
-	play_layer(SoundMaterial.hit_layer(mats[0], 2), 0.0, 0.92, BUS_SFX, pan)
-	_play_striker(mats[1], mats[0], -1.0, pan, BUS_SFX)
+	play_layer("hit_h", 0.0, _punch_pitch("hit_h") * 0.94, BUS_SFX, pan)
+	_play_striker(mats[1], mats[0], ACCENT_DB + 4.0, pan, BUS_SFX)
 
 
 func handle_ko(victim: Doll, _attacker: Node, record: Dictionary) -> void:
@@ -713,10 +740,11 @@ func handle_ko(victim: Doll, _attacker: Node, record: Dictionary) -> void:
 		return
 	_ko_ms[vid] = now
 	_last_ko_ms = now
-	play_layer("ko_slam", 0.0, _rng.randf_range(0.95, 1.03), BUS_SFX, pan)
-	play_layer("shatter", 0.0, 1.0, BUS_SFX, pan)
-	play_layer("snap", 0.0, 0.85, BUS_SFX, pan)
-	play_layer("sub", 0.0, 0.9, BUS_SFX, pan)
+	play_layer("ko", 0.0, _punch_pitch("ko"), BUS_SFX, pan)
+	play_layer("shatter", -3.0, 1.0, BUS_SFX, pan)
+	play_layer("snap", -6.0, 0.85, BUS_SFX, pan)
+	play_layer("sub", -4.0, 0.9, BUS_SFX, pan)
+	_duck(DUCK_KO)
 
 
 ## Крит: "cine" — стоп-кадр → крупный план (свой таймлайн или фазы CritCinematic), "short" — без крупного плана
@@ -743,10 +771,11 @@ func _play_crit(ctx: Dictionary, _pan: float, _ko: bool) -> void:
 	else:
 		var mats := hit_materials(ctx)
 		play_layer("boom", -2.0, 1.0, BUS_CRIT)
-		play_layer(SoundMaterial.hit_layer(mats[0], 2), 0.0, 0.9, BUS_CRIT)
-		_play_striker(mats[1], mats[0], 0.0, 0.0, BUS_CRIT)
-		play_layer("snap", 0.0, 0.9, BUS_CRIT)
-		play_layer("sub", 0.0, 0.85, BUS_CRIT)
+		play_layer("hit_h", 1.0, _punch_pitch("hit_h") * 0.9, BUS_CRIT)
+		_play_striker(mats[1], mats[0], ACCENT_DB + 4.0, 0.0, BUS_CRIT)
+		play_layer("snap", -4.0, 0.9, BUS_CRIT)
+		play_layer("sub", -2.0, 0.85, BUS_CRIT)
+		_duck(DUCK_KO)
 		_schedule_call(CRIT_SHORT_WHOOSH_MS, "whoosh", "crit_short", ctx.get("victim", null), {"min_db": -6.0, "bus": BUS_CRIT})
 		crit_phase.emit("short", 0.0)
 
@@ -799,11 +828,12 @@ func _crit_phase(name_: String) -> void:
 			set_muffle(true)
 		"cut_in":
 			play_layer("boom", 0.0, 1.0, BUS_CRIT)
-			play_layer(SoundMaterial.hit_layer(mats[0], 2), 0.0, 0.85, BUS_CRIT)
-			_play_striker(mats[1], mats[0], 0.0, 0.0, BUS_CRIT)
-			play_layer("sub", 0.0, 0.8, BUS_CRIT)
-			play_layer("snap", 0.0, 0.9, BUS_CRIT)
-			play_layer("creak", 2.0, 0.8, BUS_CRIT)
+			play_layer("hit_h", 2.0, _punch_pitch("hit_h") * 0.85, BUS_CRIT)
+			_play_striker(mats[1], mats[0], ACCENT_DB + 4.0, 0.0, BUS_CRIT)
+			play_layer("sub", -2.0, 0.8, BUS_CRIT)
+			play_layer("snap", -3.0, 0.9, BUS_CRIT)
+			play_layer("creak", 0.0, 0.8, BUS_CRIT)
+			_duck(DUCK_KO)
 			if not _crit_synced and not _crit_forced and is_instance_valid(_cine) and _cine.has_method("is_playing") \
 					and not bool(_cine.call("is_playing")):
 				set_muffle(false)           # кинематограф не пошёл — мир не глушим
@@ -834,12 +864,13 @@ func handle_env_slam(ctx: Dictionary) -> void:
 	var speed := float(ctx.get("speed", 0.0))
 	var k := clampf((speed - Tuning.HITFX_SLAM_SPEED) / 6.0, 0.0, 1.0)
 	var pan := pan_for(ctx.get("position", Vector3.ZERO))
-	var mat := SoundMaterial.of_doll_part(ctx.get("doll", null), String(ctx.get("part", "")))
-	play_layer("thud", lerpf(-10.0, 0.0, k), 0.8 * _rng.randf_range(0.95, 1.05), BUS_SFX, pan)
-	play_layer(SoundMaterial.hit_layer(mat, 1 if k < 0.5 else 2), lerpf(-10.0, -3.0, k), _rng.randf_range(0.92, 1.05), BUS_SFX, pan)
+	var punch := "hit_m" if k >= 0.5 else "hit_l"
+	play_layer("thud", lerpf(-10.0, -2.0, k), 0.8 * _rng.randf_range(0.95, 1.05), BUS_SFX, pan)
+	play_layer(punch, lerpf(-8.0, -2.0, k), _punch_pitch(punch) * 0.9, BUS_SFX, pan)
 	if bool(ctx.get("crit_flight", false)):
-		play_layer("snap", -1.0, 0.9, BUS_SFX, pan)
-		play_layer("crash", 0.0, 1.0, BUS_SFX, pan)
+		play_layer("hit_h", 0.0, _punch_pitch("hit_h") * 0.85, BUS_SFX, pan)
+		play_layer("snap", -4.0, 0.9, BUS_SFX, pan)
+		play_layer("crash", -2.0, 1.0, BUS_SFX, pan)
 
 
 # --- объявления ---
