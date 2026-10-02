@@ -76,6 +76,9 @@ extends Camera3D
 @export var safe_part_pad := 0.3
 
 ## Текущая полувысота кадра (м) и центр на плоскости plane_z — без FX.
+## Масштаб игрока (HIT_FX.md §13, автор 02.10: «масштаб, чтобы приблизить/отдалить, и цифру текущего»): × нужной полувысоты кадра;
+## < 1 — ближе, > 1 — дальше. Общий для всех камер, переживает смену арены; меняет HitJuice (колесо мыши, «,» «.»).
+static var user_zoom := 1.0
 var half_height := 0.0
 var centre := Vector2.ZERO
 var _snapped := false
@@ -267,7 +270,7 @@ func _process(delta: float) -> void:
 	var min_h := minf(min_half_height, max_h)
 	var pad_y := padding if padding_y < 0.0 else padding_y
 	var need := maxf(box.size.y * 0.5 + pad_y, (box.size.x * 0.5 + padding) / aspect)
-	var target_h := clampf(need, min_h, max_h)
+	var target_h := clampf(need, min_h, max_h) * user_zoom
 	var target_c := _clamp_centre(box.get_center(), target_h * aspect, target_h, b)
 	if not _snapped:
 		half_height = target_h

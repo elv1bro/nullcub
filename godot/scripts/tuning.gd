@@ -418,3 +418,5 @@ const JUICE_IMPACT_CAPTION := true
 # в точке удара, на heavy/ko волна воздуха (искажение) и плотная пыль, без белого кадра, цветных колец, искр цвета атакующего, инверсии,
 # послеобразов и линий скорости; "cartoon" — прежний стиль RM (звезда-блик, кольца). Клавиша «=» в бою (HitJuice.impact_style).
 const JUICE_IMPACT_STYLE_DEFAULT := "serious"
+# обводка бойцов цветом игрока (автор 02.10: «сложно прочитать тело на фоне»), клавиша B — DollOutline
+const JUICE_OUTLINE_DEFAULT := true

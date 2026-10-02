@@ -35,6 +35,7 @@ var announces: Array = []
 
 func _ready() -> void:
 	HitJuice.impact_style = "cartoon"   # проба проверяет стиль «мульт» (звезда, кольца, послеобразы); «серьёзный» — juice_probe (§13)
+	HitJuice.outline_on = false   # обводка бойцов (B) — свои узлы на мешах кукол; проба считает узлы и оверлеи частей
 	for arg in OS.get_cmdline_user_args():
 		for kv in arg.split(","):
 			var p := kv.split("=")

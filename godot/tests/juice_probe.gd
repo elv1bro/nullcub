@@ -67,6 +67,7 @@ func _run() -> void:
 	_material_checks(p1, p2)
 	await _debris_checks(p1)
 	await _style_checks(p1, p2)
+	await _ui_checks(p1, p2)
 	await _mark_checks(p1, p2)
 	await _digit_checks(p1, p2)
 	await _time_checks(p1, p2)
@@ -296,6 +297,64 @@ func _style_checks(p1: Doll, p2: Doll) -> void:
 	await _wait_time_clear()
 	await _wait_real(0.6)
 	_heal([p1, p2])
+
+
+# ------------------------------------------------------------------ панель клавиш, обводка, масштаб
+
+## L — панель клавиш (строки с живыми значениями); B — обводка бойцов (узлы Outline у мешей кукол, вкл/выкл видимостью); колесо мыши
+## и «,» «.» — масштаб камеры (DynamicCamera.user_zoom, полувысота кадра меняется); чемпион лиги в куполе — K (Void — без строки).
+func _ui_checks(p1: Doll, p2: Doll) -> void:
+	HitJuice.help_open = false
+	var kl := InputEventKey.new()
+	kl.physical_keycode = KEY_L
+	kl.pressed = true
+	juice._unhandled_input(kl)
+	await _frames(1)
+	var rows := juice.keys_panel.row_texts()
+	var titles := rows.map(func(r: Array) -> String: return String(r[1]))
+	var outline_row := rows.filter(func(r: Array) -> bool: return String(r[1]) == "обводка бойцов")
+	var zoom_row := rows.filter(func(r: Array) -> bool: return String(r[1]) == "масштаб камеры")
+	_check("ui_help_panel", juice.keys_panel.open and HitJuice.help_open and titles.has("стиль удара") and titles.has("замедление")
+		and not outline_row.is_empty() and not zoom_row.is_empty() and not titles.has("вызвать чемпиона лиги"),
+		[juice.keys_panel.open, rows.size(), outline_row, zoom_row], "L opens; rows with live values; Void — no champion row")
+	juice._unhandled_input(kl)
+	_check("ui_help_close", not juice.keys_panel.open, juice.keys_panel.open, false)
+	# обводка: ставится по одной кукле за проход OUTLINE_SCAN_S
+	HitJuice.outline_on = true
+	await _wait_real(HitJuice.OUTLINE_SCAN_S * 4.0)
+	var n1 := DollOutline.count(p1)
+	var n2 := DollOutline.count(p2)
+	var vis := p1.find_children(DollOutline.NAME, "MeshInstance3D", true, false).all(func(o: Node) -> bool: return (o as MeshInstance3D).visible)
+	var kb := InputEventKey.new()
+	kb.physical_keycode = KEY_B
+	kb.pressed = true
+	juice._unhandled_input(kb)
+	var hidden := p1.find_children(DollOutline.NAME, "MeshInstance3D", true, false).all(func(o: Node) -> bool: return not (o as MeshInstance3D).visible)
+	juice._unhandled_input(kb)
+	_check("ui_outline", n1 > 5 and n2 > 5 and vis and hidden and HitJuice.outline_on, [n1, n2, vis, hidden, HitJuice.outline_on],
+		["> 5 meshes", "> 5", true, "hidden after B", true])
+	# масштаб: колесо вверх — ближе (user_zoom меньше), полувысота кадра падает
+	var cam := match_node.game_camera() as DynamicCamera
+	HitJuice.set_zoom_level(1.0)
+	await _wait_real(1.5)
+	var h0 := cam.half_height
+	var wheel := InputEventMouseButton.new()
+	wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+	wheel.pressed = true
+	for i in range(3):
+		juice._unhandled_input(wheel)
+	var lvl := HitJuice.zoom_level()
+	await _wait_real(3.0)
+	var h1 := cam.half_height
+	var kc := InputEventKey.new()
+	kc.physical_keycode = KEY_COMMA
+	kc.pressed = true
+	for i in range(3):
+		juice._unhandled_input(kc)
+	var lvl_back := HitJuice.zoom_level()
+	_check("ui_zoom", lvl > 1.3 and h1 < h0 * 0.85 and absf(lvl_back - 1.0) < 0.01, [snappedf(lvl, 0.01), snappedf(h0, 0.01), snappedf(h1, 0.01), snappedf(lvl_back, 0.01)],
+		["> 1.3× after 3 wheel-ups", "half-height drops", "back to 1.00× after 3 commas"])
+	HitJuice.set_zoom_level(1.0)
 
 
 # ------------------------------------------------------------------ следы

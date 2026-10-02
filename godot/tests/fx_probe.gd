@@ -12,6 +12,7 @@ var _spawned := false
 
 func _ready() -> void:
 	HitJuice.impact_style = "cartoon"   # проба снимает звёзды-вспышки стиля «мульт»; «серьёзный» — juice_probe / impact_look_snapshot (§13)
+	HitJuice.outline_on = false   # обводка бойцов (B) — свои узлы на мешах кукол; проба считает узлы и оверлеи частей
 
 
 func _process(delta: float) -> void:

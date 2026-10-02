@@ -12,7 +12,7 @@ extends RefCounted
 const SHADER: Shader = preload("res://assets/shaders/doll_marks.gdshader")
 const META := "hit_marks"          # меш → {mat: ShaderMaterial, marks: Array}
 const BODY_META := "hit_wear"      # тело → сумма глубин
-const SKIP_PREFIXES := ["Sticker", "Face", "Connector_"]
+const SKIP_PREFIXES := ["Sticker", "Face", "Connector_", "Outline"]   # Outline — обводка бойцов (DollOutline)
 
 
 static func radius_for(damage: float) -> float:

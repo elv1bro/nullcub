@@ -9,6 +9,9 @@
 ## на обычных цифрах; 1–9 уже меняют площадку): 0 — следующий вариант замедления, «−» (минус рядом с нулём) — цифры вкл/выкл,
 ## «=» — стиль вспышки удара: серьёзный (свет, пыль, волна воздуха) / мульт (прежние звезда RM и цветные кольца).
 ## Физические клавиши — работают в любой раскладке. Тост внизу экрана; на первом FIGHT! сессии — подсказка с клавишами.
+## Автор 02.10 (второй круг): L — панель всех доп. клавиш сбоку (KeysPanel, значения живые); колесо мыши / «,» «.» — масштаб камеры
+## (DynamicCamera.user_zoom, текущее число в тосте и панели); B — обводка бойцов цветом игрока (DollOutline, по умолчанию вкл —
+## тело читается на тёмном фоне купола). Вызов чемпиона лиги в куполе — K (был L, NullHallArena).
 ## Говорят только N0 и табло (LORE_NULL.md «Голоса и тон»).
 class_name HitJuice
 extends Node
@@ -20,6 +23,13 @@ const HINT_S := 4.0
 const KEY_VARIANT := KEY_0
 const KEY_DIGITS := KEY_MINUS
 const KEY_STYLE := KEY_EQUAL
+const KEY_HELP := KEY_L
+const KEY_OUTLINE := KEY_B
+const KEY_ZOOM_OUT := KEY_COMMA
+const KEY_ZOOM_IN := KEY_PERIOD
+const ZOOM_STEP := 1.12          # шаг масштаба (колесо, «,» «.»)
+const ZOOM_RANGE := Vector2(0.45, 2.2)   # DynamicCamera.user_zoom: меньше — ближе
+const OUTLINE_SCAN_S := 0.15     # обводка ставится по одной кукле за проход — без всплеска узлов в один кадр (perf gate 250/кадр)
 const STYLE_TITLES := {"serious": "серьёзный (свет, пыль, волна воздуха)", "cartoon": "мульт (звезда и кольца, как было)"}
 const PILE_N := 8
 const PILE_GAP_S := 20.0
@@ -30,9 +40,13 @@ static var time_variant: String = Tuning.JUICE_TIME_DEFAULT
 static var impact_style: String = Tuning.JUICE_IMPACT_STYLE_DEFAULT
 ## Цифры-обломки включены (клавиша «−») — общий флаг.
 static var digits_on: bool = Tuning.JUICE_DIGITS
+## Обводка бойцов (клавиша B) и открыта ли панель клавиш (L) — общие, переживают смену арены.
+static var outline_on: bool = Tuning.JUICE_OUTLINE_DEFAULT
+static var help_open := false
 
 var marks_enabled: bool = Tuning.JUICE_MARKS
 var digits: DamageDigits
+var keys_panel: KeysPanel
 ## Пробы: события и счётчики.
 var events: Array = []
 var stats := {"marks": 0, "digits": 0}
@@ -44,6 +58,8 @@ var _clock := 0.0
 var _toast: Label = null
 static var _hinted := false     # подсказка клавиш показана в этой сессии
 var _toast_tw: Tween = null
+var _outline_t := 0.0
+var _outline_shown := true       # текущее видимое состояние обводок (скрыты на время крупного плана)
 
 
 static func variant() -> Dictionary:
@@ -84,6 +100,10 @@ func _ready() -> void:
 	digits = DamageDigits.new()
 	digits.name = "DamageDigits"
 	add_child(digits)
+	keys_panel = KeysPanel.new()
+	keys_panel.lines_fn = keys_lines
+	add_child(keys_panel)
+	keys_panel.set_open(help_open)
 	if _match != null:
 		if _match.has_signal("hit_fx"):
 			_match.connect("hit_fx", _on_hit_fx)
@@ -111,8 +131,8 @@ func _on_phase_changed(p: int) -> void:
 
 ## Подсказка клавиш сока удара (первый FIGHT! сессии).
 static func hint_text() -> String:
-	return "0 — замедление: %s    −  — цифры: %s    =  — удар: %s" % [String(variant().get("title", time_variant)),
-		"вкл" if digits_on else "выкл", "серьёзный" if impact_style == "serious" else "мульт"]
+	return "L — все клавиши    =  — удар: %s    0 — замедление: %s    −  — цифры: %s" % [
+		"серьёзный" if impact_style == "serious" else "мульт", String(variant().get("title", time_variant)), "вкл" if digits_on else "выкл"]
 
 
 func _on_hit_fx(ctx: Dictionary) -> void:
@@ -157,20 +177,115 @@ func _event(ev: String, args: Array) -> void:
 
 
 func _process(delta: float) -> void:
-	_clock += FxClock.real_delta(delta)
+	var real := FxClock.real_delta(delta)
+	_clock += real
+	_outline_t += real
+	if _outline_t >= OUTLINE_SCAN_S:
+		_outline_t = 0.0
+		_tick_outlines()
+
+
+## Обводка: новые куклы группы dolls получают её по одной за проход; видимость = outline_on и камера не захвачена эффектом.
+func _tick_outlines() -> void:
+	if not is_inside_tree():
+		return
+	var captured := _match != null and _match.has_method("camera_owner") and String(_match.call("camera_owner")) != ""
+	var show := outline_on and not captured
+	var dolls := get_tree().get_nodes_in_group("dolls")
+	if show:
+		for d in dolls:
+			if d is Doll and not (d as Node).has_meta(DollOutline.META) and (d as Node).is_inside_tree():
+				DollOutline.ensure(d, paint_colour(d))
+				break
+	for d in dolls:
+		if (d as Node).has_meta(DollOutline.META):
+			var on: bool = (d as Node).get_meta("outline_shown", true)
+			if on != show:
+				DollOutline.set_visible(d, show)
+				(d as Node).set_meta("outline_shown", show)
+	_outline_shown = show
+
+
+## Масштаб камеры для людей: 1 / user_zoom (больше — ближе).
+static func zoom_level() -> float:
+	return 1.0 / maxf(DynamicCamera.user_zoom, 0.01)
+
+
+static func set_zoom_level(level: float) -> void:
+	DynamicCamera.user_zoom = clampf(1.0 / maxf(level, 0.01), ZOOM_RANGE.x, ZOOM_RANGE.y)
+
+
+## Строки панели клавиш (KeysPanel): [клавиша, что делает, текущее значение]; пустая клавиша — заголовок.
+func keys_lines() -> Array:
+	var on := func(b: bool) -> String: return "вкл" if b else "выкл"
+	var rows: Array = [
+		["", "Бой", ""],
+		["WASD", "лететь", ""],
+		["Shift", "рывок", ""],
+		["Space", "переворот", ""],
+		["ЛКМ / ПКМ", "тяги рук", ""],
+		["I  O  P", "активные блоки", ""],
+		["R", "бой заново", ""],
+		["1–9", "сменить площадку", ""],
+		["Esc", "в меню", ""],
+		["", "Эффекты удара", ""],
+		["=", "стиль удара", "серьёзный" if impact_style == "serious" else "мульт"],
+		["0", "замедление", String(variant().get("title", time_variant))],
+		["−", "цифры урона", on.call(digits_on)],
+		["B", "обводка бойцов", on.call(outline_on)],
+		["колесо  ,  .", "масштаб камеры", "%.2f×" % zoom_level()],
+		["F10", "яркость эффектов", FxPreset.label().replace("FX: ", "")],
+	]
+	var arena := get_tree().get_first_node_in_group("arena") if is_inside_tree() else null
+	if arena != null and arena.has_method("call_champion"):
+		rows.append(["", "Купол", ""])
+		rows.append(["K", "вызвать чемпиона лиги", ""])
+		rows.append(["G", "поле NULL", ""])
+	rows.append(["L", "скрыть эту панель", ""])
+	return rows
+
+
+func _zoom(step: float) -> void:
+	set_zoom_level(zoom_level() * step)
+	show_toast("Масштаб камеры: %.2f×   (колесо мыши или «,» «.»)" % zoom_level())
+	if keys_panel != null:
+		keys_panel.refresh()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		var mb := (event as InputEventMouseButton).button_index
+		if mb == MOUSE_BUTTON_WHEEL_UP or mb == MOUSE_BUTTON_WHEEL_DOWN:
+			_zoom(ZOOM_STEP if mb == MOUSE_BUTTON_WHEEL_UP else 1.0 / ZOOM_STEP)
+			get_viewport().set_input_as_handled()
+		return
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	match (event as InputEventKey).physical_keycode:
+		KEY_HELP:
+			help_open = not help_open
+			keys_panel.set_open(help_open)
+			get_viewport().set_input_as_handled()
+		KEY_OUTLINE:
+			outline_on = not outline_on
+			_tick_outlines()
+			show_toast("Обводка бойцов: %s   (B — переключить)" % ("вкл" if outline_on else "выкл"))
+			get_viewport().set_input_as_handled()
+		KEY_ZOOM_IN:
+			_zoom(ZOOM_STEP)
+			get_viewport().set_input_as_handled()
+		KEY_ZOOM_OUT:
+			_zoom(1.0 / ZOOM_STEP)
+			get_viewport().set_input_as_handled()
 		KEY_VARIANT:
 			cycle_time_variant()
 			show_toast("Замедление: %s   (0 — следующее)" % String(variant().get("title", time_variant)))
+			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_STYLE:
 			impact_style = "cartoon" if impact_style == "serious" else "serious"
 			show_toast("Удар: %s   (= — переключить)" % String(STYLE_TITLES.get(impact_style, impact_style)))
+			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_DIGITS:
 			digits_on = not digits_on

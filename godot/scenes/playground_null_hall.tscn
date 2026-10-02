@@ -84,4 +84,4 @@ theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(1, 1, 1, 0.75)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
 theme_override_constants/outline_size = 7
-text = "P1: WASD + Shift + Space, каналы I O P    P2: стрелки + правый Ctrl + Enter    G: поле NULL    L: чемпион лиги    R: заново    1–8: площадки    Esc: выход"
+text = "P1: WASD + Shift + Space, каналы I O P    P2: стрелки + правый Ctrl + Enter    G: поле NULL    K: чемпион лиги    L: все клавиши    R: заново    1–8: площадки    Esc: выход"

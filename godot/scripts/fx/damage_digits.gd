@@ -124,6 +124,7 @@ func spawn(damage: float, pos: Vector3, side: float, colour: Color, big: bool) -
 	var root := c["root"] as Node3D
 	root.visible = true
 	_apply(c)
+	root.reset_physics_interpolation()   # кусок из пула телепортирован: без «проезда» от прежнего места (physics_interpolation)
 	stats["spawned"] = int(stats["spawned"]) + 1
 	return c
 

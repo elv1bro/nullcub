@@ -1,6 +1,7 @@
 ## Лист «как выглядит удар» в куполе (HIT_FX.md §13): оконная сцена, игровая камера. Удар P1 по P2 как DollCombat (ImpactFx +
 ## Match.on_hit): light 5 HP в торс и heavy 14 HP в голову, кадры через 1 / 3 / 6 / 12 кадров после каждого удара (реальное время
-## идёт и в стоп-кадре — кадры показывают, что видит игрок). style=<имя> — стиль вспышки HitJuice.impact_style (сравнение), out_dir=<абс.>.
+## идёт и в стоп-кадре — кадры показывают, что видит игрок). style=<имя> — стиль вспышки HitJuice.impact_style (сравнение), out_dir=<абс.>,
+## help=1 — открыть панель клавиш (L), outline=0|1 — обводка бойцов (B), zoom=<×> — масштаб камеры (колесо мыши).
 ## Запуск: godot --path . --resolution 1280x720 --always-on-top --fixed-fps 60 res://tests/impact_look_snapshot.tscn -- "out_dir=<абс.>"
 extends Node3D
 
@@ -22,6 +23,9 @@ func _ready() -> void:
 			match p[0]:
 				"out_dir": out_dir = p[1]
 				"style": style = p[1]
+				"help": HitJuice.help_open = p[1] != "0"
+				"outline": HitJuice.outline_on = p[1] != "0"
+				"zoom": HitJuice.set_zoom_level(float(p[1]))
 	seed(5)
 	call_deferred("_run")
 
