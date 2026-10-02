@@ -936,13 +936,7 @@ func handle_phase(p: int) -> void:
 static func com_velocity(d: Node) -> Vector3:
 	if not d is Doll:
 		return (d as RigidBody3D).linear_velocity if d is RigidBody3D else Vector3.ZERO
-	var p := Vector3.ZERO
-	var m := 0.0
-	for b in (d as Doll).parts.values():
-		if is_instance_valid(b):
-			p += (b as RigidBody3D).linear_velocity * (b as RigidBody3D).mass
-			m += (b as RigidBody3D).mass
-	return p / m if m > 0.0 else Vector3.ZERO
+	return (d as Doll).com_velocity()   # кэш на физический кадр
 
 
 ## «Вух» по скорости ЦМ: WHOOSH_MIN_SPEED → −12 dB / питч 0.85, WHOOSH_FULL_SPEED → 0 dB / 1.2; min_db — пол громкости (крит).

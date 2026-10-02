@@ -99,15 +99,7 @@ func _doll_ref() -> Doll:
 
 
 static func com_velocity(d: Doll) -> Vector3:
-	var p := Vector3.ZERO
-	var m := 0.0
-	for b in d.parts.values():
-		var rb := b as RigidBody3D
-		if rb == null or not is_instance_valid(rb):
-			continue
-		p += rb.linear_velocity * rb.mass
-		m += rb.mass
-	return p / m if m > 0.0 else Vector3.ZERO
+	return d.com_velocity()   # кэш на физический кадр (Doll.com_velocity)
 
 
 func _process(delta: float) -> void:

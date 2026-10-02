@@ -1222,7 +1222,63 @@ static func part_base_name(part_name: String) -> String:
 
 ## Центр масс куклы. interpolated = true — по ВИДИМОМУ положению частей (physics_interpolation: между двумя физическими тиками), для камеры,
 ## следящих эффектов и HUD, что считаются в _process; логика боя и физика читают настоящее (false).
+##
+## Настоящий ЦМ (interpolated = false) кэшируется на физический кадр: мозги врагов, PveFocus, ArmAssist, звук и бот-игрок зовут его десятки раз
+## за тик (≈ 8 мкс на вызов × ~14 частей), а тела между тиками не двигаются. Ключ кэша — номер физического кадра + число частей + позиция
+## торса (телепорт куклы целиком внутри кадра, до шага физики, сбрасывает его сам; сборка/открутка/прикрутка меняют число частей).
 func centre_of_mass(interpolated := false) -> Vector3:
+	if interpolated:
+		return _compute_com(true)
+	var frame := Engine.get_physics_frames()
+	var torso_body := parts.get("Torso") as RigidBody3D
+	var origin := torso_body.global_transform.origin if torso_body != null else Vector3.ZERO
+	if frame == _com_frame and parts.size() == _com_parts and origin == _com_origin:
+		return _com_cache
+	var c := _compute_com(false)
+	_com_frame = frame
+	_com_parts = parts.size()
+	_com_origin = origin
+	_com_cache = c
+	return c
+
+
+var _com_frame := -1
+var _com_parts := -1
+var _com_origin := Vector3.ZERO
+var _com_cache := Vector3.ZERO
+
+
+## Скорость ЦМ (масса-взвешенная по линейным скоростям частей). Кэш на физический кадр, как у centre_of_mass: звук куклы, толпа, след полёта,
+## ускорение и экранные эффекты читают её каждый кадр по кукле (≈ 7 мкс на вызов), а скорости меняются только шагом физики
+## (запись скорости куклы целиком внутри кадра сбрасывает кэш через скорость торса).
+func com_velocity() -> Vector3:
+	var frame := Engine.get_physics_frames()
+	var torso_body := parts.get("Torso") as RigidBody3D
+	var tv := torso_body.linear_velocity if torso_body != null else Vector3.ZERO
+	if frame == _vel_frame and parts.size() == _vel_parts and tv == _vel_torso:
+		return _vel_cache
+	var p := Vector3.ZERO
+	var m := 0.0
+	for b in parts.values():
+		var rb := b as RigidBody3D
+		if rb == null or not is_instance_valid(rb):
+			continue
+		p += rb.linear_velocity * rb.mass
+		m += rb.mass
+	_vel_cache = p / m if m > 0.0 else Vector3.ZERO
+	_vel_frame = frame
+	_vel_parts = parts.size()
+	_vel_torso = tv
+	return _vel_cache
+
+
+var _vel_frame := -1
+var _vel_parts := -1
+var _vel_torso := Vector3.ZERO
+var _vel_cache := Vector3.ZERO
+
+
+func _compute_com(interpolated: bool) -> Vector3:
 	var acc := Vector3.ZERO
 	for b in parts.values():
 		var rb := b as RigidBody3D
