@@ -44,6 +44,9 @@ const SCREEN := Vector2i(768, 576)
 const TV_DIR := "res://assets/textures/garage/tv/"
 
 @export var dry_run := false
+## Живой эфир (scenes/menu/tv_bout.gd: две куклы на арене Void в своём 3D-мире телевизора); false или `-- menu_live_tv=0` —
+## вместо него смена кадров из assets/textures/garage/tv.
+@export var live_tv := true
 @export var move_time := 0.75
 
 var state := "title"            # title | menu | settings | trophies | leaving
@@ -65,6 +68,7 @@ var _tw_lights: Tween
 var tv_vp: SubViewport
 var tv_root: Control
 var tv_mat: ShaderMaterial
+var bout: TvBout
 var _tv_time := 0.0
 var _tv_anim := {}
 
@@ -90,6 +94,8 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("menu_dry_run"):
 			dry_run = true
+		if a == "menu_live_tv=0":
+			live_tv = false
 	f_head = _font("res://assets/fonts/Oswald.ttf", 650)
 	f_body = _font("res://assets/fonts/Rubik.ttf", 450)
 	f_mono = _font("res://assets/fonts/JetBrainsMono.ttf", 600)
@@ -334,9 +340,14 @@ func _set_zone_mult(focus_zone: String, dur: float, boost := 1.0) -> void:
 func _setup_tv() -> void:
 	tv_vp = SubViewport.new()
 	tv_vp.size = SCREEN
-	tv_vp.disable_3d = true
+	tv_vp.disable_3d = not live_tv
+	tv_vp.own_world_3d = true
 	tv_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(tv_vp)
+	if live_tv:
+		bout = TvBout.new()
+		bout.name = "TvBout"
+		tv_vp.add_child(bout)
 	tv_root = Control.new()
 	tv_root.size = Vector2(SCREEN)
 	tv_root.clip_contents = true
@@ -375,14 +386,18 @@ func _build_tv(mode: String) -> void:
 		tv_root.remove_child(c)
 		c.queue_free()
 	_tv_anim = {}
+	var live3d := live_tv and (mode == "live" or mode == "quick")
+	if live_tv:
+		tv_vp.disable_3d = not live3d       # под полноэкранной графикой 3D не рисуем
 	match mode:
 		"live":
-			var a := _tv_img(TV_DIR + "tv_live_a.png")
-			var b := _tv_img(TV_DIR + "tv_live_b.png")
-			b.modulate.a = 0.0
-			_tv_anim["slides"] = [a, b]
-			_tv_anim["pics"] = ["tv_live_a.png", "tv_live_d.png", "tv_live_c.png", "tv_live_b.png"]
-			_tv_anim["pic"] = 0
+			if not live3d:
+				var a := _tv_img(TV_DIR + "tv_live_a.png")
+				var b := _tv_img(TV_DIR + "tv_live_b.png")
+				b.modulate.a = 0.0
+				_tv_anim["slides"] = [a, b]
+				_tv_anim["pics"] = ["tv_live_a.png", "tv_live_d.png", "tv_live_c.png", "tv_live_b.png"]
+				_tv_anim["pic"] = 0
 			_tv_bar("● LIVE", "NULL FIGHTING · МЕСТНАЯ ЛИГА")
 			_tv_score("КЛЁПА", "2 : 1", "ТУМБА", "NULL FIELD 0.20G ↓")
 			_tv_ticker("ОТКРЫТ НАБОР НОВИЧКОВ · БОКСЫ 01–12 · ГРАВИТАЦИЮ ВЫБИРАЮТ ЗРИТЕЛИ · ")
@@ -398,8 +413,9 @@ func _build_tv(mode: String) -> void:
 			_tv_text("VS  БОКС 07", Vector2(366, 436), 36, Color(1, 1, 1), f_head)
 			_tv_ticker("СЕГОДНЯ В 21:00 · ГАЙКА ПРОТИВ НОВИЧКА ИЗ БОКСА 07 · СТАВКИ НА ДЕТАЛЬ ПРИНЯТЫ · ")
 		"quick":
-			_tv_img(TV_DIR + "tv_live_c.png")
-			_tv_bar("ВЫСТАВОЧНЫЙ", "АРЕНА: РУИНЫ   ◀ ▶")
+			if not live3d:
+				_tv_img(TV_DIR + "tv_live_c.png")
+			_tv_bar("ВЫСТАВОЧНЫЙ", "ПРЯМОЙ ЭФИР · ПОЛЕ VOID")
 			_tv_score("P1", "VS", "P2", "1–2 ИГРОКА · БОТЫ")
 		"build":
 			_tv_grad(Color(0.04, 0.1, 0.2), Color(0.1, 0.24, 0.4))

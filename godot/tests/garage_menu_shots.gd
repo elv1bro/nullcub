@@ -1,6 +1,6 @@
 ## Кадры и ролик главного меню-гаража (scenes/menu/garage_menu.tscn). Нужно окно.
 ##   godot --path godot --resolution 1920x1080 res://tests/garage_menu_shots.tscn -- out=/абс/папка
-##       → garage-<title|story|quick|workshop|trophies|settings|exit|settings_screen|into_tv>.png
+##       → garage-<title|story|quick|workshop|trophies|settings|exit|settings_screen|into_tv>.png, garage-tv_live_0..2.png
 ##   godot --path godot --resolution 1280x720 --write-movie /абс/кадры/f.png --fixed-fps 24 res://tests/garage_menu_shots.tscn -- video=1
 ##       → сценарий: титул → любая клавиша → пункты вниз/вверх → Enter на «Истории» (нырок в телевизор); потом ffmpeg.
 extends Node
@@ -42,6 +42,11 @@ func _stills(out: String, which: String) -> void:
 	await _wait(24)
 	if want.call("title"):
 		_save(out, "title")
+	if want.call("tv_live"):     # сам экран эфира (SubViewport телевизора) через 2, 5 и 8 с — живой бой ботов
+		for k in 3:
+			await get_tree().create_timer(3.0 if k > 0 else 2.0).timeout
+			menu.tv_vp.get_texture().get_image().save_png(out.path_join("garage-tv_live_%d.png" % k))
+			print("shot tv_live_%d" % k)
 	menu.enter_menu()
 	for i in NAMES.size():
 		if not want.call(NAMES[i]):
