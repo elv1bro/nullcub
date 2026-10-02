@@ -113,7 +113,7 @@ func _dot(body: Node3D, local: Vector3, r: float) -> MeshInstance3D:
 	return mi
 
 
-## Перекрасить все меши под узлом n (кукла, её оружие) в «ржавчину Башни».
+## Перекрасить все меши под узлом n (кукла, её оружие) в «ржавчину арены».
 func tint_node(n: Node) -> void:
 	for m in n.find_children("*", "MeshInstance3D", true, false):
 		var mi := m as MeshInstance3D

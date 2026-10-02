@@ -14,7 +14,7 @@
 ##                  request_dash) зачищает волну: время зачистки, урон в обе стороны (волна не беззубая: P1 получил урон; и не
 ##                  неубиваемая: зачищена за CLEAR_MAX_S), кражи, враги подходили к P1 ближе 1.5 м;
 ##   pit          — враг над пропастью (мозг молчит) падает: KO, WaveDirector.kills.pit, enemy_down(cause "pit");
-##   waves        — полный цикл волн ускоренно (враги KO напрямую): состав волн 2 / 1+2 / 2+3 по видам, HP врагов 25/50, строки Башни,
+##   waves        — полный цикл волн ускоренно (враги KO напрямую): состав волн 2 / 1+2 / 2+3 по видам, HP врагов 25/50, строки систем поля,
 ##                  победа, запоздавшая бочка, restart (враги убраны, P1 новый, team), поражение (все игроки KO);
 ##   coop         — F2: P2 в забеге, команда players у обоих, две панели HUD, волна идёт;
 ##   aggro        — отзыв автора «враги не бьют, будто не видят»: волна 3 (2 Уборщика + 3 Разборщика) против P1-бота AGGRO_S с;
@@ -718,7 +718,7 @@ func _s_waves() -> void:
 	var comp: Array = []
 	var flags := {"hp_ok": true}
 	var overs: Array = []
-	director.tower_line.connect(func(s: String) -> void: lines.append(s))
+	director.field_line.connect(func(s: String) -> void: lines.append(s))
 	director.run_over.connect(func(v: bool, _l: String) -> void: overs.append(v))
 	director.wave_started.connect(func(i: int, _n: int, _l: String) -> void: comp.append({"wave": i + 1, "kinds": {}}))
 	director.enemy_spawned.connect(func(e: Doll) -> void:
@@ -727,7 +727,7 @@ func _s_waves() -> void:
 			var d: Dictionary = comp[comp.size() - 1]["kinds"]
 			d[k] = int(d.get(k, 0)) + 1
 		var want_hp := SWEEPER_HP if k == "sweeper" else SCRAPLING_HP
-		if not is_equal_approx(e.hp, want_hp) or not is_equal_approx(e.max_hp, want_hp) or e.get("team") != "tower" or float(e.get("team_damage_mult")) != 0.0:
+		if not is_equal_approx(e.hp, want_hp) or not is_equal_approx(e.max_hp, want_hp) or e.get("team") != "arena" or float(e.get("team_damage_mult")) != 0.0:
 			flags["hp_ok"] = false)
 	director.start_run()
 	# волны: как только все враги волны выпали — KO каждому
@@ -744,11 +744,11 @@ func _s_waves() -> void:
 			barrel = true
 	var comp_ok := comp.size() == 3 and _kinds(comp[0]) == "scrapling:2" and _kinds(comp[1]) == "scrapling:2,sweeper:1" and _kinds(comp[2]) == "scrapling:3,sweeper:2"
 	_check("waves_composition", 1.0 if comp_ok else 0.0, 1.0, "eq", "waves 2 / 1+2 / 2+3: %s" % [comp])
-	_check("waves_enemy_hp_team", 1.0 if bool(flags["hp_ok"]) else 0.0, 1.0, "eq", "Scrapling %.0f HP, Sweeper %.0f HP, team tower, team_damage_mult 0" % [SCRAPLING_HP, SWEEPER_HP])
+	_check("waves_enemy_hp_team", 1.0 if bool(flags["hp_ok"]) else 0.0, 1.0, "eq", "Scrapling %.0f HP, Sweeper %.0f HP, team arena, team_damage_mult 0" % [SCRAPLING_HP, SWEEPER_HP])
 	_check("waves_victory", 1.0 if overs == [true] else 0.0, 1.0, "eq", "run_over(victory) after wave 3 (%s)" % [overs])
-	_check("waves_tower_lines", float(lines.size()), 5.0, "gte", "Tower lines (intro, 3 waves, clears, victory): %s" % [lines])
-	_check("waves_caps", 1.0 if _all_caps(lines) else 0.0, 1.0, "eq", "Tower speaks in CAPS")
-	_check("waves_late_barrel", 1.0 if barrel else 0.0, 1.0, "eq", "late barrel dropped after FLOOR CLEAN (правило гашения)")
+	_check("waves_field_lines", float(lines.size()), 5.0, "gte", "Field lines (intro, 3 waves, clears, victory): %s" % [lines])
+	_check("waves_caps", 1.0 if _all_caps(lines) else 0.0, 1.0, "eq", "Field systems speak in CAPS")
+	_check("waves_late_barrel", 1.0 if barrel else 0.0, 1.0, "eq", "late barrel dropped after FIELD CLEAR (правило гашения)")
 	# restart
 	var old_id := p1.get_instance_id()
 	director.restart()
@@ -1006,7 +1006,7 @@ func _perf() -> void:
 
 func _shots() -> void:
 	var dir := ProjectSettings.globalize_path("res://").path_join("../docs/plan-demo/img")
-	# 1) волна: забег сразу с волны 3 — враги сыплются из желоба (строка Башни, табличка ВОЛНА 3/3)
+	# 1) волна: забег сразу с волны 3 — враги сыплются из желоба (строка систем поля, табличка ВОЛНА 3/3)
 	await _load(true, true)
 	_give_hammer(p1)
 	director.intro_s = 0.3
@@ -1049,7 +1049,7 @@ func _shots() -> void:
 				got = true
 	await _shot(dir.path_join("pve-v1-steal.png"))
 	await _unload()
-	# 4) зачистка: P1-бот с молотом зачищает волну 1 по-настоящему; кадр через 0.15 с после CLEAR (табличка «ЧИСТО», строка Башни)
+	# 4) зачистка: P1-бот с молотом зачищает волну 1 по-настоящему; кадр через 0.15 с после CLEAR (табличка «ЧИСТО», строка систем поля)
 	await _load(true, true)
 	_give_hammer(p1)
 	var clear_t := -1.0
@@ -1060,7 +1060,7 @@ func _shots() -> void:
 				clear_t = t
 			p1.input_vec = Vector2.ZERO
 			if t - clear_t >= 0.15:
-				break   # последний KO ещё разлетается (замедление KO), CLEAR! и строка Башни уже есть
+				break   # последний KO ещё разлетается (замедление KO), CLEAR! и строка систем поля уже есть
 		else:
 			_bot_rush(p1, _nearest_enemy(p1))
 	report["info"]["shot_clear_t"] = snappedf(clear_t, 0.01)

@@ -1,13 +1,13 @@
 ## HUD режима волн (scenes/pve/pve_hud.tscn, стиль scenes/ui: hud_theme.tres — тёмные доски с деревянной рамкой, шрифты диктора).
 ## Дерево — в сцене, здесь поведение:
 ##   Root/Players  — панели игроков (scenes/ui/player_panel.tscn: портрет цвета игрока + HP), P1 слева сверху, P2 справа;
-##   Root/WaveBox  — табличка «ВОЛНА 2/3» и «ВРАГОВ: 3» по центру сверху, под ней строка Башни (капсом, янтарём, печатается по буквам
+##   Root/WaveBox  — табличка «ВОЛНА 2/3» и «ВРАГОВ: 3» по центру сверху, под ней строка систем поля (капсом, янтарём, печатается по буквам
 ##                   TYPE_CPS, держится LINE_HOLD_S и гаснет);
 ##   Root/Marks    — поверх мира: у каждого живого врага полоска HP над головой (красная, ширина ∝ max_hp — Уборщик длиннее) и
 ##                   надпись телеграфа (SWEEP! / PARTS! / MINE! / UNSCREW!) из EnemyLook.callout — крупно, с пульсом: видно, КТО
 ##                   враг и ЧТО он сейчас сделает, на любом зуме камеры (3D-надпись на полном отъезде была бы в 20 px);
-##   Root/Announcer — диктор (scenes/ui/announcer.gd): WAVE 1, KO!, CLEAR!, FLOOR CLEAN!;
-##   Root/EndPanel — итог забега (ПОБЕДА / ПОРАЖЕНИЕ, строка Башни, «R — заново») — внизу по центру: камера держит игрока в центре
+##   Root/Announcer — диктор (scenes/ui/announcer.gd): WAVE 1, KO!, CLEAR!, FIELD CLEAR!;
+##   Root/EndPanel — итог забега (ПОБЕДА / ПОРАЖЕНИЕ, строка систем поля, «R — заново») — внизу по центру: камера держит игрока в центре
 ##                   кадра, табличка посередине закрывала бы его (и запоздавшую бочку).
 ## bind(director): WaveDirector (scripts/pve/wave_director.gd) — подписка по именам сигналов.
 class_name PveHud
@@ -34,7 +34,7 @@ var _clock := 0.0
 @onready var marks: Control = $Root/Marks
 @onready var wave_label: Label = $Root/WaveBox/WavePanel/WaveVBox/WaveLabel
 @onready var left_label: Label = $Root/WaveBox/WavePanel/WaveVBox/LeftLabel
-@onready var tower_label: Label = $Root/WaveBox/TowerLine
+@onready var field_label: Label = $Root/WaveBox/FieldLine
 @onready var announcer: Announcer = $Root/Announcer
 @onready var end_panel: PanelContainer = $Root/EndPanel
 @onready var end_title: Label = $Root/EndPanel/EndVBox/EndTitle
@@ -43,7 +43,7 @@ var _clock := 0.0
 
 func _ready() -> void:
 	end_panel.visible = false
-	tower_label.text = ""
+	field_label.text = ""
 	marks.draw.connect(_draw_marks)
 	wave_label.text = "ВОЛНА —"
 	left_label.text = ""
@@ -53,7 +53,7 @@ func bind(d: Node) -> void:
 	director = d
 	var pairs := [
 		["wave_started", _on_wave_started], ["wave_cleared", _on_wave_cleared], ["enemies_changed", _on_enemies_changed],
-		["tower_line", _on_tower_line], ["run_over", _on_run_over], ["announce", _on_announce], ["hp_changed", _on_hp_changed],
+		["field_line", _on_field_line], ["run_over", _on_run_over], ["announce", _on_announce], ["hp_changed", _on_hp_changed],
 		["ko", _on_ko], ["phase_changed", _on_phase_changed],
 	]
 	for p in pairs:
@@ -114,7 +114,7 @@ func _on_enemies_changed(left: int, total: int) -> void:
 	left_label.text = "ВРАГОВ: %d из %d" % [left, total] if total > 0 else ""
 
 
-func _on_tower_line(text: String) -> void:
+func _on_field_line(text: String) -> void:
 	_line_full = text
 	_line_t = 0.0
 
@@ -166,13 +166,13 @@ func _process(delta: float) -> void:
 	if _line_full != "":
 		_line_t += real
 		var n := int(_line_t * TYPE_CPS)
-		tower_label.text = _line_full.substr(0, mini(n, _line_full.length()))
+		field_label.text = _line_full.substr(0, mini(n, _line_full.length()))
 		var type_s := float(_line_full.length()) / TYPE_CPS
 		var a := 1.0 - clampf((_line_t - type_s - LINE_HOLD_S) / LINE_FADE_S, 0.0, 1.0)
-		tower_label.modulate.a = a
+		field_label.modulate.a = a
 		if a <= 0.0:
 			_line_full = ""
-			tower_label.text = ""
+			field_label.text = ""
 	marks.queue_redraw()
 
 

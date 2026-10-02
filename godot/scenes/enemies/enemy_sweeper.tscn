@@ -13,7 +13,7 @@ thrust_ref_mass = 48.0
 player_index = -1
 input_prefix = "enemy"
 external_input = true
-team = "tower"
+team = "arena"
 team_damage_mult = 0.0
 max_hp = 50.0
 

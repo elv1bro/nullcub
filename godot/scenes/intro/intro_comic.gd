@@ -10,14 +10,14 @@ class_name IntroComic
 extends Node2D
 
 const STAGE_SCENE := "res://scenes/intro/intro_stage.tscn"
-## «Холодное открытие»: журнал Башни на чёрном, пока грузится площадка (арена «Свалка» грузится долго).
+## «Холодное открытие»: табло поля NULL на чёрном, пока грузится площадка (арена «Свалка» грузится долго).
 const COLD_LINES := [
-	"TOWER//SYS  ::  DISPOSAL UNIT 0",
-	"> CYCLE 71 203 ............... RUNNING",
-	"> OBJECTS DISCARDED .......... 1 204",
-	"> SCANNING FOR ACTIVE CORES",
+	"NULL FIELD  ::  ARENA CONTROLLER",
+	"> FIELD STATUS ................ STABLE",
+	"> GRAVITY ..................... 0.20G",
+	"> MEMBRANE .................... 98%",
 ]
-const COLD_DONE := "> SIGNAL FOUND.  SECTOR 0."
+const COLD_DONE := "> FIGHTER DETECTED.  GATE 0."
 const SFX := "res://assets/audio/intro/%s.wav"
 const SEEN_FLAG := "user://intro_seen"
 const AMB_DB := -13.0
@@ -252,7 +252,7 @@ func _row_view(row: int) -> void:
 	await _wait(row_view_s * 0.45)
 
 
-## Печатает журнал Башни, пока площадка грузится: строки по буквам, потом точки и мигающий курсор до конца загрузки.
+## Печатает табло поля, пока площадка грузится: строки по буквам, потом точки и мигающий курсор до конца загрузки.
 func _cold_open() -> void:
 	var shown := ""
 	_amb.volume_db = -34.0
