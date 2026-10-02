@@ -173,10 +173,24 @@ func _tune_world_env(we: WorldEnvironment) -> void:
 	var v := values(preset)
 	var env := we.environment
 	if env != null:
+		_drop_unsupported(env)
 		if not env.has_meta(META_GLOW):
 			env.set_meta(META_GLOW, env.glow_enabled)   # как задумала арена: пресет только выключает, включённым не навязывает
 		env.glow_enabled = bool(env.get_meta(META_GLOW)) and bool(v["glow"])
 	_tune_dof(we.camera_attributes, bool(v["dof"]))
+
+
+## Эффекты, которых нет у рендерера (SSIL / SDFGI / объёмный туман — только Forward+, SSAO — Forward+ и Compatibility): выключаем в памяти,
+## иначе Godot пишет предупреждение на каждую загрузку арены. Файлы окружений не трогаются.
+func _drop_unsupported(env: Environment) -> void:
+	var method := RenderingServer.get_current_rendering_method()
+	if method == "forward_plus":
+		return
+	env.ssil_enabled = false
+	env.sdfgi_enabled = false
+	env.volumetric_fog_enabled = false
+	if method == "mobile":
+		env.ssao_enabled = false
 
 
 func _tune_camera(cam: Camera3D) -> void:
