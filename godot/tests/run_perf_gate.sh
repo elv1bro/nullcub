@@ -7,7 +7,7 @@
 #   4. match_probe perf=1 на Руинах и Свалке — рывки кадра и «узлов за кадр» в активном бою (headless: реальные часы между кадрами =
 #      цена кадра на CPU). Остальные проверки match_probe тут не смотрим (разброс ботов), только perf_*;
 #   4b. pve_cpu_probe — скрипты PvE (5 врагов + бот-игрок) за физический тик: сумма мкс против бюджета 1700 (было 1850 до кэша
-#      Doll.centre_of_mass; сейчас ~1200); лучший из двух прогонов — под чужой нагрузкой цифры плавают;
+#      Doll.centre_of_mass; сейчас ~1200); лучший из трёх прогонов — под чужой нагрузкой цифры плавают (при load 15 один прогон давал 1736 при ~1200 в покое);
 #   5. --window: stats_probe в окне (Mobile): память текстур ≤ 280 МБ и draw calls ≤ пределов на аренах и в сборке;
 #   6. --window: cold_ws_probe — первые жесты мастерской (в т. ч. «Испытать» / «назад»), худший кадр ≤ 120 мс.
 # Godot на Mac запускать нативно: gtimeout 1800 /usr/bin/arch -arm64 /bin/bash tests/run_perf_gate.sh  (GODOT=… — свой бинарник).
@@ -45,9 +45,9 @@ for sc in ruins scrap; do
   echo "$out" | grep -qE "ok +perf_nodes_per_frame" || fail=1
 done
 
-say "4b. скрипты PvE за тик (pve_cpu_probe, бюджет 1700 мкс, лучший из двух)"
+say "4b. скрипты PvE за тик (pve_cpu_probe, бюджет 1700 мкс, лучший из трёх)"
 pve_ok=0
-for i in 1 2; do
+for i in 1 2 3; do
   out=$($G --headless --path . --fixed-fps 60 res://tests/pve_cpu_probe.tscn -- "secs=10,warm=2,budget_us=1700" 2>&1)
   echo "$out" | grep -E "^TOTAL|^FAIL budget" | cut -c1-120
   echo "$out" | grep -q "=== OK ===" && { pve_ok=1; break; }
