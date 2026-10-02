@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Ragdoll Master Demo"
+config/name="NULL GRAVITY"
 run/main_scene="res://scenes/menu/garage_menu.tscn"
 config/version="0.0.1"
 config/features=PackedStringArray("4.7", "Mobile")

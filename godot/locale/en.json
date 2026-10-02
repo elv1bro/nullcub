@@ -758,7 +758,6 @@
 	"Арена «Мастерская»": "Workshop arena",
 	"Бой двоих среди верстаков": "Two-player fight among the workbenches",
 	"Арена «Void»": "Void arena",
-	"Пустое поле, как в Ragdoll Masters": "An empty field, like in Ragdoll Masters",
 	"Арена «Свалка»": "Scrapyard arena",
 	"Бой двоих на Свалке, машины и кучи хлама": "Two-player fight in the Scrapyard, cars and junk heaps",
 	"Пресеты тела": "Body presets",
@@ -836,7 +835,7 @@
 	"НЕОН": "NEON",
 	"LED-ТАБЛО": "LED BOARD",
 	"ПОЛНЫЙ ЭКРАН": "FULLSCREEN",
-	"СУБТИТРЫ N0": "N0 SUBTITLES",
+	"СУБТИТРЫ N0": "SUBTITLES",
 	"НАЗАД": "BACK",
 	"P1   WASD · Shift — ускорение · Space + A/D — раскрутка": "P1   WASD · Shift — boost · Space + A/D — spin",
 	"P2   стрелки · правый Ctrl — ускорение · Enter — раскрутка": "P2   arrows · right Ctrl — boost · Enter — spin",
@@ -1428,5 +1427,6 @@
 	"Ходуля-коготь (лига)": "Talon Stilt (league)",
 	"Разборщик (Scrapling)": "Scrapling",
 	"Уборщик (Sweeper)": "Sweeper",
-	"Метла Уборщика (рукоять + колодка)": "Sweeper's Broom (handle + block)"
+	"Метла Уборщика (рукоять + колодка)": "Sweeper's Broom (handle + block)",
+	"Пустое чёрное поле: чистая механика без декораций": "An empty black field: pure mechanics, no scenery"
 }

@@ -18,7 +18,7 @@ const ITEMS := [
 		"Уборщик и Разборщик, три волны. F2 — кооп"],
 	["Арена «Руины»", "res://scenes/playground.tscn", "Бой двоих, оружие, Sudden Death"],
 	["Арена «Мастерская»", "res://scenes/playground_workshop.tscn", "Бой двоих среди верстаков"],
-	["Арена «Void»", "res://scenes/playground_void.tscn", "Пустое поле, как в Ragdoll Masters"],
+	["Арена «Void»", "res://scenes/playground_void.tscn", "Пустое чёрное поле: чистая механика без декораций"],
 	["Арена «Свалка»", "res://scenes/playground_scrap.tscn", "Бой двоих на Свалке, машины и кучи хлама"],
 	["Пресеты тела", "res://scenes/playground_body.tscn", "Модульные куклы: F1–F12 — пресеты, [ ] — перебор"],
 ]

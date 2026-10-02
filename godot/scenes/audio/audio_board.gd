@@ -140,7 +140,7 @@ func _build_ui() -> void:
 	root.offset_bottom = -12
 	add_child(root)
 	var title := Label.new()
-	title.text = tr("Звуковая доска — Ragdoll Master (пробел — повторить, Esc — выход)")
+	title.text = tr("Звуковая доска — NULL GRAVITY (пробел — повторить, Esc — выход)")
 	title.add_theme_font_size_override("font_size", 22)
 	root.add_child(title)
 	_status = Label.new()
