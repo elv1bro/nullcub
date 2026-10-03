@@ -792,13 +792,13 @@ func _build_ui() -> void:
 	_label(ui, tr("NULL FIGHTING  ·  BAY 07"), Vector2(x0, 80), 18, Color(1.0, 0.7, 0.35, 0.9), f_mono)
 	_label(ui, "NULL", Vector2(x0 - 4, 104), 82, Color(1, 1, 1), f_head)
 	_label(ui, "GRAVITY", Vector2(x0 - 4, 184), 82, ACCENT, f_head)
-	# знак игры — дрон N0 на орбите (docs/plan-demo/BRAND.md); справа от слов, на высоте обоих строк
+	# знак игры — дрон N0 на орбите (docs/plan-demo/BRAND.md, плашка с мягким краем); справа от слов, на высоте обоих строк
 	var mark := TextureRect.new()
-	mark.texture = load("res://assets/ui/brand/null_gravity_mark.png")
+	mark.texture = load("res://assets/ui/brand/null_gravity_badge_512.png")
 	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	mark.position = Vector2(x0 + 318, 88)
-	mark.size = Vector2(200, 200)
+	mark.position = Vector2(x0 + 296, 62)
+	mark.size = Vector2(240, 240)
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(mark)
 	title_box = Control.new()

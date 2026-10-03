@@ -14,7 +14,7 @@ config/name="NULL GRAVITY"
 run/main_scene="res://scenes/boot.tscn"
 config/version="0.0.1"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://icon.svg"
+config/icon="res://assets/ui/brand/null_gravity_icon.png"
 
 [autoload]
 

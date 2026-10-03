@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://0m608i8dkhvp"
-path="res://.godot/imported/null_gravity_mark.png-f25847836f6d63f31ed4672e91321931.ctex"
+uid="uid://cvngi1n610iu6"
+path="res://.godot/imported/null_gravity_badge_512.png-74d5e5e2a2779c2661eb11406e400840.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/brand/null_gravity_mark.png"
-dest_files=["res://.godot/imported/null_gravity_mark.png-f25847836f6d63f31ed4672e91321931.ctex"]
+source_file="res://assets/ui/brand/null_gravity_badge_512.png"
+dest_files=["res://.godot/imported/null_gravity_badge_512.png-74d5e5e2a2779c2661eb11406e400840.ctex"]
 
 [params]
 
