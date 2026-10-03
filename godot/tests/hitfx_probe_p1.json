@@ -107,7 +107,7 @@
       "id": "heavy_focus_lead",
       "ok": true,
       "value": [
-        0.99,
+        0.66,
         1.0
       ],
       "limit": [
@@ -282,8 +282,8 @@
     {
       "id": "crit_camera_restored",
       "ok": true,
-      "value": "Camera:<Camera3D#142707001995>",
-      "limit": "Camera:<Camera3D#142707001995>"
+      "value": "Camera:<Camera3D#156145552086>",
+      "limit": "Camera:<Camera3D#156145552086>"
     },
     {
       "id": "crit_no_time_tags",
@@ -474,8 +474,8 @@
     {
       "id": "final_camera_game",
       "ok": true,
-      "value": "Camera:<Camera3D#142707001995>",
-      "limit": "Camera:<Camera3D#142707001995>"
+      "value": "Camera:<Camera3D#156145552086>",
+      "limit": "Camera:<Camera3D#156145552086>"
     },
     {
       "id": "final_match_fx_children",

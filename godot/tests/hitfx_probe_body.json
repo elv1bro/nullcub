@@ -107,7 +107,7 @@
       "id": "heavy_focus_lead",
       "ok": true,
       "value": [
-        1.36,
+        0.9,
         1.0
       ],
       "limit": [
@@ -282,8 +282,8 @@
     {
       "id": "crit_camera_restored",
       "ok": true,
-      "value": "Camera:<Camera3D#158880238714>",
-      "limit": "Camera:<Camera3D#158880238714>"
+      "value": "Camera:<Camera3D#172302011589>",
+      "limit": "Camera:<Camera3D#172302011589>"
     },
     {
       "id": "crit_no_time_tags",
@@ -474,8 +474,8 @@
     {
       "id": "final_camera_game",
       "ok": true,
-      "value": "Camera:<Camera3D#158880238714>",
-      "limit": "Camera:<Camera3D#158880238714>"
+      "value": "Camera:<Camera3D#172302011589>",
+      "limit": "Camera:<Camera3D#172302011589>"
     },
     {
       "id": "final_match_fx_children",
@@ -495,80 +495,80 @@
     "heavy_brake": {
       "stand_1.2_off": {
         "tier": "heavy",
-        "along_max": -2.01456642150879,
-        "gap_400": 1.2833708524704,
+        "along_max": -2.01547527313232,
+        "gap_400": 1.28361022472382,
         "gap_0": 1.2
       },
       "stand_1.2_on": {
         "tier": "heavy",
-        "along_max": -1.99236690998077,
-        "gap_400": 1.29410398006439,
+        "along_max": -1.99231648445129,
+        "gap_400": 1.28811347484589,
         "gap_0": 1.2
       },
       "stand_1.6_off": {
         "tier": "heavy",
         "along_max": -1.97988414764404,
-        "gap_400": 1.72418320178986,
+        "gap_400": 1.72420179843903,
         "gap_0": 1.6
       },
       "stand_1.6_on": {
         "tier": "heavy",
         "along_max": -1.9793928861618,
-        "gap_400": 1.72069573402405,
+        "gap_400": 1.72066795825958,
         "gap_0": 1.6
       },
       "dash_1.0_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.45615458488464,
+        "gap_400": 1.45684897899628,
         "gap_0": 1.0
       },
       "dash_1.0_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.23083126544952,
+        "gap_400": 1.23111701011658,
         "gap_0": 1.0
       },
       "dash_1.1_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.24191236495972,
+        "gap_400": 1.24191284179688,
         "gap_0": 1.1
       },
       "dash_1.1_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.27098786830902,
+        "gap_400": 1.27087461948395,
         "gap_0": 1.1
       },
       "dash_1.2_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.31425333023071,
+        "gap_400": 1.31428027153015,
         "gap_0": 1.2
       },
       "dash_1.2_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.31188666820526,
+        "gap_400": 1.31166779994965,
         "gap_0": 1.2
       },
       "dash_1.3_off": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.39393782615662,
+        "gap_400": 1.39391589164734,
         "gap_0": 1.3
       },
       "dash_1.3_on": {
         "tier": "heavy",
         "along_max": -1.4157874584198,
-        "gap_400": 1.39143633842468,
+        "gap_400": 1.39140748977661,
         "gap_0": 1.3
       }
     },
     "heavy_brake_gap_400_stand": [
       1.5,
-      1.51
+      1.5
     ],
     "heavy_brake_dash_along_max": 0.0,
     "heavy_brake_gap_400_dash": [
@@ -576,7 +576,7 @@
       1.3
     ],
     "real_ko_mode": "cinematic",
-    "played": 46,
+    "played": 48,
     "stats": {
       "flashes": 21,
       "impact_frames": 1,
