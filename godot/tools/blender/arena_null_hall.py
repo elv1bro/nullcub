@@ -775,10 +775,91 @@ def wall_panel(number):
     return done(objs, 0.01)
 
 
+
+# ----------------------------------------------------------------------------------------------------------------------
+# тренировочный зал за воротами мастерской (docs/plan-demo/MENU_GARAGE.md, «Тренировочный зал»; лист автора 02.10)
+# ----------------------------------------------------------------------------------------------------------------------
+def build_Heavy_Bag():
+    """Подвесная груша-шар Ø1.1 м: сегменты красная / тёмная кожа, шов-обручи, заклёпки по экватору, сверху плита-ухо и скоба.
+    Origin — центр шара (физическое тело в Godot); ухо подвеса — на y = +0.62."""
+    R = 0.55
+    objs = []
+    cuts = [0, 38, 76, 104, 142, 180]
+    for k in range(len(cuts) - 1):
+        a0, a1 = math.radians(cuts[k]), math.radians(cuts[k + 1])
+        n = 3
+        prof = [(R * math.sin(a0 + (a1 - a0) * i / n), -R * math.cos(a0 + (a1 - a0) * i / n)) for i in range(n + 1)]
+        prof = [(max(r, 0.0), y) for r, y in prof]
+        objs.append(revolve("Band_%d" % k, prof, "Hall_ClothRed" if k % 2 == 0 else "Hall_SteelDark", 22))
+    for k, deg in enumerate(cuts[1:-1]):
+        a = math.radians(deg)
+        r = R * math.sin(a) * 1.012
+        ring = [(r * math.cos(t * math.tau / 22), -R * math.cos(a) * 1.0, r * math.sin(t * math.tau / 22)) for t in range(22)]
+        objs.append(sweep("Seam_%d" % k, ring, 0.016, "Hall_Steel", sides=4, closed=True))
+    for i in range(10):
+        t = i * math.tau / 10
+        objs.append(sphere("Stud_%d" % i, 0.028, (R * 1.01 * math.cos(t), 0.0, R * 1.01 * math.sin(t)), "Hall_Steel", 6, 4))
+    objs.append(revolve("EarPlate", [(0.0, R - 0.02), (0.17, R - 0.02), (0.17, R + 0.03), (0.09, R + 0.06), (0.0, R + 0.06)], "Hall_SteelDark", 18))
+    objs.append(sweep("Shackle", [(0.0, R + 0.06, 0.0), (0.0, R + 0.12, 0.0), (0.0, R + 0.18, 0.0)], 0.03, "Hall_Steel", sides=8))
+    ring = [(0.07 * math.cos(t * math.tau / 20), R + 0.2 + 0.07 * math.sin(t * math.tau / 20), 0.0) for t in range(20)]
+    objs.append(sweep("Eye", ring, 0.022, "Hall_Steel", sides=8, closed=True))
+    return done(objs, 0.0), []
+
+
+def build_Chain_Link():
+    """Два звена цепи (длина 0.2 м, шаг повторения 0.2): первое в плоскости XY, второе повёрнуто на 90°. Origin — низ пары."""
+    objs = []
+    for i, (rot, y0) in enumerate(((0.0, 0.0), (math.pi / 2, 0.1))):
+        pts = []
+        for t in range(24):
+            a = t * math.tau / 24
+            x = 0.035 * math.cos(a)
+            y = 0.1 * 0.5 + 0.1 * math.sin(a) * 0.62
+            pts.append((x * math.cos(rot), y0 + y - 0.02, x * math.sin(rot)))
+        objs.append(sweep("Link_%d" % i, pts, 0.011, "Hall_SteelDark", sides=6, closed=True))
+    return done(objs, 0.0), []
+
+
+def build_Tire_Column():
+    """Колонна из покрышек для ударов: плита-основание с жёлтой кромкой, стойка, 7 покрышек со сдвигом, верхняя шайба. Высота 2.5 м.
+    Origin — центр основания на полу."""
+    objs = [box("Base", (1.3, 0.14, 1.3), "Hall_Plate", (0.0, 0.07, 0.0)),
+            box("BaseEdge", (1.36, 0.05, 1.36), "Hall_Yellow", (0.0, 0.025, 0.0)),
+            box("Foot", (0.5, 0.2, 0.5), "Hall_SteelDark", (0.0, 0.24, 0.0))]
+    objs.append(revolve("Pole", [(0.0, 0.3), (0.075, 0.3), (0.075, 2.5), (0.0, 2.5)], "Hall_SteelDark", 14))
+    tire = [(0.3, -0.15), (0.44, -0.15), (0.5, -0.08), (0.5, 0.08), (0.44, 0.15), (0.3, 0.15), (0.3, -0.15)]
+    for i in range(7):
+        objs.append(revolve("Tire_%d" % i, [(r, y) for r, y in tire], "Hall_Rubber", 16,
+                            T((0.0, 0.34 + i * 0.3, 0.0)), closed=True, phase=i * 0.3))
+        if i % 3 == 0:
+            objs.append(revolve("Tread_%d" % i, [(0.30, -0.02), (0.508, -0.02), (0.508, 0.02), (0.30, 0.02), (0.30, -0.02)], "Hall_Yellow", 16,
+                                T((0.0, 0.34 + i * 0.3, 0.0)), closed=True))
+    objs.append(revolve("Cap", [(0.0, 2.5), (0.3, 2.5), (0.3, 2.56), (0.0, 2.56)], "Hall_Yellow", 16))
+    return done(objs, 0.0), []
+
+
+def build_Hang_Beam():
+    """Подвесная двутавровая балка 6 м вдоль X для груши и манекена: полки, стенка, торцевые плиты с жёлтым, три проушины снизу
+    (центр и ±1.8). Origin — центр, низ нижней полки на y = 0."""
+    objs = [box("FlangeLow", (6.0, 0.05, 0.3), "Hall_Steel", (0.0, 0.025, 0.0)),
+            box("FlangeHigh", (6.0, 0.05, 0.3), "Hall_Steel", (0.0, 0.375, 0.0)),
+            box("Web", (6.0, 0.3, 0.06), "Hall_SteelDark", (0.0, 0.2, 0.0))]
+    for sx in (-1, 1):
+        objs.append(box("EndPlate_%d" % sx, (0.06, 0.42, 0.34), "Hall_Yellow", (sx * 3.0, 0.2, 0.0)))
+        for k in range(6):
+            objs.append(box("Stiff_%d_%d" % (sx, k), (0.04, 0.3, 0.2), "Hall_SteelDark", (sx * (0.4 + k * 0.5) + (0 if sx < 0 else 0), 0.2, 0.0)))
+    for x in (-1.8, 0.0, 1.8):
+        objs.append(box("Lug_%g" % x, (0.18, 0.1, 0.12), "Hall_SteelDark", (x, -0.05, 0.0)))
+        ring = [(x + 0.05 * math.cos(t * math.tau / 16), -0.12 + 0.05 * math.sin(t * math.tau / 16), 0.0) for t in range(16)]
+        objs.append(sweep("Eye_%g" % x, ring, 0.014, "Hall_Steel", sides=6, closed=True))
+    return done(objs, 0.004), []
+
+
 MODULES = ["Stand_Segment", "Catwalk", "Support_Column", "Stairs", "Railing", "Light_Rig",
            "Big_Screen", "Small_Scoreboard", "Banner_Red", "Banner_Blue", "Null_Emitter", "Membrane_Anchor_A", "Membrane_Anchor_B",
            "Fighter_Gate", "Camera_Broadcast", "Speaker", "Tech_Box", "Crate", "Cables_Pipes", "Debris", "Floor_Platform",
-           "Wall_Panel_01", "Wall_Panel", "Membrane_Strip", "Banner_Fighting", "Camera_Drone", "Light_Beam", "Floor_Seam"]
+           "Wall_Panel_01", "Wall_Panel", "Membrane_Strip", "Banner_Fighting", "Camera_Drone", "Light_Beam", "Floor_Seam",
+           "Heavy_Bag", "Chain_Link", "Tire_Column", "Hang_Beam"]
 MULTI = {"Fighter_Gate", "Debris"}   # несколько узлов в одном glb (створки ворот, 4 обломка)
 
 

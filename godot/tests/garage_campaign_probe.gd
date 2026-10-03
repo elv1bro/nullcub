@@ -113,7 +113,7 @@ func _run() -> void:
 	_check("shared_with_garage", menu._campaign == c.state, null)
 	# 2. бой ставится в тот же мир
 	_check("start_fight_accepted", c.start_fight(), null)
-	_check("connecting_screen", c.ui.screen_id == "connecting", c.ui.screen_id)
+	_check("loader_while_connecting", Loading.showing, null)
 	var fought := await _wait(func() -> bool: return c.fight != null and is_instance_valid(c.fight) and c.fight.is_inside_tree(), 60.0)
 	_check("fight_in_garage_tree", fought and c.fight.get_parent() == menu, [c.fight_load_ms])
 	if fought:

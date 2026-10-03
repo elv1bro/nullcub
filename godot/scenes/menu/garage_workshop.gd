@@ -9,12 +9,21 @@ extends Node
 
 signal opened
 signal closed
+signal instantiated      # мастерская поставлена в мир (спящая): гараж готов к вводу
+signal hall_ready        # тренировочный зал поставлен в мир (спящий)
 
 const SCENE := "res://scenes/workshop/workshop_embed.tscn"
+const HALL_SCENE := "res://scenes/arena/training_hall.tscn"
 const DIVE_S := 0.95
 
 var garage: Node3D                  # GarageMenu
 var ws: WorkshopBuild
+## Тренировочный зал за воротами (scenes/arena/training_hall.tscn): грузится под лоадером при первом испытании, дальше живёт спящим.
+var hall: TrainingHall
+var hall_inst_ms := -1
+var _hall_prep := false
+var _hall_prefetched := false
+var _want_test := false
 var loading := false
 var load_ms := -1                   # сколько мастерская грузилась в фоне (проба / замер), мс
 var inst_ms := -1                   # сколько ставилась в мир (instantiate + _ready), мс
@@ -39,16 +48,15 @@ func preload_scene() -> void:
 	if ResourceLoader.load_threaded_request(SCENE, "", true) == OK:
 		loading = true
 		_t_load = Time.get_ticks_msec()
+		CraftEdit.preload_parts_threaded()   # детали полок — туда же, в потоки: иначе их 157 файлов читаются в кадре постановки (≈ 540 мс)
 
 
-func _process(_delta: float) -> void:
-	if not loading:
-		return
+func _poll_load() -> void:
 	var st := ResourceLoader.load_threaded_get_status(SCENE)
 	if st == ResourceLoader.THREAD_LOAD_LOADED:
 		load_ms = Time.get_ticks_msec() - _t_load
 		# ставим, когда камера стоит (титул / пункт меню): подвисание кадра при сборке мастерской не видно на переезде
-		if not bool(garage.call("is_moving")):
+		if not bool(garage.call("is_moving")) and CraftEdit.parts_preloaded():
 			_instantiate()
 	elif st == ResourceLoader.THREAD_LOAD_FAILED or st == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 		loading = false
@@ -76,7 +84,9 @@ func _instantiate() -> void:
 		layer.visible = false
 	ws.exit_requested.connect(close)
 	ws.mode_changed.connect(_on_mode)
+	ws.test_ready_check = hall_is_ready
 	inst_ms = Time.get_ticks_msec() - t0
+	instantiated.emit()
 
 
 func is_open() -> bool:
@@ -141,6 +151,7 @@ func _leave_campaign_mode() -> void:
 
 
 func _dive() -> void:
+	prefetch_hall()
 	garage.set("state", "workshop")
 	var cam := garage.get("cam") as Camera3D
 	var ui_root := garage.get("ui") as Control
@@ -227,8 +238,118 @@ func _set_props(menu_view: bool) -> void:
 		stand.visible = menu_view
 
 
-## Испытание — весь гараж светится ровно (как комната испытаний), сборка — свет у верстака.
+## Испытание — весь гараж светится ровно (как комната испытаний), сборка — свет у верстака; на испытании открываются ворота в зал.
 func _on_mode(m: int) -> void:
+	var testing := m == WorkshopBuild.Mode.TEST
+	if not testing:
+		_leave_test()
 	if not is_open():
 		return
-	garage.call("_set_zone_mult", "" if m == WorkshopBuild.Mode.TEST else "bench", 0.4)
+	garage.call("_set_zone_mult", "" if testing else "bench", 0.4)
+	if testing:
+		_enter_test()
+
+
+# ---------------------------------------------------------------- тренировочный зал
+
+func _gate() -> GarageHallGate:
+	return garage.get_node_or_null("Room/HallGate") as GarageHallGate
+
+
+## Зал можно догружать в фоне, пока игрок собирает бойца (кадр не страдает); ставится в мир при первом «Испытать».
+func prefetch_hall() -> void:
+	if hall != null or _hall_prefetched:
+		return
+	_hall_prefetched = true
+	ResourceLoader.load_threaded_request(HALL_SCENE, "", true)
+
+
+## Хук WorkshopBuild.start_test: зал уже есть — можно; иначе запускаем загрузку под лоадером, а испытание стартует само, когда зал готов.
+func hall_is_ready() -> bool:
+	if hall != null:
+		return true
+	_want_test = true
+	prepare_hall()
+	return false
+
+
+## Поставить зал в мир (спящим). Под лоадером: фоновая загрузка с прогрессом → постановка (главный поток) → готово.
+## Для проб: await prepare_hall().
+func prepare_hall() -> void:
+	if hall != null or _hall_prep:
+		return
+	_hall_prep = true
+	var t0 := Time.get_ticks_msec()
+	Loading.begin("ПОДГОТОВКА ЗАЛА", "тренировочный зал за воротами")
+	var ps := await Loading.load_async(HALL_SCENE, "ПОДГОТОВКА ЗАЛА", "тренировочный зал за воротами") as PackedScene
+	await Loading.present()
+	if ps == null:
+		ps = load(HALL_SCENE) as PackedScene
+	hall = ps.instantiate() as TrainingHall
+	hall.name = "TrainingHall"
+	garage.add_child(hall)
+	hall_inst_ms = Time.get_ticks_msec() - t0
+	_hall_prep = false
+	Loading.finish()
+	hall_ready.emit()
+	if _want_test and ws != null and ws.active and ws.mode == WorkshopBuild.Mode.BUILD:
+		_want_test = false
+		ws.start_test()
+	_want_test = false
+
+
+## Камера испытания: в гараже кадр тесный (потолок 3.4 м), в зале — шире, чтобы были видны груша, манекен и экраны: min_half_height
+## плавно растёт от гаражного к залу по мере вылета куклы через ворота (x от −3 к −9).
+const CAM_HALF_GARAGE := 1.55
+const CAM_HALF_HALL := 3.7
+
+
+func _process(_delta: float) -> void:
+	# мастерская спит (process_mode = DISABLED) и её панель сама карточки не достроит — доделываем библиотеку по кадрам, пока игрок в меню
+	if ws != null and not is_open() and ws.ui != null and ws.ui.has_method("pump_cards"):
+		ws.ui.call("pump_cards", 3.0)
+	if ws != null and ws.mode == WorkshopBuild.Mode.TEST and ws.test_cam != null and ws.test_doll != null and is_instance_valid(ws.test_doll):
+		var t := ws.test_doll.call("torso") as RigidBody3D
+		if t != null:
+			var k := smoothstep(-3.0, -9.0, t.global_position.x)
+			ws.test_cam.min_half_height = lerpf(CAM_HALF_GARAGE, CAM_HALF_HALL, k)
+	if not loading:
+		return
+	_poll_load()
+
+
+func _enter_test() -> void:
+	if hall == null or ws == null:
+		return
+	hall.set_awake(true)
+	hall.bind(ws.test_doll, ws.dummy)
+	var g := _gate()
+	if g != null:
+		if not g.opened.is_connected(_on_gate_opened):
+			g.opened.connect(_on_gate_opened)
+		g.open()
+	else:
+		_set_door_block(false)
+
+
+func _on_gate_opened() -> void:
+	_set_door_block(false)
+
+
+func _leave_test() -> void:
+	if hall != null and hall.awake:
+		hall.unbind()
+		hall.set_awake(false)
+	var g := _gate()
+	if g != null and g.is_open:
+		g.close(0.01)
+	_set_door_block(true)
+
+
+## Заглушка проёма на время закрытых ворот (Stage/Bounds/WallL во встроенной сцене).
+func _set_door_block(on: bool) -> void:
+	if ws == null:
+		return
+	var cs := ws.get_node_or_null("Stage/Bounds/WallL") as CollisionShape3D
+	if cs != null:
+		cs.set_deferred("disabled", not on)

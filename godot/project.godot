@@ -10,8 +10,8 @@ config_version=5
 
 [application]
 
-config/name="Ragdoll Master Demo"
-run/main_scene="res://scenes/menu/garage_menu.tscn"
+config/name="NULL GRAVITY"
+run/main_scene="res://scenes/boot.tscn"
 config/version="0.0.1"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
@@ -24,6 +24,7 @@ InputSetup="*res://scripts/input/input_setup.gd"
 GameAudio="*res://scripts/audio/game_audio.gd"
 Gfx="*res://scripts/gfx/gfx.gd"
 Flow="*res://scripts/menu/flow.gd"
+Loading="*res://scripts/menu/loading.gd"
 
 [display]
 

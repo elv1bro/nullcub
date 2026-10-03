@@ -38,10 +38,11 @@ static func apply(ctx: Dictionary, sd_mult: float = 1.0) -> Vector3:
 			(b as RigidBody3D).linear_velocity += add
 		stop_attacker(ctx.get("attacker", null), victim, kb_dir)
 		return add
-	var cap := Tuning.CRIT_FLIGHT_MAX_SPEED * maxf(sd_mult, 0.0)
+	var cap := Drive.crit_flight_max_speed() * maxf(sd_mult, 0.0)
 	var v0 := _com_velocity(bodies)
 	var along := v0.dot(kb_dir)
-	var target := clampf(along * Tuning.CRIT_KNOCKBACK_MULT, Tuning.CRIT_LAUNCH_MIN_SPEED, maxf(cap, Tuning.CRIT_LAUNCH_MIN_SPEED))
+	var lmin := Drive.crit_launch_min_speed()
+	var target := clampf(along * Tuning.CRIT_KNOCKBACK_MULT, lmin, maxf(cap, lmin))
 	var dv := kb_dir * maxf(target - along, 0.0)
 	for b in bodies:
 		(b as RigidBody3D).linear_velocity += dv
@@ -58,7 +59,7 @@ static func apply(ctx: Dictionary, sd_mult: float = 1.0) -> Vector3:
 	# дамп крит-полёта — только поверх дампа полёта куклы (его вернёт land() / страховка); без полёта обычный дамп не трогаем
 	if bool(victim.get("_flight_damp")):
 		for b in bodies:
-			(b as RigidBody3D).linear_damp = Tuning.CRIT_FLIGHT_LINEAR_DAMP
+			(b as RigidBody3D).linear_damp = minf(Tuning.CRIT_FLIGHT_LINEAR_DAMP, Drive.flight_damp(true))
 	stop_attacker(ctx.get("attacker", null), victim, kb_dir)
 	return dv
 

@@ -127,17 +127,17 @@ func classify(ctx: Dictionary, fight_time: float, crit_enabled: bool = true) -> 
 			return CRIT
 		block = "bypass_gap"
 	ctx["crit_block"] = block
-	return HEAVY if sc >= Tuning.HITFX_HEAVY_SCORE else LIGHT
+	return HEAVY if sc >= Drive.heavy_score() else LIGHT
 
 
 ## Что мешает q-удару стать обычным критом: "min_fight" / "cooldown" (матч) / "attacker_cooldown"; "" — ничего.
 func _cooldown_block(ctx: Dictionary, fight_time: float) -> String:
 	if fight_time < Tuning.CRIT_MIN_FIGHT_S:
 		return "min_fight"
-	if fight_time - last_crit_t < Tuning.CRIT_COOLDOWN_S:
+	if fight_time - last_crit_t < Drive.crit_cooldown_s():
 		return "cooldown"
 	var aid := (ctx["attacker"] as Object).get_instance_id()
-	if fight_time - float(last_crit_by.get(aid, -INF)) < Tuning.CRIT_ATTACKER_COOLDOWN_S:
+	if fight_time - float(last_crit_by.get(aid, -INF)) < Drive.crit_attacker_cooldown_s():
 		return "attacker_cooldown"
 	return ""
 

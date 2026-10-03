@@ -74,6 +74,9 @@ class Watcher extends Node:
 			print("=== SCENE SWITCH PROBE: timeout at step %d ===" % step)
 			get_tree().quit(1)
 			return
+		if Loading.showing:     # смена площадки идёт под лоадером (scripts/menu/loading.gd): ждём, пока он уйдёт
+			ticks = 0
+			return
 		if ticks < WAIT_TICKS:
 			return
 		ticks = 0

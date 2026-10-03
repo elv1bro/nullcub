@@ -183,7 +183,7 @@ func _show_fx_toast(text: String) -> void:
 func switch_arena(id: String) -> void:
 	if id == arena_id or not SCENES.has(id):
 		return
-	get_tree().change_scene_to_file(SCENES[id])
+	Loading.change_scene(SCENES[id], "ПОДКЛЮЧЕНИЕ", id)
 
 
 func respawn_all() -> void:

@@ -1038,6 +1038,8 @@ func can_grab(b: Node) -> bool:
 		return false
 	if rb is Weapon or rb.is_in_group(Weapon.GROUP):
 		return false
+	if rb.has_meta(&"no_grab"):
+		return false   # снаряд-мишень (груша зала на цепи): хватать нельзя
 	var owner_doll := rb.get_parent() as Doll
 	if owner_doll == doll:
 		return false   # свои части (и после KO — тоже: сломанная кукла не хватает)

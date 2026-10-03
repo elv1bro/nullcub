@@ -1,6 +1,7 @@
 ## Снимок боя с открытой панелью управления (нужно окно): Быстрый бой (купол), Tab, V, кадр → <out>/control_panel.png.
 ##   godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/control_feel_panel_snapshot.tscn -- "out=/abs/control_panel.png,secs=3"
-## Заодно проверка: Tab открывает панель, V меняет вариант на следующий, ползунок меняет ControlFeel, сброс возвращает как было.
+## Заодно проверка: Tab открывает панель, V меняет вариант на следующий, ползунок меняет ControlFeel, J включает ДРАЙВ (Drive),
+## сброс возвращает как было. Файл настроек автора не трогает (ControlFeel.no_disk).
 extends Node
 
 var out := "/tmp/control_panel.png"
@@ -17,6 +18,7 @@ func _ready() -> void:
 			if p.size() == 2:
 				if p[0] == "out": out = p[1]
 				elif p[0] == "secs": secs = float(p[1])
+	ControlFeel.no_disk = true   # не читать и не затирать user://control_feel.cfg автора
 	ControlFeel.reset()
 	var scene := (load("res://scenes/playground_null_hall.tscn") as PackedScene).instantiate()
 	add_child(scene)
@@ -53,8 +55,14 @@ func _process(delta: float) -> void:
 		(panel2._sliders["thrust"] as HSlider).value = 20.0
 		_check(is_equal_approx(ControlFeel.thrust(), 20.0), "ползунок разгона меняет ControlFeel")
 		_check(ControlFeel.tempo == "custom", "ручка разгона → темп «СВОЙ»")
-	elif _stage == 3 and _t > secs + 1.2:
+		_key(KEY_J)
+	elif _stage == 3 and _t > secs + 0.9:
 		_stage = 4
+		_check(Drive.on, "J → ДРАЙВ вкл")
+		_check(ControlFeel.variant == "head", "ДРАЙВ при ГОЛОВЕ вариант не меняет")
+		_check(ControlFeel.label().contains(tr("ДРАЙВ")), "подпись панели говорит про ДРАЙВ")
+	elif _stage == 4 and _t > secs + 1.4:
+		_stage = 5
 		_capture()
 
 

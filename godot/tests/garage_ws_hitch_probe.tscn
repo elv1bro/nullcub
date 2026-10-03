@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/garage_ws_hitch_probe.gd" id="1_probe"]
+
+[node name="GarageWsHitchProbe" type="Node"]
+script = ExtResource("1_probe")

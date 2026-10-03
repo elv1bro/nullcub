@@ -1,7 +1,8 @@
 ## Бот-соперник кампании (docs/plan-demo/17-career-trophy.md): боец лиги, а не враг PvE.
 ## Поведение — наскок бота tests/match_probe.gd (разбег → удар → отход RUSH → разбег, рывок с разбега), поверх EnemyBrain:
 ## восприятие с задержкой reaction_s, упреждение lead_s, ошибка прицела, плавный ввод, выход из застревания, зависание против
-## поля NULL (hover_vec — поле купола может тянуть вбок и вверх).
+## поля NULL (hover_vec — поле купола может тянуть вбок и вверх). ДРАЙВ (Drive): отход после касания ≤ DRIVE_RIVAL_RETREAT_S
+## и подход зигзагом — бот давит, а не «коснулся — убежал».
 ## Отличия от врага PvE: без EnemyLook (соперник лиги не «сломанная программа» — своя краска и цвет игрока P2), цель — группа
 ## "players", свои — "rivals". Уровень 1..4 — Tuning.RIVAL_LEVELS (реакция, прицел, упреждение, отход, рывок).
 class_name RivalBrain
@@ -52,7 +53,7 @@ func _think(_delta: float) -> void:
 	match state:
 		"retreat":
 			want = Vector2(-sgn, hover_vec().y)
-			if state_t >= retreat_s:
+			if state_t >= Drive.rival_retreat_s(retreat_s):
 				go("approach")
 		_:
 			if absf(to.x) < NEAR_X_M and absf(to.y) < NEAR_Y_M:
@@ -61,6 +62,10 @@ func _think(_delta: float) -> void:
 				want = Vector2(-sgn, hover_vec().y)
 				return
 			want = Vector2(sgn, vy)
+			if Drive.on:
+				# ДРАЙВ: давит зигзагом — смена стороны подхода (выше / ниже цели) каждые DRIVE_RIVAL_ZIGZAG_S (JS aiLogic: 0.7 с)
+				var zig := 1.0 if int(_time / Tuning.DRIVE_RIVAL_ZIGZAG_S) % 2 == 0 else -1.0
+				want.y = clampf(want.y + zig * Tuning.DRIVE_RIVAL_ZIGZAG, -1.0, 1.0)
 			if use_dash and absf(to.x) > DASH_FROM_M:
 				dash()
 

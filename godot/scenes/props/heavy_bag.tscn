@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/props/heavy_bag.gd" id="1_hb"]
+[ext_resource type="PackedScene" path="res://assets/models/arena/null_hall/Heavy_Bag.glb" id="2_model"]
+
+[sub_resource type="SphereShape3D" id="bag_shape"]
+radius = 0.55
+
+[sub_resource type="PhysicsMaterial" id="bag_mat"]
+friction = 0.7
+bounce = 0.15
+
+[node name="HeavyBag" type="RigidBody3D"]
+physics_material_override = SubResource("bag_mat")
+script = ExtResource("1_hb")
+
+[node name="Model" parent="." instance=ExtResource("2_model")]
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+shape = SubResource("bag_shape")

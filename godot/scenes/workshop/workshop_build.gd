@@ -97,12 +97,17 @@ class _PreviewBlueprint extends BodyBlueprint:
 @export var autosave_name := CraftEdit.AUTOSAVE
 ## Арена, чьи bounds() ограничивают камеру испытания: в отдельной сцене — комната «Workshop», в гараже — невидимая сцена-коробка Stage.
 @export var test_arena_path := NodePath("../Workshop")
+## Кого ведёт камера испытания (DynamicCamera.follow_mode): "humans" — только куклу игрока (во встроенной мастерской манекен висит
+## в зале за 16 м — в кадр целиком он не влезет); "all" — всех из группы (отдельная мастерская).
+@export var test_follow_mode := "all"
 ## Наименьшая полувысота кадра камеры испытания, м: в гараже (потолок 3.4 м) меньше, чем в большой комнате мастерской.
 @export var test_min_half_height := 1.9
 ## Встроенная мастерская (в гараже меню): своей комнаты нет (арены $Workshop нет), выход из мастерской — сигналом exit_requested,
 ## а не сменой сцены. Пока мастерская не активна (set_active(false)), она спит: ввод, процессы, UI и 3D скрыты.
 var embedded := false
 var active := true
+## Встроенная мастерская: «зал готов?» — GarageWorkshop; false — испытание не стартует (зал грузится под лоадером и стартует сам).
+var test_ready_check := Callable()
 ## Мастерская кампании: Esc без инструмента и выбора выходит сразу (в обычной — двойной Esc).
 var single_esc_exit := false
 
@@ -2554,6 +2559,9 @@ static func _prop_scene(path: String) -> PackedScene:
 func start_test() -> bool:
 	if mode == Mode.TEST:
 		return true
+	if embedded and test_ready_check.is_valid() and not bool(test_ready_check.call()):
+		_say("Готовим зал за воротами…", COL_INFO)
+		return false
 	var errs := CraftEdit.friendly_errors(blueprint)
 	if not errs.is_empty():
 		_say(errs[0], COL_BAD)
@@ -2633,6 +2641,7 @@ func start_test() -> bool:
 	test_cam.fov = 45.0
 	test_cam.target_group = TEST_GROUP
 	test_cam.arena_path = test_arena_path
+	test_cam.follow_mode = test_follow_mode
 	test_cam.floor_inset = 0.0
 	test_cam.min_half_height = test_min_half_height
 	test_cam.padding = 1.5
