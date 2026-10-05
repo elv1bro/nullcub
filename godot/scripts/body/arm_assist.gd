@@ -1248,6 +1248,8 @@ func _own_detached_near(p: Vector3, radius: float) -> RigidBody3D:
 func reattach_own(rb: RigidBody3D, how: String) -> bool:
 	if rb == null or not is_instance_valid(rb) or rb.get_meta("detached_from", null) != doll:
 		return false
+	if rb.has_meta("joint_broken") and not Tuning.JOINT_BREAK_REATTACH:
+		return false   # сустав сломан ударами (JointBreak): деталь потеряна до конца раунда, её можно только схватить как предмет
 	if held == rb:
 		release("reattach")
 	if not bool(doll.call("reattach_part", rb)):

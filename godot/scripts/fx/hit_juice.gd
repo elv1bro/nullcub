@@ -12,6 +12,8 @@
 ## Автор 02.10 (второй круг): L — панель всех доп. клавиш сбоку (KeysPanel, значения живые); колесо мыши / «,» «.» — масштаб камеры
 ## (DynamicCamera.user_zoom, текущее число в тосте и панели); B — обводка бойцов цветом игрока (DollOutline, по умолчанию вкл —
 ## тело читается на тёмном фоне купола). Вызов чемпиона лиги в куполе — K (был L, NullHallArena).
+## Автор 04.10: C — пробный режим «Прочность суставов» (JointBreak, JOINT_BREAK.md): суставы изнашиваются от ударов, конечности
+## отлетают; вид режима — JointBreakFx (искры на повреждённом суставе, вспышка отрыва), создаётся здесь.
 ## Говорят только N0 и табло (LORE_NULL.md «Голоса и тон»).
 class_name HitJuice
 extends Node
@@ -27,6 +29,7 @@ const KEY_HELP := KEY_L
 const KEY_OUTLINE := KEY_B
 const KEY_ZOOM_OUT := KEY_COMMA
 const KEY_ZOOM_IN := KEY_PERIOD
+const KEY_JOINTS := KEY_C        # пробный режим «Прочность суставов» (JointBreak): «С» в русской раскладке — «суставы»
 const ZOOM_STEP := 1.12          # шаг масштаба (колесо, «,» «.»)
 const ZOOM_RANGE := Vector2(0.45, 2.2)   # DynamicCamera.user_zoom: меньше — ближе
 const OUTLINE_SCAN_S := 0.15     # обводка ставится по одной кукле за проход — без всплеска узлов в один кадр (perf gate 250/кадр)
@@ -47,6 +50,7 @@ static var help_open := false
 var marks_enabled: bool = Tuning.JUICE_MARKS
 var digits: DamageDigits
 var keys_panel: KeysPanel
+var joint_fx: JointBreakFx
 ## Пробы: события и счётчики.
 var events: Array = []
 var stats := {"marks": 0, "digits": 0}
@@ -115,6 +119,9 @@ func _ready() -> void:
 	keys_panel.lines_fn = keys_lines
 	add_child(keys_panel)
 	keys_panel.set_open(help_open)
+	joint_fx = JointBreakFx.new()
+	joint_fx.name = "JointBreakFx"
+	add_child(joint_fx)
 	if DisplayServer.get_name() != "headless":   # панель управления (ControlFeel): в headless-пробах не нужна и не читает user://
 		var cfp := ControlFeelPanel.new()
 		cfp.toast_fn = show_toast
@@ -241,6 +248,7 @@ func keys_lines() -> Array:
 		["Tab", tr("панель управления"), ControlFeel.label()],
 		["V  /  T", tr("вариант / темп управления"), ""],
 		["J", tr("ДРАЙВ: импульс живёт"), tr("вкл") if Drive.on else tr("выкл")],
+		["C", tr("прочность суставов: конечности отлетают"), on.call(JointBreak.on)],
 		[tr("ЛКМ / ПКМ"), tr("тяги рук"), ""],
 		["I  O  P", tr("активные блоки"), ""],
 		["R", tr("бой заново"), ""],
@@ -307,6 +315,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_STYLE:
 			impact_style = "cartoon" if impact_style == "serious" else "serious"
 			show_toast(tr("Удар: %s   (= — переключить)") % style_title())
+			keys_panel.refresh()
+			get_viewport().set_input_as_handled()
+		KEY_JOINTS:
+			JointBreak.toggle()
+			show_toast(tr("Прочность суставов: %s   (C — переключить)") % (tr("вкл — конечности отлетают, дальние суставы слабее") if JointBreak.on else tr("выкл")), 2.4)
 			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_DIGITS:

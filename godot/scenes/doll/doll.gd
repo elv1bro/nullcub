@@ -38,6 +38,9 @@ signal flipped(dir: float)
 signal part_detached(part_name: String, by: Node)
 ## Оторванная часть прикручена обратно reattach_part.
 signal part_reattached(part_name: String)
+## Сустав сломан ударами (JointBreak, пробный режим 04.10): запас joint_hp детали part_name кончился; position — точка сустава
+## в мире. Сразу после — detach_part → part_detached.
+signal joint_broken(part_name: String, by: Node, position: Vector3)
 
 enum StunPhase { NONE, STUNNED, RECOVER }
 
@@ -130,6 +133,12 @@ var _joint_xf_b: Dictionary = {}
 ## Оторванные корни (RigidBody3D) -> запись для reattach_part: сустав подвеса (отключён, остаётся ребёнком куклы), родитель,
 ## поддерево, внутренние суставы с трением, снятые пары мышц, тела под монитором DollCombat.
 var _detached: Dictionary = {}
+## Прочность суставов (JointBreak): имя детали → сколько износа ещё выдержит сустав, которым она висит на родителе;
+## joint_hp_max — запас целого сустава, joint_depth — глубина детали от ядра (1 — висит на самом ядре). Ядра здесь нет, головы —
+## если не Tuning.JOINT_BREAK_HEAD. Считается всегда (_init_joint_hp), тратится только при JointBreak.on.
+var joint_hp: Dictionary = {}
+var joint_hp_max: Dictionary = {}
+var joint_depth: Dictionary = {}
 ## Принудительное ускорение без траты Заряда (пробы, клипы: «как Shift»): is_dashing() до этого момента (_time). В игре ускорение
 ## даёт удерживаемый Shift за Заряд (_boosting); кулдауна нет, dash_ready_at только для проб — всегда ≤ _time.
 var dash_until := 0.0
@@ -231,6 +240,8 @@ func _ready() -> void:
 			j.set("angular_motor_z/force_limit", f)
 		var enabled: bool = j.get("angular_motor_z/enabled")
 		_friction_base[j] = float(j.get("angular_motor_z/force_limit")) if enabled else 0.0
+
+	_init_joint_hp()
 
 	if spawn_in_pose:
 		_snap_to_pose(SPAWN_POSE_GROUPS)
@@ -586,6 +597,72 @@ func take_damage(amount: float, attacker: Node, part: String, position: Vector3,
 	damaged.emit(amount, attacker, part, position, kind)
 	if hp <= 0.0:
 		knock_out(attacker, record)
+	elif JointBreak.on:
+		_wear_joint(part, amount, attacker)
+
+
+## Запасы суставов по глубине от ядра (JointBreak.hp_for_depth): обход по суставам от торса, node_a — родитель, node_b — ребёнок.
+func _init_joint_hp() -> void:
+	joint_hp.clear()
+	joint_hp_max.clear()
+	joint_depth.clear()
+	var root := parts.get("Torso") as RigidBody3D
+	if root == null:
+		return
+	var depth := {root: 0}
+	var order: Array = [root]
+	var i := 0
+	while i < order.size():
+		for j in joints.values():
+			if j.get_node_or_null(j.node_a) != order[i]:
+				continue
+			var child := j.get_node_or_null(j.node_b) as RigidBody3D
+			if child != null and not depth.has(child):
+				depth[child] = int(depth[order[i]]) + 1
+				order.append(child)
+		i += 1
+	for b in order:
+		var n := String((b as Node).name)
+		if b == root or (part_base_name(n) == "Head" and not Tuning.JOINT_BREAK_HEAD):
+			continue
+		joint_depth[n] = int(depth[b])
+		joint_hp_max[n] = JointBreak.hp_for_depth(int(depth[b]))
+		joint_hp[n] = joint_hp_max[n]
+
+
+## Удар в деталь part изнашивает сустав, которым она висит (JointBreak.wear); запас кончился — деталь отлетает на следующем
+## кадре (_break_joint: удар считается внутри шага физики). KO этим ударом сустав не ломает — кукла и так разлетается.
+func _wear_joint(part: String, dealt: float, by: Node) -> void:
+	if not joint_hp.has(part) or not parts.has(part):
+		return
+	var left := float(joint_hp[part]) - JointBreak.wear(dealt, part)
+	joint_hp[part] = left
+	if left <= 0.0:
+		joint_hp.erase(part)
+		_break_joint.call_deferred(part, by)
+
+
+func _break_joint(part: String, by: Node) -> void:
+	var b := parts.get(part) as RigidBody3D
+	if b == null or not alive or _broken:
+		return
+	stats["joints_broken"] = int(stats.get("joints_broken", 0)) + 1
+	joint_broken.emit(part, by, joint_pivot_global(hang_joint_name(b)))
+	var root := detach_part(part, by)
+	if root != null and alive:
+		root.set_meta("joint_broken", true)   # ArmAssist.reattach_own: касанием не возвращается (Tuning.JOINT_BREAK_REATTACH)
+	for n in joint_hp.keys():   # всё, что висело на отлетевшей детали, ушло вместе с ней
+		if not parts.has(n):
+			joint_hp.erase(n)
+
+
+## Имя сустава, которым тело b висит на родителе ("" — ядро или тело не наше).
+func hang_joint_name(b: RigidBody3D) -> String:
+	for jn in joints.keys():
+		var j := joints[jn] as Generic6DOFJoint3D
+		if j != null and is_instance_valid(j) and j.get_node_or_null(j.node_b) == b:
+			return String(jn)
+	return ""
 
 
 ## Множитель урона/стана для удара от attacker: 1, если он не из нашей непустой команды; иначе team_damage_mult (≥ 0) или
@@ -864,6 +941,11 @@ func reattach_part(body: RigidBody3D) -> bool:
 		total_mass += (p as RigidBody3D).mass
 	_apply_base_damp(_flight_damp)
 	_detached.erase(body)
+	body.remove_meta("joint_broken")
+	for s in rec["sub"]:   # прикрученная деталь возвращается с целыми суставами (JointBreak)
+		var sn := String((s as Node).name)
+		if joint_hp_max.has(sn):
+			joint_hp[sn] = joint_hp_max[sn]
 	part_reattached.emit(String(body.name))
 	return true
 

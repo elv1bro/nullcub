@@ -20,6 +20,7 @@
 ##   perf=1 (perf-pass, docs/plan-demo/PERF_PASS.md) — детектор рывков: реальные часы между кадрами (в headless --fixed-fps 60 это цена кадра
 ##   на CPU), узлы, добавленные в кадр (ADDED{класс:имя×N}), события удара рядом; проверки perf_frame_p99_ms / perf_frame_max_ms /
 ##   perf_nodes_per_frame (limits p99_ms= max_ms= max_nodes=), info.perf; spikes=1 — то же, но только печать рывков > spike_ms (окно).
+##   joints=1 — пробный режим «Прочность суставов» (JointBreak, JOINT_BREAK.md): info.joints_broken — что и когда отлетело до KO.
 ##   retreat=<с> — отход наскока вместо RUSH_RETREAT_S (retreat=1.0 в Void — клинч голова-о-голову, двойной KO → ничья).
 ## Отчёт tests/match_probe_report.json (или out=res://…), exit 0/1.
 extends Node3D
@@ -45,6 +46,8 @@ var out_path := "res://tests/match_probe_report.json"
 var hitfx_tiers: Dictionary = {}     # HIT_FX: tier -> число ударов (Match.hit_fx, только бой до restart)
 var hitfx_crits: Array = []
 var hitfx_env_kind := 0
+var joints_left: Dictionary = {}     # joints=1: имя куклы -> {деталь: доля запаса сустава на момент KO}
+var joints_broken: Array = []        # joints=1 (JointBreak): отлетевшие детали боя до KO — {doll, part, t, hp}
 var env_slams := 0
 var max_s := 120.0
 var sd_mode := false
@@ -249,6 +252,7 @@ func _ready() -> void:
 				"p99_ms": limit_p99_ms = float(p[1])
 				"max_ms": limit_max_ms = float(p[1])
 				"max_nodes": limit_nodes = int(p[1])
+				"joints": JointBreak.set_on(p[1] != "0")   # пробный режим «Прочность суставов»: info.joints_broken — кто что потерял
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
 	add_child(pg)
 	p1 = pg.get_node("P1")
@@ -293,7 +297,13 @@ func _ready() -> void:
 		ko_fired = true
 		ko_t = t
 		ko_victim = victim
-		ko_card_seen = ko_card_seen or hud.ko_card.visible)
+		ko_card_seen = ko_card_seen or hud.ko_card.visible
+		if JointBreak.on and joints_left.is_empty():   # остаток запаса суставов обоих на момент KO, в долях (подбор чисел режима)
+			for jd in [p1, p2]:
+				var left := {}
+				for n in (jd as Doll).joint_hp_max:
+					left[n] = snappedf(maxf(float((jd as Doll).joint_hp.get(n, 0.0)), 0.0) / float((jd as Doll).joint_hp_max[n]), 0.01)   # 0 — отлетела
+				joints_left[String(jd.name)] = left)
 	match_node.match_over.connect(func(winner: Doll, results: Dictionary) -> void:
 		_ctx_add("match_over")
 		over_fired = true
@@ -316,6 +326,10 @@ func _ready() -> void:
 		match_node.connect("env_slam", func(_ctx: Dictionary) -> void:
 			if stage == 0:
 				env_slams += 1)
+	for jd in [p1, p2]:
+		(jd as Doll).joint_broken.connect(func(part: String, _by: Node, _pos: Vector3) -> void:
+			if stage == 0:
+				joints_broken.append({"doll": String(jd.name), "part": part, "t": snappedf(match_node.fight_time, 0.01), "hp": snappedf((jd as Doll).hp, 0.1)}))
 	report["info"]["scene"] = scene_id
 	report["info"]["rush_retreat_s"] = rush_retreat_s
 
@@ -519,12 +533,18 @@ func _checks_ko() -> void:
 	_check("fx", 1.0 if fx_seen else 0.0, 1.0, "eq", "ImpactFx spawned under Match")
 	_check("ko", 1.0 if ko_fired else 0.0, 1.0, "eq", "KO within %.0f s of fight (fight_time %.1f)" % [max_s, match_node.fight_time])
 	if ko_fired and is_instance_valid(ko_victim):
-		_check("ko_joints", float(ko_victim.joints.size()) + float(_joint_nodes(ko_victim)), 0.0, "lte", "victim joints freed")
+		# детали, отлетевшие до KO (joints=1, JointBreak): их тел нет в parts, а суставы внутри оторванного куска остаются (рука — рукой)
+		var lost_bodies := 0
+		var lost_joints := 0
+		for rec in ko_victim._detached.values():
+			lost_bodies += (rec["sub"] as Array).size()
+			lost_joints += 1 + (rec["sub_joints"] as Array).size()
+		_check("ko_joints", float(ko_victim.joints.size()) + float(_joint_nodes(ko_victim)), float(lost_joints), "lte", "victim joints freed (detached limbs keep theirs)")
 		var valid := 0
 		for p in ko_victim.parts.values():
 			if is_instance_valid(p) and (p as Node).is_inside_tree():
 				valid += 1
-		_check("ko_parts", float(valid), 14.0, "eq", "14 parts still in the tree after KO")
+		_check("ko_parts", float(valid), 14.0 - float(lost_bodies), "eq", "14 parts (minus limbs lost before KO) still in the tree after KO")
 		_check("ko_spread", _part_spread(ko_victim), 1.5, "gte", "parts spread (m) 1 s after KO")
 		_check("ko_card", 1.0 if ko_card_seen else 0.0, 1.0, "eq", "HUD KO card shown on ko signal")
 		_check("announce_ko", 1.0 if _has_announce("ko") else 0.0, 1.0, "eq", "KO! announced")
@@ -537,6 +557,9 @@ func _checks_ko() -> void:
 	report["info"]["hitfx"] = {"tiers": hitfx_tiers, "crits": hitfx_crits, "env_slam": env_slams, "fight_time": snappedf(match_node.fight_time, 0.01),
 		"fight_s_per_crit": snappedf(match_node.fight_time / float(n_crit), 0.1) if n_crit > 0 else -1.0}
 	report["info"]["hits"] = hits
+	if JointBreak.on:
+		report["info"]["joints_broken"] = joints_broken
+		report["info"]["joints_left"] = joints_left
 	report["info"]["hit_list"] = hit_list
 	report["info"]["hp"] = {"p1": p1.hp, "p2": p2.hp}
 	report["info"]["stats_p1"] = p1.stats.duplicate()
