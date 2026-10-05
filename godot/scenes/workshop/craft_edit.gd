@@ -1480,8 +1480,17 @@ static func part_desc(d: PartDef) -> String:
 		"deco":
 			if ActiveBlocks.is_active(d.id):
 				var ad := ActiveBlocks.def_of(d.id)
-				var cost := TranslationServer.translate("%.0f заряда за выстрел") % float(ad["cost"]) if String(ad["action"]) == "gun" else TranslationServer.translate("%.0f заряда/с") % float(ad["cost"])
-				lines.append(TranslationServer.translate("Активный блок: %s. Работает, пока зажата клавиша его канала; тратит %s.") % [TranslationServer.translate(String(ad["hint"])), cost])
+				var hint := TranslationServer.translate(String(ad["hint"]))
+				if ActiveBlocks.is_press(ad):   # разовое действие: платит только за нажатие, ключа cost нет
+					lines.append(TranslationServer.translate("Активный блок: %s. Срабатывает по нажатию клавиши канала; тратит %s.")
+						% [hint, TranslationServer.translate("%.0f заряда за раз") % float(ad["cost_use"])])
+				else:
+					var cost := TranslationServer.translate("%.0f заряда/с") % float(ad["cost"])
+					if String(ad["action"]) == "gun":
+						cost = TranslationServer.translate("%.0f заряда за выстрел") % float(ad["cost"])
+					elif ad.has("cost_use"):   # крюк: выстрел троса по нажатию и тяга, пока зажато
+						cost = TranslationServer.translate("%.0f заряда за нажатие и %.0f заряда/с") % [float(ad["cost_use"]), float(ad["cost"])]
+					lines.append(TranslationServer.translate("Активный блок: %s. Работает, пока зажата клавиша его канала; тратит %s.") % [hint, cost])
 			else:
 				lines.append(TranslationServer.translate("Декор: сливается с деталью-хозяином."))
 		"weapon_head": lines.append(TranslationServer.translate("Навершие: на оружии — множитель урона ×%.2f; на теле — масса и форма.") % d.weapon_mult)

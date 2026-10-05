@@ -351,6 +351,17 @@ func _workshop_checks() -> void:
 		% [ch0, ch3, sig_has, m.get("ok", false), chm, not ch_off] + "замена на корону — канал снят: %s" % [not ch_repl])
 	_check("desc_active", CraftEdit.part_desc(CraftEdit.part("kit_active_gun")).contains("за выстрел")
 		and CraftEdit.part_desc(CraftEdit.part("kit_core_league_crystal")).contains("Особое свойство"), "описание блока и пассива в паспорте")
+	# цена в паспорте — у каждого блока: cost (заряда/с или за выстрел) и cost_use (за нажатие); у блоков «по нажатию» cost нет
+	var desc_bad: Array = []
+	for id in ActiveBlocks.DEFS:
+		var ad: Dictionary = ActiveBlocks.DEFS[id]
+		var desc := CraftEdit.part_desc(CraftEdit.part(id))
+		var priced := ad.has("cost") or ad.has("cost_use")
+		for k in ["cost", "cost_use"]:
+			priced = priced and (not ad.has(k) or desc.contains("%.0f заряда" % float(ad[k])))
+		if not priced or ActiveBlocks.is_press(ad) != desc.contains("по нажатию клавиши"):
+			desc_bad.append(id)
+	_check("desc_active_cost", desc_bad.is_empty(), "паспорт каждого блока называет его цену; «по нажатию» — у пружины и мины: не так у %s" % [desc_bad])
 
 
 func _floor() -> void:
