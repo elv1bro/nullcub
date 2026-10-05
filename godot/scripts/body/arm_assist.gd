@@ -820,11 +820,12 @@ func _apply_assist() -> void:
 	var m := maxf(part.mass, 0.01)
 	var e := target - p
 	e.z = 0.0
-	var v_new := (v_rel + e * (dt * ASSIST_K / m)) / (1.0 + dt * ASSIST_C / m + dt * dt * ASSIST_K / m)
+	var pm := PartMods.of(part, "pull_mult")   # модуль «Сервопривод» на этой руке: пружина и потолок силы × pull_mult
+	var v_new := (v_rel + e * (dt * ASSIST_K * pm / m)) / (1.0 + dt * ASSIST_C / m + dt * dt * ASSIST_K * pm / m)
 	var f := m * (v_new - v_rel) / dt
-	var fmax := ASSIST_F_MAX
+	var fmax := ASSIST_F_MAX * pm
 	if is_holding():
-		fmax = minf(ASSIST_F_MAX + ASSIST_LOAD_ACCEL * held.mass, maxf(ASSIST_F_MAX_LOADED, ASSIST_F_MAX))
+		fmax = minf(ASSIST_F_MAX + ASSIST_LOAD_ACCEL * held.mass, maxf(ASSIST_F_MAX_LOADED, ASSIST_F_MAX)) * pm
 	if doll.is_stunned():
 		fmax *= 1.0 - Tuning.STUN_CONTROL_LOSS
 	f = f.limit_length(fmax)

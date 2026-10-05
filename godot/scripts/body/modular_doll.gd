@@ -99,6 +99,8 @@ var _paint: Dictionary = {}            # uid -> ручка слоя краски
 var _stickers: Dictionary = {}         # uid -> Array[MeshInstance3D] наклеек узла (BodyPaint.add_sticker)
 ## Активные блоки и пассивы деталей (scripts/active/active_rig.gd, docs/plan-demo/ACTIVE_BLOCKS.md): заряд, каналы 1–3; null — нет.
 var active_rig: ActiveRig
+## Модули (PartMods, WORKSHOP_V4.md «Модули»): свойства всей куклы — запас Заряда, раскрутка, починка износа (PartMods.totals).
+var mod_totals: Dictionary = {}
 
 
 func _ready() -> void:
@@ -299,12 +301,13 @@ func _update_pair_gains() -> void:
 	var uniform_c := uc != null and float(uc) >= 0.0
 	for e in pairs:
 		var jt := String(_joint_type.get(String(e[MP_NAME]), KitJoint.DEFAULT))
-		if jt == KitJoint.DEFAULT:
+		var ti := KitJoint.info(jt) if jt != KitJoint.DEFAULT else {}
+		# модули (PartMods): сервопривод и амортизатор делают мышцу сустава мягче — muscle_mult тела-ребёнка
+		var km := float(ti.get("k", 1.0)) * PartMods.of(e[1], "muscle_mult")
+		if is_equal_approx(km, 1.0) and ti.is_empty():
 			continue
-		var ti := KitJoint.info(jt)
-		var km := float(ti.get("k", 1.0))
 		e[MP_K] = float(e[MP_K]) * km
-		e[MP_TMAX] = float(e[MP_TMAX]) * float(ti.get("tmax", 1.0))
+		e[MP_TMAX] = float(e[MP_TMAX]) * float(ti.get("tmax", 1.0)) * PartMods.of(e[1], "muscle_mult")
 		if km <= 0.0:
 			e[MP_K] = 0.0
 			e[MP_C] = 0.0
@@ -330,6 +333,8 @@ func _build() -> void:
 	var shape := {}         # тело -> [бонус формы, профиль]: форма своей детали (hit_mult) или слитого декора/брони — больший (WORKSHOP_V3.md §4)
 	var armor := {}         # тело -> доля урона, которую снимают слитые с ним щитки (Tuning.PART_ARMOR, meta armor)
 	var integ := {}         # тело -> запас прочности (Tuning.PART_INTEGRITY × прочность детали + щитки); ядра и головы тут нет
+	var mods := {}          # тело -> свойства слитых с ним модулей (PartMods.combine)
+	var chain_hosts := {}   # тело -> true: на нём модуль, чьи свойства спускаются по цепочке (сервопривод, амортизатор)
 	part_integrity.clear()
 	part_integrity_max.clear()
 	for n in blueprint.sorted_nodes():
@@ -378,6 +383,10 @@ func _build() -> void:
 				iron[host] = float(iron.get(host, 0.0)) + node_mass
 			if PartDef.FIXED_KINDS.has(def.kind) and def.body_mult > float((shape.get(host, [1.0, ""]) as Array)[0]):
 				shape[host] = [def.body_mult, def.hit_profile]   # шипы / рога / наруч: форма хозяина, не множитель поверх неё
+			if PartMods.is_mod(def.id):   # модуль (PartMods): свойства — телу-хозяину
+				mods[host] = PartMods.combine(mods.get(host, {}), PartMods.def_of(def.id))
+				if bool(PartMods.def_of(def.id).get("chain", false)):
+					chain_hosts[host] = true
 			var part_armor := Damage.part_armor(def.id)
 			if part_armor > 0.0:   # щиток бережёт тело, с которым слит (Tuning.PART_ARMOR)
 				armor[host] = Damage.armor_stack(float(armor.get(host, 0.0)), part_armor)
@@ -440,13 +449,37 @@ func _build() -> void:
 				var w: AABB = (b.transform * (c as Node3D).transform) * AABB(-h, h * 2.0)
 				min_y = minf(min_y, w.position.y)
 	var shift := Vector3(0.0, -min_y if min_y < INF else 0.0, 0.0)
+	# модули: свои свойства тела + спуск по цепочке от хозяев с "chain" ко всему, что на них висит
+	var kids := {}
+	for jd in todo:
+		if not kids.has(jd["a"]):
+			kids[jd["a"]] = []
+		(kids[jd["a"]] as Array).append(jd["b"])
+	var mods_final := mods.duplicate()
+	for host in chain_hosts:
+		var stack: Array = (kids.get(host, []) as Array).duplicate()
+		while not stack.is_empty():
+			var c: RigidBody3D = stack.pop_back()
+			mods_final[c] = PartMods.chain_merge(mods_final.get(c, {}), mods[host])
+			stack.append_array(kids.get(c, []))
 	for b in bodies:
 		b.transform.origin += shift
 		assembly[String(b.name)] = b.transform
 		# магнит Свалки (ScrapMachine.iron_mass: число = кг железа) и удар частью (Damage.body_mult_of_body) — BODY_KIT.md §5.4
 		b.set_meta("material", float(iron.get(b, 0.0)))
 		var bm0 := Damage.body_mult_of(String(b.name))
-		var bm := bm0 * float(mult.get(b, 1.0))
+		var bm := bm0 * float(mult.get(b, 1.0)) * float((mods_final.get(b, {}) as Dictionary).get("hit_mult", 1.0))   # отбойник бьёт мягче
+		if mods.has(b):
+			b.set_meta("mods_own", mods[b])
+		if mods_final.has(b):
+			var fm: Dictionary = mods_final[b]
+			b.set_meta(PartMods.META, fm)
+			if fm.has("frail"):
+				b.set_meta("frail", float(fm["frail"]))   # обтекатель: урон в это тело × (1 + frail) — Damage.armor_mult_of_body
+			if fm.has("bounce"):   # отбойник: тело отскакивает от стен и пола сильнее
+				var pm: PhysicsMaterial = b.physics_material_override.duplicate() if b.physics_material_override != null else PhysicsMaterial.new()
+				pm.bounce = maxf(pm.bounce, float(fm["bounce"]))
+				b.physics_material_override = pm
 		if not is_equal_approx(bm, bm0):
 			b.set_meta("body_mult", bm)
 		if shape.has(b):
@@ -462,6 +495,24 @@ func _build() -> void:
 		jd["pos"] = (jd["pos"] as Vector3) + shift
 		_chain_inertia[jd["name"]] = _inertia_about(jd["b"], jd["pos"], todo)
 		add_child(_make_joint(jd))
+	# модули всей куклы: запас Заряда, раскрутка и отброс (поля Doll), починка износа — _physics_process
+	mod_totals = PartMods.totals(bodies)
+	charge_cap_bonus = float(mod_totals.get("charge_bonus", 0.0))
+	charge = charge_cap()
+	spin_torque_mult = float(mod_totals.get("spin_mult", 1.0))
+	spin_cost_mult = float(mod_totals.get("spin_cost_mult", 1.0))
+	knock_spin_mult = float(mod_totals.get("knock_spin_mult", 1.0))
+
+
+## Модуль «Скобы-ремкомплект» (PartMods repair_per_s): износ деталей чинится сам, пока детали изнашиваются (режимы «;» и C). Запас
+## бойца не лечится; уже отлетевшие детали не возвращаются.
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	var rate := float(mod_totals.get("repair_per_s", 0.0))
+	if rate <= 0.0 or not alive or not (JointBreak.on or PartHp.on):
+		return
+	for n in joint_hp:
+		joint_hp[n] = minf(float(joint_hp[n]) + rate * delta, float(joint_hp_max.get(n, joint_hp[n])))
 
 
 ## Сварка (joint "weld", BODY_KIT.md §5.2, §5.4) замораживает деталь в позе покоя её сустава, а не прямо по якорю: поворот вокруг

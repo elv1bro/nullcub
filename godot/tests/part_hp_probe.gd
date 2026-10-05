@@ -133,8 +133,7 @@ func _consistency() -> void:
 
 func _mode_off() -> void:
 	var d := _spawn(HUMAN) as ModularDoll
-	var m := Match.new()
-	add_child(m)
+	var m := Match.new()   # не в дереве (см. _mode_on)
 	m._parts_hp(d)
 	var bp := d.blueprint
 	_check(bp.energy_cap() == bp.energy_budget and bp.node_energy(_head_uid(bp)) > 0, "выкл: потолок энергии = energy_budget, голова стоит энергии",
@@ -163,8 +162,7 @@ func _head_uid(bp: BodyBlueprint) -> String:
 
 func _mode_on() -> void:
 	PartHp.set_on(true)
-	var m := Match.new()
-	add_child(m)
+	var m := Match.new()   # не в дереве: Match в дереве сам начнёт раунд (begin) и пересчитает запасы по ходу пробы
 	var d := _spawn(HUMAN) as ModularDoll
 	m._parts_hp(d)
 	var bp := d.blueprint

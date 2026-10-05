@@ -47,6 +47,8 @@ const CATS := [
 	{"id": "armor", "title": "Броня", "icon": "armor", "kinds": ["plate", "armor"]},
 	# активные блоки (docs/plan-demo/ACTIVE_BLOCKS.md): вид deco с действием на клавише канала — only, CraftEdit.shelf_allows
 	{"id": "active", "title": "Активные блоки", "icon": "energy", "kinds": ["deco"], "only": "active"},
+	# модули (PartMods, WORKSHOP_V4.md «Модули»): пассивные детали со свойствами — у каждого плюс и цена
+	{"id": "mods", "title": "Модули", "icon": "gear", "kinds": ["deco"], "only": "mods"},
 	{"id": "mat", "title": "Материал", "icon": "material", "kinds": [], "tool": "material"},
 	{"id": "deco", "title": "Декор и покраска", "icon": "decor", "kinds": ["deco"], "alt": "paint", "only": "passive"},
 ]
@@ -1919,7 +1921,7 @@ func _refresh_part() -> void:
 				_refresh())
 			channel_row.add_child(b)
 	# одна строка «что делает» у детали из библиотеки; целиком — в подсказке
-	var desc := CraftEdit.part_desc(d) if not on_stand or ActiveBlocks.is_active(d.id) else ""
+	var desc := CraftEdit.part_desc(d) if not on_stand or ActiveBlocks.is_active(d.id) or PartMods.is_mod(d.id) else ""   # модуль: что даёт и чем платит
 	var dot := desc.find(". ")
 	part_desc.text = desc.substr(0, dot + 1) if dot > 0 else desc
 	part_desc.tooltip_text = desc if dot > 0 else ""

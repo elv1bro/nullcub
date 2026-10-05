@@ -4484,6 +4484,267 @@
    "Steel"
   ]
  },
+ "Kit_Mod_Battery": {
+  "glb": "Kit_Mod_Battery",
+  "builder": "Mod_Battery",
+  "size": "",
+  "kind": "deco",
+  "title": "Батарея",
+  "id": "kit_mod_battery",
+  "mass": 1.2,
+  "energy": 5,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1260,
+  "empties": [
+   "Shape_Box_Battery",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Bone",
+   "Brass",
+   "CoreGlow",
+   "Gem",
+   "Iron",
+   "Rubber",
+   "Screen"
+  ]
+ },
+ "Kit_Mod_Bumper": {
+  "glb": "Kit_Mod_Bumper",
+  "builder": "Mod_Bumper",
+  "size": "",
+  "kind": "deco",
+  "title": "Пружина-отбойник",
+  "id": "kit_mod_bumper",
+  "mass": 0.8,
+  "energy": 3,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_red",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1862,
+  "empties": [
+   "Shape_Cyl_Bumper",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintRed",
+   "Brass",
+   "Iron",
+   "Rubber",
+   "Steel"
+  ]
+ },
+ "Kit_Mod_Damper": {
+  "glb": "Kit_Mod_Damper",
+  "builder": "Mod_Damper",
+  "size": "",
+  "kind": "deco",
+  "title": "Амортизатор сустава",
+  "id": "kit_mod_damper",
+  "mass": 0.9,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_yellow",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2420,
+  "empties": [
+   "Shape_Cyl_Damper",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintYellow",
+   "Brass",
+   "Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Mod_Fairing": {
+  "glb": "Kit_Mod_Fairing",
+  "builder": "Mod_Fairing",
+  "size": "",
+  "kind": "deco",
+  "title": "Обтекатель",
+  "id": "kit_mod_fairing",
+  "mass": 0.6,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1978,
+  "empties": [
+   "Shape_Cyl_Fairing",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Mod_Flywheel": {
+  "glb": "Kit_Mod_Flywheel",
+  "builder": "Mod_Flywheel",
+  "size": "",
+  "kind": "deco",
+  "title": "Маховик",
+  "id": "kit_mod_flywheel",
+  "mass": 2.0,
+  "energy": 6,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "iron",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1688,
+  "empties": [
+   "Shape_Box_Flywheel",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Iron",
+   "Bone",
+   "Brass",
+   "Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Mod_Grinder": {
+  "glb": "Kit_Mod_Grinder",
+  "builder": "Mod_Grinder",
+  "size": "",
+  "kind": "deco",
+  "title": "Наждак",
+  "id": "kit_mod_grinder",
+  "mass": 0.8,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "rust",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2370,
+  "empties": [
+   "Shape_Box_Grinder",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Rust",
+   "Brass",
+   "Iron",
+   "Steel"
+  ]
+ },
+ "Kit_Mod_Repair": {
+  "glb": "Kit_Mod_Repair",
+  "builder": "Mod_Repair",
+  "size": "",
+  "kind": "deco",
+  "title": "Скобы-ремкомплект",
+  "id": "kit_mod_repair",
+  "mass": 1.0,
+  "energy": 6,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_green",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1484,
+  "empties": [
+   "Shape_Box_Repair",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintGreen",
+   "Bone",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Rubber",
+   "Steel",
+   "WoodDark"
+  ]
+ },
+ "Kit_Mod_Sail": {
+  "glb": "Kit_Mod_Sail",
+  "builder": "Mod_Sail",
+  "size": "",
+  "kind": "deco",
+  "title": "Парус-щит",
+  "id": "kit_mod_sail",
+  "mass": 1.6,
+  "energy": 5,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "rust_red",
+  "material": "iron",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2148,
+  "empties": [
+   "Shape_Box_Sail",
+   "Socket"
+  ],
+  "materials": [
+   "Base_RustRed",
+   "Brass",
+   "Iron"
+  ]
+ },
+ "Kit_Mod_Servo": {
+  "glb": "Kit_Mod_Servo",
+  "builder": "Mod_Servo",
+  "size": "",
+  "kind": "deco",
+  "title": "Сервопривод",
+  "id": "kit_mod_servo",
+  "mass": 1.4,
+  "energy": 6,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "paint_blue",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2492,
+  "empties": [
+   "Shape_Box_Servo",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintBlue",
+   "Brass",
+   "Iron",
+   "Steel"
+  ]
+ },
  "Kit_Pick_Head": {
   "glb": "Kit_Pick_Head",
   "builder": "Pick_Head",

@@ -44,6 +44,7 @@ const PART_ARMOR := {
 	"kit_deco_pro_panel": 0.3,
 	"kit_deco_aoe_carapace": 0.3,
 	# ядра: котёл 18 кг и реактор 16 кг — самые толстые; клетка, бак и хаб — железо и листовой металл; бочка, ящик, игрушка — без брони
+	"kit_mod_sail": 0.3,             # модуль «Парус-щит» (PartMods, WORKSHOP_V4.md «Модули»): броня, но парусит в воздухе
 	"kit_core_boiler": 0.2,
 	"kit_core_pro_reactor": 0.15,
 	"kit_core_cage": 0.1,
