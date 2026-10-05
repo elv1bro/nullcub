@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_hub_aoe_node.tscn" id="1_x1s3r"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_hu58m"]
+
+[resource]
+script = ExtResource("2_hu58m")
+id = "kit_hub_aoe_node"
+title = "Узел-сплетение"
+kind = "joint"
+scene = ExtResource("1_x1s3r")
+mass = 2.2
+energy = 4
+name_prefix = "Joint"
+base_mat = "bone"
+connector = true

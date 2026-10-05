@@ -154,6 +154,46 @@ static func shape_mult(profile: String, mult: float, v: float) -> float:
 	return m
 
 
+## Прочность детали 0…1: материал узла mat_id, иначе материал детали по умолчанию (Tuning.MAT_DURABILITY); щитки и броня крепче,
+## ядро — чуть. Показатель мастерской и основа запаса прочности тела в бою (Tuning.PART_INTEGRITY, ModularDoll.part_integrity).
+static func part_durability(d: PartDef, mat_id: String = "") -> float:
+	if d == null:
+		return 0.0
+	var m := mat_id if mat_id != "" else (d.base_mat if d.base_mat != "" else d.material)
+	var v := float(Tuning.MAT_DURABILITY.get(m, 0.5))
+	if d.kind == "plate" or d.kind == "armor":
+		v += Tuning.DURABILITY_ARMOR_BONUS
+	elif d.kind == "core":
+		v += Tuning.DURABILITY_CORE_BONUS
+	return clampf(v, 0.0, 1.0)
+
+
+## Броня детали part_id — доля урона 0…1 (Tuning.PART_ARMOR: id или его начало, самое длинное совпадение); 0 — не броня.
+static func part_armor(part_id: String) -> float:
+	var best := ""
+	for k in Tuning.PART_ARMOR:
+		if part_id.begins_with(String(k)) and String(k).length() > best.length():
+			best = String(k)
+	return float(Tuning.PART_ARMOR[best]) if best != "" else 0.0
+
+
+## Сложить броню двух щитков на одном теле: 1 − (1 − a)(1 − b), не выше Tuning.ARMOR_MAX.
+static func armor_stack(a: float, b: float) -> float:
+	return minf(1.0 - (1.0 - clampf(a, 0.0, 1.0)) * (1.0 - clampf(b, 0.0, 1.0)), Tuning.ARMOR_MAX)
+
+
+## Множитель урона по телу с бронёй: 1 − meta "armor" (ModularDoll пишет её телу, с которым слит щиток); без меты — 1.0.
+static func armor_mult_of_body(b: Node) -> float:
+	if b == null or not b.has_meta("armor"):
+		return 1.0
+	return 1.0 - clampf(float(b.get_meta("armor")), 0.0, Tuning.ARMOR_MAX)
+
+
+## Множитель жертвы по телу, в которое попали: место (target_mult_of по имени) × броня этого тела.
+static func target_mult_of_body(b: Node) -> float:
+	return target_mult_of(String(b.name)) * armor_mult_of_body(b) if b != null else 1.0
+
+
 ## Множитель формы тела-бьющего на скорости v: meta shape_mult / shape_profile (ModularDoll: форма детали и шипастый декор);
 ## нет меты — 1.0 (обычная кукла, оружие).
 static func shape_mult_of_body(b: Node, v: float) -> float:

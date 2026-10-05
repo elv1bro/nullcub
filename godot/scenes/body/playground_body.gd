@@ -34,6 +34,15 @@ const PRESETS := [
 	["kit_camo", "res://scenes/body/presets/kit_camo.tscn"],
 	["kit_spinner", "res://scenes/body/presets/kit_spinner.tscn"],
 	["kit_empty", "res://scenes/body/presets/kit_empty.tscn"],
+	# наборы 04.10 (docs/plan-demo/KIT_SETS.md): про-лига Земли и живые бойцы Аоэлюн — листанием ] / [
+	["pro_sprinter", "res://scenes/body/presets/pro_sprinter.tscn"],
+	["pro_titan", "res://scenes/body/presets/pro_titan.tscn"],
+	["aoe_predator", "res://scenes/body/presets/aoe_predator.tscn"],
+	["aoe_ram", "res://scenes/body/presets/aoe_ram.tscn"],
+	["pro_centipede", "res://scenes/body/presets/pro_centipede.tscn"],
+	["pro_multitool", "res://scenes/body/presets/pro_multitool.tscn"],
+	["aoe_leviathan", "res://scenes/body/presets/aoe_leviathan.tscn"],
+	["set_chimera", "res://scenes/body/presets/set_chimera.tscn"],
 ]
 ## Прямой выбор: клавиша → индекс PRESETS (номер F-клавиши = номер пресета). F10 пропущен — его ловит base (playground.gd:
 ## cycle_fx_preset, пресет эффектов удара); 10-й пресет и всё дальше F13 — только листанием.

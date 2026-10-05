@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Blade_ProEnergy.glb" id="1_r53k6"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_tabau"]
+friction = 0.5
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5isik"]
+size = Vector3(0.07, 0.09, 0.07)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_656cs"]
+size = Vector3(0.17, 0.12, 0.06)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dm3rn"]
+size = Vector3(0.08, 0.51, 0.06)
+
+[node name="KitBladeProEnergy" type="RigidBody3D" unique_id=1838640239]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.2
+physics_material_override = SubResource("PhysicsMaterial_tabau")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "weapon_head"
+metadata/part_id = "kit_blade_pro_energy"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=405902915]
+
+[node name="Shape_Collar" type="CollisionShape3D" parent="." unique_id=571018671]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0)
+shape = SubResource("BoxShape3D_5isik")
+
+[node name="Shape_Hilt" type="CollisionShape3D" parent="." unique_id=185009510]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.13, 0)
+shape = SubResource("BoxShape3D_656cs")
+
+[node name="Shape_Blade" type="CollisionShape3D" parent="." unique_id=547116349]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.445, 0)
+shape = SubResource("BoxShape3D_dm3rn")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1566712181 instance=ExtResource("1_r53k6")]
+metadata/rig_mesh = true

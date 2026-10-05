@@ -105,7 +105,7 @@ func _blast(by: Node, ignore: Node) -> void:
 		var dir := Vector3(com.x - p.x, com.y - p.y, 0.0)
 		dir = dir.normalized() if dir.length_squared() > 1e-4 else Vector3.UP
 		dir = (dir + Vector3.UP * UP_BIAS).normalized()
-		var dmg := DOLL_DAMAGE_MAX * pow(f, 0.7)
+		var dmg := DOLL_DAMAGE_MAX * pow(f, 0.7) * Damage.armor_mult_of_body(best)   # броня ближайшей к взрыву детали
 		var stun_s := 0.0
 		if combat and dmg >= DOLL_DAMAGE_MIN and d.alive and d.can_take_damage():
 			stun_s = Damage.stun_seconds(dmg)

@@ -196,7 +196,7 @@ func _on_body_entered(other: Node) -> void:
 	var closing := absf(rel.dot(nrm)) if found else rel.length()
 	var own := maxf(absf(v_item.dot(nrm)), absf(v_part.dot(nrm))) if found else maxf(v_item.length(), v_part.length())
 	closing = minf(closing, own)
-	var dmg := Damage.compute(item.mass, closing, 1.0, PROP_WEAPON_MULT, 1.0, 1.0, Damage.target_mult_of(part.name), true)
+	var dmg := Damage.compute(item.mass, closing, 1.0, PROP_WEAPON_MULT, 1.0, 1.0, Damage.target_mult_of_body(part), true)
 	if dmg <= 0.0:
 		return
 	var key := victim.get_instance_id()

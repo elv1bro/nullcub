@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_aoe_blade_s.tscn" id="1_f5you"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_b85b6"]
+
+[resource]
+script = ExtResource("2_b85b6")
+id = "kit_limb_aoe_blade_s"
+title = "Лезвия (рука)"
+scene = ExtResource("1_f5you")
+mass = 2.3
+energy = 7
+body_mult = 0.8
+hit_mult = 1.2
+hit_profile = "sharp"
+name_prefix = "UpperArm"
+base_mat = "bone"
+connector = true

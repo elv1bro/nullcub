@@ -111,6 +111,10 @@ const HIT_MULT := {
 	# детали лиги (tools/blender/kit_league.py META; профиль — HIT_PROFILE tools/build_body_kit.gd)
 	"kit_limb_league_scythe_": 1.2, "kit_hand_league_talon": 1.15, "kit_foot_league_spike": 1.15, "kit_head_league_eye": 1.15,
 	"kit_head_league_crystal": 1.1, "kit_hand_league_pincer": 1.1, "kit_limb_league_crystal_": 1.1, "kit_limb_league_tentacle_": 0.9,
+	# наборы 04.10 (tools/blender/kit_pro.py, kit_aoe.py META)
+	"kit_hand_pro_claw": 1.15, "kit_hand_pro_crusher": 1.2, "kit_foot_pro_spike": 1.2,
+	"kit_head_aoe_watcher": 1.1, "kit_head_aoe_hunter": 1.15, "kit_limb_aoe_blade_": 1.2, "kit_limb_aoe_whip_": 1.1,
+	"kit_hand_aoe_claw": 1.2, "kit_hand_aoe_hook": 1.1, "kit_foot_aoe_stilt": 1.15,
 }
 
 ## Заготовки (UI v0.2, шаблон «Пустой»: ядро и голова) — не бойцы: не стоят и тяг у них нет; остальные проверки — как у всех.

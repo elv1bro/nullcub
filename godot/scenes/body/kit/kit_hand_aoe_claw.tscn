@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Hand_AoeClaw.glb" id="1_m4map"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_rttd5"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hiy6t"]
+size = Vector3(0.14, 0.2, 0.07)
+
+[node name="KitHandAoeClaw" type="RigidBody3D" unique_id=1894385381]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+physics_material_override = SubResource("PhysicsMaterial_rttd5")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "hand"
+metadata/part_id = "kit_hand_aoe_claw"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=2146982462]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+
+[node name="Shape_Hand" type="CollisionShape3D" parent="." unique_id=1672100105]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.005, 0, 0)
+shape = SubResource("BoxShape3D_hiy6t")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1863108474 instance=ExtResource("1_m4map")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+metadata/rig_mesh = true

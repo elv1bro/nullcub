@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_deco_pro_panel_s.tscn" id="1_2jowa"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_bnnlu"]
+
+[resource]
+script = ExtResource("2_bnnlu")
+id = "kit_deco_pro_panel_s"
+title = "Щит-панель (рука)"
+kind = "armor"
+scene = ExtResource("1_2jowa")
+mass = 1.3
+energy = 4
+attach = "fixed"
+name_prefix = "Armor"
+base_mat = "paint_white"

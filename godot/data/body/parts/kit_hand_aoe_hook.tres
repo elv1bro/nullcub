@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_hand_aoe_hook.tscn" id="1_nepjk"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_3354g"]
+
+[resource]
+script = ExtResource("2_3354g")
+id = "kit_hand_aoe_hook"
+title = "Крюк-захват"
+kind = "hand"
+scene = ExtResource("1_nepjk")
+mass = 1.1
+energy = 4
+body_mult = 2.0
+hit_mult = 1.1
+hit_profile = "blunt"
+name_prefix = "Hand"
+base_mat = "bone"
+connector = true

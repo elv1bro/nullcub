@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Deco_AoeCarapace_L.glb" id="1_dwx1u"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bxht8"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_k32bk"]
+height = 0.2146
+radius = 0.11368
+
+[node name="KitDecoAoeCarapaceL" type="RigidBody3D" unique_id=264877699]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.8
+physics_material_override = SubResource("PhysicsMaterial_bxht8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "armor"
+metadata/part_id = "kit_deco_aoe_carapace_l"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=348669830]
+
+[node name="Shape_Carapace" type="CollisionShape3D" parent="." unique_id=2033160529]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1493, 0)
+shape = SubResource("CylinderShape3D_k32bk")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1412737468 instance=ExtResource("1_dwx1u")]
+metadata/rig_mesh = true

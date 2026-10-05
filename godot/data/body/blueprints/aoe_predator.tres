@@ -1,0 +1,114 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_shiee"]
+
+[resource]
+script = ExtResource("1_shiee")
+id = "aoe_predator"
+title = "Хищник Аоэлюн"
+energy_budget = 110
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "kit_core_aoe_heart",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"face": "res://assets/textures/league/league_face.png",
+"name": "Head",
+"parent": "T",
+"part": "kit_head_aoe_hunter",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "kit_limb_aoe_blade_s",
+"rest_deg": 70.0,
+"uid": "1"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "kit_limb_aoe_blade_s",
+"rest_deg": 40.0,
+"uid": "2"
+}, {
+"anchor": "Anchor_End",
+"name": "Hand_L",
+"parent": "2",
+"part": "kit_hand_aoe_claw",
+"rest_deg": 0.0,
+"uid": "3"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "kit_limb_aoe_blade_s",
+"rest_deg": 70.0,
+"uid": "4"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_R",
+"parent": "4",
+"part": "kit_limb_aoe_blade_s",
+"rest_deg": 40.0,
+"uid": "5"
+}, {
+"anchor": "Anchor_End",
+"name": "Hand_R",
+"parent": "5",
+"part": "kit_hand_aoe_claw",
+"rest_deg": 0.0,
+"uid": "6"
+}, {
+"anchor": "Anchor_Hip_L",
+"name": "UpperLeg_L",
+"parent": "T",
+"part": "kit_limb_aoe_sinew_l",
+"rest_deg": 24.0,
+"uid": "7"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_L",
+"parent": "7",
+"part": "kit_limb_aoe_sinew_l",
+"rest_deg": 6.0,
+"uid": "8"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_L",
+"parent": "8",
+"part": "kit_foot_aoe_stilt",
+"rest_deg": -14.0,
+"uid": "9"
+}, {
+"anchor": "Anchor_Hip_R",
+"name": "UpperLeg_R",
+"parent": "T",
+"part": "kit_limb_aoe_sinew_l",
+"rest_deg": 24.0,
+"uid": "A"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_R",
+"parent": "A",
+"part": "kit_limb_aoe_sinew_l",
+"rest_deg": 6.0,
+"uid": "B"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_R",
+"parent": "B",
+"part": "kit_foot_aoe_stilt",
+"rest_deg": -14.0,
+"uid": "C"
+}, {
+"anchor": "Anchor_Back",
+"parent": "T",
+"part": "kit_deco_aoe_spines",
+"uid": "D"
+}])
+control = PackedStringArray("6")
+control_rmb = PackedStringArray()

@@ -1,0 +1,108 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_gdwpm"]
+
+[resource]
+script = ExtResource("1_gdwpm")
+id = "pro_titan"
+title = "Титан"
+energy_budget = 110
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "kit_core_pro_reactor",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"name": "Head",
+"parent": "T",
+"part": "kit_head_pro_pilot",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"name": "UpperArm_L",
+"parent": "T",
+"part": "kit_limb_pro_panel_s",
+"uid": "1"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_L",
+"parent": "1",
+"part": "kit_limb_pro_panel_s",
+"rest_deg": 12.0,
+"uid": "2"
+}, {
+"anchor": "Anchor_End",
+"name": "Hand_L",
+"parent": "2",
+"part": "kit_hand_pro_crusher",
+"rest_deg": 0.0,
+"uid": "3"
+}, {
+"anchor": "Anchor_Deco",
+"parent": "2",
+"part": "kit_deco_pro_panel_s",
+"uid": "4"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"name": "UpperArm_R",
+"parent": "T",
+"part": "kit_limb_pro_panel_s",
+"uid": "5"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerArm_R",
+"parent": "5",
+"part": "kit_limb_pro_panel_s",
+"rest_deg": 12.0,
+"uid": "6"
+}, {
+"anchor": "Anchor_End",
+"parent": "6",
+"part": "kit_hammer_pro_drum",
+"rest_deg": 0.0,
+"uid": "7"
+}, {
+"anchor": "Anchor_Hip_L",
+"name": "UpperLeg_L",
+"parent": "T",
+"part": "kit_limb_pro_panel_l",
+"uid": "8"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_L",
+"parent": "8",
+"part": "kit_limb_pro_panel_l",
+"rest_deg": 5.0,
+"uid": "9"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_L",
+"parent": "9",
+"part": "kit_foot_pro_wheel",
+"rest_deg": 0.0,
+"uid": "A"
+}, {
+"anchor": "Anchor_Hip_R",
+"name": "UpperLeg_R",
+"parent": "T",
+"part": "kit_limb_pro_panel_l",
+"uid": "B"
+}, {
+"anchor": "Anchor_End",
+"name": "LowerLeg_R",
+"parent": "B",
+"part": "kit_limb_pro_panel_l",
+"rest_deg": 5.0,
+"uid": "C"
+}, {
+"anchor": "Anchor_End",
+"name": "Foot_R",
+"parent": "C",
+"part": "kit_foot_pro_wheel",
+"rest_deg": 0.0,
+"uid": "D"
+}])
+control = PackedStringArray("6")
+control_rmb = PackedStringArray()

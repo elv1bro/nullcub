@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "Pro_Carbon"
+albedo_color = Color(0.18974829, 0.19641912, 0.20906562, 1)
+metallic = 0.2
+roughness = 0.6
+rim_enabled = true
+rim = 0.25
+rim_tint = 0.6

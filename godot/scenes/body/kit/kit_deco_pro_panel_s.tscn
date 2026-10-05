@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Deco_ProPanel_S.glb" id="1_8smam"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_kkw2d"]
+friction = 0.5
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ait7w"]
+size = Vector3(0.17255, 0.22446, 0.1434)
+
+[node name="KitDecoProPanelS" type="RigidBody3D" unique_id=340937390]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.3
+physics_material_override = SubResource("PhysicsMaterial_kkw2d")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "armor"
+metadata/part_id = "kit_deco_pro_panel_s"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=87255631]
+
+[node name="Shape_Panel" type="CollisionShape3D" parent="." unique_id=182904753]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1254, 0.0517)
+shape = SubResource("BoxShape3D_ait7w")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=984731045 instance=ExtResource("1_8smam")]
+metadata/rig_mesh = true

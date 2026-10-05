@@ -476,6 +476,7 @@ func _deal(victim: Doll, amount: float, part: String, pos: Vector3, normal: Vect
 		return
 	if not victim.alive or not victim.can_take_damage():
 		return
+	amount *= Damage.armor_mult_of_body(victim.parts.get(part) as Node)   # броня тела, в которое пришлись огонь / пуля / ток
 	victim.hit_meta = {"speed": 0.0, "weapon_id": weapon_id, "striker": doll, "combo_mult": 1.0, "double_blow": false,
 		"knockback_mult": 1.0, "stun_s": 0.0, "active_block": true}
 	var hp0 := victim.hp

@@ -50,7 +50,8 @@ SHEET_DOC_MAX_BYTES = 4 * 1024 * 1024
 RENDER_TMP = os.environ.get("KIT_RENDER_TMP") or os.path.join(tempfile.gettempdir(), "body_kit_render")
 SHEET_FULL = os.path.join(RENDER_TMP, "body-kit-v2-full.png")
 ROW_RES = (2600, 760)   # по умолчанию; у рядов каталога — свои (render_frame)
-KIT_MODULES = ["kit_joints", "kit_heads", "kit_cores", "kit_limbs", "kit_ends", "kit_deco", "kit_weapons", "kit_league", "kit_active"]
+KIT_MODULES = ["kit_joints", "kit_heads", "kit_cores", "kit_limbs", "kit_ends", "kit_deco", "kit_weapons", "kit_league", "kit_active",
+               "kit_pro", "kit_aoe"]
 
 if bpy is not None:
     import importlib

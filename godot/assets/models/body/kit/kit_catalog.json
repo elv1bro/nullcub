@@ -552,6 +552,74 @@
    "Steel"
   ]
  },
+ "Kit_Blade_ProEnergy": {
+  "glb": "Kit_Blade_ProEnergy",
+  "builder": "Blade_ProEnergy",
+  "size": "",
+  "kind": "weapon_head",
+  "title": "Энергоклинок",
+  "id": "kit_blade_pro_energy",
+  "mass": 1.2,
+  "energy": 0,
+  "attach": "fixed",
+  "weapon_mult": 1.55,
+  "name_prefix": "Blade",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1496,
+  "empties": [
+   "Shape_Box_Blade",
+   "Shape_Box_Collar",
+   "Shape_Box_Hilt",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Core_AoeHeart": {
+  "glb": "Kit_Core_AoeHeart",
+  "builder": "Core_AoeHeart",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-сердце",
+  "id": "kit_core_aoe_heart",
+  "mass": 13.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": false,
+  "tris": 5838,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Sphere_Torso"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void",
+   "Shirt_Kit"
+  ]
+ },
  "Kit_Core_Ball": {
   "glb": "Kit_Core_Ball",
   "builder": "Core_Ball",
@@ -913,6 +981,82 @@
    "Shirt_Kit"
   ]
  },
+ "Kit_Core_ProGyro": {
+  "glb": "Kit_Core_ProGyro",
+  "builder": "Core_ProGyro",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-гиростаб",
+  "id": "kit_core_pro_gyro",
+  "mass": 13.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": false,
+  "tris": 5106,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Sphere_Torso"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Core_ProReactor": {
+  "glb": "Kit_Core_ProReactor",
+  "builder": "Core_ProReactor",
+  "size": "",
+  "kind": "core",
+  "title": "Ядро-реактор",
+  "id": "kit_core_pro_reactor",
+  "mass": 16.0,
+  "energy": 0,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Torso",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": false,
+  "tris": 5730,
+  "empties": [
+   "Anchor_Back",
+   "Anchor_Hip_L",
+   "Anchor_Hip_R",
+   "Anchor_Neck",
+   "Anchor_Shoulder_L",
+   "Anchor_Shoulder_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Sphere_Torso"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "CoreGlow",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Pro_Heat",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
  "Kit_Core_Toy": {
   "glb": "Kit_Core_Toy",
   "builder": "Core_Toy",
@@ -974,6 +1118,91 @@
    "Iron",
    "Shirt_Kit",
    "Steel"
+  ]
+ },
+ "Kit_Deco_AoeCarapace_L": {
+  "glb": "Kit_Deco_AoeCarapace_L",
+  "builder": "Deco_AoeCarapace",
+  "size": "L",
+  "kind": "armor",
+  "title": "Панцирь (нога)",
+  "id": "kit_deco_aoe_carapace_l",
+  "mass": 1.8,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Armor",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2392,
+  "empties": [
+   "Shape_Cyl_Carapace",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Deco_AoeCarapace_S": {
+  "glb": "Kit_Deco_AoeCarapace_S",
+  "builder": "Deco_AoeCarapace",
+  "size": "S",
+  "kind": "armor",
+  "title": "Панцирь (рука)",
+  "id": "kit_deco_aoe_carapace_s",
+  "mass": 1.2,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Armor",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2392,
+  "empties": [
+   "Shape_Cyl_Carapace",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Deco_AoeSpines": {
+  "glb": "Kit_Deco_AoeSpines",
+  "builder": "Deco_AoeSpines",
+  "size": "",
+  "kind": "deco",
+  "title": "Спинные иглы",
+  "id": "kit_deco_aoe_spines",
+  "mass": 0.7,
+  "energy": 2,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Deco",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.15,
+  "tris": 1318,
+  "empties": [
+   "Shape_Box_Base",
+   "Shape_Box_Crest",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Deco_Banner": {
@@ -1286,6 +1515,68 @@
    "Steel"
   ]
  },
+ "Kit_Deco_ProPanel_L": {
+  "glb": "Kit_Deco_ProPanel_L",
+  "builder": "Deco_ProPanel",
+  "size": "L",
+  "kind": "armor",
+  "title": "Щит-панель (нога)",
+  "id": "kit_deco_pro_panel_l",
+  "mass": 1.9,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Armor",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1446,
+  "empties": [
+   "Shape_Box_Panel",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Glow",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Deco_ProPanel_S": {
+  "glb": "Kit_Deco_ProPanel_S",
+  "builder": "Deco_ProPanel",
+  "size": "S",
+  "kind": "armor",
+  "title": "Щит-панель (рука)",
+  "id": "kit_deco_pro_panel_s",
+  "mass": 1.3,
+  "energy": 4,
+  "attach": "fixed",
+  "weapon_mult": 1.0,
+  "name_prefix": "Armor",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 1446,
+  "empties": [
+   "Shape_Box_Panel",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Glow",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
  "Kit_Deco_Spikes_L": {
   "glb": "Kit_Deco_Spikes_L",
   "builder": "Deco_Spikes",
@@ -1398,6 +1689,61 @@
    "Iron",
    "Shirt_Kit",
    "Steel"
+  ]
+ },
+ "Kit_Foot_AoeGrip": {
+  "glb": "Kit_Foot_AoeGrip",
+  "builder": "Foot_AoeGrip",
+  "size": "",
+  "kind": "foot",
+  "title": "Присоска",
+  "id": "kit_foot_aoe_grip",
+  "mass": 0.7,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 2438,
+  "empties": [
+   "Shape_Box_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Foot_AoeStilt": {
+  "glb": "Kit_Foot_AoeStilt",
+  "builder": "Foot_AoeStilt",
+  "size": "",
+  "kind": "foot",
+  "title": "Ходуля",
+  "id": "kit_foot_aoe_stilt",
+  "mass": 0.8,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.15,
+  "tris": 666,
+  "empties": [
+   "Shape_Capsule_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Foot_Boot": {
@@ -1540,6 +1886,94 @@
    "Steel"
   ]
  },
+ "Kit_Foot_ProProp": {
+  "glb": "Kit_Foot_ProProp",
+  "builder": "Foot_ProProp",
+  "size": "",
+  "kind": "foot",
+  "title": "Стопа-пропеллер",
+  "id": "kit_foot_pro_prop",
+  "mass": 0.9,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 1768,
+  "empties": [
+   "Shape_Sphere_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Rubber",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Foot_ProSpike": {
+  "glb": "Kit_Foot_ProSpike",
+  "builder": "Foot_ProSpike",
+  "size": "",
+  "kind": "foot",
+  "title": "Стопа-копьё",
+  "id": "kit_foot_pro_spike",
+  "mass": 0.8,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.2,
+  "tris": 746,
+  "empties": [
+   "Shape_Capsule_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Iron",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Foot_ProWheel": {
+  "glb": "Kit_Foot_ProWheel",
+  "builder": "Foot_ProWheel",
+  "size": "",
+  "kind": "foot",
+  "title": "Большое колесо",
+  "id": "kit_foot_pro_wheel",
+  "mass": 1.2,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Foot",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2050,
+  "empties": [
+   "Shape_Sphere_Foot",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Glow",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
  "Kit_Foot_Spring": {
   "glb": "Kit_Foot_Spring",
   "builder": "Foot_Spring",
@@ -1593,6 +2027,95 @@
    "Rubber",
    "Shirt_Kit",
    "Steel"
+  ]
+ },
+ "Kit_Hammer_ProDrum": {
+  "glb": "Kit_Hammer_ProDrum",
+  "builder": "Hammer_ProDrum",
+  "size": "",
+  "kind": "weapon_head",
+  "title": "Молот-барабан",
+  "id": "kit_hammer_pro_drum",
+  "mass": 3.4,
+  "energy": 0,
+  "attach": "fixed",
+  "weapon_mult": 1.4,
+  "name_prefix": "Hammer",
+  "base_mat": "brass",
+  "material": "wood",
+  "connector": false,
+  "body_mult": 1.0,
+  "tris": 2876,
+  "empties": [
+   "Anchor_Face_L",
+   "Anchor_Face_R",
+   "Shape_Box_Collar",
+   "Shape_Cyl_Drum",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Heat",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Hand_AoeClaw": {
+  "glb": "Kit_Hand_AoeClaw",
+  "builder": "Hand_AoeClaw",
+  "size": "",
+  "kind": "hand",
+  "title": "Коготь",
+  "id": "kit_hand_aoe_claw",
+  "mass": 1.0,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.2,
+  "tris": 1228,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Hand_AoeHook": {
+  "glb": "Kit_Hand_AoeHook",
+  "builder": "Hand_AoeHook",
+  "size": "",
+  "kind": "hand",
+  "title": "Крюк-захват",
+  "id": "kit_hand_aoe_hook",
+  "mass": 1.1,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.1,
+  "tris": 1416,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Hand_Clamp": {
@@ -1788,6 +2311,127 @@
    "Iron",
    "Shirt_Kit",
    "Steel"
+  ]
+ },
+ "Kit_Hand_ProClaw": {
+  "glb": "Kit_Hand_ProClaw",
+  "builder": "Hand_ProClaw",
+  "size": "",
+  "kind": "hand",
+  "title": "Клешня про",
+  "id": "kit_hand_pro_claw",
+  "mass": 1.1,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.15,
+  "tris": 1862,
+  "empties": [
+   "Shape_Box_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Hand_ProCrusher": {
+  "glb": "Kit_Hand_ProCrusher",
+  "builder": "Hand_ProCrusher",
+  "size": "",
+  "kind": "hand",
+  "title": "Дробилка",
+  "id": "kit_hand_pro_crusher",
+  "mass": 1.9,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Hand",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.2,
+  "tris": 2214,
+  "empties": [
+   "Shape_Cyl_Hand",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Iron",
+   "Pro_Glow",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Head_AoeHunter": {
+  "glb": "Kit_Head_AoeHunter",
+  "builder": "Head_AoeHunter",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-охотник",
+  "id": "kit_head_aoe_hunter",
+  "mass": 4.4,
+  "energy": 11,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.15,
+  "tris": 2864,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Box_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "Face",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Head_AoeWatcher": {
+  "glb": "Kit_Head_AoeWatcher",
+  "builder": "Head_AoeWatcher",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-наблюдатель",
+  "id": "kit_head_aoe_watcher",
+  "mass": 4.0,
+  "energy": 10,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.1,
+  "tris": 2952,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Sphere_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "Face",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Head_Bot": {
@@ -2123,6 +2767,69 @@
    "League_Void"
   ]
  },
+ "Kit_Head_ProPilot": {
+  "glb": "Kit_Head_ProPilot",
+  "builder": "Head_ProPilot",
+  "size": "",
+  "kind": "head",
+  "title": "Шлем пилота",
+  "id": "kit_head_pro_pilot",
+  "mass": 4.6,
+  "energy": 10,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2864,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Sphere_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Face",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Head_ProVisor": {
+  "glb": "Kit_Head_ProVisor",
+  "builder": "Head_ProVisor",
+  "size": "",
+  "kind": "head",
+  "title": "Голова-визор",
+  "id": "kit_head_pro_visor",
+  "mass": 4.2,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Head",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2452,
+  "empties": [
+   "Anchor_Top",
+   "Shape_Box_Head",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Face",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
  "Kit_Head_Round": {
   "glb": "Kit_Head_Round",
   "builder": "Head_Round",
@@ -2182,6 +2889,68 @@
    "Rubber",
    "Shirt_Kit",
    "Steel"
+  ]
+ },
+ "Kit_Hub_AoeNode": {
+  "glb": "Kit_Hub_AoeNode",
+  "builder": "Hub_AoeNode",
+  "size": "",
+  "kind": "joint",
+  "title": "Узел-сплетение",
+  "id": "kit_hub_aoe_node",
+  "mass": 2.2,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Joint",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 1596,
+  "empties": [
+   "Anchor_End",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Sphere_Hub",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Hub_ProTee": {
+  "glb": "Kit_Hub_ProTee",
+  "builder": "Hub_ProTee",
+  "size": "",
+  "kind": "joint",
+  "title": "Тройник",
+  "id": "kit_hub_pro_tee",
+  "mass": 2.4,
+  "energy": 4,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Joint",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2554,
+  "empties": [
+   "Anchor_End",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Sphere_Hub",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit"
   ]
  },
  "Kit_Joint_Free": {
@@ -2253,6 +3022,248 @@
   "materials": [
    "Shirt_Kit",
    "Steel"
+  ]
+ },
+ "Kit_Limb_AoeBlade_L": {
+  "glb": "Kit_Limb_AoeBlade_L",
+  "builder": "Limb_AoeBlade",
+  "size": "L",
+  "kind": "limb",
+  "title": "Лезвия (нога)",
+  "id": "kit_limb_aoe_blade_l",
+  "mass": 4.4,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.2,
+  "tris": 1958,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_AoeBlade_S": {
+  "glb": "Kit_Limb_AoeBlade_S",
+  "builder": "Limb_AoeBlade",
+  "size": "S",
+  "kind": "limb",
+  "title": "Лезвия (рука)",
+  "id": "kit_limb_aoe_blade_s",
+  "mass": 2.3,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.2,
+  "tris": 1958,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_AoeSinew_L": {
+  "glb": "Kit_Limb_AoeSinew_L",
+  "builder": "Limb_AoeSinew",
+  "size": "L",
+  "kind": "limb",
+  "title": "Жила (нога)",
+  "id": "kit_limb_aoe_sinew_l",
+  "mass": 3.4,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 2374,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_AoeSinew_S": {
+  "glb": "Kit_Limb_AoeSinew_S",
+  "builder": "Limb_AoeSinew",
+  "size": "S",
+  "kind": "limb",
+  "title": "Жила (рука)",
+  "id": "kit_limb_aoe_sinew_s",
+  "mass": 1.8,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 2374,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_AoeSpine_L": {
+  "glb": "Kit_Limb_AoeSpine_L",
+  "builder": "Limb_AoeSpine",
+  "size": "L",
+  "kind": "limb",
+  "title": "Позвонок (нога)",
+  "id": "kit_limb_aoe_spine_l",
+  "mass": 3.7,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 1928,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Ribs",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_AoeSpine_S": {
+  "glb": "Kit_Limb_AoeSpine_S",
+  "builder": "Limb_AoeSpine",
+  "size": "S",
+  "kind": "limb",
+  "title": "Позвонок (рука)",
+  "id": "kit_limb_aoe_spine_s",
+  "mass": 2.0,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "tris": 1984,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Ribs",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_AoeWhip_L": {
+  "glb": "Kit_Limb_AoeWhip_L",
+  "builder": "Limb_AoeWhip",
+  "size": "L",
+  "kind": "limb",
+  "title": "Плеть (нога)",
+  "id": "kit_limb_aoe_whip_l",
+  "mass": 2.9,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.1,
+  "tris": 2866,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
+  ]
+ },
+ "Kit_Limb_AoeWhip_S": {
+  "glb": "Kit_Limb_AoeWhip_S",
+  "builder": "Limb_AoeWhip",
+  "size": "S",
+  "kind": "limb",
+  "title": "Плеть (рука)",
+  "id": "kit_limb_aoe_whip_s",
+  "mass": 1.5,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "bone",
+  "material": "wood",
+  "connector": true,
+  "hit_mult": 1.1,
+  "tris": 2134,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_Bone",
+   "League_Flesh",
+   "League_Glow",
+   "League_Void"
   ]
  },
  "Kit_Limb_Basic_L": {
@@ -2894,6 +3905,138 @@
    "Base_WoodDark",
    "Brass",
    "Iron",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_ProPanel_L": {
+  "glb": "Kit_Limb_ProPanel_L",
+  "builder": "Limb_ProPanel",
+  "size": "L",
+  "kind": "limb",
+  "title": "Панельная (нога)",
+  "id": "kit_limb_pro_panel_l",
+  "mass": 5.0,
+  "energy": 8,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2184,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_ProPanel_S": {
+  "glb": "Kit_Limb_ProPanel_S",
+  "builder": "Limb_ProPanel",
+  "size": "S",
+  "kind": "limb",
+  "title": "Панельная (рука)",
+  "id": "kit_limb_pro_panel_s",
+  "mass": 2.6,
+  "energy": 6,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2140,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Rubber",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_ProSpine_L": {
+  "glb": "Kit_Limb_ProSpine_L",
+  "builder": "Limb_ProSpine",
+  "size": "L",
+  "kind": "limb",
+  "title": "Рама-позвонок (нога)",
+  "id": "kit_limb_pro_spine_l",
+  "mass": 5.2,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2278,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Ring",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_ProSpine_S": {
+  "glb": "Kit_Limb_ProSpine_S",
+  "builder": "Limb_ProSpine",
+  "size": "S",
+  "kind": "limb",
+  "title": "Рама-позвонок (рука)",
+  "id": "kit_limb_pro_spine_s",
+  "mass": 2.9,
+  "energy": 7,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2278,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Ring",
+   "Shape_Capsule_Limb",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
    "Shirt_Kit"
   ]
  },

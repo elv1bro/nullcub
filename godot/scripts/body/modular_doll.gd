@@ -44,6 +44,7 @@
 ##     клешня) × body_mult слитого декора/брони (шипы). PartDef.body_mult детали со своим телом не читается (= Tuning.BODY_MULT по
 ##     префиксу, builder), hit_mult сваренного узла и weapon_mult слитого навершия — тоже (weapon_mult только для CraftedWeapon):
 ##     навершие на теле добавляет массу и формы;
+##     "armor" — доля урона, которую снимают слитые с телом щитки (Tuning.PART_ARMOR; Damage.armor_mult_of_body), если она есть;
 ##   • цвет игрока — _recolor с одной копией на исходный материал (коннекторы и Shirt_Kit каждой детали).
 ##
 ## Покраска (docs/plan-demo/BODY_PAINT.md §5, BodyPaint): после Doll._ready — бит слоя наклеек мешам (кроме коннекторов), узлам с
@@ -82,6 +83,12 @@ var uid_body: Dictionary = {}
 var uid_joint: Dictionary = {}
 ## Ошибки validate() чертежа, если он не собрался (тогда собран human).
 var build_errors: PackedStringArray = []
+## Запас прочности тел (Tuning.PART_BREAK, 04.10): имя тела → сколько урона В НЕГО оно ещё выдержит; кончился — деталь отлетает
+## (part_broken, затем Doll.detach_part → part_detached). Ядра и головы здесь нет. part_integrity_max — запас целой детали.
+var part_integrity: Dictionary = {}
+var part_integrity_max: Dictionary = {}
+## Деталь сломалась от урона (запас part_integrity кончился): part_name — имя тела, by — чей удар. Сразу после — part_detached.
+signal part_broken(part_name: String, by: Node)
 ## Имя тела -> Transform3D в кукле сразу после сборки (до позы) — для проб.
 var assembly: Dictionary = {}
 var _bp_pose: Dictionary = {}          # имя сустава -> measured-градусы (поза покоя чертежа)
@@ -106,6 +113,7 @@ func _ready() -> void:
 	if snap:
 		_snap_pose(SPAWN_POSE_GROUPS)
 	child_entered_tree.connect(_on_child_entered)
+	part_reattached.connect(_on_part_reattached)
 	for c in get_children():
 		if c is DollCombat:
 			_hook_combat(c)
@@ -116,6 +124,39 @@ func _ready() -> void:
 func team_mult_for(attacker: Node) -> float:
 	var m := super.team_mult_for(attacker)
 	return m * active_rig.incoming_mult() if active_rig != null and is_instance_valid(active_rig) else m
+
+
+## Урон изнашивает деталь, в которую пришёл (Tuning.PART_BREAK): запас part_integrity тела тратится на урон, реально снятый с HP
+## (после брони, блока кистью и множителя команды); кончился — деталь отлетает (_break_part на следующем кадре: удар считается
+## внутри шага физики). KO этим ударом детали уже не ломает — кукла и так разлетается.
+func take_damage(amount: float, attacker: Node, part: String, position: Vector3, normal: Vector3, kind: String) -> void:
+	var before := hp
+	super.take_damage(amount, attacker, part, position, normal, kind)
+	var dealt := before - hp
+	if not Tuning.PART_BREAK or JointBreak.on or dealt <= 0.0 or not alive or not part_integrity.has(part):
+		return   # JointBreak (пробный режим суставов) считает износ сам, в Doll.take_damage — два счёта сразу не ведём
+	part_integrity[part] = float(part_integrity[part]) - dealt
+	if float(part_integrity[part]) <= 0.0:
+		part_integrity.erase(part)
+		_break_part.call_deferred(part, attacker)
+
+
+func _break_part(part: String, by: Node) -> void:
+	if not alive or not parts.has(part):
+		return
+	stats["parts_broken"] = int(stats.get("parts_broken", 0)) + 1
+	part_broken.emit(part, by)
+	detach_part(part, by)
+	for n in part_integrity.keys():   # всё, что висело на отлетевшей детали, ушло вместе с ней
+		if not parts.has(n):
+			part_integrity.erase(n)
+
+
+## Прикрученная обратно деталь (Doll.reattach_part) возвращается с полным запасом — и всё, что на ней висит.
+func _on_part_reattached(_part: String) -> void:
+	for n in part_integrity_max:
+		if parts.has(n) and not part_integrity.has(n):
+			part_integrity[n] = part_integrity_max[n]
 
 
 ## Поза покоя чертежа (а не Tuning.POSE).
@@ -285,6 +326,10 @@ func _build() -> void:
 	var iron := {}          # тело -> кг железа (meta material): свой узел + слитые, чей материал iron (BodyBlueprint.node_iron)
 	var mult := {}          # тело -> множитель удара сверх таблицы по имени: материал своего узла
 	var shape := {}         # тело -> [бонус формы, профиль]: форма своей детали (hit_mult) или слитого декора/брони — больший (WORKSHOP_V3.md §4)
+	var armor := {}         # тело -> доля урона, которую снимают слитые с ним щитки (Tuning.PART_ARMOR, meta armor)
+	var integ := {}         # тело -> запас прочности (Tuning.PART_INTEGRITY × прочность детали + щитки); ядра и головы тут нет
+	part_integrity.clear()
+	part_integrity_max.clear()
 	for n in blueprint.sorted_nodes():
 		var uid := String(n["uid"])
 		var def := BodyBlueprint.part_def(String(n["part"]))
@@ -331,6 +376,11 @@ func _build() -> void:
 				iron[host] = float(iron.get(host, 0.0)) + node_mass
 			if PartDef.FIXED_KINDS.has(def.kind) and def.body_mult > float((shape.get(host, [1.0, ""]) as Array)[0]):
 				shape[host] = [def.body_mult, def.hit_profile]   # шипы / рога / наруч: форма хозяина, не множитель поверх неё
+			var part_armor := Damage.part_armor(def.id)
+			if part_armor > 0.0:   # щиток бережёт тело, с которым слит (Tuning.PART_ARMOR)
+				armor[host] = Damage.armor_stack(float(armor.get(host, 0.0)), part_armor)
+				if integ.has(host):
+					integ[host] = float(integ[host]) + Tuning.PART_INTEGRITY * Tuning.ARMOR_INTEGRITY_BONUS
 			uid_body[uid] = String(host.name)
 			if STRIKER_KINDS.has(def.kind):
 				_striker[String(host.name)] = true
@@ -344,6 +394,11 @@ func _build() -> void:
 		mult[inst] = mdef.body_mult if mdef != null else 1.0
 		if not is_equal_approx(def.hit_mult, 1.0):
 			shape[inst] = [def.hit_mult, def.hit_profile]   # форма детали (шипы, рога, клешня) × скорость — Damage.shape_mult
+		if def.kind != "core" and def.kind != "head":
+			integ[inst] = Tuning.PART_INTEGRITY * Damage.part_durability(def, blueprint.node_mat(uid))
+		var own_armor := Damage.part_armor(def.id)
+		if own_armor > 0.0:   # своя броня детали (ядро с толстыми стенками); слитые щитки сложатся с ней
+			armor[inst] = own_armor
 		bodies.append(inst)
 		uid_body[uid] = String(inst.name)
 		if STRIKER_KINDS.has(def.kind):
@@ -393,6 +448,11 @@ func _build() -> void:
 		if shape.has(b):
 			b.set_meta("shape_mult", minf(float(shape[b][0]), Tuning.SHAPE_MULT_MAX) if float(shape[b][0]) > 1.0 else float(shape[b][0]))
 			b.set_meta("shape_profile", String(shape[b][1]))
+		if armor.has(b):
+			b.set_meta("armor", float(armor[b]))   # Damage.armor_mult_of_body: урон В это тело × (1 − броня)
+		if integ.has(b):
+			part_integrity[String(b.name)] = float(integ[b])
+			part_integrity_max[String(b.name)] = float(integ[b])
 		add_child(b)
 	for jd in todo:
 		jd["pos"] = (jd["pos"] as Vector3) + shift

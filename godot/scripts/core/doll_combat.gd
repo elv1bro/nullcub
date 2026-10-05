@@ -273,7 +273,7 @@ func _contact_doll(part: RigidBody3D, other: RigidBody3D, other_doll: Doll, pos:
 		_enqueue({
 			"victim_part": part, "striker": other, "attacker": other_doll, "kind": "head" if part.name.begins_with("Head") else "body",
 			"mass": other.mass, "body_mult": Damage.body_mult_of_body(other) * Damage.shape_mult_of_body(other, closing), "weapon_mult": 1.0, "weapon_id": "",
-			"speed": hit_speed, "target_mult": 1.0 if head_head else Damage.target_mult_of(part.name),
+			"speed": hit_speed, "target_mult": 1.0 if head_head else Damage.target_mult_of_body(part),
 			"pos": pos, "nrm": nrm, "dir": dir, "t": _time,
 		})
 		return
@@ -380,7 +380,7 @@ func _attacker_key(c: Dictionary) -> int:
 
 func _raw_damage(c: Dictionary, combo_mult: float) -> float:
 	var vp: RigidBody3D = c["victim_part"]
-	var target := float(c.get("target_mult", Damage.target_mult_of(vp.name)))
+	var target := float(c.get("target_mult", Damage.target_mult_of_body(vp)))
 	if c["kind"] == "environment" and not Tuning.ENV_DAMAGE_ENABLED:
 		return 0.0
 	if c["kind"] == "environment" and not (c["striker"] is Weapon):
@@ -575,7 +575,7 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 	doll.take_damage(dmg, attacker, vp.name, pos, nrm, kind)
 	# knockback: направление от бьющего к жертве + апбиас; SD множит. Блок кистью (TargetMult < 1, Tuning.HAND_HIT_MULT) режет урон и
 	# стан, но не отброс: удар в подставленную руку толкает тело как обычный (метла Метельщика сталкивает и через «блок»)
-	var tm := float(c.get("target_mult", Damage.target_mult_of(vp.name)))
+	var tm := float(c.get("target_mult", Damage.target_mult_of_body(vp)))
 	var j := Drive.knockback_impulse(dmg / tm if tm > 0.0 and tm < 1.0 else dmg, _knockback_mult())
 	var dir_v: Vector3 = c["dir"]
 	var env := kind == "environment" and not (c["striker"] is Weapon)

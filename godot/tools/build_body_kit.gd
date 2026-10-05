@@ -541,6 +541,10 @@ const HIT_PROFILE := {
 	"kit_limb_league_scythe_": "sharp", "kit_hand_league_talon": "sharp", "kit_foot_league_spike": "sharp", "kit_head_league_eye": "sharp",
 	"kit_head_league_crystal": "sharp", "kit_hand_league_pincer": "blunt", "kit_limb_league_crystal_": "blunt",
 	"kit_limb_league_tentacle_": "soft",
+	# наборы 04.10: про-лига Земли (tools/blender/kit_pro.py) и живые детали Аоэлюн (kit_aoe.py)
+	"kit_hand_pro_claw": "sharp", "kit_foot_pro_spike": "sharp", "kit_hand_pro_crusher": "blunt",
+	"kit_limb_aoe_blade_": "sharp", "kit_limb_aoe_whip_": "sharp", "kit_hand_aoe_claw": "sharp", "kit_foot_aoe_stilt": "sharp",
+	"kit_head_aoe_watcher": "sharp", "kit_head_aoe_hunter": "sharp", "kit_deco_aoe_spines": "sharp", "kit_hand_aoe_hook": "blunt",
 }
 
 

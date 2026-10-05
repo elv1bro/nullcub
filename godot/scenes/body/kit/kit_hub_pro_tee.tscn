@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Hub_ProTee.glb" id="1_du38i"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_jljoa"]
+friction = 0.5
+bounce = 0.05
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_0tyij"]
+radius = 0.074
+
+[node name="KitHubProTee" type="RigidBody3D" unique_id=1262425187]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 2.4
+physics_material_override = SubResource("PhysicsMaterial_jljoa")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "joint"
+metadata/part_id = "kit_hub_pro_tee"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=42412168]
+
+[node name="Shape_Hub" type="CollisionShape3D" parent="." unique_id=886462201]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.108, 0)
+shape = SubResource("SphereShape3D_0tyij")
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1005169185]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.19600001, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.052
+
+[node name="Anchor_Side_L" type="Marker3D" parent="." unique_id=1970265591]
+transform = Transform3D(0.34202012, -0.9396927, 0, 0.9396927, 0.34202012, 0, 0, 0, 1, 0.08269295, -0.13809778, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Anchor_Side_R" type="Marker3D" parent="." unique_id=2122775325]
+transform = Transform3D(0.34202012, 0.9396927, 0, -0.9396927, 0.34202012, 0, 0, 0, 1, -0.08269295, -0.13809778, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = true
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Mesh" type="Node3D" parent="." unique_id=208044909 instance=ExtResource("1_du38i")]
+metadata/rig_mesh = true

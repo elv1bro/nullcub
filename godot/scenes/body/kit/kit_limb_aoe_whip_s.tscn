@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_AoeWhip_S.glb" id="1_4lb5o"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_8bp1r"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ncacr"]
+radius = 0.0464
+height = 0.33712
+
+[node name="KitLimbAoeWhipS" type="RigidBody3D" unique_id=1154398568]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.5
+physics_material_override = SubResource("PhysicsMaterial_8bp1r")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+metadata/part_id = "kit_limb_aoe_whip_s"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1119221680]
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1846001531]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.052
+
+[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=1633577839]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.035, 0)
+metadata/accepts = PackedStringArray("armor", "deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Limb" type="CollisionShape3D" parent="." unique_id=1511045421]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
+shape = SubResource("CapsuleShape3D_ncacr")
+
+[node name="Grip" type="Marker3D" parent="." unique_id=1490873328]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1303308465 instance=ExtResource("1_4lb5o")]
+metadata/rig_mesh = true

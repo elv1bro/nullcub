@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Foot_AoeGrip.glb" id="1_ynb57"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_o8hi8"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_inop1"]
+size = Vector3(0.26, 0.05, 0.18)
+
+[node name="KitFootAoeGrip" type="RigidBody3D" unique_id=141558833]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 0.7
+physics_material_override = SubResource("PhysicsMaterial_o8hi8")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "foot"
+metadata/part_id = "kit_foot_aoe_grip"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=830631426]
+
+[node name="Shape_Foot" type="CollisionShape3D" parent="." unique_id=874073990]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.073, 0.03)
+shape = SubResource("BoxShape3D_inop1")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1746791739 instance=ExtResource("1_ynb57")]
+metadata/rig_mesh = true

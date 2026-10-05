@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_foot_aoe_stilt.tscn" id="1_rwxxf"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_hnqsn"]
+
+[resource]
+script = ExtResource("2_hnqsn")
+id = "kit_foot_aoe_stilt"
+title = "Ходуля"
+kind = "foot"
+scene = ExtResource("1_rwxxf")
+mass = 0.8
+energy = 3
+body_mult = 1.2
+hit_mult = 1.15
+hit_profile = "sharp"
+name_prefix = "Foot"
+base_mat = "bone"
+connector = true

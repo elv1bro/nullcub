@@ -1,0 +1,80 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_AoeSpine_L.glb" id="1_sdtts"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_cwh3p"]
+friction = 0.55
+bounce = 0.1
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_i63qt"]
+radius = 0.074
+height = 0.4792
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hg2d5"]
+size = Vector3(0.23463744, 0.0814, 0.0814)
+
+[node name="KitLimbAoeSpineL" type="RigidBody3D" unique_id=109200760]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 3.7
+physics_material_override = SubResource("PhysicsMaterial_cwh3p")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+metadata/part_id = "kit_limb_aoe_spine_l"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1727994841]
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1141895415]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.052
+
+[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=822498301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.035, 0)
+metadata/accepts = PackedStringArray("armor", "deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Shape_Limb" type="CollisionShape3D" parent="." unique_id=930568341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.21, 0)
+shape = SubResource("CapsuleShape3D_i63qt")
+
+[node name="Anchor_Side_L" type="Marker3D" parent="." unique_id=12664963]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0.14731872, -0.2143, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Anchor_Side_R" type="Marker3D" parent="." unique_id=297167351]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, -0.14731872, -0.2143, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = true
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Shape_Ribs" type="CollisionShape3D" parent="." unique_id=718978841]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2143, 0)
+shape = SubResource("BoxShape3D_hg2d5")
+
+[node name="Grip" type="Marker3D" parent="." unique_id=2074564124]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1715389707 instance=ExtResource("1_sdtts")]
+metadata/rig_mesh = true

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_blade_pro_energy.tscn" id="1_0nbqk"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_7civk"]
+
+[resource]
+script = ExtResource("2_7civk")
+id = "kit_blade_pro_energy"
+title = "Энергоклинок"
+kind = "weapon_head"
+scene = ExtResource("1_0nbqk")
+mass = 1.2
+energy = 0
+attach = "fixed"
+name_prefix = "Blade"
+weapon_mult = 1.55
+base_mat = "paint_white"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_hammer_pro_drum.tscn" id="1_m160r"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_m8ly8"]
+
+[resource]
+script = ExtResource("2_m8ly8")
+id = "kit_hammer_pro_drum"
+title = "Молот-барабан"
+kind = "weapon_head"
+scene = ExtResource("1_m160r")
+mass = 3.4
+energy = 0
+attach = "fixed"
+name_prefix = "Hammer"
+weapon_mult = 1.4
+base_mat = "brass"

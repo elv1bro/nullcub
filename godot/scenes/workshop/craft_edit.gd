@@ -45,7 +45,11 @@ const BODY_PRESETS := ["human", "spider", "long_arm", "big_arm", "legless", "jun
 	"kit_human", "kit_brawler", "kit_bot", "kit_horned", "kit_king", "kit_spider", "kit_devil", "kit_skull", "kit_wheels", "kit_lantern",
 	"kit_graffiti", "kit_camo", "kit_spinner", "kit_empty",
 	# бойцы NULL League (tools/build_league.gd): открытая категория — бюджет чертежа выше регламента 100 (LORE_NULL.md)
-	"league_reaper", "league_crystal", "league_deep", "league_portal"]
+	"league_reaper", "league_crystal", "league_deep", "league_portal",
+	# наборы 04.10 (tools/build_league.gd): про-лига Земли и живые бойцы Аоэлюн
+	"pro_sprinter", "pro_titan", "aoe_predator", "aoe_ram",
+	# «невозможные конструкции» 04.10: ветвление через тройник / узел и позвонки; open_empty — заготовка с бюджетом 300
+	"pro_centipede", "pro_multitool", "aoe_leviathan", "set_chimera", "open_empty"]
 ## Детали, которых нет на полках: kit_human_* — дубли wood_* под риг v3 (BODY_KIT.md §3.2) для пресета kit_human; на полке
 ## их не отличить от kit_limb_basic_* / kit_core_barrel. Чертежи с ними грузятся как обычно (BodyBlueprint.part_def).
 const SHELF_HIDDEN_PREFIXES := ["kit_human_"]
@@ -1261,13 +1265,6 @@ static func list_saved() -> Array:
 
 # ------------------------------------------------------------------ зеркало, паспорт детали (UI v0.2)
 
-## Прочность материала для паспорта детали и сводки «Прочность» (0…1): металл крепче дерева. Пока показатель мастерской — в бою
-## не читается (урон и HP от него не зависят); нет в таблице — 0.5.
-const MAT_DURABILITY := {
-	"iron": 1.0, "brass": 0.9, "rust": 0.8, "rust_red": 0.85, "bone": 0.6, "rubber": 0.7, "wood_dark": 0.6, "wood": 0.5,
-	"maple": 0.5, "planks": 0.45, "paint_red": 0.5, "paint_blue": 0.5, "paint_yellow": 0.5, "paint_white": 0.5, "paint_green": 0.5,
-	"cloth": 0.3,
-}
 static var _length_cache: Dictionary = {}
 
 
@@ -1451,17 +1448,10 @@ static func part_length(d: PartDef) -> float:
 	return l
 
 
-## Прочность детали 0…1 (материал узла или детали по умолчанию; броня и щитки крепче, ядро — чуть). Показатель мастерской.
+## Прочность детали 0…1 (материал узла или детали по умолчанию; броня и щитки крепче, ядро — чуть) — Damage.part_durability:
+## тот же показатель задаёт запас прочности детали в бою (Tuning.PART_INTEGRITY).
 static func part_durability(d: PartDef, mat_id := "") -> float:
-	if d == null:
-		return 0.0
-	var m := mat_id if mat_id != "" else (d.base_mat if d.base_mat != "" else d.material)
-	var v := float(MAT_DURABILITY.get(m, 0.5))
-	if d.kind in ["plate", "armor"]:
-		v += 0.25
-	elif d.kind == "core":
-		v += 0.1
-	return clampf(v, 0.0, 1.0)
+	return Damage.part_durability(d, mat_id)
 
 
 ## Паспорт детали словами (правая панель): что она делает в бою.
@@ -1486,6 +1476,11 @@ static func part_desc(d: PartDef) -> String:
 				lines.append(TranslationServer.translate("Декор: сливается с деталью-хозяином."))
 		"weapon_head": lines.append(TranslationServer.translate("Навершие: на оружии — множитель урона ×%.2f; на теле — масса и форма.") % d.weapon_mult)
 		_: lines.append(kind_title(d.kind).capitalize() + ".")
+	var armor := Damage.part_armor(d.id)
+	if armor > 0.0 and BodyBlueprint.is_fixed_part(d):
+		lines.append(TranslationServer.translate("Защита: снимает %d %% урона с ударов в деталь, на которой стоит.") % roundi(armor * 100.0))
+	elif armor > 0.0:
+		lines.append(TranslationServer.translate("Толстые стенки: снимает %d %% урона с ударов в эту деталь.") % roundi(armor * 100.0))
 	if ActiveBlocks.PASSIVE.has(d.id):
 		lines.append(TranslationServer.translate("Особое свойство: %s.") % TranslationServer.translate(String(ActiveBlocks.PASSIVE[d.id]["hint"])))
 	var sm := minf(d.body_mult if BodyBlueprint.is_fixed_part(d) else d.hit_mult, Tuning.SHAPE_MULT_MAX)

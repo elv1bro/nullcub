@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NULL GRAVITY — каталог деталей</title>
+<link rel="icon" href="img/brand.png">
+<!-- Собирается tools/build_catalog.py из tools/catalog_template.html; руками правь шаблон, а не docs/catalog/index.html. -->
+<style>
+@font-face { font-family: "Oswald"; src: url("fonts/Oswald.ttf"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Rubik"; src: url("fonts/Rubik.ttf"); font-weight: 300 900; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/JetBrainsMono.ttf"); font-weight: 100 800; font-display: swap; }
+
+:root {
+  --bg: #110d0a;
+  --bg-2: #18120e;
+  --panel: #1e1712;
+  --panel-hi: #2a2018;
+  --plate-a: #33271c;
+  --plate-b: #1b1510;
+  --line: rgba(204, 158, 92, .16);
+  --line-2: rgba(204, 158, 92, .36);
+  --text: #f5e6c7;
+  --dim: #bdab91;
+  --faint: #8d7f6e;
+  --amber: #ffbd4d;
+  --brass: #cc9e5c;
+  --steel: #94a1ad;
+  --green: #80d66b;
+  --red: #ed5442;
+  --blue: #b8dbff;
+  --purple: #b385f5;
+  --r: 10px;
+  --head-h: 60px;
+  --side-w: 232px;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --display: "Oswald", "Arial Narrow", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--head-h) + 64px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: radial-gradient(1200px 700px at 70% -10%, #261b12 0%, transparent 60%);
+  background-attachment: fixed;
+  color: var(--text);
+  font: 400 15px/1.45 "Rubik", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+h1, h2, h3, p { margin: 0; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ---------- шапка ---------- */
+.top {
+  position: sticky; top: 0; z-index: 20;
+  height: var(--head-h);
+  display: flex; align-items: center; gap: 20px;
+  padding: 0 20px;
+  background: rgba(17, 13, 10, .92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; flex: none; }
+.brand img { width: 34px; height: 34px; border-radius: 8px; }
+.brand b { font: 600 20px/1 var(--display); letter-spacing: .14em; display: block; }
+.brand span { font: 400 11px/1 var(--mono); color: var(--faint); letter-spacing: .08em; text-transform: uppercase; display: block; margin-top: 5px; }
+.search { flex: 1; max-width: 460px; position: relative; }
+.search input {
+  width: 100%; height: 38px; padding: 0 14px 0 38px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+}
+.search input::placeholder { color: var(--faint); }
+.search input:focus { border-color: var(--line-2); outline: none; }
+.search svg { position: absolute; left: 12px; top: 11px; width: 16px; height: 16px; stroke: var(--faint); fill: none; stroke-width: 2; }
+.build { margin-left: auto; font: 400 11px/1.5 var(--mono); color: var(--faint); text-align: right; flex: none; }
+
+/* ---------- каркас ---------- */
+.layout { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); max-width: 1680px; margin: 0 auto; }
+.side {
+  position: sticky; top: var(--head-h); align-self: start;
+  height: calc(100vh - var(--head-h)); overflow-y: auto;
+  padding: 22px 12px 40px 20px;
+  border-right: 1px solid var(--line);
+}
+.side h4 { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin: 20px 0 8px 10px; }
+.side h4:first-child { margin-top: 0; }
+.side a {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  padding: 6px 10px; border-radius: 6px;
+  color: var(--dim); text-decoration: none; font-size: 14px;
+}
+.side a:hover { background: var(--panel); color: var(--text); }
+.side a.on { background: var(--panel-hi); color: var(--amber); }
+.side a i { font: normal 11px var(--mono); color: var(--faint); }
+.side a.empty { opacity: .35; }
+main { padding: 0 28px 120px; min-width: 0; }
+
+/* ---------- панель материала и фильтров ---------- */
+.tools {
+  position: sticky; top: var(--head-h); z-index: 10;
+  margin: 0 -28px; padding: 12px 28px;
+  background: rgba(17, 13, 10, .94); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px;
+}
+.tools .lbl { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-right: 2px; }
+.row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.chip {
+  height: 28px; padding: 0 11px; border-radius: 14px;
+  background: transparent; border: 1px solid var(--line); color: var(--dim); font-size: 13px;
+}
+.chip:hover { border-color: var(--line-2); color: var(--text); }
+.chip.on { background: var(--amber); border-color: var(--amber); color: #1a1208; font-weight: 500; }
+.sw {
+  width: 26px; height: 26px; border-radius: 50%; padding: 0;
+  border: 2px solid var(--bg); box-shadow: 0 0 0 1px var(--line-2);
+  background: var(--c);
+}
+.sw:hover { box-shadow: 0 0 0 1px var(--text); }
+.sw.on { box-shadow: 0 0 0 2px var(--amber); }
+.mat-now { font-size: 13px; color: var(--dim); min-width: 13ch; }
+.mat-now b { color: var(--amber); font-weight: 500; }
+
+/* ---------- разделы ---------- */
+.hero { padding: 40px 0 26px; max-width: 78ch; }
+.hero h1 { font: 600 44px/1.05 var(--display); letter-spacing: .04em; text-transform: uppercase; }
+.hero h1 em { font-style: normal; color: var(--amber); }
+.hero p { color: var(--dim); margin-top: 14px; font-size: 16px; }
+.counts { display: flex; flex-wrap: wrap; gap: 26px; margin-top: 22px; }
+.counts div { font: 400 12px/1.3 var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: .08em; }
+.counts b { display: block; font: 500 30px/1 var(--display); color: var(--text); letter-spacing: .02em; margin-bottom: 4px; }
+
+section { padding-top: 34px; }
+section > header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+section h2 { font: 600 26px/1.1 var(--display); letter-spacing: .08em; text-transform: uppercase; }
+section h2 i { font: normal 400 13px var(--mono); color: var(--faint); letter-spacing: 0; margin-left: 8px; }
+section .note { color: var(--dim); font-size: 14px; max-width: 86ch; margin-bottom: 16px; }
+.group-title { font: 500 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--brass); margin: 22px 0 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 14px; }
+.grid.wide { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
+.none { color: var(--faint); font-size: 14px; padding: 8px 0 0; }
+
+/* ---------- карточка ---------- */
+.card {
+  display: flex; flex-direction: column; text-align: left; padding: 0;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  overflow: hidden; position: relative;
+  transition: border-color .12s, transform .12s;
+}
+button.card:hover { border-color: var(--line-2); transform: translateY(-2px); }
+.pic {
+  aspect-ratio: 1; width: 100%;
+  background: radial-gradient(circle at 50% 42%, var(--plate-a), var(--plate-b) 72%);
+  display: grid; place-items: center; position: relative;
+}
+.pic img { width: 86%; height: 86%; object-fit: contain; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .45)); }
+.grid.wide .pic { aspect-ratio: 4 / 3; }
+.pic .nopic { font: 500 12px var(--mono); color: var(--faint); letter-spacing: .1em; text-transform: uppercase; }
+.tag {
+  position: absolute; top: 8px; left: 8px;
+  font: 500 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+  padding: 4px 6px; border-radius: 4px; background: rgba(17, 13, 10, .72); color: var(--dim);
+}
+.tag.league, .tag.aoe { color: var(--purple); }
+.tag.pro { color: var(--amber); }
+.tag.active { color: var(--blue); }
+.tag.r { left: auto; right: 8px; }
+.cb { padding: 11px 12px 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.name { font-weight: 500; font-size: 15px; line-height: 1.25; }
+.sub { font-size: 12.5px; color: var(--dim); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-height: 18px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1px rgba(255, 255, 255, .18); display: inline-block; margin-right: 5px; vertical-align: -1px; }
+.prof { color: var(--faint); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: auto 0 0; padding-top: 9px; border-top: 1px solid var(--line); }
+.stats div + div { border-left: 1px solid var(--line); padding-left: 9px; }
+.stats dt, .kv dt { font: 500 9.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+.stats dd { margin: 0; font: 500 14px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stats dd small { font-size: 10.5px; color: var(--faint); margin-left: 2px; font-weight: 400; }
+.stats dd.hl { color: var(--amber); }
+.stats dd.chg { color: var(--blue); }
+dl { margin: 0; }
+.hint { font-size: 13px; color: var(--dim); line-height: 1.4; }
+.bar { height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--amber); border-radius: 3px; }
+.bar.over i { background: var(--purple); }
+.comp { font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+
+/* ---------- таблицы ---------- */
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { font: 500 10px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; font-family: "Rubik", sans-serif; }
+td.l, th.l { text-align: left; font-family: "Rubik", sans-serif; white-space: normal; }
+tr.pick { cursor: pointer; }
+tr.pick:hover td { background: rgba(255, 189, 77, .06); }
+tr.on td { background: rgba(255, 189, 77, .12); color: var(--amber); }
+tr.base td:first-child::after { content: "свой"; font: 500 9.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-left: 8px; }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+.tw table tr:last-child td { border-bottom: 0; }
+.yes { color: var(--green); }
+.no { color: var(--faint); }
+
+/* ---------- правила ---------- */
+.rules { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.rule { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
+.rule h3 { font: 500 16px/1.2 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; }
+.rule p, .rule li { font-size: 14px; color: var(--dim); }
+.rule ul { margin: 8px 0 0; padding-left: 18px; }
+.rule li + li { margin-top: 4px; }
+.rule b, .rule .num { color: var(--text); font-weight: 500; }
+
+/* ---------- окно детали ---------- */
+dialog {
+  width: min(1040px, calc(100vw - 32px)); max-height: calc(100vh - 48px);
+  padding: 0; border: 1px solid var(--line-2); border-radius: 14px;
+  background: var(--bg-2); color: var(--text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .7);
+}
+dialog::backdrop { background: rgba(8, 6, 4, .72); backdrop-filter: blur(3px); }
+.dlg { display: grid; grid-template-columns: 340px minmax(0, 1fr); }
+.dlg-pic { padding: 20px; border-right: 1px solid var(--line); position: sticky; top: 0; align-self: start; }
+.dlg-pic .pic { border-radius: var(--r); border: 1px solid var(--line); }
+.dlg-pic .pic.tall { aspect-ratio: 3 / 4; }
+.dlg-pic .row { margin-top: 14px; gap: 7px; }
+.dlg-pic .mat-now { margin-top: 10px; display: block; }
+.dlg-body { padding: 22px 26px 28px; min-width: 0; }
+.eyebrow { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--brass); }
+.dlg-body h2 { font: 600 30px/1.1 var(--display); letter-spacing: .04em; text-transform: uppercase; margin: 8px 0 6px; }
+.idline { font: 400 12px var(--mono); color: var(--faint); margin-bottom: 14px; }
+.desc { color: var(--dim); margin-bottom: 18px; }
+.kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 14px 16px; margin-bottom: 20px; }
+.kv dd { margin: 0; font: 500 16px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.kv dd small { font-size: 11px; color: var(--faint); font-weight: 400; margin-left: 3px; }
+.kv dd.t { font: 400 14px/1.3 "Rubik", sans-serif; }
+.kv .w2 { grid-column: span 2; }
+.dlg-body h3 { font: 500 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin: 22px 0 10px; }
+.formula { font: 400 13.5px/1.7 var(--mono); color: var(--dim); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.formula b { color: var(--amber); font-weight: 500; }
+.formula span { color: var(--faint); }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: 12.5px; padding: 4px 9px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--dim); }
+.pill b { color: var(--text); font-weight: 500; }
+button.pill:hover { border-color: var(--line-2); color: var(--text); }
+.x { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); font-size: 18px; line-height: 1; z-index: 2; }
+.x:hover { border-color: var(--line-2); }
+.nav-hint { font: 400 11px var(--mono); color: var(--faint); margin-top: 22px; }
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .side h4 { display: none; }
+  .side a { white-space: nowrap; flex: none; }
+  main { padding: 0 16px 80px; }
+  .tools { margin: 0 -16px; padding: 10px 16px; position: static; }
+  .build { display: none; }
+  .hero h1 { font-size: 32px; }
+  .dlg { grid-template-columns: minmax(0, 1fr); }
+  .dlg-pic { position: static; border-right: 0; border-bottom: 1px solid var(--line); }
+  .dlg-pic .pic { max-width: 300px; margin: 0 auto; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .card { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a class="brand" href="#top">
+    <img src="img/brand.png" alt="">
+    <div><b>NULL GRAVITY</b><span>каталог деталей</span></div>
+  </a>
+  <label class="search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="q" type="search" placeholder="Поиск: нога, шипы, железо, kit_limb…" autocomplete="off">
+  </label>
+  <div class="build" id="build"></div>
+</div>
+
+<div class="layout" id="top">
+  <nav class="side" id="side"></nav>
+  <main>
+    <div class="hero">
+      <h1>Всё, из чего <em>собирают</em> бойца</h1>
+      <p>Детали тела, материалы, шарниры, активные блоки, оружие и готовые бойцы — с характеристиками из файлов игры.
+        Выбери материал на панели ниже: все детали кита перекрасятся, а масса, удар и прочность пересчитаются. Клик по карточке — паспорт детали и таблица по всем материалам.</p>
+      <div class="counts" id="counts"></div>
+    </div>
+    <div class="tools">
+      <div class="row"><span class="lbl">Материал</span><span id="mats" class="row"></span><span class="mat-now" id="matNow"></span></div>
+      <div class="row"><span class="lbl">Набор</span><span id="series" class="row"></span></div>
+    </div>
+    <div id="sections"></div>
+  </main>
+</div>
+
+<dialog id="dlg"></dialog>
+
+<script>
+const D = /*__DATA__*/null;
+const T = D.tuning;
+const MAT = Object.fromEntries(D.materials.map(m => [m.id, m]));
+const PART = Object.fromEntries(D.parts.map(p => [p.id, p]));
+const JOINT = Object.fromEntries(D.joints.map(j => [j.id, j]));
+const state = { q: "", series: "all", mat: "" };
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const num = (v, d = 2) => String(parseFloat(Number(v).toFixed(d)));
+const pct = v => Math.round(v * 100) + " %";
+const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+
+// ---------- словари ----------
+const SERIES = {
+  kit: ["Кит", "детали кита тела v2: красятся в любой из 15 материалов"],
+  pro: ["Про-лига", "профессиональная лига Земли: спортивное железо, листы автора 04.10"],
+  aoe: ["Аоэлюн", "живые детали Аоэлюн: кость, мышца, хитин, листы автора 04.10"],
+  league: ["Лига NULL", "детали бойцов NULL League"],
+  human: ["Кит «Человек»", "дубли под риг куклы v3; на полках мастерской скрыты"],
+  maple: ["Клён", "кукла v3 из клёна; материал не меняется"],
+  junk: ["Хлам", "детали Свалки; материал не меняется"],
+  metal: ["Железо", "железные детали врагов; материал не меняется"],
+  craft: ["Крафт", "первый набор крафта и детали оружия; материал не меняется"],
+};
+const SERIES_ORDER = ["kit", "pro", "aoe", "league", "human", "maple", "junk", "metal", "craft"];
+function seriesOf(p) {
+  const id = p.id;
+  if (id.includes("_pro_")) return "pro";
+  if (id.includes("_aoe_")) return "aoe";
+  if (id.includes("league")) return "league";
+  if (id.startsWith("kit_human_")) return "human";
+  if (id.startsWith("kit_")) return "kit";
+  if (id.startsWith("wood_")) return "maple";
+  if (id.startsWith("junk_")) return "junk";
+  if (id.startsWith("metal_")) return "metal";
+  return "craft";
+}
+const CATS = [
+  { id: "core", title: "Ядра", note: "Центр тела: к ядру крепится всё остальное. Само ядро энергии не стоит — оно её даёт.", test: p => p.kind === "core" },
+  { id: "head", title: "Головы", note: `Голова нужна ровно одна. Удар в неё проходит ×${num(T.HEAD_HIT_MULT)}, сама бьёт слабо.`, test: p => p.kind === "head" },
+  { id: "arm", title: "Руки", note: "Короткие звенья: плечо и предплечье. Первое звено от ядра бьёт как плечо, второе — как предплечье.", test: p => p.kind === "limb" && p.name_prefix.endsWith("Arm") },
+  { id: "leg", title: "Ноги", note: "Длинные звенья: бедро и голень. Длиннее — дальше достаёт, но дороже по энергии.", test: p => p.kind === "limb" && p.name_prefix.endsWith("Leg") },
+  { id: "hand", title: "Кисти", note: `Кисть бьёт сильнее всего и держит оружие. Удар в кисть почти не проходит: ×${num(T.HAND_HIT_MULT)}.`, test: p => p.kind === "hand" },
+  { id: "foot", title: "Стопы", note: "Опора и пинок.", test: p => p.kind === "foot" },
+  { id: "link", title: "Суставы и цепи", note: "Связующие звенья со своим телом: гибкость и размах.", test: p => p.kind === "joint" || p.kind === "chain" },
+  { id: "armor", title: "Броня", note: "Крепится намертво: сливается с деталью-хозяином, добавляет массу и прочность.", test: p => p.kind === "armor" || p.kind === "plate" },
+  { id: "deco", title: "Декор", note: "Крепится намертво на голову, спину или конечность. Рога и шипы дают хозяину колющую форму.", test: p => p.kind === "deco" && !p.active },
+  { id: "active", title: "Активные блоки", note: `Блок работает, пока зажата клавиша его канала, и тратит заряд ядра. Каналы: ${T.CHANNEL_KEYS.p1.join(" / ")} у первого игрока, ${T.CHANNEL_KEYS.p2.join(" / ")} у второго.`, test: p => p.kind === "deco" && !!p.active },
+  { id: "wpart", title: "Детали оружия", note: "Рукояти, навершия и моды верстака оружия. Навершие можно поставить и на тело вместо кисти: там оно работает массой и формой, без множителя.", test: p => ["handle", "weapon_head", "mod"].includes(p.kind) },
+];
+const PLACE = { Head: "голова", Torso: "ядро", Hand: "кисть", Foot: "стопа", UpperArm: "плечо", LowerArm: "предплечье", UpperLeg: "бедро", LowerLeg: "голень", Chain: "цепь", Joint: "сустав" };
+const PROFILE = { sharp: "колющая", blunt: "дробящая", soft: "мягкая" };
+const KIND = { core: "ядро", head: "голова", limb: "конечность", hand: "кисть", foot: "стопа", joint: "сустав", chain: "цепь", plate: "щиток", armor: "броня", deco: "декор", handle: "рукоять", weapon_head: "навершие", mod: "мод" };
+const ANCHOR = { Neck: "шея", Shoulder: "плечо", Hip: "бедро", Side: "бок", Back: "спина", End: "конец звена", Deco: "обойма", Top: "макушка", Elbow: "локоть", Wrist: "запястье", Knee: "колено", Ankle: "лодыжка", Head: "под навершие", Face: "боёк", Tip: "остриё" };
+const BODY = { Torso: "ядро", Head: "голова", UpperArm: "плечо", LowerArm: "предплечье", Hand: "кисть", UpperLeg: "бедро", LowerLeg: "голень", Foot: "стопа" };
+const ACT = {
+  cost: ["расход", "заряда/с"], cost_use: ["цена нажатия", "заряда"], force: ["сила"], dps: ["урон", "HP/с"], range: ["дальность", "м"],
+  cone_deg: ["конус", "°"], push: ["толчок"], rate: ["темп", "выстр./с"], damage: ["урон", "HP"], impulse: ["импульс"], recoil: ["отдача"],
+  spread_deg: ["разброс", "°"], radius: ["радиус", "м"], accel: ["ускорение"], mult: ["входящий урон", "×"], hps: ["лечение", "HP/с"],
+  pull: ["тяга"], cooldown: ["перезарядка", "с"], hit: ["удар по цели"], reach: ["досягаемость", "м"], life: ["живёт", "с"],
+  every: ["шаг", "с"], stun: ["стан", "с"], max: ["мин сразу", "шт."], arm_s: ["взвод", "с"], stiff: ["жёсткость"], max_force: ["предел силы"],
+};
+const PASSIVE = { charge_max: ["запас заряда", "+"], charge_regen: ["заряд в секунду", "+"], dealt_mult: ["заряд за урон", "×"], hp_regen: ["HP в секунду", "+"] };
+
+// ---------- расчёты ----------
+function matFor(p, m) {
+  if (!p.base_mat) return "";
+  return m && (m === p.base_mat || p.variants.includes(m)) ? m : p.base_mat;
+}
+const partMass = (p, m) => p.base_mat ? p.mass * MAT[m].density / MAT[p.base_mat].density : p.mass;
+const partImg = (p, m) => "img/parts/" + p.id + (p.base_mat && m !== p.base_mat ? "__" + m : "") + ".webp";
+function partDur(p, m) {
+  if (!p.base_mat) return p.durability;
+  const bonus = p.kind === "plate" || p.kind === "armor" ? .25 : p.kind === "core" ? .1 : 0;
+  return Math.min(1, Math.max(0, MAT[m].durability + bonus));
+}
+const partIron = (p, m) => p.base_mat ? MAT[m].iron : p.material === "iron";
+const breakable = p => !p.fixed && p.kind !== "core" && p.kind !== "head";
+const partInteg = (p, m) => Math.round(T.PART_INTEGRITY * partDur(p, m));
+function shapeMult(p) {
+  const v = p.fixed ? p.body_mult : p.hit_mult;
+  return v > 1 ? Math.min(v, T.SHAPE_MULT_MAX) : v;
+}
+function places(p) {
+  if (p.fixed) return [];
+  if (p.kind === "limb" && p.connector) {
+    if (p.name_prefix === "UpperArm") return ["UpperArm", "LowerArm"];
+    if (p.name_prefix === "UpperLeg") return ["UpperLeg", "LowerLeg"];
+  }
+  return [p.name_prefix];
+}
+function strikes(p, m) {
+  const mm = p.base_mat ? MAT[m].body_mult : 1, sh = shapeMult(p);
+  return places(p).map(pre => { const place = T.BODY_MULT[pre] ?? 1; return { pre, place, mm, sh, total: place * mm * sh }; });
+}
+function strikeText(p, m) {
+  const s = strikes(p, m).map(x => x.total);
+  const lo = Math.min(...s), hi = Math.max(...s);
+  return "×" + num(lo) + (hi - lo > 1e-6 ? "–" + num(hi) : "");
+}
+function costText(a) {
+  if (a.use === "press") return num(a.cost_use) + " за раз";
+  if (a.action === "gun") return num(a.cost) + " / выстр.";
+  return num(a.cost) + "/с";
+}
+function keyStat(p, m) {
+  if (p.active) return ["заряд", costText(p.active)];
+  if (!p.fixed) return ["удар", strikeText(p, m)];
+  if (p.armor > 0) return ["защита", "−" + pct(p.armor)];
+  if (p.kind === "weapon_head" || p.weapon_mult !== 1) return ["в оружии", "×" + num(p.weapon_mult)];
+  if (p.body_mult !== 1) return ["хозяину", "×" + num(shapeMult(p))];
+  return ["длина", num(p.length) + " м"];
+}
+const USED = {};
+for (const f of D.fighters) for (const n of f.nodes) (USED[n.part] ??= new Set()).add(f.id);
+
+function partSearch(p) {
+  const s = SERIES[seriesOf(p)][0];
+  return [p.name, p.title, p.id, p.kind_title, KIND[p.kind], s, p.base_mat ? MAT[p.base_mat].title : "", PROFILE[p.hit_profile] ?? "",
+    p.active ? p.active.title + " " + p.active.hint + " активный" : "", p.passive ? p.passive.hint : "",
+    p.name_prefix.endsWith("Arm") ? "рука" : "", p.name_prefix.endsWith("Leg") ? "нога" : "", p.desc ?? ""].join(" ").toLowerCase();
+}
+for (const p of D.parts) { p._s = partSearch(p); p._series = seriesOf(p); p._cat = (CATS.find(c => c.test(p)) ?? CATS[CATS.length - 1]).id; }
+const visible = p => (state.series === "all" || p._series === state.series) && (!state.q || p._s.includes(state.q));
+const hit = text => !state.q || text.toLowerCase().includes(state.q);
+
+// ---------- карточки ----------
+function partCard(p) {
+  const m = matFor(p, state.mat), swapped = p.base_mat && m !== p.base_mat;
+  const [kl, kv] = keyStat(p, m);
+  const ser = p._series;
+  const tag = p.active ? `<span class="tag active">активный</span>` : ser !== "kit" ? `<span class="tag ${ser}">${esc(SERIES[ser][0])}</span>` : "";
+  const mat = p.base_mat ? `<span><i class="dot" style="--c:${MAT[m].swatch}"></i>${esc(MAT[m].title)}</span>` : `<span>${esc(matWord(p))}</span>`;
+  const prof = p.hit_profile ? `<span class="prof">${PROFILE[p.hit_profile]}</span>` : "";
+  return `<button class="card" data-part="${p.id}">
+    <div class="pic">${p.image ? `<img loading="lazy" src="${partImg(p, m)}" alt="">` : `<span class="nopic">нет кадра</span>`}${tag}</div>
+    <div class="cb">
+      <div class="name">${esc(p.name)}</div>
+      <div class="sub">${mat}${prof}</div>
+      <dl class="stats">
+        <div><dt>масса</dt><dd class="${swapped ? "chg" : ""}">${num(partMass(p, m))}<small>кг</small></dd></div>
+        <div><dt>энергия</dt><dd>${p.energy}</dd></div>
+        <div><dt>${kl}</dt><dd class="${swapped && kl === "удар" ? "chg" : "hl"}">${kv}</dd></div>
+      </dl>
+    </div></button>`;
+}
+const matWord = p => ({ wood: "дерево", iron: "железо", cloth: "ткань" }[p.material] ?? p.material);
+
+function nodeLabel(n) {
+  const p = PART[n.part];
+  if (!p) return esc(n.part);
+  const bits = [esc(p.name)];
+  if (n.mat && n.mat !== p.base_mat) bits.push(esc(MAT[n.mat].title.toLowerCase()));
+  if (n.joint && n.joint !== "pin") bits.push("шарнир «" + esc(JOINT[n.joint].title.toLowerCase()) + "»");
+  return bits.join(", ");
+}
+function composition(nodes) {
+  const groups = new Map();
+  for (const n of nodes) { const k = nodeLabel(n); groups.set(k, (groups.get(k) ?? 0) + 1); }
+  return [...groups].map(([k, c]) => (c > 1 ? c + "× " : "") + k).join(" · ");
+}
+function dollCard(f, kind) {
+  const over = f.energy / f.budget;
+  return `<button class="card" data-${kind}="${f.id}">
+    <div class="pic">${f.image ? `<img loading="lazy" src="img/${kind === "fighter" ? "fighters" : "enemies"}/${f.id}.webp" alt="">` : `<span class="nopic">нет кадра</span>`}
+      ${f.league ? `<span class="tag league">Лига NULL</span>` : ""}</div>
+    <div class="cb">
+      <div class="name">${esc(f.title)}</div>
+      <div class="bar ${f.budget > T.ENERGY_BUDGET ? "over" : ""}"><i style="width:${Math.min(100, over * 100)}%"></i></div>
+      <dl class="stats">
+        <div><dt>энергия</dt><dd>${f.energy}<small>/ ${f.budget}</small></dd></div>
+        <div><dt>масса</dt><dd>${num(f.mass, 1)}<small>кг</small></dd></div>
+        <div><dt>здоровье</dt><dd class="hl">${num(f.max_hp, 0)}</dd></div>
+      </dl>
+    </div></button>`;
+}
+function weaponCard(w) {
+  const parts = w.parts.map(id => PART[id] ? PART[id].name : id).join(" + ");
+  return `<div class="card">
+    <div class="pic">${w.image ? `<img loading="lazy" src="img/weapons/${w.id}.webp" alt="">` : `<span class="nopic">нет кадра</span>`}</div>
+    <div class="cb">
+      <div class="name">${esc(w.title)}</div>
+      <div class="comp">${parts ? esc(parts) : "готовое оружие арены"}</div>
+      <dl class="stats">
+        <div><dt>масса</dt><dd>${num(w.mass, 1)}<small>кг</small></dd></div>
+        <div><dt>урон</dt><dd class="hl">×${num(w.damage_mult)}</dd></div>
+        <div><dt>длина</dt><dd>${num(w.length)}<small>м</small></dd></div>
+      </dl>
+    </div></div>`;
+}
+function matCard(m) {
+  return `<button class="card" data-mat="${m.id}">
+    <div class="pic">${m.image ? `<img loading="lazy" src="img/materials/${m.id}.webp" alt="">` : ""}${m.iron ? `<span class="tag r">магнитится</span>` : ""}</div>
+    <div class="cb">
+      <div class="name"><i class="dot" style="--c:${m.swatch}"></i>${esc(m.title)}</div>
+      <dl class="stats">
+        <div><dt>масса</dt><dd>×${num(m.density)}</dd></div>
+        <div><dt>удар</dt><dd class="hl">×${num(m.body_mult)}</dd></div>
+        <div><dt>прочность</dt><dd>${pct(m.durability)}</dd></div>
+      </dl>
+    </div></button>`;
+}
+function jointCard(j) {
+  const lim = Array.isArray(j.limits) ? `${num(j.limits[0])}…${num(j.limits[1])}°` : j.limits === "group+20" ? "группа ±20°" : j.weld ? "нет" : "по группе";
+  return `<div class="card">
+    <div class="pic">${j.image ? `<img loading="lazy" src="img/joints/${j.id}.webp" alt="">` : `<span class="nopic">без коннектора</span>`}</div>
+    <div class="cb">
+      <div class="name">${esc(j.title)}</div>
+      <div class="hint">${esc(cap(j.hint))}.</div>
+      <dl class="stats">
+        <div><dt>энергия</dt><dd>${j.energy ? "+" + j.energy : "0"}</dd></div>
+        <div><dt>мышца</dt><dd class="hl">${j.weld ? "—" : "×" + num(j.k)}</dd></div>
+        <div><dt>ход</dt><dd style="font-size:12px">${lim}</dd></div>
+      </dl>
+    </div></div>`;
+}
+
+// ---------- разделы ----------
+function byName(a, b) { return SERIES_ORDER.indexOf(a._series) - SERIES_ORDER.indexOf(b._series) || a.name.localeCompare(b.name, "ru"); }
+function section(id, title, count, note, body) {
+  return `<section id="${id}"><header><h2>${title}<i>${count}</i></h2></header>${note ? `<p class="note">${note}</p>` : ""}${body}</section>`;
+}
+function render() {
+  const out = [], nav = [`<h4>Детали</h4>`];
+  for (const c of CATS) {
+    const all = D.parts.filter(p => p._cat === c.id), list = all.filter(visible).sort(byName);
+    nav.push(`<a href="#${c.id}" class="${list.length ? "" : "empty"}">${c.title}<i>${list.length}</i></a>`);
+    if (!list.length) continue;
+    let body;
+    if (c.id === "wpart") {
+      body = [["handle", "Рукояти"], ["weapon_head", "Навершия"], ["mod", "Моды"]].map(([k, t]) => {
+        const sub = list.filter(p => p.kind === k);
+        return sub.length ? `<div class="group-title">${t}</div><div class="grid">${sub.map(partCard).join("")}</div>` : "";
+      }).join("");
+    } else body = `<div class="grid">${list.map(partCard).join("")}</div>`;
+    out.push(section(c.id, c.title, list.length + (list.length < all.length ? " из " + all.length : ""), c.note, body));
+  }
+  const other = [
+    ["materials", "Материалы", D.materials.filter(m => hit(m.title + " " + m.id)), matCard, "",
+      "Материал — отдельная ось крафта: любую деталь кита можно перекрасить. Масса детали умножается на плотность, удар частью — на множитель материала, трение и отскок идут в физику тела. Клик по карточке примеряет материал на все детали."],
+    ["joints", "Шарниры", D.joints.filter(j => hit(j.title + " " + j.hint)), jointCard, "wide",
+      "Тип шарнира задаёт, как деталь висит на родителе: силу мышцы, трение, ход и цену в энергии."],
+    ["weapons", "Оружие", D.weapons.filter(w => hit(w.title + " " + w.id)), weaponCard, "wide",
+      "Готовое оружие арены и чертежи верстака оружия. Множитель урона — произведение множителей наверший и модов."],
+    ["fighters", "Бойцы", D.fighters.filter(f => hit(f.title + " " + f.id)), f => dollCard(f, "fighter"), "wide",
+      `Готовые чертежи тела — шаблоны мастерской. Бюджет ядра по регламенту — ${T.ENERGY_BUDGET}; у бойцов лиги он выше. Клик — состав по деталям.`],
+    ["enemies", "Враги", D.enemies.filter(f => hit(f.title + " " + f.id)), f => dollCard(f, "enemy"), "wide", "Противники PvE-волн."],
+  ];
+  nav.push(`<h4>Остальное</h4>`);
+  for (const [id, title, list, card, cls, note] of other) {
+    nav.push(`<a href="#${id}" class="${list.length ? "" : "empty"}">${title}<i>${list.length}</i></a>`);
+    if (!list.length) continue;
+    let body;
+    if (id === "weapons") {
+      body = [["arena", "Готовое оружие арены"], ["craft", "Чертежи верстака"]].map(([g, t]) => {
+        const sub = list.filter(w => w.group === g);
+        return sub.length ? `<div class="group-title">${t}</div><div class="grid ${cls}">${sub.map(card).join("")}</div>` : "";
+      }).join("");
+    } else body = `<div class="grid ${cls}">${list.map(card).join("")}</div>`;
+    if (id === "materials") body += materialsTable(list);
+    out.push(section(id, title, list.length, note, body));
+  }
+  nav.push(`<a href="#rules">Правила</a>`);
+  out.push(rules());
+  if (out.length === 1) out.unshift(`<p class="none" style="padding-top:40px">Ничего не нашлось по запросу «${esc(state.q)}».</p>`);
+  $("#sections").innerHTML = out.join("");
+  $("#side").innerHTML = nav.join("");
+}
+function materialsTable(list) {
+  return `<div class="group-title">Сводная таблица</div><div class="tw"><table>
+    <tr><th>Материал</th><th>Масса ×</th><th>Удар ×</th><th>Прочность</th><th>Трение</th><th>Отскок</th><th>Магнит</th></tr>
+    ${list.map(m => `<tr><td><i class="dot" style="--c:${m.swatch}"></i>${esc(m.title)}</td><td>${num(m.density)}</td><td>${num(m.body_mult)}</td>
+      <td>${pct(m.durability)}</td><td>${num(m.friction)}</td><td>${num(m.bounce)}</td><td class="${m.iron ? "yes" : "no"}">${m.iron ? "да" : "нет"}</td></tr>`).join("")}
+  </table></div>`;
+}
+function rules() {
+  const bm = T.BODY_MULT;
+  return `<section id="rules"><header><h2>Правила</h2></header>
+  <p class="note">Откуда берутся числа на карточках. Все значения — из файлов игры этой сборки.</p>
+  <div class="rules">
+    <div class="rule"><h3>Энергия ядра</h3><p>Бюджет чертежа — <span class="num">${T.ENERGY_BUDGET}</span>. Каждая деталь стоит свою энергию, и чем дальше она от центра ядра, тем дороже.</p>
+      <ul><li>Ближе <span class="num">${num(T.ENERGY_REACH_FREE_M)} м</span> — без наценки; дальше — <span class="num">+${num(T.ENERGY_REACH_PER_M * 100)} %</span> за каждый метр.</li>
+      <li>Шарнир «пружина» — <span class="num">+${JOINT.spring.energy}</span>, «мотор» — <span class="num">+${JOINT.motor.energy}</span>.</li>
+      <li>Тяга (рука мышью): первая бесплатно, каждая следующая — <span class="num">${T.PULL_ENERGY}</span> × вынос; не больше <span class="num">${T.MAX_PULLS}</span>.</li></ul></div>
+    <div class="rule"><h3>Удар частью тела</h3><p>Множитель удара = <b>место</b> × <b>материал</b> × <b>форма</b>.</p>
+      <ul><li>Место: кисть <span class="num">×${num(bm.Hand)}</span>, стопа <span class="num">×${num(bm.Foot)}</span>, предплечье <span class="num">×${num(bm.LowerArm)}</span>, плечо <span class="num">×${num(bm.UpperArm)}</span>, голень <span class="num">×${num(bm.LowerLeg)}</span>, бедро <span class="num">×${num(bm.UpperLeg)}</span>, ядро <span class="num">×${num(bm.Torso)}</span>, голова <span class="num">×${num(bm.Head)}</span>.</li>
+      <li>Материал: от резины <span class="num">×${num(MAT.rubber.body_mult)}</span> до железа и латуни <span class="num">×${num(MAT.iron.body_mult)}</span>.</li>
+      <li>Форма — не выше <span class="num">×${num(T.SHAPE_MULT_MAX)}</span> и зависит от скорости.</li></ul></div>
+    <div class="rule"><h3>Форма и скорость</h3>
+      <ul><li><b>Колющая</b> (шипы, когти, рога): полный бонус до <span class="num">${num(T.SHAPE_SLOW_V)} м/с</span>, к <span class="num">${num(T.SHAPE_FAST_V)} м/с</span> сходит на ×1 — точный медленный тычок.</li>
+      <li><b>Дробящая</b> (кулак, тиски, наруч): наоборот — бонус растёт к <span class="num">${num(T.SHAPE_FAST_V)} м/с</span>, на медленном ×1 — размах и рывок.</li>
+      <li><b>Мягкая</b> (верёвка, щупальце): множитель меньше единицы на любой скорости.</li>
+      <li>Шипы, рога и наруч дают форму детали-хозяину, а не множитель поверх её собственной.</li></ul></div>
+    <div class="rule"><h3>Куда попал</h3>
+      <ul><li>В голову — <span class="num">×${num(T.HEAD_HIT_MULT)}</span>.</li><li>В кисть — <span class="num">×${num(T.HAND_HIT_MULT)}</span>: кисть работает как блок.</li><li>В остальное — <span class="num">×1</span>.</li>
+      <li>Здоровье бойца по умолчанию — <span class="num">${num(T.MAX_HP)}</span>.</li></ul></div>
+    <div class="rule"><h3>Броня</h3><p>Броня снимает долю урона с ударов в то тело, на котором стоит.</p>
+      <ul><li>Щиток бережёт деталь-хозяина: наруч — предплечье, наплечник — плечо.</li>
+      <li>У ядер с толстыми стенками броня своя: тяжёлое ядро платит массой.</li>
+      <li>Броня на одном теле складывается, но не выше <span class="num">${pct(T.ARMOR_MAX)}</span>.</li>
+      <li>Отброс броня не гасит — только урон и стан.</li></ul></div>
+    <div class="rule"><h3>Поломка деталей${T.PART_BREAK ? "" : " — выключена"}</h3>${T.PART_BREAK ? "" : `<p>В этой сборке поломка по материалу выключена (<span class="num">Tuning.PART_BREAK</span>); отрыв деталей пробуется режимом «Прочность суставов», клавиша C.</p>`}<p>У каждой конечности, кисти и стопы свой запас прочности: <span class="num">${num(T.PART_INTEGRITY)}</span> × прочность материала.</p>
+      <ul><li>Запас тратит урон, пришедший именно в эту деталь.</li>
+      <li>Запас кончился — деталь отлетает вместе со всем, что на ней висит. Боец дерётся дальше.</li>
+      <li>Щиток добавляет хозяину <span class="num">+${num(T.PART_INTEGRITY * T.ARMOR_INTEGRITY_BONUS)}</span> к запасу.</li>
+      <li>Ядро и голова не ломаются: у них здоровье бойца.</li></ul></div>
+    <div class="rule"><h3>Материал</h3>
+      <ul><li>Масса детали = её масса × плотность материала ÷ плотность её материала по умолчанию.</li>
+      <li>Трение и отскок материала идут в физику тела.</li>
+      <li>Железо, ржавчина и крашеный лист притягиваются магнитом; латунь — нет.</li>
+      <li>Старые детали (клён, хлам, крафт) не перекрашиваются.</li></ul></div>
+    <div class="rule"><h3>Заряд и каналы</h3><p>Активные блоки тратят общий заряд ядра: запас <span class="num">${num(T.CHARGE_MAX)}</span>.</p>
+      <ul><li>Копится сам: <span class="num">+${num(T.CHARGE_REGEN)}</span> в секунду.</li>
+      <li><span class="num">+${num(T.CHARGE_PER_DEALT)}</span> за каждый HP урона, нанесённого ударом; <span class="num">+${num(T.CHARGE_PER_TAKEN)}</span> за HP полученного.</li>
+      <li>Три канала: ${T.CHANNEL_KEYS.p1.join(" / ")} (игрок 1), ${T.CHANNEL_KEYS.p2.join(" / ")} (игрок 2). Блоки одного канала работают вместе.</li></ul></div>
+    <div class="rule"><h3>Декор, броня, навершия</h3>
+      <ul><li>Крепятся намертво: формы и масса сливаются с деталью-хозяином.</li>
+      <li>Множитель урона навершия работает только в оружии; на теле навершие — это масса и форма.</li>
+      <li>Сварка превращает любую деталь в часть родителя.</li></ul></div>
+  </div></section>`;
+}
+
+// ---------- окно ----------
+const dlg = $("#dlg");
+let dlgPart = null, dlgMat = "";
+function anchorsHtml(p) {
+  if (!p.anchors.length) return "";
+  const groups = new Map();
+  for (const a of p.anchors) {
+    const base = a.name.replace(/_[LR]$/, "");
+    const key = base + "|" + a.accepts.join(",");
+    const g = groups.get(key) ?? { base, accepts: a.accepts, n: 0 };
+    g.n++; groups.set(key, g);
+  }
+  return `<h3>Разъёмы</h3><div class="pills">${[...groups.values()].map(g =>
+    `<span class="pill"><b>${esc(cap(ANCHOR[g.base] ?? g.base))}${g.n > 1 ? " ×" + g.n : ""}</b> — ${g.accepts.map(k => KIND[k] ?? k).join(", ")}</span>`).join("")}</div>`;
+}
+function strikeHtml(p, m) {
+  if (p.fixed) {
+    const bits = [];
+    if (p.kind === "weapon_head" || p.weapon_mult !== 1) bits.push(`в оружии: урон <b>×${num(p.weapon_mult)}</b>`);
+    if (p.body_mult !== 1) bits.push(`хозяину: форма <b>×${num(shapeMult(p))}</b>${p.hit_profile ? ` <span>(${PROFILE[p.hit_profile]})</span>` : ""}`);
+    return bits.length ? `<h3>Удар</h3><div class="formula">${bits.join("<br>")}</div>` : "";
+  }
+  const rows = strikes(p, m).map(s => {
+    const f = [`место ×${num(s.place)} <span>(${PLACE[s.pre] ?? s.pre})</span>`];
+    if (p.base_mat) f.push(`материал ×${num(s.mm)}`);
+    if (s.sh !== 1) f.push(`форма ×${num(s.sh)}${p.hit_profile ? ` <span>(${PROFILE[p.hit_profile]})</span>` : ""}`);
+    return f.join(" · ") + ` = <b>×${num(s.total)}</b>`;
+  });
+  return `<h3>Удар этой деталью</h3><div class="formula">${rows.join("<br>")}</div>`;
+}
+function activeHtml(p) {
+  let h = "";
+  if (p.active) {
+    const a = p.active, cells = [];
+    for (const [k, [label, unit]] of Object.entries(ACT)) if (a[k] != null) cells.push(`<div><dt>${label}</dt><dd>${num(a[k])}${unit ? `<small>${unit}</small>` : ""}</dd></div>`);
+    h += `<h3>Действие: ${esc(a.title)}${a.use === "press" ? " · по нажатию" : " · пока зажато"}</h3><dl class="kv">${cells.join("")}</dl>`;
+  }
+  if (p.passive) {
+    const cells = Object.entries(PASSIVE).filter(([k]) => p.passive[k] != null).map(([k, [label, sign]]) => `<div><dt>${label}</dt><dd>${sign}${num(p.passive[k])}</dd></div>`);
+    h += `<h3>Особое свойство</h3><dl class="kv">${cells.join("")}</dl>`;
+  }
+  return h;
+}
+function matTable(p, m) {
+  if (!p.base_mat) return "";
+  const ids = D.materials.map(x => x.id).filter(id => id === p.base_mat || p.variants.includes(id));
+  const showStrike = !p.fixed;
+  return `<h3>В каждом материале</h3><div class="tw"><table>
+    <tr><th>Материал</th><th>Масса, кг</th>${showStrike ? "<th>Удар</th>" : ""}<th>${breakable(p) ? "Запас, урона" : "Прочность"}</th><th>Трение</th><th>Отскок</th><th>Магнит</th></tr>
+    ${ids.map(id => { const x = MAT[id]; return `<tr class="pick ${id === m ? "on" : ""} ${id === p.base_mat ? "base" : ""}" data-pick="${id}">
+      <td><i class="dot" style="--c:${x.swatch}"></i>${esc(x.title)}</td><td>${num(partMass(p, id))}</td>${showStrike ? `<td>${strikeText(p, id)}</td>` : ""}
+      <td>${breakable(p) ? partInteg(p, id) : pct(partDur(p, id))}</td><td>${num(x.friction)}</td><td>${num(x.bounce)}</td><td class="${x.iron ? "yes" : "no"}">${x.iron ? "да" : "нет"}</td></tr>`; }).join("")}
+  </table></div>`;
+}
+function partDialog(p, m) {
+  dlgPart = p; dlgMat = m;
+  const cat = CATS.find(c => c.id === p._cat), ser = SERIES[p._series];
+  const desc = p.desc || (p.active ? `Активный блок: ${p.active.hint}. Расход заряда — ${costText(p.active)}.` : "");
+  const used = [...(USED[p.id] ?? [])].map(id => D.fighters.find(f => f.id === id));
+  const sw = p.base_mat ? `<div class="row">${D.materials.filter(x => x.id === p.base_mat || p.variants.includes(x.id)).map(x =>
+    `<button class="sw ${x.id === m ? "on" : ""}" style="--c:${x.swatch}" title="${esc(x.title)}" data-pick="${x.id}"></button>`).join("")}</div>
+    <span class="mat-now">Материал: <b>${esc(MAT[m].title)}</b>${m === p.base_mat ? " — свой" : ""}</span>` : `<span class="mat-now">Материал не меняется: ${esc(matWord(p))}</span>`;
+  const iron = partIron(p, m);
+  dlg.innerHTML = `<button class="x" data-close aria-label="Закрыть">×</button><div class="dlg">
+    <div class="dlg-pic"><div class="pic">${p.image ? `<img src="${partImg(p, m)}" alt="">` : `<span class="nopic">нет кадра</span>`}</div>${sw}</div>
+    <div class="dlg-body">
+      <div class="eyebrow">${esc(cat.title)} · ${esc(ser[0])}</div>
+      <h2>${esc(p.name)}</h2>
+      <div class="idline">${esc(p.id)}${p.title && p.title !== p.name ? " · " + esc(p.title) : ""}${p.hidden ? " · на полках мастерской скрыта" : ""}</div>
+      <p class="desc">${esc(desc)}</p>
+      <dl class="kv">
+        <div><dt>масса</dt><dd>${num(partMass(p, m))}<small>кг</small></dd></div>
+        <div><dt>энергия</dt><dd>${p.energy}</dd></div>
+        <div><dt>длина</dt><dd>${num(p.length)}<small>м</small></dd></div>
+        ${breakable(p) ? `<div><dt>запас прочности</dt><dd>${partInteg(p, m)}<small>урона</small></dd></div>`
+          : `<div><dt>прочность</dt><dd>${pct(partDur(p, m))}</dd></div>`}
+        ${p.armor > 0 ? `<div><dt>броня</dt><dd class="yes">−${pct(p.armor)}<small>урона</small></dd></div>` : ""}
+        <div class="w2"><dt>габарит Ш × В × Г</dt><dd>${p.size.map(v => num(v)).join(" × ")}<small>м</small></dd></div>
+        <div class="w2"><dt>крепление</dt><dd class="t">${p.fixed ? "намертво, сливается с хозяином" : "свой сустав и своё тело"}</dd></div>
+        <div><dt>магнит</dt><dd class="t ${iron ? "yes" : "no"}">${iron ? "притягивается" : "нет"}</dd></div>
+        <div><dt>набор</dt><dd class="t">${esc(ser[0])}</dd></div>
+      </dl>
+      ${strikeHtml(p, m)}${activeHtml(p)}${anchorsHtml(p)}${matTable(p, m)}
+      ${used.length ? `<h3>Стоит у бойцов</h3><div class="pills">${used.map(f => `<button class="pill" data-fighter="${f.id}">${esc(f.title)}</button>`).join("")}</div>` : ""}
+      <p class="nav-hint">← → — соседние детали · Esc — закрыть</p>
+    </div></div>`;
+  if (!dlg.open) dlg.showModal();
+  dlg.scrollTop = 0;
+}
+function dollDialog(f, folder) {
+  dlgPart = null;
+  const rows = f.nodes.map(n => {
+    const p = PART[n.part];
+    const base = n.body.replace(/_[0-9A-Z]$/, "");
+    const side = /_L$/.test(n.body) ? " Л" : /_R$/.test(n.body) ? " П" : "";
+    const where = n.body ? (BODY[base] ? cap(BODY[base]) + side : n.body) : "↳ намертво";
+    const extra = [n.pull === "lmb" ? "тяга ЛКМ" : n.pull === "rmb" ? "тяга ПКМ" : "", n.channel ? "канал " + n.channel : ""].filter(Boolean).join(", ");
+    return `<tr class="pick" data-part="${n.part}"><td>${esc(where)}</td><td class="l">${esc(p ? p.name : n.part)}</td>
+      <td class="l">${n.mat ? `<i class="dot" style="--c:${MAT[n.mat].swatch}"></i>${esc(MAT[n.mat].title)}` : p ? esc(matWord(p)) : ""}</td>
+      <td class="l">${n.joint ? esc(JOINT[n.joint].title) : "—"}</td><td class="l">${esc(extra)}</td></tr>`;
+  }).join("");
+  dlg.innerHTML = `<button class="x" data-close aria-label="Закрыть">×</button><div class="dlg">
+    <div class="dlg-pic"><div class="pic tall">${f.image ? `<img src="img/${folder}/${f.id}.webp" alt="">` : ""}</div></div>
+    <div class="dlg-body">
+      <div class="eyebrow">${folder === "fighters" ? (f.league ? "Боец лиги NULL" : "Шаблон мастерской") : "Враг"}</div>
+      <h2>${esc(f.title)}</h2>
+      <div class="idline">${esc(f.id)}</div>
+      <dl class="kv">
+        <div><dt>энергия</dt><dd>${f.energy}<small>/ ${f.budget}</small></dd></div>
+        <div><dt>масса</dt><dd>${num(f.mass, 1)}<small>кг</small></dd></div>
+        <div><dt>здоровье</dt><dd>${num(f.max_hp, 0)}</dd></div>
+        <div><dt>деталей</dt><dd>${f.nodes.length}</dd></div>
+        <div><dt>тяг</dt><dd>${f.pulls}</dd></div>
+        ${f.weapon ? `<div><dt>оружие</dt><dd class="t">${esc(f.weapon)}, ${num(f.weapon_mass, 1)} кг</dd></div>` : ""}
+      </dl>
+      <h3>Состав</h3>
+      <div class="tw"><table><tr><th>Место</th><th class="l">Деталь</th><th class="l">Материал</th><th class="l">Шарнир</th><th class="l">Управление</th></tr>${rows}</table></div>
+    </div></div>`;
+  if (!dlg.open) dlg.showModal();
+  dlg.scrollTop = 0;
+}
+function stepPart(dir) {
+  if (!dlgPart) return;
+  const ids = [...document.querySelectorAll("#sections [data-part]")].map(b => b.dataset.part);
+  const i = ids.indexOf(dlgPart.id);
+  if (i < 0) return;
+  const p = PART[ids[(i + dir + ids.length) % ids.length]];
+  partDialog(p, matFor(p, state.mat));
+}
+
+// ---------- панель ----------
+function renderTools() {
+  $("#mats").innerHTML = `<button class="chip ${state.mat ? "" : "on"}" data-mat="">свой</button>` +
+    D.materials.map(m => `<button class="sw ${state.mat === m.id ? "on" : ""}" style="--c:${m.swatch}" title="${esc(m.title)}" data-mat="${m.id}"></button>`).join("");
+  $("#matNow").innerHTML = state.mat ? `все детали кита: <b>${esc(MAT[state.mat].title)}</b>` : "у каждой детали — свой";
+  const counts = {};
+  for (const p of D.parts) counts[p._series] = (counts[p._series] ?? 0) + 1;
+  $("#series").innerHTML = `<button class="chip ${state.series === "all" ? "on" : ""}" data-series="all">все</button>` +
+    SERIES_ORDER.filter(s => counts[s]).map(s => `<button class="chip ${state.series === s ? "on" : ""}" data-series="${s}" title="${esc(SERIES[s][1])}">${esc(SERIES[s][0])} ${counts[s]}</button>`).join("");
+}
+function setMat(m) { state.mat = m; renderTools(); render(); }
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-close],[data-pick],[data-part],[data-fighter],[data-enemy],[data-mat],[data-series]");
+  if (!t) { if (e.target === dlg) dlg.close(); return; }
+  const d = t.dataset;
+  if ("close" in d) dlg.close();
+  else if (d.pick) partDialog(dlgPart, d.pick);
+  else if (d.part) { const p = PART[d.part]; if (p) partDialog(p, matFor(p, state.mat)); }
+  else if (d.fighter) dollDialog(D.fighters.find(f => f.id === d.fighter), "fighters");
+  else if (d.enemy) dollDialog(D.enemies.find(f => f.id === d.enemy), "enemies");
+  else if ("mat" in d) { setMat(d.mat === state.mat ? "" : d.mat); if (t.closest("#materials")) document.getElementById("core")?.scrollIntoView(); }
+  else if (d.series) { state.series = d.series; renderTools(); render(); }
+});
+document.addEventListener("keydown", e => {
+  if (dlg.open && (e.key === "ArrowRight" || e.key === "ArrowLeft")) { e.preventDefault(); stepPart(e.key === "ArrowRight" ? 1 : -1); }
+  else if (e.key === "/" && document.activeElement !== $("#q") && !dlg.open) { e.preventDefault(); $("#q").focus(); }
+});
+let qt;
+$("#q").addEventListener("input", e => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value.trim().toLowerCase(); render(); }, 120); });
+
+// подсветка раздела в боковой навигации
+const spy = new IntersectionObserver(es => {
+  for (const en of es) if (en.isIntersecting) {
+    document.querySelectorAll("#side a").forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + en.target.id));
+  }
+}, { rootMargin: "-20% 0px -70% 0px" });
+const observe = () => document.querySelectorAll("#sections section").forEach(s => spy.observe(s));
+new MutationObserver(observe).observe($("#sections"), { childList: true });
+
+const B = D.build;
+$("#build").innerHTML = `сборка ${esc(B.version)}${B.commit ? " · " + esc(B.commit) : ""}<br>${esc(B.date)}`;
+$("#counts").innerHTML = [[D.parts.length, "деталей"], [D.materials.length, "материалов"], [D.joints.length, "типов шарнира"],
+  [D.parts.filter(p => p.active).length, "активных блоков"], [D.weapons.length, "видов оружия"], [D.fighters.length, "бойцов"]]
+  .map(([n, l]) => `<div><b>${n}</b>${l}</div>`).join("");
+renderTools();
+render();
+</script>
+</body>
+</html>

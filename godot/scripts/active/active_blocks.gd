@@ -70,6 +70,10 @@ const PASSIVE := {
 	"kit_core_league_gyro": {"charge_regen": 3.0, "hint": "гироскоп раскручивает поле: +3 заряда в секунду"},
 	"kit_core_league_orb": {"dealt_mult": 1.5, "hint": "око видит удар: заряд за нанесённый урон × 1.5"},
 	"kit_core_league_flesh": {"hp_regen": 1.0, "hint": "живая ткань зарастает: +1 HP в секунду"},
+	# наборы 04.10 (tools/blender/kit_pro.py, kit_aoe.py)
+	"kit_core_pro_gyro": {"dealt_mult": 1.3, "hint": "маховик гиростаба раскручивается от ударов: заряд за нанесённый урон × 1.3"},
+	"kit_core_pro_reactor": {"charge_max": 40.0, "hint": "реактор держит большой запас: +40 к заряду"},
+	"kit_core_aoe_heart": {"hp_regen": 0.7, "hint": "живое сердце зарастает: +0.7 HP в секунду"},
 }
 
 

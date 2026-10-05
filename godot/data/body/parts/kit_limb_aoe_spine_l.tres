@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_limb_aoe_spine_l.tscn" id="1_um3ot"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_0iyf4"]
+
+[resource]
+script = ExtResource("2_0iyf4")
+id = "kit_limb_aoe_spine_l"
+title = "Позвонок (нога)"
+scene = ExtResource("1_um3ot")
+mass = 3.7
+energy = 8
+body_mult = 0.6
+name_prefix = "UpperLeg"
+base_mat = "bone"
+connector = true
