@@ -158,6 +158,7 @@ func register(d: Doll) -> void:
 	BoostFx.attach(d)   # эффекты ускорения / раскрутки (COMBAT_CHARGE.md), пресет — F11
 	d.knocked_out.connect(_on_doll_ko.bind(d))
 	d.damaged.connect(_on_doll_damaged.bind(d))
+	d.parts_hp_changed.connect(_on_doll_parts_hp.bind(d))
 	d.tree_exiting.connect(_unregister.bind(d))
 	if phase == Phase.SUDDEN_DEATH and sd_step >= 0:
 		d.set_stability(Damage.sd_stability_mult(sd_step))
@@ -211,6 +212,7 @@ func respawn_doll(old: Doll) -> Doll:
 	if ps == null:
 		ps = load(DEFAULT_DOLL_SCENE) as PackedScene
 	var d: Doll = ps.instantiate()
+	var parts_hp := old.has_meta("parts_hp")
 	d.player_index = old.player_index
 	d.input_prefix = old.input_prefix
 	d.external_input = old.external_input
@@ -265,6 +267,9 @@ func respawn_doll(old: Doll) -> Doll:
 	for n in extra:
 		d.add_child(n)
 	register(d)
+	if parts_hp:   # запас из деталей: у новой куклы свой (целые детали), а не урезанный отрывами старой
+		d.set_meta("parts_hp", true)
+		_parts_hp(d)
 	doll_replaced.emit(old, d)
 	return d
 
@@ -284,6 +289,7 @@ func begin() -> void:
 			respawn_doll(d)
 	for d in dolls():
 		_drive_hp(d as Doll)
+		_parts_hp(d as Doll)
 	for d in dolls():
 		var dd := d as Doll
 		dd.control_enabled = false
@@ -308,6 +314,41 @@ func _drive_hp(d: Doll) -> void:
 		return
 	d.max_hp = want
 	d.hp = want
+
+
+## Запас из деталей (PartHp, WORKSHOP_V4.md): запас бойца — Σ ❤ его деталей (Doll.parts_hp_total), с ДРАЙВОМ × DRIVE_MAX_HP / MAX_HP;
+## ставится в начале раунда (begin) и при пересоздании куклы (respawn_doll), метка "parts_hp". Особый запас (враги PvE) не трогается;
+## режим выключили — кукла с меткой возвращается к обычному запасу.
+func _parts_hp(d: Doll) -> void:
+	if not d.has_meta("parts_hp") and not (is_equal_approx(d.max_hp, Tuning.MAX_HP) or is_equal_approx(d.max_hp, Tuning.DRIVE_MAX_HP)):
+		return
+	if not PartHp.on:
+		if d.has_meta("parts_hp"):
+			d.remove_meta("parts_hp")
+			d.max_hp = Tuning.DRIVE_MAX_HP if Drive.on else Tuning.MAX_HP
+			d.hp = d.max_hp
+		return
+	d.max_hp = maxf(roundf(d.parts_hp_total() * (Tuning.DRIVE_MAX_HP / Tuning.MAX_HP if Drive.on else 1.0)), 1.0)
+	d.hp = d.max_hp
+	d.set_meta("parts_hp", true)
+
+
+## Режим «Запас из деталей» переключили посреди боя (HitJuice): запасы отрыва под новый режим, запас бойца — из деталей (или обычный)
+## с той же долей, что была; HUD получает hp_changed.
+func refresh_parts_hp() -> void:
+	for d in dolls():
+		var dd := d as Doll
+		if not dd.alive:
+			continue
+		var frac := dd.hp / maxf(dd.max_hp, 1.0)
+		dd.refresh_wear()
+		_parts_hp(dd)
+		dd.hp = maxf(dd.max_hp * frac, 1.0)
+		hp_changed.emit(dd, dd.hp, dd.max_hp)
+
+
+func _on_doll_parts_hp(_delta: float, _part: String, doll: Doll) -> void:
+	hp_changed.emit(doll, doll.hp, doll.max_hp)
 
 
 ## Заново: все куклы инстанцируются на точках спавна, потом begin().

@@ -17,6 +17,9 @@
 ## Автор 05.10: X — пробный режим «СТАЗИС» (Stasis, STASIS.md): время идёт, только пока человек жмёт свои действия; метка режима
 ## на HUD — StasisBadge, создаётся здесь при первом включении (выключенный режим ничего не добавляет в сцену). «Ч» в русской
 ## раскладке — «часы».
+## Автор 05.10: «;» — пробный режим «Запас из деталей» (PartHp, WORKSHOP_V4.md): запас бойца — сумма ❤ деталей, деталь отлетает от
+## своего урона и уносит свои ❤, голова — KO. «Ж» в русской раскладке — «жизнь». С «Прочностью суставов» не совмещается: включили
+## одно — другое выключается (оба считают отрыв одним механизмом Doll.joint_hp).
 ## Говорят только N0 и табло (LORE_NULL.md «Голоса и тон»).
 class_name HitJuice
 extends Node
@@ -34,6 +37,7 @@ const KEY_ZOOM_OUT := KEY_COMMA
 const KEY_ZOOM_IN := KEY_PERIOD
 const KEY_JOINTS := KEY_C        # пробный режим «Прочность суставов» (JointBreak): «С» в русской раскладке — «суставы»
 const KEY_STASIS := KEY_X        # пробный режим «СТАЗИС» (Stasis): «Ч» в русской раскладке — «часы»
+const KEY_PARTS := KEY_SEMICOLON  # пробный режим «Запас из деталей» (PartHp): «Ж» в русской раскладке — «жизнь»
 const ZOOM_STEP := 1.12          # шаг масштаба (колесо, «,» «.»)
 const ZOOM_RANGE := Vector2(0.45, 2.2)   # DynamicCamera.user_zoom: меньше — ближе
 const OUTLINE_SCAN_S := 0.15     # обводка ставится по одной кукле за проход — без всплеска узлов в один кадр (perf gate 250/кадр)
@@ -256,6 +260,7 @@ func keys_lines() -> Array:
 		["V  /  T", tr("вариант / темп управления"), ""],
 		["J", tr("ДРАЙВ: импульс живёт"), tr("вкл") if Drive.on else tr("выкл")],
 		["C", tr("прочность суставов: конечности отлетают"), on.call(JointBreak.on)],
+		[";", tr("запас из деталей: у каждой детали свой"), on.call(PartHp.on)],
 		["X", tr("СТАЗИС: время идёт, только пока двигаешься"), on.call(Stasis.on)],
 		[tr("ЛКМ / ПКМ"), tr("тяги рук"), ""],
 		["I  O  P", tr("активные блоки"), ""],
@@ -327,7 +332,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		KEY_JOINTS:
 			JointBreak.toggle()
+			if JointBreak.on and PartHp.on:   # один механизм отрыва — два режима сразу не ведём
+				PartHp.set_on(false)
+			_refresh_parts_hp()
 			show_toast(tr("Прочность суставов: %s   (C — переключить)") % (tr("вкл — конечности отлетают, дальние суставы слабее") if JointBreak.on else tr("выкл")), 2.4)
+			keys_panel.refresh()
+			get_viewport().set_input_as_handled()
+		KEY_PARTS:
+			PartHp.toggle()
+			if PartHp.on and JointBreak.on:
+				JointBreak.set_on(false)
+			_refresh_parts_hp()
+			show_toast(tr("Запас из деталей: %s   (; — переключить)") % (tr("вкл — запас из суммы деталей, деталь отлетает и уносит свой") if PartHp.on else tr("выкл")), 2.4)
 			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_STASIS:
@@ -343,6 +359,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				digits.clear()
 			show_toast(tr("Цифры урона: %s   (− — переключить)") % (tr("вкл") if digits_on else tr("выкл")))
 			get_viewport().set_input_as_handled()
+
+
+## Запас бойцов под включённый / выключенный режим «Запас из деталей» — сразу, не со следующего раунда (Match.refresh_parts_hp).
+func _refresh_parts_hp() -> void:
+	if _match != null and _match.has_method("refresh_parts_hp"):
+		_match.call("refresh_parts_hp")
 
 
 ## Метка СТАЗИСА на HUD (StasisBadge) — на своём слое; видимость решает сама (Stasis.on, фаза, крит-кино).

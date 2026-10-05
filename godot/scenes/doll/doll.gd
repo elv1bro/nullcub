@@ -41,6 +41,8 @@ signal part_reattached(part_name: String)
 ## Сустав сломан ударами (JointBreak, пробный режим 04.10): запас joint_hp детали part_name кончился; position — точка сустава
 ## в мире. Сразу после — detach_part → part_detached.
 signal joint_broken(part_name: String, by: Node, position: Vector3)
+## Запас из деталей (PartHp, пробный режим 05.10): отрыв или возврат детали поменял hp / max_hp на ❤ поддерева (delta < 0 — потеря).
+signal parts_hp_changed(delta: float, part_name: String)
 
 enum StunPhase { NONE, STUNNED, RECOVER }
 
@@ -139,6 +141,9 @@ var _detached: Dictionary = {}
 var joint_hp: Dictionary = {}
 var joint_hp_max: Dictionary = {}
 var joint_depth: Dictionary = {}
+## Запас из деталей (PartHp, docs/plan-demo/WORKSHOP_V4.md): имя тела → ❤ детали (масса × материал, PartHp.hp_of). Считается всегда
+## (_init_part_hp), в бою работает только при PartHp.on: запас бойца = Σ ❤ (parts_hp_total, ставит Match), отрыв уносит ❤ поддерева.
+var part_hp: Dictionary = {}
 ## Принудительное ускорение без траты Заряда (пробы, клипы: «как Shift»): is_dashing() до этого момента (_time). В игре ускорение
 ## даёт удерживаемый Shift за Заряд (_boosting); кулдауна нет, dash_ready_at только для проб — всегда ≤ _time.
 var dash_until := 0.0
@@ -241,6 +246,7 @@ func _ready() -> void:
 		var enabled: bool = j.get("angular_motor_z/enabled")
 		_friction_base[j] = float(j.get("angular_motor_z/force_limit")) if enabled else 0.0
 
+	_init_part_hp()
 	_init_joint_hp()
 
 	if spawn_in_pose:
@@ -597,8 +603,31 @@ func take_damage(amount: float, attacker: Node, part: String, position: Vector3,
 	damaged.emit(amount, attacker, part, position, kind)
 	if hp <= 0.0:
 		knock_out(attacker, record)
-	elif JointBreak.on:
+	elif JointBreak.on or PartHp.on:
 		_wear_joint(part, amount, attacker)
+
+
+## ❤ каждой детали (PartHp.hp_of): масса тела (у ModularDoll — со слитыми щитками и декором) × материал. Прочность материала — meta
+## "durability" тела (ModularDoll._build, Damage.part_durability), у обычной куклы — дерево (торс — с надбавкой ядра).
+func _init_part_hp() -> void:
+	part_hp.clear()
+	for n in parts:
+		var b := parts[n] as RigidBody3D
+		var dur := float(b.get_meta("durability", Tuning.MAT_DURABILITY["wood"] + (Tuning.DURABILITY_CORE_BONUS if b == parts.get("Torso") else 0.0)))
+		part_hp[String(n)] = PartHp.hp_of(b.mass, dur)
+
+
+## Запас бойца из деталей: Σ ❤ деталей, которые сейчас на нём (оторванные не считаются).
+func parts_hp_total() -> float:
+	var t := 0.0
+	for n in parts:
+		t += float(part_hp.get(String(n), 0.0))
+	return t
+
+
+## Пересчитать запасы отрыва под текущий режим (JointBreak / PartHp включили на ходу); износ сбрасывается.
+func refresh_wear() -> void:
+	_init_joint_hp()
 
 
 ## Запасы суставов по глубине от ядра (JointBreak.hp_for_depth): обход по суставам от торса, node_a — родитель, node_b — ребёнок.
@@ -623,10 +652,12 @@ func _init_joint_hp() -> void:
 		i += 1
 	for b in order:
 		var n := String((b as Node).name)
-		if b == root or (part_base_name(n) == "Head" and not Tuning.JOINT_BREAK_HEAD):
-			continue
+		var head := part_base_name(n) == "Head"
+		if b == root or (head and not (Tuning.JOINT_BREAK_HEAD or PartHp.on)):
+			continue   # ядро не отлетает никогда; голова — в запасе из деталей (отлетела — KO) или по Tuning.JOINT_BREAK_HEAD
 		joint_depth[n] = int(depth[b])
-		joint_hp_max[n] = JointBreak.hp_for_depth(int(depth[b]))
+		# запас из деталей: порог отрыва — от ❤ самой детали (PartHp.break_hp), а не от глубины
+		joint_hp_max[n] = PartHp.break_hp(float(part_hp.get(n, 0.0)), head) if PartHp.on else JointBreak.hp_for_depth(int(depth[b]))
 		joint_hp[n] = joint_hp_max[n]
 
 
@@ -846,6 +877,11 @@ func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
 			for s in sub:
 				if (mon0 as Array).has(s) and not (rec["monitored"] as Array).has(s):
 					(rec["monitored"] as Array).append(s)
+	# запас из деталей (PartHp): отлетевшее поддерево уносит свои ❤ из запаса и его максимума; reattach_part вернёт ровно столько
+	rec["hp_lost"] = 0.0
+	if PartHp.on and alive:
+		for s in sub:
+			rec["hp_lost"] = float(rec["hp_lost"]) + float(part_hp.get(String((s as Node).name), 0.0))
 	_detached[b] = rec
 	for s in sub:
 		var rb := s as RigidBody3D
@@ -876,6 +912,14 @@ func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
 					if is_instance_valid(s) and is_instance_valid(p):
 						(s as RigidBody3D).remove_collision_exception_with(p))
 	part_detached.emit(part_name, by)
+	var lost := float(rec["hp_lost"])
+	if lost > 0.0 and alive:
+		max_hp = maxf(max_hp - lost, 1.0)
+		hp = maxf(hp - lost, 0.0)
+		stats["parts_hp_lost"] = float(stats.get("parts_hp_lost", 0.0)) + lost
+		parts_hp_changed.emit(-lost, part_name)
+		if hp <= 0.0:   # оторвали последнее, что держало запас, — добивание
+			knock_out(by, {"kind": "detach", "part": part_name, "damage": lost})
 	return b
 
 
@@ -947,6 +991,11 @@ func reattach_part(body: RigidBody3D) -> bool:
 		if joint_hp_max.has(sn):
 			joint_hp[sn] = joint_hp_max[sn]
 	part_reattached.emit(String(body.name))
+	var back := float(rec.get("hp_lost", 0.0))   # запас из деталей: вернулись ❤, которые деталь унесла при отрыве
+	if back > 0.0:
+		max_hp += back
+		hp = minf(hp + back, max_hp)
+		parts_hp_changed.emit(back, String(body.name))
 	return true
 
 

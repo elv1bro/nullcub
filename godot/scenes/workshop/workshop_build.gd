@@ -32,6 +32,8 @@ class_name WorkshopBuild
 extends Node3D
 
 signal changed
+## Пробный режим «Запас из деталей» (PartHp) переключён клавишей «;» — UI перестраивает полку (❤ на карточках, энергия ядра и головы).
+signal parts_hp_toggled
 signal toast(text: String, colour: Color)
 signal mode_changed(mode: int)
 signal view_changed(view: int)
@@ -856,8 +858,8 @@ func _mirror_one(trial: BodyBlueprint, uid: String) -> Dictionary:
 	var errs := CraftEdit.structural_errors(trial)
 	if not errs.is_empty():
 		return {"ok": false, "code": "invalid", "reason": CraftEdit._friendly(errs[0])}
-	if trial.energy_used() > trial.energy_budget:
-		return {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason(tr("зеркальную копию"), trial.energy_used(), trial.energy_budget)}
+	if trial.energy_used() > trial.energy_cap():
+		return {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason(tr("зеркальную копию"), trial.energy_used(), trial.energy_cap())}
 	return {"ok": true, "code": "ok", "reason": "", "uid": nu, "count": 1, "replaced": occ}
 
 
@@ -1001,6 +1003,18 @@ func load_path(path: String) -> bool:
 
 
 # =================================================================== стенд и верстак
+
+## Пробный режим «Запас из деталей» (PartHp, docs/plan-demo/WORKSHOP_V4.md) — та же клавиша «;», что в бою: ❤ деталей на карточках,
+## в паспорте и сводке, энергию дают ядро и голова (BodyBlueprint.energy_cap), голова сама энергии не стоит. С «Прочностью суставов»
+## не совмещается (как в бою, HitJuice).
+func toggle_parts_hp() -> void:
+	PartHp.toggle()
+	if PartHp.on and JointBreak.on:
+		JointBreak.set_on(false)
+	_say(tr("Запас из деталей: %s   (; — переключить)") % (tr("вкл — ❤ у каждой детали, энергию дают ядро и голова") if PartHp.on else tr("выкл")), COL_INFO)
+	parts_hp_toggled.emit()
+	_rebuild()
+
 
 func _rebuild() -> void:
 	_clear_ghost()
@@ -1293,7 +1307,7 @@ func cheapest_cost(part_id: String) -> int:
 
 ## Свободная энергия тела.
 func energy_free() -> int:
-	return blueprint.energy_budget - blueprint.energy_used()
+	return blueprint.energy_cap() - blueprint.energy_used()
 
 
 # =================================================================== протяжка
@@ -1477,8 +1491,8 @@ func drag_trial(t: Dictionary = {}) -> Dictionary:
 			var errs := CraftEdit.structural_errors(tb2)
 			if not errs.is_empty():
 				r = {"ok": false, "code": "invalid", "reason": CraftEdit._friendly(errs[0])}
-			elif tb2.energy_used() > tb2.energy_budget:
-				r = {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason(tr("копию"), tb2.energy_used(), tb2.energy_budget)}
+			elif tb2.energy_used() > tb2.energy_cap():
+				r = {"ok": false, "code": "energy", "reason": CraftEdit.energy_reason(tr("копию"), tb2.energy_used(), tb2.energy_cap())}
 		r["bp"] = tb2
 	if r.get("bp") is BodyBlueprint:
 		var tbp := r["bp"] as BodyBlueprint
@@ -2317,6 +2331,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		match k.physical_keycode:
 			KEY_Q:
 				toggle_control_pick()
+			KEY_SEMICOLON:
+				toggle_parts_hp()
 			KEY_T:
 				start_test()
 			KEY_ENTER, KEY_KP_ENTER:
@@ -2732,7 +2748,7 @@ func body_stats() -> Dictionary:
 		weapon_line = "%s → %s" % [(blueprint.weapon as WeaponBlueprint).title.trim_suffix(" *"),
 			uid_title("body", String(m["uid"])) if String(m["uid"]) != "" else tr("некуда")]
 	var accel := ref / maxf(mass + wmass, 0.1)
-	return {"title": blueprint.title, "energy": blueprint.energy_used(), "budget": blueprint.energy_budget, "mass": mass,
+	return {"title": blueprint.title, "energy": blueprint.energy_used(), "budget": blueprint.energy_cap(), "mass": mass, "hp": blueprint.parts_hp_total(),
 		"weapon_mass": wmass, "bodies": bodies, "parts": blueprint.nodes.size(), "accel": accel, "ref": ref,
 		"control": ctrl, "weapon": weapon_line, "errors": CraftEdit.friendly_errors(blueprint),
 		"warnings": CraftEdit.warnings(blueprint)}
@@ -2750,9 +2766,12 @@ func drag_preview() -> Dictionary:
 	var s := body_stats()
 	var ref := float(s["ref"])
 	var bp: BodyBlueprint = dt.get("bp") if dt.get("bp") is BodyBlueprint else null
+	if PartHp.on and bp != null and (stand == null or (stand as ModularDoll).thrust_ref_mass <= 0.0):
+		ref = bp.thrust_n() / Tuning.MOVE_FORCE_PER_KG   # запас из деталей: другое ядро — другой мотор
 	var mass := float(dt.get("mass_after", s["mass"]))
 	return {"ok": bool(dt.get("ok", false)), "code": String(dt.get("code", "")), "reason": String(dt.get("reason", "")), "mass": mass, "energy": int(dt.get("energy_after", s["energy"])),
-		"parts": bp.nodes.size() if bp != null else int(s["parts"]), "accel": ref / maxf(mass + float(s["weapon_mass"]), 0.1)}
+		"parts": bp.nodes.size() if bp != null else int(s["parts"]), "accel": ref / maxf(mass + float(s["weapon_mass"]), 0.1),
+		"hp": bp.parts_hp_total() if bp != null else int(s["hp"])}
 
 
 ## Центр массы стенда (мир); без стенда — ноль.
@@ -2944,7 +2963,7 @@ func _drag_refusal(t: Dictionary) -> String:
 	var code := String(dt.get("code", t.get("code", ""))) if not dt.is_empty() else String(t.get("code", ""))
 	if code == "energy":
 		var e := int(dt.get("energy_after", 0)) if not dt.is_empty() else 0
-		return tr("Не хватает энергии: будет %d / %d") % [e, blueprint.energy_budget] if e > 0 else tr("Не хватает энергии")
+		return tr("Не хватает энергии: будет %d / %d") % [e, blueprint.energy_cap()] if e > 0 else tr("Не хватает энергии")
 	if why == "":
 		return tr("Сюда не встанет")
 	var dot := why.find(". ")
