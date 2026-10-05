@@ -237,8 +237,7 @@ func start_run() -> void:
 	_barrel_at = -1.0
 	_part_line_t = -100.0
 	_pit_line_t = -100.0
-	Engine.time_scale = 1.0
-	_time_effects.clear()
+	_reset_time()
 	fight_time = 0.0
 	sd_step = -1
 	_ko_order.clear()
@@ -328,8 +327,7 @@ func _finish_run(victory: bool) -> void:
 ## Заново: враги, их метлы, оторванные детали и бочки убираются, игроки пересоздаются на спавнах, оружие площадки — на места.
 func restart() -> void:
 	_set_phase(Phase.OVER)
-	Engine.time_scale = 1.0
-	_time_effects.clear()
+	_reset_time()
 	spawn_queue.clear()
 	# из дерева сразу (не только queue_free): иначе новый P1 в этом же кадре подхватил бы метлу, которая освободится в конце кадра
 	for g in ["pve_spawned", "detached_parts"]:
@@ -588,6 +586,12 @@ func _check_over() -> void:
 
 func begin() -> void:
 	start_run()
+
+
+## СТАЗИС (STASIS.md §3): время ждёт игрока только в волне — spawning (предупреждение желоба и выпадение врагов) и fight, плюс manual
+## проб. Intro (отсчёт), пауза между волнами (передышка, строка систем поля) и итоги идут сами — без нажатий, как без режима.
+func stasis_allowed() -> bool:
+	return wave_state in ["spawning", "fight", "manual"]
 
 
 func time_left_s() -> float:

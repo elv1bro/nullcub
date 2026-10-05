@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/playground_pve.tscn" id="1_pve"]
+[ext_resource type="Script" path="res://scenes/pve/playground_stasis.gd" id="2_stasis"]
+
+[node name="PlaygroundStasis" instance=ExtResource("1_pve")]
+script = ExtResource("2_stasis")

@@ -21,6 +21,7 @@ var settings := {}
 var _pause: CanvasLayer = null
 var _restart := Callable()
 var _font_head: Font = null
+var _paused_time_scale := -1.0   # СТАЗИС: масштаб времени боя до паузы (−1 — пауза его не трогала)
 
 
 func _ready() -> void:
@@ -52,6 +53,11 @@ func toggle_pause(restart := Callable()) -> void:
 	_restart = restart
 	_build_pause()
 	get_tree().paused = true
+	# СТАЗИС (Stasis, docs/plan-demo/STASIS.md): на паузе Match не тикает и масштаб не держит — меню и всё, что идёт в паузе
+	# (PROCESS_MODE_ALWAYS), живут в реальном времени; при выходе — прежний масштаб. Режим выключен — масштаб не трогаем.
+	if Stasis.on and Engine.time_scale < 1.0:
+		_paused_time_scale = Engine.time_scale
+		Engine.time_scale = 1.0
 
 
 func close_pause() -> void:
@@ -59,6 +65,9 @@ func close_pause() -> void:
 		_pause.queue_free()
 		_pause = null
 	get_tree().paused = false
+	if _paused_time_scale > 0.0:
+		Engine.time_scale = _paused_time_scale
+		_paused_time_scale = -1.0
 
 
 func is_paused() -> bool:

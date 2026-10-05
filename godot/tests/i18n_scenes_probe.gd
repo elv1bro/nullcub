@@ -1,6 +1,6 @@
 ## Проба «в английском не осталось кириллицы» (headless): под en загружает главные сцены (гараж, кампания, тестовое меню, бой в куполе,
 ## Руины, Свалка, PvE, мастерская), ждёт несколько кадров и обходит дерево: Label / Button / RichTextLabel / LineEdit / Label3D / подсказки —
-## текст, как его покажет движок (atr), не должен содержать русских букв. Заодно открывает экраны гаража НАСТРОЙКИ и ТРОФЕИ.
+## текст, как его покажет движок (atr), не должен содержать русских букв. Купол — с включённым СТАЗИСОМ (метка режима на HUD). Заодно открывает экраны гаража НАСТРОЙКИ и ТРОФЕИ.
 ## Ловит забытые tr() в const-таблицах и строках, собранных заранее. Тексты, нарисованные draw_string, проверяются `tools/i18n.py check`.
 ## Запуск: godot --headless --path . res://tests/i18n_scenes_probe.tscn   Exit 0/1, отчёт tests/i18n_scenes_report.json.
 ## Параметры: -- "lang=en" (другой код языка), "only=garage" (одна сцена по подстроке пути).
@@ -15,6 +15,7 @@ const SCENES := [
 	"res://scenes/playground.tscn",
 	"res://scenes/playground_scrap.tscn",
 	"res://scenes/playground_pve.tscn",
+	"res://scenes/playground_stasis.tscn",
 	"res://scenes/workshop/workshop_build.tscn",
 ]
 const FRAMES := 40
@@ -51,6 +52,7 @@ func _scene(path: String) -> void:
 	if packed == null:
 		_note(path, ["сцена не загрузилась"])
 		return
+	Stasis.set_on(path.ends_with("playground_null_hall.tscn"))   # бой в куполе — с меткой режима СТАЗИС (StasisBadge, STASIS.md); playground_stasis включает сам
 	var inst := packed.instantiate()
 	add_child(inst)
 	for i in FRAMES:
@@ -60,6 +62,7 @@ func _scene(path: String) -> void:
 	var left := _scan(inst)
 	_note(path, left)
 	inst.queue_free()
+	Stasis.set_on(false)
 	await get_tree().process_frame
 	await get_tree().process_frame
 

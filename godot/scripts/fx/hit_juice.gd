@@ -14,6 +14,9 @@
 ## тело читается на тёмном фоне купола). Вызов чемпиона лиги в куполе — K (был L, NullHallArena).
 ## Автор 04.10: C — пробный режим «Прочность суставов» (JointBreak, JOINT_BREAK.md): суставы изнашиваются от ударов, конечности
 ## отлетают; вид режима — JointBreakFx (искры на повреждённом суставе, вспышка отрыва), создаётся здесь.
+## Автор 05.10: X — пробный режим «СТАЗИС» (Stasis, STASIS.md): время идёт, только пока человек жмёт свои действия; метка режима
+## на HUD — StasisBadge, создаётся здесь при первом включении (выключенный режим ничего не добавляет в сцену). «Ч» в русской
+## раскладке — «часы».
 ## Говорят только N0 и табло (LORE_NULL.md «Голоса и тон»).
 class_name HitJuice
 extends Node
@@ -30,6 +33,7 @@ const KEY_OUTLINE := KEY_B
 const KEY_ZOOM_OUT := KEY_COMMA
 const KEY_ZOOM_IN := KEY_PERIOD
 const KEY_JOINTS := KEY_C        # пробный режим «Прочность суставов» (JointBreak): «С» в русской раскладке — «суставы»
+const KEY_STASIS := KEY_X        # пробный режим «СТАЗИС» (Stasis): «Ч» в русской раскладке — «часы»
 const ZOOM_STEP := 1.12          # шаг масштаба (колесо, «,» «.»)
 const ZOOM_RANGE := Vector2(0.45, 2.2)   # DynamicCamera.user_zoom: меньше — ближе
 const OUTLINE_SCAN_S := 0.15     # обводка ставится по одной кукле за проход — без всплеска узлов в один кадр (perf gate 250/кадр)
@@ -51,6 +55,7 @@ var marks_enabled: bool = Tuning.JUICE_MARKS
 var digits: DamageDigits
 var keys_panel: KeysPanel
 var joint_fx: JointBreakFx
+var stasis_badge: StasisBadge
 ## Пробы: события и счётчики.
 var events: Array = []
 var stats := {"marks": 0, "digits": 0}
@@ -201,6 +206,8 @@ func _event(ev: String, args: Array) -> void:
 func _process(delta: float) -> void:
 	var real := FxClock.real_delta(delta)
 	_clock += real
+	if Stasis.on and stasis_badge == null:
+		_ensure_stasis_badge()
 	_outline_t += real
 	if _outline_t >= OUTLINE_SCAN_S:
 		_outline_t = 0.0
@@ -249,6 +256,7 @@ func keys_lines() -> Array:
 		["V  /  T", tr("вариант / темп управления"), ""],
 		["J", tr("ДРАЙВ: импульс живёт"), tr("вкл") if Drive.on else tr("выкл")],
 		["C", tr("прочность суставов: конечности отлетают"), on.call(JointBreak.on)],
+		["X", tr("СТАЗИС: время идёт, только пока двигаешься"), on.call(Stasis.on)],
 		[tr("ЛКМ / ПКМ"), tr("тяги рук"), ""],
 		["I  O  P", tr("активные блоки"), ""],
 		["R", tr("бой заново"), ""],
@@ -322,12 +330,33 @@ func _unhandled_input(event: InputEvent) -> void:
 			show_toast(tr("Прочность суставов: %s   (C — переключить)") % (tr("вкл — конечности отлетают, дальние суставы слабее") if JointBreak.on else tr("выкл")), 2.4)
 			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
+		KEY_STASIS:
+			Stasis.toggle()
+			if Stasis.on:
+				_ensure_stasis_badge()
+			show_toast(tr("СТАЗИС: %s   (X — переключить)") % (tr("вкл — время идёт, только пока ты двигаешься") if Stasis.on else tr("выкл")), 2.4)
+			keys_panel.refresh()
+			get_viewport().set_input_as_handled()
 		KEY_DIGITS:
 			digits_on = not digits_on
 			if not digits_on:
 				digits.clear()
 			show_toast(tr("Цифры урона: %s   (− — переключить)") % (tr("вкл") if digits_on else tr("выкл")))
 			get_viewport().set_input_as_handled()
+
+
+## Метка СТАЗИСА на HUD (StasisBadge) — на своём слое; видимость решает сама (Stasis.on, фаза, крит-кино).
+func _ensure_stasis_badge() -> void:
+	if stasis_badge != null and is_instance_valid(stasis_badge):
+		return
+	var layer := CanvasLayer.new()
+	layer.name = "StasisLayer"
+	layer.layer = StasisBadge.LAYER
+	add_child(layer)
+	stasis_badge = StasisBadge.new()
+	stasis_badge.name = "StasisBadge"
+	stasis_badge.match_node = _match
+	layer.add_child(stasis_badge)
 
 
 ## Тост внизу экрана (как F10 площадки), поверх HUD; живёт в реальном времени.
