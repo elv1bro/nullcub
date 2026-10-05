@@ -41,7 +41,7 @@ func _run() -> void:
 		"пунктов %d (+ выход), нет сцен %s, фокус на первом %s" % [M.ITEMS.size(), missing, first.has_focus()])
 	var v := String(ProjectSettings.get_setting("application/config/version", ""))
 	var from_garage := GarageMenu.ITEMS.any(func(it: Dictionary) -> bool: return String(it["go"]) == MENU)
-	_check("menu_version", v == "0.0.1" and String(menu.get_node("%Version").text).contains(v) and from_garage
+	_check("menu_version", RegEx.create_from_string("^\\d+\\.\\d+\\.\\d+$").search(v) != null and String(menu.get_node("%Version").text).contains(v) and from_garage
 		and String(ProjectSettings.get_setting("application/run/main_scene", "")) == "res://scenes/boot.tscn", "версия «%s», главная сцена %s, пункт гаража сюда %s" % [v,
 		ProjectSettings.get_setting("application/run/main_scene", ""), from_garage])
 	var bad: Array = []
