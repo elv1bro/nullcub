@@ -14,6 +14,7 @@ extends Node
 const MENU := preload("res://scenes/menu/garage_menu.tscn")
 const WORKSHOP := "res://scenes/workshop/workshop_build.tscn"
 const HALL := "res://scenes/playground_null_hall.tscn"
+const SPORT := "res://scenes/playground_sport.tscn"
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -107,7 +108,7 @@ func _pass() -> Dictionary:
 	shots["campaign:loss"] = _scan(menu)
 	menu.queue_free()
 	await _wait(5)
-	for p in [WORKSHOP, HALL]:
+	for p in [WORKSHOP, HALL, SPORT]:
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
 		await _wait(SETTLE * 2)
