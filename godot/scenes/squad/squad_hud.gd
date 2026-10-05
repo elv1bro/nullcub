@@ -2,12 +2,16 @@
 ## панелей закрыли бы карту, поэтому здесь свой, как в командных шутерах. Дерево строит сам, шрифты — по скину HUD (HudSkin):
 ##   • сверху по центру — счёт команд (синие слева, красные справа, цвет — Tuning.SQUAD_COLORS), между ними часы, под ними «ДО N»;
 ##   • справа сверху — лента выбываний «кто ▸ кого» цветами команд (FEED_MAX строк, гаснут через FEED_HOLD_S);
-##   • над каждым живым бойцом — полоска HP цвета команды и имя (ТЫ, СИНИЙ 2, КРАСНЫЙ 1…); соперник за кадром — стрелка у края
-##     экрана с метрами (от игрока);
-##   • слева снизу — HP и заряд (патроны пулемёта) игрока, подсказка клавиш первые HINT_S секунд;
+##   • над каждым живым бойцом — полоска HP цвета команды (под ней — броня) и имя (ТЫ, СИНИЙ 2, КРАСНЫЙ 1…); соперник за кадром —
+##     стрелка у края экрана с метрами (от игрока); у игрока — луч прицела от ствола (куда уйдёт пуля), над попаданиями игрока —
+##     цифры урона;
+##   • слева снизу — HP, броня, оружие и патроны игрока («12 / 48»: магазин / запас; полоса — магазин, на перезарядке — её ход),
+##     очки улучшения; подсказка клавиш первые HINT_S секунд;
+##   • снизу по центру — улучшения, пока на них хватает очков: [1] [2] [3] — ветка из трёх, второй уровень, усиления (SquadMatch.offers);
 ##   • игрок выбыл — по центру «ВОЗВРАТ ЧЕРЕЗ N»; конец — табличка победителя со счётом и таблицей бойцов (фраги / выбывания),
 ##     «R — заново».
-## Диктор (Announcer) — только отсчёт, FIGHT! и KO! игрока (его фраг); надписи ударов шести бойцов были бы шумом.
+## Диктор (Announcer) — только отсчёт, FIGHT!, KO! игрока (его фраг), новое оружие и взятый ящик игрока; надписи ударов шести бойцов
+## были бы шумом. Лента выбываний пишет и оружие добившего.
 ## bind(match) — подписка на SquadMatch по именам сигналов.
 class_name SquadHud
 extends CanvasLayer
@@ -23,6 +27,11 @@ const BAR_W := 64.0
 const BAR_H := 7.0
 const BAR_LIFT := 0.62           # м над головой
 const ARROW_MARGIN := 46.0
+const ARMOR_COLOUR := Color(0.55, 0.82, 1.0)
+const DIGIT_S := 0.7              # цифра урона живёт столько реальных секунд и всплывает на DIGIT_RISE px
+const DIGIT_RISE := 46.0
+const AIM_DASH := 0.35            # м: штрих луча прицела
+const SUPPLY_WORDS := {"ammo": "+ПАТРОНЫ", "health": "+ЖИЗНИ", "armor": "+БРОНЯ"}
 
 var match_node: SquadMatch
 var root: Control
@@ -33,8 +42,14 @@ var caption: Label
 var feed: VBoxContainer
 var marks: Control
 var me_hp: ProgressBar
+var me_armor: ProgressBar
 var me_ammo: ProgressBar
 var me_label: Label
+var me_weapon: Label
+var me_points: Label
+var up_panel: PanelContainer
+var up_title: Label
+var up_cards: Array = []          # Label × 3
 var hint: Label
 var respawn_label: Label
 var end_panel: PanelContainer
@@ -43,6 +58,7 @@ var end_score: Label
 var end_table: GridContainer
 var _plates: Array = []
 var _feed_rows: Array = []       # [[Label, осталось с]]
+var _digits: Array = []          # [[мировая точка, текст, осталось с]]
 var _clock := 0.0
 
 
@@ -66,6 +82,7 @@ func _ready() -> void:
 	_build_score()
 	_build_feed()
 	_build_me()
+	_build_upgrades()
 	_build_end()
 	announcer = Announcer.new()
 	announcer.name = "Announcer"
@@ -169,29 +186,68 @@ func _build_me() -> void:
 	box.anchor_bottom = 1.0
 	box.offset_left = 28.0
 	box.offset_right = 448.0
-	box.offset_top = -170.0
+	box.offset_top = -236.0
 	box.offset_bottom = -24.0
-	box.add_theme_constant_override("separation", 6)
+	box.add_theme_constant_override("separation", 5)
 	root.add_child(box)
 	me_label = _label("Name", 26, Color.WHITE)
 	me_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	box.add_child(me_label)
 	me_hp = _bar(SquadMatch.team_colour(0).lightened(0.2))
 	box.add_child(me_hp)
+	me_armor = _bar(ARMOR_COLOUR)
+	me_armor.custom_minimum_size.y = 9.0
+	me_armor.max_value = Tuning.SQUAD_ARMOR_MAX
+	box.add_child(me_armor)
+	me_weapon = _label("Weapon", 30, Color(1.0, 0.92, 0.7))
+	me_weapon.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	box.add_child(me_weapon)
 	me_ammo = _bar(Color(1.0, 0.8, 0.3))
 	me_ammo.custom_minimum_size.y = 12.0
 	box.add_child(me_ammo)
+	me_points = _label("Points", 20, Color(0.75, 1.0, 0.7))
+	me_points.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	box.add_child(me_points)
 	hint = _label("Hint", 22, Color(1, 1, 1, 0.8))
 	hint.anchor_left = 0.5
 	hint.anchor_right = 0.5
 	hint.anchor_top = 1.0
 	hint.anchor_bottom = 1.0
-	hint.offset_left = -560.0
-	hint.offset_right = 560.0
+	hint.offset_left = -640.0
+	hint.offset_right = 640.0
 	hint.offset_top = -64.0
 	hint.offset_bottom = -24.0
-	hint.text = tr("WASD — лететь · мышь — прицел · ЛКМ (или I) — огонь · Shift — рывок · R — заново")
+	hint.text = tr("WASD — лететь · ЛКМ — рука с оружием · I — огонь · O — перезарядка · 1 / 2 / 3 — улучшения · Shift — рывок")
 	root.add_child(hint)
+
+
+## Улучшения: снизу по центру, над подсказкой — заголовок с очками и до трёх карточек «[1] АВТОМАТ — очередь, магазин 30 · 1 очко».
+func _build_upgrades() -> void:
+	up_panel = PanelContainer.new()
+	up_panel.name = "Upgrades"
+	up_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	up_panel.anchor_left = 0.5
+	up_panel.anchor_right = 0.5
+	up_panel.anchor_top = 1.0
+	up_panel.anchor_bottom = 1.0
+	up_panel.offset_left = -470.0
+	up_panel.offset_right = 470.0
+	up_panel.offset_top = -78.0
+	up_panel.offset_bottom = -78.0
+	up_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN   # высота — по числу карточек, растёт вверх от подсказки
+	up_panel.visible = false
+	var v := VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_theme_constant_override("separation", 2)
+	up_panel.add_child(v)
+	up_title = _label("Title", 24, Color(0.75, 1.0, 0.7))
+	v.add_child(up_title)
+	for k in 3:
+		var l := _label("Card%d" % k, 24, Color.WHITE)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		v.add_child(l)
+		up_cards.append(l)
+	root.add_child(up_panel)
 
 
 func _bar(fill: Color) -> ProgressBar:
@@ -256,6 +312,17 @@ func _apply_skin() -> void:
 		sb.border_width_bottom = 6 if i < 2 else 2
 		sb.set_corner_radius_all(4)
 		(_plates[i] as PanelContainer).add_theme_stylebox_override("panel", sb)
+	if up_panel != null:
+		var ub := StyleBoxFlat.new()
+		ub.bg_color = Color(0.03, 0.05, 0.035, 0.82)
+		ub.border_color = Color(0.55, 0.95, 0.5, 0.9)
+		ub.border_width_top = 3
+		ub.set_corner_radius_all(6)
+		ub.content_margin_left = 22.0
+		ub.content_margin_right = 22.0
+		ub.content_margin_top = 8.0
+		ub.content_margin_bottom = 8.0
+		up_panel.add_theme_stylebox_override("panel", ub)
 	if end_panel != null:
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = Color(0.03, 0.035, 0.05, 0.92)
@@ -270,7 +337,8 @@ func _apply_skin() -> void:
 func bind(m: SquadMatch) -> void:
 	match_node = m
 	var pairs := [["score_changed", _on_score], ["frag", _on_frag], ["announce", _on_announce], ["time_left", _on_time],
-		["match_over", _on_over], ["phase_changed", _on_phase]]
+		["match_over", _on_over], ["phase_changed", _on_phase], ["bullet_landed", _on_bullet], ["upgraded", _on_upgraded],
+		["supply_taken", _on_supply]]
 	for p in pairs:
 		if m.has_signal(p[0]) and not m.is_connected(p[0], p[1]):
 			m.connect(p[0], p[1])
@@ -323,7 +391,9 @@ func _on_frag(killer: Doll, victim: Doll, team: int) -> void:
 	var vname := name_of(victim)
 	if killer != null:
 		var kc := SquadMatch.team_colour(SquadMatch.team_of(killer)).lightened(0.35).to_html(false)
-		row.text = "[right][color=#%s]%s[/color]  ▸  [color=#%s]%s[/color][/right]" % [kc, name_of(killer), vc, vname]
+		var g := SquadMatch.gun_of(killer)
+		var wn := tr(String(Tuning.SQUAD_WEAPONS[g.weapon]["title"])) if g != null and g.weapon != "" else "▸"
+		row.text = "[right][color=#%s]%s[/color]  [color=#c8c8c8]%s[/color]  [color=#%s]%s[/color][/right]" % [kc, name_of(killer), wn, vc, vname]
 	else:
 		row.text = "[right][color=#%s]%s[/color]  %s[/right]" % [vc, vname, tr("выбыл")]
 	feed.add_child(row)
@@ -333,6 +403,26 @@ func _on_frag(killer: Doll, victim: Doll, team: int) -> void:
 		(old[0] as Node).queue_free()
 	if killer != null and not killer.external_input:
 		announcer.announce(tr("KO!"), Color(1.0, 0.85, 0.3), "ko")
+
+
+## Попадание пули: у пуль игрока — цифра урона над точкой попадания.
+func _on_bullet(_victim: Doll, shooter: Doll, damage: float, pos: Vector3) -> void:
+	if shooter == null or shooter != _human():
+		return
+	_digits.append([pos, str(int(round(damage))), DIGIT_S])
+	if _digits.size() > 24:
+		_digits.pop_front()
+
+
+func _on_upgraded(pi: int, offer: Dictionary) -> void:
+	var me := _human()
+	if me != null and me.player_index == pi:
+		announcer.announce(tr(String(offer.get("title", ""))), Color(0.6, 1.0, 0.55), "event")
+
+
+func _on_supply(d: Doll, kind: String) -> void:
+	if d != null and d == _human():
+		announcer.announce(tr(String(SUPPLY_WORDS.get(kind, ""))), SupplyCrate.COLOURS.get(kind, Color.WHITE), "event")
 
 
 func _on_announce(text: String, color: Color, kind: String) -> void:
@@ -349,6 +439,7 @@ func _on_phase(p: int) -> void:
 		for r in _feed_rows:
 			(r[0] as Node).queue_free()
 		_feed_rows.clear()
+		_digits.clear()
 
 
 func _on_over(_winner: Doll, results: Dictionary) -> void:
@@ -425,16 +516,58 @@ func _process(delta: float) -> void:
 		me_label.text = "%s · %s" % [name_of(me), tr("СИНИЕ") if SquadMatch.team_of(me) == 0 else tr("КРАСНЫЕ")]
 		me_hp.max_value = me.max_hp
 		me_hp.value = me.hp if me.alive else 0.0
-		var rig: Variant = me.get("active_rig")
-		if rig is ActiveRig and is_instance_valid(rig):
-			me_ammo.max_value = (rig as ActiveRig).charge_max
-			me_ammo.value = (rig as ActiveRig).charge
+		me_armor.value = match_node.armor_of(me) if me.alive else 0.0
+		var g := SquadMatch.gun_of(me)
+		if g != null and g.weapon != "":
+			var wt := tr(String(Tuning.SQUAD_WEAPONS[g.weapon]["title"]))
+			var rp := g.reload_progress()
+			if g.out_of_ammo():
+				me_weapon.text = "%s   %s" % [wt, tr("ПАТРОНОВ НЕТ — РУКОПАШНАЯ")]
+			elif rp >= 0.0:
+				me_weapon.text = "%s   %s" % [wt, tr("ПЕРЕЗАРЯДКА")]
+			else:
+				me_weapon.text = "%s   %d / %d" % [wt, g.mag, g.reserve]
+			me_ammo.max_value = 1.0
+			me_ammo.value = rp if rp >= 0.0 else float(g.mag) / maxf(float(g.mag_max), 1.0)
+			me_ammo.modulate = Color(1, 1, 1, 0.55) if rp >= 0.0 else Color.WHITE
+		var lo := match_node.loadout(me.player_index)
+		me_points.text = tr("ОЧКИ УЛУЧШЕНИЯ: %d") % int(lo["points"])
+		_update_upgrades(me)
 		if not me.alive and match_node != null and match_node.play_state == "play":
 			var left := match_node.respawn_left(me)
 			if left >= 0.0:
 				respawn_label.text = tr("ВОЗВРАТ ЧЕРЕЗ %d") % int(ceil(left))
 				respawn_label.visible = true
+	else:
+		up_panel.visible = false
+	var j := 0
+	while j < _digits.size():
+		_digits[j][2] = float(_digits[j][2]) - real
+		if float(_digits[j][2]) <= 0.0:
+			_digits.remove_at(j)
+		else:
+			j += 1
 	marks.queue_redraw()
+
+
+## Карточки улучшений: видны, пока на что-то хватает очков; карточка, на которую очков мало, — бледная.
+func _update_upgrades(me: Doll) -> void:
+	var pi := me.player_index
+	var show := match_node.play_state != "over" and match_node.can_upgrade(pi)
+	up_panel.visible = show
+	if not show:
+		return
+	var pts := int(match_node.loadout(pi)["points"])
+	var of := match_node.offers(pi)
+	up_title.text = tr("УЛУЧШЕНИЕ · ОЧКОВ: %d · ЖМИ 1 / 2 / 3") % pts
+	for k in up_cards.size():
+		var l := up_cards[k] as Label
+		l.visible = k < of.size()
+		if not l.visible:
+			continue
+		var o: Dictionary = of[k]
+		l.text = tr("[%d]  %s — %s · очков: %d") % [k + 1, tr(String(o["title"])), tr(String(o["note"])), int(o["cost"])]
+		l.modulate = Color.WHITE if pts >= int(o["cost"]) else Color(1, 1, 1, 0.4)
 
 
 ## Полоски HP и имена над бойцами, стрелки к соперникам за кадром.
@@ -470,12 +603,53 @@ func _draw_marks() -> void:
 		var r := Rect2(sp - Vector2(BAR_W * 0.5, BAR_H * 0.5), Vector2(BAR_W, BAR_H))
 		marks.draw_rect(r.grow(2.0), Color(0.03, 0.03, 0.04, 0.85))
 		marks.draw_rect(Rect2(r.position, Vector2(BAR_W * clampf(d.hp / maxf(d.max_hp, 1.0), 0.0, 1.0), BAR_H)), c)
+		var ar := match_node.armor_of(d)
+		if ar > 0.0:
+			var a_r := Rect2(r.position + Vector2(0.0, BAR_H + 3.0), Vector2(BAR_W * clampf(ar / Tuning.SQUAD_ARMOR_MAX, 0.0, 1.0), 3.0))
+			marks.draw_rect(a_r.grow(1.0), Color(0.03, 0.03, 0.04, 0.85))
+			marks.draw_rect(a_r, ARMOR_COLOUR)
 		var txt := name_of(d)
 		var fs := 20 if d != me else 22
 		var tw := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
 		var pos := sp + Vector2(-tw.x * 0.5, -10.0)
 		marks.draw_string_outline(font, pos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, Color(0, 0, 0, 0.9))
 		marks.draw_string(font, pos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.WHITE if d == me else c)
+	if me != null and me.alive:
+		_draw_aim(cam, to_canvas, me)
+	for e in _digits:
+		var wp := e[0] as Vector3
+		if cam.is_position_behind(wp):
+			continue
+		var k2 := clampf(float(e[2]) / DIGIT_S, 0.0, 1.0)
+		var dp: Vector2 = to_canvas * cam.unproject_position(wp) + Vector2(0.0, -DIGIT_RISE * (1.0 - k2))
+		var txt2 := String(e[1])
+		var tw2 := font.get_string_size(txt2, HORIZONTAL_ALIGNMENT_LEFT, -1, 26)
+		var col := Color(1.0, 0.95, 0.6, k2)
+		marks.draw_string_outline(font, dp - Vector2(tw2.x * 0.5, 0.0), txt2, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, 6, Color(0, 0, 0, 0.9 * k2))
+		marks.draw_string(font, dp - Vector2(tw2.x * 0.5, 0.0), txt2, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, col)
+
+
+## Луч прицела игрока: штрихи от дула по стволу на дальность оружия — куда уйдёт пуля (ствол смотрит по руке).
+func _draw_aim(cam: Camera3D, to_canvas: Transform2D, me: Doll) -> void:
+	var g := SquadMatch.gun_of(me)
+	if g == null or g.def.is_empty():
+		return
+	var ray := g.aim_ray()
+	if ray.is_empty():
+		return
+	var o := ray[0] as Vector3
+	var dir := ray[1] as Vector3
+	var reach := float(g.def["range"])
+	var n := int(reach / (AIM_DASH * 2.0))
+	var col := Color(1.0, 1.0, 1.0, 0.45) if g.mag > 0 and g.reloading <= 0.0 else Color(1.0, 0.4, 0.3, 0.35)
+	for k in n:
+		var a3 := o + dir * (float(k) * AIM_DASH * 2.0)
+		var b3 := a3 + dir * AIM_DASH
+		if cam.is_position_behind(a3) or cam.is_position_behind(b3):
+			continue
+		var fade := 1.0 - float(k) / float(maxi(n, 1))
+		marks.draw_line(to_canvas * cam.unproject_position(a3), to_canvas * cam.unproject_position(b3),
+			Color(col.r, col.g, col.b, col.a * fade), 2.0)
 
 
 func _arrow(sp: Vector2, vp: Vector2, c: Color, me: Doll, d: Doll, font: Font) -> void:
@@ -487,6 +661,8 @@ func _arrow(sp: Vector2, vp: Vector2, c: Color, me: Doll, d: Doll, font: Font) -
 	var half := centre - Vector2(ARROW_MARGIN, ARROW_MARGIN)
 	var k := minf(half.x / maxf(absf(dir.x), 1e-4), half.y / maxf(absf(dir.y), 1e-4))
 	var p := centre + dir * k
+	if p.x > vp.x - 160.0 and absf(p.y - centre.y) < 36.0:
+		p.y += 48.0 * (1.0 if p.y >= centre.y else -1.0)   # справа посередине — подсказка «L — клавиши» (HitJuice): стрелка мимо неё
 	var side := Vector2(-dir.y, dir.x)
 	var pts := PackedVector2Array([p + dir * 18.0, p - dir * 10.0 + side * 12.0, p - dir * 10.0 - side * 12.0])
 	marks.draw_colored_polygon(pts, c)

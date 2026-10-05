@@ -1,5 +1,6 @@
 ## Снимки «Стычки 3 на 3» (нужно окно): карта целиком, отсчёт, бой глазами P1 (за него играет бот, камера и HUD ведут его как
-## игрока — SquadMatch.focus_index), фраг P1, ожидание возврата, итоги, и клип clip/frame_NNNN.png (10 кадров/с).
+## игрока — SquadMatch.focus_index), панель улучшений и винтовка в руке, ящики снабжения, фраг P1, ожидание возврата, итоги, и клип
+## clip/frame_NNNN.png (10 кадров/с).
 ##   godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/squad_snapshot.tscn -- "out_dir=/abs/dir,clip_s=8,level=2"
 ## Глазами проверить: карта читается (базы, укрытия, плиты), команды различимы (цвет, обводка, имена), трассы пуль видны, счёт и лента
 ## фрагов на HUD, стрелки к соперникам за кадром, табличка итогов.
@@ -100,6 +101,29 @@ func _run() -> void:
 		await _shot("clip/frame_%04d" % i)
 		await _wait(0.1)
 	await _shot("squad_fight_2")
+	# улучшения: мозгу P1 не даём взять самому, очко — панель «1 / 2 / 3» на HUD; потом винтовка в руке
+	var me0 := _p0()
+	var br := me0.get_node_or_null("SquadBrain") as SquadBrain if me0 != null else null
+	if br != null:
+		br._upgrade_t = 1.0e9
+	var lo := sm.loadout(0)
+	if int(Tuning.SQUAD_WEAPONS[String(lo["weapon"])]["tier"]) == 0:
+		sm.add_points(0, 1)
+		await _wait(0.4)
+		await _shot("squad_upgrade")
+		sm.choose(0, 2)
+		await _wait(1.2)
+		await _shot("squad_rifle")
+	# ящики рядом с P1
+	me0 = _p0()
+	if me0 != null and me0.alive:
+		var c := me0.centre_of_mass()
+		var k := 0
+		for kind in ["ammo", "health", "armor"]:
+			sm.spawn_supply(kind, c + Vector3(-3.0 + 3.0 * k, 2.6, 0.0))
+			k += 1
+		await _wait(0.5)
+		await _shot("squad_supply")
 	# фраг с участием P1 (он добил или его выбили) — кадр сразу после
 	var got := {"k": false}
 	sm.frag.connect(func(k: Doll, v: Doll, _t: int) -> void:

@@ -670,32 +670,92 @@ const PARTHP_CORE_THRUST := {
 const PARTHP_HEAD_THRUST_N := 80.0
 
 # --- СТЫЧКА 3 НА 3: пробный режим (docs/plan-demo/SQUAD.md, автор 05.10: «карта побольше, стычки 3 на 3 как в шутерах, базовые пулемёты») ---
-## Две команды по три бойца на «Полигоне» — карте 64 × 16 м из пропсов Руин. У каждого пулемёт на правом предплечье (активный блок
-## kit_active_gun, канал 1). Команда синих — чётные player_index (P1 и два бота), красных — нечётные (три бота). Смерть — возрождение
-## на своей базе через SQUAD_RESPAWN_S; очко команде — за каждого выбывшего соперника (удар, пуля, падение). Матч до SQUAD_SCORE_TO_WIN
-## или SQUAD_TIME_LIMIT_S (ведущий победил; равный счёт — ничья). Свои не ранят (team_damage_mult 0), толкают полностью.
+## Две команды по три бойца на «Полигоне» — карте 64 × 16 м из пропсов Руин. Команда синих — чётные player_index (P1 и два бота, слева),
+## красных — нечётные (три бота, справа). Смерть — возрождение на своей базе через SQUAD_RESPAWN_S; очко команде — за каждого выбывшего
+## соперника (удар, пуля, падение). Матч до SQUAD_SCORE_TO_WIN или SQUAD_TIME_LIMIT_S (ведущий победил; равный счёт — ничья). Свои не
+## ранят (team_damage_mult 0), толкают полностью.
 const SQUAD_SCORE_TO_WIN := 15
 const SQUAD_TIME_LIMIT_S := 300.0
 const SQUAD_RESPAWN_S := 4.0
 const SQUAD_SPAWN_SHIELD_S := 1.5        # после возрождения урон не проходит столько с (иначе встречают очередью у базы)
 const SQUAD_KO_SLOWMO_S := 0.35          # замедление KO в стычке (обычный бой 1.2 с: при 15+ нокаутах за матч кино надоедает)
 ## Корпус вертикально (как ControlFeel «upright», но только в стычке, у всех бойцов): × PD-момента ControlFeel.UPRIGHT_K / _D. Без него
-## торс в зависании заваливается на 40–70°, и плечо не достаёт до целей выше головы (проба aim: «вверх» — 80–160° мимо). После удара,
-## в стане и в раскрутке молчит, как и в Doll._tick_posture.
+## торс в зависании заваливается на 40–70°, и плечо не достаёт до целей выше головы. После удара, в стане и в раскрутке молчит.
 const SQUAD_UPRIGHT := 0.55
 const SQUAD_COLORS := [Color("2f6fde"), Color("d9342b")]   # синие, красные — рубашки, обводка, HUD
-## Пулемёт в стычке: поверх ActiveBlocks.DEFS["kit_active_gun"] (rate 12, урон 1.5, дальность 14 м, разброс 3°, цена 2 заряда).
-## Дальше (карта шире купола) и больнее, но реже: 100 HP — ≈ 4 с точной очереди; заряд (патроны) тянет очередь ≈ 5 с, копится 10/с.
-const SQUAD_GUN := {"rate": 10.0, "damage": 2.5, "range": 22.0, "spread_deg": 2.5, "impulse": 4.0, "recoil": 2.0, "cost": 2.0}
-const SQUAD_CHARGE_REGEN := 10.0
-## Бот стычки (SquadBrain): держит дистанцию боя, ходит вверх-вниз, стреляет, когда рука смотрит на цель и своих на линии нет;
-## заряд кончился — отходит «на перезарядку». Уровни: доля тяги, ошибка прицела (м), задержка восприятия (с), конус выстрела (°).
+## Рука с оружием (автор 05.10: «у команды справа левая рука, у левой — правая»): та, что на экране со стороны соперника. Кукла
+## смотрит в камеру, поэтому у синих (слева, бьют вправо) это анатомически левая кисть Hand_L, у красных — правая Hand_R. Ею же
+## управляет ЛКМ, как в обычном бою. [синие, красные] — uid кисти в kit_human.
+const SQUAD_GUN_HAND := ["3", "9"]
+
+## Оружие (SquadGun, автор 05.10): у всех на старте пистолет; очки улучшения открывают ветку из трёх (SQUAD_BRANCHES) и второй
+## уровень ветки, дальше — усиления (SQUAD_PERKS). Стреляет активная клавиша 1 (I), пока зажата, не чаще interval с. Магазин mag,
+## запас reserve (ящики добавляют), перезарядка reload_s — сама на пустом магазине или клавиша 2 (O). Патронов нет совсем — рукопашная.
+## Ствол смотрит по руке (плечо → кисть): тянешь руку ЛКМ к курсору — туда и стреляет.
+##   damage — урон пули (дроби — за дробину), pellets — пуль за выстрел, spread_deg — ± разброс, range — м, impulse — Н·с в задетое
+##   тело, recoil — Н·с в кисть стрелка, pierce — пуля проходит сквозь бойцов (до 3), len — длина ствола (м, вид и точка вылета),
+##   tracer — цвет трассы, sound — [слой SfxDirector, питч]. Пули не трясут камеру и не замедляют время (SquadMatch.bullet_hit).
+const SQUAD_WEAPONS := {
+	"pistol": {"title": "ПИСТОЛЕТ", "note": "точно, магазин 12", "tier": 0, "damage": 9.0, "pellets": 1, "interval": 0.28, "mag": 12,
+		"reserve": 48, "reload_s": 1.1, "spread_deg": 1.5, "range": 18.0, "impulse": 6.0, "recoil": 1.5, "pierce": false, "len": 0.26,
+		"tracer": Color(1.0, 0.85, 0.4), "sound": ["snap", 1.55]},
+	"smg": {"title": "АВТОМАТ", "note": "очередь, магазин 30", "tier": 1, "damage": 5.0, "pellets": 1, "interval": 0.09, "mag": 30,
+		"reserve": 120, "reload_s": 1.5, "spread_deg": 4.0, "range": 16.0, "impulse": 3.0, "recoil": 0.8, "pierce": false, "len": 0.4,
+		"tracer": Color(1.0, 0.75, 0.3), "sound": ["snap", 2.0]},
+	"mg": {"title": "ПУЛЕМЁТ", "note": "длинная очередь, магазин 70", "tier": 2, "damage": 6.0, "pellets": 1, "interval": 0.075, "mag": 70,
+		"reserve": 210, "reload_s": 2.6, "spread_deg": 3.5, "range": 20.0, "impulse": 4.0, "recoil": 1.0, "pierce": false, "len": 0.6,
+		"tracer": Color(1.0, 0.6, 0.25), "sound": ["snap", 1.8]},
+	"sawnoff": {"title": "ОБРЕЗ", "note": "дробь вблизи, 2 выстрела", "tier": 1, "damage": 5.0, "pellets": 7, "interval": 0.45, "mag": 2,
+		"reserve": 24, "reload_s": 1.4, "spread_deg": 11.0, "range": 9.0, "impulse": 6.0, "recoil": 6.0, "pierce": false, "len": 0.34,
+		"tracer": Color(1.0, 0.92, 0.6), "sound": ["thud", 1.0]},
+	"shotgun": {"title": "ДРОБОВИК", "note": "дробь, магазин 6", "tier": 2, "damage": 5.5, "pellets": 8, "interval": 0.65, "mag": 6,
+		"reserve": 30, "reload_s": 2.0, "spread_deg": 8.0, "range": 12.0, "impulse": 6.0, "recoil": 7.0, "pierce": false, "len": 0.62,
+		"tracer": Color(1.0, 0.92, 0.6), "sound": ["thud", 0.85]},
+	"rifle": {"title": "ВИНТОВКА", "note": "далеко и больно, магазин 6", "tier": 1, "damage": 30.0, "pellets": 1, "interval": 0.75, "mag": 6,
+		"reserve": 30, "reload_s": 1.8, "spread_deg": 0.4, "range": 32.0, "impulse": 18.0, "recoil": 5.0, "pierce": false, "len": 0.72,
+		"tracer": Color(0.85, 0.95, 1.0), "sound": ["snap", 1.0]},
+	"rail": {"title": "РЕЛЬСОТРОН", "note": "насквозь через бойцов, магазин 3", "tier": 2, "damage": 55.0, "pellets": 1, "interval": 1.3,
+		"mag": 3, "reserve": 15, "reload_s": 2.4, "spread_deg": 0.0, "range": 45.0, "impulse": 40.0, "recoil": 10.0, "pierce": true,
+		"len": 0.8, "tracer": Color(0.4, 0.9, 1.0), "sound": ["whoosh", 1.4]},
+}
+const SQUAD_START_WEAPON := "pistol"
+## Ветки развития пистолета: [первый уровень, второй]. Порядок — клавиши выбора 1 / 2 / 3.
+const SQUAD_BRANCHES := [["smg", "mg"], ["sawnoff", "shotgun"], ["rifle", "rail"]]
+## Усиления после второго уровня ветки: множители чисел оружия (складываются умножением), каждое — до SQUAD_PERK_MAX раз.
+const SQUAD_PERKS := {
+	"damage": {"title": "УРОН +20 %", "mult": {"damage": 1.2}},
+	"mag": {"title": "МАГАЗИН И ЗАПАС +50 %", "mult": {"mag": 1.5, "reserve": 1.5}},
+	"speed": {"title": "ПЕРЕЗАРЯДКА И ТЕМП +25 %", "mult": {"reload_s": 0.75, "interval": 0.8}},
+}
+const SQUAD_PERK_ORDER := ["damage", "mag", "speed"]
+const SQUAD_PERK_MAX := 3
+## Очки улучшения: за фраг и за каждые SQUAD_POINTS_DAMAGE урона по соперникам. Цена: ветка, второй уровень, каждое усиление.
+const SQUAD_POINTS_PER_FRAG := 1
+const SQUAD_POINTS_DAMAGE := 250.0
+const SQUAD_UPGRADE_COST := {"branch": 1, "tier2": 2, "perk": 3}
+
+## Броня: пока она есть, входящий урон × SQUAD_ARMOR_MULT (Doll.incoming_mult), снятое с брони = прошедшему урону.
+const SQUAD_ARMOR_MAX := 100.0
+const SQUAD_ARMOR_MULT := 0.5
+## Ящики снабжения (SupplyCrate): появляются на точках карты (ProvingGround.supply_points) раз в SQUAD_SUPPLY_EVERY_S, не больше
+## SQUAD_SUPPLY_MAX сразу, живут SQUAD_SUPPLY_LIFE_S; берёт тот, кто коснулся (любая деталь ближе SQUAD_SUPPLY_PICK_M к центру).
+## Вид: [вес, сколько даёт] — патроны (доля полного запаса оружия), жизни (HP), броня.
+const SQUAD_SUPPLY_EVERY_S := 6.0
+const SQUAD_SUPPLY_MAX := 5
+const SQUAD_SUPPLY_LIFE_S := 40.0
+const SQUAD_SUPPLY_PICK_M := 0.9
+const SQUAD_SUPPLY := {"ammo": {"weight": 0.45, "amount": 0.6}, "health": {"weight": 0.35, "amount": 40.0},
+	"armor": {"weight": 0.2, "amount": 50.0}}
+
+## Бот стычки (SquadBrain): держит дистанцию своего оружия (SQUAD_BOT_RANGE[оружие]), ходит вверх-вниз, стреляет, когда ствол
+## смотрит на цель и своих на линии нет; патронов нет — ищет ящик или идёт в рукопашную. Уровни: доля тяги, ошибка прицела (м),
+## задержка восприятия (с), конус выстрела (°).
 const SQUAD_BOT_LEVELS := {
 	1: {"max_in": 0.75, "aim_error_m": 0.9, "reaction_s": 0.4, "fire_cone_deg": 14.0},
 	2: {"max_in": 0.88, "aim_error_m": 0.55, "reaction_s": 0.3, "fire_cone_deg": 10.0},
 	3: {"max_in": 1.0, "aim_error_m": 0.3, "reaction_s": 0.2, "fire_cone_deg": 7.0},
 }
-const SQUAD_BOT_RANGE := Vector2(6.0, 12.0)   # м: дистанция, на которой бот держится от цели (ближе — отходит, дальше — подходит)
-const SQUAD_BOT_RELOAD_BELOW := 8.0           # заряд: ниже — отход на перезарядку ...
-const SQUAD_BOT_RELOAD_UNTIL := 45.0          # ... до стольких
+const SQUAD_BOT_RANGE := {"pistol": Vector2(6.0, 11.0), "smg": Vector2(5.0, 9.0), "mg": Vector2(6.0, 12.0),
+	"sawnoff": Vector2(2.5, 5.0), "shotgun": Vector2(3.0, 6.5), "rifle": Vector2(10.0, 18.0), "rail": Vector2(12.0, 22.0)}
 const SQUAD_BOT_MELEE_M := 2.2                # цель ближе — наскок с ускорением, как в обычном бою
+const SQUAD_BOT_SUPPLY_M := 16.0              # за ящиком (жизни, броня) бот идёт, если он ближе этого; за патронами — всегда

@@ -83,6 +83,9 @@ const SPAWN_POSE_GROUPS := ["Shoulder", "Elbow", "Hip", "Knee"]   # прокси
 @export var team_damage_mult := -1.0
 ## Запас HP этой куклы (PvE-враги 40 / 80); hp в _ready и reset_for_match = max_hp; Match.hp_changed и HUD берут его отсюда.
 @export var max_hp: float = Tuning.MAX_HP
+## Множитель всего входящего урона и стана (team_mult_for — через него идут take_damage и DollCombat): режимы со своей защитой —
+## броня «Стычки 3 на 3» (SquadMatch: 0.5, пока она есть). 1 — как без режима.
+var incoming_mult := 1.0
 
 ## Подбор дампа без правки Tuning (tests/feel_probe: ldc/ldl/adl/fdc/fdl/brake): ключи "core", "limb", "limb_ang", "flight_core",
 ## "flight_limb", "brake", "core_ang" перекрывают Tuning.DOLL_LINEAR_DAMP / DOLL_LIMB_LINEAR_DAMP / DOLL_LIMB_ANGULAR_DAMP / FLIGHT_LINEAR_DAMP /
@@ -696,12 +699,12 @@ func hang_joint_name(b: RigidBody3D) -> String:
 	return ""
 
 
-## Множитель урона/стана для удара от attacker: 1, если он не из нашей непустой команды; иначе team_damage_mult (≥ 0) или
-## Tuning.TEAM_DAMAGE_MULT.
+## Множитель урона/стана для удара от attacker: incoming_mult × (1, если он не из нашей непустой команды; иначе team_damage_mult (≥ 0)
+## или Tuning.TEAM_DAMAGE_MULT).
 func team_mult_for(attacker: Node) -> float:
 	if team == "" or not (attacker is Doll) or attacker == self or (attacker as Doll).team != team:
-		return 1.0
-	return team_damage_mult if team_damage_mult >= 0.0 else Tuning.TEAM_DAMAGE_MULT
+		return incoming_mult
+	return incoming_mult * (team_damage_mult if team_damage_mult >= 0.0 else Tuning.TEAM_DAMAGE_MULT)
 
 
 ## Ускорение «удерживается» на ближайшем тике управления — для ботов (external_input): Input они не читают. Те же правила, что у
