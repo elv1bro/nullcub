@@ -25,6 +25,9 @@
 ## Исходники assets/textures/pbr/<папка>/*.png — 2048² без мип-мапов и без сжатия (~16 МБ видеопамяти на карту) — только запасной путь,
 ## если копии ещё не импортированы (предупреждение в сводке).
 ## Autoload в режиме -s недоступен: tuning.gd грузится как ресурс (константы), скрипты PartDef / MaterialDef / BodyBlueprint — по пути.
+## Скрипт куклы modular_doll.gd обязан компилироваться и здесь (_check_doll_script, иначе ошибка в сводке): в скриптах его цепочки
+## зависимостей константы Tuning.X допустимы, а метод автозагрузки зовётся через узел get_node_or_null("/root/<Имя>"), не по имени.
+## Сцена пресета пишется текстом (_write_preset_scene) и при том же содержимом не переписывается.
 extends SceneTree
 
 const KIT_DIR := "res://assets/models/body/kit/"
@@ -193,6 +196,7 @@ func _init() -> void:
 				_warn("нет коннектора «%s» (KitJoint %s): в каталоге нет Kit_Joint_%s.glb" % [c, t, c.capitalize()])
 		for h in HUMAN:
 			_build_human_part(h)
+		_check_doll_script()
 		_build_presets()
 		_find_stale()
 	T.free()
@@ -1197,22 +1201,50 @@ func _save_blueprint(id: String, title: String, nodes: Array, control: Array, bu
 	if not _save(bp, path):
 		return
 	bp = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REPLACE)
-	# сцена куклы с этим чертежом: корень ModularDoll (Match.respawn_doll пересоздаёт по scene_file_path), как presets/junk.tscn
-	var root := Node3D.new()
-	root.name = "ModularDoll"
-	root.set_script(load(MODULAR_SCRIPT))
-	if root.get_script() == null:
-		root.free()
-		_err("modular_doll.gd не компилируется в режиме -s — пресет %s без сцены" % id)
-		return
-	root.set("blueprint", bp)
 	var out := PRESET_DIR + id + ".tscn"
-	if not _pack(root, out):
+	if not _write_preset_scene(id, out):
 		return
 	var energy := int(bp.call("energy_used"))
 	var mass := float(bp.call("total_mass"))
 	summary["presets"][id] = {"energy": energy, "budget": budget, "mass": snappedf(mass, 0.1), "nodes": nodes.size(), "control": control}
 	print("preset %-12s energy %3d / %d, mass %5.1f kg, %2d nodes → %s" % [id, energy, budget, mass, nodes.size(), out])
+
+
+## Сцена куклы с чертежом: корень ModularDoll со ссылками на скрипт и чертёж (Match.respawn_doll пересоздаёт по scene_file_path), как
+## presets/junk.tscn. Пишется текстом, а не PackedScene.pack: с не скомпилированным modular_doll.gd pack записывал в сцену значения
+## всех экспортных свойств куклы (04.10: так были испорчены все kit_*.tscn). Сцена с тем же содержимым (_norm) не переписывается.
+func _write_preset_scene(id: String, path: String) -> bool:
+	var t := "[gd_scene format=3]\n\n"
+	t += "[ext_resource type=\"Script\" path=\"%s\" id=\"1\"]\n" % MODULAR_SCRIPT
+	t += "[ext_resource type=\"Resource\" path=\"%s%s.tres\" id=\"2\"]\n" % [BLUEPRINT_DIR, id]
+	t += "\n[node name=\"ModularDoll\" type=\"Node3D\"]\nscript = ExtResource(\"1\")\nblueprint = ExtResource(\"2\")\n"
+	_written[path] = true
+	if FileAccess.file_exists(path) and _norm(FileAccess.get_file_as_string(path)) == _norm(t):
+		return true
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		_err("save %s: %d" % [path, FileAccess.get_open_error()])
+		return false
+	f.store_string(t)
+	f.close()
+	return true
+
+
+## Скрипт куклы обязан компилироваться в режиме -s. Автозагрузок здесь нет: вызов метода по имени автозагрузки в любом скрипте из
+## цепочки зависимостей modular_doll.gd (04.10 — Flow в scenes/ui/hud.gd) ломает её всю. load() при этом возвращает скрипт, а не
+## null, и can_instantiate() у него true (false — только у самого скрипта с ошибкой). Признак сбоя в зависимости: скрипт куклы не
+## знает значений по умолчанию ни одного своего свойства — из-за этого PackedScene.pack и писал в сцену их все.
+func _check_doll_script() -> void:
+	var s := load(MODULAR_SCRIPT) as GDScript
+	var ok := false
+	if s != null and s.can_instantiate():
+		for p in s.get_script_property_list():
+			if int(p["usage"]) & PROPERTY_USAGE_STORAGE != 0 and s.get_property_default_value(p["name"]) != null:
+				ok = true
+				break
+	if not ok:
+		_err("%s не компилируется в режиме -s (выше — SCRIPT ERROR с файлом и строкой): автозагрузку брать узлом /root/<Имя>"
+			% MODULAR_SCRIPT)
 
 
 # --- общее ---
