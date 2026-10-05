@@ -620,3 +620,14 @@ const JOINT_BREAK_REATTACH := false       # true — отлетевшую дет
 const JOINT_SPARK_BELOW := 0.5
 const JOINT_SPARK_GAP_S := Vector2(0.35, 1.4)
 const JOINT_BREAK_FX_STRENGTH := 14.0     # сила вспышки ImpactFx в точке сустава в момент отрыва
+
+# --- СТАЗИС: пробный режим (docs/plan-demo/STASIS.md, автор 05.10) — клавиша X в бою, по умолчанию выкл ---
+## «Чтобы время шло, только если движется игрок» (референс — SUPERHOT; в интерфейсе это имя не пишется). Двигает время ВВОД людей:
+## любое действие InputMap с префиксом куклы (Stasis.input_strength; стик — доля наклона). Нет ввода — Engine.time_scale тянется к
+## STASIS_IDLE_SCALE за STASIS_RAMP_DOWN_S реальных секунд, есть — к 1 за STASIS_RAMP_UP_S. Не ноль: часть кода делит на масштаб
+## времени, нижняя граница — HITFX_TIME_SCALE_MIN. Со стоп-кадрами и замедлениями складывается минимумом (Match._apply_time_scale).
+## Режим молчит (масштаб сразу 1): людей нет или все в нокауте, отсчёт и итоги, крит-кино, пауза. Состояние — Stasis.on.
+const STASIS_DEFAULT := false
+const STASIS_IDLE_SCALE := 0.05
+const STASIS_RAMP_UP_S := 0.06
+const STASIS_RAMP_DOWN_S := 0.2

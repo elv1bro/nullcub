@@ -140,6 +140,12 @@ func _finish(reason: String) -> void:
 	super._finish(reason)
 
 
+## СТАЗИС (STASIS.md §3): время ждёт игрока только в розыгрыше. Ввод мяча (отсчёт), пауза после гола и итоги идут сами — иначе
+## пауза после гола тянулась бы, пока игрок стоит.
+func stasis_allowed() -> bool:
+	return play_state == "play" and super.stasis_allowed()
+
+
 func _place_ball() -> void:
 	if ball == null:
 		return
