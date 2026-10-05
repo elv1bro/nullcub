@@ -470,6 +470,44 @@ const HALL_FORCE_WORDS := [[1.5, "ЛЁГКИЙ"], [4.0, "СРЕДНИЙ"], [8.0,
 ## экран «скорость»: шкала до этого значения (м/с)
 const HALL_SPEED_SCALE_MS := 24.0
 
+# --- спорт-зал (docs/plan-demo/SPORT.md, автор 04.10: «режим ФУТБОЛ: пинать мяч в чужие ворота, до 3 голов» + баскетбол, волейбол) ---
+# Поле в плоскости боя: внутренние грани стен x = ±SPORT_FIELD_HALF_W, пол y = 0, потолок y = SPORT_FIELD_H.
+const SPORT_FIELD_HALF_W := 11.0
+const SPORT_FIELD_H := 10.0
+const SPORT_GOALS_TO_WIN := 3            # матч до стольких голов / очков
+const SPORT_TIME_LIMIT_S := 180.0        # основное время; при равном счёте — «золотой гол» ещё SPORT_GOLDEN_S, потом ничья
+const SPORT_GOLDEN_S := 90.0
+const SPORT_KICKOFF_S := 2.0             # отсчёт перед вводом мяча после гола (первый ввод — обычный COUNTDOWN_S)
+const SPORT_GOAL_PAUSE_S := 2.2          # с (физических) от гола до расстановки: мяч в сетке, повтор надписи
+const SPORT_GOAL_SLOWMO := 0.35          # замедление в момент гола на SPORT_GOAL_SLOWMO_S реальных секунд
+const SPORT_GOAL_SLOWMO_S := 0.7
+const SPORT_KO_RESPAWN_S := 2.5          # нокаут в спорте — «удаление»: кукла возвращается у своих ворот через столько
+const SPORT_SPAWN_X := 5.5               # куклы на вводе мяча: x = ∓SPORT_SPAWN_X
+const SPORT_BALL_RADIUS := 0.4           # м (кукла 1.8 м): мяч крупный — читается в общем плане зала
+const SPORT_BALL_MAX_SPEED := 16.0       # м/с: потолок скорости мяча (тоннелирование сквозь сетку, читаемость)
+const SPORT_BALL_IDLE_S := 6.0           # мяч лежит без касаний столько — подброс (страховка от «застрял в углу»)
+const SPORT_BALL_CORNER_S := 2.5         # мяч зажат в углу у пола (куклы сидят на нём) столько — выброс к центру, касания не считаются
+## Виды спорта: мяч (масса кг, тяжесть × поля 2.0 м/с², отскок, трение, дамп) и снаряд.
+##   football   — ворота у пола: линия x = ±goal_x, перекладина на goal_h, глубина до стены;
+##   basketball — кольца на стенах: центр кольца (±hoop_x, hoop_y), полуширина просвета hoop_r; очко — мяч прошёл кольцо сверху вниз;
+##                мяч сам стучит об пол: после касания пола летит вверх не медленнее floor_kick м/с (5.0 → до 4.8 м, чуть ниже кольца);
+##   volleyball — сетка по центру высотой net_h; очко — мяч коснулся пола на чужой половине; куклы на свою половину заперты.
+const SPORTS := {
+	"football": {"title": "ФУТБОЛ", "mass": 3.0, "gravity_scale": 1.6, "bounce": 0.62, "friction": 0.5, "lin_damp": 0.12, "ang_damp": 0.6,
+		"goal_x": 9.2, "goal_h": 3.2, "ball_y": 3.2},
+	"basketball": {"title": "БАСКЕТБОЛ", "mass": 2.5, "gravity_scale": 1.3, "bounce": 0.74, "friction": 0.6, "lin_damp": 0.1, "ang_damp": 0.6,
+		"hoop_x": 9.5, "hoop_y": 5.4, "hoop_r": 1.0, "ball_y": 4.0, "floor_kick": 5.0},
+	"volleyball": {"title": "ВОЛЕЙБОЛ", "mass": 1.6, "gravity_scale": 0.85, "bounce": 0.7, "friction": 0.4, "lin_damp": 0.18, "ang_damp": 0.6,
+		"net_h": 3.4, "ball_y": 6.0, "serve_x": 4.5},
+}
+const SPORT_ORDER := ["football", "basketball", "volleyball"]
+## Бот спорт-зала (SportBrain): доля полной тяги, ошибка прицела (м), упреждение мяча (с), пользуется ли ускорением.
+const SPORT_BOT_LEVELS := {
+	1: {"max_in": 0.72, "aim_error_m": 0.55, "lead_s": 0.12, "dash": false},
+	2: {"max_in": 0.88, "aim_error_m": 0.3, "lead_s": 0.2, "dash": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.12, "lead_s": 0.28, "dash": true},
+}
+
 # --- ДРАЙВ (docs/plan-demo/DRIVE.md, 02.10): пресет «импульс живёт» — клавиша J или кнопка в панели Tab, по умолчанию выкл ---
 # Разбор 02.10 (автор: «бой сухой, нет драйва как в тех играх и в JS»): физику подогнали под цифры RM вязкостью (дамп полёта 1.8 —
 # скорость гаснет за ~0.55 с) при g 1.1 H/с², а в RM и JS почти нет ни гравитации, ни сопротивления (JS: g 0.2 H/с², τ ≈ 1.7 с).

@@ -1,0 +1,85 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/sport/playground_sport.gd" id="1_yiqhl"]
+[ext_resource type="PackedScene" path="res://scenes/arena/sport_hall.tscn" id="2_oi1jn"]
+[ext_resource type="Script" path="res://scenes/arena/sport_hall.gd" id="3_5ainl"]
+[ext_resource type="PackedScene" path="res://scenes/doll/doll.tscn" id="4_3p0im"]
+[ext_resource type="Script" path="res://scenes/doll/doll.gd" id="5_sh0fe"]
+[ext_resource type="PackedScene" path="res://scenes/doll/doll_dark.tscn" id="6_njtxv"]
+[ext_resource type="PackedScene" path="res://scenes/sport/sport_ball.tscn" id="7_at4ti"]
+[ext_resource type="Script" path="res://scripts/sport/sport_ball.gd" id="8_gbtg8"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="9_wf3nc"]
+[ext_resource type="Script" path="res://scripts/sport/sport_match.gd" id="10_xw33k"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="11_3vdep"]
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="12_b2tvd"]
+[ext_resource type="Script" path="res://scenes/sport/sport_hud.gd" id="13_aorwj"]
+
+[node name="Playground" type="Node3D" unique_id=921379710]
+script = ExtResource("1_yiqhl")
+sport = "basketball"
+arena_id = "sport"
+
+[node name="SportHall" type="Node3D" parent="." unique_id=1118896602 groups=["arena"] instance=ExtResource("2_oi1jn")]
+script = ExtResource("3_5ainl")
+
+[node name="P1" type="Node3D" parent="." unique_id=1965540815 groups=["dolls", "sport_cam"] instance=ExtResource("4_3p0im")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.05, 0)
+script = ExtResource("5_sh0fe")
+
+[node name="P2" type="Node3D" parent="." unique_id=1219066531 groups=["dolls", "sport_cam"] instance=ExtResource("6_njtxv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.05, 0)
+script = ExtResource("5_sh0fe")
+player_index = 1
+input_prefix = "p2"
+
+[node name="Ball" type="RigidBody3D" parent="." unique_id=2106693029 groups=["sport_cam"] instance=ExtResource("7_at4ti")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+script = ExtResource("8_gbtg8")
+
+[node name="Weapons" type="Node3D" parent="." unique_id=2027456129]
+
+[node name="Camera" type="Camera3D" parent="." unique_id=402193087 groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 26)
+fov = 30.0
+far = 300.0
+script = ExtResource("9_wf3nc")
+arena_path = NodePath("../SportHall")
+floor_inset = 0.0
+target_group = "sport_cam"
+padding = 3.2
+padding_y = 2.4
+min_half_height = 4.6
+fit_bounds = true
+zoom_out_tau = 0.25
+zoom_in_tau = 1.1
+follow_tau = 0.3
+
+[node name="Match" type="Node" parent="." unique_id=1389357657]
+script = ExtResource("10_xw33k")
+sport = "basketball"
+ball_path = NodePath("../Ball")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../SportHall")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=675716380 instance=ExtResource("11_3vdep")]
+layer = 10
+script = ExtResource("12_b2tvd")
+
+[node name="SportHud" type="CanvasLayer" parent="." unique_id=1090697242]
+layer = 11
+script = ExtResource("13_aorwj")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=760925154]
+
+[node name="Hint" type="Label" parent="UI" unique_id=2035812253]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -46.0
+offset_right = 1900.0
+offset_bottom = -12.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 7

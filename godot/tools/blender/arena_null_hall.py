@@ -855,11 +855,167 @@ def build_Hang_Beam():
     return done(objs, 0.004), []
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# спорт-зал (docs/plan-demo/SPORT.md, 04.10): мячи трёх видов, ворота, кольцо со щитом, сетка. Числа — как Tuning.SPORT_* / SPORTS.
+# ----------------------------------------------------------------------------------------------------------------------
+SPORT_BALL_R = 0.4
+
+
+def _ico_dirs():
+    """12 вершин икосаэдра (единичные векторы) — центры тёмных пятиугольников футбольного мяча."""
+    t = (1.0 + 5.0 ** 0.5) / 2.0
+    out = []
+    for a in (-1.0, 1.0):
+        for b in (-t, t):
+            out += [(0.0, a, b), (a, b, 0.0), (b, 0.0, a)]
+    return [Vector(p).normalized() for p in out]
+
+
+def build_Sport_Ball_Foot():
+    """Футбольный мяч Ø0.8 м: белая сфера, 12 тёмных пятиугольников по вершинам икосаэдра (чуть выпуклые заплаты), между ними
+    швы-желобки поля NULL (тонкие светящиеся кольца по трём большим кругам). Origin — центр."""
+    R = SPORT_BALL_R
+    objs = [fin(sphere("Skin", R, (0.0, 0.0, 0.0), "Hall_PrintWhite", 30, 15), angle=80)]
+    a = math.radians(21.0)
+    for i, d in enumerate(_ico_dirs()):
+        r1 = R * 1.008
+        prof = [(0.0, r1), (r1 * math.sin(a * 0.55), r1 * math.cos(a * 0.55)), (r1 * math.sin(a), r1 * math.cos(a) - 0.004)]
+        objs.append(fin(revolve("Patch_%d" % i, prof, "Hall_PrintDark", 5, align_y(d)), angle=80))
+    return objs, []
+
+
+def build_Sport_Ball_Basket():
+    """Баскетбольный мяч Ø0.8 м: оранжевая сфера, чёрные швы — экватор, меридиан и две боковые дуги. Origin — центр."""
+    R = SPORT_BALL_R
+    objs = [fin(sphere("Skin", R, (0.0, 0.0, 0.0), "Hall_Yellow", 30, 15), angle=80)]
+    n = 36
+    rs = R * 1.004
+    objs.append(sweep("Seam_Eq", [(rs * math.cos(k * math.tau / n), 0.0, rs * math.sin(k * math.tau / n)) for k in range(n)],
+                      0.013, "Hall_Rubber", sides=4, closed=True))
+    objs.append(sweep("Seam_Mer", [(rs * math.cos(k * math.tau / n), rs * math.sin(k * math.tau / n), 0.0) for k in range(n)],
+                      0.013, "Hall_Rubber", sides=4, closed=True))
+    for sx in (-1.0, 1.0):
+        off = 0.58 * rs
+        rr = (rs * rs - off * off) ** 0.5
+        objs.append(sweep("Seam_Side_%d" % sx, [(sx * off, rr * math.cos(k * math.tau / n), rr * math.sin(k * math.tau / n)) for k in range(n)],
+                          0.013, "Hall_Rubber", sides=4, closed=True))
+    return objs, []
+
+
+def build_Sport_Ball_Volley():
+    """Волейбольный мяч Ø0.8 м: полосы жёлтая / белая / синяя / белая / жёлтая, ось полос наклонена — в полёте видно вращение.
+    Origin — центр."""
+    R = SPORT_BALL_R
+    objs = []
+    cuts = [0, 42, 74, 106, 138, 180]
+    mats = ["Hall_Yellow", "Hall_PrintWhite", "Hall_ClothBlue", "Hall_PrintWhite", "Hall_Yellow"]
+    tilt = Rz(28.0) @ Rx(18.0)
+    for k in range(len(cuts) - 1):
+        a0, a1 = math.radians(cuts[k]), math.radians(cuts[k + 1])
+        m = 4
+        prof = [(max(R * math.sin(a0 + (a1 - a0) * i / m), 0.0), -R * math.cos(a0 + (a1 - a0) * i / m)) for i in range(m + 1)]
+        if k == 0:
+            prof[0] = (0.0, -R)
+        if k == len(cuts) - 2:
+            prof[-1] = (0.0, R)
+        objs.append(fin(revolve("Band_%d" % k, prof, mats[k], 28, tilt), angle=80))
+    return objs, []
+
+
+def _lattice(name, corners, nu, nv, r, mat):
+    """Сетка из прутьев на четырёхугольнике corners (a, b, c, d по кругу): nu линий вдоль a→b, nv линий вдоль b→c."""
+    a, b, c, d = [Vector(p) for p in corners]
+    objs = []
+    for i in range(nu):
+        t = (i + 0.5) / nu
+        objs.append(tube("%s_U%d" % (name, i), a.lerp(d, t), b.lerp(c, t), r, mat, 4))
+    for j in range(nv):
+        t = (j + 0.5) / nv
+        objs.append(tube("%s_V%d" % (name, j), a.lerp(b, t), d.lerp(c, t), r, mat, 4))
+    return objs
+
+
+def build_Sport_Goal():
+    """Ворота для вида сбоку: рама 2.6 м по z (ближняя и дальняя штанги), перекладина на 3.2 м, глубина 1.8 м, крыша с подъёмом
+    к задней стенке (3.7 м) — мяч сверху скатывается в поле. Сетка — светящиеся прутья поля NULL на крыше, спинке и боках.
+    Origin — середина линии ворот на полу; проём смотрит в +X (ворота левой стены), сетка уходит в −X."""
+    H, HB, D, W = 3.2, 3.7, 1.8, 1.3
+    objs = []
+    for sz in (-1.0, 1.0):
+        z = sz * W
+        objs.append(tube("Post_%d" % sz, (0.0, 0.0, z), (0.0, H, z), 0.075, "Hall_PrintWhite", 10))
+        objs.append(tube("BackPost_%d" % sz, (-D, 0.0, z), (-D, HB, z), 0.04, "Hall_SteelDark", 6))
+        objs.append(tube("RoofRail_%d" % sz, (0.0, H, z), (-D, HB, z), 0.04, "Hall_SteelDark", 6))
+        objs.append(tube("BaseRail_%d" % sz, (0.0, 0.04, z), (-D, 0.04, z), 0.04, "Hall_SteelDark", 6))
+        objs.append(box("Foot_%d" % sz, (0.34, 0.06, 0.34), "Hall_Yellow", (0.0, 0.03, z)))
+        objs += _lattice("Side_%d" % sz, [(0.0, 0.0, z), (-D, 0.0, z), (-D, HB, z), (0.0, H, z)], 6, 4, 0.011, "Hall_NullGlow")
+    objs.append(tube("Crossbar", (0.0, H, -W - 0.075), (0.0, H, W + 0.075), 0.075, "Hall_PrintWhite", 10))
+    objs.append(tube("BackTop", (-D, HB, -W), (-D, HB, W), 0.04, "Hall_SteelDark", 6))
+    objs.append(tube("BackBase", (-D, 0.04, -W), (-D, 0.04, W), 0.04, "Hall_SteelDark", 6))
+    objs += _lattice("Roof", [(0.0, H, -W), (0.0, H, W), (-D, HB, W), (-D, HB, -W)], 4, 6, 0.011, "Hall_NullGlow")
+    objs += _lattice("Back", [(-D, 0.0, -W), (-D, 0.0, W), (-D, HB, W), (-D, HB, -W)], 7, 6, 0.011, "Hall_NullGlow")
+    return done(objs, 0.0), []
+
+
+def build_Sport_Hoop():
+    """Баскетбольное кольцо со щитом на стену: кронштейн, щит 2.0 × 2.4 м с белой рамкой и светящимся квадратом-мишенью, кольцо
+    (осевая окружность Ø2.08 м под мяч Ø0.8 — куклы бьют мяч телом, прицел грубый) с сеткой-конусом. Origin — точка на стене
+    на высоте кольца; кольцо уходит в +X (центр кольца — x = 1.5)."""
+    RIM, CX = 1.04, 1.5
+    objs = [box("Arm", (0.14, 0.34, 0.34), "Hall_SteelDark", (0.07, 0.5, 0.0)),
+            box("Board", (0.1, 2.0, 2.4), "Hall_SteelDark", (0.19, 0.75, 0.0)),
+            box("Bracket", (0.24, 0.1, 0.3), "Hall_Yellow", (0.36, -0.02, 0.0))]
+    fx = 0.245
+    for y in (-0.25, 1.75):
+        objs.append(box("Frame_H_%g" % y, (0.02, 0.07, 2.4), "Hall_PrintWhite", (fx, y + 0.0, 0.0)))
+    for z in (-1.165, 1.165):
+        objs.append(box("Frame_V_%g" % z, (0.02, 2.0, 0.07), "Hall_PrintWhite", (fx, 0.75, z)))
+    for y in (0.1, 0.9):
+        objs.append(box("Target_H_%g" % y, (0.02, 0.06, 1.0), "Hall_LightWarm", (fx, y, 0.0)))
+    for z in (-0.47, 0.47):
+        objs.append(box("Target_V_%g" % z, (0.02, 0.8, 0.06), "Hall_LightWarm", (fx, 0.5, z)))
+    n = 28
+    ring = [(CX + RIM * math.cos(k * math.tau / n), 0.0, RIM * math.sin(k * math.tau / n)) for k in range(n)]
+    objs.append(sweep("Rim", ring, 0.045, "Hall_Yellow", sides=8, closed=True))
+    strands = 12
+    low_r, low_y = 0.68, -1.05
+    for k in range(strands):
+        a0 = k * math.tau / strands
+        a1 = (k + 0.5) * math.tau / strands
+        top = (CX + RIM * math.cos(a0), -0.03, RIM * math.sin(a0))
+        bot = (CX + low_r * math.cos(a1), low_y, low_r * math.sin(a1))
+        top2 = (CX + RIM * math.cos(a0 + math.tau / strands), -0.03, RIM * math.sin(a0 + math.tau / strands))
+        objs.append(tube("Net_A%d" % k, top, bot, 0.011, "Hall_PrintWhite", 4))
+        objs.append(tube("Net_B%d" % k, bot, top2, 0.011, "Hall_PrintWhite", 4))
+    low = [(CX + low_r * math.cos(k * math.tau / 16), low_y, low_r * math.sin(k * math.tau / 16)) for k in range(16)]
+    objs.append(sweep("Net_Low", low, 0.012, "Hall_PrintWhite", sides=4, closed=True))
+    return done(objs, 0.0), []
+
+
+def build_Sport_Net():
+    """Волейбольная сетка поперёк поля (вдоль z): стойки на плитах с жёлтой кромкой, белая лента по верху на 3.4 м, полотно —
+    светящиеся прутья поля NULL от пола до ленты (в виде сбоку сетка — тонкая линия: её держат стойки и свечение). Origin — центр
+    основания на полу."""
+    H, W = 3.4, 1.5
+    objs = []
+    for sz in (-1.0, 1.0):
+        z = sz * W
+        objs.append(box("Base_%d" % sz, (0.7, 0.1, 0.5), "Hall_Plate", (0.0, 0.05, z)))
+        objs.append(box("BaseEdge_%d" % sz, (0.76, 0.04, 0.56), "Hall_Yellow", (0.0, 0.02, z)))
+        objs.append(tube("Post_%d" % sz, (0.0, 0.1, z), (0.0, H + 0.25, z), 0.065, "Hall_SteelDark", 10))
+        objs.append(revolve("Cap_%d" % sz, [(0.0, H + 0.25), (0.09, H + 0.25), (0.09, H + 0.31), (0.0, H + 0.31)], "Hall_Yellow", 10, T((0.0, 0.0, z))))
+    objs.append(box("TopBand", (0.05, 0.14, 2.0 * W), "Hall_PrintWhite", (0.0, H - 0.07, 0.0)))
+    objs.append(box("LowBand", (0.04, 0.08, 2.0 * W), "Hall_PrintWhite", (0.0, 0.14, 0.0)))
+    objs += _lattice("Mesh", [(0.0, 0.18, -W), (0.0, 0.18, W), (0.0, H - 0.14, W), (0.0, H - 0.14, -W)], 9, 9, 0.012, "Hall_NullGlow")
+    return done(objs, 0.0), []
+
+
 MODULES = ["Stand_Segment", "Catwalk", "Support_Column", "Stairs", "Railing", "Light_Rig",
            "Big_Screen", "Small_Scoreboard", "Banner_Red", "Banner_Blue", "Null_Emitter", "Membrane_Anchor_A", "Membrane_Anchor_B",
            "Fighter_Gate", "Camera_Broadcast", "Speaker", "Tech_Box", "Crate", "Cables_Pipes", "Debris", "Floor_Platform",
            "Wall_Panel_01", "Wall_Panel", "Membrane_Strip", "Banner_Fighting", "Camera_Drone", "Light_Beam", "Floor_Seam",
-           "Heavy_Bag", "Chain_Link", "Tire_Column", "Hang_Beam"]
+           "Heavy_Bag", "Chain_Link", "Tire_Column", "Hang_Beam",
+           "Sport_Ball_Foot", "Sport_Ball_Basket", "Sport_Ball_Volley", "Sport_Goal", "Sport_Hoop", "Sport_Net"]
 MULTI = {"Fighter_Gate", "Debris"}   # несколько узлов в одном glb (створки ворот, 4 обломка)
 
 

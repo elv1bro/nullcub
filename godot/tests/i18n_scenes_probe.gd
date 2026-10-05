@@ -11,6 +11,7 @@ const SCENES := [
 	"res://scenes/menu/test_menu.tscn",
 	"res://scenes/campaign/campaign.tscn",
 	"res://scenes/playground_null_hall.tscn",
+	"res://scenes/playground_sport.tscn",
 	"res://scenes/playground.tscn",
 	"res://scenes/playground_scrap.tscn",
 	"res://scenes/playground_pve.tscn",

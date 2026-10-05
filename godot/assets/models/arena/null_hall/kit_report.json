@@ -371,6 +371,92 @@
   ],
   "markers": []
  },
+ "Sport_Ball_Basket": {
+  "tris": 1992,
+  "budget": 3000,
+  "bytes": 85852,
+  "materials": [
+   "Hall_Rubber",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Sport_Ball_Basket"
+  ],
+  "markers": []
+ },
+ "Sport_Ball_Foot": {
+  "tris": 1056,
+  "budget": 3000,
+  "bytes": 32880,
+  "materials": [
+   "Hall_PrintDark",
+   "Hall_PrintWhite"
+  ],
+  "nodes": [
+   "Sport_Ball_Foot"
+  ],
+  "markers": []
+ },
+ "Sport_Ball_Volley": {
+  "tris": 1272,
+  "budget": 3000,
+  "bytes": 41676,
+  "materials": [
+   "Hall_ClothBlue",
+   "Hall_PrintWhite",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Sport_Ball_Volley"
+  ],
+  "markers": []
+ },
+ "Sport_Goal": {
+  "tris": 808,
+  "budget": 3000,
+  "bytes": 57196,
+  "materials": [
+   "Hall_NullGlow",
+   "Hall_PrintWhite",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Sport_Goal"
+  ],
+  "markers": []
+ },
+ "Sport_Hoop": {
+  "tris": 996,
+  "budget": 3000,
+  "bytes": 56796,
+  "materials": [
+   "Hall_LightWarm",
+   "Hall_PrintWhite",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Sport_Hoop"
+  ],
+  "markers": []
+ },
+ "Sport_Net": {
+  "tris": 440,
+  "budget": 3000,
+  "bytes": 31908,
+  "materials": [
+   "Hall_NullGlow",
+   "Hall_Plate",
+   "Hall_PrintWhite",
+   "Hall_SteelDark",
+   "Hall_Yellow"
+  ],
+  "nodes": [
+   "Sport_Net"
+  ],
+  "markers": []
+ },
  "Stairs": {
   "tris": 2248,
   "budget": 3000,

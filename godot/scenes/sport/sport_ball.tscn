@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/sport/sport_ball.gd" id="1_mm0n8"]
+[ext_resource type="PackedScene" path="res://assets/models/arena/null_hall/Sport_Ball_Foot.glb" id="2_8nrrs"]
+[ext_resource type="PackedScene" path="res://assets/models/arena/null_hall/Sport_Ball_Basket.glb" id="3_uu33l"]
+[ext_resource type="PackedScene" path="res://assets/models/arena/null_hall/Sport_Ball_Volley.glb" id="4_hvn3h"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_7m7nc"]
+radius = 0.4
+
+[node name="SportBall" type="RigidBody3D" unique_id=2106693029]
+script = ExtResource("1_mm0n8")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=1686311456]
+shape = SubResource("SphereShape3D_7m7nc")
+
+[node name="Model_football" type="Node3D" parent="." unique_id=1843464305 instance=ExtResource("2_8nrrs")]
+
+[node name="Model_basketball" type="Node3D" parent="." unique_id=1076581591 instance=ExtResource("3_uu33l")]
+visible = false
+
+[node name="Model_volleyball" type="Node3D" parent="." unique_id=963455763 instance=ExtResource("4_hvn3h")]
+visible = false
