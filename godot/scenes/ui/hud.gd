@@ -64,7 +64,7 @@ func _ready() -> void:
 	if ko_splatter_alpha >= 0.0:
 		ko_card.set_splatter_alpha(ko_splatter_alpha)
 	results.rematch.connect(_on_rematch)
-	results.main_menu.connect(func() -> void: Flow.to_menu())   # MAIN MENU в итогах → гараж (scripts/menu/flow.gd)
+	results.main_menu.connect(_on_main_menu)
 	results.visibility_changed.connect(_on_results_visibility)
 	get_tree().create_timer(0.5, true, false, true).timeout.connect(results.prewarm)   # первый показ итогов — заранее, под обратный отсчёт
 	_last_ms = Time.get_ticks_msec()
@@ -299,6 +299,15 @@ func _on_rematch() -> void:
 	rematch_requested.emit()
 	if match_node != null and match_node.has_method("restart"):
 		match_node.restart()
+
+
+## MAIN MENU в итогах → гараж (scripts/menu/flow.gd). Автозагрузка берётся узлом, а не именем Flow: вызов метода по имени автозагрузки
+## не компилируется в режиме -s (там их нет), а hud.gd стоит в цепочке зависимостей modular_doll.gd — сборщики tools/build_body_kit.gd
+## и build_league.gd получали «битый» скрипт куклы (04.10).
+func _on_main_menu() -> void:
+	var flow := get_node_or_null("/root/Flow")
+	if flow != null:
+		flow.to_menu()
 
 
 func _process(_delta: float) -> void:

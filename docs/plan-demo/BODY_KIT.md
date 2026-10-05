@@ -253,6 +253,9 @@
 ### 3.5 Пресеты
 
 - `data/body/blueprints/kit_*.tres` и `scenes/body/presets/kit_*.tscn`, формат как у `junk.tscn`. Пишет `tools/build_body_kit.gd` (`_build_presets`), бюджет 100.
+  - Сцена пресета пишется текстом (`_write_preset_scene`, 04.10): в ней только ссылки на `modular_doll.gd` и на чертёж. Сцена с тем же содержимым не переписывается, повторный запуск сборщика не меняет `scenes/body/presets` в git. Испорченная или отсутствующая сцена пишется заново.
+  - Сборщик работает в режиме `-s`, автозагрузок там нет. `modular_doll.gd` обязан компилироваться и в нём, иначе в сводке ошибка и код выхода 1 (`_check_doll_script`).
+  - Правило для скриптов в цепочке зависимостей `modular_doll.gd` (до 04.10 её ломал вызов `Flow.to_menu()` в `scenes/ui/hud.gd`): константы `Tuning.X` допустимы, метод автозагрузки зовётся через узел — `get_node_or_null("/root/Flow")`, а не по имени.
 - `kit_human` повторяет `human` один в один (те же uid, имена тел, углы), только детали `kit_human_*`.
 - Остальные — «человеческая» раскладка тел (`UpperArm_L`, `LowerArm_L`, `Hand_L`… как `human`: `Damage.body_mult_of` по имени); углы локтя / колена заданы явно (10° / 5°), потому что у `End` кита `rest_deg = 0`.
 - Конечность кита без явного имени на локте / колене получает тело `LowerArm_<uid>` / `LowerLeg_<uid>` (`BodyBlueprint.name_prefix_of`). Это нужно, потому что `name_prefix` у неё — по размеру (S — UpperArm, L — UpperLeg).
