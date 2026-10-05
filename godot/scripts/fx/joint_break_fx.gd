@@ -37,7 +37,7 @@ func _process(delta: float) -> void:
 		if not _hooked.has(id):
 			_hooked[id] = true
 			d.joint_broken.connect(_on_joint_broken.bind(d))
-		if JointBreak.on and d.alive:
+		if (JointBreak.on or PartHp.on) and d.alive:
 			_tick_sparks(d, id)
 
 

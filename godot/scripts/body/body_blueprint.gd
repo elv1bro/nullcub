@@ -126,10 +126,77 @@ func node_energy(uid: String) -> int:
 	return _node_energy(n, float(node_reach().get(uid, 0.0))) if not n.is_empty() else 0
 
 
-## Базовая цена узла без расстояния: PartDef.energy + шарнир (KitJoint: пружина 2, мотор 8).
+## Базовая цена узла без расстояния: PartDef.energy + шарнир (KitJoint: пружина 2, мотор 8). В запасе из деталей (PartHp) ядро и
+## голова энергию дают (energy_cap), а сами не стоят ничего — платится только шарнир шеи.
 static func node_base_energy(n: Dictionary) -> int:
 	var d := part_def(String(n.get("part", "")))
-	return (d.energy if d != null else 0) + KitJoint.energy_of(String(n.get("joint", "")))
+	var own := d.energy if d != null else 0
+	if PartHp.on and d != null and (d.kind == "core" or d.kind == "head"):
+		own = 0
+	return own + KitJoint.energy_of(String(n.get("joint", "")))
+
+
+## Потолок энергии сборки — с ним сверяют validate и мастерская. Обычно energy_budget; в запасе из деталей (PartHp, WORKSHOP_V4.md)
+## энергию дают ядро и голова (PartHp.energy_of_core / energy_of_head), а energy_budget сверх Tuning.PARTHP_ENERGY_BASE — надбавка
+## (регламент лиги, враги, отладочные 1000 у проб).
+func energy_cap() -> int:
+	if not PartHp.on:
+		return energy_budget
+	return energy_from_core_head() + energy_budget - Tuning.PARTHP_ENERGY_BASE
+
+
+## ❤ деталей чертежа (запас из деталей, PartHp): uid узла со своим телом → PartHp.hp_of(масса тела, прочность материала). Масса тела —
+## как в ModularDoll._build: node_mass узла + слитые с ним fixed-узлы (декор, броня, сварка), поэтому числа совпадают с Doll.part_hp
+## собранной куклы (tests/part_hp_probe сверяет). Не зависит от того, включён ли режим.
+func parts_hp() -> Dictionary:
+	var host := {}   # uid -> uid узла, чьё тело его несёт
+	var mass := {}   # uid тела -> кг
+	for n in sorted_nodes():
+		var uid := String(n.get("uid", ""))
+		var p := String(n.get("parent", ""))
+		host[uid] = String(host.get(p, p)) if p != "" and _is_fixed_n(n) else uid
+		mass[host[uid]] = float(mass.get(host[uid], 0.0)) + _node_mass(n)
+	var out := {}
+	for n in nodes:
+		var uid := String(n.get("uid", ""))
+		if String(host.get(uid, "")) == uid:
+			out[uid] = PartHp.hp_of(float(mass[uid]), Damage.part_durability(part_def(String(n.get("part", ""))), _node_mat(n)))
+	return out
+
+
+## Запас бойца из деталей чертежа: Σ parts_hp.
+func parts_hp_total() -> int:
+	var t := 0
+	for v in parts_hp().values():
+		t += int(v)
+	return t
+
+
+## PartDef ядра чертежа (корень); null — корня нет.
+func core_def() -> PartDef:
+	for n in nodes:
+		if String(n.get("parent", "")) == "":
+			return part_def(String(n.get("part", "")))
+	return null
+
+
+## Тяга сборки в запасе из деталей, Н: мотор ядра + голова (PartHp.thrust_n). Не зависит от того, включён ли режим.
+func thrust_n() -> float:
+	return PartHp.thrust_n(core_def(), true)
+
+
+## Энергия, которую дают ядро и голова чертежа (PartHp; не зависит от того, включён ли режим).
+func energy_from_core_head() -> int:
+	var e := 0
+	for n in nodes:
+		var d := part_def(String(n.get("part", "")))
+		if d == null:
+			continue
+		if d.kind == "core" and String(n.get("parent", "")) == "":
+			e += PartHp.energy_of_core(d)
+		elif d.kind == "head":
+			e += PartHp.energy_of_head(d)
+	return e
 
 
 static func _node_energy(n: Dictionary, d: float) -> int:
@@ -333,8 +400,8 @@ func validate() -> PackedStringArray:
 		errors.append(E_ROOTS % roots)
 	if heads != 1:
 		errors.append(E_HEADS % heads)
-	if energy_used() > energy_budget:
-		errors.append(E_ENERGY % [energy_used(), energy_budget])
+	if energy_used() > energy_cap():
+		errors.append(E_ENERGY % [energy_used(), energy_cap()])
 	for c in control:
 		if not uids.has(c):
 			errors.append(E_CTRL_MISSING % c)

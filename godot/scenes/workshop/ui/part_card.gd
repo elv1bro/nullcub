@@ -105,6 +105,9 @@ func setup(d: PartDef, on_body := false, fav := false) -> void:
 	_energy.text = str(d.energy)
 	WsStyle.label(_energy, WsStyle.SIZE_S)
 	_energy.add_theme_color_override("font_color", WsStyle.AMBER if d.energy > 0 else WsStyle.TEXT_DIM)
+	if PartHp.on and (d.kind == "core" or d.kind == "head"):   # запас из деталей: ядро и голова энергию дают, а не стоят
+		_energy.text = "+%d" % (PartHp.energy_of_core(d) if d.kind == "core" else PartHp.energy_of_head(d))
+		_energy.add_theme_color_override("font_color", WsStyle.GREEN)
 	_energy.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(_energy)
 	var gap := Control.new()
@@ -117,6 +120,18 @@ func setup(d: PartDef, on_body := false, fav := false) -> void:
 	WsStyle.label(mass, WsStyle.SIZE_S, true)
 	mass.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(mass)
+	if PartHp.on:   # запас из деталей: ❤ детали (у декора и брони — прибавка к детали, на которой стоят)
+		var gap2 := Control.new()
+		gap2.custom_minimum_size = Vector2(6, 0)
+		gap2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(gap2)
+		row.add_child(WsIcon.make("heart", 16.0, WsStyle.TEXT_DIM))
+		var hp := Label.new()
+		var fixed := PartDef.FIXED_KINDS.has(d.kind) or d.attach == "fixed"
+		hp.text = ("+%d" if fixed else "%d") % PartHp.hp_of_part(d)
+		WsStyle.label(hp, WsStyle.SIZE_S, true)
+		hp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(hp)
 	tooltip_text = _tooltip(d, on_body)
 	_sync_star()
 	mouse_entered.connect(func() -> void: _set_hover(true))
@@ -142,7 +157,7 @@ func set_live(tex: Texture2D) -> void:
 
 ## Цена у ближайшего свободного подходящего разъёма (WorkshopBuild.cheapest_cost; дальше от ядра — дороже); -1 — некуда.
 func set_cost(cost: int) -> void:
-	if _energy != null:
+	if _energy != null and not (PartHp.on and (def.kind == "core" or def.kind == "head")):   # у ядра и головы — сколько дают («+80»)
 		_energy.text = str(cost) if cost >= 0 else "—"
 
 
@@ -152,7 +167,8 @@ func set_fits(fits: bool) -> void:
 		return
 	_fits = fits
 	modulate = Color(1, 1, 1, 1) if fits else Color(0.78, 0.7, 0.68, 0.88)
-	_energy.add_theme_color_override("font_color", (WsStyle.AMBER if def.energy > 0 else WsStyle.TEXT_DIM) if fits else WsStyle.RED)
+	var gives := PartHp.on and (def.kind == "core" or def.kind == "head")
+	_energy.add_theme_color_override("font_color", (WsStyle.GREEN if gives else (WsStyle.AMBER if def.energy > 0 else WsStyle.TEXT_DIM)) if fits else WsStyle.RED)
 	_energy_icon.color = WsStyle.AMBER if fits else WsStyle.RED
 	_restyle()
 

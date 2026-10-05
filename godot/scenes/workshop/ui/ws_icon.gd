@@ -27,7 +27,7 @@ const NAMES := [
 	"energy", "mass", "search", "filter", "physics", "mirror", "duplicate", "delete", "undo", "redo",
 	"star", "star_filled", "clock", "all", "gear", "play", "close", "chevron_left", "chevron_right", "chevron_down",
 	"help", "save", "folder", "pull", "body", "head", "limb", "joint", "hand", "weapon",
-	"armor", "material", "paint", "decor", "check", "warning", "plus", "minus", "socket",
+	"armor", "material", "paint", "decor", "check", "warning", "plus", "minus", "socket", "heart",
 ]
 ## Выключенная кнопка: значок уходит к цвету тёмного дерева (непрозрачно — см. шапку).
 const DIM_TO := Color(0.3, 0.26, 0.22)
@@ -287,10 +287,21 @@ func _draw() -> void:
 		"socket":
 			_ring(Vector2(12, 12), 7.5)
 			_dot(Vector2(12, 12), 3.0)
+		"heart":
+			_i_heart()
 		_:
 			if not _warned.has(icon):
 				_warned[icon] = true
 				push_warning("WsIcon: нет значка «%s»" % icon)
+
+
+## Запас из деталей (PartHp): сердце из двух дуг и острия — тем же штрихом, с заливкой, как «энергия».
+func _i_heart() -> void:
+	var p := _arc(Vector2(8.25, 9.5), 4.25, 140.0, 360.0)
+	p.append_array(_arc(Vector2(15.75, 9.5), 4.25, 180.0, 400.0))
+	p.append(Vector2(12, 20))
+	_fill(p, 0.3)
+	_path(p, true)
 
 
 func _i_energy() -> void:
