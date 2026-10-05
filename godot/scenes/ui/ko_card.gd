@@ -33,6 +33,7 @@ var _last_colour := Color.WHITE
 
 
 func _ready() -> void:
+	dim.texture = dim_texture()
 	visible = false
 	_last_ms = Time.get_ticks_msec()
 	splatter.visible = false
@@ -40,6 +41,29 @@ func _ready() -> void:
 	sub.text = tr("FIGHTER OFFLINE")
 	_apply_skin()
 	HudSkin.events.changed.connect(func(_id: String) -> void: _apply_skin())
+
+
+## Затемнение под карточкой — радиальный градиент 256×256. Строится здесь, на главном потоке, а не подресурсом ko_card.tscn: HUD
+## грузят в фоне (ResourceLoader с под-потоками — бой кампании при входе в гараж, площадки), а GradientTexture2D, собранный в рабочем
+## потоке, достраивает картинку отложенным вызовом на главном, пока поток ещё ставит width / height. Гонка давала «Expected Image data
+## size of 256x256x4 … got 65536» (256×64 — высота ещё по умолчанию) и порчу кучи: 05.10 игра падала на первом лоадере (SIGABRT).
+static var _dim_tex: GradientTexture2D
+
+
+static func dim_texture() -> GradientTexture2D:
+	if _dim_tex == null:
+		var g := Gradient.new()
+		g.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+		g.colors = PackedColorArray([Color(0, 0, 0, 0.1), Color(0, 0, 0, 0.28), Color(0, 0, 0, 0.6)])
+		var t := GradientTexture2D.new()
+		t.width = 256
+		t.height = 256
+		t.fill = GradientTexture2D.FILL_RADIAL
+		t.fill_from = Vector2(0.5, 0.5)
+		t.fill_to = Vector2(1.0, 0.5)
+		t.gradient = g
+		_dim_tex = t
+	return _dim_tex
 
 
 func _apply_skin() -> void:
