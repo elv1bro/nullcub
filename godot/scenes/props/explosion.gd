@@ -45,6 +45,8 @@ signal detonated(pos: Vector3, hits: Array)
 
 ## Для проб: {doll, damage, part} по жертвам и тела, получившие импульс.
 var hits: Array = []
+## Сила взрыва: урон и отброс × power (бочка — 1; батарея-модуль PartMods — 0.5). Радиус и эффекты те же.
+var power := 1.0
 var kicked: Array = []
 var _t := 0.0
 var _balls: Array = []    # [MeshInstance3D, StandardMaterial3D, r0, r1, delay, colour_from, colour_to, life, pos0, drift]
@@ -52,11 +54,12 @@ var _light: OmniLight3D
 
 
 ## Взорвать в pos (в игре — плоскость z = 0). by — кому засчитать (Doll | null). ignore — тело, которое взрывается (не толкать себя).
-static func detonate(parent: Node, pos: Vector3, by: Node = null, ignore: Node = null) -> Explosion:
+static func detonate(parent: Node, pos: Vector3, by: Node = null, ignore: Node = null, power_k: float = 1.0) -> Explosion:
 	if parent == null or not parent.is_inside_tree():
 		return null
 	var e := Explosion.new()
 	e.name = "Explosion"
+	e.power = power_k
 	parent.add_child(e)
 	e.global_position = pos   # плоскость боя z = 0; пробы раскладывают пропсы по дорожкам z — взрыв остаётся на своей
 	e._blast(by, ignore)
@@ -105,7 +108,7 @@ func _blast(by: Node, ignore: Node) -> void:
 		var dir := Vector3(com.x - p.x, com.y - p.y, 0.0)
 		dir = dir.normalized() if dir.length_squared() > 1e-4 else Vector3.UP
 		dir = (dir + Vector3.UP * UP_BIAS).normalized()
-		var dmg := DOLL_DAMAGE_MAX * pow(f, 0.7) * Damage.armor_mult_of_body(best)   # броня ближайшей к взрыву детали
+		var dmg := DOLL_DAMAGE_MAX * power * pow(f, 0.7) * Damage.armor_mult_of_body(best)   # броня ближайшей к взрыву детали
 		var stun_s := 0.0
 		if combat and dmg >= DOLL_DAMAGE_MIN and d.alive and d.can_take_damage():
 			stun_s = Damage.stun_seconds(dmg)
@@ -127,7 +130,7 @@ func _blast(by: Node, ignore: Node) -> void:
 			if m != null and m.has_method("on_hit") and dealt > 0.0:
 				m.call("on_hit", d, attacker, dealt, "weapon", best.global_position, 0, false, WEAPON_ID, PROP_KICK_SPEED * f)
 		if not d.is_broken():
-			d.apply_knockback(dir * DOLL_IMPULSE_MAX * f, best, stun_s, dir, Tuning.KNOCKBACK_MIN * f)
+			d.apply_knockback(dir * DOLL_IMPULSE_MAX * power * f, best, stun_s, dir, Tuning.KNOCKBACK_MIN * f)
 			if stun_s > 0.0 and d.alive:
 				d.stun(stun_s)
 		else:

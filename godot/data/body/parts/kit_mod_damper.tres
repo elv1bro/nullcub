@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_mod_damper.tscn" id="1_bakl5"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_inlhu"]
+
+[resource]
+script = ExtResource("2_inlhu")
+id = "kit_mod_damper"
+title = "Амортизатор сустава"
+kind = "deco"
+scene = ExtResource("1_bakl5")
+mass = 0.9
+energy = 4
+attach = "fixed"
+name_prefix = "Deco"
+base_mat = "paint_yellow"

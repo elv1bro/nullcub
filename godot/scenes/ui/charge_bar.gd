@@ -14,6 +14,8 @@ const FOLLOW_SPEED := 14.0              # 1/с: заливка догоняет 
 @export var fill_from_right := false
 
 var charge := 100.0
+## Полный запас бойца (set_charge): Tuning.CHARGE_MAX + батареи; заливка 0…cap, выше — перезаряд.
+var cap := Tuning.CHARGE_MAX
 var locked := false
 var _shown := 100.0
 var _flash := 0.0
@@ -32,10 +34,12 @@ func _ready() -> void:
 	_shown = charge
 
 
-func set_charge(value: float, is_locked: bool) -> void:
+## cap_v — полный запас бойца (Doll.charge_cap: CHARGE_MAX + батареи-модули PartMods); выше него — перезаряд.
+func set_charge(value: float, is_locked: bool, cap_v: float = Tuning.CHARGE_MAX) -> void:
 	if is_locked and not locked:
 		_flash = 1.0   # только что выдохся
-	charge = clampf(value, 0.0, Tuning.CHARGE_OVER_MAX)
+	cap = maxf(cap_v, 1.0)
+	charge = clampf(value, 0.0, Tuning.CHARGE_OVER_MAX + cap - Tuning.CHARGE_MAX)
 	locked = is_locked
 	queue_redraw()
 
@@ -68,16 +72,16 @@ func _draw() -> void:
 	var r := Rect2(Vector2.ZERO, size)
 	draw_style_box(_bg, r)
 	var inner := r.grow(-3.0)
-	var base := clampf(_shown, 0.0, Tuning.CHARGE_MAX) / Tuning.CHARGE_MAX
-	var over := clampf((_shown - Tuning.CHARGE_MAX) / (Tuning.CHARGE_OVER_MAX - Tuning.CHARGE_MAX), 0.0, 1.0)
+	var base := clampf(_shown, 0.0, cap) / cap
+	var over := clampf((_shown - cap) / (Tuning.CHARGE_OVER_MAX - Tuning.CHARGE_MAX), 0.0, 1.0)
 	var col := FILL
 	if locked:
 		col = FILL_LOCKED.lerp(Color(1.0, 0.5, 0.4), 0.5 + 0.5 * sin(_pulse))
 	_fill(inner, base, col)
-	if _shown > Tuning.CHARGE_MAX:
+	if _shown > cap:
 		_fill(inner, over, OVER)
 	# метка порога возврата после запора
-	var mark_x := inner.position.x + inner.size.x * (Tuning.CHARGE_RESTART / Tuning.CHARGE_MAX if not fill_from_right else 1.0 - Tuning.CHARGE_RESTART / Tuning.CHARGE_MAX)
+	var mark_x := inner.position.x + inner.size.x * (Tuning.CHARGE_RESTART / cap if not fill_from_right else 1.0 - Tuning.CHARGE_RESTART / cap)
 	draw_line(Vector2(mark_x, inner.position.y), Vector2(mark_x, inner.end.y), Color(0, 0, 0, 0.45), 1.0)
 	if _flash > 0.0:
 		draw_rect(inner, Color(1.0, 0.35, 0.3, 0.6 * _flash))

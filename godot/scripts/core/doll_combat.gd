@@ -541,7 +541,7 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 	var stun_s := Damage.stun_seconds(dmg)
 	# своя команда (Doll.team, PvE-волны): стан и учтённый урон × TEAM_DAMAGE_MULT, как HP в Doll.take_damage; толчки полные
 	var team_mult := doll.team_mult_for(attacker)   # своя команда: как HP в Doll.take_damage (Doll.team_damage_mult)
-	stun_s *= team_mult
+	stun_s *= team_mult * PartMods.of(vp, "stun_mult")   # модуль «Амортизатор сустава» на ударенной ветке: стан меньше
 	# урон, который жертва реально получает: статистика, щепки, Match.on_hit (надписи, уровень удара, крит) — по нему;
 	# take_damage режет сам (передаём dmg), отброс — полный (толчки своих остаются)
 	var dmg_eff := dmg * team_mult

@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Mod_Servo.glb" id="1_gviu5"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_468mx"]
+friction = 0.5
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_67px6"]
+size = Vector3(0.09, 0.2, 0.05)
+
+[node name="KitModServo" type="RigidBody3D" unique_id=719074291]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.4
+physics_material_override = SubResource("PhysicsMaterial_468mx")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "deco"
+metadata/part_id = "kit_mod_servo"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=401765586]
+transform = Transform3D(-1, -1.509958e-07, 0, 1.509958e-07, -1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Shape_Servo" type="CollisionShape3D" parent="." unique_id=1641580097]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.085)
+shape = SubResource("BoxShape3D_67px6")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1377438534 instance=ExtResource("1_gviu5")]
+metadata/rig_mesh = true

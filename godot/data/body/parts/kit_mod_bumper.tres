@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_mod_bumper.tscn" id="1_dkxkt"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_j0lpj"]
+
+[resource]
+script = ExtResource("2_j0lpj")
+id = "kit_mod_bumper"
+title = "Пружина-отбойник"
+kind = "deco"
+scene = ExtResource("1_dkxkt")
+mass = 0.8
+energy = 3
+attach = "fixed"
+name_prefix = "Deco"
+base_mat = "paint_red"

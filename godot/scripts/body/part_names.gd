@@ -186,6 +186,16 @@ const NAMES := {
 	"kit_active_mine": "Минный лоток",
 	"kit_active_searchlight": "Прожектор",
 	"kit_active_anchor": "Тормоз-якорь",
+	# модули (PartMods, WORKSHOP_V4.md «Модули»; модели — tools/blender/kit_mods.py)
+	"kit_mod_servo": "Сервопривод",
+	"kit_mod_battery": "Батарея",
+	"kit_mod_sail": "Парус-щит",
+	"kit_mod_flywheel": "Маховик",
+	"kit_mod_bumper": "Пружина-отбойник",
+	"kit_mod_fairing": "Обтекатель",
+	"kit_mod_damper": "Амортизатор сустава",
+	"kit_mod_repair": "Скобы-ремкомплект",
+	"kit_mod_grinder": "Наждак",
 	# наборы 04.10: про-лига Земли (tools/blender/kit_pro.py) и живые детали Аоэлюн (kit_aoe.py)
 	"kit_core_pro_gyro": "Ядро-гиростаб",
 	"kit_core_pro_reactor": "Ядро-реактор",
