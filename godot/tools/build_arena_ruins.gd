@@ -19,7 +19,7 @@
 ##   ├── Node3D "Right": стены, wooden_deck, знамя blue, gallows + cage в точке Beam/Hook
 ##   ├── Node3D "Torches": torch ×6 на лицах кладки
 ##   ├── Node3D "Props": barrel/crate (Breakable) — обломки спавнятся сюда же
-##   ├── StaticBody3D "Bounds": невидимые стены x=±HALF_W и потолок y=CEIL_Y
+##   ├── StaticBody3D "Bounds": невидимые стены x=±HALF_W, потолок y=CEIL_Y, стенки шахт ям PitWallL/R (под краем земли)
 ##   ├── Area3D "DeathZone": ямы у краёв (|x|>14, ниже земли) + страховочный низ
 ##   └── Node3D "Spawns": Marker3D Spawn0..3 (каменный мост, под воротами, левая и правая палубы)
 extends SceneTree
@@ -36,6 +36,7 @@ const G := 0.4                  # верх плит земли (плиты y=0..
 const WALL_Z := -0.7            # центр кладки: глубина 0.8 → лицо на z≈−0.3 (голова куклы r=0.24 не входит в стену)
 const TORCH_Z := 0.05           # origin факела: плита кронштейна (z −0.3 от origin) прижата к лицу стены
 const HALF_W := 16.0            # невидимые стены
+const GROUND_HALF_W := 14.0     # край плит земли (7 плит по 4 м): дальше до невидимой стены — яма
 const CEIL_Y := 12.0
 const DECK_Y := G + 2.25        # верх боковых палуб (wooden_deck: столбы 2 м + настил 0.25)
 const BRIDGE_Y := G + 3.2       # низ каменного моста (плита 0.4 → верх 4.0 = верх арки ворот + 0.4)
@@ -249,13 +250,20 @@ func _bounds() -> void:
 	_box_shape(b, "WallL", -HALF_W - 1.0, -HALF_W, -10.0, 30.0, 0.0, 8.0)
 	_box_shape(b, "WallR", HALF_W, HALF_W + 1.0, -10.0, 30.0, 0.0, 8.0)
 	_box_shape(b, "Ceiling", -HALF_W - 1.0, HALF_W + 1.0, CEIL_Y, CEIL_Y + 1.0, 0.0, 8.0)
+	# стенки шахт ям: под плитами земли (низ y=0) яма была открыта вбок — кукла, съехав в щель у невидимой стены, выше зоны KO
+	# (y −3) уходила под плиты за декор фундамента и оставалась там живой, соперник сверху её не доставал (04.10: match_probe
+	# scene=ruins — 2 прогона из 21 без KO за 120 с, ещё 4 закончились KO kind self случайно; проверка pit_walls). Как
+	# PitWallL/R Свалки: грань стенки — торец земли (|x| = GROUND_HALF_W), верх внутри плиты (G − 0.1): на ходовой поверхности
+	# новых рёбер нет; низ — как у невидимых стен (y −10), ниже живая кукла не бывает (зона KO y −9…−3, от стенок на 0.1 м)
+	_box_shape(b, "PitWallL", -GROUND_HALF_W, -GROUND_HALF_W + 1.0, -10.0, G - 0.1, 0.0, 6.0)
+	_box_shape(b, "PitWallR", GROUND_HALF_W - 1.0, GROUND_HALF_W, -10.0, G - 0.1, 0.0, 6.0)
 	var dz := Area3D.new()
 	dz.name = "DeathZone"
 	dz.monitoring = true
 	arena_root.add_child(dz)
-	# ямы не касаются невидимых стен (иначе StaticBody3D "Bounds" сам попадает в зону)
-	_box_shape(dz, "PitL", -HALF_W + 0.1, -14.0, -9.0, -3.0, 0.0, 6.0)
-	_box_shape(dz, "PitR", 14.0, HALF_W - 0.1, -9.0, -3.0, 0.0, 6.0)
+	# ямы не касаются ни невидимых стен, ни стенок шахт (иначе StaticBody3D "Bounds" сам попадает в зону)
+	_box_shape(dz, "PitL", -HALF_W + 0.1, -GROUND_HALF_W - 0.1, -9.0, -3.0, 0.0, 6.0)
+	_box_shape(dz, "PitR", GROUND_HALF_W + 0.1, HALF_W - 0.1, -9.0, -3.0, 0.0, 6.0)
 	_box_shape(dz, "Floor", -HALF_W - 2.0, HALF_W + 2.0, -15.0, -14.0, 0.0, 8.0)
 
 

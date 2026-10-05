@@ -2,6 +2,9 @@
 ## или playground_void.tscn — пустое поле Void)
 ## с Match и HUD; две скриптованные куклы (external_input) дерутся наскоками, как в combat_gate (разбег → отход → разбег, с тягой
 ## по вертикали к сопернику; с разбега ≥ 2 м — рывок, как Shift, раз в DASH_COOLDOWN_S), до KO или max_s секунд боя. P2 в начале ставится на 3.8 м правее P1 (в Руинах — на каменный мост).
+## Упёрлась на разбеге (BLOCKED_S стоит при полной тяге) — отход и новый разбег, как после сближения. Заклинило (STUCK_S без
+## ударов): между куклами препятствие — идут навстречу по пути на сетке проходимости (nav, до NAV_S), иначе или если путь не свёл —
+## прыжок UNSTICK_S (врозь / вверх и к сопернику).
 ## Проверки (checks[].id):
 ##   announce_countdown/fight — отсчёт «3» и FIGHT! объявлены; hud_panels — панели P1/P2 созданы; hud_timer — таймер HUD обновляется
 ##   и совпадает с Match.time_left_s(); hits — Match.hit ≥ 1; announce_hit — HEAD/BODY/DOUBLE BLOW! ≥ 1; hud_hp_synced — hp панели
@@ -11,12 +14,20 @@
 ##   results_visible — панель итогов показана (реальное время);
 ##   time_scale_restored — Engine.time_scale вернулся к 1; restart — после restart(): фаза COUNTDOWN, итоги скрыты, куклы новые,
 ##   живые, hp 100, панели HUD сброшены.
+##   pit_walls (только Руины) — шахты ям у краёв закрыты стенками под краем земли (Bounds/PitWallL/R): 6 лучей из шахт внутрь
+##   арены на y −0.5…−2.5 упираются в стенку на |x| = 14. Без стенок кукла уходила из ямы под плиты земли и жила там до конца
+##   боя — соперник сверху её не доставал, KO не было (04.10: 2 прогона из 21 красные, hits = 6 за 120 с).
 ##   sd=1 — режим Sudden Death: time_limit_s = 3, куклы стоят; проверки sd_phase, sd_hammer (площадка уронила молот на шаге
 ##   SUDDEN_DEATH_HEAVY_WEAPON_STEP), sd_bridges (RopeBridge.break_apart на шаге SUDDEN_DEATH_BREAK_PLATFORMS_STEP; только Руины),
 ##   sd_stability (Doll.stability_mult по шагу), sd_no_damage (стоящие куклы без урона), hud_sd_label (надпись SUDDEN DEATH в HUD).
 ##   HIT_FX (29.09): fx_directors — Match создал HitFxDirector и SfxDirector; hitfx_env_kind — ударов kind environment с уровнем 0;
 ##   info.hitfx — гистограмма уровней Match.hit_fx, crits[] (t, tier, score, damage), env_slam, fight_s_per_crit.
 ## Запуск: godot --headless --path . --fixed-fps 60 res://tests/match_probe.tscn -- "scene=ruins,max_s=120" (scene=ruins|workshop|void|scrap)
+##   p1=x:y, p2=x:y — исходные точки кукол вместо штатных (воспроизвести ловушку геометрии: p1=-10:2.7,p2=-9.5:0.5 — P1 на левом
+##   помосте Руин, P2 под ним).
+##   trace=1 — разбор «нет KO»: раз в секунду боя строка TRACE (центр масс, скорость торса, ввод, hp, Заряд обеих кукол) и строка
+##   TRACE unstick / TRACE nav на каждое расклинивание; без него при таймауте в отчёте всё равно есть info.timeout.pos, info.unsticks
+##   (прыжки), info.navs (обходы по сетке) и info.blocked_retreats (отходы упёршейся куклы).
 ##   perf=1 (perf-pass, docs/plan-demo/PERF_PASS.md) — детектор рывков: реальные часы между кадрами (в headless --fixed-fps 60 это цена кадра
 ##   на CPU), узлы, добавленные в кадр (ADDED{класс:имя×N}), события удара рядом; проверки perf_frame_p99_ms / perf_frame_max_ms /
 ##   perf_nodes_per_frame (limits p99_ms= max_ms= max_nodes=), info.perf; spikes=1 — то же, но только печать рывков > spike_ms (окно).
@@ -39,6 +50,23 @@ const BOOST_START_CHARGE := 40.0         # как у ботов EnemyBrain.DASH_
 const BOOST_KEEP_CHARGE := 5.0
 const STUCK_S := 6.0                 # без ударов столько секунд — куклы заклинило геометрией (полка, станок): прыжок врозь
 const UNSTICK_S := 1.2
+# Обход препятствия (nav): заклинило (нет ударов STUCK_S), а между куклами геометрия — помост, мост, плита, куча ящиков. Прыжки
+# вслепую тут не сводят: в Руинах помост + верёвочный мост + каменный мост — сплошной настил 15 м, кукла сверху и кукла снизу
+# «сближались» через него по 20 с и больше (04.10: бои 91–117 с при лимите 120). Куклы идут навстречу по пути на сетке проходимости.
+const NAV_CELL := 0.5                # м: клетка сетки в плоскости боя (z = 0), границы — arena.bounds()
+const NAV_CLEAR_R := 0.45            # м: полуширина свободного прохода (торс куклы); клетка занята, если коробка задела препятствие
+const NAV_HALF_Z := 0.24             # м: полутолщина слоя кукол (голова r = 0.24)
+const NAV_S := 8.0                   # с: дольше по пути не идём — следующая попытка обычным прыжком
+const NAV_REPATH_S := 0.25           # с: путь пересчитывается от текущих положений кукол
+const NAV_LOOKAHEAD := 6             # клеток: цель — самая дальняя клетка пути впереди, до которой сетка свободна по прямой
+const NAV_MEET_M := 2.5              # м: куклы видят друг друга и ближе этого — пришли, дальше обычный наскок
+const NAV_HEAVY_KG := 8.0            # динамическое тело от этой массы — препятствие (тележка, козлы, клетка); ящики/бочки и доски моста — всегда
+const NAV_DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]
+const BLOCKED_SPEED := 0.35          # м/с (как EnemyBrain.STUCK_SPEED): полная тяга к сопернику, а торс стоит
+const BLOCKED_S := 0.8               # с: столько стоит на разбеге — упёрся (ящики между куклами, торец плиты): отход и новый разбег
+const RUINS_PIT_X := 15.0            # Руины (tools/build_arena_ruins.gd): середина шахты ямы — земля до |x| = GROUND_HALF_W 14, стена на 16
+const RUINS_PIT_WALL_X := 14.0
+const RUINS_PIT_RAY_Y := [-0.5, -1.5, -2.5]   # между низом плит земли (y 0) и верхом зоны KO (y −3)
 const RESULTS_WAIT_REAL_MS := 6000
 
 var scene_id := "ruins"
@@ -88,7 +116,23 @@ var rush_retreat: Dictionary = {}
 var last_hit_t := 0.0
 var unstick_until := -1.0
 var unstick_n := 0                     # номер попытки расклинивания (чередование врозь / через препятствие)
+var blocked_since: Dictionary = {}     # Doll -> с какого времени стоит на разбеге
+var blocked_n := 0                     # сколько раз упёршаяся кукла уходила на новый разбег
+var nav_until := -1.0                  # до этого времени куклы идут по пути навстречу друг другу
+var nav_n := 0                         # сколько раз заклинивание лечилось обходом
+var nav_tried := false                 # прошлый обход не свёл кукол (вышло время) — следующая попытка прыжком
+var nav_met_t := -1.0                  # когда обход свёл кукол: отсюда снова ждём удара STUCK_S
+var _nav_free := PackedByteArray()     # 1 — клетка свободна
+var _nav_w := 0
+var _nav_h := 0
+var _nav_org := Vector2.ZERO
+var _nav_path: Array[Vector2i] = []    # клетки от P1 к P2
+var _nav_repath_at := -1.0
 var fight_seen := false               # фаза FIGHT наступала (до неё Match.phase == OVER — начальное значение)
+var trace := false                    # trace=1: раз в секунду боя — позиции/скорости/ввод кукол, плюс каждое срабатывание расклинивания
+var _trace_next := 0.0
+var start_pos: Dictionary = {}        # "p1" / "p2" -> Vector3 из аргументов p1=x:y, p2=x:y
+var pit_rays := -1                    # Руины: сколько лучей из шахт ям упёрлось в стенку под краем земли (−1 — ещё не мерили)
 var report := {"ok": true, "checks": [], "info": {}}
 # --- perf=1 / spikes=1: рывки кадра по реальным часам и узлы, добавленные в кадр ---
 var perf := false
@@ -242,6 +286,11 @@ func _ready() -> void:
 				"out": out_path = p[1]
 				"retreat": rush_retreat_s = float(p[1])
 				"legacy": legacy_dash = p[1] != "0"
+				"trace": trace = p[1] != "0"
+				"p1", "p2":   # p1=x:y / p2=x:y — исходная точка куклы (разбор ловушек геометрии: одна на помосте, другая под ним)
+					var xy := p[1].split(":")
+					if xy.size() == 2:
+						start_pos[p[0]] = Vector3(float(xy[0]), float(xy[1]), 0.0)
 				"variant": ControlFeel.set_variant(p[1])   # вариант управления (ControlFeel): боты и игроки ведут куклу так же
 				"tempo": ControlFeel.set_tempo(p[1])       # темп: now | brisk | action | ram
 				"perf": perf = p[1] != "0"
@@ -273,6 +322,10 @@ func _ready() -> void:
 					plank_y_at_break[rb] = ys)
 	else:
 		p2.position = p1.position + P2_OFFSET
+		if start_pos.has("p1"):
+			p1.position = start_pos["p1"]
+		if start_pos.has("p2"):
+			p2.position = start_pos["p2"]
 	if perf or spikes:
 		get_tree().node_added.connect(_on_node_added)
 	match_node.announce.connect(func(text: String, _c: Color, kind: String) -> void:
@@ -346,9 +399,25 @@ func _rush(d: Doll, other: Doll) -> void:
 	# заклинило (нет ударов STUCK_S): обе куклы прыгают врозь и вверх, потом вниз — ломает упор в полку/станок
 	# v2 (HIT_FX §11.6): чётная попытка — врозь, нечётная — вверх и через препятствие к сопернику (станок Мастерской
 	# между куклами: врозь-вниз их не разводит, обе снова упираются в станок с двух сторон)
-	if t - last_hit_t > STUCK_S and t > unstick_until + STUCK_S:
-		unstick_until = t + UNSTICK_S
-		unstick_n += 1
+	# v3 (04.10): если по сетке проходимости между куклами препятствие и есть путь в обход — идут по пути (nav); не свело за NAV_S
+	# или препятствия нет (клинч, пролёты мимо) — прыжок, как раньше
+	if t - maxf(last_hit_t, nav_met_t) > STUCK_S and t > unstick_until + STUCK_S and t >= nav_until:
+		var us := Time.get_ticks_usec()
+		if not nav_tried and _nav_begin():
+			nav_until = t + NAV_S
+			nav_n += 1
+			nav_tried = true
+			if trace:
+				print("TRACE nav n=%d t=%.2f since_hit=%.1f path=%d grid=%.1f ms %s" % [nav_n, t, t - last_hit_t, _nav_path.size(), (Time.get_ticks_usec() - us) / 1000.0, _trace_pos()])
+		else:
+			nav_tried = false
+			unstick_until = t + UNSTICK_S
+			unstick_n += 1
+			if trace:
+				print("TRACE unstick n=%d t=%.2f since_hit=%.1f %s %s" % [unstick_n, t, t - last_hit_t, _trace_pos(), _trace_between()])
+	if t < nav_until and _nav_update():
+		d.input_vec = _nav_input(d)
+		return
 	if t < unstick_until:
 		var first_half := t < unstick_until - UNSTICK_S * 0.5
 		if unstick_n % 2 == 0:
@@ -358,9 +427,17 @@ func _rush(d: Doll, other: Doll) -> void:
 		return
 	var until := float(rush_retreat.get(d, -1.0))
 	if t < until:
+		blocked_since.erase(d)
 		d.input_vec = Vector2(-sgn, 0.0)
 	elif absf(dx) < RUSH_NEAR and absf(dy) < 1.2:
+		blocked_since.erase(d)
 		rush_retreat[d] = t + rush_retreat_s
+		d.input_vec = Vector2(-sgn, 0.0)
+	elif _blocked(d):
+		# упёрся на разбеге (в Руинах — ящики под помостом между куклами: обе давят с двух сторон и стоят до расклинивания):
+		# тот же отход, что после сближения, — следующий наскок с разбега и на Заряде выбивает ящики
+		rush_retreat[d] = t + rush_retreat_s
+		blocked_n += 1
 		d.input_vec = Vector2(-sgn, 0.0)
 	else:
 		# с отбросом RM (FEEL_TARGET §9: 1–2 H/с вместо 4) куклы после удара остаются рядом и толкаются по 0.1–3 HP:
@@ -378,6 +455,237 @@ func _rush(d: Doll, other: Doll) -> void:
 			else:
 				rush_boost[d] = false
 		d.input_vec = Vector2(sgn, vy)
+
+
+## Кукла на разбеге (полная тяга к сопернику) стоит BLOCKED_S подряд — упёрлась.
+func _blocked(d: Doll) -> bool:
+	var torso := d.parts.get("Torso") as RigidBody3D
+	if torso == null or d.is_stunned() or torso.linear_velocity.length() >= BLOCKED_SPEED:
+		blocked_since.erase(d)
+		return false
+	if not blocked_since.has(d):
+		blocked_since[d] = t
+		return false
+	if t - float(blocked_since[d]) < BLOCKED_S:
+		return false
+	blocked_since.erase(d)
+	return true
+
+
+## Препятствие для обхода: статика, зона смерти арены, ящики/бочки, доски верёвочного моста, тяжёлые динамические тела.
+## Части кукол, оружие, обломки и мелочь — нет.
+func _nav_obstacle(c: Object) -> bool:
+	if c is Area3D:
+		return (c as Node).name == "DeathZone"
+	if c is StaticBody3D or c is AnimatableBody3D:
+		return true
+	var rb := c as RigidBody3D
+	if rb == null or rb is Weapon or rb.get_parent() is Doll:
+		return false
+	if rb is Breakable or rb.mass >= NAV_HEAVY_KG:
+		return true
+	var n := rb.get_parent()
+	while n != null and n != pg:
+		if n is RopeBridge:
+			return true
+		n = n.get_parent()
+	return false
+
+
+func _doll_rids() -> Array[RID]:
+	var out: Array[RID] = []
+	for d in [p1, p2]:
+		for part in (d as Doll).parts.values():
+			if is_instance_valid(part):
+				out.append((part as RigidBody3D).get_rid())
+	return out
+
+
+## Сетка проходимости на момент заклинивания (ящики к этому времени сдвинуты) и первый путь. false — обход не нужен или невозможен.
+func _nav_begin() -> bool:
+	if pg.arena == null or not pg.arena.has_method("bounds"):
+		return false
+	var b: AABB = pg.arena.call("bounds")
+	_nav_org = Vector2(b.position.x, b.position.y)
+	_nav_w = int(ceil(b.size.x / NAV_CELL))
+	_nav_h = int(ceil(b.size.y / NAV_CELL))
+	_nav_free.resize(_nav_w * _nav_h)
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsShapeQueryParameters3D.new()
+	# коробка, а не шар: по глубине — только слой кукол (|z| ≤ NAV_HALF_Z); кладка за плоскостью боя (z ≤ −0.3) куклам не мешает
+	var box := BoxShape3D.new()
+	box.size = Vector3(NAV_CLEAR_R * 2.0, NAV_CLEAR_R * 2.0, NAV_HALF_Z * 2.0)
+	q.shape = box
+	q.collide_with_areas = true
+	q.exclude = _doll_rids()
+	for iy in _nav_h:
+		for ix in _nav_w:
+			var c := _nav_pos(Vector2i(ix, iy))
+			q.transform = Transform3D(Basis.IDENTITY, Vector3(c.x, c.y, 0.0))
+			var free := 1
+			for hit in space.intersect_shape(q, 32):
+				if _nav_obstacle(hit["collider"]):
+					free = 0
+					break
+			_nav_free[iy * _nav_w + ix] = free
+	_nav_repath_at = t + NAV_REPATH_S
+	return _nav_repath() and not _nav_grid_los(_nav_path[0], _nav_path[_nav_path.size() - 1])
+
+
+func _nav_cell(p: Vector3) -> Vector2i:
+	return Vector2i(clampi(int(floor((p.x - _nav_org.x) / NAV_CELL)), 0, _nav_w - 1), clampi(int(floor((p.y - _nav_org.y) / NAV_CELL)), 0, _nav_h - 1))
+
+
+func _nav_pos(c: Vector2i) -> Vector2:
+	return _nav_org + (Vector2(c) + Vector2(0.5, 0.5)) * NAV_CELL
+
+
+func _nav_is_free(c: Vector2i) -> bool:
+	return c.x >= 0 and c.y >= 0 and c.x < _nav_w and c.y < _nav_h and _nav_free[c.y * _nav_w + c.x] == 1
+
+
+## Ближайшая свободная клетка: кукла лежит на плите или прижата к стене — её собственная клетка в зазоре прохода.
+func _nav_snap(c: Vector2i) -> Vector2i:
+	if _nav_is_free(c):
+		return c
+	for r in range(1, 5):
+		var best := Vector2i(-1, -1)
+		var best_d := 1 << 30
+		for oy in range(-r, r + 1):
+			for ox in range(-r, r + 1):
+				if maxi(absi(ox), absi(oy)) != r:
+					continue
+				var n := c + Vector2i(ox, oy)
+				if _nav_is_free(n) and ox * ox + oy * oy < best_d:
+					best_d = ox * ox + oy * oy
+					best = n
+		if best.x >= 0:
+			return best
+	return Vector2i(-1, -1)
+
+
+## Поиск в ширину по 8 соседям (по диагонали — только если обе соседние по сторонам свободны: углы не срезаем).
+func _nav_repath() -> bool:
+	_nav_path.clear()
+	var a := _nav_snap(_nav_cell(p1.centre_of_mass()))
+	var b := _nav_snap(_nav_cell(p2.centre_of_mass()))
+	if a.x < 0 or b.x < 0:
+		return false
+	var prev := PackedInt32Array()
+	prev.resize(_nav_w * _nav_h)
+	prev.fill(-1)
+	var start := a.y * _nav_w + a.x
+	var goal := b.y * _nav_w + b.x
+	var queue := PackedInt32Array([start])
+	prev[start] = start
+	var head := 0
+	while head < queue.size() and prev[goal] == -1:
+		var cur := queue[head]
+		head += 1
+		var cc := Vector2i(cur % _nav_w, cur / _nav_w)
+		for dir in NAV_DIRS:
+			var n := cc + dir
+			if not _nav_is_free(n) or prev[n.y * _nav_w + n.x] != -1:
+				continue
+			if dir.x != 0 and dir.y != 0 and not (_nav_is_free(cc + Vector2i(dir.x, 0)) and _nav_is_free(cc + Vector2i(0, dir.y))):
+				continue
+			prev[n.y * _nav_w + n.x] = cur
+			queue.append(n.y * _nav_w + n.x)
+	if prev[goal] == -1:
+		return false
+	var i := goal
+	while i != start:
+		_nav_path.append(Vector2i(i % _nav_w, i / _nav_w))
+		i = prev[i]
+	_nav_path.append(a)
+	_nav_path.reverse()
+	return true
+
+
+## Раз в NAV_REPATH_S: путь от новых положений; куклы сошлись (ближе NAV_MEET_M и сетка между ними свободна) — обход окончен.
+## false — обхода больше нет (сошлись или пути нет), _rush идёт дальше обычной логикой.
+func _nav_update() -> bool:
+	if t < _nav_repath_at:
+		return true
+	_nav_repath_at = t + NAV_REPATH_S
+	var has_path := _nav_repath()
+	var met := has_path and p1.centre_of_mass().distance_to(p2.centre_of_mass()) < NAV_MEET_M and _nav_grid_los(_nav_path[0], _nav_path[_nav_path.size() - 1])
+	if met or not has_path:
+		nav_until = t
+		if met:
+			nav_met_t = t
+			nav_tried = false
+		if trace:
+			print("TRACE nav end t=%.2f %s %s" % [t, "met" if met else "no path", _trace_pos()])
+		return false
+	return true
+
+
+func _nav_grid_los(a: Vector2i, b: Vector2i) -> bool:
+	var steps := maxi(absi(b.x - a.x), absi(b.y - a.y)) * 2
+	for k in range(1, steps + 1):
+		var p := Vector2(a).lerp(Vector2(b), float(k) / float(steps))
+		if not _nav_is_free(Vector2i(roundi(p.x), roundi(p.y))):
+			return false
+	return true
+
+
+## Полная тяга к самой дальней клетке пути впереди (≤ NAV_LOOKAHEAD), до которой сетка свободна по прямой. P1 идёт с начала пути, P2 — с конца.
+func _nav_input(d: Doll) -> Vector2:
+	var n := _nav_path.size()
+	if n == 0:
+		return Vector2.ZERO
+	var idx := 0 if d == p1 else n - 1
+	var step := 1 if d == p1 else -1
+	var target := idx
+	for k in range(1, NAV_LOOKAHEAD + 1):
+		var j := idx + step * k
+		if j < 0 or j >= n or not _nav_grid_los(_nav_path[idx], _nav_path[j]):
+			break
+		target = j
+	var c := d.centre_of_mass()
+	var v := _nav_pos(_nav_path[target]) - Vector2(c.x, c.y)
+	return v.normalized() if v.length() > 0.05 else Vector2.ZERO
+
+
+## Руины: из середины каждой шахты ямы луч внутрь арены под плитами земли; стенка шахты — StaticBody3D на |x| = RUINS_PIT_WALL_X.
+## Меряется один раз в начале боя: куклы ещё на мосту, в шахтах пусто.
+func _probe_pit_walls() -> void:
+	var space := get_world_3d().direct_space_state
+	pit_rays = 0
+	for side in [-1.0, 1.0]:
+		for y in RUINS_PIT_RAY_Y:
+			var q := PhysicsRayQueryParameters3D.create(Vector3(side * RUINS_PIT_X, y, 0.0), Vector3(side * (RUINS_PIT_WALL_X - 2.0), y, 0.0))
+			var hit := space.intersect_ray(q)
+			if not hit.is_empty() and hit["collider"] is StaticBody3D and absf(absf((hit["position"] as Vector3).x) - RUINS_PIT_WALL_X) < 0.05:
+				pit_rays += 1
+
+
+## trace: что лежит между куклами (коробка от ЦМ до ЦМ, ±1 м по высоте) — имена тел, кроме частей кукол.
+func _trace_between() -> String:
+	var a := p1.centre_of_mass()
+	var b := p2.centre_of_mass()
+	var q := PhysicsShapeQueryParameters3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(absf(b.x - a.x) + 0.4, absf(b.y - a.y) + 2.0, 0.6)
+	q.shape = box
+	q.transform = Transform3D(Basis.IDENTITY, (a + b) * 0.5)
+	q.exclude = _doll_rids()
+	var names: PackedStringArray = []
+	for hit in get_world_3d().direct_space_state.intersect_shape(q, 32):
+		var n := hit["collider"] as Node3D
+		names.append("%s@(%.1f,%.1f)" % [n.name, n.global_position.x, n.global_position.y])
+	return "between=[%s]" % ", ".join(names)
+
+
+func _trace_pos() -> String:
+	var out: PackedStringArray = []
+	for d in [p1, p2]:
+		var c: Vector3 = d.centre_of_mass()
+		var torso: RigidBody3D = d.parts.get("Torso", null)
+		var v: Vector3 = torso.linear_velocity if torso != null and is_instance_valid(torso) else Vector3.ZERO
+		out.append("%s com=(%.2f,%.2f,%.2f) v=(%.1f,%.1f) in=(%.2f,%.2f) hp=%.0f ch=%.0f" % [d.name, c.x, c.y, c.z, v.x, v.y, d.input_vec.x, d.input_vec.y, d.hp, d.charge])
+	return " | ".join(out)
 
 
 func _check(id: String, value: float, limit: float, cmp: String, detail: String) -> void:
@@ -447,8 +755,13 @@ func _physics_process(delta: float) -> void:
 	match stage:
 		0:
 			if match_node.combat_active():
+				if scene_id == "ruins" and pit_rays < 0:
+					_probe_pit_walls()
 				_rush(p1, p2)
 				_rush(p2, p1)
+				if trace and t >= _trace_next:
+					_trace_next = t + 1.0
+					print("TRACE t=%.1f fight=%.1f hits=%d %s" % [t, match_node.fight_time, hits, _trace_pos()])
 			else:
 				p1.input_vec = Vector2.ZERO
 				p2.input_vec = Vector2.ZERO
@@ -456,7 +769,10 @@ func _physics_process(delta: float) -> void:
 				_checks_ko()
 				stage = 1
 			elif fight_seen and (match_node.fight_time >= max_s or (match_node.phase == Match.Phase.OVER and not ko_fired)):
-				report["info"]["timeout"] = {"fight_time": match_node.fight_time, "hp": [p1.hp, p2.hp], "hits": hits}
+				var c1 := p1.centre_of_mass()
+				var c2 := p2.centre_of_mass()
+				report["info"]["timeout"] = {"fight_time": match_node.fight_time, "hp": [p1.hp, p2.hp], "hits": hits,
+					"pos": [[snappedf(c1.x, 0.01), snappedf(c1.y, 0.01)], [snappedf(c2.x, 0.01), snappedf(c2.y, 0.01)]], "last_hit_ago_s": snappedf(t - last_hit_t, 0.1)}
 				_checks_ko()
 				stage = 1
 		1:
@@ -522,6 +838,8 @@ func _sd_tick() -> void:
 
 
 func _checks_ko() -> void:
+	if scene_id == "ruins":
+		_check("pit_walls", float(pit_rays), float(RUINS_PIT_RAY_Y.size() * 2), "eq", "pit shafts are walled off under the ground edge (rays stopped at |x| = %.0f)" % RUINS_PIT_WALL_X)
 	_check("announce_countdown", 1.0 if _has_announce("countdown") else 0.0, 1.0, "eq", "countdown announced")
 	_check("announce_fight", 1.0 if _has_announce("fight") else 0.0, 1.0, "eq", "FIGHT! announced")
 	_check("hud_panels", float(hud.panels.size()), 2.0, "eq", "HUD has 2 player panels")
@@ -574,6 +892,9 @@ func _checks_ko() -> void:
 			"charge_end": snappedf((pair[1] as Doll).charge, 0.1)}
 	report["info"]["charge"] = ch
 	report["info"]["legacy_dash"] = legacy_dash
+	report["info"]["unsticks"] = unstick_n
+	report["info"]["navs"] = nav_n
+	report["info"]["blocked_retreats"] = blocked_n
 
 
 func _checks_over() -> void:
