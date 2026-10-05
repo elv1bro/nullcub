@@ -23,6 +23,8 @@
 ##   shelves_*  — вкладки полки: ядро / головы / конечности / кисти-стопы / броня-декор со своими деталями кита, «Шарниры» и
 ##                «Материал» — инструменты (плашки в UI: 15 материалов, 5 типов шарнира); детали второй волны — на своих вкладках
 ##                (навершия kit_weapons — на «Броня, декор»); kit_human_* на полках нет (дубли wood_*), но PartDef грузится;
+##                shelves_part_desc — паспорт словами (CraftEdit.part_desc) не пустой у каждой детали из data/body/parts;
+##                shelves_press_block_desc — блок «по нажатию» (мина) из библиотеки: описание и цена за раз в паспорте справа;
 ##   kit_preset_<id>_loads — каждый пресет кита: без ошибок, на стенде столько тел, сколько узлов не is_fixed;
 ##   mat_*      — кисть: железо на плечо kit_human (узел mat, поверхность Base_ → Base_Iron, физматериал, масса ×2.2), материал по
 ##                умолчанию стирает ключ, Ctrl+Z; деревянная деталь human — отказ «не красится»; клик мышью кистью; ПКМ кладёт кисть,
@@ -1310,6 +1312,28 @@ func _kit_shelves() -> void:
 	_check("shelves_ui_tools", n_mat == MaterialDef.all_ids().size() and n_jt == KitJoint.ORDER.size()
 		and n_jparts == CraftEdit.parts_of_kinds(["joint", "chain"]).size() and has_crown,
 		"UI: 15 плашек материала, 5 типов шарнира (+ детали суставов), корона в декоре, наплечник в броне", [n_mat, n_jt, n_jparts, has_crown])
+	# паспорт словами — у каждой детали из data/body/parts (и скрытых с полок kit_human_*): пустой = ошибка скрипта в part_desc
+	var no_desc: Array = []
+	var n_defs := 0
+	for f in DirAccess.get_files_at(BodyBlueprint.PARTS_DIR):
+		var fn := f.trim_suffix(".remap")
+		if not fn.ends_with(".tres"):
+			continue
+		n_defs += 1
+		var pd := BodyBlueprint.part_def(fn.trim_suffix(".tres"))
+		if pd == null or CraftEdit.part_desc(pd).strip_edges() == "":
+			no_desc.append(fn.trim_suffix(".tres"))
+	_check("shelves_part_desc", n_defs > 100 and no_desc.is_empty(), "паспорт словами (CraftEdit.part_desc) не пустой у всех %d деталей" % n_defs, no_desc)
+	# блок «по нажатию» (мина: в DEFS только cost_use) в паспорте справа: строка «что делает» видна, цена за раз — в подсказке
+	ws.select_shelf("kit_active_mine")
+	await _frames(1)
+	var desc_label: Label = ws.ui.get("part_desc")
+	var acts := (ws.ui.get("part_actions") as Control).get_children().filter(func(c: Node) -> bool: return not c.is_queued_for_deletion()).size()
+	_check("shelves_press_block_desc", desc_label.visible and desc_label.text.begins_with("Активный блок") and desc_label.tooltip_text.contains("25 заряда за раз")
+		and acts > 0, "мина из библиотеки: описание в паспорте, в подсказке «25 заряда за раз», кнопки действий на месте",
+		[desc_label.visible, desc_label.text, desc_label.tooltip_text, acts])
+	ws.clear_selection()
+	await _frames(1)
 
 
 ## Пресеты кита на стенде: без ошибок, тел столько, сколько узлов со своим телом.
