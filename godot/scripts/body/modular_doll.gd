@@ -133,8 +133,8 @@ func take_damage(amount: float, attacker: Node, part: String, position: Vector3,
 	var before := hp
 	super.take_damage(amount, attacker, part, position, normal, kind)
 	var dealt := before - hp
-	if not Tuning.PART_BREAK or JointBreak.on or dealt <= 0.0 or not alive or not part_integrity.has(part):
-		return   # JointBreak (пробный режим суставов) считает износ сам, в Doll.take_damage — два счёта сразу не ведём
+	if not Tuning.PART_BREAK or JointBreak.on or PartHp.on or dealt <= 0.0 or not alive or not part_integrity.has(part):
+		return   # JointBreak и PartHp (пробные режимы) считают износ сами, в Doll.take_damage — два счёта сразу не ведём
 	part_integrity[part] = float(part_integrity[part]) - dealt
 	if float(part_integrity[part]) <= 0.0:
 		part_integrity.erase(part)
@@ -170,6 +170,8 @@ func thrust_mass() -> float:
 		return total_mass   # обычная тяга Doll (Doll зовёт thrust_mass() в обеих строках тяги, и в окне полёта тоже)
 	if thrust_ref_mass > 0.0:
 		return thrust_ref_mass
+	if PartHp.on:   # запас из деталей: тягу дают мотор ядра и голова (PartHp.thrust_n), разгон = тяга / настоящая масса сборки
+		return PartHp.thrust_n(blueprint.core_def() if blueprint != null else null, parts.has("Head")) / Tuning.MOVE_FORCE_PER_KG
 	# = Tuning.total_mass(); методы автолоада не компилируются, когда builder (-s) грузит этот скрипт
 	var m: Dictionary = Tuning.MASS
 	return float(m["Head"]) + float(m["Torso"]) + 2.0 * (float(m["UpperArm"]) + float(m["LowerArm"]) + float(m["Hand"])
@@ -394,8 +396,10 @@ func _build() -> void:
 		mult[inst] = mdef.body_mult if mdef != null else 1.0
 		if not is_equal_approx(def.hit_mult, 1.0):
 			shape[inst] = [def.hit_mult, def.hit_profile]   # форма детали (шипы, рога, клешня) × скорость — Damage.shape_mult
+		var durability := Damage.part_durability(def, blueprint.node_mat(uid))
+		inst.set_meta("durability", durability)   # ❤ детали в запасе из деталей (Doll._init_part_hp, PartHp.hp_of)
 		if def.kind != "core" and def.kind != "head":
-			integ[inst] = Tuning.PART_INTEGRITY * Damage.part_durability(def, blueprint.node_mat(uid))
+			integ[inst] = Tuning.PART_INTEGRITY * durability
 		var own_armor := Damage.part_armor(def.id)
 		if own_armor > 0.0:   # своя броня детали (ядро с толстыми стенками); слитые щитки сложатся с ней
 			armor[inst] = own_armor

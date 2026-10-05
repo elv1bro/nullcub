@@ -218,6 +218,8 @@ func bind(c: WorkshopBuild) -> void:
 	ctl = c
 	overlay.set("ctl", c)
 	ctl.changed.connect(_refresh)
+	if ctl.has_signal("parts_hp_toggled"):
+		ctl.parts_hp_toggled.connect(_build_shelf)   # «;» — ❤ на карточках и энергия ядра / головы (PartHp)
 	ctl.toast.connect(show_toast)
 	ctl.mode_changed.connect(_on_mode)
 	ctl.view_changed.connect(func(_v: int) -> void:
@@ -1705,6 +1707,39 @@ func _refresh_energy(s: Dictionary, pv: Dictionary) -> void:
 		energy_value.text = "%d / %d" % [used, budget]
 
 
+## Паспорт детали в запасе из деталей (PartHp): её ❤ (на бойце — тела со слитыми щитками, ветка — сумма), когда отлетит; ядро и
+## голова — сколько энергии дают.
+func _part_hp_rows(d: PartDef, on_stand: bool, uid: String, branch: bool) -> void:
+	var hp := PartHp.hp_of_part(d)
+	var tip := ""
+	var added := false   # декор / броня: своего тела нет — ❤ прибавляются к хозяину
+	if on_stand:
+		var by := ctl.blueprint.parts_hp()
+		if branch:
+			hp = 0
+			for u in CraftEdit.subtree(ctl.blueprint, uid):
+				hp += int(by.get(u, 0))
+		elif by.has(uid):
+			hp = int(by[uid])
+	if d.kind == "core":
+		tip = tr("ядро не отлетает")
+	elif d.kind == "head":
+		tip = tr("отлетит после %d урона в неё — нокаут") % roundi(PartHp.break_hp(hp, true))
+	elif PartDef.FIXED_KINDS.has(d.kind) or d.attach == "fixed":
+		added = true
+		tip = tr("прибавка к детали, на которой стоит")
+	elif not branch:
+		tip = tr("отлетит после %d урона в неё и унесёт свои ❤") % roundi(PartHp.break_hp(hp))
+	_row(part_rows, "heart", tr("Запас"), ("+%d" if added else "%d") % hp, WsStyle.TEXT, tip)
+	if d.kind == "core" or d.kind == "head":
+		var e := PartHp.energy_of_core(d) if d.kind == "core" else PartHp.energy_of_head(d)
+		_row(part_rows, "energy", tr("Даёт энергии"), "+%d" % e, WsStyle.AMBER, tr("ядро и голова дают энергию и тягу, сами энергии не стоят"))
+		var t := PartHp.thrust_of_core(d) if d.kind == "core" else Tuning.PARTHP_HEAD_THRUST_N
+		_row(part_rows, "speed" if WsIcon.names().has("speed") else "play", tr("Мотор"), tr("%d Н") % roundi(t),
+			WsStyle.GREEN if t > Tuning.PARTHP_CORE_THRUST_N and d.kind == "core" else (WsStyle.AMBER if t < Tuning.PARTHP_CORE_THRUST_N and d.kind == "core" else WsStyle.TEXT),
+			tr("тяга ядра; обычное ядро — %d Н, разгон = тяга / масса сборки") % roundi(Tuning.PARTHP_CORE_THRUST_N) if d.kind == "core" else tr("голова добавляет к мотору ядра"))
+
+
 ## Маленькая сводка: имя, масса, детали, разгон, энергия; при протяжке — «было → станет».
 func _refresh_summary(s: Dictionary, pv: Dictionary) -> void:
 	summary_title.text = _current_title()
@@ -1720,6 +1755,8 @@ func _refresh_summary(s: Dictionary, pv: Dictionary) -> void:
 		_row(summary_rows, "all", tr("Детали"), str(int(s["parts"])))
 		_row(summary_rows, sp, tr("Разгон"), "×%.2f" % acc)
 		_row(summary_rows, "energy", tr("Энергия"), "%d / %d" % [int(s["energy"]), int(s["budget"])])
+		if PartHp.on:
+			_row(summary_rows, "heart", tr("Запас"), "%d" % int(s["hp"]), WsStyle.TEXT, tr("сумма ❤ деталей; оторванная деталь уносит свои"))
 	else:
 		# «было → станет» — только у того, что меняется; остальное как есть, приглушённо
 		var ok := bool(pv["ok"])
@@ -1735,6 +1772,11 @@ func _refresh_summary(s: Dictionary, pv: Dictionary) -> void:
 			WsStyle.GREEN if a1 > acc + 0.005 else (WsStyle.AMBER if a1 < acc - 0.005 else WsStyle.TEXT_DIM))
 		_row(summary_rows, "energy", tr("Энергия"), "%d → %d" % [int(s["energy"]), e1] if e1 != int(s["energy"]) else "%d / %d" % [e1, int(s["budget"])],
 			WsStyle.RED if e1 > int(s["budget"]) or not ok else (WsStyle.AMBER if e1 != int(s["energy"]) else WsStyle.TEXT_DIM))
+		if PartHp.on:
+			var h0 := int(s["hp"])
+			var h1 := int(pv.get("hp", h0))
+			_row(summary_rows, "heart", tr("Запас"), "%d → %d" % [h0, h1] if h1 != h0 else str(h1),
+				WsStyle.GREEN if h1 > h0 else (WsStyle.AMBER if h1 < h0 else WsStyle.TEXT_DIM))
 	var lines: PackedStringArray = []
 	for e in (s["errors"] as PackedStringArray):
 		lines.append(e)
@@ -1829,6 +1871,8 @@ func _refresh_part() -> void:
 		_row(part_rows, "energy", tr("Энергия"), str(cost if cost >= 0 else d.energy), WsStyle.AMBER if fits else WsStyle.RED,
 			tr("у ближайшего свободного разъёма; дальше от ядра — дороже") if cost >= 0 else tr("свободного разъёма под неё нет"))
 	_row(part_rows, "limb", tr("Длина"), tr("%.2f м") % CraftEdit.part_length(d))
+	if PartHp.on:
+		_part_hp_rows(d, on_stand, uid, branch)
 	# деталь / ветка
 	for c in branch_row.get_children():
 		c.queue_free()
@@ -2129,6 +2173,8 @@ func _update_drag_info(dragging: bool) -> void:
 			if String(t["replace"]) != "":
 				repl = tr("  ·  [color=#ffb35a]замена[/color]")
 			txt = tr("%+.1f кг  ·  [color=#ffbd4d]⚡ %+d[/color]%s%s") % [dm, de, com, repl]
+			if PartHp.on:
+				txt += "  ·  ❤ %+d" % (int(pv.get("hp", s["hp"])) - int(s["hp"]))
 	drag_info_text.text = txt
 	drag_info.reset_size()
 	var p: Vector2 = ctl.drag["pos"]

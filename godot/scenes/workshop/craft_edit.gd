@@ -638,7 +638,7 @@ static func energy_reason(what: String, after: int, budget: int) -> String:
 
 
 static func energy_budget(bp: Resource) -> int:
-	return (bp as BodyBlueprint).energy_budget if bp is BodyBlueprint else 0
+	return (bp as BodyBlueprint).energy_cap() if bp is BodyBlueprint else 0
 
 
 # ------------------------------------------------------------------ прикрутить / открутить
@@ -692,9 +692,9 @@ static func check(bp: Resource, part_id: String, parent_uid: String, anchor: Str
 	if bp is BodyBlueprint:
 		var after := (trial as BodyBlueprint).energy_used()
 		r["energy_after"] = after
-		if after > (bp as BodyBlueprint).energy_budget and after > energy_used(bp):
+		if after > (bp as BodyBlueprint).energy_cap() and after > energy_used(bp):
 			r["code"] = "energy"
-			r["reason"] = energy_reason("«%s»" % PartNames.of(d), after, (bp as BodyBlueprint).energy_budget)
+			r["reason"] = energy_reason("«%s»" % PartNames.of(d), after, (bp as BodyBlueprint).energy_cap())
 			return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():
@@ -819,7 +819,7 @@ static func check_root(bp: Resource, part_id: String) -> Dictionary:
 	if bp is BodyBlueprint:
 		var after := (trial as BodyBlueprint).energy_used()
 		r["energy_after"] = after
-		if after > (bp as BodyBlueprint).energy_budget and after > energy_used(bp):
+		if after > (bp as BodyBlueprint).energy_cap() and after > energy_used(bp):
 			r["code"] = "energy"
 			r["reason"] = TranslationServer.translate("Не хватает энергии")
 			return r
@@ -965,8 +965,8 @@ static func set_control(bp: BodyBlueprint, uid: String) -> Dictionary:
 	ctrl2.append(h)
 	trial.control = ctrl2
 	var after := trial.energy_used()
-	if after > bp.energy_budget and after > bp.energy_used():
-		return {"ok": false, "uid": h, "reason": energy_reason(TranslationServer.translate("тягу"), after, bp.energy_budget), "code": "energy"}
+	if after > bp.energy_cap() and after > bp.energy_used():
+		return {"ok": false, "uid": h, "reason": energy_reason(TranslationServer.translate("тягу"), after, bp.energy_cap()), "code": "energy"}
 	bp.control = ctrl2
 	return {"ok": true, "uid": h, "reason": "", "cleared": false, "button": "lmb", "code": "lmb"}
 
@@ -1145,9 +1145,9 @@ static func check_joint(bp: Resource, uid: String, jt: String) -> Dictionary:
 	_apply_joint(trial, uid, jt)
 	var after := trial.energy_used()
 	r["energy_after"] = after
-	if after > body.energy_budget and after > body.energy_used():
+	if after > body.energy_cap() and after > body.energy_used():
 		r["code"] = "energy"
-		r["reason"] = energy_reason(TranslationServer.translate("шарнир «%s»") % joint_title(jt), after, body.energy_budget)
+		r["reason"] = energy_reason(TranslationServer.translate("шарнир «%s»") % joint_title(jt), after, body.energy_cap())
 		return r
 	var errs := structural_errors(trial)
 	if not errs.is_empty():
@@ -1324,7 +1324,7 @@ static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 		var c := check(bp, part_id, String(q[1]), String(q[2]))
 		if not bool(c["ok"]):
 			var d := part(part_id)
-			return {"ok": false, "code": String(c["code"]), "reason": energy_reason(TranslationServer.translate("зеркальную копию"), int(c["energy_after"]), bp.energy_budget)
+			return {"ok": false, "code": String(c["code"]), "reason": energy_reason(TranslationServer.translate("зеркальную копию"), int(c["energy_after"]), bp.energy_cap())
 				if String(c["code"]) == "energy" else TranslationServer.translate("Зеркально не встаёт «%s»: %s") % [PartNames.of(d) if d != null else part_id, c["reason"]]}
 		var res := _apply_attach(bp, part_id, String(q[1]), String(q[2]))
 		var nu := String(res.get("uid", ""))
@@ -1337,8 +1337,8 @@ static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 		count += 1
 		for ch in children_of(bp, String(q[0])):
 			queue.append([String(ch["uid"]), nu, String(ch.get("anchor", ""))])
-	if bp.energy_used() > bp.energy_budget:
-		return {"ok": false, "code": "energy", "reason": energy_reason(TranslationServer.translate("зеркальную копию"), bp.energy_used(), bp.energy_budget)}
+	if bp.energy_used() > bp.energy_cap():
+		return {"ok": false, "code": "energy", "reason": energy_reason(TranslationServer.translate("зеркальную копию"), bp.energy_used(), bp.energy_cap())}
 	var errs := structural_errors(bp)
 	if not errs.is_empty():
 		return {"ok": false, "code": "invalid", "reason": _friendly(errs[0])}
@@ -1360,7 +1360,7 @@ static func graft_subtree(dst: BodyBlueprint, src: BodyBlueprint, src_uid: Strin
 		if not bool(c["ok"]):
 			var d := part(part_id)
 			return {"ok": false, "code": String(c["code"]), "map": map,
-				"reason": energy_reason("«%s»" % (PartNames.of(d) if d != null else part_id), int(c["energy_after"]), dst.energy_budget)
+				"reason": energy_reason("«%s»" % (PartNames.of(d) if d != null else part_id), int(c["energy_after"]), dst.energy_cap())
 				if String(c["code"]) == "energy" else String(c["reason"])}
 		var res := _apply_attach(dst, part_id, String(q[1]), String(q[2]))
 		var nu := String(res.get("uid", ""))
@@ -1379,8 +1379,8 @@ static func graft_subtree(dst: BodyBlueprint, src: BodyBlueprint, src_uid: Strin
 			first = nu
 		for ch in children_of(src, String(q[0])):
 			queue.append([String(ch["uid"]), nu, String(ch.get("anchor", ""))])
-	if dst.energy_used() > dst.energy_budget:
-		return {"ok": false, "code": "energy", "map": map, "reason": energy_reason(TranslationServer.translate("эту ветку"), dst.energy_used(), dst.energy_budget)}
+	if dst.energy_used() > dst.energy_cap():
+		return {"ok": false, "code": "energy", "map": map, "reason": energy_reason(TranslationServer.translate("эту ветку"), dst.energy_used(), dst.energy_cap())}
 	var errs := structural_errors(dst)
 	if not errs.is_empty():
 		return {"ok": false, "code": "invalid", "map": map, "reason": _friendly(errs[0])}
@@ -1421,8 +1421,8 @@ static func move_subtree(bp: BodyBlueprint, uid: String, parent: String, anchor:
 		trial.weapon_on = String(m[bp.weapon_on]) if m.has(bp.weapon_on) else trial.weapon_on
 	# энергия — с тягами на новом выносе (graft считал без них: detach снял их вместе с веткой)
 	var after := trial.energy_used()
-	if after > trial.energy_budget and after > bp.energy_used():
-		return {"ok": false, "code": "energy", "map": m, "reason": energy_reason(TranslationServer.translate("перенос"), after, trial.energy_budget)}
+	if after > trial.energy_cap() and after > bp.energy_used():
+		return {"ok": false, "code": "energy", "map": m, "reason": energy_reason(TranslationServer.translate("перенос"), after, trial.energy_cap())}
 	r["bp"] = trial
 	return r
 

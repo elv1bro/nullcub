@@ -32,6 +32,10 @@
 ##   на CPU), узлы, добавленные в кадр (ADDED{класс:имя×N}), события удара рядом; проверки perf_frame_p99_ms / perf_frame_max_ms /
 ##   perf_nodes_per_frame (limits p99_ms= max_ms= max_nodes=), info.perf; spikes=1 — то же, но только печать рывков > spike_ms (окно).
 ##   joints=1 — пробный режим «Прочность суставов» (JointBreak, JOINT_BREAK.md): info.joints_broken — что и когда отлетело до KO.
+##   parts=1 — пробный режим «Запас из деталей» (PartHp, WORKSHOP_V4.md): info.parts — запас на старте боя (max_hp из ❤ деталей),
+##   что и когда отлетело (part_detached: деталь, t, hp до и после, потерянные ❤), остаток.
+##   d1=<id> / d2=<id> — вместо обычной куклы P1 / P2 пресет scenes/body/presets/<id>.tscn (калибровка сборок друг против друга;
+##   проверки «частей 14» у KO для сборок с другим числом тел не про них).
 ##   retreat=<с> — отход наскока вместо RUSH_RETREAT_S (retreat=1.0 в Void — клинч голова-о-голову, двойной KO → ничья).
 ## Отчёт tests/match_probe_report.json (или out=res://…), exit 0/1.
 extends Node3D
@@ -76,6 +80,9 @@ var hitfx_crits: Array = []
 var hitfx_env_kind := 0
 var joints_left: Dictionary = {}     # joints=1: имя куклы -> {деталь: доля запаса сустава на момент KO}
 var joints_broken: Array = []        # joints=1 (JointBreak): отлетевшие детали боя до KO — {doll, part, t, hp}
+var parts_lost: Array = []           # parts=1 (PartHp): отлетевшие детали боя до KO — {doll, part, t, hp, max_hp, lost}
+var parts_start: Dictionary = {}     # parts=1: имя куклы -> max_hp на FIGHT!
+var doll_presets: Dictionary = {}    # d1= / d2=: "P1" / "P2" -> id пресета scenes/body/presets/<id>.tscn
 var env_slams := 0
 var max_s := 120.0
 var sd_mode := false
@@ -302,7 +309,12 @@ func _ready() -> void:
 				"max_ms": limit_max_ms = float(p[1])
 				"max_nodes": limit_nodes = int(p[1])
 				"joints": JointBreak.set_on(p[1] != "0")   # пробный режим «Прочность суставов»: info.joints_broken — кто что потерял
+				"parts": PartHp.set_on(p[1] != "0")        # пробный режим «Запас из деталей»: info.parts
+				"d1": doll_presets["P1"] = p[1]
+				"d2": doll_presets["P2"] = p[1]
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
+	for pn in doll_presets:   # пресет вместо обычной куклы — до add_child: _ready площадки и Match видят уже сборку
+		_swap_doll(pg, String(pn), "res://scenes/body/presets/%s.tscn" % doll_presets[pn])
 	add_child(pg)
 	p1 = pg.get_node("P1")
 	p2 = pg.get_node("P2")
@@ -336,6 +348,9 @@ func _ready() -> void:
 		if p == Match.Phase.FIGHT:
 			fight_seen = true
 			last_hit_t = t
+			if parts_start.is_empty():
+				for pd in [p1, p2]:
+					parts_start[String(pd.name)] = (pd as Doll).max_hp
 		events.append({"phase": p, "t": snappedf(t, 0.01)}))
 	match_node.hit.connect(func(victim: Doll, attacker: Node, damage: float, kind: String, _pos: Vector3) -> void:
 		hits += 1
@@ -383,8 +398,44 @@ func _ready() -> void:
 		(jd as Doll).joint_broken.connect(func(part: String, _by: Node, _pos: Vector3) -> void:
 			if stage == 0:
 				joints_broken.append({"doll": String(jd.name), "part": part, "t": snappedf(match_node.fight_time, 0.01), "hp": snappedf((jd as Doll).hp, 0.1)}))
+	for jd in [p1, p2]:
+		(jd as Doll).part_detached.connect(func(part: String, _by: Node) -> void:
+			if stage == 0 and fight_seen:
+				parts_lost.append({"doll": String(jd.name), "part": part, "t": snappedf(match_node.fight_time, 0.01), "hp": snappedf((jd as Doll).hp, 0.1)}))
+		(jd as Doll).parts_hp_changed.connect(func(delta: float, _part: String) -> void:
+			if stage == 0 and fight_seen and not parts_lost.is_empty() and delta < 0.0:
+				var last: Dictionary = parts_lost[parts_lost.size() - 1]
+				last["lost"] = -delta
+				last["hp_after"] = snappedf((jd as Doll).hp, 0.1)
+				last["max_hp"] = (jd as Doll).max_hp)
 	report["info"]["scene"] = scene_id
 	report["info"]["rush_retreat_s"] = rush_retreat_s
+	report["info"]["presets"] = doll_presets
+
+
+## P1 / P2 площадки (ещё не в дереве) → пресет path: то же имя, место, игрок, префикс ввода, группы и дети без своих тел (WeaponPickup).
+func _swap_doll(root: Node, pname: String, path: String) -> void:
+	var old := root.get_node_or_null(pname) as Doll
+	if old == null or not ResourceLoader.exists(path):
+		push_error("match_probe: нет %s или %s" % [pname, path])
+		return
+	var d := (load(path) as PackedScene).instantiate() as Doll
+	d.transform = old.transform
+	d.player_index = old.player_index
+	d.input_prefix = old.input_prefix
+	for g in old.get_groups():
+		d.add_to_group(g)
+	for c in old.get_children():
+		if not (c is RigidBody3D or c is Joint3D) and c.get_script() != null:
+			var n: Node = (c.get_script() as Script).new()
+			n.name = c.name
+			d.add_child(n)
+	var idx := old.get_index()
+	root.remove_child(old)
+	old.free()
+	d.name = pname
+	root.add_child(d)
+	root.move_child(d, idx)
 
 
 func _rush(d: Doll, other: Doll) -> void:
@@ -878,6 +929,8 @@ func _checks_ko() -> void:
 	if JointBreak.on:
 		report["info"]["joints_broken"] = joints_broken
 		report["info"]["joints_left"] = joints_left
+	if PartHp.on:
+		report["info"]["parts"] = {"start": parts_start, "lost": parts_lost, "end": {"P1": [snappedf(p1.hp, 0.1), p1.max_hp], "P2": [snappedf(p2.hp, 0.1), p2.max_hp]}}
 	report["info"]["hit_list"] = hit_list
 	report["info"]["hp"] = {"p1": p1.hp, "p2": p2.hp}
 	report["info"]["stats_p1"] = p1.stats.duplicate()
@@ -932,18 +985,22 @@ func _checks_restart() -> void:
 			fresh += 1
 		if dd.alive and not dd.is_broken():
 			alive += 1
-		if is_equal_approx(dd.hp, Tuning.MAX_HP):
+		if is_equal_approx(dd.hp, dd.max_hp) and (is_equal_approx(dd.max_hp, Tuning.MAX_HP) or dd.has_meta("parts_hp")):   # parts=1: запас из деталей
 			full_hp += 1
 	_check("restart_fresh", float(fresh), 2.0, "eq", "both dolls are new instances")
 	_check("restart_alive", float(alive), 2.0, "eq", "both alive and unbroken")
-	_check("restart_hp", float(full_hp), 2.0, "eq", "both at MAX_HP")
+	_check("restart_hp", float(full_hp), 2.0, "eq", "both at MAX_HP (parts=1 — at Σ ❤ of their parts)")
 	_check("restart_phase", 1.0 if match_node.phase == Match.Phase.COUNTDOWN else 0.0, 1.0, "eq", "phase COUNTDOWN after restart (phase=%d)" % match_node.phase)
 	_check("restart_results_hidden", 0.0 if hud.results.visible else 1.0, 1.0, "eq", "HUD results hidden after restart")
 	_check("restart_ko_card_hidden", 0.0 if hud.ko_card.visible else 1.0, 1.0, "eq", "HUD KO card hidden after restart")
 	var panels_reset := 0
 	for i in hud.panels.keys():
 		var p: PlayerPanel = hud.panels[i]
-		if is_equal_approx(p.hp_bar.hp, Tuning.MAX_HP) and not p.portrait.knocked_out:
+		var want := Tuning.MAX_HP
+		for d in ds:   # parts=1: запас новой куклы этого игрока — Σ ❤ её деталей
+			if (d as Doll).player_index == i and (d as Doll).has_meta("parts_hp"):
+				want = (d as Doll).max_hp
+		if is_equal_approx(p.hp_bar.hp, want) and not p.portrait.knocked_out:
 			panels_reset += 1
 	_check("restart_panels", float(panels_reset), 2.0, "eq", "HUD panels reset (hp max, KO cleared)")
 	_check("restart_group", float(get_tree().get_nodes_in_group("dolls").size()), 2.0, "eq", "group dolls has exactly 2")

@@ -119,7 +119,7 @@ func _update_hint() -> void:
 		var md := p1 as ModularDoll
 		var bp := md.blueprint
 		var accel := md.thrust_mass() / maxf(md.total_mass, 0.001) if md.fixed_thrust else 1.0
-		line = tr("P1: %s — энергия %d / %d, масса %.1f кг, тел %d, разгон ×%.2f") % [bp.title, bp.energy_used(), bp.energy_budget,
+		line = tr("P1: %s — энергия %d / %d, масса %.1f кг, тел %d, разгон ×%.2f") % [bp.title, bp.energy_used(), bp.energy_cap(),
 			md.total_mass, md.parts.size(), accel]
 	hint.text = tr("%s    [пресет %d / %d %s — %s]\n%s") % [line, preset_index + 1, PRESETS.size(), PRESETS[preset_index][0], PRESET_HELP,
 		tr(CONTROLS)]
