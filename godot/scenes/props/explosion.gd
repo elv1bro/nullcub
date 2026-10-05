@@ -111,16 +111,21 @@ func _blast(by: Node, ignore: Node) -> void:
 			stun_s = Damage.stun_seconds(dmg)
 			var self_hit := by_doll == d
 			var attacker: Node = null if self_hit else by_doll
+			# свой взрыв по своей команде (Doll.team_mult_for: PvE-враги, «Стычка 3 на 3» — 0): стан тоже × множитель команды, как у
+			# DollCombat; в статистику и Match.on_hit — урон, который реально снят (иначе HUD, звук и счёт видели попадание без урона)
+			stun_s *= d.team_mult_for(attacker)
 			d.hit_meta = {"speed": PROP_KICK_SPEED * f, "weapon_id": WEAPON_ID, "striker": self, "combo_mult": 1.0,
 				"double_blow": false, "knockback_mult": 1.0, "stun_s": stun_s, "explosion": true}
+			var hp0: float = d.hp
 			d.take_damage(dmg, attacker, String(best.name), best.global_position, -dir, "self" if self_hit else "weapon")
-			if attacker != null:
+			var dealt: float = hp0 - d.hp
+			if attacker != null and dealt > 0.0:
 				var s: Dictionary = (attacker as Doll).stats
-				s["damage_dealt"] = float(s.get("damage_dealt", 0.0)) + dmg
-				s["hardest_hit"] = maxf(float(s.get("hardest_hit", 0.0)), dmg)
-			hits.append({"doll": d, "damage": dmg, "part": String(best.name), "falloff": f})
-			if m != null and m.has_method("on_hit"):
-				m.call("on_hit", d, attacker, dmg, "weapon", best.global_position, 0, false, WEAPON_ID, PROP_KICK_SPEED * f)
+				s["damage_dealt"] = float(s.get("damage_dealt", 0.0)) + dealt
+				s["hardest_hit"] = maxf(float(s.get("hardest_hit", 0.0)), dealt)
+			hits.append({"doll": d, "damage": dmg, "dealt": dealt, "part": String(best.name), "falloff": f})
+			if m != null and m.has_method("on_hit") and dealt > 0.0:
+				m.call("on_hit", d, attacker, dealt, "weapon", best.global_position, 0, false, WEAPON_ID, PROP_KICK_SPEED * f)
 		if not d.is_broken():
 			d.apply_knockback(dir * DOLL_IMPULSE_MAX * f, best, stun_s, dir, Tuning.KNOCKBACK_MIN * f)
 			if stun_s > 0.0 and d.alive:

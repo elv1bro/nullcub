@@ -49,6 +49,10 @@ var shots := 0
 var ready_ok := false
 ## Автопилот каналов (боты): held[] пишет _autopilot по цели мозга.
 var auto := false
+## Каналы человека жмёт не клавиатура, а held[] (площадка решает сама — «Стычка 3 на 3»: стреляет ствол, который смотрит на курсор).
+var manual := false
+## Пуля пулемёта ранит и пропсы (Breakable: ящик ломается, взрывная бочка загорается) — «Стычка 3 на 3»; по умолчанию только толкает.
+var bullets_break_props := false
 ## Живые мины этого бойца (минный лоток).
 var mines: Array = []
 
@@ -207,7 +211,7 @@ func _physics_process(dt: float) -> void:
 
 
 func _want(ch: int) -> bool:
-	if doll.external_input or auto:
+	if doll.external_input or auto or manual:
 		return held[ch - 1]
 	var a := ActiveBlocks.action_name(doll.input_prefix, ch)
 	return InputMap.has_action(a) and Input.is_action_pressed(a)
@@ -423,6 +427,8 @@ func _shoot(b: Dictionary) -> void:
 			var victim := _doll_of(body)
 			if victim != null and victim != doll:
 				_deal(victim, float(d["damage"]), String(body.name), end, hit["normal"], "active_gun")
+			elif bullets_break_props and body is Breakable:
+				(body as Breakable).take_damage(float(d["damage"]))
 	host.apply_impulse(-ax * float(d["recoil"]), o - host.global_position)
 	shots += 1
 	_tracer(o, end)

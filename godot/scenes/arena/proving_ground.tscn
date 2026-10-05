@@ -1,0 +1,1056 @@
+[gd_scene format=3 uid="uid://df1dwlp3vk6nk"]
+
+[ext_resource type="Script" path="res://scenes/arena/proving_ground.gd" id="1_6afwe"]
+[ext_resource type="Environment" path="res://assets/environments/ruins_env.tres" id="2_srgfq"]
+[ext_resource type="CameraAttributesPractical" path="res://assets/environments/ruins_camera.tres" id="3_48115"]
+[ext_resource type="PackedScene" path="res://scenes/arena/parallax_background.tscn" id="4_qkfoc"]
+[ext_resource type="Script" path="res://scenes/arena/parallax_background.gd" id="5_jxjwx"]
+[ext_resource type="PackedScene" path="res://scenes/props/stone_platform_4m.tscn" id="6_3lk0v"]
+[ext_resource type="Script" path="res://scenes/props/stone_static.gd" id="7_d6ucw"]
+[ext_resource type="PackedScene" path="res://scenes/props/wall_segment.tscn" id="8_ycyrg"]
+[ext_resource type="PackedScene" path="res://scenes/props/wooden_deck.tscn" id="9_xcfu5"]
+[ext_resource type="PackedScene" path="res://scenes/props/stone_block.tscn" id="10_n0xxd"]
+[ext_resource type="PackedScene" path="res://scenes/props/banner.tscn" id="11_uwjau"]
+[ext_resource type="Script" path="res://scenes/props/banner.gd" id="12_k6702"]
+[ext_resource type="PackedScene" path="res://scenes/props/torch.tscn" id="13_7k0i1"]
+[ext_resource type="Script" path="res://scenes/props/torch.gd" id="14_3ssbm"]
+[ext_resource type="PackedScene" path="res://scenes/props/stone_platform_5m.tscn" id="15_sjrw2"]
+[ext_resource type="PackedScene" path="res://scenes/props/gate.tscn" id="16_y4djf"]
+[ext_resource type="Script" path="res://scenes/props/gate.gd" id="17_q5sw6"]
+[ext_resource type="PackedScene" path="res://scenes/props/wooden_deck_3m.tscn" id="18_71ona"]
+[ext_resource type="PackedScene" path="res://scenes/props/crate.tscn" id="19_2jplv"]
+[ext_resource type="Script" path="res://scenes/props/breakable.gd" id="20_sk044"]
+[ext_resource type="PackedScene" path="res://scenes/props/barrel.tscn" id="21_ueqr3"]
+[ext_resource type="PackedScene" path="res://scenes/props/scrap/prop_metal_barrel.tscn" id="22_5hhdj"]
+[ext_resource type="Script" path="res://scenes/props/explosive_barrel.gd" id="23_n70gk"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ujmvc"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_en74r"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ikkq8"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5i7ua"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_preqw"]
+friction = 0.9
+bounce = 0.05
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_e5khb"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_3xf4b"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_amf7o"]
+friction = 0.8
+bounce = 0.1
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_tw2f5"]
+friction = 0.55
+bounce = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hab41"]
+size = Vector3(1, 40, 8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_863lg"]
+size = Vector3(1, 40, 8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_u72po"]
+size = Vector3(66, 1, 8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_g1uro"]
+size = Vector3(68, 1, 8)
+
+[node name="ProvingGround" type="Node3D" unique_id=639514434]
+script = ExtResource("1_6afwe")
+arena_bounds = AABB(-32, -2, -1, 64, 18, 2)
+
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1900142488]
+environment = ExtResource("2_srgfq")
+camera_attributes = ExtResource("3_48115")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=363237736]
+transform = Transform3D(0.6332378, 0.56181633, -0.53232735, 0, 0.6877994, 0.7259009, 0.7739574, -0.45966786, 0.43554053, 0, 0, 0)
+light_color = Color(1, 0.93, 0.82, 1)
+light_energy = 1.25
+light_indirect_energy = 1.5
+shadow_enabled = true
+shadow_bias = 0.03
+shadow_blur = 1.2
+directional_shadow_split_1 = 0.15
+directional_shadow_split_2 = 0.35
+directional_shadow_split_3 = 0.6
+directional_shadow_max_distance = 60.0
+
+[node name="Parallax" type="Node3D" parent="." unique_id=9474485 instance=ExtResource("4_qkfoc")]
+script = ExtResource("5_jxjwx")
+layer2_y_offset = -0.6
+layer4_scroll = 0.0
+layer3_scroll = 0.25
+layer2_scroll = 0.55
+layer1_scroll = 0.8
+scroll_vertical = false
+
+[node name="Ground" type="Node3D" parent="." unique_id=817913331]
+
+[node name="Ground" type="StaticBody3D" parent="Ground" unique_id=1855928111 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_1" type="StaticBody3D" parent="Ground" unique_id=1730759362 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -26, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_2" type="StaticBody3D" parent="Ground" unique_id=250159238 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_3" type="StaticBody3D" parent="Ground" unique_id=174178694 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -18, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_4" type="StaticBody3D" parent="Ground" unique_id=1880526933 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_5" type="StaticBody3D" parent="Ground" unique_id=67726104 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -10, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_6" type="StaticBody3D" parent="Ground" unique_id=368943526 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_7" type="StaticBody3D" parent="Ground" unique_id=954224700 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -2, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_8" type="StaticBody3D" parent="Ground" unique_id=1869495632 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_9" type="StaticBody3D" parent="Ground" unique_id=816014587 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_10" type="StaticBody3D" parent="Ground" unique_id=1806041153 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_11" type="StaticBody3D" parent="Ground" unique_id=997230181 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 14, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_12" type="StaticBody3D" parent="Ground" unique_id=1478245216 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_13" type="StaticBody3D" parent="Ground" unique_id=855649928 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 22, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_14" type="StaticBody3D" parent="Ground" unique_id=732351176 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Ground_15" type="StaticBody3D" parent="Ground" unique_id=890269429 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 30, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="Foundation" type="StaticBody3D" parent="Ground" unique_id=1919858829 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_1" type="StaticBody3D" parent="Ground" unique_id=466396826 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_2" type="StaticBody3D" parent="Ground" unique_id=1892328526 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_3" type="StaticBody3D" parent="Ground" unique_id=1988726148 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_4" type="StaticBody3D" parent="Ground" unique_id=2135969240 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_5" type="StaticBody3D" parent="Ground" unique_id=125479170 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_6" type="StaticBody3D" parent="Ground" unique_id=2126766923 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_7" type="StaticBody3D" parent="Ground" unique_id=935115762 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_8" type="StaticBody3D" parent="Ground" unique_id=1993625340 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_9" type="StaticBody3D" parent="Ground" unique_id=194268466 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_10" type="StaticBody3D" parent="Ground" unique_id=582925663 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_11" type="StaticBody3D" parent="Ground" unique_id=1344127770 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_12" type="StaticBody3D" parent="Ground" unique_id=1738271749 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_13" type="StaticBody3D" parent="Ground" unique_id=2018456151 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_14" type="StaticBody3D" parent="Ground" unique_id=1408208586 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_15" type="StaticBody3D" parent="Ground" unique_id=372410959 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_16" type="StaticBody3D" parent="Ground" unique_id=1275028710 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_17" type="StaticBody3D" parent="Ground" unique_id=1657328343 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_18" type="StaticBody3D" parent="Ground" unique_id=2081538031 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_19" type="StaticBody3D" parent="Ground" unique_id=1110954643 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_20" type="StaticBody3D" parent="Ground" unique_id=1634018469 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_21" type="StaticBody3D" parent="Ground" unique_id=538557451 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_22" type="StaticBody3D" parent="Ground" unique_id=1438825058 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_23" type="StaticBody3D" parent="Ground" unique_id=855365776 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_24" type="StaticBody3D" parent="Ground" unique_id=1905576965 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_25" type="StaticBody3D" parent="Ground" unique_id=735525524 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_26" type="StaticBody3D" parent="Ground" unique_id=503003211 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_27" type="StaticBody3D" parent="Ground" unique_id=340585257 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_28" type="StaticBody3D" parent="Ground" unique_id=1400072593 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_29" type="StaticBody3D" parent="Ground" unique_id=1344825399 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_30" type="StaticBody3D" parent="Ground" unique_id=537907638 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Foundation_31" type="StaticBody3D" parent="Ground" unique_id=888086182 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, -3, 0.55)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="BaseBlue" type="Node3D" parent="." unique_id=395361783]
+
+[node name="Deck" type="StaticBody3D" parent="BaseBlue" unique_id=51681926 instance=ExtResource("9_xcfu5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0.4, 0)
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+script = ExtResource("7_d6ucw")
+
+[node name="Tower" type="StaticBody3D" parent="BaseBlue" unique_id=2041300525 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 0.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_1" type="StaticBody3D" parent="BaseBlue" unique_id=1073786628 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 3.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_2" type="StaticBody3D" parent="BaseBlue" unique_id=2051762571 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 0.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_3" type="StaticBody3D" parent="BaseBlue" unique_id=574642971 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 3.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_Top" type="StaticBody3D" parent="BaseBlue" unique_id=788690231 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.228011, -0.037783194, -0.19101298, 0.08719559, 0.5486603, 0, 0.21653146, -0.006662196, 1.0832886, -30.3, 6.4, -0.65)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Banner" type="Node3D" parent="BaseBlue" unique_id=588404420 instance=ExtResource("11_uwjau")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.4, 2.65, -0.5)
+script = ExtResource("12_k6702")
+color = "blue"
+
+[node name="Banner_1" type="Node3D" parent="BaseBlue" unique_id=275590842 instance=ExtResource("11_uwjau")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 6.4, -0.5)
+script = ExtResource("12_k6702")
+color = "blue"
+
+[node name="CoverFar" type="StaticBody3D" parent="BaseBlue" unique_id=347464391 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, -0.8, 0)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+
+[node name="CoverFar_Top" type="StaticBody3D" parent="BaseBlue" unique_id=829439554 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.2044661, -0.03705877, 0.28470096, 0.08719559, 0.5486603, 0, -0.32273573, 0.0099298665, 1.0625184, -21, 2.2, 0)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Float" type="StaticBody3D" parent="BaseBlue" unique_id=963311017 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 4.4, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="CoverNear" type="StaticBody3D" parent="BaseBlue" unique_id=1675445297 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, -1.2, 0)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+
+[node name="CoverNear_Top" type="StaticBody3D" parent="BaseBlue" unique_id=1093816118 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.173006, 0.027048843, -0.3762221, -0.06541995, 0.54924625, 0, 0.4269392, 0.009844972, 1.0336618, -11, 1.8, 0)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Ruin" type="StaticBody3D" parent="BaseBlue" unique_id=1408836007 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, -0.6, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Ruin_1" type="StaticBody3D" parent="BaseBlue" unique_id=1242960313 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -13.5, -0.1, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Ruin_Top" type="StaticBody3D" parent="BaseBlue" unique_id=911364710 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.2180319, -0.046888147, 0.22870287, 0.10894467, 0.5479071, 0, -0.25890067, 0.009966384, 1.0759624, -18.2, 2.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Torches" type="Node3D" parent="." unique_id=795092320]
+
+[node name="Torch" type="Node3D" parent="Torches" unique_id=1226746978 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 4.7, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_1" type="Node3D" parent="Torches" unique_id=107846429 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 2, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_2" type="Node3D" parent="Torches" unique_id=430056954 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 2.3, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_3" type="Node3D" parent="Torches" unique_id=159047288 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 4.7, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_4" type="Node3D" parent="Torches" unique_id=321689287 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 2, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_5" type="Node3D" parent="Torches" unique_id=1459952599 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 2.3, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_6" type="Node3D" parent="Torches" unique_id=1722556751 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.9, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_7" type="Node3D" parent="Torches" unique_id=1777273747 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.9, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_8" type="Node3D" parent="Torches" unique_id=1565967591 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 4.7, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="Torch_9" type="Node3D" parent="Torches" unique_id=244744834 instance=ExtResource("13_7k0i1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 4.7, 0.05)
+script = ExtResource("14_3ssbm")
+
+[node name="BaseRed" type="Node3D" parent="." unique_id=978614844]
+
+[node name="Deck_1" type="StaticBody3D" parent="BaseRed" unique_id=194166739 instance=ExtResource("9_xcfu5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.4, 0)
+physics_material_override = SubResource("PhysicsMaterial_ikkq8")
+script = ExtResource("7_d6ucw")
+
+[node name="Tower_4" type="StaticBody3D" parent="BaseRed" unique_id=785574696 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 30.5, 0.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_5" type="StaticBody3D" parent="BaseRed" unique_id=96061314 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 3.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_6" type="StaticBody3D" parent="BaseRed" unique_id=737696969 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 25.5, 0.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_7" type="StaticBody3D" parent="BaseRed" unique_id=725045692 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 3.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=364199797 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.228011, -0.037783194, 0.19101298, 0.08719559, 0.5486603, 0, -0.21653146, 0.006662196, 1.0832886, 30.3, 6.4, -0.65)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Banner_2" type="Node3D" parent="BaseRed" unique_id=1099551811 instance=ExtResource("11_uwjau")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.4, 2.65, -0.5)
+script = ExtResource("12_k6702")
+
+[node name="Banner_3" type="Node3D" parent="BaseRed" unique_id=667744137 instance=ExtResource("11_uwjau")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 6.4, -0.5)
+script = ExtResource("12_k6702")
+
+[node name="CoverFar_1" type="StaticBody3D" parent="BaseRed" unique_id=137922252 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, -0.8, 0)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+
+[node name="CoverFar_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=799943937 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.2044661, 0.03705877, 0.28470096, -0.08719559, 0.5486603, 0, -0.32273573, -0.0099298665, 1.0625184, 21, 2.2, 0)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Float_1" type="StaticBody3D" parent="BaseRed" unique_id=2033340352 instance=ExtResource("6_3lk0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 4.4, 0)
+physics_material_override = SubResource("PhysicsMaterial_ujmvc")
+script = ExtResource("7_d6ucw")
+
+[node name="CoverNear_1" type="StaticBody3D" parent="BaseRed" unique_id=1266938875 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -1.2, 0)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+
+[node name="CoverNear_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=356527925 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.173006, -0.027048843, -0.3762221, 0.06541995, 0.54924625, 0, 0.4269392, -0.009844972, 1.0336618, 11, 1.8, 0)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Ruin_2" type="StaticBody3D" parent="BaseRed" unique_id=967145344 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, -0.6, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Ruin_3" type="StaticBody3D" parent="BaseRed" unique_id=248740131 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 13.5, -0.1, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Ruin_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=1898869134 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.2180319, -0.046888147, 0.22870287, 0.10894467, 0.5479071, 0, -0.25890067, 0.009966384, 1.0759624, 18.2, 2.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Centre" type="Node3D" parent="." unique_id=1764679361]
+
+[node name="Tower_8" type="StaticBody3D" parent="Centre" unique_id=644535447 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_9" type="StaticBody3D" parent="Centre" unique_id=174463492 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 3.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="High" type="StaticBody3D" parent="Centre" unique_id=1165731653 instance=ExtResource("15_sjrw2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 8.6, 0)
+physics_material_override = SubResource("PhysicsMaterial_preqw")
+script = ExtResource("7_d6ucw")
+
+[node name="Tower_10" type="StaticBody3D" parent="Centre" unique_id=462940374 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Tower_11" type="StaticBody3D" parent="Centre" unique_id=50030454 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 3.5, 3.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="High_1" type="StaticBody3D" parent="Centre" unique_id=1774307034 instance=ExtResource("15_sjrw2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 8.6, 0)
+physics_material_override = SubResource("PhysicsMaterial_preqw")
+script = ExtResource("7_d6ucw")
+
+[node name="Gate" type="Node3D" parent="Centre" unique_id=1584025032 instance=ExtResource("16_y4djf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -0.7)
+script = ExtResource("17_q5sw6")
+open = true
+
+[node name="Bridge" type="StaticBody3D" parent="Centre" unique_id=396472865 instance=ExtResource("15_sjrw2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
+physics_material_override = SubResource("PhysicsMaterial_preqw")
+script = ExtResource("7_d6ucw")
+
+[node name="BackWall" type="StaticBody3D" parent="Centre" unique_id=1272388112 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 3.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="BackWall_1" type="StaticBody3D" parent="Centre" unique_id=2094032868 instance=ExtResource("8_ycyrg")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1, 3.4, -0.7)
+physics_material_override = SubResource("PhysicsMaterial_en74r")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="TopDeck" type="StaticBody3D" parent="Centre" unique_id=711123072 instance=ExtResource("18_71ona")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 6.4, 0)
+physics_material_override = SubResource("PhysicsMaterial_e5khb")
+script = ExtResource("7_d6ucw")
+
+[node name="TopDeck_1" type="StaticBody3D" parent="Centre" unique_id=995655318 instance=ExtResource("18_71ona")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.4, 0)
+physics_material_override = SubResource("PhysicsMaterial_e5khb")
+script = ExtResource("7_d6ucw")
+
+[node name="TopDeck_2" type="StaticBody3D" parent="Centre" unique_id=941386730 instance=ExtResource("18_71ona")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 6.4, 0)
+physics_material_override = SubResource("PhysicsMaterial_e5khb")
+script = ExtResource("7_d6ucw")
+
+[node name="TopRuin" type="Node3D" parent="Centre" unique_id=1162142345 instance=ExtResource("16_y4djf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 6.65, -0.7)
+script = ExtResource("17_q5sw6")
+open = true
+doors = false
+
+[node name="TopRuin_Rubble" type="StaticBody3D" parent="Centre" unique_id=972078503 instance=ExtResource("10_n0xxd")]
+transform = Transform3D(1.2263253, -0.047207404, -0.19101298, 0.10894467, 0.5479071, 0, 0.21623424, -0.008323939, 1.0832886, 3.6, 6.65, -0.6)
+physics_material_override = SubResource("PhysicsMaterial_5i7ua")
+script = ExtResource("7_d6ucw")
+solid = false
+
+[node name="Props" type="Node3D" parent="." unique_id=1083776014]
+
+[node name="Crate" type="RigidBody3D" parent="Props" unique_id=124550438 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.3, 2.67, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_1" type="RigidBody3D" parent="Props" unique_id=669814364 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.3, 3.39, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_2" type="RigidBody3D" parent="Props" unique_id=1458493809 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.4, 0.42, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_3" type="RigidBody3D" parent="Props" unique_id=1129922433 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.3, 0.42, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_4" type="RigidBody3D" parent="Props" unique_id=162657123 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.3, 1.14, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_5" type="RigidBody3D" parent="Props" unique_id=1032250132 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.8, 4.82, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_6" type="RigidBody3D" parent="Props" unique_id=2089383660 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 9.02, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_7" type="RigidBody3D" parent="Props" unique_id=613758301 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 6.67, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_8" type="RigidBody3D" parent="Props" unique_id=1634605757 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.3, 2.67, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_9" type="RigidBody3D" parent="Props" unique_id=1529271845 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.3, 3.39, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_10" type="RigidBody3D" parent="Props" unique_id=2120692820 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.4, 0.42, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_11" type="RigidBody3D" parent="Props" unique_id=180245038 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.3, 0.42, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_12" type="RigidBody3D" parent="Props" unique_id=1335842670 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.3, 1.14, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_13" type="RigidBody3D" parent="Props" unique_id=1550593392 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.8, 4.82, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_14" type="RigidBody3D" parent="Props" unique_id=454910366 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 9.02, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Crate_15" type="RigidBody3D" parent="Props" unique_id=1664155476 instance=ExtResource("19_2jplv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 6.67, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_3xf4b")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+kind = "crate"
+hp = 20.0
+
+[node name="Barrel" type="RigidBody3D" parent="Props" unique_id=2096918000 instance=ExtResource("21_ueqr3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.8, 0.42, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 15.0
+physics_material_override = SubResource("PhysicsMaterial_amf7o")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+
+[node name="Barrel_1" type="RigidBody3D" parent="Props" unique_id=68757172 instance=ExtResource("21_ueqr3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.8, 0.42, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 15.0
+physics_material_override = SubResource("PhysicsMaterial_amf7o")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+
+[node name="Barrel_2" type="RigidBody3D" parent="Props" unique_id=2045114072 instance=ExtResource("21_ueqr3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 6.67, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 15.0
+physics_material_override = SubResource("PhysicsMaterial_amf7o")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("20_sk044")
+
+[node name="MetalBarrel" type="RigidBody3D" parent="Props" unique_id=864538343 instance=ExtResource("22_5hhdj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0.42, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 12.0
+physics_material_override = SubResource("PhysicsMaterial_tw2f5")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("23_n70gk")
+hp = 20.0
+
+[node name="MetalBarrel_1" type="RigidBody3D" parent="Props" unique_id=1574229232 instance=ExtResource("22_5hhdj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0.42, 0)
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 12.0
+physics_material_override = SubResource("PhysicsMaterial_tw2f5")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 16
+linear_damp = 0.2
+angular_damp = 0.5
+script = ExtResource("23_n70gk")
+hp = 20.0
+
+[node name="Bounds" type="StaticBody3D" parent="." unique_id=398194308]
+
+[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=46857008]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.5, 10, 0)
+shape = SubResource("BoxShape3D_hab41")
+
+[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=612293185]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.5, 10, 0)
+shape = SubResource("BoxShape3D_863lg")
+
+[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=377751222]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16.5, 0)
+shape = SubResource("BoxShape3D_u72po")
+
+[node name="DeathZone" type="Area3D" parent="." unique_id=65223834]
+
+[node name="Floor" type="CollisionShape3D" parent="DeathZone" unique_id=7204401]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -14.5, 0)
+shape = SubResource("BoxShape3D_g1uro")
+
+[node name="Spawns" type="Node3D" parent="." unique_id=514047392]
+
+[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=257241825]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.45, 0)
+
+[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=1237946927]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.45, 0)
+
+[node name="Spawn2" type="Marker3D" parent="Spawns" unique_id=212204156]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 2.7, 0)
+
+[node name="Spawn3" type="Marker3D" parent="Spawns" unique_id=1799774332]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 2.7, 0)
+
+[node name="Spawn4" type="Marker3D" parent="Spawns" unique_id=533775510]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.8, 0.45, 0)
+
+[node name="Spawn5" type="Marker3D" parent="Spawns" unique_id=1708588769]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.8, 0.45, 0)
