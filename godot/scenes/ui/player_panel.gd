@@ -99,8 +99,8 @@ func set_hp(hp: float, max_hp: float = Tuning.MAX_HP, animate: bool = true) -> v
 
 
 ## Заряд бойца (COMBAT_CHARGE.md): значение и «выдохся»; зовёт Hud каждый кадр из Doll.charge / charge_locked.
-func set_charge(value: float, locked: bool) -> void:
-	charge_bar.set_charge(value, locked)
+func set_charge(value: float, locked: bool, cap: float = Tuning.CHARGE_MAX) -> void:
+	charge_bar.set_charge(value, locked, cap)
 
 
 func set_combo(n: int) -> void:

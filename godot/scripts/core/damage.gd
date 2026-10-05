@@ -183,10 +183,14 @@ static func armor_stack(a: float, b: float) -> float:
 
 
 ## Множитель урона по телу с бронёй: 1 − meta "armor" (ModularDoll пишет её телу, с которым слит щиток); без меты — 1.0.
+## Модуль «Обтекатель» (PartMods frail, meta "frail"): тонкая жесть — урон в это тело × (1 + frail) поверх брони.
 static func armor_mult_of_body(b: Node) -> float:
-	if b == null or not b.has_meta("armor"):
+	if b == null:
 		return 1.0
-	return 1.0 - clampf(float(b.get_meta("armor")), 0.0, Tuning.ARMOR_MAX)
+	var frail := 1.0 + maxf(float(b.get_meta("frail", 0.0)), 0.0)
+	if not b.has_meta("armor"):
+		return frail
+	return (1.0 - clampf(float(b.get_meta("armor")), 0.0, Tuning.ARMOR_MAX)) * frail
 
 
 ## Множитель жертвы по телу, в которое попали: место (target_mult_of по имени) × броня этого тела.

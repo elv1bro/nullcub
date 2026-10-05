@@ -155,6 +155,12 @@ var dash_ready_at := 0.0
 # --- Заряд (docs/plan-demo/COMBAT_CHARGE.md): ресурс ускорения и раскрутки ---
 ## Заряд 0…CHARGE_MAX; выше — перезаряд до CHARGE_OVER_MAX (тает, когда серия ударов оборвалась). HUD читает charge / charge_locked.
 var charge: float = Tuning.CHARGE_MAX
+## Модули (PartMods, WORKSHOP_V4.md «Модули»; ставит ModularDoll._build): батарея — запас Заряда сверх CHARGE_MAX (charge_cap); маховик —
+## раскрутка сильнее (spin_torque_mult) и дешевле (spin_cost_mult), удар меньше крутит (knock_spin_mult: доля отброса в ударенную деталь).
+var charge_cap_bonus := 0.0
+var spin_torque_mult := 1.0
+var spin_cost_mult := 1.0
+var knock_spin_mult := 1.0
 ## Выдохся (дошёл до 0): ускорение и раскрутка заперты, пока charge не вернётся до CHARGE_RESTART.
 var charge_locked := false
 var _boosting := false                ## ускорение включено в этот тик (Shift держится, Заряд есть)
@@ -590,6 +596,7 @@ func take_damage(amount: float, attacker: Node, part: String, position: Vector3,
 	if amount <= 0.0 or not can_take_damage():
 		hit_meta = {}
 		return
+	var striker: Object = hit_meta.get("striker") if hit_meta.get("striker") is Object else null
 	hp = maxf(hp - amount, 0.0)
 	stats["damage_taken"] = float(stats["damage_taken"]) + amount
 	stats["collisions"] = int(stats["collisions"]) + 1
@@ -607,7 +614,11 @@ func take_damage(amount: float, attacker: Node, part: String, position: Vector3,
 	if hp <= 0.0:
 		knock_out(attacker, record)
 	elif JointBreak.on or PartHp.on:
-		_wear_joint(part, amount, attacker)
+		# модуль «Наждак» на бьющем теле (PartMods): чужая деталь изнашивается сильнее, своя — стирается частью урона
+		_wear_joint(part, amount * PartMods.of(striker, "wear_mult"), attacker)
+		var sw := PartMods.of(striker, "self_wear")
+		if sw > 0.0 and attacker is Doll and attacker != self and (attacker as Doll).alive and striker is Node:
+			(attacker as Doll)._wear_joint(String((striker as Node).name), amount * sw, self)
 
 
 ## ❤ каждой детали (PartHp.hp_of): масса тела (у ModularDoll — со слитыми щитками и декором) × материал. Прочность материала — meta
@@ -661,6 +672,7 @@ func _init_joint_hp() -> void:
 		joint_depth[n] = int(depth[b])
 		# запас из деталей: порог отрыва — от ❤ самой детали (PartHp.break_hp), а не от глубины
 		joint_hp_max[n] = PartHp.break_hp(float(part_hp.get(n, 0.0)), head) if PartHp.on else JointBreak.hp_for_depth(int(depth[b]))
+		joint_hp_max[n] = float(joint_hp_max[n]) * PartMods.of(b, "break_mult")   # амортизатор: деталь труднее оторвать
 		joint_hp[n] = joint_hp_max[n]
 
 
@@ -751,16 +763,21 @@ func add_charge(amount: float, over: bool = false) -> float:
 		return 0.0
 	if over:
 		_charge_hold_until = _time + Tuning.CHARGE_OVER_HOLD_S
-	var cap := Tuning.CHARGE_OVER_MAX if over else Tuning.CHARGE_MAX
+	var cap := Tuning.CHARGE_OVER_MAX + charge_cap_bonus if over else charge_cap()
 	var added := clampf(minf(amount, cap - charge), 0.0, amount)
 	charge += added
 	stats["charge_from_hits"] = float(stats["charge_from_hits"]) + added
 	return added
 
 
+## Полный запас Заряда: CHARGE_MAX + батареи (PartMods charge_bonus).
+func charge_cap() -> float:
+	return Tuning.CHARGE_MAX + charge_cap_bonus
+
+
 ## Полный бак, снять запоры (начало матча, reset_for_match).
 func reset_charge() -> void:
-	charge = Tuning.CHARGE_MAX
+	charge = charge_cap()
 	charge_locked = false
 	_boosting = false
 	_spinning = false
@@ -777,7 +794,7 @@ func _tick_charge(delta: float, boosting: bool, spinning: bool) -> void:
 		spend += Tuning.CHARGE_DRAIN_PER_S
 		stats["boost_s"] = float(stats["boost_s"]) + delta
 	if spinning:
-		spend += Tuning.CHARGE_SPIN_DRAIN_PER_S
+		spend += Tuning.CHARGE_SPIN_DRAIN_PER_S * spin_cost_mult   # маховик — дешевле
 		stats["spin_s"] = float(stats["spin_s"]) + delta
 	if spend > 0.0:
 		var spent := minf(charge, spend * delta)
@@ -790,14 +807,14 @@ func _tick_charge(delta: float, boosting: bool, spinning: bool) -> void:
 			_boost_rearm = boosting
 			_spin_rearm = spinning
 			stats["charge_empty"] = int(stats["charge_empty"]) + 1
-	elif _time >= _charge_regen_at and charge < Tuning.CHARGE_MAX:
-		var gained := minf(Tuning.CHARGE_MAX - charge, Tuning.CHARGE_REGEN_PER_S * delta)
+	elif _time >= _charge_regen_at and charge < charge_cap():
+		var gained := minf(charge_cap() - charge, Tuning.CHARGE_REGEN_PER_S * delta)
 		charge += gained
 		stats["charge_from_regen"] = float(stats["charge_from_regen"]) + gained
 	if charge_locked and charge >= Tuning.CHARGE_RESTART:
 		charge_locked = false
-	if charge > Tuning.CHARGE_MAX and _time >= _charge_hold_until:
-		charge = maxf(Tuning.CHARGE_MAX, charge - Tuning.CHARGE_OVER_DECAY_PER_S * delta)
+	if charge > charge_cap() and _time >= _charge_hold_until:
+		charge = maxf(charge_cap(), charge - Tuning.CHARGE_OVER_DECAY_PER_S * delta)
 
 
 ## Оторвать часть вместе с поддеревом (PvE, CONCEPT_V2: Разборщик откручивает деталь, позже пресс и Садовник).
@@ -915,6 +932,11 @@ func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
 					if is_instance_valid(s) and is_instance_valid(p):
 						(s as RigidBody3D).remove_collision_exception_with(p))
 	part_detached.emit(part_name, by)
+	# модуль «Батарея» (PartMods blast) на отлетевшем куске — взрыв на следующем кадре, урон засчитан тому, кто оторвал
+	for s in sub:
+		var pw := PartMods.of(s, "blast")
+		if pw > 0.0 and is_inside_tree():
+			_battery_blast.call_deferred(s as RigidBody3D, by, pw)
 	var lost := float(rec["hp_lost"])
 	if lost > 0.0 and alive:
 		max_hp = maxf(max_hp - lost, 1.0)
@@ -924,6 +946,16 @@ func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
 		if hp <= 0.0:   # оторвали последнее, что держало запас, — добивание
 			knock_out(by, {"kind": "detach", "part": part_name, "damage": lost})
 	return b
+
+
+## Взрыв батареи на оторванном куске (Explosion грузится по пути: doll.gd не тянет сцены пропсов при компиляции сборщиков в -s).
+func _battery_blast(body: RigidBody3D, by: Node, power: float) -> void:
+	if body == null or not is_instance_valid(body) or not is_inside_tree():
+		return
+	var ex: Script = load("res://scenes/props/explosion.gd")
+	var at := Vector3(body.global_position.x, body.global_position.y, 0.0)
+	ex.call("detonate", get_parent(), at, by if by != null and is_instance_valid(by) else null, body, power)
+	stats["batteries_blown"] = int(stats.get("batteries_blown", 0)) + 1
 
 
 ## Прикрутить обратно часть, оторванную detach_part (PvE: отобранную у Разборщика кисть игрок возвращает себе). body — корень
@@ -1145,7 +1177,7 @@ func apply_knockback(impulse: Vector3, part: RigidBody3D = null, stun_s: float =
 	if part == null or part == t or not is_instance_valid(part) or part.get_parent() != self:
 		t.linear_velocity += impulse / t.mass
 	else:
-		var share := Drive.kb_torso_share()
+		var share := 1.0 - (1.0 - Drive.kb_torso_share()) * knock_spin_mult   # маховик: меньше в ударенную деталь — меньше закрутки
 		var to_part := impulse * (1.0 - share)
 		var extra := Vector3.ZERO
 		var max_j := part.mass * Tuning.KNOCKBACK_PART_MAX_DV
@@ -1195,9 +1227,11 @@ func _part_linear_damp(part: String, flight: bool) -> float:
 	var key := ("flight_" if flight else "") + ("core" if core else "limb")
 	if damp_override.has(key):
 		return float(damp_override[key])
+	var b: Object = parts.get(part)   # модули (PartMods): обтекатель — воздух тормозит меньше (drag_mult), парус — больше (drag_add)
 	if flight:   # полёт после удара: ControlFeel меняет только инерцию управляемого хода; ДРАЙВ — лёгкий дамп полёта (Drive)
-		return Drive.flight_damp(core)
-	return (Tuning.DOLL_LINEAR_DAMP if core else Tuning.DOLL_LIMB_LINEAR_DAMP) * ControlFeel.damp_mult() * Drive.move_damp_mult()
+		return Drive.flight_damp(core) * PartMods.of(b, "drag_mult") + PartMods.of(b, "drag_add")
+	return (Tuning.DOLL_LINEAR_DAMP if core else Tuning.DOLL_LIMB_LINEAR_DAMP) * ControlFeel.damp_mult() * Drive.move_damp_mult() \
+		* PartMods.of(b, "drag_mult") + PartMods.of(b, "drag_add")
 
 
 func _part_angular_damp(part: String) -> float:
@@ -1593,8 +1627,8 @@ func _physics_process(delta: float) -> void:
 	if _spinning:
 		# вправо — по часовой (кувырок вперёд по ходу), как режим rotate; выше SPIN_MAX_W момент не прикладывается
 		var s := -signf(v.x)
-		if torso().angular_velocity.z * s < Tuning.SPIN_MAX_W:
-			torso().apply_torque(Vector3(0, 0, s * minf(absf(v.x), 1.0) * Tuning.SPIN_TORQUE_PER_KG * thrust_mass()))
+		if torso().angular_velocity.z * s < Tuning.SPIN_MAX_W * sqrt(spin_torque_mult):   # маховик поднимает и потолок раскрутки
+			torso().apply_torque(Vector3(0, 0, s * minf(absf(v.x), 1.0) * Tuning.SPIN_TORQUE_PER_KG * thrust_mass() * spin_torque_mult))
 	_tick_charge(delta, _boosting, _spinning)
 	if mode == "rotate":
 		if abs(v.x) > 0.01:

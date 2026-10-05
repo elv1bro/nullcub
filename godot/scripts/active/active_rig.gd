@@ -120,6 +120,7 @@ func _exit_tree() -> void:
 
 func _collect() -> void:
 	blocks.clear()
+	charge_max += float(doll.mod_totals.get("charge_bonus", 0.0))   # модуль «Батарея» (PartMods): и заряд активных блоков
 	for n in doll.blueprint.nodes:
 		var pid := String(n.get("part", ""))
 		var uid := String(n.get("uid", ""))

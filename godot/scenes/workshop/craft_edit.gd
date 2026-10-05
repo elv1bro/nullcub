@@ -69,6 +69,7 @@ const BODY_SHELVES := [
 	{"id": "armor", "title": "Броня", "kinds": ["plate", "armor", "mod", "weapon_head"], "icon": "kit_deco_gauntlet_s"},
 	{"id": "deco", "title": "Декор", "kinds": ["deco"], "icon": "kit_deco_crown", "only": "passive"},
 	{"id": "active", "title": "Активные", "kinds": ["deco"], "icon": "kit_active_booster", "only": "active"},
+	{"id": "mods", "title": "Модули", "kinds": ["deco"], "icon": "kit_mod_servo", "only": "mods"},
 	{"id": "mat", "title": "Материал", "kinds": [], "tool": "material", "glyph": "▦"},
 	{"id": "paint", "title": "Покраска", "kinds": [], "tool": "paint", "glyph": "✎"},
 ]
@@ -187,8 +188,10 @@ static func shelf_allows(sh: Dictionary, d: PartDef) -> bool:
 	match String(sh.get("only", "")):
 		"active":
 			return ActiveBlocks.is_active(d.id)
+		"mods":   # модули (PartMods, WORKSHOP_V4.md «Модули»): пассивные детали со свойствами, без клавиши
+			return PartMods.is_mod(d.id)
 		"passive":
-			return not ActiveBlocks.is_active(d.id)
+			return not ActiveBlocks.is_active(d.id) and not PartMods.is_mod(d.id)
 	return true
 
 
@@ -1481,6 +1484,8 @@ static func part_desc(d: PartDef) -> String:
 					elif ad.has("cost_use"):   # крюк: выстрел троса по нажатию и тяга, пока зажато
 						cost = TranslationServer.translate("%.0f заряда за нажатие и %.0f заряда/с") % [float(ad["cost_use"]), float(ad["cost"])]
 					lines.append(TranslationServer.translate("Активный блок: %s. Работает, пока зажата клавиша его канала; тратит %s.") % [hint, cost])
+			elif PartMods.is_mod(d.id):
+				lines.append(TranslationServer.translate("Модуль: %s. Работает всегда, без клавиши.") % TranslationServer.translate(String(PartMods.def_of(d.id)["hint"])))
 			else:
 				lines.append(TranslationServer.translate("Декор: сливается с деталью-хозяином."))
 		"weapon_head": lines.append(TranslationServer.translate("Навершие: на оружии — множитель урона ×%.2f; на теле — масса и форма.") % d.weapon_mult)

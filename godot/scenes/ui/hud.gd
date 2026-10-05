@@ -333,4 +333,4 @@ func _poll_charge() -> void:
 			continue
 		var p := panel_for(player_of(d))
 		if p != null:
-			p.set_charge(float(c), bool(d.get("charge_locked")))
+			p.set_charge(float(c), bool(d.get("charge_locked")), float(d.call("charge_cap")) if d.has_method("charge_cap") else Tuning.CHARGE_MAX)
