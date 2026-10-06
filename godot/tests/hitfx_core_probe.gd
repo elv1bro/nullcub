@@ -29,7 +29,9 @@
 ##              ≤ CRIT_FLIGHT_MAX_SPEED × sd. В отчёте info.freq.hits — все удары [площадка@сид, матч, t, урон, score, eligible, tier,
 ##              kind, атакующий, double_blow, is_ko, part, dash, combo, weapon_id, crit_block] для перекалибровки порогов; info.freq.power —
 ##              мощные удары по уровням и причинам, damage_dist — урон crit и heavy по корзинам; crit=0 — те же бои без крита.
-## Запуск (≈ 75 с): godot --headless --path . --fixed-fps 60 res://tests/hitfx_core_probe.tscn -- "freq=void+ruins+workshop,matches=6,seeds=29+7"
+## Запуск (≈ 100 с): godot --headless --path . --fixed-fps 60 res://tests/hitfx_core_probe.tscn -- "freq=void+ruins+workshop,matches=6,seeds=29+7+13"
+##   (06.10: три сида вместо двух — в «Запасе из деталей», стандарте с 06.10, бои короче, период крита ≈ 30 с вместо ≈ 34 с и с большим
+##   разбросом; на 36 матчах 1 прогон из 7 уходил ниже 25 с, на 54 разброс меньше. Коридор 25–45 с прежний.)
 ##   only=tier — только синтетика HitTier + масса (tests/hit_tier_probe.tscn, секунды); freq=none — без ботов.
 ## Отчёт tests/hitfx_core_probe_report.json (или out=…), exit 0/1.
 extends Node3D
@@ -58,7 +60,7 @@ const UNSTICK_S := 1.2
 ## Режим по умолчанию (tests/hit_tier_probe.tscn ставит "tier"); аргумент only= перекрывает.
 @export var default_only := ""
 
-var cfg := {"only": "", "freq": "void+ruins+workshop", "freq_s": 60.0, "matches": 6, "crit": true, "seed": 29, "seeds": "29+7", "out": "res://tests/hitfx_core_probe_report.json"}
+var cfg := {"only": "", "freq": "void+ruins+workshop", "freq_s": 60.0, "matches": 6, "crit": true, "seed": 29, "seeds": "29+7+13", "out": "res://tests/hitfx_core_probe_report.json"}
 var report := {"ok": true, "checks": [], "info": {}}
 var t := 0.0
 var pg: Node3D = null
@@ -961,7 +963,7 @@ func _freq_checks() -> void:
 				var c: Dictionary = fx_ctxs[i]
 				tiers[c["tier"]] = int(tiers.get(c["tier"], 0)) + 1
 				all_hits.append(["%s@%d" % [sid, int(run[0])], match_i, snappedf(float(c["fight_time"]), 0.01), snappedf(float(c["damage"]), 0.01), snappedf(float(c["score"]), 0.01),
-					1 if HitTier.eligible(c) else 0, c["tier"], c["kind"], (c["attacker"] as Doll).player_index if c["attacker"] is Doll else -1,
+					1 if HitTier.eligible(c) else 0, c["tier"], c["kind"], (c["attacker"] as Doll).player_index if is_instance_valid(c["attacker"]) and c["attacker"] is Doll else -1,
 					1 if bool(c["double_blow"]) else 0, 1 if bool(c["is_ko"]) else 0, String(c["part"]), 1 if bool(c["dash"]) else 0, int(c["combo"]),
 					String(c.get("weapon_id", "")), String(c.get("crit_block", ""))])
 				if c["tier"] == "crit" or c["tier"] == "ko_crit":

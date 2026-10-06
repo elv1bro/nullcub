@@ -17,6 +17,8 @@ signal dash_ended
 
 const DROP_FREE_S := 1.5
 const DASH_TAIL_S := 0.3          # после конца полёта удар ещё считается «в полёте» (инерция)
+const SETUP_RETRY_S := 0.1   # руки ещё нет (тело собирается) — повтор через столько, не больше SETUP_RETRIES раз
+const SETUP_RETRIES := 20
 
 var doll: Doll
 var weapon_id := ""
@@ -33,6 +35,7 @@ var dash_end_t := -10.0
 ## Ударная волна молота уже была в этом полёте.
 var wave_done := false
 var _match: Node = null
+var _retries := 0
 
 
 func _ready() -> void:
@@ -102,9 +105,14 @@ func equip(id: String, mult: float = 1.0) -> void:
 	if a == null or a.part == null or not is_instance_valid(a.part):
 		if a != null and a.part_name != "" and not doll.parts.has(a.part_name):
 			return   # руки нет (оторвана): оружие вернётся с рукой (rearm из SquadMatch.restore_arm)
+		# рука ещё не собрана — позже, по таймеру: call_deferred из отложенного вызова крутится в том же кадре (руки нет совсем —
+		# очередь сообщений переполнялась и игра падала, signal 11)
 		weapon_id = ""
-		_setup.call_deferred()   # рука ещё не собрана — позже
+		if _retries < SETUP_RETRIES and is_inside_tree():
+			_retries += 1
+			get_tree().create_timer(SETUP_RETRY_S).timeout.connect(_setup)
 		return
+	_retries = 0
 	var w := Weapon.spawn(weapon_id, doll.get_parent(), a.grip_global(), 0.0)
 	if w == null:
 		weapon_id = ""
