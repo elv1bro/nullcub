@@ -173,7 +173,10 @@ func _pass() -> Dictionary:
 			pz.join_p2()
 			await _wait(SETTLE)
 			shots["puzzle:p2"] = _scan(inst)
-			pz.room_times = [42.0, 31.5, 77.0, 25.0, 64.0, 58.0]
+			pz.goto_room(pz.rooms.size() - 1)   # «Стрелочник» (PORTAL.md): самая длинная подсказка и строка «Один: …»
+			await _wait(SETTLE)
+			shots["puzzle:room8"] = _scan(inst)
+			pz.room_times =[42.0, 31.5, 77.0, 25.0, 64.0, 58.0, 36.0, 49.5]
 			pz.done = true
 			pz.demo_finished.emit(297.5)
 			await _wait(SETTLE * 2)
