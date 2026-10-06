@@ -88,6 +88,11 @@ const SPAWN_POSE_GROUPS := ["Shoulder", "Elbow", "Hip", "Knee"]   # прокси
 ## Множитель всего входящего урона и стана (team_mult_for — через него идут take_damage и DollCombat): режимы со своей защитой —
 ## броня «Стычки 3 на 3» (SquadMatch: 0.5, пока она есть). 1 — как без режима.
 var incoming_mult := 1.0
+## Множители тяги и потолка скорости управления (по умолчанию 1; стычка: бонус «форсаж», несущий флаг, полёт громилы — потолок; держатель бомбы ×1.2 — BombMatch, BOMB.md).
+var thrust_mult := 1.0
+var speed_cap_mult := 1.0
+## Без торможения торса при нулевом вводе (стычка: громилу тянет оружие, клавиши движения можно не жать).
+var brake_off := false
 
 ## Подбор дампа без правки Tuning (tests/feel_probe: ldc/ldl/adl/fdc/fdl/brake): ключи "core", "limb", "limb_ang", "flight_core",
 ## "flight_limb", "brake", "core_ang" перекрывают Tuning.DOLL_LINEAR_DAMP / DOLL_LIMB_LINEAR_DAMP / DOLL_LIMB_ANGULAR_DAMP / FLIGHT_LINEAR_DAMP /
@@ -149,6 +154,13 @@ var joint_depth: Dictionary = {}
 ## Запас из деталей (PartHp, docs/plan-demo/WORKSHOP_V4.md): имя тела → ❤ детали (масса × материал, PartHp.hp_of). Считается всегда
 ## (_init_part_hp), в бою работает только при PartHp.on: запас бойца = Σ ❤ (parts_hp_total, ставит Match), отрыв уносит ❤ поддерева.
 var part_hp: Dictionary = {}
+## Деталей нет с рождения (спорт-зал, автор 06.10: «между матчами не чиним, оставляем как есть»): имена тел и порванных связок
+## («Link_<id>»), ставит Match.respawn_doll(keep_lost) до add_child. Кукла из сцены (doll.tscn) — _ready убирает эти тела, всё, что на
+## них висит, и их суставы до сборки; ModularDoll — _build не строит такие узлы чертежа со всей веткой, _build_links — такие связки.
+## Торс (ядро) и голова не убираются.
+var missing_parts: PackedStringArray = []
+var _born_parts: Array = []   # имена тел после сборки (_ready): чего из них нет в parts — оторвано (lost_part_names)
+var _broken_links: PackedStringArray = []   # связки, порванные в бою (break_link) — тоже в lost_part_names
 ## Связки (KitLink, строит ModularDoll._build_links после спавна в позе; WORKSHOP_V4.md «Связки»): имя связки → {id, type, bodies, joints,
 ## a, b (тела концов), hp (❤), len, strut (сустав телескопа у пружины и поршня), extend, channel}; имя тела связки → имя связки.
 ## Суставы связок не суставы мышц: в joints их нет. Износ связки (link_wear) тратит урон в её тела в любом бою — связку можно перебить.
@@ -237,11 +249,14 @@ func _ready() -> void:
 		_group_zeta[g] = muscle_zeta if muscle_zeta >= 0.0 else float(G.get("zeta", Tuning.MUSCLE_ZETA))
 
 	# части и суставы — из дерева сцены
+	if not missing_parts.is_empty():
+		_drop_missing_parts()
 	for c in get_children():
 		if c is RigidBody3D:
 			parts[c.name] = c
 		elif c is Generic6DOFJoint3D:
 			joints[c.name] = c
+	_born_parts = parts.keys()
 	for j in joints.values():
 		var a := j.get_node_or_null(j.node_a) as RigidBody3D
 		var b := j.get_node_or_null(j.node_b) as RigidBody3D
@@ -296,6 +311,41 @@ func _ready() -> void:
 		add_child(skin)
 		if skin.apply(self, skin_scene, skin_mode, skin_bone_map):
 			_set_rig_visible(false)
+
+
+## Убрать до сборки тела missing_parts (кроме торса и головы), всё, что висит на них по суставам (node_a — родитель, node_b — ребёнок),
+## и суставы, которые к ним шли.
+func _drop_missing_parts() -> void:
+	var gone: Array = []
+	for c in get_children():
+		var base := part_base_name(String(c.name))
+		if c is RigidBody3D and missing_parts.has(String(c.name)) and base != "Torso" and base != "Head":
+			gone.append(c)
+	var js: Array = get_children().filter(func(c: Node) -> bool: return c is Generic6DOFJoint3D)
+	var i := 0
+	while i < gone.size():
+		for j in js:
+			var child := (j as Generic6DOFJoint3D).get_node_or_null((j as Generic6DOFJoint3D).node_b)
+			if (j as Generic6DOFJoint3D).get_node_or_null((j as Generic6DOFJoint3D).node_a) == gone[i] and child is RigidBody3D and not gone.has(child):
+				gone.append(child)
+		i += 1
+	for j in js:
+		var jj := j as Generic6DOFJoint3D
+		if gone.has(jj.get_node_or_null(jj.node_a)) or gone.has(jj.get_node_or_null(jj.node_b)):
+			gone.append(jj)
+	for n in gone:
+		remove_child(n)
+		(n as Node).queue_free()
+
+
+## Имена деталей, которых у куклы уже нет: не было с рождения (missing_parts), оторванные в бою со всем, что на них висело (detach_part),
+## и порванные связки («Link_<id>», break_link). Голова и торс не попадают: их отрыв — KO, тела остаются в parts.
+func lost_part_names() -> PackedStringArray:
+	var out := PackedStringArray(missing_parts)
+	for n in _born_parts + Array(_broken_links):
+		if not parts.has(n) and not out.has(String(n)):
+			out.append(String(n))
+	return out
 
 
 ## Ставит суставы групп groups (по порядку: проксимальные раньше) в позу покоя до первого шага физики: дистальная цепь сустава
@@ -697,6 +747,7 @@ func break_link(ln: String, by: Node = null) -> bool:
 	joint_broken.emit(String((bodies[0] as Node).name) if not bodies.is_empty() and is_instance_valid(bodies[0]) else ln, by, pos)   # вспышка и искры (JointBreakFx)
 	var tchild := String(rec.get("tether_child", ""))   # деталь на этой связке: улетит со всей веткой
 	links_rt.erase(ln)
+	_broken_links.append(ln)
 	link_wear.erase(ln)
 	for j in rec["joints"]:
 		if is_instance_valid(j):
@@ -1713,7 +1764,7 @@ func _physics_process(delta: float) -> void:
 	var locked := _time < thrust_lock_until
 	if locked:
 		v = Vector2.ZERO   # отдача после удара: тяги нет (RM: бьющий не дожимает жертву)
-	_set_idle_brake(v.length_squared() <= 0.0001 and _time >= knockback_until)
+	_set_idle_brake(v.length_squared() <= 0.0001 and _time >= knockback_until and not brake_off)
 	var control := 1.0 - Tuning.STUN_CONTROL_LOSS if is_stunned() else 1.0
 	var share := _head_share()
 	var body := _control_body()
@@ -1734,7 +1785,7 @@ func _physics_process(delta: float) -> void:
 	if _spinning and not was_spinning:
 		flipped.emit(signf(v.x))        # звук: раскрутка пошла
 	var thrust_n: float = ControlFeel.thrust() * thrust_mass()
-	var mult: float = (ControlFeel.dash_mult() if is_dashing() else 1.0) * control
+	var mult: float = (ControlFeel.dash_mult() if is_dashing() else 1.0) * control * thrust_mult
 	if _spinning:
 		# вправо — по часовой (кувырок вперёд по ходу), как режим rotate; выше SPIN_MAX_W момент не прикладывается
 		var s := -signf(v.x)
@@ -1746,7 +1797,7 @@ func _physics_process(delta: float) -> void:
 			torso().apply_torque(Vector3(0, 0, -v.x * Tuning.ROTATE_TORQUE * mult))
 		if abs(v.y) > 0.01:
 			_push(Vector3(0, v.y, 0) * thrust_n * mult, share)
-	var max_speed: float = ControlFeel.max_speed() * (ControlFeel.dash_mult() if is_dashing() else 1.0)
+	var max_speed: float = ControlFeel.max_speed() * (ControlFeel.dash_mult() if is_dashing() else 1.0) * speed_cap_mult
 	if mode != "rotate" and v.length_squared() > 0.0001:
 		var f := Vector3(v.x, v.y, 0.0).limit_length(1.0) * thrust_n * mult
 		var tb := ControlFeel.turn_boost()

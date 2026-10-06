@@ -13,8 +13,13 @@
 ##     такому ящику, если он ближе Tuning.SQUAD_BOT_SUPPLY_M; по дороге стреляет, если может; не добрался за CRATE_GIVE_UP_S —
 ##     ящик брошен на CRATE_SKIP_S (пути бот не ищет — идёт напрямую);
 ##   • melee   — цель ближе SQUAD_BOT_MELEE_M или патронов нет и ящика с ними нет: наскок тягой с ускорением (кукла бьёт телом);
-##   • brawl   — громила (рукопашный класс, SquadMelee): к цели с рывком, рука с оружием — на неё, ближе BRAWL_LUNGE_M — выпад.
-## Класс и оружие бота — от матча (SquadMatch: класс по SQUAD_BOT_CLASSES, оружие — по опыту, само).
+##   • brawl   — громила (рукопашный класс, SquadMelee): к цели с рывком, рука с оружием — на неё; ближе BRAWL_LUNGE_M — полёт за
+##     оружием (держит до BOT_DASH_MAX_S или до цели), мимо — снова;
+##   • objective — захват флага (SquadMatch.mode «ctf»): несущий — домой к своему флагу; свой флаг унесли — все гонятся за несущим
+##     (он — цель); свой флаг лежит — ближайший идёт вернуть; иначе нападающие (места 0 и 2) — к чужому флагу, защитник (место 1,
+##     снайпер) — у своей базы; соперник ближе OBJ_ENGAGE_M — сначала бой.
+## Гаусс копит заряд (спуск зажат) до gauss_charge и стреляет, отпустив, когда ствол на цели. Руку с оружием оторвало — к ближайшему
+## ящику любого вида (он вернёт руку), по дороге бьёт телом. Класс, ветка и оружие бота — от матча (SquadMatch), сами.
 class_name SquadBrain
 extends EnemyBrain
 
@@ -28,13 +33,17 @@ const CEIL_MARGIN := 2.0            # м под потолком карты
 const MELEE_S := 0.8
 const LOW_HP := 0.45                # доля HP: ниже — к ящику жизней
 const CLOSE_RANGE_M := 12.0
-const BRAWL_LUNGE_M := 5.0           # громила: ближе — выпад (выпад 7.5 м/с покрывает это за ~0.6 с)
+const BRAWL_LUNGE_M := 9.0           # громила: ближе — полёт к цели (12 м/с: 9 м — за ~0.8 с, под огнём меньше)
 const BRAWL_DASH_M := 6.0            # громила: дальше — рывок на сближение
 const CRATE_GIVE_UP_S := 6.0         # к ящику не добрался за столько (пути нет: напрямую, а сверху настил) — бросить его …
 const CRATE_SKIP_S := 15.0           # … на столько
 const STUCK_RADIUS_M := 1.5
 const STUCK_AREA_S := 5.0
-const UNSTICK_DIRS := [Vector2(0.6, 0.9), Vector2(1.0, -0.15), Vector2(0.5, -0.9), Vector2(-0.6, 0.9), Vector2(-1.0, -0.15)]         # оружие с дальностью не больше этой (обрез, дробовик) — сближаться рывком
+const UNSTICK_DIRS := [Vector2(0.6, 0.9), Vector2(1.0, -0.15), Vector2(0.5, -0.9), Vector2(-0.6, 0.9), Vector2(-1.0, -0.15)]
+const BOT_DASH_MAX_S := 1.2          # громила: полёт бота — не дольше (5 с полёта человек держит сам, бот бы улетал мимо)
+const OBJ_ENGAGE_M := 8.0            # захват флага, защитник: соперник ближе — бой, дальше — к своему флагу
+const OBJ_RUSH_FIGHT_M := 4.0        # захват флага, нападающий (и кто возвращает свой флаг): к цели, стреляя на ходу; бой — только вплотную
+const DEFEND_M := 6.0                # защитник держится у своего флага не дальше
 
 ## Уровень 1..3 (Tuning.SQUAD_BOT_LEVELS); 0 — default_level (его ставит площадка: Match.respawn_doll создаёт мозг заново, экспорт теряется).
 @export var level := 0
@@ -53,6 +62,8 @@ var _stuck_anchor_t := 0.0
 var _unstick_n := 0
 var _lane := 1.2
 var _phase := 0.0
+## Гаусс: до какого заряда копить (по уровню бота).
+var gauss_charge := 0.75
 
 
 func _init() -> void:
@@ -82,6 +93,7 @@ func _brain_ready() -> void:
 	aim_error_m = float(p["aim_error_m"])
 	reaction_s = float(p["reaction_s"])
 	fire_cone_deg = float(p["fire_cone_deg"])
+	gauss_charge = 0.55 + 0.15 * float(lv)
 	var slot := int(doll.player_index) / 2
 	_lane = float(LANE_Y[slot % LANE_Y.size()])
 	_phase = float(doll.player_index) * 1.7
@@ -97,10 +109,24 @@ func arm() -> ArmAssist:
 	return g.arm() if g != null else null
 
 
+func sm() -> SquadMatch:
+	return get_tree().get_first_node_in_group(Match.GROUP) as SquadMatch
+
+
+## Оружие есть, а руки с ним нет (прочность суставов оторвала): ствол без луча, рукопашное — не в руке.
+func _armless(g: SquadGun, ml: SquadMelee) -> bool:
+	if g != null and g.weapon != "":
+		return g.aim_ray().is_empty()
+	return ml != null and ml.weapon_id != "" and not ml.armed()
+
+
 func _think(delta: float) -> void:
 	var g := gun()
+	var ml := SquadMatch.melee_of(doll)
+	var m := sm()
+	var armless := _armless(g, ml)
 	var had := crate
-	_pick_crate(g)
+	_pick_crate(g, armless)
 	if crate != null and crate == had:
 		_crate_t += delta
 		if _crate_t > CRATE_GIVE_UP_S:
@@ -110,26 +136,45 @@ func _think(delta: float) -> void:
 	else:
 		_crate_t = 0.0
 	var has_target := target != null and is_instance_valid(target) and target.alive
-	if crate != null:
+	var obj: Variant = _objective(m)
+	var carrying := m != null and m.carried_flag(doll) != null
+	var rush := obj is Vector2 and not _defending()
+	if crate != null and rush and not armless and not (g != null and g.out_of_ammo()):
+		crate = null   # к цели режима — без заходов за ящиками «на всякий случай»
+	if crate != null and not carrying:
 		go("supply")
 		var cp := crate.global_position
 		want = steer_speed(_clamp_goal(Vector2(cp.x, cp.y)), 6.0, max_in)
-		if has_target and g != null:
-			var tp0 := predicted()
-			_aim(tp0)
-			_trigger(_can_hit(g, tp0, my_pos().distance_to(com2(target))))
-		else:
-			_release_arm()
-			_trigger(false)
+		_fight_on_the_way(g, has_target)
+		return
+	var t_dist := my_pos().distance_to(com2(target)) if has_target else INF
+	if obj is Vector2 and (carrying or rush or not has_target or t_dist > OBJ_ENGAGE_M):
+		go("objective")
+		var op := obj as Vector2
+		want = steer_speed(_clamp_goal(op), 7.0, max_in)
+		if carrying or my_pos().distance_to(op) > 10.0:
+			dash()
+		if ml != null and ml.weapon_id != "" and (g == null or g.weapon == "") and _fly_to(ml, op):
+			_aim(op)
+			return
+		_fight_on_the_way(g, has_target)
 		return
 	if not has_target:
 		_advance()
 		_release_arm()
 		_trigger(false)
 		return
-	var ml := SquadMatch.melee_of(doll)
 	if ml != null and ml.weapon_id != "" and (g == null or g.weapon == ""):
 		_brawl(ml)
+		return
+	if armless:
+		go("melee")   # ствола в руке нет, ящика рядом нет — бьёт телом
+		want = steer(predicted(), 1.0)
+		if state_t > MELEE_S:
+			state_t = 0.0
+			note_attack()
+			dash()
+		_trigger(false)
 		return
 	var tp := predicted()
 	var d := my_pos().distance_to(com2(target))
@@ -168,20 +213,106 @@ func _think(delta: float) -> void:
 				go("reload")
 	want = want.limit_length(max_in)
 	_aim(tp)
-	_trigger(state != "melee" and g != null and _can_hit(g, tp, d))
+	_shoot(g, state != "melee" and g != null and _can_hit(g, tp, d))
+
+
+## По дороге (к ящику, к цели режима): цель есть — рука на неё и огонь, если можно; громила — полёт, если цель рядом.
+func _fight_on_the_way(g: SquadGun, has_target: bool) -> void:
+	if not has_target:
+		_release_arm()
+		_trigger(false)
+		return
+	var tp := predicted()
+	_aim(tp)
+	var ml := SquadMatch.melee_of(doll)
+	if ml != null and ml.weapon_id != "" and (g == null or g.weapon == ""):
+		_fly(ml, tp, my_pos().distance_to(com2(target)))
+		return
+	_shoot(g, g != null and g.weapon != "" and _can_hit(g, tp, my_pos().distance_to(com2(target))))
+
+
+## Спуск: обычное оружие — зажат, пока можно попасть; гаусс — копит заряд до gauss_charge (зажат), потом держит, пока ствол не на
+## цели, и отпускает — выстрел.
+func _shoot(g: SquadGun, can_hit: bool) -> void:
+	if g == null or not g.charges():
+		_trigger(can_hit)
+		return
+	if g.mag <= 0 or g.reloading > 0.0:
+		_trigger(false)
+		return
+	if g.charge < gauss_charge:
+		_trigger(true)
+	else:
+		_trigger(not can_hit)
+
+
+## Цель режима захвата флага (точка) или null: несущий — свой флаг дома (доставка); свой флаг лежит — ближайший из своих идёт вернуть;
+## нападающие (места 0 и 2) — к чужому флагу (дома или где лежит); защитник (место 1) — у своего флага. Свой флаг унесли — целью
+## становится несущий (_pick_target), точки нет.
+func _objective(m: SquadMatch) -> Variant:
+	if m == null or not m.is_ctf():
+		return null
+	var mine := m.flag_of(team)
+	var theirs := m.flag_of(1 - team)
+	if mine == null or theirs == null:
+		return null
+	if m.carried_flag(doll) != null:
+		return Vector2(mine.home.x, mine.home.y)
+	if mine.state == "carried":
+		return null
+	if mine.state == "dropped" and _nearest_to(mine.global_position):
+		return Vector2(mine.global_position.x, mine.global_position.y)
+	var slot := int(doll.player_index) / 2
+	if slot == 1:
+		var h := Vector2(mine.home.x, mine.home.y)
+		return h if my_pos().distance_to(h) > DEFEND_M else null
+	if theirs.state == "carried":
+		return Vector2(mine.home.x - _side() * 3.0, mine.home.y)   # свой несёт — прикрыть его у базы
+	return Vector2(theirs.point().x, theirs.point().y)
+
+
+## Защитник (место 1): держит свой флаг, а не бежит к чужому.
+func _defending() -> bool:
+	return int(doll.player_index) / 2 == 1
+
+
+## Я ближайший из живых своих к точке at.
+func _nearest_to(at: Vector3) -> bool:
+	var me := doll.centre_of_mass().distance_to(at)
+	for n in get_tree().get_nodes_in_group(SquadMatch.team_group(team)):
+		if n != doll and n is Doll and (n as Doll).alive and (n as Doll).centre_of_mass().distance_to(at) < me:
+			return false
+	return true
+
+
+## Цель: в захвате флага, если свой флаг несёт соперник, — он; иначе — ближайший (EnemyBrain).
+func _pick_target() -> void:
+	var m := sm()
+	if m != null and m.is_ctf():
+		var mine := m.flag_of(team)
+		if mine != null and mine.state == "carried" and is_instance_valid(mine.carrier) and mine.carrier.alive:
+			if target != mine.carrier:
+				target = mine.carrier
+				_hist.clear()
+			return
+	super._pick_target()
 
 
 ## Ящик, за которым стоит идти сейчас (или null): патронов нет — ближайший с патронами, где бы он ни был; жизней мало — жизни; запас
 ## меньше магазина — патроны; брони нет — броня (эти — если ближе SQUAD_BOT_SUPPLY_M).
-func _pick_crate(g: SquadGun) -> void:
+func _pick_crate(g: SquadGun, armless := false) -> void:
 	if crate != null and (not is_instance_valid(crate) or crate.is_queued_for_deletion()):
 		crate = null
 	var kinds: Array = []
 	var far_ok := false
-	if g != null and g.out_of_ammo():
+	if armless:
+		kinds = Tuning.SQUAD_SUPPLY.keys()   # любой ящик вернёт руку с оружием
+		far_ok = true
+	elif g != null and g.out_of_ammo():
 		kinds = ["ammo"]
 		far_ok = true
 	else:
+		kinds.append_array(Tuning.SQUAD_BOOSTS)
 		if doll.hp < doll.max_hp * LOW_HP:
 			kinds.append("health")
 		if g != null and g.reserve < g.mag_max:
@@ -213,12 +344,34 @@ func _brawl(ml: SquadMelee) -> void:
 	var tp := predicted()
 	var d := my_pos().distance_to(com2(target))
 	want = steer(tp, max_in)
-	if d > BRAWL_DASH_M:
+	if d > BRAWL_DASH_M and not ml.dashing:
 		dash()
 	_aim(tp)
 	_trigger(false)
-	if d < BRAWL_LUNGE_M and ml.can_lunge():
-		if ml.lunge(Vector3(tp.x, tp.y, 0.0)):
+	_fly(ml, tp, d)
+
+
+## Громила к цели режима: дальше 6 м — полёт к ней (оружие тянет, как к сопернику), долетел или 2.5 с — конец. true — летит.
+func _fly_to(ml: SquadMelee, op: Vector2) -> bool:
+	var d := my_pos().distance_to(op)
+	if ml.dashing:
+		ml.steer_dash(Vector3(op.x, op.y, 0.0))
+		if d < 1.5 or ml.dash_t > 2.5:
+			ml.end_dash()
+		return true
+	if d > 6.0 and ml.can_dash():
+		return ml.start_dash(Vector3(op.x, op.y, 0.0))
+	return false
+
+
+## Полёт громилы-бота: цель ближе BRAWL_LUNGE_M — полёт к ней (рука с оружием ведёт), держит до BOT_DASH_MAX_S или пока не долетел.
+func _fly(ml: SquadMelee, tp: Vector2, d: float) -> void:
+	if ml.dashing:
+		ml.steer_dash(Vector3(tp.x, tp.y, 0.0))
+		if ml.dash_t > BOT_DASH_MAX_S or d < 0.8:
+			ml.end_dash()
+	elif d < BRAWL_LUNGE_M and d > 1.2 and ml.can_dash():
+		if ml.start_dash(Vector3(tp.x, tp.y, 0.0)):
 			note_attack()
 
 
@@ -301,7 +454,7 @@ func _can_hit(g: SquadGun, tp: Vector2, d: float) -> bool:
 
 
 func _stuck_allowed() -> bool:
-	return state in ["advance", "engage", "reload", "supply", "brawl"]
+	return state in ["advance", "engage", "reload", "supply", "brawl", "objective"]
 
 
 ## Застревание (поверх EnemyBrain: там только «жмёт, а стоит», и выход всегда вверх-вбок). Ещё и «жмёт, а топчется на месте»: ЦМ
@@ -334,3 +487,6 @@ func _tick_stuck(delta: float) -> void:
 func _silenced(_why: String) -> void:
 	_trigger(false)
 	_release_arm()
+	var ml := SquadMatch.melee_of(doll)
+	if ml != null:
+		ml.end_dash()

@@ -527,6 +527,9 @@ const SPORT_BALL_RADIUS := 0.4           # м (кукла 1.8 м): мяч кру
 const SPORT_BALL_MAX_SPEED := 16.0       # м/с: потолок скорости мяча (тоннелирование сквозь сетку, читаемость)
 const SPORT_BALL_IDLE_S := 6.0           # мяч лежит без касаний столько — подброс (страховка от «застрял в углу»)
 const SPORT_BALL_CORNER_S := 2.5         # мяч зажат в углу у пола (куклы сидят на нём) столько — выброс к центру, касания не считаются
+# Автор 06.10: «в футболе, волейболе и баскетболе по умолчанию режим на ; (конечности отрываются), между матчами не чиним — как есть».
+const SPORT_PARTHP := true               # зал включает «Запас из деталей» (PartHp, клавиша «;»); вышли из зала — режимы как были
+const SPORT_KEEP_DAMAGE := true          # после гола кукла не чинится: оторванное не отрастает до конца матча, запас и износ — как были
 ## Виды спорта: мяч (масса кг, тяжесть × поля 2.0 м/с², отскок, трение, дамп) и снаряд.
 ##   football   — ворота у пола: линия x = ±goal_x, перекладина на goal_h, глубина до стены;
 ##   basketball — кольца на стенах: центр кольца (±hoop_x, hoop_y), полуширина просвета hoop_r; очко — мяч прошёл кольцо сверху вниз;
@@ -672,11 +675,12 @@ const PARTHP_HEAD_THRUST_N := 80.0
 
 # --- СТЫЧКА 3 НА 3: пробный режим (docs/plan-demo/SQUAD.md, автор 05.10: «карта побольше, стычки 3 на 3 как в шутерах, базовые пулемёты») ---
 ## Две команды по три бойца на «Полигоне» — карте 64 × 16 м из пропсов Руин. Команда синих — чётные player_index (P1 и два бота, слева),
-## красных — нечётные (три бота, справа). Смерть — возрождение на своей базе через SQUAD_RESPAWN_S; очко команде — за каждого выбывшего
-## соперника (удар, пуля, падение). Матч до SQUAD_SCORE_TO_WIN или SQUAD_TIME_LIMIT_S (ведущий победил; равный счёт — ничья). Свои не
-## ранят (team_damage_mult 0), толкают полностью.
+## красных — нечётные (три бота, справа). Смерть — возрождение на своей базе через SQUAD_RESPAWN_S. Режимы (SquadSettings.mode):
+## «перестрелка» — очко команде за каждого выбывшего соперника, матч до SquadSettings.score_to_win; «захват флага» — очко за
+## доставленный флаг (SQUAD_FLAG_*). Время — SquadSettings.time_min (ведущий победил; равный счёт — ничья). Свои не ранят
+## (team_damage_mult 0), толкают полностью.
 const SQUAD_SCORE_TO_WIN := 100              # автор 06.10: «фрагов общих пока 100»
-const SQUAD_TIME_LIMIT_S := 1200.0             # 20 минут: до 100 очков боты идут около 15
+const SQUAD_TIME_LIMIT_S := 1200.0             # 20 минут: до 100 очков боты идут 12–16
 const SQUAD_RESPAWN_S := 4.0
 const SQUAD_SPAWN_SHIELD_S := 1.5        # после возрождения урон не проходит столько с (иначе встречают очередью у базы)
 const SQUAD_KO_SLOWMO_S := 0.35          # замедление KO в стычке (обычный бой 1.2 с: при 15+ нокаутах за матч кино надоедает)
@@ -689,102 +693,162 @@ const SQUAD_COLORS := [Color("2f6fde"), Color("d9342b")]   # синие, кра�
 ## управляет ЛКМ, как в обычном бою. [синие, красные] — uid кисти в kit_human.
 const SQUAD_GUN_HAND := ["3", "9"]
 
-## Оружие (SquadGun, автор 05.10): у стрелков на старте пистолет, дальше — по уровням класса (SQUAD_CLASSES): автомат и пулемёт,
-## винтовка и рельсотрон, обрез и дробовик, усиления (SQUAD_PERKS). Огонь — ЛКМ (или I), пока зажата, не чаще interval с; рука с оружием всегда тянется
-## к курсору, ствол смотрит по руке (плечо → кисть). Магазин mag, запас reserve (ящики добавляют), перезарядка reload_s — сама на
-## пустом магазине или Q. Патронов нет совсем — рукопашная.
+## Настройки перед боем (SquadSetup, автор 06.10: «режим настроек перед запуском боя — количество фрагов + ещё что-то»): варианты строк.
+const SQUAD_SCORE_CHOICES := [25, 50, 100, 150]
+const SQUAD_CAPTURE_CHOICES := [3, 5, 7]
+const SQUAD_TIME_CHOICES := [5, 10, 20, 30]   # минуты
+
+## Оружие стрелков (SquadGun). Огонь — ЛКМ (или I), пока зажата, не чаще interval с; рука с оружием всегда тянется к курсору, ствол
+## смотрит по руке (плечо → кисть). Магазин mag, запас reserve (ящики добавляют), перезарядка reload_s — сама на пустом магазине или Q.
+## Патронов нет совсем — рукопашная.
 ##   damage — урон пули (дроби — за дробину), pellets — пуль за выстрел, spread_deg — ± разброс, range — м (дальше пуля гаснет),
-##   speed — м/с полёта пули (не мгновенный луч: видно, летит, можно увернуться), ball — толщина трассера пули (м; автор 06.10:
-##   «шарики как-то детские» — пуля теперь светящийся трассер: яркая голова и гаснущий хвост, длина streak м), impulse — Н·с в
-##   задетое тело, recoil — Н·с в кисть стрелка, pierce — пуля проходит сквозь бойцов (до 3), len — длина ствола (м, вид и точка
-##   вылета), tracer — цвет трассера, sound — [слой SfxDirector, питч]. Пули не трясут камеру и не замедляют время (SquadMatch.bullet_hit).
+##   speed — м/с полёта пули, ball — толщина трассера (м), streak — длина хвоста трассера (м), impulse — Н·с в задетое тело, recoil — Н·с
+##   в кисть стрелка, pierce — пуля проходит сквозь бойцов (до 3), len — длина ствола (м, вид и точка вылета), tracer — цвет ядра
+##   трассера, sound — [слой SfxDirector, питч].
+##   Гаусс (charge_s > 0, автор 06.10: «мощность зависит от того, сколько было зажато; бьёт сквозь всех, но каждое препятствие —
+##   минус процент урона»): ЛКМ держишь — копится заряд (полный за charge_s), отпустил — выстрел; урон от damage_min до damage по
+##   заряду; летит сквозь бойцов и стены (through_walls), каждая стена или пропс — × (1 − wall_loss), каждый боец — × (1 − body_loss).
 const SQUAD_WEAPONS := {
-	"pistol": {"title": "ПИСТОЛЕТ", "note": "точно, магазин 12", "tier": 0, "damage": 9.0, "pellets": 1, "interval": 0.28, "mag": 12,
+	"pistol": {"title": "ПИСТОЛЕТ", "note": "точно, магазин 12", "damage": 9.0, "pellets": 1, "interval": 0.28, "mag": 12,
 		"reserve": 48, "reload_s": 1.1, "spread_deg": 1.5, "range": 18.0, "speed": 40.0, "ball": 0.070, "streak": 0.50, "impulse": 6.0, "recoil": 1.5, "pierce": false, "len": 0.26,
 		"tracer": Color(1.0, 0.85, 0.4), "sound": ["snap", 1.55]},
-	"smg": {"title": "АВТОМАТ", "note": "очередь, магазин 30", "tier": 1, "damage": 5.0, "pellets": 1, "interval": 0.09, "mag": 30,
-		"reserve": 120, "reload_s": 1.5, "spread_deg": 4.0, "range": 16.0, "speed": 46.0, "ball": 0.060, "streak": 0.45, "impulse": 3.0, "recoil": 0.8, "pierce": false, "len": 0.4,
-		"tracer": Color(1.0, 0.75, 0.3), "sound": ["snap", 2.0]},
-	"mg": {"title": "ПУЛЕМЁТ", "note": "длинная очередь, магазин 70", "tier": 2, "damage": 6.0, "pellets": 1, "interval": 0.075, "mag": 70,
-		"reserve": 210, "reload_s": 2.6, "spread_deg": 3.5, "range": 20.0, "speed": 50.0, "ball": 0.070, "streak": 0.60, "impulse": 4.0, "recoil": 1.0, "pierce": false, "len": 0.6,
-		"tracer": Color(1.0, 0.6, 0.25), "sound": ["snap", 1.8]},
-	"sawnoff": {"title": "ОБРЕЗ", "note": "дробь вблизи, 2 выстрела", "tier": 1, "damage": 5.0, "pellets": 7, "interval": 0.45, "mag": 2,
+	"sawnoff": {"title": "ОБРЕЗ", "note": "дробь вплотную, 2 выстрела", "damage": 5.0, "pellets": 7, "interval": 0.45, "mag": 2,
 		"reserve": 24, "reload_s": 1.4, "spread_deg": 11.0, "range": 9.0, "speed": 34.0, "ball": 0.050, "streak": 0.28, "impulse": 6.0, "recoil": 6.0, "pierce": false, "len": 0.34,
 		"tracer": Color(1.0, 0.92, 0.6), "sound": ["thud", 1.0]},
-	"shotgun": {"title": "ДРОБОВИК", "note": "дробь, магазин 6", "tier": 2, "damage": 5.5, "pellets": 8, "interval": 0.65, "mag": 6,
-		"reserve": 30, "reload_s": 2.0, "spread_deg": 8.0, "range": 12.0, "speed": 38.0, "ball": 0.050, "streak": 0.32, "impulse": 6.0, "recoil": 7.0, "pierce": false, "len": 0.62,
+	"shotgun": {"title": "ДРОБОВИК", "note": "дробь, магазин 6, отбрасывает", "damage": 5.5, "pellets": 8, "interval": 0.65, "mag": 6,
+		"reserve": 30, "reload_s": 2.0, "spread_deg": 8.0, "range": 12.0, "speed": 38.0, "ball": 0.050, "streak": 0.32, "impulse": 9.0, "recoil": 7.0, "pierce": false, "len": 0.62,
 		"tracer": Color(1.0, 0.92, 0.6), "sound": ["thud", 0.85]},
-	"rifle": {"title": "ВИНТОВКА", "note": "далеко и больно, магазин 6", "tier": 1, "damage": 26.0, "pellets": 1, "interval": 0.75, "mag": 6,
-		"reserve": 30, "reload_s": 1.8, "spread_deg": 0.4, "range": 32.0, "speed": 80.0, "ball": 0.070, "streak": 1.10, "impulse": 18.0, "recoil": 5.0, "pierce": false, "len": 0.72,
+	"smg": {"title": "АВТОМАТ", "note": "очередь на бегу, магазин 32", "damage": 6.0, "pellets": 1, "interval": 0.08, "mag": 32,
+		"reserve": 128, "reload_s": 1.5, "spread_deg": 4.0, "range": 17.0, "speed": 48.0, "ball": 0.060, "streak": 0.45, "impulse": 3.0, "recoil": 0.8, "pierce": false, "len": 0.4,
+		"tracer": Color(1.0, 0.75, 0.3), "sound": ["snap", 2.0]},
+	"rifle": {"title": "ВИНТОВКА", "note": "точно и далеко, магазин 5", "damage": 24.0, "pellets": 1, "interval": 0.8, "mag": 5,
+		"reserve": 30, "reload_s": 1.8, "spread_deg": 0.4, "range": 32.0, "speed": 85.0, "ball": 0.070, "streak": 1.10, "impulse": 18.0, "recoil": 5.0, "pierce": false, "len": 0.72,
 		"tracer": Color(0.85, 0.95, 1.0), "sound": ["snap", 1.0]},
-	"rail": {"title": "РЕЛЬСОТРОН", "note": "насквозь через бойцов, магазин 3", "tier": 2, "damage": 48.0, "pellets": 1, "interval": 1.3,
-		"mag": 3, "reserve": 15, "reload_s": 2.4, "spread_deg": 0.0, "range": 45.0, "speed": 130.0, "ball": 0.130, "streak": 1.80, "impulse": 40.0, "recoil": 10.0, "pierce": true,
-		"len": 0.8, "tracer": Color(0.4, 0.9, 1.0), "sound": ["whoosh", 1.4]},
+	"marksman": {"title": "СНАЙПЕРКА", "note": "быстрее и дальше, магазин 8", "damage": 30.0, "pellets": 1, "interval": 0.5, "mag": 8,
+		"reserve": 40, "reload_s": 1.6, "spread_deg": 0.2, "range": 42.0, "speed": 140.0, "ball": 0.075, "streak": 1.40, "impulse": 20.0, "recoil": 4.0, "pierce": false, "len": 0.86,
+		"tracer": Color(0.92, 0.98, 1.0), "sound": ["snap", 0.9]},
+	"gauss": {"title": "ГАУСС", "note": "держи ЛКМ — заряд; насквозь бойцов и стен", "damage": 85.0, "damage_min": 15.0, "charge_s": 1.6,
+		"pellets": 1, "interval": 0.9, "mag": 4, "reserve": 16, "reload_s": 2.6, "spread_deg": 0.0, "range": 55.0, "speed": 190.0, "ball": 0.130,
+		"streak": 2.2, "impulse": 40.0, "recoil": 10.0, "pierce": true, "through_walls": true, "wall_loss": 0.35, "body_loss": 0.15, "len": 0.9,
+		"tracer": Color(0.4, 0.9, 1.0), "sound": ["whoosh", 1.2]},
 }
 const SQUAD_START_WEAPON := "pistol"
-## Усиления оружия: множители чисел (складываются умножением). Открываются уровнями класса (SQUAD_CLASSES).
+## Усиления: множители чисел оружия (складываются умножением) и свойства бойца. Открываются уровнями класса (SQUAD_CLASSES).
+##   tough — броня при каждом возврате, hp — запас HP, dash — полёт громилы быстрее (× speed) и чаще (пауза / speed).
 const SQUAD_PERKS := {
-	"damage": {"title": "УРОН +20 %", "mult": {"damage": 1.2}},
+	"damage": {"title": "УРОН +20 %", "mult": {"damage": 1.2, "damage_min": 1.2}},
 	"mag": {"title": "МАГАЗИН И ЗАПАС +50 %", "mult": {"mag": 1.5, "reserve": 1.5}},
 	"speed": {"title": "ПЕРЕЗАРЯДКА И ТЕМП +25 %", "mult": {"reload_s": 0.75, "interval": 0.8}},
+	"charge": {"title": "ЗАРЯД ГАУССА БЫСТРЕЕ", "mult": {"charge_s": 0.7}},
 	"tough": {"title": "БРОНЯ +30 ПРИ ВОЗВРАТЕ", "armor": 30.0},
-	"lunge": {"title": "ВЫПАД СИЛЬНЕЕ И ЧАЩЕ", "lunge": 1.25},
+	"hp": {"title": "ЗАПАС +20 HP", "hp": 20.0},
+	"dash": {"title": "ПОЛЁТ БЫСТРЕЕ И ЧАЩЕ", "dash": 1.2},
 }
-
-## Классы бойцов (автор 06.10: «как минимум 3 класса; рукопашные — один из классов, ему улучшается оружие; улучшение за опыт:
-## выбираешь класс, и показывает, что ты теперь можешь»). Класс выбирается клавишами 1–4 на отсчёте и пока ждёшь возврата (новый —
-## с возрождения). Опыт (SQUAD_XP_*) копится сам — за урон по соперникам и за фраги; уровни (SQUAD_XP_LEVELS) открывают то, что
-## записано в levels класса (индекс — уровень − 1): weapon — оружие (огнестрел — SQUAD_WEAPONS, рукопашное — melee, Weapon.IDS),
-## perk — усиление (SQUAD_PERKS). Опыт и уровень сохраняются после выбывания и при смене класса (уровень переносится в новый класс).
-## hp — запас здоровья класса, armor — броня при каждом возврате, bullet_mult — множитель урона пуль по бойцу класса (громила крепкий:
-## без него его расстреливали на подходе — проба 06.10: 1–3 фрага при 9–10 выбываниях).
+## Классы бойцов (автор 06.10: «стрелка убрать, оставим 3 класса: рукопашный, снайпер и налётчик; на 5 уровне можно взять подкласс»).
+## Класс — клавишами 1–3 на отсчёте и пока ждёшь возврата (в бою — с возрождения). Опыт (SQUAD_XP_*) копится сам — за урон и фраги;
+## уровни (SQUAD_XP_LEVELS) открывают levels класса (1–4: общий ствол древа), на SQUAD_BRANCH_LEVEL — выбор ветки (branches: подкласс,
+## его levels — уровни 5–8). Что открывает уровень: weapon (SQUAD_WEAPONS), melee (SQUAD_MELEE), perk (SQUAD_PERKS).
+## hp — запас здоровья, armor — броня при каждом возврате, bullet_mult — × урона пуль по бойцу класса, zoom — камера игрока
+## дальше во столько раз (автор 06.10: «для снайпера зум дальше, сразу берёшь — и у тебя не такой зум, как у других»),
+## icon — оружие на карточке класса.
 const SQUAD_CLASSES := {
-	"assault": {"title": "ШТУРМОВИК", "note": "очереди на средней дистанции", "hp": 100.0, "armor": 0.0, "levels": [
-		{"weapon": "pistol"}, {"weapon": "smg"}, {"perk": "mag"}, {"perk": "speed"}, {"weapon": "mg"}, {"perk": "damage"},
-		{"perk": "mag"}, {"perk": "damage"}]},
-	"sniper": {"title": "СНАЙПЕР", "note": "издалека и больно, пули насквозь", "hp": 90.0, "armor": 0.0, "levels": [
-		{"weapon": "pistol"}, {"weapon": "rifle"}, {"perk": "damage"}, {"perk": "speed"}, {"weapon": "rail"}, {"perk": "mag"},
-		{"perk": "damage"}, {"perk": "speed"}]},
-	"raider": {"title": "НАЛЁТЧИК", "note": "дробь вплотную, рывки", "hp": 110.0, "armor": 20.0, "levels": [
-		{"weapon": "pistol"}, {"weapon": "sawnoff"}, {"perk": "speed"}, {"perk": "mag"}, {"weapon": "shotgun"}, {"perk": "damage"},
-		{"perk": "speed"}, {"perk": "damage"}]},
-	"brawler": {"title": "ГРОМИЛА", "note": "рукопашная, ЛКМ — выпад, пули × 0.6", "hp": 140.0, "armor": 30.0,
-		"bullet_mult": 0.6, "levels": [
-		{"melee": "pan"}, {"melee": "sword"}, {"perk": "tough"}, {"melee": "axe"}, {"perk": "lunge"}, {"melee": "mace"},
-		{"melee": "hammer"}, {"perk": "lunge"}]},
+	"brawler": {"title": "ГРОМИЛА", "note": "рукопашная: ЛКМ — полёт за оружием, пули × 0.5", "hp": 140.0, "armor": 30.0,
+		"bullet_mult": 0.5, "zoom": 1.0, "icon": "hammer",
+		"levels": [{"melee": "pan"}, {"perk": "tough"}, {"perk": "dash"}, {"perk": "hp"}],
+		"branches": {
+			"hammer": {"levels": [{"melee": "hammer"}, {"perk": "hp"}, {"perk": "tough"}, {"perk": "dash"}]},
+			"sword": {"levels": [{"melee": "sword"}, {"perk": "dash"}, {"perk": "hp"}, {"perk": "dash"}]},
+			"axe": {"levels": [{"melee": "axe"}, {"perk": "tough"}, {"perk": "hp"}, {"perk": "dash"}]},
+		}, "branch_order": ["hammer", "sword", "axe"]},
+	"sniper": {"title": "СНАЙПЕР", "note": "издалека; обзор шире, чем у всех", "hp": 90.0, "armor": 0.0, "zoom": 1.4, "icon": "rifle",
+		"levels": [{"weapon": "rifle"}, {"perk": "speed"}, {"perk": "damage"}, {"perk": "mag"}],
+		"branches": {
+			"gauss": {"levels": [{"weapon": "gauss"}, {"perk": "charge"}, {"perk": "damage"}, {"perk": "mag"}]},
+			"marksman": {"levels": [{"weapon": "marksman"}, {"perk": "speed"}, {"perk": "damage"}, {"perk": "mag"}]},
+		}, "branch_order": ["gauss", "marksman"]},
+	"raider": {"title": "НАЛЁТЧИК", "note": "вплотную: дробь и рывки", "hp": 110.0, "armor": 20.0, "zoom": 1.0, "icon": "sawnoff",
+		"levels": [{"weapon": "sawnoff"}, {"perk": "speed"}, {"perk": "mag"}, {"perk": "damage"}],
+		"branches": {
+			"shotgun": {"levels": [{"weapon": "shotgun"}, {"perk": "damage"}, {"perk": "mag"}, {"perk": "speed"}]},
+			"smg": {"levels": [{"weapon": "smg"}, {"perk": "mag"}, {"perk": "damage"}, {"perk": "speed"}]},
+		}, "branch_order": ["shotgun", "smg"]},
 }
-const SQUAD_CLASS_ORDER := ["assault", "sniper", "raider", "brawler"]
-## Классы ботов по player_index (P1 выбирает сам; по умолчанию — штурмовик): составы зеркальные и по месту в команде (player_index / 2 —
-## точка возврата и «полка» высоты бота): штурмовик, снайпер, громила. Проба 06.10: с налётчиком вместо снайпера красные проигрывали
-## все матчи 14–19 : 30, а со снайпером на другом месте (верхняя полка) — уже синие 21–23 : 30.
-const SQUAD_BOT_CLASSES := {1: "assault", 2: "sniper", 3: "sniper", 4: "brawler", 5: "brawler"}
+const SQUAD_CLASS_ORDER := ["brawler", "sniper", "raider"]
+## Уровень выбора ветки и сколько ждать выбора игрока (потом — первая ветка сама; боты выбирают сразу).
+const SQUAD_BRANCH_LEVEL := 5
+const SQUAD_BRANCH_AUTO_S := 20.0
+## Класс по месту в команде (player_index / 2): составы зеркальные — налётчик, снайпер, громила. P1 — на месте 0 (налётчик), меняет сам.
+const SQUAD_SLOT_CLASSES := ["raider", "sniper", "brawler"]
 ## Опыт: за 1 HP урона по соперникам и за фраг; пороги уровней 1…8 (опыт с начала матча).
 const SQUAD_XP_PER_DAMAGE := 1.0
 const SQUAD_XP_PER_FRAG := 40.0
 const SQUAD_XP_LEVELS := [0.0, 60.0, 160.0, 300.0, 480.0, 700.0, 960.0, 1260.0]
-## Рукопашное оружие громилы (название для HUD и ленты; числа — Tuning.WEAPON, бьёт физикой, как в обычном бою).
-const SQUAD_MELEE := {"pan": "СКОВОРОДА", "sword": "МЕЧ", "axe": "ТОПОР", "mace": "БУЛАВА", "hammer": "МОЛОТ"}
-## Выпад громилы (ЛКМ / I): толчок торса и руки с оружием к курсору (цели бота): Δv м/с торсу, кисти — × LUNGE_HAND, пауза — с.
-const SQUAD_LUNGE_DV := 7.5
-const SQUAD_LUNGE_HAND := 1.8
-const SQUAD_LUNGE_COOLDOWN_S := 0.9
+
+## Оружие громилы — настоящее оружие игры (Tuning.WEAPON, бьёт физикой через DollCombat). Своё у каждого (ветка 5-го уровня,
+## автор 06.10: «выбор из 3 оружий, каждое оружие своё даёт»): speed / cooldown — × скорости и паузы полёта; wave_* — удар в
+## полёте поднимает ударную волну (радиус м, импульс Н·с, стан с, урон HP); armor_pierce — броня стычки не гасит урон этим оружием;
+## joint_mult — × урона суставам (прочность суставов).
+const SQUAD_MELEE := {
+	"pan": {"title": "СКОВОРОДА", "note": "звонко и обидно"},
+	"hammer": {"title": "МОЛОТ", "note": "удар в полёте — ударная волна вокруг", "speed": 0.9, "cooldown": 1.15,
+		"wave_m": 3.0, "wave_impulse": 26.0, "wave_stun_s": 0.6, "wave_damage": 8.0},
+	"sword": {"title": "МЕЧ", "note": "полёт быстрее, пауза вдвое короче", "speed": 1.2, "cooldown": 0.5},
+	"axe": {"title": "ТОПОР", "note": "сквозь броню, рубит суставы", "armor_pierce": true, "joint_mult": 2.5},
+}
+## Полёт громилы (SquadMelee, автор 06.10: «выпад сделай как молот Тора — резкое ускорение на 5 секунд в сторону оружия; проверь,
+## чтобы импульс был нормальный и не ваншотил сразу всех»): ЛКМ зажата — оружие тянет бойца к курсору до SQUAD_DASH_S (отпустил —
+## полёт кончился), скорость до SQUAD_DASH_SPEED с разгоном SQUAD_DASH_ACCEL, кисть с оружием впереди (× SQUAD_DASH_HAND); потом пауза
+## SQUAD_DASH_COOLDOWN_S. Удар оружием в полёте — не больше SQUAD_DASH_HIT_MAX HP и по одному бойцу не чаще SQUAD_DASH_HIT_GAP_S
+## (молот на 12 м/с иначе снимал 60 HP с касания и добивал прижатого за секунду).
+const SQUAD_DASH_S := 5.0
+const SQUAD_DASH_SPEED := 12.0
+const SQUAD_DASH_ACCEL := 38.0
+const SQUAD_DASH_HAND := 1.6
+const SQUAD_DASH_COOLDOWN_S := 4.0
+const SQUAD_DASH_HIT_MAX := 35.0
+const SQUAD_DASH_HIT_GAP_S := 0.6
+## Удар оружием громилы не в полёте — не больше этого (молот махом мыши иначе снимал 60).
+const SQUAD_MELEE_HIT_MAX := 40.0
 ## Удары телом и оружием в стычке (SquadMatch.on_hit, автор 06.10: «в рукопашке всё трясётся, и не прерывается»): без стоп-кадров,
 ## замедлений и толчков кадра; камеру чуть трясёт только удар не слабее SQUAD_MELEE_SHAKE_MIN HP, в котором участвует человек.
 const SQUAD_MELEE_SHAKE_MIN := 14.0
 const SQUAD_MELEE_SHAKE_MULT := 0.5
-
+## Прочность суставов (Tuning.JOINT_*, клавиша C в бою) в стычке включена по умолчанию (автор 06.10): конечности отлетают. Оторвало
+## руку с оружием — стрелять нечем; любой ящик возвращает руку с оружием (и даёт своё).
+const SQUAD_JOINTS_DEFAULT := true
+## Запас суставов бойцов стычки × столько (JOINT_HP_BASE рассчитан на удары телом; винтовка в 24 HP иначе отрывала предплечье с
+## одного выстрела). Пуля в кисть изнашивает сустав предплечья, а не кисти (износ кисти × 4 — Damage.target_mult кисти 0.25).
+const SQUAD_JOINT_HP_MULT := 2.0
 ## Броня: пока она есть, входящий урон × SQUAD_ARMOR_MULT (Doll.incoming_mult), снятое с брони = прошедшему урону.
 const SQUAD_ARMOR_MAX := 100.0
 const SQUAD_ARMOR_MULT := 0.5
-## Ящики снабжения (SupplyCrate): появляются на точках карты (ProvingGround.supply_points) раз в SQUAD_SUPPLY_EVERY_S, не больше
-## SQUAD_SUPPLY_MAX сразу, живут SQUAD_SUPPLY_LIFE_S; берёт тот, кто коснулся (любая деталь ближе SQUAD_SUPPLY_PICK_M к центру).
-## Вид: [вес, сколько даёт] — патроны (доля полного запаса оружия), жизни (HP), броня.
+## Ящики (SupplyCrate): появляются на точках карты (ProvingGround.supply_points) раз в SQUAD_SUPPLY_EVERY_S, не больше SQUAD_SUPPLY_MAX
+## сразу, живут SQUAD_SUPPLY_LIFE_S; берёт тот, кто коснулся (любая деталь ближе SQUAD_SUPPLY_PICK_M к центру). Виды: weight — доля
+## появлений; патроны (amount — доля полного запаса), жизни (HP), броня; бонусы на seconds (автор 06.10: «бонусы как зум»): обзор —
+## камера дальше × mult (боту — дальность восприятия), ярость — урон × mult, форсаж — тяга и скорость × mult, полёт громилы чаще.
 const SQUAD_SUPPLY_EVERY_S := 6.0
 const SQUAD_SUPPLY_MAX := 5
 const SQUAD_SUPPLY_LIFE_S := 40.0
 const SQUAD_SUPPLY_PICK_M := 0.9
-const SQUAD_SUPPLY := {"ammo": {"weight": 0.45, "amount": 0.6}, "health": {"weight": 0.35, "amount": 40.0},
-	"armor": {"weight": 0.2, "amount": 50.0}}
+const SQUAD_SUPPLY := {
+	"ammo": {"weight": 0.30, "amount": 0.6, "title": "+ПАТРОНЫ", "colour": Color(1.0, 0.82, 0.25)},
+	"health": {"weight": 0.26, "amount": 40.0, "title": "+ЖИЗНИ", "colour": Color(0.35, 1.0, 0.45)},
+	"armor": {"weight": 0.16, "amount": 50.0, "title": "+БРОНЯ", "colour": Color(0.45, 0.8, 1.0)},
+	"zoom": {"weight": 0.10, "seconds": 25.0, "mult": 1.35, "title": "ОБЗОР", "colour": Color(0.78, 0.55, 1.0)},
+	"rage": {"weight": 0.09, "seconds": 12.0, "mult": 1.5, "title": "ЯРОСТЬ", "colour": Color(1.0, 0.35, 0.2)},
+	"haste": {"weight": 0.09, "seconds": 12.0, "mult": 1.35, "title": "ФОРСАЖ", "colour": Color(0.3, 1.0, 0.85)},
+}
+const SQUAD_BOOSTS := ["zoom", "rage", "haste"]
+
+## Захват флага (SquadMatch.mode «ctf», автор 06.10: «CTF режим я не увидел — добавь»): флаг у базы каждой команды. Чужой флаг берёт
+## касание (ближе SQUAD_FLAG_PICK_M), свой упавший — касание возвращает домой; донёс чужой флаг до своего флага (а свой — дома) — очко.
+## Выбыл с флагом — флаг падает, через SQUAD_FLAG_RETURN_S сам уходит домой. Несущий летит медленнее (× SQUAD_FLAG_CARRIER_THRUST).
+const SQUAD_CAPTURES_TO_WIN := 3
+const SQUAD_FLAG_PICK_M := 1.3
+const SQUAD_FLAG_RETURN_S := 15.0
+const SQUAD_FLAG_CARRIER_THRUST := 0.85
+const SQUAD_XP_PER_CAPTURE := 80.0
+const SQUAD_XP_PER_RETURN := 20.0
 
 ## Бот стычки (SquadBrain): держит дистанцию своего оружия (SQUAD_BOT_RANGE[оружие]), ходит вверх-вниз, стреляет, когда ствол
 ## смотрит на цель и своих на линии нет; патронов нет — ищет ящик или идёт в рукопашную. Уровни: доля тяги, ошибка прицела (м),
@@ -794,11 +858,86 @@ const SQUAD_BOT_LEVELS := {
 	2: {"max_in": 0.88, "aim_error_m": 0.55, "reaction_s": 0.3, "fire_cone_deg": 10.0},
 	3: {"max_in": 1.0, "aim_error_m": 0.3, "reaction_s": 0.2, "fire_cone_deg": 7.0},
 }
-const SQUAD_BOT_RANGE := {"pistol": Vector2(6.0, 11.0), "smg": Vector2(5.0, 9.0), "mg": Vector2(6.0, 12.0),
-	"sawnoff": Vector2(2.5, 5.0), "shotgun": Vector2(3.0, 6.5), "rifle": Vector2(10.0, 18.0), "rail": Vector2(12.0, 22.0)}
+const SQUAD_BOT_RANGE := {"pistol": Vector2(6.0, 11.0), "smg": Vector2(5.0, 10.0), "sawnoff": Vector2(2.5, 5.0),
+	"shotgun": Vector2(3.0, 6.5), "rifle": Vector2(10.0, 18.0), "marksman": Vector2(12.0, 24.0), "gauss": Vector2(14.0, 28.0)}
 const SQUAD_BOT_MELEE_M := 2.2                # цель ближе — наскок с ускорением, как в обычном бою
-const SQUAD_BOT_SUPPLY_M := 16.0              # за ящиком (жизни, броня) бот идёт, если он ближе этого; за патронами — всегда
+const SQUAD_BOT_SUPPLY_M := 16.0              # за ящиком (жизни, броня, бонус) бот идёт, если он ближе этого; за патронами — всегда
 
 # --- связки (docs/plan-demo/WORKSHOP_V4.md «Связки», KitLink; автор 06.10: «можно перебить») ---
 ## Запас связки вне «Запаса из деталей»: столько урона в её тела — и она рвётся (в «Запасе из деталей» — PartHp.break_hp от её ❤).
 const LINK_BREAK_HP := 30.0
+
+# --- БОМБА: передай касанием (docs/plan-demo/BOMB.md, MODES_PACK.md §1, 06.10) ---
+## Пятеро в куполе Old NULL Hall (P1 + 4 бота, P2 на стрелках — клавиша U). У одной куклы бомба: коснулся любой деталью любой детали
+## другой живой куклы — бомба у неё; вернуть тому, от кого получил, нельзя BOMB_RETURN_LOCK_S. Фитиль скрытый, случайный
+## BOMB_FUSE_MIN_S…BOMB_FUSE_MAX_S, при передаче не сбрасывается. Конец фитиля — взрыв у держателя: он выбывает, соседей раскидывает без
+## урона; через BOMB_NEXT_S бомба у случайного живого. Последний живой берёт партию, матч — до BOMB_WINS_TO_WIN побед.
+const BOMB_DOLLS := 5
+## Автор 06.10 после первого прогона ботов («давай чуть короче»): было 20–30 с и до 3 побед — матч 11–20 минут.
+const BOMB_WINS_TO_WIN := 2
+const BOMB_FUSE_MIN_S := 14.0
+const BOMB_FUSE_MAX_S := 20.0
+const BOMB_RETURN_LOCK_S := 1.0
+## Бомбу только что передали — держатель отдаст её дальше не раньше этого (касание в куче не прыгает по трём куклам за один тик).
+const BOMB_PASS_MIN_HOLD_S := 0.15
+const BOMB_NEXT_S := 2.0                    # после взрыва — новая бомба у случайного живого
+const BOMB_ROUND_PAUSE_S := 3.0             # партия кончилась — столько до следующей (или итогов матча)
+const BOMB_COUNTDOWN_S := 2.0               # отсчёт перед каждой партией, кроме первой (первая — обычный COUNTDOWN_S)
+## Держатель быстрее (автор 06.10: «держатель быстрее — догнать реально»): тяга и предел скорости управления × (Doll.thrust_mult /
+## speed_cap_mult). Без предела скорости тяга ×1.2 дала бы только разгон: оба упираются в MAX_MOVE_SPEED за секунду.
+const BOMB_HOLDER_THRUST_MULT := 1.2
+const BOMB_HOLDER_SPEED_MULT := 1.2
+## Взрыв (Explosion.detonate, сила × это): держатель выбывает, соседей раскидывает (урона нет — Doll.incoming_mult = 0 у всех).
+const BOMB_BLAST_POWER := 1.0
+const BOMB_KO_SLOWMO_S := 0.5               # замедление на взрыв (обычный KO — 1.2 с: за матч взрывов десяток)
+## Писк и мигание весь фитиль, темп растёт к концу (автор 06.10: «скрытый таймер, но по миганию и звуку чуть-чуть понятно»). Пауза между
+## писками — от доли сгоревшего фитиля k (0 → 1): BEEP_SLOW_S → BEEP_FAST_S по кривой k^BEEP_CURVE; каждая пауза × (1 ± BEEP_JITTER)
+## случайно, а у каждой бомбы своя поправка k ± BEEP_BIAS — по темпу «чуть-чуть понятно», но точно не высчитать.
+const BOMB_BEEP_SLOW_S := 1.0
+const BOMB_BEEP_FAST_S := 0.11
+const BOMB_BEEP_CURVE := 1.7
+const BOMB_BEEP_JITTER := 0.15
+const BOMB_BEEP_BIAS := 0.06
+const BOMB_BEEP_FLASH_S := 0.09             # вспышка лампы и света на писк
+## Точки появления пятерых (x, y) — на точках арены их четыре; внутри мембраны купола 16 × 19 м.
+const BOMB_SPAWN := [Vector2(-10.0, 2.5), Vector2(10.0, 2.5), Vector2(-5.0, 2.5), Vector2(5.0, 2.5), Vector2(0.0, 5.5)]
+## Цвета пятерых: первые четыре — PLAYER_COLORS, пятый — фиолетовый (рубашки, метки, HUD).
+const BOMB_COLORS := [Color("2f6fde"), Color("d9342b"), Color("2e9e4f"), Color("e8b820"), Color("9b4dde")]
+## Камера: игрок + держатель (если он ближе этого, м); дальше — только игрок и стрелка к бомбе у края экрана.
+const BOMB_FOCUS_M := 14.0
+## Боты (BombBrain): доля тяги, ошибка прицела (м), задержка восприятия (с), упреждение (с), рывок за Заряд.
+const BOMB_BOT_LEVELS := {
+	1: {"max_in": 0.8, "aim_error_m": 0.6, "reaction_s": 0.35, "lead_s": 0.2, "dash": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.35, "reaction_s": 0.25, "lead_s": 0.3, "dash": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.2, "reaction_s": 0.15, "lead_s": 0.4, "dash": true},
+}
+const BOMB_BOT_DASH_M := Vector2(1.2, 6.0)  # держатель-бот жмёт ускорение, когда цель в этом коридоре (м)
+const BOMB_BOT_PANIC_M := 3.5               # держатель ближе — бот без бомбы удирает напрямую, с рывком
+const BOMB_BOT_FLEE_MARGIN_M := Vector2(3.0, 3.5)   # кольцо бегства — эллипс мембраны, ужатый на столько (по x, по y)
+
+# --- ГОНКА: 10 точек (docs/plan-demo/MODES_PACK.md §4, 06.10; docs/plan-demo/RACE.md) ---
+## Автор 06.10: «гонки — нужно быстрее собрать 10 пунктов, кто быстрее соберёт их»; «у всех одни и те же точки: если кто-то взял, то
+## у тебя этой точки уже нет, и надо к следующей». RaceMatch (scripts/race/race_match.gd), бот RaceBrain, площадка scenes/race/.
+## Сколько точек горит одновременно (1 — драка за каждую точку, 5 — больше маршрута; работает любое 1..6) и сколько собрать для победы.
+const RACE_VISIBLE := 3
+const RACE_TO_WIN := 10
+## Взятие: любая деталь живой куклы ближе RACE_PICK_M к центру точки. Новая точка — на случайной свободной метке не ближе
+## RACE_NEW_MIN_M к взявшему (и первые — не ближе этого к центру старта).
+const RACE_PICK_M := 0.9
+const RACE_NEW_MIN_M := 8.0
+## KO → возврат через RACE_RESPAWN_S у последней точки, которую взяла эта кукла (не брала — на старте), на RACE_RESPAWN_DROP_M ниже
+## центра точки (точка кукле по грудь, а не под ногами); первые RACE_SPAWN_SHIELD_S урон не проходит.
+const RACE_RESPAWN_S := 2.0
+const RACE_RESPAWN_DROP_M := 0.9
+const RACE_SPAWN_SHIELD_S := 1.5
+## Лимит гонки: вышло — побеждает тот, у кого больше точек (равно — кто раньше их набрал).
+const RACE_TIME_LIMIT_S := 300.0
+## Гонщиков: P1 + боты (P2 — бот или второй игрок на стрелках, клавиша U).
+const RACE_RACERS := 4
+## Бот гонки (RaceBrain) по уровням 1–3: max_in — доля тяги; dash — ускорение на длинной прямой; yield — соперник ближе к точке в
+## столько раз (и на 3 м) — бот берёт другую; shove — вероятность наскочить на соперника, который рядом и ближе к моей точке.
+const RACE_BOT_LEVELS := {
+	1: {"max_in": 0.8, "dash": false, "yield": 0.6, "shove": 0.0},
+	2: {"max_in": 0.92, "dash": true, "yield": 0.65, "shove": 0.4},
+	3: {"max_in": 1.0, "dash": true, "yield": 0.7, "shove": 0.8},
+}
