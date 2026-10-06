@@ -322,9 +322,9 @@ func _static_hit(space: PhysicsDirectSpaceState3D, shape: Shape3D, at: Vector3) 
 	q.transform = Transform3D(Basis.IDENTITY, Vector3(at.x, at.y, 0.0))
 	q.collide_with_areas = false
 	for h in space.intersect_shape(q, 16):
-		if h.get("collider") is StaticBody3D:
+		if RaceNav.is_obstacle(h.get("collider")):   # статика, тяжёлые пропсы, доски моста
 			var c := h.get("collider") as Node3D
-			print("    static at (%.1f, %.1f): %s" % [at.x, at.y, str(c.get_path()).replace(str(pg.get_path()) + "/", "")])
+			print("    obstacle at (%.1f, %.1f): %s" % [at.x, at.y, str(c.get_path()).replace(str(pg.get_path()) + "/", "")])
 			return true
 	return false
 

@@ -3,11 +3,13 @@
 ## метками (центр и два луча по бокам на FAT_M), который не задевает препятствий. Кратчайшие пути — Флойд–Уоршелл (меток ≤ 20).
 ## Бот, которому прямая к точке закрыта, летит к той видимой метке, от которой путь по графу до цели короче всего (RaceBrain._plan).
 ## Препятствие для луча — статика (StaticBody3D, в том числе AnimatableBody3D: пресс Свалки), доски верёвочного моста Руин (RopeBridge
-## — RigidBody3D на цепи, сквозь них не пролететь) и замороженные тела (тяжёлые пропсы-якоря PropHeft). Куклы и лёгкие пропсы — нет.
+## — RigidBody3D на цепи, сквозь них не пролететь), замороженные тела (тяжёлые пропсы-якоря PropHeft) и пропсы тяжелее
+## PUSHABLE_KG (тележка 30 кг, железная бочка 40, большой ящик 80 — их не растолкать с ходу). Куклы и лёгкие пропсы — нет.
 class_name RaceNav
 extends RefCounted
 
 const FAT_M := 0.3
+const PUSHABLE_KG := 15.0
 
 var marks: Array[Vector3] = []
 ## dist[i][j] — длина кратчайшего пути по графу (INF — недостижимо), edges[i] — соседи i.
@@ -21,10 +23,12 @@ static func is_obstacle(c: Object) -> bool:
 		return true
 	if c is RigidBody3D:
 		var b := c as RigidBody3D
-		if b.freeze:
+		var p := b.get_parent()
+		if p is Doll:
+			return false   # деталь куклы
+		if b.freeze or b.mass > PUSHABLE_KG:
 			return true
-		var p := b.get_parent()   # доска моста: RopeBridge/Planks/Plank_i
-		return p != null and (p is RopeBridge or p.get_parent() is RopeBridge)
+		return p != null and (p is RopeBridge or p.get_parent() is RopeBridge)   # доска моста: RopeBridge/Planks/Plank_i
 	return false
 
 

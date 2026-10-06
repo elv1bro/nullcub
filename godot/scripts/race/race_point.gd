@@ -112,7 +112,6 @@ func _process(delta: float) -> void:
 	var pulse := 0.5 + 0.5 * sin(_t * TAU * PULSE_HZ)
 	_ring_mat.emission_energy_multiplier = 2.4 + 1.6 * pulse
 	_ball.scale = Vector3.ONE * (0.85 + 0.3 * pulse)
-	_ring.rotation_degrees.z += 50.0 * delta
 
 
 ## Центр точки (физическая метка, без покачивания) — для камеры и стрелок HUD.

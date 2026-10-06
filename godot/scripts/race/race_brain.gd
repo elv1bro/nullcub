@@ -9,8 +9,9 @@
 ##   • полёт: полная тяга к точке (steer_speed, не быстрее CRUISE_MS), далеко и по прямой — ускорение (уровни 2–3);
 ##   • толчок (shove, уровни 2–3): соперник ближе к моей точке, чем я, и рядом (≤ SHOVE_M) — наскок на него с ускорением: сбить с
 ##     подлёта — часть игры (MODES_PACK.md §4);
-##   • застрял (EnemyBrain: жмёт, а стоит; или топчется в круге STUCK_RADIUS_M дольше STUCK_AREA_S) — выход в сторону (по кругу
-##     UNSTICK_DIRS) и смена цели: текущая точка — в чёрный список на SKIP_S.
+##   • застрял (EnemyBrain: жмёт, а стоит; или топчется в круге STUCK_RADIUS_M дольше STUCK_AREA_S) — выход в самую открытую сторону
+##     (из 8 лучей — самый длинный: из кармана — к выходу; застревает там же снова — выход дольше) и смена цели: текущая точка и
+##     метка-перевалка — в чёрный список на SKIP_S.
 ## Уровень 1..3 — Tuning.RACE_BOT_LEVELS; 0 — default_level (его ставит площадка: Match.respawn_doll создаёт мозг заново, экспорт теряется).
 class_name RaceBrain
 extends EnemyBrain
@@ -30,8 +31,7 @@ const FLOOR_Y := 0.9
 const CEIL_MARGIN := 1.2
 const STUCK_RADIUS_M := 1.2
 const STUCK_AREA_S := 3.0
-const SKIP_S := 4.0
-const UNSTICK_DIRS := [Vector2(0.6, 0.9), Vector2(1.0, -0.2), Vector2(0.5, -0.9), Vector2(-0.6, 0.9), Vector2(-1.0, -0.2)]
+const SKIP_S := 6.0
 
 @export var level := 0
 static var default_level := 2
@@ -55,6 +55,9 @@ var _rethink_t := 0.0
 var _path_t := 0.0
 var _shove_until := -1.0
 var _skip: Dictionary = {}        # instance id точки → до какого _time не выбирать
+var _skip_via: Dictionary = {}    # метка-перевалка → до какого _time не лететь через неё
+var _last_stuck_at := Vector2.INF
+var _stuck_here := 0
 var _stuck_anchor := Vector2.ZERO
 var _stuck_anchor_t := 0.0
 var _unstick_n := 0
@@ -208,7 +211,7 @@ func _plan(me: Vector2, gp: Vector2) -> void:
 	if nv != null and nv.ready() and gm >= 0:
 		var cands: Array = []
 		for i in nv.marks.size():
-			if i == gm:
+			if i == gm or float(_skip_via.get(i, -1.0)) > _time:
 				continue
 			var pl := nv.path_len(i, gm)
 			if pl == INF:
@@ -267,15 +270,21 @@ func _stuck_allowed() -> bool:
 	return state in ["race", "detour", "hover"]
 
 
-## Застревание (поверх EnemyBrain): «жмёт, а стоит» или «топчется в круге STUCK_RADIUS_M дольше STUCK_AREA_S» — выход по кругу
-## UNSTICK_DIRS и смена цели (текущая — в чёрный список на SKIP_S).
+## Застревание (поверх EnemyBrain): «жмёт, а стоит» или «топчется в круге STUCK_RADIUS_M дольше STUCK_AREA_S» — выход в самую
+## открытую сторону (_open_dir) и смена цели (точка и перевалка — в чёрный список на SKIP_S).
 func _tick_stuck(delta: float) -> void:
 	if _time < _unstick_until:
 		want = _unstick_dir
 		return
 	var me := my_pos()
+	if rm == null or rm.play_state != "play":
+		_stuck_anchor = me   # отсчёт и итоги: кукла стоит не по своей вине
+		_stuck_anchor_t = _time
+		_stuck_t = 0.0
+		return
 	var pushing := _stuck_allowed() and want.length() >= STUCK_INPUT
-	if not pushing or me.distance_to(_stuck_anchor) > STUCK_RADIUS_M:
+	# круг считается во всех состояниях гонки (и в толчке: «толкнул — вернулся к точке — толкнул» на одном месте — тоже застрял)
+	if not (_stuck_allowed() or state == "shove") or me.distance_to(_stuck_anchor) > STUCK_RADIUS_M:
 		_stuck_anchor = me
 		_stuck_anchor_t = _time
 	_stuck_t = _stuck_t + delta if pushing and my_vel().length() < STUCK_SPEED else 0.0
@@ -284,18 +293,44 @@ func _tick_stuck(delta: float) -> void:
 	_stuck_t = 0.0
 	_stuck_anchor = me
 	_stuck_anchor_t = _time
-	_unstick_until = _time + UNSTICK_S
-	var sx := -signf(want.x) if absf(want.x) > 0.2 else (1.0 if _rng.randf() < 0.5 else -1.0)
-	var d: Vector2 = UNSTICK_DIRS[_unstick_n % UNSTICK_DIRS.size()]
 	_unstick_n += 1
-	_unstick_dir = Vector2(d.x * sx, d.y)
+	_unstick_until = _time + UNSTICK_S * (1.0 + 0.5 * float(mini(_unstick_n_here(me), 3)))
+	_unstick_dir = _open_dir(me)
 	counters["unstick"] = int(counters.get("unstick", 0)) + 1
 	if goal_point != null and is_instance_valid(goal_point):
 		_skip[goal_point.get_instance_id()] = _time + SKIP_S
+	if via >= 0:
+		_skip_via[via] = _time + SKIP_S   # перевалка, через которую не пролезть, — тоже в чёрный список
 	goal_point = null
 	detour = false
 	via = -1
 	_rethink_t = 0.0
+
+
+## Сколько раз подряд бот застревал в этом месте (≤ 3 м от прошлого застревания) — выход с каждым разом дольше.
+func _unstick_n_here(me: Vector2) -> int:
+	if me.distance_to(_last_stuck_at) > 3.0:
+		_stuck_here = 0
+	_last_stuck_at = me
+	_stuck_here += 1
+	return _stuck_here - 1
+
+
+## Куда выбираться: из 8 направлений — то, где луч до препятствия длиннее всего (из кармана — к выходу); поровну — вверх и по кругу.
+func _open_dir(me: Vector2) -> Vector2:
+	var space := _space()
+	var ex := _own_rids()
+	var best := Vector2.UP
+	var best_l := -1.0
+	for k in 8:
+		var d := Vector2.UP.rotated(TAU * float(k) / 8.0 + 0.2 * float(_unstick_n % 3))
+		var hit := RaceNav.ray(space, me, me + d * 5.0, ex)
+		var l := 5.0 if hit.is_empty() else me.distance_to(hit["pos"] as Vector2)
+		l += 0.4 * d.y   # при равных — вверх (полёт), а не в пол
+		if l > best_l:
+			best_l = l
+			best = d
+	return best
 
 
 func _silenced(_why: String) -> void:
