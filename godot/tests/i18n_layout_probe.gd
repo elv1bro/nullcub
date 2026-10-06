@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, HUD купола с меткой СТАЗИСА, спорт-зал, «Стычка 3 на 3» и её итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, HUD купола с меткой СТАЗИСА, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием» и её итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -16,6 +16,7 @@ const WORKSHOP := "res://scenes/workshop/workshop_build.tscn"
 const HALL := "res://scenes/playground_null_hall.tscn"
 const SPORT := "res://scenes/playground_sport.tscn"
 const SQUAD := "res://scenes/playground_squad.tscn"
+const BOMB := "res://scenes/playground_bomb.tscn"
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -109,7 +110,7 @@ func _pass() -> Dictionary:
 	shots["campaign:loss"] = _scan(menu)
 	menu.queue_free()
 	await _wait(5)
-	for p in [WORKSHOP, HALL, SPORT, SQUAD]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
@@ -121,6 +122,12 @@ func _pass() -> Dictionary:
 			sm._finish("score")
 			await _wait(SETTLE * 3)
 			shots["squad:end"] = _scan(inst)
+		if p == BOMB:   # «Бомба касанием» (BOMB.md): ещё табличка итогов с таблицей бойцов
+			var bm := inst.get_node("Match") as BombMatch
+			bm.wins = {0: 3, 1: 1, 3: 2}
+			bm._finish("wins")
+			await _wait(SETTLE * 3)
+			shots["bomb:end"] = _scan(inst)
 		inst.queue_free()
 		await _wait(5)
 	Stasis.set_on(false)
