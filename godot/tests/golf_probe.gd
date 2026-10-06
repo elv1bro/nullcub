@@ -571,6 +571,12 @@ func _bots(seeds: Array, level: int, joints := false) -> void:
 			t += TICK
 			if gm.play_state != "play":
 				continue
+			if trace and int(t / TICK) % 1800 == 0:
+				var st: Array = []
+				for i in [0, 1]:
+					var dd := _doll(i)
+					st.append("P%d %s %s" % [i + 1, GolfMatch.STATE_NAMES[int(_p(i)["state"])], str(_com2(dd)) if dd != null else "—"])
+				print("    [%.0f с] лунка %d, %.0f с: %s" % [t, gm.hole_i + 1, gm.hole_time, ", ".join(st)])
 			for i in [0, 1]:
 				var d := _doll(i)
 				if d == null or int(_p(i)["state"]) == GolfMatch.S.HOLED:
