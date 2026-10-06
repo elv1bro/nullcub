@@ -168,8 +168,10 @@ func _build_bottom() -> void:
 	hint.anchor_bottom = 1.0
 	hint.offset_left = -760.0
 	hint.offset_right = 760.0
-	hint.offset_top = -62.0
-	hint.offset_bottom = -22.0
+	hint.offset_top = -84.0
+	hint.offset_bottom = -20.0
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # длинный язык — в две строки, а не за экран
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	root.add_child(hint)
 	toast_label = _label("Toast", 26, Color.WHITE)
 	toast_label.anchor_left = 0.5
