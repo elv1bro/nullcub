@@ -51,7 +51,7 @@ RENDER_TMP = os.environ.get("KIT_RENDER_TMP") or os.path.join(tempfile.gettempdi
 SHEET_FULL = os.path.join(RENDER_TMP, "body-kit-v2-full.png")
 ROW_RES = (2600, 760)   # по умолчанию; у рядов каталога — свои (render_frame)
 KIT_MODULES = ["kit_joints", "kit_heads", "kit_cores", "kit_limbs", "kit_ends", "kit_deco", "kit_weapons", "kit_league", "kit_active",
-               "kit_pro", "kit_aoe", "kit_mods"]
+               "kit_pro", "kit_aoe", "kit_mods", "kit_frames"]
 
 if bpy is not None:
     import importlib

@@ -760,3 +760,7 @@ const SQUAD_BOT_RANGE := {"pistol": Vector2(6.0, 11.0), "smg": Vector2(5.0, 9.0)
 	"sawnoff": Vector2(2.5, 5.0), "shotgun": Vector2(3.0, 6.5), "rifle": Vector2(10.0, 18.0), "rail": Vector2(12.0, 22.0)}
 const SQUAD_BOT_MELEE_M := 2.2                # цель ближе — наскок с ускорением, как в обычном бою
 const SQUAD_BOT_SUPPLY_M := 16.0              # за ящиком (жизни, броня) бот идёт, если он ближе этого; за патронами — всегда
+
+# --- связки (docs/plan-demo/WORKSHOP_V4.md «Связки», KitLink; автор 06.10: «можно перебить») ---
+## Запас связки вне «Запаса из деталей»: столько урона в её тела — и она рвётся (в «Запасе из деталей» — PartHp.break_hp от её ❤).
+const LINK_BREAK_HP := 30.0

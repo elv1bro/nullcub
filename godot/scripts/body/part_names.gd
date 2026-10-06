@@ -232,6 +232,11 @@ const NAMES := {
 	"kit_hub_pro_tee": "Тройник",
 	"kit_limb_pro_spine_s": "Малая рама-позвонок",
 	"kit_limb_pro_spine_l": "Большая рама-позвонок",
+	# рама и разветвители 06.10 (tools/blender/kit_frames.py, WORKSHOP_V4.md «Рама и разветвители»): по пять и два выхода
+	"kit_limb_frame_s": "Малая рама",
+	"kit_limb_frame_l": "Большая рама",
+	"kit_hub_star": "Звезда",
+	"kit_hub_fork": "Развилка",
 	"kit_hub_aoe_node": "Узел-сплетение",
 	"kit_limb_aoe_spine_s": "Малый позвонок",
 	"kit_limb_aoe_spine_l": "Большой позвонок",

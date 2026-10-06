@@ -1,0 +1,99 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Limb_Frame_L.glb" id="1_s74an"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_vshrs"]
+friction = 0.5
+bounce = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_838ld"]
+size = Vector3(0.52128, 0.47328, 0.09)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wskdb"]
+size = Vector3(0.1036, 0.045, 0.1036)
+
+[node name="KitLimbFrameL" type="RigidBody3D" unique_id=1230872753]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 4.0
+physics_material_override = SubResource("PhysicsMaterial_vshrs")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "limb"
+metadata/part_id = "kit_limb_frame_l"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1650729708]
+
+[node name="Anchor_Deco" type="Marker3D" parent="." unique_id=1933514141]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12924, 0)
+metadata/accepts = PackedStringArray("armor", "deco")
+metadata/joint_group = ""
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+
+[node name="Anchor_End" type="Marker3D" parent="." unique_id=1698270196]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.59923995, 0)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "auto"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.052
+
+[node name="Anchor_Side_L" type="Marker3D" parent="." unique_id=1097978662]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0.32264, -0.3006, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Anchor_Side_R" type="Marker3D" parent="." unique_id=1746820556]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, -0.32264, -0.3006, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = true
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Anchor_SideB_L" type="Marker3D" parent="." unique_id=1393920027]
+transform = Transform3D(0.7660444, -0.6427877, 0, 0.6427877, 0.7660444, 0, 0, 0, 1, 0.2777965, -0.565322, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Anchor_SideB_R" type="Marker3D" parent="." unique_id=924932930]
+transform = Transform3D(0.7660444, 0.6427877, 0, -0.6427877, 0.7660444, 0, 0, 0, 1, -0.2777965, -0.565322, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = true
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Shape_Frame" type="CollisionShape3D" parent="." unique_id=464807414]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3006, 0)
+shape = SubResource("BoxShape3D_838ld")
+
+[node name="Shape_Stem" type="CollisionShape3D" parent="." unique_id=931425702]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0681, 0)
+shape = SubResource("BoxShape3D_wskdb")
+
+[node name="Grip" type="Marker3D" parent="." unique_id=1135772419]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.59923995, 0)
+
+[node name="Mesh" type="Node3D" parent="." unique_id=938459786 instance=ExtResource("1_s74an")]
+metadata/rig_mesh = true

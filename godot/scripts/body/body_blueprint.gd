@@ -32,6 +32,10 @@ const PARTS_DIR := "res://data/body/parts/"
 @export var weapon_on := ""
 ## Энергия за кг оружия в руке по регламенту лиги (weapon_energy); 0 — оружие энергию не ест.
 @export var weapon_energy_per_kg := 0.0
+## Связки (KitLink, WORKSHOP_V4.md «Связки»): замыкают контур между двумя деталями — {id, type, a, pa, b, pb, len, channel?}. a / b — uid
+## узлов со своим телом, pa / pb — точка в кадре тела (Vector3), len — длина в позе покоя, м. Битая связка (нет узла, узел без тела)
+## при сборке пропускается — validate её не бракует, мастерская чистит связки снятых деталей (CraftEdit.prune_links).
+@export var links: Array[Dictionary] = []
 
 
 static var _part_def_cache: Dictionary = {}   # id -> PartDef (null — файла нет)
@@ -78,7 +82,31 @@ func energy_used() -> int:
 		total += _node_energy(n, float(reach.get(String(n.get("uid", "")), 0.0)))
 	for i in range(1, control.size()):
 		total += reach_cost(PULL_ENERGY, float(reach.get(String(control[i]), 0.0)))
-	return total + weapon_energy()
+	return total + weapon_energy() + links_energy()
+
+
+## Σ цен связок (KitLink.energy_of: вид × длина).
+func links_energy() -> int:
+	var t := 0
+	for l in links:
+		t += KitLink.energy_of(String(l.get("type", "rod")), float(l.get("len", 0.0)))
+	return t
+
+
+## Связка по id ({} — нет).
+func find_link(id: String) -> Dictionary:
+	for l in links:
+		if String(l.get("id", "")) == id:
+			return l
+	return {}
+
+
+## Свободный id связки: «1», «2», …
+func next_link_id() -> String:
+	var k := 1
+	while not find_link(str(k)).is_empty():
+		k += 1
+	return str(k)
 
 
 ## Регламент лиги (кампания, docs/plan-demo/17-career-trophy.md): оружие в руке ест энергию ядра — ceil(масса оружия ×

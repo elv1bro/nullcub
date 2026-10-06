@@ -43,6 +43,8 @@ signal part_reattached(part_name: String)
 signal joint_broken(part_name: String, by: Node, position: Vector3)
 ## Запас из деталей (PartHp, пробный режим 05.10): отрыв или возврат детали поменял hp / max_hp на ❤ поддерева (delta < 0 — потеря).
 signal parts_hp_changed(delta: float, part_name: String)
+## Связка (KitLink) перебита или порвалась с оторванной деталью: link_name — имя связки («Link_1»), position — её середина.
+signal link_broken(link_name: String, by: Node, position: Vector3)
 
 enum StunPhase { NONE, STUNNED, RECOVER }
 
@@ -147,6 +149,13 @@ var joint_depth: Dictionary = {}
 ## Запас из деталей (PartHp, docs/plan-demo/WORKSHOP_V4.md): имя тела → ❤ детали (масса × материал, PartHp.hp_of). Считается всегда
 ## (_init_part_hp), в бою работает только при PartHp.on: запас бойца = Σ ❤ (parts_hp_total, ставит Match), отрыв уносит ❤ поддерева.
 var part_hp: Dictionary = {}
+## Связки (KitLink, строит ModularDoll._build_links после спавна в позе; WORKSHOP_V4.md «Связки»): имя связки → {id, type, bodies, joints,
+## a, b (тела концов), hp (❤), len, strut (сустав телескопа у пружины и поршня), extend, channel}; имя тела связки → имя связки.
+## Суставы связок не суставы мышц: в joints их нет. Износ связки (link_wear) тратит урон в её тела в любом бою — связку можно перебить.
+var links_rt: Dictionary = {}
+var link_of_body: Dictionary = {}
+var link_wear: Dictionary = {}
+var link_wear_max: Dictionary = {}
 ## Принудительное ускорение без траты Заряда (пробы, клипы: «как Shift»): is_dashing() до этого момента (_time). В игре ускорение
 ## даёт удерживаемый Shift за Заряд (_boosting); кулдауна нет, dash_ready_at только для проб — всегда ≤ _time.
 var dash_until := 0.0
@@ -611,6 +620,8 @@ func take_damage(amount: float, attacker: Node, part: String, position: Vector3,
 	hit_meta = {}
 	last_hit = record
 	damaged.emit(amount, attacker, part, position, kind)
+	if hp > 0.0 and link_of_body.has(part):   # удар в связку изнашивает её (в любом бою): кончился запас — связка рвётся
+		_wear_link(String(link_of_body[part]), amount * PartMods.of(striker, "wear_mult"), attacker)
 	if hp <= 0.0:
 		knock_out(attacker, record)
 	elif JointBreak.on or PartHp.on:
@@ -642,6 +653,77 @@ func parts_hp_total() -> float:
 ## Пересчитать запасы отрыва под текущий режим (JointBreak / PartHp включили на ходу); износ сбрасывается.
 func refresh_wear() -> void:
 	_init_joint_hp()
+	_init_link_wear()
+
+
+## Запас связок: в «Запасе из деталей» — PartHp.break_hp(❤ связки), иначе Tuning.LINK_BREAK_HP.
+func _init_link_wear() -> void:
+	link_wear.clear()
+	link_wear_max.clear()
+	for ln in links_rt:
+		var mx := PartHp.break_hp(float(links_rt[ln]["hp"])) if PartHp.on else Tuning.LINK_BREAK_HP
+		link_wear_max[ln] = mx
+		link_wear[ln] = mx
+
+
+func _wear_link(ln: String, dealt: float, by: Node) -> void:
+	if not link_wear.has(ln):
+		return
+	link_wear[ln] = float(link_wear[ln]) - dealt
+	if float(link_wear[ln]) <= 0.0:
+		link_wear.erase(ln)
+		break_link.call_deferred(ln, by)
+
+
+## Порвать связку ln: суставы освобождаются, её тела — обломки (как оторванная деталь), контур раскрывается. В «Запасе из деталей»
+## запас бойца теряет её ❤. false — такой целой связки нет.
+func break_link(ln: String, by: Node = null) -> bool:
+	if not links_rt.has(ln):
+		return false
+	var rec: Dictionary = links_rt[ln]
+	var bodies: Array = rec["bodies"]
+	var pos := Vector3.ZERO
+	for b in bodies:
+		if is_instance_valid(b):
+			pos += (b as Node3D).global_position / float(bodies.size())
+	joint_broken.emit(String((bodies[0] as Node).name) if not bodies.is_empty() and is_instance_valid(bodies[0]) else ln, by, pos)   # вспышка и искры (JointBreakFx)
+	links_rt.erase(ln)
+	link_wear.erase(ln)
+	for j in rec["joints"]:
+		if is_instance_valid(j):
+			(j as Generic6DOFJoint3D).node_a = NodePath()
+			(j as Generic6DOFJoint3D).node_b = NodePath()
+			(j as Node).queue_free()
+	for b in bodies:
+		if not is_instance_valid(b):
+			continue
+		var rb := b as RigidBody3D
+		parts.erase(rb.name)
+		link_of_body.erase(String(rb.name))
+		rb.linear_damp = Tuning.LINEAR_DAMP
+		rb.angular_damp = Tuning.ANGULAR_DAMP
+		rb.set_meta("detached_from", self)
+		rb.add_to_group("detached_parts")
+	total_mass = 0.0
+	for p in parts.values():
+		total_mass += (p as RigidBody3D).mass
+	if _self_exceptions and is_inside_tree():
+		var rest: Array = parts.values()
+		get_tree().create_timer(0.2).timeout.connect(func() -> void:
+			for s in bodies:
+				for p in rest:
+					if is_instance_valid(s) and is_instance_valid(p):
+						(s as RigidBody3D).remove_collision_exception_with(p))
+	stats["links_broken"] = int(stats.get("links_broken", 0)) + 1
+	link_broken.emit(ln, by, pos)
+	var lost := float(rec.get("hp", 0.0)) if PartHp.on and alive else 0.0
+	if lost > 0.0:
+		max_hp = maxf(max_hp - lost, 1.0)
+		hp = maxf(hp - lost, 0.0)
+		parts_hp_changed.emit(-lost, ln)
+		if hp <= 0.0:
+			knock_out(by, {"kind": "detach", "part": ln, "damage": lost})
+	return true
 
 
 ## Запасы суставов по глубине от ядра (JointBreak.hp_for_depth): обход по суставам от торса, node_a — родитель, node_b — ребёнок.
@@ -860,6 +942,9 @@ func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
 	var sub_names: Array = []
 	for s in sub:
 		sub_names.append(String((s as Node).name))
+	for ln in links_rt.keys():   # связки, которые шли к оторванному куску, рвутся вместе с ним
+		if sub.has(links_rt[ln]["a"]) or sub.has(links_rt[ln]["b"]):
+			break_link(String(ln), by)
 	# оружие в оторванной кисти выпадает (WeaponPickup и похожие: is_holding / drop)
 	for c in get_children():
 		if c.has_method("is_holding") and c.has_method("drop"):
@@ -1074,6 +1159,14 @@ func break_apart() -> void:
 	_broken = true
 	alive = false
 	var com := centre_of_mass()
+	for ln in links_rt:   # KO: суставы связок тоже рвутся — кукла рассыпается целиком
+		for lj in links_rt[ln]["joints"]:
+			if is_instance_valid(lj):
+				(lj as Generic6DOFJoint3D).node_a = NodePath()
+				(lj as Generic6DOFJoint3D).node_b = NodePath()
+				(lj as Node).queue_free()
+	links_rt.clear()
+	link_wear.clear()
 	for j in joints.values():
 		var jj := j as Generic6DOFJoint3D
 		jj.set("angular_motor_z/enabled", false)

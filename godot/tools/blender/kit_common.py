@@ -68,7 +68,7 @@ BASES = ["Wood", "Maple", "WoodDark", "Planks", "PaintRed", "PaintBlue", "PaintY
 
 # радиусы шаров шарниров по якорю (как «шары» куклы v3, чуть крупнее — игрушка)
 JOINT_R = {"Neck": 0.05, "Shoulder": 0.064, "Elbow": 0.054, "Wrist": 0.044, "Hip": 0.076, "Knee": 0.066, "Ankle": 0.052,
-           "Side": 0.062, "End": 0.052, "Top": 0.0, "Deco": 0.0, "Back": 0.0}
+           "Side": 0.062, "End": 0.052, "Top": 0.0, "Deco": 0.0, "Back": 0.0, "SideB": 0.062}
 
 
 def kit_setup(export=False):

@@ -25,7 +25,7 @@
 ##                (навершия kit_weapons — на «Броня, декор»); kit_human_* на полках нет (дубли wood_*), но PartDef грузится;
 ##                shelves_part_desc — паспорт словами (CraftEdit.part_desc) не пустой у каждой детали из data/body/parts;
 ##                shelves_press_block_desc — блок «по нажатию» (мина) из библиотеки: описание и цена за раз в паспорте справа;
-##   kit_preset_<id>_loads — каждый пресет кита: без ошибок, на стенде столько тел, сколько узлов не is_fixed;
+##   kit_preset_<id>_loads — каждый пресет кита: без ошибок, на стенде столько тел, сколько узлов не is_fixed (плюс тела связок, все связки собраны);
 ##   mat_*      — кисть: железо на плечо kit_human (узел mat, поверхность Base_ → Base_Iron, физматериал, масса ×2.2), материал по
 ##                умолчанию стирает ключ, Ctrl+Z; деревянная деталь human — отказ «не красится»; клик мышью кистью; ПКМ кладёт кисть,
 ##                а не откручивает; замена детали сохраняет mat только у детали с base_mat; сохранение / загрузка с mat и joint;
@@ -1348,7 +1348,9 @@ func _kit_presets() -> void:
 		for n in bp.nodes:
 			if not CraftEdit.is_fixed(bp, String(n["uid"])):
 				own += 1
-		var built := ws.stand != null and ws.stand.build_errors.is_empty() and ws.stand.parts.size() == own
+		# тела связок (KitLink: шаблон «Поршневой») — свои тела бойца сверх узлов чертежа
+		var built := ws.stand != null and ws.stand.build_errors.is_empty() and ws.stand.parts.size() - ws.stand.link_of_body.size() == own \
+			and ws.stand.links_rt.size() == bp.links.size()
 		_check("kit_preset_%s_loads" % id, set_ok and bp.id == id and CraftEdit.friendly_errors(bp).is_empty() and built,
 			"пресет %s: без ошибок, на стенде %d тел" % [id, own],
 			{"bodies": ws.stand.parts.size() if ws.stand else -1, "energy": bp.energy_used(), "mass": snappedf(bp.total_mass(), 0.1),
