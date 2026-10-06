@@ -167,3 +167,13 @@ sips -s format jpeg -s formatOptions 84 /abs/ru.png --out docs/plan-demo/img/mod
    отдельным мелким шагом, если нужно.
 4. **Надписи гаража у пункта ВСЕ РЕЖИМЫ** («Тестовая сборка · всё, что есть в демо, списком») не менял: гараж правят
    другие сессии.
+
+## Строки для godot/README.md (раздел «Проверки»)
+
+README в основном чекауте правит другая сессия — добавить, когда освободится:
+
+```
+godot --headless --path godot --fixed-fps 60 res://tests/modes_screen_probe.tscn   # экран «ВСЕ РЕЖИМЫ» (../docs/plan-demo/MODES_SCREEN.md): сцены всех режимов на месте, карточки со снимком или заглушкой N0, ↑↓ / W S / End / Home и колесо, клик / второй клик, Enter и ИГРАТЬ (стычка — SquadSettings.ask), кроссфейд снимка, памятка L и Esc, память выбора, вёрстка ru / en (qps — печать)
+GODOT_BIN=/usr/local/bin/godot godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/modes_shots.tscn -- "only=quick+bomb"   # снимки режимов для «ВСЕ РЕЖИМЫ» → godot/assets/ui/modes/<id>.jpg (960×540, ≤ 150 КБ; боты играют, HUD и 3D-надписи с буквами спрятаны), потом --import
+godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/modes_screen_snapshot.tscn -- "out=/abs/shot.png,lang=en,sel=squad,memo=0"   # кадр экрана «ВСЕ РЕЖИМЫ» на языке, с выбранным режимом
+```
