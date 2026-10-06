@@ -181,10 +181,17 @@ func _dome() -> void:
 	var hp := Vector3(1.5, 3.0, 0.0)
 	var p1 := pg.get_node("P1") as Doll
 	var p2 := pg.get_node("P2") as Doll
-	var ctx: Dictionary = m_node.call("make_hit_ctx", p2, p1, 14.0, "punch", hp, 1, false, "", 8.0)
+	# сила кольца — по урону (автор 06.10): слабый удар без кольца, 14 HP — слабое, крит / KO — не слабее своего пола
+	var pw_ok := NullLook.wave_power(5.0, "light") == 0.0 and NullLook.wave_power(14.0, "light") > 0.1 \
+		and NullLook.wave_power(14.0, "light") < 0.5 and NullLook.wave_power(30.0, "heavy") >= 0.99 \
+		and NullLook.wave_power(15.0, "crit") >= 0.85 and NullLook.wave_power(14.0, "ko_crit") >= 0.99
+	_check("wave_by_damage", pw_ok, "5 HP %.2f, 14 HP %.2f, 30 HP %.2f, крит 15 HP %.2f" % [NullLook.wave_power(5.0, "light"),
+		NullLook.wave_power(14.0, "light"), NullLook.wave_power(30.0, "heavy"), NullLook.wave_power(15.0, "crit")])
+	var ctx: Dictionary = m_node.call("make_hit_ctx", p2, p1, 5.0, "punch", hp, 1, false, "", 8.0)
 	ctx["tier"] = "light"
 	m_node.emit_signal("hit_fx", ctx.duplicate())
 	var after_light := nl.waves_total
+	ctx["damage"] = 18.0
 	ctx["tier"] = "heavy"
 	m_node.emit_signal("hit_fx", ctx.duplicate())
 	nl.field.membrane_hit.emit(Vector2(16.0, 2.0), 9.0)
@@ -201,6 +208,34 @@ func _dome() -> void:
 	_check("hit_waves", after_light == w0 and nl.waves_total == w0 + 2 and in_dust and in_bubble and centre_on,
 		"light +%d, heavy+membrane +%d, in dust %s, in bubble %s, bubble centre shown %s" % [after_light - w0, nl.waves_total - after_light,
 		str(in_dust), str(in_bubble), str(centre_on)])
+	# --- Z («Я»): пыль арены вкл / выкл, Ctrl+Z (отмена в мастерской) не трогает
+	var dust_was: bool = look.checked(&"null_dust")
+	var cfg_path := ProjectSettings.globalize_path("user://look.cfg")
+	var cfg_before := FileAccess.get_file_as_string(cfg_path) if FileAccess.file_exists(cfg_path) else ""
+	var kz := InputEventKey.new()
+	kz.physical_keycode = KEY_Z
+	kz.pressed = true
+	kz.ctrl_pressed = true
+	Input.parse_input_event(kz)
+	await _frames(2)
+	var ctrl_kept: bool = look.checked(&"null_dust") == dust_was
+	var kz2 := InputEventKey.new()
+	kz2.physical_keycode = KEY_Z
+	kz2.pressed = true
+	Input.parse_input_event(kz2)
+	await _frames(2)
+	var toggled: bool = look.checked(&"null_dust") != dust_was and d.visible != dust_was
+	look.set_on(&"null_dust", dust_was)
+	# клавиша пишет галочку в user://look.cfg (как панель) — вернуть файл игрока как был
+	if cfg_before == "":
+		if FileAccess.file_exists(cfg_path):
+			DirAccess.remove_absolute(cfg_path)
+	else:
+		var fw := FileAccess.open(cfg_path, FileAccess.WRITE)
+		fw.store_string(cfg_before)
+		fw.close()
+	_check("z_toggles_dust", ctrl_kept and toggled and d.visible == dust_was, "Ctrl+Z не трогает %s, Z переключает %s, вернули %s" % [
+		str(ctrl_kept), str(toggled), str(d.visible == dust_was)])
 	# --- кильватер
 	for b in p1.parts.values():
 		(b as RigidBody3D).linear_velocity = Vector3(14.0, 0.0, 0.0)

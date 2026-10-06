@@ -86,6 +86,12 @@ func set_master(v: bool, save := false) -> void:
 		_panel.refresh()
 
 
+## Короткая надпись по центру сверху (как у рубильника) — для клавиш проб вида.
+func toast(text: String) -> void:
+	if _panel != null:
+		_panel.toast(text)
+
+
 func ids() -> Array[StringName]:
 	return _order.duplicate()
 
