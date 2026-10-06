@@ -351,11 +351,15 @@ func _build() -> void:
 	var chain_hosts := {}   # тело -> true: на нём модуль, чьи свойства спускаются по цепочке (сервопривод, амортизатор)
 	part_integrity.clear()
 	part_integrity_max.clear()
+	var dropped := {}       # uid -> true: узла нет с рождения (Doll.missing_parts — он сам или кто-то выше по цепочке)
 	for n in blueprint.sorted_nodes():
 		var uid := String(n["uid"])
 		var def := BodyBlueprint.part_def(String(n["part"]))
-		var inst := def.scene.instantiate() as RigidBody3D
 		var parent := String(n.get("parent", ""))
+		if parent != "" and (dropped.has(parent) or (def.kind != "head" and not blueprint.is_fixed(uid) and missing_parts.has(blueprint.body_name_of(uid)))):
+			dropped[uid] = true   # оторвано в прошлом розыгрыше (спорт-зал): ни тела, ни сустава, ни слитого с ним, ни связок к нему
+			continue
+		var inst := def.scene.instantiate() as RigidBody3D
 		var mirror := false
 		var a: Dictionary = {}
 		var a_xf := Transform3D.IDENTITY
@@ -553,12 +557,14 @@ func _physics_process(delta: float) -> void:
 
 ## Связки чертежа — телами и суставами (LinkBuilder.build) в текущей позе. Тела связок становятся частями куклы: parts, масса, ❤
 ## (PartHp: вся связка — одна деталь, ❤ на первом теле), исключения столкновений со своими телами, дамп. Битые связки (нет узла,
-## узел без своего тела, концы совпали) пропускаются.
+## узел без своего тела, концы совпали) и порванные в прошлом розыгрыше («Link_<id>» в missing_parts) пропускаются.
 func _build_links() -> void:
 	for l in blueprint.links:
 		var ua := String(l.get("a", ""))
 		var ub := String(l.get("b", ""))
 		if not uid_body.has(ua) or not uid_body.has(ub) or blueprint.is_fixed(ua) or blueprint.is_fixed(ub):
+			continue
+		if missing_parts.has("Link_" + String(l.get("id", "1"))):
 			continue
 		var ba := parts.get(uid_body[ua]) as RigidBody3D
 		var bb := parts.get(uid_body[ub]) as RigidBody3D

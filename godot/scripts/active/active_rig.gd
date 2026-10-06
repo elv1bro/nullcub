@@ -154,6 +154,8 @@ func _collect() -> void:
 			hp_regen += float(p.get("hp_regen", 0.0))
 		if not ActiveBlocks.is_active(pid):
 			continue
+		if not doll.uid_body.has(uid):
+			continue   # узел не собран: оторван в прошлом розыгрыше (Doll.missing_parts)
 		var host := doll.get_node_or_null(String(doll.uid_body.get(uid, ""))) as RigidBody3D
 		if host == null:
 			push_warning("ActiveRig: блок %s (%s) без тела-хозяина" % [uid, pid])
@@ -192,6 +194,8 @@ func _physics_process(dt: float) -> void:
 		_autopilot()
 	# поршни-связки: канал зажат и заряда хватает — выдвинут, иначе втянут (KitLink piston: cost заряда в секунду)
 	for p in pistons:
+		if not doll.links_rt.has(String(p["name"])):
+			continue   # поршень порван (или не собран: порван в прошлом розыгрыше) — заряд не тратит
 		var need_p := float(KitLink.info("piston")["cost"]) * dt
 		var on_p := ok and _want(int(p["channel"])) and charge >= need_p
 		if on_p:
