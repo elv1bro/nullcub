@@ -42,6 +42,7 @@ func _ready() -> void:
 				_grids.append(g)
 	if bag != null:
 		bag.hit.connect(_on_bag_hit)
+	NullLook.attach(self, NullLook.KIND_HALL)   # пыль поля NULL (docs/plan-demo/look/null.md)
 	set_awake(false)
 
 

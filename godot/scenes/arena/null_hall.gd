@@ -46,6 +46,7 @@ func _ready() -> void:
 	if field != null:
 		field.membrane_hit.connect(func(_p: Vector2, speed: float) -> void: excite(clampf(speed / 10.0, 0.35, 1.0)))
 	_connect_match.call_deferred()
+	NullLook.attach(self, NullLook.KIND_DOME)   # вид поля NULL: пыль, пузырь, смена поля (docs/plan-demo/look/null.md)
 
 
 ## Толпа болеет: азарт поднимается до amount (0..1) и спадает сам (crowd_cool_per_s).

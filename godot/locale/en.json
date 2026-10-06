@@ -1899,5 +1899,12 @@
 	"Отражения арены": "Arena reflections",
 	"Кадр": "Frame",
 	"Пластик": "Plastic",
-	" · рендерер — после перезапуска": " · renderer — after restart"
+	" · рендерер — после перезапуска": " · renderer — after restart",
+	"Поле NULL": "NULL field",
+	"Пыль на обычных аренах": "Dust on regular arenas",
+	"Пыль и мусор в объёме боя": "Dust and debris in the fight volume",
+	"Кильватер поля за быстрым бойцом": "Field wake behind a fast fighter",
+	"Мембрана-пузырь: преломление, радужный край, рябь": "Bubble membrane: refraction, rainbow rim, ripples",
+	"Смена гравитации: волна по кадру": "Gravity shift: wave across the frame",
+	"Преломление фона через мембрану": "Background refraction through the membrane"
 }
