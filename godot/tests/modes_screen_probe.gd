@@ -47,6 +47,12 @@ func _run() -> void:
 	var loc := get_node("/root/Loc")
 	loc.set_language("ru")
 	M.set("last_id", "")
+	# прокрутка и кроссфейд снимка анимируются по delta, проба ждёт кадрами по 1/60 с: без --fixed-fps — ложные FAIL.
+	# Флаг движок забирает себе (в get_cmdline_args его нет) — узнаём по delta
+	for i in 3:
+		await get_tree().process_frame
+	_check("fixed_fps", absf(get_process_delta_time() - 1.0 / 60.0) < 1e-6,
+		"запуск с --fixed-fps 60 (иначе прокрутка и кроссфейд не успевают за кадрами пробы), delta %.4f" % get_process_delta_time())
 	_check_data()
 	await _open()
 	_check_cards()
