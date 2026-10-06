@@ -133,6 +133,9 @@ const HOLD_F_MAX := 150.0
 ## Вдвое больше — срыв сразу.
 const HOLD_SLIP_M := 0.45
 const HOLD_SLIP_S := 0.2
+## Свой предел срыва у предмета (meta, м) вместо HOLD_SLIP_M: тяжёлые ящики головоломок (scripts/puzzle/puzzle_crate.gd) — их несут
+## вдвоём, и пружины двух рук растягиваются дальше 0.45 м. Без meta — как было.
+const SLIP_META := &"hold_slip_m"
 const RELEASE_EXCEPT_S := 0.3      # с после отпускания: исключения коллизий со своими частями снимаются (если предмет отошёл)
 const RELEASE_EXCEPT_MAX_S := 2.0  # и не позже этого, даже если предмет лежит на кукле (Jolt растолкнёт)
 const RELEASE_CLEAR_M := 0.15      # «отошёл»: зазор AABB предмета и частей куклы, м
@@ -207,6 +210,10 @@ var last_reattach: Dictionary = {}
 var blocked_candidate: RigidBody3D = null
 ## Последний бросок: {body, t, dir, speed} (для проб).
 var last_throw: Dictionary = {}
+## Подпись клавиш над предметом вместо «E» / «RB» и «ЛКМ» / «стик» (пусто — как было). Ставит клавиатурная рука P2 головоломок
+## (scripts/puzzle/puzzle_key_arm.gd, docs/plan-demo/PUZZLE.md); в остальных режимах пусто.
+var hint_grab_key := ""
+var hint_aim := ""
 
 var _ready_done := false
 var _time := 0.0
@@ -875,8 +882,9 @@ func _apply_hold() -> void:
 	var d := p_h - p_i
 	d.z = 0.0
 	var stretch := d.length()
-	_overstretch_t = _overstretch_t + get_physics_process_delta_time() if stretch > HOLD_SLIP_M else 0.0
-	if _overstretch_t >= HOLD_SLIP_S or stretch > 2.0 * HOLD_SLIP_M:
+	var slip_m := float(held.get_meta(SLIP_META, HOLD_SLIP_M))
+	_overstretch_t = _overstretch_t + get_physics_process_delta_time() if stretch > slip_m else 0.0
+	if _overstretch_t >= HOLD_SLIP_S or stretch > 2.0 * slip_m:
 		release("slip")
 		return
 	var dv := _point_velocity(part, p_h) - _point_velocity(held, p_i)
@@ -1504,8 +1512,8 @@ func _update_label() -> void:
 	if _hint == null:
 		return
 	var show := show_hints and doll.alive and not doll.external_input
-	var key := "E" if _mouse_enabled() else "RB"
-	var aim := tr("ЛКМ") if _mouse_enabled() else tr("стик")
+	var key := hint_grab_key if hint_grab_key != "" else ("E" if _mouse_enabled() else "RB")
+	var aim := hint_aim if hint_aim != "" else (tr("ЛКМ") if _mouse_enabled() else tr("стик"))
 	var b: RigidBody3D = null
 	var text := ""
 	var kind := "grab"

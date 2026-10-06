@@ -45,11 +45,13 @@
   оторванные руки и ноги — нет. Потери копятся: без руки в одном розыгрыше, без стопы в следующем — выйдет без обеих.
 - **Новый матч** (R, F, итоги) — куклы целые.
 - Выключили режим `;` (и «Прочность суставов» тоже выключена) — после гола куклы снова целые, как раньше.
+- Так у любой куклы: и у обычной, и у собранной в мастерской. У сборки не возвращаются и порванные связки (поршень, пружина, трос);
+  оторванная деталь не возвращается со всем, что на ней было (слитый декор, модули, деталь на связке), активные блоки на ней не работают.
 
 Числа: `Tuning.SPORT_PARTHP` (режим в зале по умолчанию), `Tuning.SPORT_KEEP_DAMAGE` (не чинить между розыгрышами). Как устроено:
-`Doll.missing_parts` — каких тел у куклы нет с рождения (их и всё, что на них висит, `_ready` убирает до сборки),
-`Doll.lost_part_names()`, `Match.respawn_doll(old, keep_lost)`, `SportMatch.keeps_damage()` / `_respawn_as_is`. Только кукла из сцены
-(`doll.tscn`): сборка из мастерской (`ModularDoll`) строит тела сама, для неё оторванное после гола пока отрастает.
+`Doll.missing_parts` — каких тел и связок («Link_<id>») у куклы нет с рождения; кукла из сцены (`doll.tscn`) убирает такие тела и всё,
+что на них висит, в `_ready` до сборки, сборка из мастерской (`ModularDoll._build`) не строит такие узлы чертежа со всей веткой,
+`_build_links` — такие связки. `Doll.lost_part_names()`, `Match.respawn_doll(old, keep_lost)`, `SportMatch.keeps_damage()` / `_respawn_as_is`.
 
 ## Управление
 
@@ -90,7 +92,7 @@ godot --headless --path godot res://tools/build_sport_hall.tscn
 ## Проверки
 
 ```bash
-godot --headless --path godot --fixed-fps 60 res://tests/sport_probe.tscn                         # правила трёх видов + матч ботов, 89 проверок
+godot --headless --path godot --fixed-fps 60 res://tests/sport_probe.tscn                         # правила трёх видов + матч ботов, 118 проверок
 godot --headless --path godot --fixed-fps 60 res://tests/sport_probe.tscn -- "sports=football,only=bots,trace=1"   # бой ботов с печатью мяча и состояний
 godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/sport_snapshot.tscn -- "out_dir=/abs/dir"   # кадры (окно)
 ```

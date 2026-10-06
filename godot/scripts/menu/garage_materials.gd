@@ -47,6 +47,13 @@ const SPEC := {
 	"LampAmber": {"color": Color(0, 0, 0), "emi": [Color(1.0, 0.6, 0.2), 1.6]},
 	"LampGreen": {"color": Color(0, 0, 0), "emi": [Color(0.25, 1.0, 0.35), 4.0]},
 	"Leaves": {"tex": GAR + "leaves.png", "rough": 0.7, "scissor": true},
+	# пилотское место и стенд экранов (06.10): пластик шлема и консоли, стекло визора, полоса связи, кожа кресла
+	"PlasticDark": {"color": Color(0.075, 0.08, 0.09), "rough": 0.42, "metal": 0.1},
+	"PlasticLight": {"color": Color(0.8, 0.78, 0.73), "rough": 0.38},
+	"Visor": {"color": Color(0.02, 0.03, 0.05), "rough": 0.06, "metal": 0.4, "emi": [Color(0.1, 0.45, 0.6), 0.25]},
+	"LinkGlow": {"color": Color(0, 0, 0), "emi": [Color(0.3, 0.88, 1.0), 3.2]},
+	"Leather": {"color": Color(0.1, 0.075, 0.065), "rough": 0.55},
+	"Fabric": {"color": Color(0.16, 0.17, 0.2), "rough": 0.95},
 	# картинки на моделях с UV 0..1 (tools/gen_garage_textures.py)
 	"Blueprint": {"tex": GAR + "blueprint.png", "rough": 0.85},
 	"BannerCloth": {"tex": GAR + "banner.png", "rough": 0.95},

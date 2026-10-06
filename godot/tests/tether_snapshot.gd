@@ -1,13 +1,12 @@
 ## Кадры «детали на связке» (docs/plan-demo/WORKSHOP_V4.md «Деталь на связке и налог на ветвление»): вкладка «Шарниры» с новыми
-## шарнирами, стенд, испытание с кистенем и кукла в гараже.
+## шарнирами, стенд, испытание с кистенем.
 ##   godot/tools/godot_nofocus.sh --path godot --resolution 1920x1080 res://tests/tether_snapshot.tscn -- "out=/abs/dir"
 ## Нужно окно. Пишет tether-joints.png (вкладка, нога на тросе), tether-stand.png (нога на тросе, кисть на поршне, кисть на пружине),
-## tether-flail-1..3.png (испытание: тяга на стопе ноги на тросе, мышь крутит её), tether-garage.png и tether-garage-side.png
-## (та же сборка сидит на ящике, как в гараже меню).
+## tether-flail-1..3.png (испытание: тяга на стопе ноги на тросе, мышь крутит её). Кадров «кукла на ящике в гараже» больше нет
+## (06.10: в гараже кукла висит на стенде мастерской).
 extends Node3D
 
 const WORKSHOP := "res://scenes/workshop/workshop_build.tscn"
-const GARAGE_DOLL := "res://scenes/menu/garage_doll.gd"
 const BP_PATH := "user://tether_snapshot_bp.tres"
 
 var out_dir := "user://"
@@ -75,41 +74,5 @@ func _run() -> void:
 			await _shot("flail-%d" % [1 + (i - 70) / 30])
 	ws.queue_free()
 	await _frames(5)
-	# гараж: та же сборка сидит на ящике
-	var cam := Camera3D.new()
-	cam.position = Vector3(0.0, 1.1, 3.4)
-	add_child(cam)
-	cam.look_at(Vector3(0.0, 0.7, 0.0))
-	cam.current = true
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-50.0, 30.0, 0.0)
-	add_child(sun)
-	var env := WorldEnvironment.new()
-	env.environment = Environment.new()
-	env.environment.background_mode = Environment.BG_COLOR
-	env.environment.background_color = Color(0.16, 0.13, 0.11)
-	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.environment.ambient_light_color = Color(0.6, 0.6, 0.6)
-	add_child(env)
-	var floor := MeshInstance3D.new()
-	var pm := PlaneMesh.new()
-	pm.size = Vector2(8.0, 8.0)
-	floor.mesh = pm
-	add_child(floor)
-	var box := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(0.6, 0.5, 0.5)
-	box.mesh = bm
-	box.position = Vector3(0.0, 0.25, 0.0)
-	add_child(box)
-	var gd := Node3D.new()
-	gd.set_script(load(GARAGE_DOLL))
-	gd.set("blueprint_path", BP_PATH)
-	add_child(gd)
-	await _frames(20)
-	await _shot("garage")
-	cam.position = Vector3(3.4, 1.1, 0.4)
-	cam.look_at(Vector3(0.0, 0.7, 0.0))
-	await _frames(5)
-	await _shot("garage-side")
+	# (06.10: кукла больше не сидит на ящике в гараже — висит на стенде мастерской, её кадры — tether-stand.png)
 	get_tree().quit(0)

@@ -202,7 +202,7 @@ func spawn_point_for(d: Doll) -> Vector3:
 
 ## Заменяет куклу новым инстансом её сцены (doll.tscn / doll_dark.tscn) с теми же настройками на точке спавна, переносит
 ## скриптовые узлы-дети (WeaponPickup и т. п.), регистрирует, шлёт doll_replaced. Возвращает новую куклу.
-## keep_lost — оторванное у старой куклы не отрастает (Doll.missing_parts; спорт-зал, SportMatch.keeps_damage); у ModularDoll — нет.
+## keep_lost — оторванное у старой куклы не отрастает (Doll.missing_parts: детали и порванные связки; спорт-зал, SportMatch.keeps_damage).
 func respawn_doll(old: Doll, keep_lost := false) -> Doll:
 	var parent := old.get_parent()
 	if parent == null:
@@ -260,7 +260,7 @@ func respawn_doll(old: Doll, keep_lost := false) -> Doll:
 	parent.remove_child(old)
 	old.queue_free()
 	d.name = name_
-	if keep_lost and not (d is ModularDoll):
+	if keep_lost:
 		d.missing_parts = old.lost_part_names()
 	parent.add_child(d)
 	parent.move_child(d, idx)

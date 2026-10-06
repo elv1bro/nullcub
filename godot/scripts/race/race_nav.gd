@@ -23,6 +23,8 @@ static func is_obstacle(c: Object) -> bool:
 		return true
 	if c is RigidBody3D:
 		var b := c as RigidBody3D
+		if b.is_in_group("debris"):
+			return false   # обломок ящика (Breakable): мелкий и временный, застывший — не стена (пресс Свалки бьёт ящик в разный момент)
 		var p := b.get_parent()
 		if p is Doll:
 			return false   # деталь куклы

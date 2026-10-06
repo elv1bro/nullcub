@@ -47,6 +47,9 @@ ROLES = {
     "Photo_A": (0.7, 0.6, 0.5), "Photo_B": (0.7, 0.6, 0.5), "Photo_C": (0.7, 0.6, 0.5), "Photo_D": (0.7, 0.6, 0.5),
     "Photo_E": (0.7, 0.6, 0.5), "Photo_F": (0.7, 0.6, 0.5), "Poster_A": (0.6, 0.4, 0.3), "Poster_B": (0.4, 0.5, 0.6),
     "Poster_C": (0.5, 0.4, 0.6),
+    # пилотское место и стенд экранов (06.10): нейрошлем, кресло, консоль связи, мониторы
+    "PlasticDark": (0.07, 0.075, 0.085), "PlasticLight": (0.78, 0.76, 0.72), "Visor": (0.02, 0.03, 0.05),
+    "LinkGlow": (0.25, 0.9, 1.0), "Leather": (0.09, 0.07, 0.065), "Fabric": (0.16, 0.17, 0.2),
 }
 
 _rng = random.Random(7)
@@ -1141,6 +1144,219 @@ def build_Rug(name):
     return a.finish()
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# пилотское место (06.10, лор LORE_V2 §2а п. 3: «нейро-шлем + очки/визор, быт, не киберпанк»; через шлем механик управляет
+# куклой на стенде) и стенд экранов с показателями бойца
+# ----------------------------------------------------------------------------------------------------------------------
+def bm_rod(p0, p1, r, segs=10, r2=None):
+    """Цилиндр от точки p0 до p1 (радиус r, у p1 — r2)."""
+    p0, p1 = Vector(p0), Vector(p1)
+    d = p1 - p0
+    bm = bm_cyl(r, d.length, segs=segs, r2=r2)
+    q = Vector((0, 0, 1)).rotation_difference(d.normalized())
+    bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=q.to_matrix(), verts=bm.verts)
+    _xform(bm, (p0 + p1) * 0.5)
+    return bm
+
+
+def build_NeuroHeadset(name):
+    """Нейрошлем механика: обод вокруг головы, дуга через макушку, визор-очки спереди (тёмное стекло, голубая полоса связи),
+    чашки у висков с кольцами-индикаторами, модуль NULL-интерфейса на затылке с антенной. Беспроводной.
+    Origin — центр обода (на голове — середина головы на уровне лба), визор смотрит в −Y (в Godot +Z)."""
+    a = Asset(name)
+    # обод — эллипс 0.105 × 0.125 (голова длиннее, чем шире)
+    band = bm_torus(0.108, 0.014, segs=36, rsegs=8)
+    bmesh.ops.scale(band, vec=Vector((1.0, 1.16, 1.0)), verts=band.verts)
+    a.add(band, "PlasticDark", smooth=True)
+    pad = bm_torus(0.1, 0.009, (0, 0, -0.012), segs=36, rsegs=6)
+    bmesh.ops.scale(pad, vec=Vector((1.0, 1.16, 1.0)), verts=pad.verts)
+    a.add(pad, "Rubber", smooth=True)
+    # дуга через макушку (от виска к виску) и вторая — от лба к затылку
+    a.add(bm_torus(0.108, 0.011, rot=(90, 0, 0), segs=24, rsegs=6, arc=0.5), "PlasticLight", smooth=True)
+    arc2 = bm_torus(0.118, 0.008, rot=(90, 0, 90), segs=24, rsegs=6, arc=0.5)
+    a.add(arc2, "PlasticDark", smooth=True)
+    # визор: скруглённая коробка-очки, стекло чуть выпуклое, полоса связи над стеклом
+    vy = -0.128
+    a.add(bm_rslab(0.2, 0.072, 0.03, 0.05, loc=(0, vy + 0.012, -0.018), bevel=0.006), "PlasticDark", smooth=True)
+    glass = bm_grid(0.172, 0.05, 8, 3, bulge=0.008, loc=(0, vy - 0.014, -0.02))
+    a.add(glass, "Visor", keep_uv=True, smooth=True)
+    a.add(bm_box((0.15, 0.006, 0.006), loc=(0, vy - 0.016, 0.012)), "LinkGlow")
+    a.add(bm_box((0.2, 0.03, 0.012), loc=(0, vy + 0.01, -0.058), bevel=0.004), "Rubber")
+    # чашки у висков с кольцами
+    for sx in (-1, 1):
+        x = sx * 0.112
+        a.add(bm_cyl(0.034, 0.03, (x, -0.01, -0.02), (0, 90, 0), segs=20, bevel=0.006), "PlasticLight", smooth=True)
+        a.add(bm_torus(0.024, 0.0035, (x + sx * 0.016, -0.01, -0.02), (0, 90, 0), segs=20, rsegs=4), "LinkGlow")
+        a.add(bm_cyl(0.012, 0.012, (x + sx * 0.018, -0.01, -0.02), (0, 90, 0), segs=10), "PlasticDark")
+    # модуль на затылке и короткая антенна
+    a.add(bm_box((0.07, 0.04, 0.05), loc=(0, 0.14, 0.0), bevel=0.01, seg=2), "PlasticLight")
+    a.add(bm_box((0.045, 0.006, 0.006), loc=(0, 0.161, 0.012)), "LinkGlow")
+    a.add(bm_rod((0.02, 0.15, 0.025), (0.035, 0.17, 0.09), 0.004, segs=6), "PlasticDark")
+    a.add(bm_sphere(0.007, (0.035, 0.17, 0.092), segs=8, rings=5), "LampRed")
+    return a.finish()
+
+
+def build_LinkConsole(name):
+    """Консоль связи на верстаке: корпус 0.46 × 0.3 × 0.12 с наклонной панелью (экран состояния, кнопки, кольцо связи) и
+    подставкой-«головой» для нейрошлема справа. Подставка — купол на стойке, обод шлема ложится на высоту 0.33 над низом
+    консоли (точка HEADSET_REST = (0.13, 0.0, 0.33) в кадре модели). Origin — центр низа консоли."""
+    a = Asset(name)
+    # корпус слева, низкий, с наклонной верхней панелью
+    pts = [(-0.23, 0.0), (0.04, 0.0), (0.04, 0.08), (-0.23, 0.13)]
+    a.add(bm_prism(pts, 0.28, loc=(0, 0.0, 0), rot=(0, 0, 0), bevel=0.008), "PlasticDark", along='X')
+    scr = bm_grid(0.14, 0.075, 6, 3, bulge=0.0, loc=(0, 0, 0))
+    bmesh.ops.rotate(scr, cent=(0, 0, 0), matrix=Euler((math.radians(-79), 0, 0), 'XYZ').to_matrix(), verts=scr.verts)
+    _xform(scr, (-0.13, -0.02, 0.112))
+    a.add(scr, "Screen", keep_uv=True)
+    for i in range(4):
+        bm = bm_box((0.026, 0.02, 0.012), bevel=0.003)
+        _xform(bm, (-0.19 + i * 0.034, 0.085, 0.112 - 0.017 * 1.0 - i * 0.0), (11, 0, 0))
+        a.add(bm, ("LampAmber", "PlasticLight", "PlasticLight", "LampGreen")[i])
+    ring = bm_torus(0.045, 0.006, segs=28, rsegs=5)
+    bmesh.ops.rotate(ring, cent=(0, 0, 0), matrix=Euler((math.radians(-11), 0, 0), 'XYZ').to_matrix(), verts=ring.verts)
+    _xform(ring, (-0.02, 0.05, 0.1))
+    a.add(ring, "LinkGlow")
+    # подставка для шлема
+    hx = 0.13
+    a.add(bm_cyl(0.085, 0.022, (hx, 0, 0.011), segs=24, bevel=0.006), "Iron")
+    a.add(bm_cyl(0.016, 0.22, (hx, 0, 0.13), segs=12), "Steel", smooth=True)
+    dome = bm_sphere(0.085, (hx, 0, 0.3), segs=20, rings=10, scale=(1.0, 1.15, 0.95))
+    a.add(dome, "PlasticDark", smooth=True)
+    a.add(bm_torus(0.07, 0.004, (hx, 0, 0.245), segs=24, rsegs=4), "LinkGlow")
+    # кабель питания уходит за верстак
+    a.add(bm_rod((-0.2, 0.12, 0.03), (-0.26, 0.32, 0.01), 0.008, segs=6), "Rubber")
+    return a.finish()
+
+
+def build_PilotChair(name):
+    """Кресло пилота: сиденье и высокая спинка с подголовником (кожа, прошивка полосами), подлокотники, газлифт,
+    пятилучевая крестовина на колёсиках, голубая полоса связи по краю спинки. Сиденье 0.5 м. Origin — центр низа,
+    сидящий смотрит в −Y."""
+    a = Asset(name)
+    # крестовина и колёса
+    for k in range(5):
+        t = 2 * math.pi * k / 5 + math.pi / 2
+        tip = (math.cos(t) * 0.3, math.sin(t) * 0.3, 0.075)
+        a.add(bm_rod((0, 0, 0.1), tip, 0.022, segs=8, r2=0.016), "Iron")
+        a.add(bm_cyl(0.028, 0.03, (tip[0], tip[1], 0.03), (0, 90, math.degrees(t)), segs=12), "Rubber")
+    a.add(bm_cyl(0.05, 0.08, (0, 0, 0.11), segs=16), "Iron")
+    a.add(bm_cyl(0.025, 0.28, (0, 0, 0.29), segs=12), "Steel", smooth=True)
+    a.add(bm_cyl(0.035, 0.12, (0, 0, 0.21), segs=12), "Rubber")
+    # сиденье
+    a.add(bm_box((0.5, 0.48, 0.05), loc=(0, 0, 0.44), bevel=0.01), "Iron")
+    a.add(bm_rslab(0.52, 0.5, 0.06, 0.09, loc=(0, 0, 0.5), rot=(90, 0, 0), bevel=0.02), "Leather", smooth=True)
+    for i in range(3):
+        a.add(bm_box((0.008, 0.46, 0.006), loc=(-0.12 + i * 0.12, 0, 0.547)), "Rubber")
+    # спинка (наклон назад 12°), подголовник
+    back = bm_rslab(0.48, 0.62, 0.08, 0.085, loc=(0, 0, 0), bevel=0.02)
+    _xform(back, (0, 0.27, 0.86), (-12, 0, 0))
+    a.add(back, "Leather", smooth=True)
+    head = bm_rslab(0.3, 0.16, 0.06, 0.08, loc=(0, 0, 0), bevel=0.02)
+    _xform(head, (0, 0.35, 1.25), (-12, 0, 0))
+    a.add(head, "Leather", smooth=True)
+    for sx in (-1, 1):
+        strip = bm_box((0.012, 0.012, 0.6))
+        _xform(strip, (sx * 0.245, 0.225, 0.86), (-12, 0, 0))
+        a.add(strip, "LinkGlow")
+        a.add(bm_rod((sx * 0.12, 0.29, 0.5), (sx * 0.12, 0.34, 1.16), 0.012, segs=6), "Steel")
+    a.add(bm_rod((0, 0.24, 0.46), (0, 0.3, 0.6), 0.03, segs=10), "Iron")
+    # подлокотники
+    for sx in (-1, 1):
+        a.add(bm_rod((sx * 0.27, 0.12, 0.47), (sx * 0.27, 0.06, 0.68), 0.014, segs=8), "Iron")
+        a.add(bm_box((0.07, 0.3, 0.035), loc=(sx * 0.27, 0.04, 0.7), bevel=0.012), "Rubber")
+    return a.finish()
+
+
+def _monitor(a, w, h, d=0.045, bezel=0.022, mount=True, glow=None):
+    """Плоский монитор w × h: корпус-рамка, экран Screen (UV 0..1), крепление сзади. Origin — центр задней плоскости."""
+    a.add(bm_rslab(w + 2 * bezel, h + 2 * bezel, 0.012, d, loc=(0, -d / 2, 0), bevel=0.004), "PlasticDark")
+    a.add(bm_grid(w, h, 4, 3, loc=(0, -d - 0.001, 0)), "Screen", keep_uv=True)
+    if glow:
+        a.add(bm_box((w * 0.35, 0.004, 0.004), loc=(0, -d - 0.002, -h / 2 - bezel * 0.5)), glow)
+    if mount:
+        a.add(bm_box((0.1, 0.03, 0.1), loc=(0, 0.012, 0)), "Iron")
+
+
+def build_Monitor_Flat(name):
+    """Монитор 0.6 × 0.36. Origin — центр задней плоскости (крепление к стойке), экран смотрит в −Y."""
+    a = Asset(name)
+    _monitor(a, 0.6, 0.36, glow="LinkGlow")
+    return a.finish()
+
+
+def build_Monitor_Wide(name):
+    """Широкий монитор 1.04 × 0.44 — главный экран стенда. Origin — центр задней плоскости."""
+    a = Asset(name)
+    _monitor(a, 1.04, 0.44, d=0.05, bezel=0.026, glow="LinkGlow")
+    for sx in (-1, 1):
+        a.add(bm_box((0.016, 0.006, 0.016), loc=(sx * 0.5, -0.054, -0.248)), "LampAmber")
+    return a.finish()
+
+
+def build_Monitor_Small(name):
+    """Маленький монитор 0.34 × 0.24. Origin — центр задней плоскости."""
+    a = Asset(name)
+    _monitor(a, 0.34, 0.24, d=0.035, bezel=0.016)
+    return a.finish()
+
+
+def build_Monitor_CRT(name):
+    """Старый монитор-кинескоп 0.44 × 0.36 × 0.38 (кремовый корпус, выпуклый экран, кнопки). Origin — центр задней плоскости
+    рамки (стоит на полке стойки — низ корпуса на −0.21 от origin)."""
+    a = Asset(name)
+    W, H, D = 0.46, 0.4, 0.36
+    a.add(bm_rslab(W, H, 0.03, 0.06, loc=(0, -0.03, 0), bevel=0.008), "PaintCream")
+    a.add(bm_box((W - 0.06, D - 0.06, H - 0.06), loc=(0, D / 2 - 0.03, -0.01), bevel=0.04, seg=2), "PaintCream")
+    a.add(bm_rframe(0.37, 0.29, 0.03, 0.34, 0.26, 0.04, 0.012, loc=(0, -0.064, 0.02)), "Iron")
+    a.add(bm_grid(0.35, 0.27, 8, 6, bulge=0.02, loc=(0, -0.062, 0.02)), "Screen", keep_uv=True, smooth=True)
+    for i in range(3):
+        a.add(bm_cyl(0.009, 0.01, (0.12 + i * 0.03, -0.064, -0.165), (90, 0, 0), segs=8), "Iron")
+    a.add(bm_sphere(0.007, (-0.17, -0.066, -0.165), segs=8, rings=5), "LampGreen")
+    return a.finish()
+
+
+# раскладка экранов стенда (в кадре стойки, x вбок, z вверх; экраны на y = −0.07): имя модели, центр, роль на стенде
+RACK_SCREENS = [
+    ("Wide", (0.0, 1.62), "main"),
+    ("Flat", (-0.71, 2.2), "energy"), ("Flat", (0.71, 2.2), "parts"),
+    ("Small", (-0.36, 2.28), "pulse"), ("Small", (0.36, 2.28), "link"),
+    ("Flat", (-0.71, 1.0), "mass"), ("Flat", (0.71, 1.0), "joints"),
+    ("Small", (0.0, 1.06), "hp"),
+]
+
+
+def build_ScreenRack(name, W=2.1, H=2.62):
+    """Стенд экранов — ферма у стены: две стойки-фермы, поперечины на трёх уровнях, полка снизу (с ней — мелочь: кофр,
+    кружка), пучки кабелей, сигнальные лампы сверху, табличка BAY 07. Ширина W, высота H. Экраны ставит сборщик сцены по
+    RACK_SCREENS (godot/tools/build_garage_menu.gd). Origin — центр низа, лицом в −Y."""
+    a = Asset(name)
+    for sx in (-1, 1):
+        x = sx * (W / 2 - 0.05)
+        for dy in (-0.04, 0.04):
+            a.add(bm_box((0.035, 0.035, H), loc=(x - sx * 0.035, dy, H / 2)), "Iron")
+            a.add(bm_box((0.035, 0.035, H), loc=(x + sx * 0.035, dy, H / 2)), "Iron")
+        for k in range(int(H / 0.3)):          # раскосы фермы
+            z0 = 0.1 + k * 0.3
+            a.add(bm_rod((x - 0.035, -0.045, z0), (x + 0.035, -0.045, z0 + 0.3), 0.006, segs=5), "Steel")
+        a.add(bm_box((0.32, 0.4, 0.04), loc=(x, 0.05, 0.02), bevel=0.008), "Iron")
+        a.add(bm_sphere(0.03, (x, -0.02, H + 0.03), segs=10, rings=6), "LampAmber" if sx < 0 else "LampRed")
+    for z in (0.66, 1.34, 1.94, 2.5):
+        a.add(bm_box((W - 0.1, 0.05, 0.05), loc=(0, 0.02, z), bevel=0.006), "Iron")
+    # полка внизу
+    a.add(bm_box((W - 0.2, 0.42, 0.035), loc=(0, -0.12, 0.44), bevel=0.006), "WoodDark", along='X')
+    for sx in (-1, 1):
+        a.add(bm_rod((sx * (W / 2 - 0.12), 0.0, 0.42), (sx * (W / 2 - 0.12), -0.3, 0.42), 0.012, segs=6), "Iron")
+    # кабели: пучок по поперечине и вниз к полу
+    for i in range(4):
+        y = 0.07 + i * 0.012
+        a.add(bm_rod((-W / 2 + 0.2, y, 2.45 - i * 0.02), (W / 2 - 0.25, y, 2.42 - i * 0.025), 0.009, segs=6), "Rubber")
+        a.add(bm_rod((W / 2 - 0.25 + i * 0.02, y, 2.42), (W / 2 - 0.3 + i * 0.03, y + 0.05, 0.02), 0.009, segs=6), "Rubber")
+    # табличка BAY 07
+    a.add(bm_box((0.36, 0.012, 0.1), loc=(0, -0.01, 2.72), bevel=0.004), "PaintCream")
+    a.add(bm_box((0.32, 0.004, 0.012), loc=(0, -0.018, 2.705)), "PaintRed")
+    return a.finish()
+
+
 CARDS = [("Card_Blueprint", 1.2, 0.825, "Blueprint", 2)] + \
     [("Card_Photo_%s" % k, 0.22, 0.24, "Photo_%s" % k, 1) for k in "ABCDEF"] + \
     [("Card_Poster_%s" % k, 0.42, 0.62, "Poster_%s" % k, 2) for k in "ABC"]
@@ -1161,6 +1377,9 @@ MODULES = [
     ("Wall", build_Wall), ("Wall_Short", build_Wall_Short), ("Post", build_Post), ("Post_Hazard", build_Post_Hazard),
     ("Beam", build_Beam), ("Ceiling", build_Ceiling), ("Floor", build_Floor), ("HazardSquare", build_HazardSquare),
     ("Rug", build_Rug),
+    ("NeuroHeadset", build_NeuroHeadset), ("LinkConsole", build_LinkConsole), ("PilotChair", build_PilotChair),
+    ("Monitor_Flat", build_Monitor_Flat), ("Monitor_Wide", build_Monitor_Wide), ("Monitor_Small", build_Monitor_Small),
+    ("Monitor_CRT", build_Monitor_CRT), ("ScreenRack", build_ScreenRack),
 ] + [(n, (lambda nm, w=w, h=h, r=r, p=p: build_Card(nm, w, h, r, p))) for n, w, h, r, p in CARDS]
 
 

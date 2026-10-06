@@ -10,12 +10,15 @@ extends RefCounted
 static var on: bool = Tuning.JOINT_BREAK_DEFAULT
 
 
+## Один механизм отрыва — два режима сразу не ведём: включили «Прочность суставов» — «Запас из деталей» (PartHp, стандарт с 06.10) гаснет.
 static func set_on(v: bool) -> void:
 	on = v
+	if on:
+		PartHp.on = false
 
 
 static func toggle() -> bool:
-	on = not on
+	set_on(not on)
 	return on
 
 

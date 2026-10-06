@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек» и их итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -18,6 +18,9 @@ const SPORT := "res://scenes/playground_sport.tscn"
 const SQUAD := "res://scenes/playground_squad.tscn"
 const BOMB := "res://scenes/playground_bomb.tscn"
 const RACE := "res://scenes/playground_race.tscn"
+const ROYALE := "res://scenes/playground_royale.tscn"
+const GOLF := "res://scenes/playground_golf.tscn"
+const PUZZLE := "res://scenes/playground_puzzle.tscn"
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -84,7 +87,7 @@ func _pass() -> Dictionary:
 		menu.set_focus(i, true)
 		await _wait(SETTLE)
 		shots["garage:item%d" % i] = _scan(menu)
-	menu.set_focus(4, true)
+	menu.set_focus(5, true)
 	menu._open_settings()
 	await _wait(SETTLE)
 	shots["garage:settings"] = _scan(menu)
@@ -93,6 +96,12 @@ func _pass() -> Dictionary:
 	await _wait(SETTLE)
 	shots["garage:trophies"] = _scan(menu)
 	menu._close_trophies()
+	# загрузка связи нейрошлема (garage_headset.gd): надпись и строка поверх чёрного визора
+	menu.headset.overlay.visible = true
+	menu.headset._show_boot("NULL LINK", "нейрошлем · фильтр NULL включён · стенд 1")
+	await _wait(SETTLE)
+	shots["garage:headset_boot"] = _scan(menu)
+	menu.headset.overlay.visible = false
 	menu.set_focus(0, true)
 	await _wait(10)
 	menu.activate()
@@ -112,7 +121,7 @@ func _pass() -> Dictionary:
 	menu.queue_free()
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, ROYALE, GOLF, PUZZLE]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
@@ -146,6 +155,29 @@ func _pass() -> Dictionary:
 			rmm._finish("points")
 			await _wait(SETTLE * 3)
 			shots["race:end"] = _scan(inst)
+		if p == ROYALE:   # «Королевская битва» (ROYALE.md): ещё табличка итогов с местами
+			var ro := inst.get_node("Match") as RoyaleMatch
+			ro._finish("ko")
+			await _wait(SETTLE * 3)
+			shots["royale:end"] = _scan(inst)
+		if p == GOLF:   # «Гольф: кукла — мяч» (GOLF.md): ещё карточка итогов по лункам
+			var gmm := inst.get_node("Match") as GolfMatch
+			gmm.players[0]["card"] = [3, 4, 2]
+			gmm.players[1]["card"] = [4, 3, 5]
+			gmm.hole_i = 2
+			gmm._finish("holes")
+			await _wait(SETTLE * 3)
+			shots["golf:end"] = _scan(inst)
+		if p == PUZZLE:   # «Головоломки вдвоём» (PUZZLE.md): P2 вошёл (памятка P2 длиннее) и табличка итогов со временем комнат
+			var pz := inst as PuzzlePlayground
+			pz.join_p2()
+			await _wait(SETTLE)
+			shots["puzzle:p2"] = _scan(inst)
+			pz.room_times = [42.0, 31.5, 77.0, 25.0, 64.0, 58.0]
+			pz.done = true
+			pz.demo_finished.emit(297.5)
+			await _wait(SETTLE * 2)
+			shots["puzzle:end"] = _scan(inst)
 		inst.queue_free()
 		await _wait(5)
 		if p == SQUAD:   # экран настроек стычки перед боем (SquadSetup): строки, пояснение, кнопки

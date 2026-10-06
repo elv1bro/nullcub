@@ -4,7 +4,7 @@
 ##   • формулы: множитель материала, ❤ по массе с полом PARTHP_MIN, порог отрыва (голова — свой множитель), энергия ядра 12 кг = 80 и
 ##     головы 4 кг = 20, тяга 480 Н;
 ##   • ❤ обычной куклы и kit_human совпадают по телам, Σ = запас «Человека»; ❤ чертежа (BodyBlueprint.parts_hp) = ❤ собранной куклы
-##     (Doll.part_hp) у всех пресетов; все пресеты собираются и в режиме (энергия в потолке ядра и головы);
+##     (Doll.part_hp) у всех пресетов; все пресеты и враги PvE (data/enemies) собираются и в режиме (энергия в потолке ядра и головы);
 ##   • режим выключен: потолок энергии = energy_budget, голова стоит энергии, запас 100, тяга как раньше, суставы по глубине;
 ##   • режим включён: Match ставит запас = Σ ❤ (с ДРАЙВОМ × 1.5), порог отрыва — от ❤ детали, голова в таблице; урон в предплечье
 ##     копится, на пороге предплечье отлетает с кистью и уносит их ❤ из запаса и максимума (сигнал parts_hp_changed), reattach_part
@@ -128,7 +128,17 @@ func _consistency() -> void:
 		d.queue_free()
 		await _frames(1)
 	_check(mism.is_empty(), "❤ чертежа (BodyBlueprint.parts_hp) = ❤ собранной куклы у всех пресетов", mism.slice(0, 6))
-	_check(bad_build.is_empty(), "в режиме все пресеты собираются (энергия в потолке ядра и головы)", bad_build)
+	for f in DirAccess.get_files_at("res://data/enemies/"):   # враги PvE тоже: в режиме (стандарт с 06.10) и без
+		var eb := load("res://data/enemies/" + f) as BodyBlueprint
+		if eb == null:
+			continue
+		for on in [true, false]:
+			PartHp.set_on(on)
+			var ee := eb.validate()
+			if not ee.is_empty():
+				bad_build.append("%s (режим %s): %s" % [f.get_basename(), on, ee[0]])
+		PartHp.set_on(false)
+	_check(bad_build.is_empty(), "в режиме и без все пресеты и враги PvE собираются (энергия в потолке ядра и головы)", bad_build)
 
 
 func _mode_off() -> void:

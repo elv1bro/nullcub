@@ -8,7 +8,7 @@
 ##   боты (SportBrain за обоих): матч доигрывается (голы или время), есть голы, мяч не покидает зал, скорость мяча ≤ потолка.
 ##   «как есть» (автор 06.10, Tuning.SPORT_PARTHP / SPORT_KEEP_DAMAGE): в зале включён «Запас из деталей»; оторванное не отрастает
 ##   после гола и после нокаута, запас и износ после гола те же; новый матч — куклы целые; режим выключен — чинится, как раньше;
-##   вышли из зала — режимы отрыва как были.
+##   вышли из зала — режимы отрыва как были; то же для куклы из мастерской (ModularDoll «Поршневой»: узлы чертежа и порванные связки).
 ## Headless:
 ##   godot --headless --path . --fixed-fps 60 res://tests/sport_probe.tscn -- "sports=football,basketball,volleyball,bots=1,max_s=300,out=<json>"
 ## → код выхода 0/1, JSON между === SPORT PROBE === и === OK / FAIL ===. only=rules | bots — половина пробы.
@@ -71,6 +71,8 @@ func _ready() -> void:
 				"volleyball":
 					await _rules_volleyball()
 			await _rules_keep_damage(id)
+			if id == "football":
+				await _rules_keep_damage_modular()
 		if String(a["bots"]) == "1" and String(a["only"]) != "rules":
 			await _bot_match(id, float(a["max_s"]), String(a["trace"]) == "1")
 	report["ok"] = ok
@@ -87,7 +89,8 @@ func _ready() -> void:
 
 # ------------------------------------------------------------------ помощники
 
-func _load(id: String, countdown := 0.2, kickoff := 0.2, bot := false) -> void:
+## prep(площадка) — до add_child: подменить куклу и т. п.
+func _load(id: String, countdown := 0.2, kickoff := 0.2, bot := false, prep := Callable()) -> void:
 	if pg != null:
 		remove_child(pg)
 		pg.queue_free()
@@ -106,6 +109,8 @@ func _load(id: String, countdown := 0.2, kickoff := 0.2, bot := false) -> void:
 		over_winner = w
 		over_results = r
 		over_count += 1)
+	if prep.is_valid():
+		prep.call(pg)
 	add_child(pg)
 	ball = pg.get_node("Ball") as SportBall
 	await _until(func() -> bool: return sm.play_state == "play", 6.0)
@@ -344,6 +349,64 @@ func _rules_keep_damage(id: String) -> void:
 	pg = null
 	await get_tree().physics_frame
 	_check(id + ".modes_restored", [PartHp.on, JointBreak.on] == modes_out, "PartHp %s, JointBreak %s" % [PartHp.on, JointBreak.on])
+
+
+## Кукла из мастерской за P1 (чертёж «Поршневой» в памяти: поршни Link_1 бедро L — кисть L и Link_2 бедро R — кисть R, пружина
+## Link_3 между голенями): кисть L оторвана (Link_1 рвётся с ней), Link_3 порвана — после гола и нокаута их нет, новый матч — целая.
+func _rules_keep_damage_modular() -> void:
+	var id := "football"
+	var bp := (load("res://data/body/blueprints/kit_pistons.tres") as BodyBlueprint).duplicate(true) as BodyBlueprint
+	await _load(id, 0.2, 0.2, false, func(root: Node) -> void:
+		var old := root.get_node("P1") as Doll
+		var md := (load("res://scenes/body/modular_doll.tscn") as PackedScene).instantiate() as ModularDoll
+		md.blueprint = bp
+		md.name = old.name
+		md.transform = old.transform
+		md.player_index = old.player_index
+		md.input_prefix = old.input_prefix
+		for g in old.get_groups():
+			md.add_to_group(g)
+		var idx := old.get_index()
+		root.remove_child(old)
+		old.free()
+		root.add_child(md)
+		root.move_child(md, idx))
+	var p1 := _doll(0) as ModularDoll
+	var links3 := func(d: ModularDoll) -> Array: return [d.links_rt.has("Link_1"), d.links_rt.has("Link_2"), d.links_rt.has("Link_3")]
+	_check("football.modular_start", p1 != null and links3.call(p1) == [true, true, true] and p1.active_rig != null and p1.parts.has("Hand_L"),
+		"связки %s, деталей %d" % [links3.call(p1) if p1 != null else [], p1.parts.size() if p1 != null else 0])
+	if p1 == null:
+		return
+	var full_max := p1.max_hp
+	var full_n := p1.parts.size()
+	p1.break_link("Link_3")
+	p1.detach_part("Hand_L")
+	p1.hp -= 6.0
+	var swap := {}
+	var on_swap := func(o: Doll, _n: Doll) -> void:
+		if o.player_index == 0 and swap.is_empty():
+			swap.merge({"hp": o.hp, "max": o.max_hp, "lost": o.lost_part_names()})
+	sm.doll_replaced.connect(on_swap)
+	await _force_goal(id, 0)
+	await _until(func() -> bool: return sm.play_state == "kickoff", Tuning.SPORT_GOAL_PAUSE_S + 1.0)
+	sm.doll_replaced.disconnect(on_swap)
+	var p1g := _doll(0) as ModularDoll
+	_check("football.modular_kept_after_goal", p1g != null and p1g != p1 and _lacks(p1g, ["Hand_L"]) and not p1g.uid_body.has("3") and p1g.parts.has("LowerArm_L")
+		and links3.call(p1g) == [false, true, false] and p1g.active_rig != null,
+		"связки %s, нет %s (было %s)" % [links3.call(p1g) if p1g != null else [], p1g.lost_part_names() if p1g != null else [], swap.get("lost", [])])
+	_check("football.modular_hp_kept", p1g != null and not swap.is_empty() and is_equal_approx(p1g.max_hp, float(swap["max"])) and float(swap["max"]) < full_max
+		and is_equal_approx(p1g.hp, float(swap["hp"])) and float(swap["hp"]) < float(swap["max"]), "запас %.1f/%.1f (было %s, целый %.0f)" % [p1g.hp, p1g.max_hp, swap, full_max])
+	await _until(func() -> bool: return sm.play_state == "play", 3.0)
+	p1g.knock_out()
+	await _wait(Tuning.SPORT_KO_RESPAWN_S + 0.4)
+	var p1k := _doll(0) as ModularDoll
+	_check("football.modular_kept_after_ko", p1k != null and p1k != p1g and p1k.alive and _lacks(p1k, ["Hand_L"]) and links3.call(p1k) == [false, true, false]
+		and p1k.parts.has("Head") and is_equal_approx(p1k.hp, p1k.max_hp), "связки %s, запас %.0f/%.0f" % [links3.call(p1k) if p1k != null else [], p1k.hp, p1k.max_hp])
+	sm.restart()
+	await _until(func() -> bool: return sm.play_state == "play", 3.0)
+	var p1r := _doll(0) as ModularDoll
+	_check("football.modular_new_match_whole", p1r != null and p1r.parts.size() == full_n and links3.call(p1r) == [true, true, true] and is_equal_approx(p1r.max_hp, full_max),
+		"деталей %d из %d, связки %s, запас %.0f/%.0f" % [p1r.parts.size(), full_n, links3.call(p1r), p1r.hp, p1r.max_hp])
 
 
 # ------------------------------------------------------------------ футбол

@@ -17,6 +17,7 @@ const SCENES := [
 	"res://scenes/playground_pve.tscn",
 	"res://scenes/playground_stasis.tscn",
 	"res://scenes/workshop/workshop_build.tscn",
+	"res://scenes/playground_puzzle.tscn",   # «Головоломки вдвоём» (PUZZLE.md): подписи кг на плитах и ящиках, «ВЫХОД», коробки логики — Label3D
 ]
 const FRAMES := 40
 const MAX_LEFT := 25
