@@ -7,6 +7,7 @@
 ##     от цели: рука с оружием на экране со стороны соперника (у синих — справа), поэтому синие держатся левее цели, красные —
 ##     правее; ход вверх-вниз (уклонение); рука (SquadArm) — на упреждённую цель; спуск (SquadGun.trigger) — когда ствол в конусе
 ##     fire_cone_deg (+ разброс оружия) от цели, она в дальности и первая кукла на луче от дула — не своя;
+##     Дробь (дальность ≤ CLOSE_RANGE_M) сближается рывком;
 ##   • reload  — идёт перезарядка: отход подальше от цели;
 ##   • supply  — к ящику (SupplyCrate): патронов нет совсем — к любому ящику с патронами; мало жизней, мало запаса или нет брони — к
 ##     такому ящику, если он ближе Tuning.SQUAD_BOT_SUPPLY_M; по дороге стреляет, если может;
@@ -25,6 +26,7 @@ const CEIL_MARGIN := 2.0            # м под потолком карты
 const MELEE_S := 0.8
 const LOW_HP := 0.45                # доля HP: ниже — к ящику жизней
 const UPGRADE_CHECK_S := 0.5
+const CLOSE_RANGE_M := 12.0         # оружие с дальностью не больше этой (обрез, дробовик) — сближаться рывком
 
 ## Уровень 1..3 (Tuning.SQUAD_BOT_LEVELS); 0 — default_level (его ставит площадка: Match.respawn_doll создаёт мозг заново, экспорт теряется).
 @export var level := 0
@@ -132,6 +134,8 @@ func _think(delta: float) -> void:
 			if state != "engage":
 				go("engage")
 			want = _hold_range(tp, (band.x + band.y) * 0.5)
+			if g != null and float(g.def["range"]) <= CLOSE_RANGE_M and d > band.y:
+				dash()   # дробь бьёт только вблизи: сближение рывком, а не шагом под огнём винтовок
 			if no_ammo or d < Tuning.SQUAD_BOT_MELEE_M:
 				go("melee")
 				note_attack()

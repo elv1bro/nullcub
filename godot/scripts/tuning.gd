@@ -690,33 +690,34 @@ const SQUAD_COLORS := [Color("2f6fde"), Color("d9342b")]   # синие, кра�
 const SQUAD_GUN_HAND := ["3", "9"]
 
 ## Оружие (SquadGun, автор 05.10): у всех на старте пистолет; очки улучшения открывают ветку из трёх (SQUAD_BRANCHES) и второй
-## уровень ветки, дальше — усиления (SQUAD_PERKS). Стреляет активная клавиша 1 (I), пока зажата, не чаще interval с. Магазин mag,
-## запас reserve (ящики добавляют), перезарядка reload_s — сама на пустом магазине или клавиша 2 (O). Патронов нет совсем — рукопашная.
-## Ствол смотрит по руке (плечо → кисть): тянешь руку ЛКМ к курсору — туда и стреляет.
-##   damage — урон пули (дроби — за дробину), pellets — пуль за выстрел, spread_deg — ± разброс, range — м, impulse — Н·с в задетое
-##   тело, recoil — Н·с в кисть стрелка, pierce — пуля проходит сквозь бойцов (до 3), len — длина ствола (м, вид и точка вылета),
-##   tracer — цвет трассы, sound — [слой SfxDirector, питч]. Пули не трясут камеру и не замедляют время (SquadMatch.bullet_hit).
+## уровень ветки, дальше — усиления (SQUAD_PERKS). Огонь — ЛКМ (или I), пока зажата, не чаще interval с; рука с оружием всегда тянется
+## к курсору, ствол смотрит по руке (плечо → кисть). Магазин mag, запас reserve (ящики добавляют), перезарядка reload_s — сама на
+## пустом магазине или Q. Патронов нет совсем — рукопашная.
+##   damage — урон пули (дроби — за дробину), pellets — пуль за выстрел, spread_deg — ± разброс, range — м (дальше пуля гаснет),
+##   speed — м/с полёта пули-шарика (не мгновенный луч: видно, летит, можно увернуться), ball — радиус шарика (м), impulse — Н·с в
+##   задетое тело, recoil — Н·с в кисть стрелка, pierce — пуля проходит сквозь бойцов (до 3), len — длина ствола (м, вид и точка
+##   вылета), tracer — цвет шарика, sound — [слой SfxDirector, питч]. Пули не трясут камеру и не замедляют время (SquadMatch.bullet_hit).
 const SQUAD_WEAPONS := {
 	"pistol": {"title": "ПИСТОЛЕТ", "note": "точно, магазин 12", "tier": 0, "damage": 9.0, "pellets": 1, "interval": 0.28, "mag": 12,
-		"reserve": 48, "reload_s": 1.1, "spread_deg": 1.5, "range": 18.0, "impulse": 6.0, "recoil": 1.5, "pierce": false, "len": 0.26,
+		"reserve": 48, "reload_s": 1.1, "spread_deg": 1.5, "range": 18.0, "speed": 40.0, "ball": 0.100, "impulse": 6.0, "recoil": 1.5, "pierce": false, "len": 0.26,
 		"tracer": Color(1.0, 0.85, 0.4), "sound": ["snap", 1.55]},
 	"smg": {"title": "АВТОМАТ", "note": "очередь, магазин 30", "tier": 1, "damage": 5.0, "pellets": 1, "interval": 0.09, "mag": 30,
-		"reserve": 120, "reload_s": 1.5, "spread_deg": 4.0, "range": 16.0, "impulse": 3.0, "recoil": 0.8, "pierce": false, "len": 0.4,
+		"reserve": 120, "reload_s": 1.5, "spread_deg": 4.0, "range": 16.0, "speed": 46.0, "ball": 0.085, "impulse": 3.0, "recoil": 0.8, "pierce": false, "len": 0.4,
 		"tracer": Color(1.0, 0.75, 0.3), "sound": ["snap", 2.0]},
 	"mg": {"title": "ПУЛЕМЁТ", "note": "длинная очередь, магазин 70", "tier": 2, "damage": 6.0, "pellets": 1, "interval": 0.075, "mag": 70,
-		"reserve": 210, "reload_s": 2.6, "spread_deg": 3.5, "range": 20.0, "impulse": 4.0, "recoil": 1.0, "pierce": false, "len": 0.6,
+		"reserve": 210, "reload_s": 2.6, "spread_deg": 3.5, "range": 20.0, "speed": 50.0, "ball": 0.090, "impulse": 4.0, "recoil": 1.0, "pierce": false, "len": 0.6,
 		"tracer": Color(1.0, 0.6, 0.25), "sound": ["snap", 1.8]},
 	"sawnoff": {"title": "ОБРЕЗ", "note": "дробь вблизи, 2 выстрела", "tier": 1, "damage": 5.0, "pellets": 7, "interval": 0.45, "mag": 2,
-		"reserve": 24, "reload_s": 1.4, "spread_deg": 11.0, "range": 9.0, "impulse": 6.0, "recoil": 6.0, "pierce": false, "len": 0.34,
+		"reserve": 24, "reload_s": 1.4, "spread_deg": 11.0, "range": 9.0, "speed": 34.0, "ball": 0.070, "impulse": 6.0, "recoil": 6.0, "pierce": false, "len": 0.34,
 		"tracer": Color(1.0, 0.92, 0.6), "sound": ["thud", 1.0]},
 	"shotgun": {"title": "ДРОБОВИК", "note": "дробь, магазин 6", "tier": 2, "damage": 5.5, "pellets": 8, "interval": 0.65, "mag": 6,
-		"reserve": 30, "reload_s": 2.0, "spread_deg": 8.0, "range": 12.0, "impulse": 6.0, "recoil": 7.0, "pierce": false, "len": 0.62,
+		"reserve": 30, "reload_s": 2.0, "spread_deg": 8.0, "range": 12.0, "speed": 38.0, "ball": 0.070, "impulse": 6.0, "recoil": 7.0, "pierce": false, "len": 0.62,
 		"tracer": Color(1.0, 0.92, 0.6), "sound": ["thud", 0.85]},
 	"rifle": {"title": "ВИНТОВКА", "note": "далеко и больно, магазин 6", "tier": 1, "damage": 30.0, "pellets": 1, "interval": 0.75, "mag": 6,
-		"reserve": 30, "reload_s": 1.8, "spread_deg": 0.4, "range": 32.0, "impulse": 18.0, "recoil": 5.0, "pierce": false, "len": 0.72,
+		"reserve": 30, "reload_s": 1.8, "spread_deg": 0.4, "range": 32.0, "speed": 80.0, "ball": 0.110, "impulse": 18.0, "recoil": 5.0, "pierce": false, "len": 0.72,
 		"tracer": Color(0.85, 0.95, 1.0), "sound": ["snap", 1.0]},
 	"rail": {"title": "РЕЛЬСОТРОН", "note": "насквозь через бойцов, магазин 3", "tier": 2, "damage": 55.0, "pellets": 1, "interval": 1.3,
-		"mag": 3, "reserve": 15, "reload_s": 2.4, "spread_deg": 0.0, "range": 45.0, "impulse": 40.0, "recoil": 10.0, "pierce": true,
+		"mag": 3, "reserve": 15, "reload_s": 2.4, "spread_deg": 0.0, "range": 45.0, "speed": 130.0, "ball": 0.160, "impulse": 40.0, "recoil": 10.0, "pierce": true,
 		"len": 0.8, "tracer": Color(0.4, 0.9, 1.0), "sound": ["whoosh", 1.4]},
 }
 const SQUAD_START_WEAPON := "pistol"

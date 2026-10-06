@@ -1648,8 +1648,6 @@
 	"Скобы-ремкомплект": "Repair staples",
 	"Наждак": "Grinder",
 	"Стычка 3 на 3: перестрелка на Полигоне": "3v3 Skirmish: shootout on the Proving Ground",
-	"Две команды по три бойца. У всех пистолет, дальше ветка: автомат, обрез или винтовка. ЛКМ — рука, I — огонь, O — перезарядка, 1 / 2 / 3 — улучшения. Ящики: патроны, жизни, броня. До 15": "Two teams of three fighters. Everyone starts with a pistol, then a branch: SMG, sawn-off or rifle. LMB — arm, I — fire, O — reload, 1 / 2 / 3 — upgrades. Crates: ammo, health, armor. First to 15",
-	"WASD — лететь · ЛКМ — рука с оружием · I — огонь · O — перезарядка · 1 / 2 / 3 — улучшения · Shift — рывок": "WASD — fly · LMB — gun arm · I — fire · O — reload · 1 / 2 / 3 — upgrades · Shift — boost",
 	"+ПАТРОНЫ": "+AMMO",
 	"+ЖИЗНИ": "+HEALTH",
 	"+БРОНЯ": "+ARMOR",
@@ -1715,5 +1713,9 @@
 	"Звезда": "Star",
 	"Развилка": "Fork",
 	"Рама (рука)": "Frame (arm)",
-	"Рама (нога)": "Frame (leg)"
+	"Рама (нога)": "Frame (leg)",
+	"Две команды по три бойца. У всех пистолет, дальше ветка: автомат, обрез или винтовка. Мышь — прицел, ЛКМ — огонь, Q — перезарядка, 1 / 2 / 3 — улучшения. Ящики: патроны, жизни, броня. До 15": "Two teams of three fighters. Everyone starts with a pistol, then a branch: SMG, sawn-off or rifle. Mouse — aim, LMB — fire, Q — reload, 1 / 2 / 3 — upgrades. Crates: ammo, health, armor. First to 15",
+	"Стычка 3 на 3: Полигон ночью": "3v3 Skirmish: Proving Ground at night",
+	"Та же стычка ночью: луна, фонари цвета команд у баз, факелы, светящиеся пули": "The same skirmish at night: moonlight, team-coloured lamps at the bases, torches, glowing bullets",
+	"WASD — лететь · мышь — прицел · ЛКМ — огонь · Q — перезарядка · 1 / 2 / 3 — улучшения · Shift — рывок": "WASD — fly · mouse — aim · LMB — fire · Q — reload · 1 / 2 / 3 — upgrades · Shift — boost"
 }

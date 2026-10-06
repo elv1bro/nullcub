@@ -1,14 +1,15 @@
 ## Оружие бойца «Стычки 3 на 3» (docs/plan-demo/SQUAD.md, автор 05.10: «первое оружие у всех пистолет, потом ветка из 3 развитий;
 ## стрелять на активную клавишу, пока зажата; перезарядка и сколько осталось патронов; между выстрелами минимальная пауза;
 ## закончились пули — рукопашная»). Узел-ребёнок куклы. Числа — Tuning.SQUAD_WEAPONS × усиления (SquadMatch.loadout).
-##   • ствол в руке с оружием (ArmAssist куклы — кисть Tuning.SQUAD_GUN_HAND команды) и смотрит по руке: плечо → кисть. Тянешь
-##     руку ЛКМ к курсору — туда и стреляет; отпустил — рука висит, ствол смотрит вниз;
+##   • ствол в руке с оружием (ArmAssist куклы — кисть Tuning.SQUAD_GUN_HAND команды) и смотрит по руке: плечо → кисть. У игрока
+##     рука всегда тянется к курсору (площадка), у бота — к цели;
 ##   • trigger — «спуск зажат» на этот тик (P1 — клавиша, бот — мозг): выстрел не чаще interval; магазин mag, запас reserve;
 ##     пустой магазин — перезарядка reload_s сама (или reload()), пока она идёт, ствол молчит; нет ни магазина, ни запаса —
 ##     out_of_ammo(), только рукопашная;
-##   • выстрел — pellets лучей с разбросом spread_deg из дула (кончик ствола), свои детали не задеваются; пробитие (pierce) — луч идёт
-##     дальше сквозь бойцов; в тело — импульс, в бойца — SquadMatch.bullet_hit (урон без тряски камеры), Breakable — урон (ящик
-##     ломается, взрывная бочка загорается); стрелку — отдача в кисть, трасса, вспышка у дула, звук;
+##   • выстрел — pellets пуль-шариков с разбросом spread_deg из дула (кончик ствола); пуля летит со скоростью speed (автор 05.10:
+##     «снаряды именно как шарики, а не линии») и каждый тик проверяет свой отрезок пути лучом — свои детали не задевает; пробитие
+##     (pierce) — летит дальше сквозь бойцов; в тело — импульс, в бойца — SquadMatch.bullet_hit (урон без тряски камеры), Breakable —
+##     урон (ящик ломается, взрывная бочка загорается); прошла range — гаснет; стрелку — отдача в кисть, вспышка у дула, звук;
 ##   • молчит, пока кукла не жива, разбита, без управления (отсчёт, итоги) или в стане.
 ## Match.respawn_doll создаёт узел заново (script.new()): оружие и усиления он берёт у матча (SquadMatch.loadout по player_index),
 ## патроны — полные.
@@ -18,7 +19,6 @@ extends Node
 signal fired(origin: Vector3, dir: Vector3)
 signal reload_started(seconds: float)
 
-const TRACER_LIFE_S := 0.06
 const FLASH_LIFE_S := 0.05
 const PIERCE_MAX := 3
 const MODEL_SCALE := 1.5        # модель ствола крупнее руки: на общем плане 64-метровой карты ствол в 0.3 м не читается
@@ -45,7 +45,10 @@ var _flash: MeshInstance3D = null
 var _flash_t := 0.0
 var _arm: ArmAssist = null
 var _match: Node = null
-static var _glow: Dictionary = {}   # цвет трассы → материал (не новый на каждую пулю)
+## Пули в полёте: [{pos, vel, left (м до range), ex (RID, которые не задевать), pierced, node}].
+var balls: Array = []
+static var _glow: Dictionary = {}   # цвет шарика → материал (не новый на каждую пулю)
+static var _ball_mesh: SphereMesh = null
 
 
 func _ready() -> void:
@@ -164,6 +167,7 @@ func _physics_process(dt: float) -> void:
 		reload()
 	if trigger and can_fire():
 		_fire()
+	_step_balls(dt)
 
 
 func _fire() -> void:
@@ -181,7 +185,7 @@ func _fire() -> void:
 			ex.append((p as RigidBody3D).get_rid())
 	for i in int(def["pellets"]):
 		var d := dir.rotated(Vector3.BACK, deg_to_rad(_rng.randf_range(-1.0, 1.0) * float(def["spread_deg"])))
-		_pellet(o, d, ex.duplicate())
+		_spawn_ball(o, d, ex.duplicate())
 	var hand := arm().part if arm() != null else null
 	if hand != null and is_instance_valid(hand):
 		hand.apply_impulse(-dir * float(def["recoil"]), o - hand.global_position)
@@ -191,42 +195,94 @@ func _fire() -> void:
 		_match.call("gun_sound", doll, def)
 
 
-## Одна пуля / дробина: луч до range; пробитие — дальше сквозь бойцов (не больше PIERCE_MAX).
-func _pellet(o: Vector3, d: Vector3, ex: Array[RID]) -> void:
-	var space := doll.get_world_3d().direct_space_state
-	var to := o + d * float(def["range"])
-	var from := o
-	var end := to
-	var pierced := 0
-	while true:
-		var q := PhysicsRayQueryParameters3D.create(from, to)
-		q.exclude = ex
-		var hit := space.intersect_ray(q)
-		if hit.is_empty():
-			end = to
-			break
-		end = hit["position"]
-		var body := hit["collider"] as Node
-		var victim := _doll_of(body)
-		if body is RigidBody3D and not (body as RigidBody3D).freeze:
-			(body as RigidBody3D).apply_impulse(d * float(def["impulse"]), end - (body as RigidBody3D).global_position)
-		if victim != null and victim != doll:
-			var dealt := 0.0
-			if _match != null and _match.has_method("bullet_hit"):
-				dealt = float(_match.call("bullet_hit", victim, doll, float(def["damage"]), String(body.name), end, hit["normal"], weapon))
-			pellets_hit += 1
-			damage_dealt += dealt
-			if bool(def["pierce"]) and pierced < PIERCE_MAX:
-				pierced += 1
-				for p in victim.parts.values():   # дальше — сквозь всего бойца
-					if is_instance_valid(p):
-						ex.append((p as RigidBody3D).get_rid())
-				from = end
-				continue
-		elif body is Breakable:
-			(body as Breakable).take_damage(float(def["damage"]))
-		break
-	_tracer(o, end, def["tracer"])
+## Пуля-шарик: светящаяся сфера своего цвета, летит из o по d со скоростью оружия.
+func _spawn_ball(o: Vector3, d: Vector3, ex: Array[RID]) -> void:
+	var mi := MeshInstance3D.new()
+	if _ball_mesh == null:
+		_ball_mesh = SphereMesh.new()
+		_ball_mesh.radius = 0.5
+		_ball_mesh.height = 1.0
+		_ball_mesh.radial_segments = 10
+		_ball_mesh.rings = 6
+	mi.mesh = _ball_mesh
+	var col: Color = def["tracer"]
+	var key := col.to_html()
+	if not _glow.has(key):
+		_glow[key] = _mat(col, 0.0, 4.0)
+	mi.material_override = _glow[key]
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.top_level = true
+	mi.scale = Vector3.ONE * float(def["ball"]) * 2.0
+	add_child(mi)
+	mi.global_position = o
+	balls.append({"pos": o, "vel": d * float(def["speed"]), "left": float(def["range"]), "ex": ex, "pierced": 0, "node": mi,
+		"weapon": weapon, "damage": float(def["damage"]), "impulse": float(def["impulse"]), "pierce": bool(def["pierce"])})
+
+
+## Полёт пуль за тик: отрезок пути — луч (свои детали и уже пробитые бойцы — мимо); попала — урон и импульс, пробивающая летит
+## дальше; прошла range — гаснет.
+func _step_balls(dt: float) -> void:
+	if balls.is_empty():
+		return
+	var space := doll.get_world_3d().direct_space_state if is_instance_valid(doll) and doll.is_inside_tree() else null
+	var i := 0
+	while i < balls.size():
+		var b: Dictionary = balls[i]
+		var start := b["pos"] as Vector3
+		var from := start
+		var step := (b["vel"] as Vector3) * dt
+		var len := minf(step.length(), float(b["left"]))
+		var to := from + step.normalized() * len
+		var done := len <= 0.001 or space == null
+		var guard := 0
+		while not done and guard < PIERCE_MAX + 2:
+			guard += 1
+			var q := PhysicsRayQueryParameters3D.create(from, to)
+			q.exclude = b["ex"]
+			var hit := space.intersect_ray(q)
+			if hit.is_empty():
+				break
+			var at: Vector3 = hit["position"]
+			var body := hit["collider"] as Node
+			var victim := _doll_of(body)
+			var d := (b["vel"] as Vector3).normalized()
+			if body is RigidBody3D and not (body as RigidBody3D).freeze:
+				(body as RigidBody3D).apply_impulse(d * float(b["impulse"]), at - (body as RigidBody3D).global_position)
+			if victim != null and victim != doll:
+				var dealt := 0.0
+				if _match != null and _match.has_method("bullet_hit"):
+					dealt = float(_match.call("bullet_hit", victim, doll, float(b["damage"]), String(body.name), at, hit["normal"],
+						String(b["weapon"])))
+				pellets_hit += 1
+				damage_dealt += dealt
+				if bool(b["pierce"]) and int(b["pierced"]) < PIERCE_MAX:
+					b["pierced"] = int(b["pierced"]) + 1
+					var ex: Array[RID] = b["ex"]
+					for p in victim.parts.values():   # дальше — сквозь всего бойца
+						if is_instance_valid(p):
+							ex.append((p as RigidBody3D).get_rid())
+					from = at
+					continue
+			elif body is Breakable:
+				(body as Breakable).take_damage(float(b["damage"]))
+			to = at
+			done = true
+		b["left"] = float(b["left"]) - start.distance_to(to) if not done else 0.0
+		b["pos"] = to
+		var node := b["node"] as Node3D
+		if is_instance_valid(node):
+			node.global_position = to
+		if done or float(b["left"]) <= 0.0:
+			if is_instance_valid(node):
+				node.queue_free()
+			balls.remove_at(i)
+		else:
+			i += 1
+
+
+## Пуль в полёте (пробы).
+func balls_in_flight() -> int:
+	return balls.size()
 
 
 static func _doll_of(n: Node) -> Doll:
@@ -342,23 +398,3 @@ func _show_flash(at: Vector3) -> void:
 	_flash.global_position = at
 	_flash.visible = true
 	_flash_t = FLASH_LIFE_S
-
-
-func _tracer(a: Vector3, b: Vector3, col: Color) -> void:
-	var len := a.distance_to(b)
-	if len < 0.05:
-		return
-	var mi := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(0.016, len, 0.016)
-	mi.mesh = bm
-	var key := col.to_html()
-	if not _glow.has(key):
-		_glow[key] = _mat(col, 0.0, 3.0)
-	mi.material_override = _glow[key]
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mi.top_level = true
-	add_child(mi)
-	var dir := (b - a).normalized()
-	mi.global_transform = Transform3D(Basis(Quaternion(Vector3.UP, dir)), (a + b) * 0.5)
-	get_tree().create_timer(TRACER_LIFE_S, true, true).timeout.connect(mi.queue_free)

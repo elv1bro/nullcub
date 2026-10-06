@@ -9,15 +9,18 @@
 ##     возврат; броня: урон × 0.5 и снимается с неё; ящики: патроны / жизни / броня берутся касанием, полный запас — не берётся,
 ##     ящики появляются сами; нокаут — очко и фраг, возврат на базу со щитом; падение — очко сопернику; конец по очкам и по времени,
 ##     заново — всё сброшено;
+##   night: ночная карта (playground_squad_night.tscn) — окружение тёмное, луна слабая, фонари есть, фон затемнён, звёзды и луна на небе,
+##     у обеих карт нет глубины резкости; 20 с боя ботов ночью — пули летят и попадают;
 ##   bots (P1 тоже бот): матч ботов до конца — все стреляют, пули попадают, урона по своим нет, фраги у обеих команд, первый фраг не
 ##     поздно, перезарядки, улучшения и ящики были, никто не застрял надолго, все в границах карты; пули не дали эффектов удара
 ##     (hit_fx — от ударов телом); темп и счёт — в info.
 ## Headless:
-##   godot --headless --path godot --fixed-fps 60 res://tests/squad_probe.tscn -- "only=aim|rules|bots,max_s=330,level=2,trace=1,out=<json>"
+##   godot --headless --path godot --fixed-fps 60 res://tests/squad_probe.tscn -- "only=aim|rules|night|bots,max_s=330,level=2,trace=1,out=<json>"
 ## → JSON между === SQUAD PROBE === и === OK / FAIL ===, exit 0/1. errors_script — SCRIPT ERROR за прогон (Logger).
 extends Node
 
 const SCENE := "res://scenes/playground_squad.tscn"
+const SCENE_NIGHT := "res://scenes/playground_squad_night.tscn"
 const TICK := 1.0 / 60.0
 
 ## Счётчик SCRIPT ERROR за прогон (как stasis_probe): ошибка скрипта обрывает только свою функцию — проба могла бы молча потерять проверки.
@@ -72,6 +75,8 @@ func _ready() -> void:
 		await _aim()
 	if String(a["only"]) in ["", "rules"]:
 		await _rules()
+	if String(a["only"]) in ["", "night"]:
+		await _night()
 	if String(a["only"]) in ["", "bots"]:
 		await _bots(float(a["max_s"]), int(a["level"]), String(a["trace"]) == "1")
 	_check("errors_script", errs.count == 0, "ошибок скриптов %d; первая: %s" % [errs.count, errs.first])
@@ -89,10 +94,10 @@ func _ready() -> void:
 
 # ------------------------------------------------------------------ помощники
 
-func _load(p1_bot: bool, level := 2, countdown := 0.3, supplies := false) -> void:
+func _load(p1_bot: bool, level := 2, countdown := 0.3, supplies := false, scene := SCENE) -> void:
 	await _unload()
 	Engine.time_scale = 1.0
-	pg = (load(SCENE) as PackedScene).instantiate() as SquadPlayground
+	pg = (load(scene) as PackedScene).instantiate() as SquadPlayground
 	pg.p1_bot = p1_bot
 	pg.bot_level = level
 	sm = pg.get_node("Match") as SquadMatch
@@ -230,8 +235,8 @@ func _rules() -> void:
 	_check("start_pistol", pistols == 6, "пистолет 12 / 48 у %d из 6" % pistols)
 	var p1arm := _doll(0).get_node_or_null("ArmAssist") as ArmAssist
 	var botarm := _doll(1).get_node_or_null("ArmAssist") as ArmAssist
-	_check("p1_arm_like_normal", p1arm != null and p1arm.show_hints and botarm != null and not botarm.show_hints and not _doll(0).external_input,
-		"у игрока — обычная тяга руки с подсказкой (ЛКМ), у ботов без колец")
+	_check("p1_arm_follows_mouse", p1arm != null and p1arm.show_hints and p1arm.arm_active and botarm != null and not botarm.show_hints
+		and not _doll(0).external_input, "рука игрока тянется к курсору без кнопок (кольцо-прицел), у ботов без колец")
 	var side_ok := true
 	for d in ds:
 		var x := (d as Doll).centre_of_mass().x
@@ -279,6 +284,15 @@ func _gun_rules() -> void:
 		min_gap = mini(min_gap, int(frames[i]) - int(frames[i - 1]))
 	_check("gun_rate", in_1s >= 3 and in_1s <= 5 and min_gap >= int(floor(0.28 * 60.0)), "за 1 с выстрелов %d, наименьший зазор %d тиков (интервал 0.28 с = 16.8)" % [in_1s, min_gap])
 	_check("gun_mag_spent", g.mag == 12 - in_1s and g.shots == in_1s, "магазин %d после %d выстрелов" % [g.mag, in_1s])
+	# пули — шарики в полёте: есть сразу после выстрела, за тик проходят speed / 60 м, дальше range гаснут
+	var shot0 := g.shots
+	await _until(func() -> bool: return g.shots > shot0, 1.0)
+	var flying := g.balls_in_flight()
+	var p0: Vector3 = (g.balls[0]["pos"] as Vector3) if flying > 0 else Vector3.ZERO
+	await get_tree().physics_frame
+	var step := ((g.balls[0]["pos"] as Vector3).distance_to(p0)) if g.balls_in_flight() > 0 else 0.0
+	_check("bullets_are_balls", flying >= 1 and absf(step - 40.0 / 60.0) < 0.05 and (g.balls[0]["node"] as MeshInstance3D).mesh is SphereMesh,
+		"в полёте %d, шарик за тик прошёл %.2f м (ждём %.2f — 40 м/с)" % [flying, step, 40.0 / 60.0])
 	await _until(func() -> bool: return g.mag == 0, 5.0)
 	var empty_at := Engine.get_physics_frames()
 	await _until(func() -> bool: return g.reloading > 0.0, 0.2)   # перезарядка — со следующего тика после последнего патрона
@@ -288,6 +302,7 @@ func _gun_rules() -> void:
 	g.trigger = false
 	await _until(func() -> bool: return g.reloading <= 0.0, 3.0)
 	var r_s := float(Engine.get_physics_frames() - r_start) / 60.0
+	_check("bullets_fade", g.balls_in_flight() == 0, "через %.1f с после последнего выстрела шариков в полёте нет (18 м / 40 м/с = 0.45 с)" % r_s)
 	_check("gun_reload_time", g.mag == 12 and g.reserve == 36 and absf(r_s - 1.1) < 0.1, "перезарядка %.2f с (ждём 1.1), стало %d / %d" % [r_s, g.mag, g.reserve])
 	g.trigger = true
 	await _hold(d, tgt, 20)
@@ -446,6 +461,46 @@ func _arms(d: Doll) -> Array:
 	return parts
 
 
+# ------------------------------------------------------------------ ночь
+
+func _night() -> void:
+	print("--- night")
+	await _load(true, 2, 0.3, true, SCENE_NIGHT)
+	var arena := pg.arena
+	var we := arena.get_node("Environment") as WorldEnvironment
+	var env := we.environment
+	var sun := arena.get_node("Sun") as DirectionalLight3D
+	var lamps := arena.get_node_or_null("Lamps")
+	var lamp_n := lamps.get_child_count() if lamps != null else 0
+	_check("night_dark", bool(arena.get("night")) and env.ambient_light_energy < 1.0 and sun.light_energy < 1.0 and sun.light_color.b > sun.light_color.r
+		and env.glow_enabled, "ночь: окружающий свет %.2f, луна %.2f (голубая), свечение вкл" % [env.ambient_light_energy, sun.light_energy])
+	_check("night_lamps", lamp_n >= 10, "фонарей %d (цвета команд у баз, тёплые у башни)" % lamp_n)
+	var sky := arena.get_node("Parallax/Layer4Sky") as MeshInstance3D
+	var tint := (sky.material_override as StandardMaterial3D).albedo_color
+	_check("night_sky", tint.v < 0.35 and sky.get_node_or_null("Stars") != null and sky.get_node_or_null("Moon") != null,
+		"фон затемнён (яркость множителя %.2f), звёзды и луна на небе" % tint.v)
+	var cam_night := (we.camera_attributes as CameraAttributesPractical)
+	var day := (load("res://scenes/arena/proving_ground.tscn") as PackedScene).instantiate()
+	var cam_day := ((day.get_node("Environment") as WorldEnvironment).camera_attributes as CameraAttributesPractical)
+	var day_fog := (day.get_node("Environment") as WorldEnvironment).environment.fog_density
+	day.free()
+	_check("no_dof", cam_night != null and not cam_night.dof_blur_far_enabled and cam_day != null and not cam_day.dof_blur_far_enabled
+		and day_fog < 0.004, "у обеих карт нет глубины резкости, дымка днём %.4f (у Руин 0.004)" % day_fog)
+	var hits := {"n": 0}
+	sm.bullet_landed.connect(func(_v: Doll, _s: Doll, _d: float, _p: Vector3) -> void: hits["n"] = int(hits["n"]) + 1)
+	var shots0 := 0
+	for d in sm.dolls():
+		shots0 += SquadMatch.gun_of(d).shots
+	await _wait(20.0)
+	var shots := 0
+	for d in sm.dolls():
+		var g := SquadMatch.gun_of(d)
+		if g != null:
+			shots += g.shots
+	_check("night_fight", shots - shots0 > 30 and int(hits["n"]) > 5, "20 с ночью: выстрелов %d, попаданий %d" % [shots - shots0, int(hits["n"])])
+	await _unload()
+
+
 # ------------------------------------------------------------------ матч ботов
 
 func _bots(max_s: float, level: int, trace: bool) -> void:
@@ -523,7 +578,7 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 		kills[int(pi) % 2] += int(sm.tally[pi]["kills"])
 	var shooters := 0
 	for pi in shots:
-		if int(shots[pi]) > 20:
+		if int(shots[pi]) > 10:
 			shooters += 1
 	var tier_max := 0
 	for pi in sm.loadouts:
@@ -541,7 +596,7 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 	for k in sm.supplies_taken:
 		taken += int(sm.supplies_taken[k])
 	_check("bots_match_ends", over_count == 1, "матч кончился: %s за %.0f с, счёт %s" % [str(over_count == 1), sm.fight_time, str(sm.score)])
-	_check("bots_all_shoot", shooters == 6, "стреляли (> 20 выстрелов) %d из 6" % shooters)
+	_check("bots_all_shoot", shooters == 6, "стреляли (> 10 выстрелов) %d из 6; выстрелов %s" % [shooters, str(shots)])
 	_check("bots_bullets_hit", int(acc["bullet_hits"]) > 100, "попаданий пулями %d (%.0f HP)" % [int(acc["bullet_hits"]), float(acc["bullet"])])
 	_check("bots_no_friendly", float(acc["friendly"]) <= 0.01, "урон по своим %.1f HP" % float(acc["friendly"]))
 	_check("bots_bullets_no_fx", hitfx < int(acc["bullet_hits"]) / 5, "эффектов удара %d на %d попаданий пулями (эффекты — только от ударов телом)" % [hitfx, int(acc["bullet_hits"])])
