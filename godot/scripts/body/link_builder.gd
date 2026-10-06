@@ -27,7 +27,8 @@ static func build(d: Node3D, l: Dictionary, ba: RigidBody3D, bb: RigidBody3D) ->
 	var r := float(info["r"])
 	var mass := KitLink.mass_of(t, length)
 	var rec := {"id": String(l.get("id", "1")), "name": nm, "type": t, "bodies": [], "joints": [], "a": ba, "b": bb, "len": length,
-		"strut": null, "extend": 0.0, "channel": int(l.get(KitLink.CHANNEL_KEY, 1)), "hp": 0.0}
+		"strut": null, "extend": 0.0, "channel": int(l.get(KitLink.CHANNEL_KEY, 1)), "hp": 0.0,
+		"pa": l.get("pa", Vector3.ZERO), "pb": l.get("pb", Vector3.ZERO)}
 	match t:
 		"rod", "bar":
 			var body := _body(d, nm, wa, wb, r, mass, t, ba)
@@ -190,13 +191,13 @@ static func _mat(id: String) -> Material:
 
 
 ## Переставить тела связки rec между текущими точками концов (стенд мастерской, витрина гаража — тела заморожены, позу меняют руками).
-static func place(d: Node3D, rec: Dictionary, l: Dictionary) -> void:
+static func place(_d: Node3D, rec: Dictionary) -> void:
 	var ba: RigidBody3D = rec["a"]
 	var bb: RigidBody3D = rec["b"]
 	if not is_instance_valid(ba) or not is_instance_valid(bb):
 		return
-	var wa: Vector3 = ba.global_transform * (l.get("pa", Vector3.ZERO) as Vector3)
-	var wb: Vector3 = bb.global_transform * (l.get("pb", Vector3.ZERO) as Vector3)
+	var wa: Vector3 = ba.global_transform * (rec.get("pa", Vector3.ZERO) as Vector3)
+	var wb: Vector3 = bb.global_transform * (rec.get("pb", Vector3.ZERO) as Vector3)
 	var bodies: Array = rec["bodies"]
 	var n := bodies.size()
 	for i in range(n):

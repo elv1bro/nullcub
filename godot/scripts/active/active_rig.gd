@@ -127,6 +127,9 @@ static func has_pistons(bp: BodyBlueprint) -> bool:
 	for l in bp.links:
 		if String(l.get("type", "")) == "piston":
 			return true
+	for n in bp.nodes:   # деталь «на поршне» (KitJoint on_piston) — тот же поршень, связка «Link_T<uid>»
+		if String(n.get("joint", "")) == "on_piston":
+			return true
 	return false
 
 
@@ -136,6 +139,9 @@ func _collect() -> void:
 	for l in doll.blueprint.links:
 		if String(l.get("type", "")) == "piston":
 			pistons.append({"name": "Link_" + String(l.get("id", "")), "channel": clampi(int(l.get(KitLink.CHANNEL_KEY, 1)), 1, ActiveBlocks.CHANNELS)})
+	for n in doll.blueprint.nodes:
+		if String(n.get("joint", "")) == "on_piston":
+			pistons.append({"name": "Link_T" + String(n.get("uid", "")), "channel": clampi(int(n.get(KitLink.CHANNEL_KEY, 1)), 1, ActiveBlocks.CHANNELS)})
 	charge_max += float(doll.mod_totals.get("charge_bonus", 0.0))   # модуль «Батарея» (PartMods): и заряд активных блоков
 	for n in doll.blueprint.nodes:
 		var pid := String(n.get("part", ""))

@@ -685,6 +685,18 @@ func set_joint(uid: String, jt := "") -> Dictionary:
 		_say(String(r["reason"]), COL_BAD)
 		return r
 	if not bool(r["changed"]):
+		if KitJoint.is_tether(jt):   # тот же тип «на связке» ещё раз — следующая длина связки
+			var c := CraftEdit.cycle_tether_len(blueprint, uid, true)
+			last_result = c
+			if not bool(c["ok"]):
+				_say(String(c["reason"]), COL_BAD)
+				return c
+			_push_history()
+			c = CraftEdit.cycle_tether_len(blueprint, uid)
+			_name_custom_body()
+			_rebuild()
+			_say(tr("%s «%s»: %.1f м") % [what, CraftEdit.joint_title(jt), float(c["len"])], COL_OK)
+			return c
 		last_result = r
 		_say(tr("%s — уже «%s»") % [what, CraftEdit.joint_title(jt)], COL_INFO)
 		return r
@@ -700,6 +712,8 @@ func set_joint(uid: String, jt := "") -> Dictionary:
 	if KitJoint.is_weld(jt):
 		var host := CraftEdit.def_of(blueprint, CraftEdit.host_uid(blueprint, uid))
 		_say(tr("Сварка: %s — теперь часть «%s»%s") % [what, host.title if host != null else "", tail], COL_OK)
+	elif KitJoint.is_tether(jt):
+		_say(tr("%s «%s»: %.1f м — клик ещё раз длиннее") % [what, CraftEdit.joint_title(jt), KitJoint.tether_len_of(CraftEdit.find(blueprint, uid))], COL_OK)
 	else:
 		_say(tr("Шарнир «%s» → «%s»: %s%s") % [CraftEdit.joint_title(String(r["joint_before"])), CraftEdit.joint_title(jt), what, tail], COL_OK)
 	return r

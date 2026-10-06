@@ -82,7 +82,48 @@ func energy_used() -> int:
 		total += _node_energy(n, float(reach.get(String(n.get("uid", "")), 0.0)))
 	for i in range(1, control.size()):
 		total += reach_cost(PULL_ENERGY, float(reach.get(String(control[i]), 0.0)))
-	return total + weapon_energy() + links_energy()
+	for n in nodes:   # налог на ветвление: занятый боковой выход не-ядра, с выносом
+		total += _branch_energy(n, reach)
+	return total + weapon_energy() + links_energy() + ends_energy()
+
+
+## Налог на ветвление и на лишние концы (автор 06.10: «любое разветвление тоже требовало; читерство, если на всех поставить кулаки»):
+## каждый занятый боковой выход (Side*, SideB*) детали, которая не ядро, — BRANCH_ENERGY × вынос узла; концов (кисти, стопы,
+## навершия) сверх FREE_ENDS — по END_ENERGY за каждый.
+const BRANCH_ENERGY := 3
+const FREE_ENDS := 4
+const END_ENERGY := 6
+const END_KINDS := ["hand", "foot", "weapon_head"]
+
+
+## Налог на ветвление у узла uid (0 — не боковой выход или родитель — ядро).
+func branch_energy(uid: String) -> int:
+	return _branch_energy(find_node(uid), node_reach())
+
+
+func _branch_energy(n: Dictionary, reach: Dictionary) -> int:
+	if n.is_empty() or not String(n.get("anchor", "")).begins_with("Anchor_Side"):
+		return 0
+	var p := find_node(String(n.get("parent", "")))
+	var pd := part_def(String(p.get("part", ""))) if not p.is_empty() else null
+	if pd == null or pd.kind == "core":
+		return 0
+	return reach_cost(BRANCH_ENERGY, float(reach.get(String(n.get("uid", "")), 0.0)))
+
+
+## Концы: кисти, стопы, навершия (END_KINDS) — сколько их в сборке.
+func ends_count() -> int:
+	var c := 0
+	for n in nodes:
+		var d := part_def(String(n.get("part", "")))
+		if d != null and END_KINDS.has(d.kind):
+			c += 1
+	return c
+
+
+## Налог на концы сверх FREE_ENDS.
+func ends_energy() -> int:
+	return maxi(0, ends_count() - FREE_ENDS) * END_ENERGY
 
 
 ## Σ цен связок (KitLink.energy_of: вид × длина).
@@ -148,20 +189,24 @@ func pull_button(uid: String) -> String:
 	return "rmb" if control_rmb.has(uid) else "lmb"
 
 
-## Цена узла uid с наценкой за расстояние.
+## Цена узла uid с наценкой за расстояние (и налогом на ветвление, если он на боковом выходе).
 func node_energy(uid: String) -> int:
 	var n := find_node(uid)
-	return _node_energy(n, float(node_reach().get(uid, 0.0))) if not n.is_empty() else 0
+	var reach := node_reach()
+	return _node_energy(n, float(reach.get(uid, 0.0))) + _branch_energy(n, reach) if not n.is_empty() else 0
 
 
-## Базовая цена узла без расстояния: PartDef.energy + шарнир (KitJoint: пружина 2, мотор 8). В запасе из деталей (PartHp) ядро и
-## голова энергию дают (energy_cap), а сами не стоят ничего — платится только шарнир шеи.
+## Базовая цена узла без расстояния: PartDef.energy + шарнир (KitJoint: пружина 2, мотор 8) + связка у детали «на связке» (KitLink по
+## длине). В запасе из деталей (PartHp) ядро и голова энергию дают (energy_cap), а сами не стоят ничего — платится только шарнир шеи.
 static func node_base_energy(n: Dictionary) -> int:
 	var d := part_def(String(n.get("part", "")))
 	var own := d.energy if d != null else 0
 	if PartHp.on and d != null and (d.kind == "core" or d.kind == "head"):
 		own = 0
-	return own + KitJoint.energy_of(String(n.get("joint", "")))
+	var jt := String(n.get("joint", ""))
+	if KitJoint.is_tether(jt):
+		own += KitLink.energy_of(KitJoint.tether_link(jt), KitJoint.tether_len_of(n))
+	return own + KitJoint.energy_of(jt)
 
 
 ## Потолок энергии сборки — с ним сверяют validate и мастерская. Обычно energy_budget; в запасе из деталей (PartHp, WORKSHOP_V4.md)
@@ -258,6 +303,8 @@ func node_reach() -> Dictionary:
 		if pm:
 			a_local = _mirror_xf(a_local)
 		var a_xf: Transform3D = (xf[parent] as Transform3D) * a_local
+		if KitJoint.is_tether(String(n.get("joint", ""))):   # деталь на связке висит дальше по оси якоря на длину связки
+			a_xf = a_xf * Transform3D(Basis.IDENTITY, Vector3(0.0, -KitJoint.tether_len_of(n), 0.0))
 		var m := pm != bool(a["mirror"])
 		var sock := _socket_xf(part_def(String(n.get("part", ""))))
 		if m:
@@ -295,6 +342,7 @@ const E_NO_PARENT := "у «%s» нет родителя «%s»"
 const E_ROOTS := "корней %d, нужен один (ядро)"
 const E_HEADS := "голов %d, нужна ровно одна"
 const E_ENERGY := "энергия %d > бюджета %d"
+const E_TETHER_HEAD := "узел %s: голова держится на шее, на связку её не повесить"
 const E_CTRL_MISSING := "управляемая деталь «%s» не найдена"
 const E_CTRL_FIXED := "рука мышью на «%s» — у детали нет своего тела (fixed), отметь тело-хозяина"
 const E_MAT_UNKNOWN := "у «%s» неизвестный материал «%s»"
@@ -338,6 +386,7 @@ const ERROR_FORMATS := [
 	E_WELD_HEAD,
 	E_WELD_CTRL,
 	E_WELD_AUTO,
+	E_TETHER_HEAD,
 	E_CYCLE,
 	E_UID_CHARS,
 	E_NO_ANCHOR,
@@ -732,6 +781,8 @@ func _joint_error(n: Dictionary, d: PartDef, jt: String) -> String:
 		return E_JT_ROOT % [uid, jt]
 	if is_fixed_part(d):
 		return E_JT_FIXED % [uid, d.id, jt]
+	if KitJoint.is_tether(jt) and d.kind == "head":
+		return E_TETHER_HEAD % uid
 	if not KitJoint.is_weld(jt):
 		# мотор / пружина множат мышцу группы (ModularDoll._update_pair_gains): у группы без мышцы (k = 0 в Tuning.MUSCLE_GROUPS —
 		# Ankle: стопы, третий сегмент ноги, «прочие» якоря) они стоили бы энергию и ничего не давали. Группа — по якорю

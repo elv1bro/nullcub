@@ -6,7 +6,7 @@
 script = ExtResource("1_i8qav")
 id = "aoe_leviathan"
 title = "Левиафан Аоэлюн"
-energy_budget = 220
+energy_budget = 280
 nodes = Array[Dictionary]([{
 "anchor": "",
 "name": "Torso",
