@@ -6,7 +6,8 @@
 ##            голова за стеклом не отстаёт; вышла — снова летает; далеко от двери — не садится); переворот → кран ставит на колёса;
 ##   cargo  — груз в кузове: на ровном на полной скорости и при торможении ручником не вылетает; на кочках на полной скорости часть
 ##            вылетает (на малом газу — для сведения); рука хватает выпавший ящик и кладёт обратно в кузов;
-##   course — настоящая площадка: подъём без толкания (с места, с короткого разгона), с толканием одной и двух кукол; доска со
+##   course — настоящая площадка: клавиши по-настоящему (F у двери — села, D — газ, Space — ручник, F — вышла); подъём без
+##            толкания (с места, с короткого разгона, соло со старта — для сведения), с толканием одной и двух кукол; доска со
 ##            стеллажа рукой — поперёк провала; провал без доски — машина падает и возвращается на старт; с доской — проезжает;
 ##            весь участок сценарным вводом (водитель + две куклы толкают на подъёме, доска рукой) — время и сколько груза довезли.
 ## Headless:
@@ -631,6 +632,58 @@ func _load_playground() -> void:
 	pg.car.external_control = true
 
 
+## Нажатие клавиши через Input (как с клавиатуры: событие идёт во вьюпорт → _unhandled_input площадки, действия Input — машине).
+func _key(code: Key, down: bool) -> void:
+	var e := InputEventKey.new()
+	e.physical_keycode = code
+	e.keycode = code
+	e.pressed = down
+	Input.parse_input_event(e)
+	Input.flush_buffered_events()
+
+
+## Клавиатура по-настоящему: площадка с игроком P1, F у двери — села, D — газ (машина поехала), Space — ручник, F — вышла.
+func _keys() -> void:
+	_clear_world()
+	await _unload()
+	pg = (load(PLAYGROUND) as PackedScene).instantiate() as ConvoyPlayground
+	pg.auto_join = false
+	add_child(pg)
+	await _wait(0.6)
+	var p1 := pg.p1
+	_key(KEY_F, true)
+	await _ticks(2)
+	_key(KEY_F, false)
+	var far_action := pg.last_car_action
+	var far := pg.car.driver == null and far_action == "far"
+	pg.teleport(p1, pg.car.door_global() + Vector3(0.0, 0.7, 0.0))
+	await _wait(0.3)
+	_key(KEY_F, true)
+	await _ticks(2)
+	_key(KEY_F, false)
+	var sat := pg.car.driver == p1
+	var x0 := pg.car.chassis.global_position.x
+	_key(KEY_D, true)
+	await _wait(2.0)
+	_key(KEY_D, false)
+	var moved := pg.car.chassis.global_position.x - x0
+	_key(KEY_SPACE, true)
+	await _wait(2.0)
+	var held := absf(pg.car.speed()) < 0.1 and pg.car.handbrake
+	_key(KEY_SPACE, false)
+	await _ticks(2)
+	var parked := pg.car.handbrake == false   # с водителем без ручника — накат
+	_key(KEY_F, true)
+	await _ticks(2)
+	_key(KEY_F, false)
+	await _ticks(2)
+	var out := pg.car.driver == null and p1.control_enabled and pg.car.handbrake
+	_check("keys", far and sat and moved > 2.0 and held and parked and out,
+		"F далеко — «%s»; F у двери — села %s; D 2 с — машина проехала %.2f м (часы %.1f с); Space — стоит %s; F — вышла %s, ручник без водителя %s" % [
+			far_action, str(sat), moved, pg.time_s, str(held), str(out), str(pg.car.handbrake)])
+	await _unload()
+
+
 ## Машина на дороге в точке x (ЦМ по x) с грузом в кузове, на ручнике; ground — высота дороги.
 func _car_at(x: float, ground: float) -> void:
 	pg.car.reset_state()
@@ -696,6 +749,7 @@ func _climb(x0: float, n_push: int, max_s: float) -> Dictionary:
 
 func _sec_course() -> void:
 	print("--- course")
+	await _keys()
 	await _load_playground()
 	var x0: float = BUILDER.HILL_X0 - 3.0
 	var none := await _climb(x0, 0, 14.0)
@@ -766,7 +820,8 @@ func _plank_by_hand(p: ConvoyCargo) -> Dictionary:
 		var c := d.centre_of_mass()
 		var pp := p.global_position
 		var off := Vector2(c.x - pp.x, c.y - pp.y)   # кукла относительно середины доски
-		arm.set_target_override(arm.root_point() + Vector3(-0.45, 0.05, 0.0))
+		# рука держит доску сбоку на уровне плеча; опуская к провалу — ниже плеча (кукла стоит на площадке, ниже ей некуда)
+		arm.set_target_override(arm.root_point() + Vector3(-0.45, -0.45 if phase == 3 else 0.05, 0.0))
 		var g := Vector2.ZERO
 		match phase:
 			0:   # вытянуть вправо, пока левый конец не сошёл с правого кронштейна
@@ -783,12 +838,13 @@ func _plank_by_hand(p: ConvoyCargo) -> Dictionary:
 					phase = 3
 			3:   # опустить медленно: середина доски на 0.45 м над дорогой
 				g = Vector2(cx + off.x, BUILDER.HILL_H + 0.45 + off.y)
-				if pp.y < BUILDER.HILL_H + 0.9 and absf(pp.x - cx) < 0.3 and absf(p.linear_velocity.x) < 0.3:
+				if pp.y < BUILDER.HILL_H + 1.0 and absf(pp.x - cx) < 0.35 and absf(p.linear_velocity.x) < 0.35:
 					r["flew"] = true
 					break
 		var to := Vector2(g.x - c.x, g.y - c.y)
 		# по x и по y — раздельно (вертикаль не съедается общим пределом), вниз — медленно
-		d.input_vec = Vector2(clampf(to.x * 1.2, -0.4, 0.4), clampf(to.y * 1.2 + HOVER.y, -0.1, 0.6))
+		# по x — с гашением раскачки доски (её скорость), по y — отдельно, вниз медленно
+		d.input_vec = Vector2(clampf(to.x * 1.2 - p.linear_velocity.x * 0.5, -0.4, 0.4), clampf(to.y * 1.2 + HOVER.y, -0.1, 0.6))
 		if trace and i % 15 == 0:
 			print("    доска: фаза %d t=%.2f доска (%.2f, %.2f, %.0f°) кукла (%.2f, %.2f) в руке %s растяжение %.2f" % [phase, i * TICK,
 				pp.x, pp.y, rad_to_deg(p.rotation.z), c.x, c.y, str(arm.held == p), arm.hold_distance()])
