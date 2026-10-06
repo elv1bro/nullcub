@@ -283,6 +283,9 @@ func _snap_pose(groups: Array) -> void:
 				var rb := body as RigidBody3D
 				var tr := rb.global_transform
 				rb.global_transform = Transform3D(rot * tr.basis, pivot + rot * (tr.origin - pivot))
+	if not _tether_specs.is_empty():   # ветки на связках суставом с родителем не связаны — к креплениям, тела связок — между концами
+		_place_tethered()
+		refresh_links()
 
 
 ## Тело b и всё ниже него по суставам.

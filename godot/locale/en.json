@@ -1754,5 +1754,7 @@
 	"на пружине: отскакивает и бьёт с оттяжкой": "on a spring: bounces back and hits with a snap",
 	"На поршне": "On a piston",
 	"на поршне: выстреливает по клавише канала (I)": "on a piston: shoots out on its channel key (I)",
-	"Концов %d (кисти, стопы, навершия): каждый сверх %d — ещё ⚡%d, всего ⚡%d": "%d ends (hands, feet, weapon heads): each beyond %d costs ⚡%d more, ⚡%d in total"
+	"Концов %d (кисти, стопы, навершия): каждый сверх %d — ещё ⚡%d, всего ⚡%d": "%d ends (hands, feet, weapon heads): each beyond %d costs ⚡%d more, ⚡%d in total",
+	"канал поршня: вкладка «Связки», инструмент «Поршень» — клик по нему": "piston channel: Links tab, the Piston tool — click on it",
+	"%s висит «%s» — длина и снять: вкладка «Шарниры и цепи»": "%s hangs «%s» — length and removal: the Joints and chains tab"
 }

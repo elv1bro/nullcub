@@ -958,6 +958,8 @@ func detach_part(part_name: String, by: Node = null, free_root := false) -> Rigi
 	for s in sub:
 		sub_names.append(String((s as Node).name))
 	for ln in links_rt.keys():   # связки, которые шли к оторванному куску, рвутся вместе с ним
+		if not links_rt.has(ln):
+			continue   # уже порвана: разрыв связки детали «на связке» уносит ветку, а с ней и связки ниже
 		if sub.has(links_rt[ln]["a"]) or sub.has(links_rt[ln]["b"]):
 			break_link(String(ln), by)
 	# оружие в оторванной кисти выпадает (WeaponPickup и похожие: is_holding / drop)

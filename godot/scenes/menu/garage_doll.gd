@@ -88,6 +88,14 @@ func build() -> void:
 		_children[a].append({"joint": jt, "body": b})
 		_pivot_local[jt] = a.transform.affine_inverse() * jt.position
 		is_child[b] = true
+	for ln in doll.links_rt:   # деталь на связке (KitJoint on_*): ребёнок без сустава — поворачивается вместе с родителем, сама висит
+		var rec: Dictionary = doll.links_rt[ln]
+		if String(rec.get("tether_child", "")) == "" or not is_instance_valid(rec.get("a")) or not is_instance_valid(rec.get("b")):
+			continue
+		if not _children.has(rec["a"]):
+			_children[rec["a"]] = []
+		_children[rec["a"]].append({"joint": null, "body": rec["b"], "tether": rec})
+		is_child[rec["b"]] = true
 	for j in doll.joints.values():
 		(j as Generic6DOFJoint3D).node_a = NodePath()
 		(j as Generic6DOFJoint3D).node_b = NodePath()
@@ -102,6 +110,8 @@ func build() -> void:
 			(lj as Generic6DOFJoint3D).node_b = NodePath()
 	doll.refresh_links()
 	_seat()
+	_rest_tethered()
+	doll.refresh_links()
 	_find_neck()
 
 
@@ -127,6 +137,9 @@ func _pose(body: Node3D) -> void:
 	for e in _children.get(body, []):
 		var jt: Generic6DOFJoint3D = e["joint"]
 		var child: Node3D = e["body"]
+		if jt == null:   # на связке: висит, как есть
+			_pose(child)
+			continue
 		var group := String(jt.name).get_slice("_", 0)
 		if SIT.has(group):
 			var spec: Array = SIT[group]
@@ -154,7 +167,7 @@ func _seat() -> void:
 	var pivots: Array = []
 	for a in _children:
 		for e in _children[a]:
-			if String((e["joint"] as Node).name).begins_with("Hip"):
+			if e["joint"] != null and String((e["joint"] as Node).name).begins_with("Hip"):
 				hips.append(e["body"])
 				pivots.append((a as Node3D).transform * (_pivot_local[e["joint"]] as Vector3))
 	var min_y := INF
@@ -175,10 +188,39 @@ func _seat() -> void:
 		doll.position = Vector3(-c.x, seat_height - min_y, -c.z - 0.08)
 
 
+## Ветка на связке, ушедшая под пол (нога на тросе висит с ящика ниже пола), поворачивается вперёд вокруг крепления связки, пока не
+## ляжет на пол (шаг 10°, не дальше горизонтали). Пол — y = 0 этого узла.
+func _rest_tethered() -> void:
+	for a in _children:
+		for e in _children[a]:
+			if e["joint"] != null:
+				continue
+			var rec: Dictionary = e["tether"]
+			var anchor := (a as Node3D).global_transform * (rec["pa"] as Vector3)
+			var bodies := _subtree(e["body"], [])
+			for step in range(10):
+				if _lowest_y(bodies) >= 0.0:
+					break
+				var r := Basis(global_transform.basis.x.normalized(), deg_to_rad(-10.0))   # ось «вправо» куклы: вперёд, к лицу (+Z), как Hip в SIT
+				var xf := Transform3D(r, anchor - r * anchor)
+				for d in bodies:
+					(d as Node3D).global_transform = xf * (d as Node3D).global_transform
+
+
+## Нижняя точка мешей тел в координатах этого узла.
+func _lowest_y(bodies: Array) -> float:
+	var min_y := INF
+	for b in bodies:
+		for mi in (b as Node).find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			min_y = minf(min_y, (global_transform.affine_inverse() * m.global_transform * m.get_aabb()).position.y)
+	return min_y
+
+
 func _find_neck() -> void:
 	for a in _children:
 		for e in _children[a]:
-			if String((e["joint"] as Node).name).begins_with("Neck"):
+			if e["joint"] != null and String((e["joint"] as Node).name).begins_with("Neck"):
 				_neck_pivot = (a as Node3D).transform * (_pivot_local[e["joint"]] as Vector3)
 				_neck_bodies = _subtree(e["body"], [])
 	for b in _neck_bodies:
