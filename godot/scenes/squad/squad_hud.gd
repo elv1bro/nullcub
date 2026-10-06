@@ -217,7 +217,7 @@ func _build_me() -> void:
 	hint.offset_right = 640.0
 	hint.offset_top = -64.0
 	hint.offset_bottom = -24.0
-	hint.text = tr("WASD — лететь · ЛКМ — рука с оружием · I — огонь · O — перезарядка · 1 / 2 / 3 — улучшения · Shift — рывок")
+	hint.text = tr("WASD — лететь · мышь — прицел · ЛКМ — огонь · Q — перезарядка · 1 / 2 / 3 — улучшения · Shift — рывок")
 	root.add_child(hint)
 
 

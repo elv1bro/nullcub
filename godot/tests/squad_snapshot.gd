@@ -1,16 +1,19 @@
 ## Снимки «Стычки 3 на 3» (нужно окно): карта целиком, отсчёт, бой глазами P1 (за него играет бот, камера и HUD ведут его как
 ## игрока — SquadMatch.focus_index), панель улучшений и винтовка в руке, ящики снабжения, фраг P1, ожидание возврата, итоги, и клип
 ## clip/frame_NNNN.png (10 кадров/с).
-##   godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/squad_snapshot.tscn -- "out_dir=/abs/dir,clip_s=8,level=2"
+##   godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/squad_snapshot.tscn -- "out_dir=/abs/dir,clip_s=8,level=2,night=1"
+## (night=1 — ночная карта)
 ## Глазами проверить: карта читается (базы, укрытия, плиты), команды различимы (цвет, обводка, имена), трассы пуль видны, счёт и лента
 ## фрагов на HUD, стрелки к соперникам за кадром, табличка итогов.
 extends Node
 
 const SCENE := "res://scenes/playground_squad.tscn"
+const SCENE_NIGHT := "res://scenes/playground_squad_night.tscn"
 
 var out_dir := "/tmp"
 var clip_s := 8.0
 var level := 2
+var night := false
 var pg: SquadPlayground
 var sm: SquadMatch
 
@@ -25,6 +28,7 @@ func _ready() -> void:
 				"out_dir": out_dir = kv[1]
 				"clip_s": clip_s = float(kv[1])
 				"level": level = int(kv[1])
+				"night": night = kv[1] == "1"
 	_run.call_deferred()
 
 
@@ -57,7 +61,7 @@ func _p0() -> Doll:
 
 
 func _run() -> void:
-	pg = (load(SCENE) as PackedScene).instantiate() as SquadPlayground
+	pg = (load(SCENE_NIGHT if night else SCENE) as PackedScene).instantiate() as SquadPlayground
 	pg.p1_bot = true
 	pg.bot_level = level
 	sm = pg.get_node("Match") as SquadMatch

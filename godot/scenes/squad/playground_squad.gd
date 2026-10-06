@@ -3,10 +3,10 @@
 ## (scenes/arena/proving_ground.tscn) + шесть бойцов + SquadMatch + SquadHud + камера за игроком.
 ## Бойцы собираются здесь, до регистрации в матче (Match._late_ready — отложенный): «Человек» (kit_human) у обеих команд — команды
 ## различают рубашка, обводка и имена цветом команды. Рука с оружием — Tuning.SQUAD_GUN_HAND: со стороны соперника на экране (у синих
-## — кисть Hand_L, у красных — Hand_R; кукла смотрит в камеру), она же blueprint.control — ею управляет ЛКМ, как в обычном бою.
-##   P1 (player_index 0) — человек: WASD летать, Shift рывок, ЛКМ — тянуть руку с оружием к курсору (SquadArm, как в обычных боях),
-##   I (активная клавиша 1) — огонь, пока зажата; O (активная клавиша 2) — перезарядка; 1 / 2 / 3 — взять улучшение (SquadHud
-##   показывает, какие есть и хватает ли очков);
+## — кисть Hand_L, у красных — Hand_R; кукла смотрит в камеру), она же blueprint.control.
+##   P1 (player_index 0) — человек: WASD летать, Shift рывок; рука с оружием всегда тянется к курсору (автор 05.10: «рука всегда за
+##   мышкой, без ЛКМ, а огонь на ЛКМ»), кольцо тяги — прицел; ЛКМ (или I, X геймпада) — огонь, пока зажата; Q (или Y геймпада) —
+##   перезарядка, пустой магазин перезаряжается сам; 1 / 2 / 3 — взять улучшение (SquadHud показывает, какие есть и хватает ли очков);
 ##   боты 1–5 — SquadBrain, уровень bot_level (SquadBrain.default_level: мозг после возрождения — новый экземпляр без настроек).
 ## Клавиши: R — заново, Esc — пауза (Flow), 4–9 — площадки хаба, M / N — музыка / толпа, H — скин HUD, K — уровень ботов 1 → 2 → 3.
 ## Пропасти нет; страховочный низ карты (body_fell) — KO, как в бою. Масштаб камеры игрока (DynamicCamera.user_zoom, общий на все
@@ -118,8 +118,8 @@ func _physics_process(_delta: float) -> void:
 	_tick_focus()
 
 
-## Огонь игрока: активная клавиша 1 (I / X геймпада), пока зажата; перезарядка — активная клавиша 2 (O / Y). Рукой управляет ЛКМ
-## (SquadArm — обычная тяга руки), ствол смотрит по руке.
+## Игрок: рука с оружием всегда тянется к курсору (цель руки — курсор каждый тик; без мыши — правый стик, как в бою), ствол смотрит
+## по руке; огонь — ЛКМ или активная клавиша 1 (I / X геймпада), пока зажата; перезарядка — Q или активная клавиша 2 (Y геймпада).
 func _human_gun() -> void:
 	var p := human()
 	if p == null:
@@ -127,9 +127,18 @@ func _human_gun() -> void:
 	var g := SquadMatch.gun_of(p)
 	if g == null:
 		return
-	g.trigger = InputMap.has_action("p1_act1") and Input.is_action_pressed("p1_act1")
-	if InputMap.has_action("p1_act2") and Input.is_action_just_pressed("p1_act2"):
-		g.reload()
+	var a := g.arm()
+	if a != null and p.alive:
+		var mp: Variant = a.mouse_on_plane() if DisplayServer.mouse_get_mode() != DisplayServer.MOUSE_MODE_HIDDEN else null
+		if mp is Vector3:
+			a.set_target_override(mp)
+		else:
+			a.clear_target_override()
+	g.trigger = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) \
+		or (InputMap.has_action("p1_act1") and Input.is_action_pressed("p1_act1"))
+	if Input.is_physical_key_pressed(KEY_Q) or (InputMap.has_action("p1_act2") and Input.is_action_pressed("p1_act2")):
+		if g.mag < g.mag_max:
+			g.reload()
 
 
 ## Камера: игрок + ближайший соперник ближе FOCUS_ENEMY_M (иначе на карте 64 м кадр всё время ездил бы туда-сюда); игрок выбыл —

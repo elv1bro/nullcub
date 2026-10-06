@@ -1,4 +1,6 @@
 ## Builder карты «Полигон» для пробного режима «Стычка 3 на 3» (docs/plan-demo/SQUAD.md): собирает res://scenes/arena/proving_ground.tscn
+## (день) и proving_ground_night.tscn (ночь: тёмное небо, луна, фонари цвета команд, тёплый свет у башни; фон-параллакс затемняет и
+## посыпает звёздами сам скрипт карты — ProvingGround.night)
 ## ИЗ КОМПОНЕНТНЫХ СЦЕН Руин scenes/props/*.tscn (как tools/build_arena_ruins.gd) — карта вдвое шире Руин (64 × 16 м), зеркальная:
 ## база синих слева, красных справа, между ними укрытия, парящие плиты и башня в центре. Повторный запуск перезаписывает сцену.
 ## Запуск: godot --headless --path godot --import && godot --headless --path godot res://tools/build_proving_ground.tscn
@@ -9,7 +11,9 @@
 ## кукол (z = WALL_Z, solid = false). Твёрдое в плоскости кукол: плиты земли, палубы баз, укрытия (стены, утопленные в землю — верх
 ## на высоте груди), парящие плиты, мост и верхняя площадка башни, пропсы. Ям нет: карта для перестрелки, а не для выталкивания.
 ## Дерево: Node3D "ProvingGround" (script proving_ground.gd)
-##   ├── WorldEnvironment "Environment", DirectionalLight3D "Sun", "Parallax" (parallax_background.tscn, слои едут за камерой)
+##   ├── WorldEnvironment "Environment" (день — окружение Руин с половиной дымки, ночь — своё), DirectionalLight3D "Sun" (ночью —
+##   │     лунный), камера без глубины резкости (автор 05.10: «как-то размыто всё»: Руины размывают всё дальше 24 м), "Parallax"
+##   │     (parallax_background.tscn, слои едут за камерой), ночью — Node3D "Lamps" (OmniLight3D)
 ##   ├── Node3D "Ground": stone_platform_4m ×16 (x −32..32), фундамент wall_segment (декор, y −3..0)
 ##   ├── Node3D "BaseBlue" / "BaseRed": палуба базы, башни-декор, знамя цвета команды, укрытия CoverNear / CoverFar, парящая плита
 ##   ├── Node3D "Centre": башни-декор, ворота, каменный мост (верх 4.0), верхняя площадка (верх 6.65), высокие плиты (верх 9.0)
@@ -19,12 +23,11 @@
 extends Node
 
 const OUT := "res://scenes/arena/proving_ground.tscn"
-const SCENE_UID := "uid://provingground01"
+const OUT_NIGHT := "res://scenes/arena/proving_ground_night.tscn"
 const PROPS := "res://scenes/props/%s.tscn"
 const SCRIPT := "res://scenes/arena/proving_ground.gd"
 const PARALLAX := "res://scenes/arena/parallax_background.tscn"
 const ENV_RES := "res://assets/environments/ruins_env.tres"
-const CAM_RES := "res://assets/environments/ruins_camera.tres"
 const METAL_BARREL := "res://scenes/props/scrap/prop_metal_barrel.tscn"
 
 const G := 0.4
@@ -49,15 +52,28 @@ var _scenes: Dictionary = {}
 var _names: Dictionary = {}
 
 
+var night := false
+
+
 func _ready() -> void:
+	for n in [false, true]:
+		if not _build(n):
+			get_tree().quit(1)
+			return
+	get_tree().quit(0)
+
+
+func _build(is_night: bool) -> bool:
+	night = is_night
+	_names.clear()
 	arena_root = Node3D.new()
 	arena_root.name = "ProvingGround"
 	var scr := load(SCRIPT) as Script
 	if scr == null:
 		push_error("no script " + SCRIPT)
-		get_tree().quit(1)
-		return
+		return false
 	arena_root.set_script(scr)
+	arena_root.set("night", night)
 	_environment()
 	_parallax()
 	_ground()
@@ -67,22 +83,22 @@ func _ready() -> void:
 	_props()
 	_bounds()
 	_spawns()
+	if night:
+		_lamps()
 	_set_owner(arena_root)
 	var ps := PackedScene.new()
 	var err := ps.pack(arena_root)
+	var out := OUT_NIGHT if night else OUT
 	if err != OK:
 		push_error("pack failed: %d" % err)
-		get_tree().quit(1)
-		return
-	err = ResourceSaver.save(ps, OUT)
+		return false
+	err = ResourceSaver.save(ps, out)
 	if err != OK:
 		push_error("save failed: %d" % err)
-		get_tree().quit(1)
-		return
-	ResourceSaver.set_uid(OUT, ResourceUID.text_to_id(SCENE_UID))
-	print("saved ", OUT, ": nodes=", _count(arena_root), " components=", _scenes.size(), " kinds")
+		return false
+	print("saved ", out, ": nodes=", _count(arena_root), " components=", _scenes.size(), " kinds")
 	arena_root.free()
-	get_tree().quit(0)
+	return true
 
 
 # ---------------------------------------------------------------- helpers
@@ -288,17 +304,33 @@ func _parallax() -> void:
 func _environment() -> void:
 	var env := WorldEnvironment.new()
 	env.name = "Environment"
-	if ResourceLoader.exists(ENV_RES):
-		env.environment = load(ENV_RES)
-		if ResourceLoader.exists(CAM_RES):
-			env.camera_attributes = load(CAM_RES)
+	if night:
+		env.environment = _night_environment()
+	elif ResourceLoader.exists(ENV_RES):
+		var e := (load(ENV_RES) as Environment).duplicate() as Environment   # своя копия: окружение Руин не трогаем
+		e.fog_density *= 0.5            # карта вдвое шире Руин: дальние планы тонули в молочной дымке
+		e.fog_aerial_perspective = 0.2
+		env.environment = e
+	# своя камера без глубины резкости: у Руин (ruins_camera.tres) всё дальше 24 м размыто, а на этой карте камера отъезжает до 22 м
+	var cam := CameraAttributesPractical.new()
+	cam.dof_blur_far_enabled = false
+	cam.dof_blur_near_enabled = false
+	cam.auto_exposure_enabled = false
+	env.camera_attributes = cam
 	arena_root.add_child(env)
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sun"
-	sun.basis = Basis.looking_at(Vector3(0.55, -0.75, -0.45).normalized(), Vector3.UP)
-	sun.light_color = Color(1.0, 0.93, 0.82)
-	sun.light_energy = 1.25
-	sun.light_indirect_energy = 1.5
+	if night:
+		# луна: холодный слабый свет сверху-слева, тени остаются — силуэты читаются
+		sun.basis = Basis.looking_at(Vector3(0.45, -0.8, -0.4).normalized(), Vector3.UP)
+		sun.light_color = Color(0.62, 0.72, 1.0)
+		sun.light_energy = 0.55
+		sun.light_indirect_energy = 0.6
+	else:
+		sun.basis = Basis.looking_at(Vector3(0.55, -0.75, -0.45).normalized(), Vector3.UP)
+		sun.light_color = Color(1.0, 0.93, 0.82)
+		sun.light_energy = 1.25
+		sun.light_indirect_energy = 1.5
 	sun.shadow_enabled = true
 	sun.shadow_blur = 1.2
 	sun.shadow_bias = 0.03
@@ -308,3 +340,72 @@ func _environment() -> void:
 	sun.directional_shadow_split_2 = 0.35
 	sun.directional_shadow_split_3 = 0.6
 	arena_root.add_child(sun)
+
+
+## Ночь: тёмно-синее небо (отражения и окружающий свет), окружающий свет — синий и слабый, чтобы бойцы не пропадали; сильнее свечение
+## (glow) — шарики пуль, факелы, фонари и кольца ящиков светятся; лёгкая синяя дымка.
+func _night_environment() -> Environment:
+	var e := Environment.new()
+	e.background_mode = Environment.BG_SKY
+	var sky := Sky.new()
+	var sm := ProceduralSkyMaterial.new()
+	sm.sky_top_color = Color(0.015, 0.02, 0.055)
+	sm.sky_horizon_color = Color(0.05, 0.07, 0.13)
+	sm.ground_bottom_color = Color(0.01, 0.012, 0.02)
+	sm.ground_horizon_color = Color(0.05, 0.07, 0.13)
+	sm.sun_angle_max = 1.0
+	sky.sky_material = sm
+	e.sky = sky
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color(0.32, 0.38, 0.6)
+	e.ambient_light_energy = 0.55
+	e.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+	e.tonemap_mode = Environment.TONE_MAPPER_ACES
+	e.tonemap_exposure = 1.05
+	e.ssao_enabled = true
+	e.ssao_radius = 0.8
+	e.ssao_intensity = 1.6
+	e.ssil_enabled = true
+	e.ssil_radius = 4.0
+	e.ssil_intensity = 1.2
+	e.glow_enabled = true
+	e.glow_intensity = 0.9
+	e.glow_strength = 1.0
+	e.glow_bloom = 0.04
+	e.glow_hdr_threshold = 0.95
+	e.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
+	e.fog_enabled = true
+	e.fog_light_color = Color(0.1, 0.13, 0.24)
+	e.fog_light_energy = 1.0
+	e.fog_density = 0.003
+	e.fog_aerial_perspective = 0.25
+	return e
+
+
+## Ночные фонари: у баз — цвета команды (над палубой и у башен), у башни в центре — тёплые, над парящими плитами — холодные.
+func _lamps() -> void:
+	var l := _group("Lamps")
+	var blue := Color(0.45, 0.6, 1.0)
+	var red := Color(1.0, 0.45, 0.4)
+	for s in [-1.0, 1.0]:
+		var team := blue if s < 0.0 else red
+		_lamp(l, "BaseLamp", Vector3(BASE_X * s, DECK_Y + 2.6, 1.2), team, 3.0, 10.0)
+		_lamp(l, "TowerLamp", Vector3(25.5 * s, G + 6.6, 0.8), team, 2.0, 8.0)
+		_lamp(l, "CoverLamp", Vector3(COVER_FAR_X * s, G + 3.4, 1.0), team.lerp(Color.WHITE, 0.4), 1.2, 6.5)
+		_lamp(l, "FloatLamp", Vector3(FLOAT_X * s, FLOAT_Y + 2.4, 1.2), Color(0.7, 0.8, 1.0), 1.4, 7.0)
+		_lamp(l, "HighLamp", Vector3(HIGH_X * s, HIGH_Y + 2.0, 1.2), Color(0.7, 0.8, 1.0), 1.2, 6.5)
+		_lamp(l, "MidLamp", Vector3(6.5 * s, G + 2.6, 1.4), Color(1.0, 0.7, 0.42), 1.6, 7.0)
+	_lamp(l, "CentreLamp", Vector3(0.0, TOWER_TOP + 2.2, 1.4), Color(1.0, 0.72, 0.45), 2.4, 10.0)
+	_lamp(l, "GateLamp", Vector3(0.0, G + 2.4, 1.2), Color(1.0, 0.7, 0.42), 1.6, 7.0)
+
+
+func _lamp(parent: Node, name: String, pos: Vector3, col: Color, energy: float, rng: float) -> void:
+	var o := OmniLight3D.new()
+	o.name = _uniq(name)
+	o.position = pos
+	o.light_color = col
+	o.light_energy = energy
+	o.omni_range = rng
+	o.omni_attenuation = 1.2
+	o.shadow_enabled = false
+	parent.add_child(o)
