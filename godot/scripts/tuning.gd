@@ -1211,3 +1211,65 @@ const CLIMB_WALL_H := 30.0
 const CLIMB_CAM_MIN_HALF_H := 4.2
 const CLIMB_CAM_MAX_HALF_H := 5.0
 const CLIMB_CAM_LOOK_UP := 1.2
+
+# --- ПЕРЕГОН: проба машины (docs/plan-demo/CONVOY.md, MODES_PACK.md §7, 06.10) ---
+## Автор 06.10: «RV There Yet — подумай, как добавить интересно похожее». Первый шаг плана — проба «машина» на одном участке 100 м:
+## езда, толкание куклами, груз в открытом кузове, переворот (без запаса тяги, лебёдки и звёзд — они потом). Машина — своя физика
+## (ConvoyCar, scripts/convoy/), не VehicleBody3D: кузов RigidBody3D + 3 колеса-сферы на Generic6DOFJoint3D (ход подвески по Y кузова,
+## пружина — скриптом; вращение по Z — мотор сустава), всё в плоскости боя (z зажата, как у кукол).
+## Вес. Мир NULL: g = 2 м/с² (кукла парит). Машине и грузу — свой вес, как пропсам (PropHeft): машина × CAR_G_SCALE (g ≈ 6 — не
+## «лунная», держит дорогу), груз × CARGO_G_SCALE (g ≈ 3.5 — легче машины: на кочке машина проваливается вниз быстрее груза, и груз
+## «всплывает» над кузовом — так он и вылетает).
+const CONVOY_CHASSIS_MASS := 300.0
+const CONVOY_WHEEL_MASS := 15.0
+const CONVOY_CAR_G_SCALE := 3.0
+const CONVOY_CARGO_G_SCALE := 1.75
+## Колёса: радиус (м), положения по x в системе кузова (зад, середина, перёд), трение резины.
+const CONVOY_WHEEL_RADIUS := 0.45
+const CONVOY_WHEEL_X := [-1.55, -0.05, 1.45]
+const CONVOY_WHEEL_FRICTION := 1.0
+## Подвеска: ход колеса вниз / вверх от точки крепления (м), пружина (Н/м) — свободна при полном ходе вниз (под весом машины
+## 300 × 6 / 3 = 600 Н на колесо проседает на 0.1 м), демпфер (Н·с/м); сила одной пружины не больше SPRING_F_MAX.
+const CONVOY_TRAVEL_DOWN := 0.2
+const CONVOY_TRAVEL_UP := 0.12
+const CONVOY_SPRING_K := 6000.0
+const CONVOY_SPRING_C := 650.0
+const CONVOY_SPRING_F_MAX := 6000.0
+## Мотор (мотор сустава колеса, все три ведущие): момент на колесо (Н·м) — тяга 3 × 85 / 0.45 = 567 Н, ≈ 1.6 м/с² на ровном;
+## предел скорости вперёд / назад (м/с); накат без газа — слабый момент к нулю (сопротивление качению, Н·м).
+const CONVOY_DRIVE_TORQUE := 85.0
+const CONVOY_MAX_SPEED := 8.0
+const CONVOY_REVERSE_SPEED := 4.0
+const CONVOY_ROLL_TORQUE := 4.0
+## Ручник: мотор колеса держит ноль с моментом до BRAKE_TORQUE (больше, чем даёт сцепление — колёса стоят, машина скользит юзом).
+## Без водителя машина всегда на ручнике.
+const CONVOY_BRAKE_TORQUE := 400.0
+## Наклон в воздухе (W / S, ни одно колесо не касается земли): момент на кузов (Н·м), не быстрее AIR_TILT_MAX_W рад/с.
+const CONVOY_AIR_TILT_TORQUE := 1800.0
+const CONVOY_AIR_TILT_MAX_W := 3.0
+## Сесть / выйти: ЦМ куклы ближе ENTER_RADIUS (м) к двери кабины. Вышедшая кукла появляется над кабиной на EXIT_UP_M.
+const CONVOY_ENTER_RADIUS := 2.0
+const CONVOY_EXIT_UP_M := 2.6
+## Перевернулась: «верх» кузова смотрит вбок или вниз (up.y < FLIP_UP_Y), машина медленнее FLIP_SPEED, — через UPRIGHT_S с её сам
+## поднимает «кран» (кузов без веса поднимается на CRANE_LIFT_M над землёй, поворачивается колёсами вниз, отпускается); не вышло за
+## CRANE_MAX_S — ставится на колёса переносом.
+const CONVOY_FLIP_UP_Y := 0.3
+const CONVOY_FLIP_SPEED := 1.2
+const CONVOY_UPRIGHT_S := 4.0
+const CONVOY_CRANE_LIFT_M := 2.6
+const CONVOY_CRANE_MAX_S := 3.0
+## Груз в кузове: [вид, масса кг]. Вид — ConvoyCargo.kind: crate (ящик 0.6 м), barrel (бочка), big (ящик 0.8 м). До 15 кг —
+## лёгкий класс (PropHeft.LIGHT: рука приваривает и бросает), тяжелее — средний (только тащить).
+const CONVOY_CARGO := [["crate", 10.0], ["crate", 10.0], ["barrel", 12.0], ["crate", 10.0], ["big", 30.0]]
+## Доски для провала: длина (м; провал 3.4 м — допуск ±0.7 м, куда положить), масса (кг), сколько штук на стеллаже, множитель веса.
+## Доска для руки — всегда «средний» класс (не приваривается к кисти); лёгкая (8 кг × g 1 = 8 Н) — опускается на провал медленно.
+const CONVOY_PLANK_LEN := 5.0
+const CONVOY_PLANK_MASS := 8.0
+const CONVOY_PLANKS := 3
+const CONVOY_PLANK_G_SCALE := 0.5
+## Доска в руке держится ровно (ConvoyPlayground._level_held): частота (рад/с) и предел момента (Н·м) выравнивания к горизонтали.
+const CONVOY_PLANK_LEVEL_OMEGA := 8.0
+const CONVOY_PLANK_LEVEL_TORQUE := 150.0
+## Провал: машина ниже кромки на PIT_DROP_M дольше PIT_RESET_S — назад на старт участка (с грузом, что в кузове).
+const CONVOY_PIT_DROP_M := 1.0
+const CONVOY_PIT_RESET_S := 1.5

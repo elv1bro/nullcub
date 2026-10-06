@@ -32,7 +32,7 @@ var _tweens: Array[Tween] = []
 
 
 ## Плашки нужны матчу 1 на 1 (Match и SportMatch); у стычки, бомбы, гонки и PvE — своё вступление. По пути скрипта — без загрузки их классов.
-const SKIP := ["squad_match.gd", "bomb_match.gd", "race_match.gd", "wave_director.gd", "climb_match.gd"]
+const SKIP := ["squad_match.gd", "bomb_match.gd", "race_match.gd", "wave_director.gd", "climb_match.gd", "convoy_match.gd"]
 
 
 static func wants(m: Node) -> bool:
