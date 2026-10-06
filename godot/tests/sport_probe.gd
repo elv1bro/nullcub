@@ -6,6 +6,9 @@
 ##   баскетбол — кольцо сверху вниз, снизу вверх не считается; волейбол — подача, пол чужой половины, сетка держит мяч,
 ##   стенка над сеткой держит куклу и пропускает мяч;
 ##   боты (SportBrain за обоих): матч доигрывается (голы или время), есть голы, мяч не покидает зал, скорость мяча ≤ потолка.
+##   «как есть» (автор 06.10, Tuning.SPORT_PARTHP / SPORT_KEEP_DAMAGE): в зале включён «Запас из деталей»; оторванное не отрастает
+##   после гола и после нокаута, запас и износ после гола те же; новый матч — куклы целые; режим выключен — чинится, как раньше;
+##   вышли из зала — режимы отрыва как были.
 ## Headless:
 ##   godot --headless --path . --fixed-fps 60 res://tests/sport_probe.tscn -- "sports=football,basketball,volleyball,bots=1,max_s=300,out=<json>"
 ## → код выхода 0/1, JSON между === SPORT PROBE === и === OK / FAIL ===. only=rules | bots — половина пробы.
@@ -67,6 +70,7 @@ func _ready() -> void:
 					await _rules_basketball()
 				"volleyball":
 					await _rules_volleyball()
+			await _rules_keep_damage(id)
 		if String(a["bots"]) == "1" and String(a["only"]) != "rules":
 			await _bot_match(id, float(a["max_s"]), String(a["trace"]) == "1")
 	report["ok"] = ok
@@ -262,6 +266,86 @@ func _rules_common(id: String) -> void:
 	_check(id + ".draw", sm.phase == Match.Phase.OVER and over_winner == null and bool(over_results.get("draw", false)), "ничья %s" % over_results.get("draw", false))
 
 
+# ------------------------------------------------------------------ куклы не чинятся между розыгрышами
+
+## Деталей нет у куклы: ни тела в parts и в дереве, ни суставов к ним.
+func _lacks(d: Doll, names: Array) -> bool:
+	for n in names:
+		if d.parts.has(n) or d.get_node_or_null(NodePath(String(n))) != null:
+			return false
+	return true
+
+
+func _rules_keep_damage(id: String) -> void:
+	if pg != null:
+		remove_child(pg)
+		pg.queue_free()
+		pg = null
+		await get_tree().physics_frame
+	var modes_out := [PartHp.on, JointBreak.on]
+	await _load(id)
+	var p1 := _doll(0)
+	var full_max := p1.max_hp
+	_check(id + ".parthp_default", PartHp.on and not JointBreak.on and sm.keeps_damage() and is_equal_approx(full_max, roundf(p1.parts_hp_total())),
+		"PartHp %s, JointBreak %s, запас %.0f из деталей %.0f" % [PartHp.on, JointBreak.on, full_max, p1.parts_hp_total()])
+	# рука оторвана, урон, износ ноги — гол — на вводе всё как было
+	p1.detach_part("UpperArm_L")
+	p1.hp -= 7.0
+	p1.joint_hp["UpperLeg_R"] = float(p1.joint_hp["UpperLeg_R"]) - 5.0
+	var max_before := p1.max_hp
+	var arm := ["UpperArm_L", "LowerArm_L", "Hand_L", "Shoulder_L", "Elbow_L", "Wrist_L"]
+	var swap := {}   # старая кукла в момент замены: запас, максимум, износ бедра (между отрывом и голом могла задеть свою руку)
+	var on_swap := func(o: Doll, _n: Doll) -> void:
+		if o.player_index == 0 and swap.is_empty():
+			swap.merge({"hp": o.hp, "max": o.max_hp, "leg": float(o.joint_hp.get("UpperLeg_R", -1.0))})
+	sm.doll_replaced.connect(on_swap)
+	await _force_goal(id, 0)
+	await _until(func() -> bool: return sm.play_state == "kickoff", Tuning.SPORT_GOAL_PAUSE_S + 1.0)
+	sm.doll_replaced.disconnect(on_swap)
+	var p1g := _doll(0)
+	_check(id + ".kept_after_goal", p1g != p1 and _lacks(p1g, arm) and p1g.parts.has("UpperArm_R") and p1g.parts.has("Head") and p1g.parts.size() == 11,
+		"деталей %d, нет %s" % [p1g.parts.size(), p1g.lost_part_names()])
+	var leg_now := float(p1g.joint_hp.get("UpperLeg_R", -1.0))
+	_check(id + ".hp_kept_after_goal", not swap.is_empty() and is_equal_approx(p1g.max_hp, max_before) and max_before < full_max
+		and is_equal_approx(p1g.hp, float(swap["hp"])) and float(swap["hp"]) < max_before and is_equal_approx(leg_now, float(swap["leg"]))
+		and leg_now < float(p1g.joint_hp_max.get("UpperLeg_R", 0.0)),
+		"запас %.1f/%.0f (было %s, целый %.0f), износ бедра %.1f" % [p1g.hp, p1g.max_hp, swap, full_max, leg_now])
+	# нокаут: голова на месте, рука — нет, запас — полный из того, что осталось
+	await _until(func() -> bool: return sm.play_state == "play", 3.0)
+	p1g.knock_out()
+	await _wait(Tuning.SPORT_KO_RESPAWN_S + 0.4)
+	var p1k := _doll(0)
+	_check(id + ".kept_after_ko", p1k != p1g and p1k.alive and _lacks(p1k, arm) and p1k.parts.has("Head") and is_equal_approx(p1k.hp, p1k.max_hp)
+		and is_equal_approx(p1k.max_hp, max_before), "деталей %d, запас %.0f/%.0f" % [p1k.parts.size(), p1k.hp, p1k.max_hp])
+	# вторая потеря копится к первой
+	p1k.detach_part("Foot_R")
+	await _force_goal(id, 0)
+	await _until(func() -> bool: return sm.play_state == "kickoff", Tuning.SPORT_GOAL_PAUSE_S + 1.0)
+	var p1f := _doll(0)
+	_check(id + ".losses_add_up", _lacks(p1f, arm + ["Foot_R", "Ankle_R"]) and p1f.parts.has("LowerLeg_R") and p1f.parts.size() == 10,
+		"нет %s" % [p1f.lost_part_names()])
+	# новый матч — куклы целые
+	await _until(func() -> bool: return sm.play_state == "play", 3.0)
+	sm.restart()
+	await _until(func() -> bool: return sm.play_state == "play", 3.0)
+	var p1r := _doll(0)
+	_check(id + ".new_match_whole", p1r.parts.size() == 14 and is_equal_approx(p1r.max_hp, full_max) and is_equal_approx(p1r.hp, full_max),
+		"деталей %d, запас %.0f/%.0f" % [p1r.parts.size(), p1r.hp, p1r.max_hp])
+	# режим выключили («;») — после гола кукла снова целая
+	PartHp.set_on(false)
+	p1r.detach_part("UpperArm_R")
+	await _force_goal(id, 0)
+	await _until(func() -> bool: return sm.play_state == "kickoff", Tuning.SPORT_GOAL_PAUSE_S + 1.0)
+	_check(id + ".off_repairs", not sm.keeps_damage() and _doll(0).parts.size() == 14, "деталей %d" % _doll(0).parts.size())
+	PartHp.set_on(true)
+	# вышли из зала — режимы отрыва как были до него
+	remove_child(pg)
+	pg.queue_free()
+	pg = null
+	await get_tree().physics_frame
+	_check(id + ".modes_restored", [PartHp.on, JointBreak.on] == modes_out, "PartHp %s, JointBreak %s" % [PartHp.on, JointBreak.on])
+
+
 # ------------------------------------------------------------------ футбол
 
 func _rules_football() -> void:
@@ -397,10 +481,12 @@ func _bot_match(id: String, max_s: float, trace := false) -> void:
 			print(line)
 	var info := {"sim_s": snappedf(t, 0.1), "clock_s": snappedf(sm.fight_time, 0.1), "score": sm.score.duplicate(), "goals": sm.goals.duplicate(true),
 		"reason": String(over_results.get("reason", "")), "touches": ball.touches - touches0, "ball_rescues": sm.ball_rescues,
-		"ball_speed_max": snappedf(speed_max, 0.01), "kos": kos, "escaped_ticks": escaped}
+		"ball_speed_max": snappedf(speed_max, 0.01), "kos": kos, "escaped_ticks": escaped, "parts_lost": {}}
+	for d in sm.dolls():   # к концу матча: чего у куклы нет (между розыгрышами не чинится — Tuning.SPORT_KEEP_DAMAGE)
+		info["parts_lost"]["P%d" % ((d as Doll).player_index + 1)] = (d as Doll).lost_part_names()
 	report["sports"][id]["bots"] = info
 	var total := int(sm.score[0]) + int(sm.score[1])
 	_check(id + ".bots_match_ends", sm.phase == Match.Phase.OVER, "за %.0f с игры, причина «%s»" % [sm.fight_time, info["reason"]])
-	_check(id + ".bots_score", total >= 1, "счёт %s за %.0f с, касаний %d" % [sm.score, sm.fight_time, info["touches"]])
+	_check(id + ".bots_score", total >= 1, "счёт %s за %.0f с, касаний %d, нокаутов %d, оторвано %s" % [sm.score, sm.fight_time, info["touches"], kos, info["parts_lost"]])
 	_check(id + ".bots_ball_in_hall", escaped == 0, "тиков вне зала: %d" % escaped)
 	_check(id + ".bots_ball_speed_cap", speed_max <= Tuning.SPORT_BALL_MAX_SPEED + 0.5, "макс %.1f м/с (потолок %.1f)" % [speed_max, Tuning.SPORT_BALL_MAX_SPEED])

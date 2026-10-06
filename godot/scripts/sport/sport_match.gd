@@ -9,6 +9,8 @@
 ##     «золотой гол» (фаза SUDDEN_DEATH без её усилений: sd_step держится 0) до SPORT_GOLDEN_S, потом ничья;
 ##   • нокаут матч не кончает: кукла возвращается у своих ворот через SPORT_KO_RESPAWN_S («удаление» — соперник играет в пустые);
 ##     крит-кино выключено (crit_enabled = false) — розыгрыш не останавливается на полторы секунды;
+##   • кукла между розыгрышами не чинится (keeps_damage, автор 06.10): оторванное не отрастает до конца матча; на расстановке после
+##     гола запас и износ суставов — как были; после нокаута — полный запас того, что осталось. Новый матч (R, F) — куклы целые;
 ##   • итоги (build_results): победитель и места — по счёту, плюс score / sport / goals; статистика кукол копится через все
 ##     розыгрыши (куклы на вводе пересоздаются — Match.respawn_doll).
 ## Сигналы для HUD (scenes/sport/sport_hud.gd) и арены: score_changed, goal_scored, sport_changed, kickoff + унаследованные.
@@ -183,12 +185,13 @@ func _start_fight() -> void:
 	announce.emit(tr("PLAY!"), ANNOUNCE_COLORS["fight"], "fight" if first else "countdown")
 
 
-## Расстановка на новый ввод после гола: куклы — заново на своих точках (полные HP), мяч — на точку ввода, короткий отсчёт.
+## Расстановка на новый ввод после гола: куклы — заново на своих точках (keeps_damage — какими были, иначе целые), мяч — на точку
+## ввода, короткий отсчёт.
 func _kickoff() -> void:
 	_respawns.clear()
 	for d in dolls():
 		_bank_stats(d as Doll)
-		respawn_doll(d)
+		_respawn_as_is(d as Doll)
 	for d in dolls():
 		(d as Doll).control_enabled = false
 	_place_ball()
@@ -386,9 +389,31 @@ func _tick_respawns(delta: float) -> void:
 		var d: Variant = e[0]
 		if is_instance_valid(d) and (d as Doll).is_inside_tree() and not (d as Doll).alive:
 			_bank_stats(d as Doll)
-			var nd := respawn_doll(d as Doll)
+			var nd := _respawn_as_is(d as Doll)
 			nd.control_enabled = play_state == "play" or play_state == "goal"
 			hp_changed.emit(nd, nd.hp, nd.max_hp)
+
+
+## Куклы между розыгрышами не чинятся (автор 06.10: «между матчами не чиним это, а оставляем как есть»): Tuning.SPORT_KEEP_DAMAGE
+## и идёт режим, в котором детали отрываются («Запас из деталей» или «Прочность суставов»).
+func keeps_damage() -> bool:
+	return Tuning.SPORT_KEEP_DAMAGE and (PartHp.on or JointBreak.on)
+
+
+## Пересоздать куклу на её точке. keeps_damage(): оторванное не отрастает (Match.respawn_doll keep_lost); живая кукла (расстановка
+## после гола) сохраняет запас и износ суставов; после нокаута — полный запас того, что осталось, голова на месте (её отрыв и есть KO).
+func _respawn_as_is(old: Doll) -> Doll:
+	var keep := keeps_damage()
+	var was_alive := old.alive
+	var hp_left := old.hp
+	var wear: Dictionary = old.joint_hp.duplicate()
+	var d := respawn_doll(old, keep)
+	if keep and was_alive:
+		d.hp = clampf(hp_left, 1.0, d.max_hp)
+		for n in wear:
+			if d.joint_hp.has(n):
+				d.joint_hp[n] = minf(float(wear[n]), float(d.joint_hp_max[n]))
+	return d
 
 
 # --- итоги ---

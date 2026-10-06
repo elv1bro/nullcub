@@ -149,6 +149,11 @@ var joint_depth: Dictionary = {}
 ## Запас из деталей (PartHp, docs/plan-demo/WORKSHOP_V4.md): имя тела → ❤ детали (масса × материал, PartHp.hp_of). Считается всегда
 ## (_init_part_hp), в бою работает только при PartHp.on: запас бойца = Σ ❤ (parts_hp_total, ставит Match), отрыв уносит ❤ поддерева.
 var part_hp: Dictionary = {}
+## Деталей нет с рождения (спорт-зал, автор 06.10: «между матчами не чиним, оставляем как есть»): имена тел сцены, ставит
+## Match.respawn_doll(keep_lost) до add_child — _ready убирает эти тела, всё, что на них висит, и их суставы до сборки куклы.
+## Торс и голова не убираются. Только кукла из сцены (doll.tscn): ModularDoll строит тела в _ready сама.
+var missing_parts: PackedStringArray = []
+var _born_parts: Array = []   # имена тел после сборки (_ready): чего из них нет в parts — оторвано (lost_part_names)
 ## Связки (KitLink, строит ModularDoll._build_links после спавна в позе; WORKSHOP_V4.md «Связки»): имя связки → {id, type, bodies, joints,
 ## a, b (тела концов), hp (❤), len, strut (сустав телескопа у пружины и поршня), extend, channel}; имя тела связки → имя связки.
 ## Суставы связок не суставы мышц: в joints их нет. Износ связки (link_wear) тратит урон в её тела в любом бою — связку можно перебить.
@@ -237,11 +242,14 @@ func _ready() -> void:
 		_group_zeta[g] = muscle_zeta if muscle_zeta >= 0.0 else float(G.get("zeta", Tuning.MUSCLE_ZETA))
 
 	# части и суставы — из дерева сцены
+	if not missing_parts.is_empty():
+		_drop_missing_parts()
 	for c in get_children():
 		if c is RigidBody3D:
 			parts[c.name] = c
 		elif c is Generic6DOFJoint3D:
 			joints[c.name] = c
+	_born_parts = parts.keys()
 	for j in joints.values():
 		var a := j.get_node_or_null(j.node_a) as RigidBody3D
 		var b := j.get_node_or_null(j.node_b) as RigidBody3D
@@ -296,6 +304,41 @@ func _ready() -> void:
 		add_child(skin)
 		if skin.apply(self, skin_scene, skin_mode, skin_bone_map):
 			_set_rig_visible(false)
+
+
+## Убрать до сборки тела missing_parts (кроме торса и головы), всё, что висит на них по суставам (node_a — родитель, node_b — ребёнок),
+## и суставы, которые к ним шли.
+func _drop_missing_parts() -> void:
+	var gone: Array = []
+	for c in get_children():
+		var base := part_base_name(String(c.name))
+		if c is RigidBody3D and missing_parts.has(String(c.name)) and base != "Torso" and base != "Head":
+			gone.append(c)
+	var js: Array = get_children().filter(func(c: Node) -> bool: return c is Generic6DOFJoint3D)
+	var i := 0
+	while i < gone.size():
+		for j in js:
+			var child := (j as Generic6DOFJoint3D).get_node_or_null((j as Generic6DOFJoint3D).node_b)
+			if (j as Generic6DOFJoint3D).get_node_or_null((j as Generic6DOFJoint3D).node_a) == gone[i] and child is RigidBody3D and not gone.has(child):
+				gone.append(child)
+		i += 1
+	for j in js:
+		var jj := j as Generic6DOFJoint3D
+		if gone.has(jj.get_node_or_null(jj.node_a)) or gone.has(jj.get_node_or_null(jj.node_b)):
+			gone.append(jj)
+	for n in gone:
+		remove_child(n)
+		(n as Node).queue_free()
+
+
+## Имена деталей, которых у куклы уже нет: не было с рождения (missing_parts) и оторванные в бою со всем, что на них висело (detach_part,
+## break_link). Голова и торс не попадают: их отрыв — KO, тела остаются в parts.
+func lost_part_names() -> PackedStringArray:
+	var out := PackedStringArray(missing_parts)
+	for n in _born_parts:
+		if not parts.has(n) and not out.has(String(n)):
+			out.append(String(n))
+	return out
 
 
 ## Ставит суставы групп groups (по порядку: проксимальные раньше) в позу покоя до первого шага физики: дистальная цепь сустава
