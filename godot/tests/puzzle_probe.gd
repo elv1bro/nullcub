@@ -9,9 +9,10 @@
 ##              кладёт без стрелки; кукла P2 без узла (другие режимы) — действие p2_grab_kb ничего не делает, подписи «RB» прежние;
 ##              геймпад — узел уступает; на площадке гонки у P2 нет PuzzleKeyArm;
 ##   rooms    — каждая комната решается сценарием на настоящей площадке: ящик/кукла/рычаг/лифт/бочка → дверь открыта → кукла в тамбуре →
-##              следующая комната; вдвоём и соло, где они разные; после шестой — итоги;
-##   bounds   — из каждой комнаты кукла не вылетает: 8 направлений, полная тяга с ускорением по 3 с — ЦМ внутри комнаты, в тамбур
-##              при закрытой двери не попасть.
+##              следующая комната; вдвоём и соло, где они разные; после последней (восьмой) — итоги. Комнаты 7–8 — с порталами
+##              (docs/plan-demo/PORTAL.md; подробнее их гоняет tests/portal_probe.gd);
+##   bounds   — из каждой комнаты кукла не вылетает: 8 направлений, полная тяга с ускорением по 3 с — ЦМ внутри комнаты (или в кармане
+##              портала), в тамбур при закрытой двери не попасть.
 ## Headless:
 ##   godot --headless --path godot --fixed-fps 60 res://tests/puzzle_probe.tscn -- "only=parts,out=<json>"
 ## → JSON между === PUZZLE PROBE === и === OK / FAIL ===, exit 0/1. errors_script — SCRIPT ERROR за прогон (Logger).
@@ -737,10 +738,11 @@ func _rooms(only: String) -> void:
 	print("--- rooms")
 	await _load_pg(0, true)
 	var want := func(i: int) -> bool: return only == "" or str(i + 1) in only.split("+")
-	var start_ok := pg.current == 0 and pg.rooms.size() == 6
-	_check("rooms_six", start_ok, "комнат %d, старт в %d" % [pg.rooms.size(), pg.current + 1])
+	var n := pg.rooms.size()
+	var start_ok := pg.current == 0 and n == 8
+	_check("rooms_eight", start_ok, "комнат %d, старт в %d" % [n, pg.current + 1])
 	var timings := {}
-	for i in 6:
+	for i in n:
 		if not want.call(i):
 			continue
 		if pg.current != i:
@@ -762,10 +764,10 @@ func _rooms(only: String) -> void:
 		var opened := r.solved() or r.door().open_frac() > 0.5
 		var moved := await _exit_via_door(pg.p1, r)
 		timings["room%d" % (i + 1)] = snappedf(pg.total_time - t0, 0.1)
-		var next_ok := (pg.current == i + 1) if i < 5 else pg.done
+		var next_ok := (pg.current == i + 1) if i < n - 1 else pg.done
 		_check("room%d_coop" % (i + 1), closed and solved and opened and moved and next_ok,
 			"дверь закрыта в начале %s, сценарий %s, дверь открыта %s, вышли %s, дальше %s" % [str(closed), str(solved), str(opened), str(moved), str(next_ok)])
-		if i < 5 and next_ok:
+		if i < n - 1 and next_ok:
 			var inside := true
 			for d in pg.players():
 				var c := (d as Doll).centre_of_mass()
@@ -773,13 +775,13 @@ func _rooms(only: String) -> void:
 			_check("room%d_players_moved" % (i + 1), inside, "игроки у входа комнаты %d" % (i + 2))
 	info["room_times_coop"] = timings
 	if only == "":
-		_check("demo_finished", pg.done and pg.room_times.size() == 6, "итоги: %s, комнат пройдено %d" % [str(pg.done), pg.room_times.size()])
-	# соло: P2 ушёл; комнаты 2, 3, 5 решаются иначе (ящик вместо второго)
+		_check("demo_finished", pg.done and pg.room_times.size() == n, "итоги: %s, комнат пройдено %d" % [str(pg.done), pg.room_times.size()])
+	# соло: P2 ушёл; комнаты 2, 3, 5 решаются иначе (ящик вместо второго), 8 — плита с таймером вместо второго
 	pg.restart_demo()
 	pg.leave_p2()
 	await _ticks(3)
 	_script_players()
-	for i in [1, 2, 4]:
+	for i in [1, 2, 4, 7]:
 		if not want.call(i):
 			continue
 		pg.goto_room(i)
@@ -790,7 +792,7 @@ func _rooms(only: String) -> void:
 		var solved: bool = await call("_solve_%d" % (i + 1), r, false)
 		var opened := r.door().open_frac() > 0.5
 		var moved := await _exit_via_door(pg.p1, r, 10.0)
-		_check("room%d_solo" % (i + 1), solved and opened and moved and pg.current == i + 1,
+		_check("room%d_solo" % (i + 1), solved and opened and moved and (pg.current == i + 1 if i < pg.rooms.size() - 1 else pg.done),
 			"сценарий %s, дверь открыта %s, успел выйти %s" % [str(solved), str(opened), str(moved)])
 
 
@@ -897,25 +899,37 @@ func _solve_4(r: PuzzleRoom, _coop: bool) -> bool:
 	var g := r.find("Gravity") as PuzzleGravity
 	var wp := r.find("WallPlate") as PuzzlePlate
 	var p1 := pg.p1
-	_teleport(p1, _at(r, -4.8, 1.0))
-	await _wait(0.6)
-	var arm := _arm(p1)
-	var grabbed := await _grab_with(arm, lever.handle)
-	for i in 120:
-		if lever.is_on():
-			break
-		arm.set_target_override(arm.root_point() + Vector3(arm.reach, 0.1, 0))
-		p1.input_vec = Vector2(1.0, 0.2)
-		await get_tree().physics_frame
-	p1.input_vec = Vector2.ZERO
-	arm.release("probe")
-	arm.clear_target_override()
+	var grabbed := await _flip_lever(p1, lever, _at(r, -4.8, 1.0))
 	var turned := await _until(func() -> bool: return g.is_on(), 3.0)
 	var pressed := await _until(func() -> bool: return wp.is_on(), 5.0)
 	await _until(func() -> bool: return r.door().is_on(), 2.0)
 	info["room4"] = {"grabbed": grabbed, "lever_on": lever.is_on(), "gravity": [snappedf(g.down().x, 0.01), snappedf(g.down().y, 0.01)],
 		"wall_plate_kg": snappedf(wp.mass_now, 0.1)}
 	return lever.is_on() and turned and pressed
+
+
+## Перекинуть рычаг вправо: кукла у рычага (from), рука хватает рукоять и тянет вправо, тяга вправо-вверх 2 с; не вышло (рука
+## соскочила, кукла упёрлась) — заново, до 3 попыток (как сделал бы игрок; с 06.10 ход куклы чувствителен к числу тел в сцене —
+## в комнатах 7–8 добавились порталы, и с первой попытки рычаг комнаты 4 перекидывался не всегда). true — рукоять схвачена.
+func _flip_lever(p1: Doll, lever: PuzzleLever, from: Vector3) -> bool:
+	var arm := _arm(p1)
+	var grabbed := false
+	for attempt in 3:
+		if lever.is_on():
+			break
+		_teleport(p1, from)
+		await _wait(0.6)
+		grabbed = await _grab_with(arm, lever.handle) or grabbed
+		for i in 120:
+			if lever.is_on():
+				break
+			arm.set_target_override(arm.root_point() + Vector3(arm.reach, 0.1, 0))
+			p1.input_vec = Vector2(1.0, 0.2)
+			await get_tree().physics_frame
+		p1.input_vec = Vector2.ZERO
+		arm.release("probe")
+		arm.clear_target_override()
+	return grabbed
 
 
 ## Толкать чугунный ящик телом вправо, пока его центр не дойдёт до x_to (локально) или не включатся весы; застрял (перелез через ящик,
@@ -1043,6 +1057,231 @@ func _solve_6(r: PuzzleRoom, _coop: bool) -> bool:
 	return grabbed and broke and reached and pressed and opened
 
 
+## 7. «Разгон» (порталы): P1 встаёт на полку за чугунным ящиком и толкает его вправо — ящик падает в щель A на полу, вылетает из B
+## в левой стене и ложится на весы уступа (бортик ловит). Застрял (перелез через ящик) — заново из-за ящика, до 3 попыток.
+func _solve_7(r: PuzzleRoom, _coop: bool) -> bool:
+	var iron := r.find("Iron") as RigidBody3D
+	var scale := r.find("Scale") as PuzzlePlate
+	var pair := r.find("Portals") as PortalPair
+	var t0 := pair.transfers
+	for attempt in 3:
+		if _com(iron).y < 5.0:
+			break
+		var ic0 := _com(iron)
+		_teleport(pg.p1, Vector3(ic0.x - 1.15, 7.0, 0))
+		await _wait(0.3)
+		var still := 0.0
+		var last_x := ic0.x
+		for i in int(5.0 / TICK):
+			pg.p1.input_vec = Vector2(1.0, -0.3).normalized()
+			await get_tree().physics_frame
+			var ic := _com(iron)
+			if trace and i % 30 == 0:
+				var pc := pg.p1.centre_of_mass()
+				print("    room7 push #%d t=%.1f iron=(%.2f, %.2f) p1=(%.2f, %.2f)" % [attempt, i * TICK, ic.x - r.global_position.x, ic.y, pc.x - r.global_position.x, pc.y])
+			if ic.y < 5.0:
+				break
+			still = still + TICK if absf(ic.x - last_x) < 0.002 else 0.0
+			last_x = ic.x
+			if still > 1.0 or pg.p1.centre_of_mass().x > ic.x + 0.3:
+				break
+	pg.p1.input_vec = Vector2.ZERO
+	var v_fall := 0.0
+	var on := false
+	for i in int(6.0 / TICK):
+		if scale.is_on():
+			on = true
+			break
+		for h in pair.history:
+			if h["what"] == iron:
+				v_fall = maxf(v_fall, (h["v_in"] as Vector3).length())
+		if trace and i % 20 == 0:
+			var ic := _com(iron)
+			print("    room7 fly t=%.1f iron=(%.2f, %.2f) v=%s transfers %d scale %.0f" % [i * TICK, ic.x - r.global_position.x, ic.y, str(iron.linear_velocity), pair.transfers, scale.mass_now])
+		await get_tree().physics_frame
+	await _until(func() -> bool: return r.door().is_on(), 2.0)
+	var ic := _com(iron)
+	info["room7"] = {"iron_transfers": pair.history.filter(func(h: Dictionary) -> bool: return h["what"] == iron).size(),
+		"speed_into_A": snappedf(v_fall, 0.01), "iron_at": [snappedf(ic.x - r.global_position.x, 0.01), snappedf(ic.y, 0.01)],
+		"scale_kg": snappedf(scale.mass_now, 0.1), "transfers": pair.transfers - t0}
+	return on
+
+
+## Бочка комнаты, которую ещё можно бросить (целая взрывная в Props), или null.
+func _barrel_of(r: PuzzleRoom) -> ExplosiveBarrel:
+	for c in r.get_node("Props").get_children():
+		if c is ExplosiveBarrel and is_instance_valid(c) and not (c as ExplosiveBarrel)._exploded and not c.is_queued_for_deletion():
+			return c
+	return null
+
+
+static func _r2(v: Vector3) -> Vector2:
+	return Vector2(snappedf(v.x, 0.01), snappedf(v.y, 0.01))
+
+
+## Плавно провести куклу по точкам (тяга ∝ расстоянию, у последней точки — до остановки): с бочкой в руке без ударов — держимая
+## бочка от удара о стену быстрее 2.5 м/с загорается (Breakable, ThrownCredit), как у игрока.
+func _glide(d: Doll, pts: Array, max_s: float, reach_m := 0.35, hold: ArmAssist = null) -> bool:
+	var k := 0
+	for i in int(max_s / TICK):
+		if hold != null:
+			hold.set_target_override(hold.root_point() + Vector3(0.35, 0.5, 0))   # груз — над плечом: не болтается, не цепляет полку, рычаг, плиту
+		var c := d.centre_of_mass()
+		var p: Vector2 = pts[k]
+		var to := Vector2(p.x - c.x, p.y - c.y)
+		var last := k == pts.size() - 1
+		if to.length() < reach_m and (not last or d.com_velocity().length() < 0.8):
+			k += 1
+			if k >= pts.size():
+				d.input_vec = Vector2.ZERO
+				return true
+			continue
+		var v := d.com_velocity()
+		var want := to.normalized() * clampf(to.length() / 1.2, 0.3, 1.0) * 3.0   # желаемая скорость, м/с
+		var steer := Vector2(want.x - v.x, want.y - v.y)
+		d.input_vec = steer.limit_length(1.0) if steer.length() > 0.05 else Vector2.ZERO
+		if trace and i % 30 == 0:
+			print("    glide %s t=%.1f com=(%.2f, %.2f) → (%.2f, %.2f) [%d/%d]" % [d.name, i * TICK, c.x, c.y, p.x, p.y, k + 1, pts.size()])
+		await get_tree().physics_frame
+	d.input_vec = Vector2.ZERO
+	return false
+
+
+## Перенести куклу (ЦМ в to) и то, что у неё в руке, одним сдвигом; скорости — ноль.
+func _teleport_with(d: Doll, held: RigidBody3D, to: Vector3) -> void:
+	var shift := to - d.centre_of_mass()
+	shift.z = 0.0
+	var list: Array = d.parts.values()
+	if held != null and is_instance_valid(held):
+		list.append(held)
+	for p in list:
+		var b := p as RigidBody3D
+		b.global_position += shift
+		b.linear_velocity = Vector3.ZERO
+		b.angular_velocity = Vector3.ZERO
+		b.reset_physics_interpolation()
+
+
+## Встать на плиту (ЦМ над ней), дождаться тока.
+func _stand_on(d: Doll, plate: PuzzlePlate, max_s := 4.0, hold: ArmAssist = null) -> bool:
+	await _glide(d, [Vector2(plate.global_position.x, plate.global_position.y + 2.2), Vector2(plate.global_position.x, plate.global_position.y + 1.1)], max_s, 0.35, hold)
+	d.input_vec = Vector2(0, -0.4)
+	var on := await _until(func() -> bool: return plate.is_on(), 1.5)
+	d.input_vec = Vector2.ZERO
+	return on
+
+
+## 8. «Стрелочник» (порталы): P1 перекидывает рычаг на B2; ток — вдвоём P2 стоит на плите, соло P1 встаёт на неё сам (таймер 5 с);
+## P1 берёт бочку с полки, зависает над щелью A и бросает вниз — бочка вылетает из B2 на трещину; потом P1 (соло — снова с плиты) сам
+## ныряет в A → B2 → за разбитую трещину на плиту-защёлку → дверь открыта.
+func _solve_8(r: PuzzleRoom, coop: bool) -> bool:
+	var lever := r.find("Lever") as PuzzleLever
+	var plate := r.find("Plate") as PuzzlePlate
+	var latch := r.find("PlateC2") as PuzzlePlate
+	var wall := r.find("CrackWall") as PuzzleCrackWall
+	var pair := r.find("Portals") as PortalPair
+	var p1 := pg.p1
+	var arm := _arm(p1)
+	var grabbed := await _flip_lever(p1, lever, _at(r, -3.4, 1.0))
+	if not lever.is_on():
+		info["room8_%s" % ("coop" if coop else "solo")] = {"lever": false, "lever_grabbed": grabbed}
+		return false
+	if coop:
+		_teleport(pg.p2, _at(r, -3.8, 1.0))
+	var broke := false
+	var throws := 0
+	var via_b2 := 0
+	for attempt in 4:
+		if arm.held != null:
+			arm.release("probe")   # взорвавшаяся в руке бочка ещё не убрана из дерева
+			await _ticks(2)
+		var barrel := _barrel_of(r)
+		if barrel == null:
+			await _until(func() -> bool: return _barrel_of(r) != null, Tuning.PUZZLE_BARREL_RESPAWN_S + 3.0)
+			await _wait(1.0)
+			barrel = _barrel_of(r)
+			if barrel == null:
+				continue
+		# соло: сначала на плиту (ТАЙМЕР 5 с пошёл, когда сошёл), потом за бочкой
+		if not coop:
+			_teleport(p1, _at(r, -3.8, 1.0))
+			await _until(func() -> bool: return plate.is_on(), 1.5)
+			await _wait(0.2)
+		# бочка — на правый край полки над входом, P1 на полке справа от неё (рука-хват у куклы слева); взяла — кукла с бочкой одним
+		# сдвигом над щелью A: подлёт с грузом здесь не главное (перенос бочки рукой проверяет комната 6), главное — бросок в портал
+		_place(barrel, _at(r, -6.0, 3.02))
+		var bp := barrel.global_position
+		_teleport(p1, _at(r, -5.2, 4.0))
+		await _wait(0.4)
+		if not await _grab_with(arm, barrel):
+			if trace:
+				print("    room8 не схватил бочку %s у (%.2f, %.2f), p1 (%.2f, %.2f), held %s" % [barrel.name, bp.x - r.global_position.x, bp.y,
+					p1.centre_of_mass().x - r.global_position.x, p1.centre_of_mass().y, str(arm.held)])
+			continue
+		arm.clear_target_override()
+		await _wait(0.3)
+		if trace:
+			print("    room8 grabbed barrel hp %.1f lit %s welded %s dist %.2f" % [barrel.hp, str(barrel.lit), str(arm.is_welded()), arm.hold_distance()])
+		_teleport_with(p1, barrel, _at(r, 1.0, 2.8))
+		# рука — вниз под плечо (бочка повисает над щелью), бросок вниз
+		for i in 30:
+			arm.set_target_override(arm.root_point() + Vector3(-0.2, -arm.reach, 0))
+			await get_tree().physics_frame
+		if trace:
+			var pc := p1.centre_of_mass()
+			print("    room8 before throw: p1=(%.2f, %.2f) barrel=(%.2f, %.2f) held %s timer %s pair %s" % [pc.x - r.global_position.x, pc.y,
+				barrel.global_position.x - r.global_position.x, barrel.global_position.y, str(arm.held == barrel), str(r.find("Timer").is_on()), str(pair.is_on())])
+		arm.press_grab()
+		throws += 1
+		await _ticks(2)
+		arm.clear_target_override()
+		if trace:
+			for k in 60:
+				if not is_instance_valid(barrel) or barrel._exploded:
+					print("    room8 бочки нет на тике %d" % k)
+					break
+				if k % 4 == 0:
+					print("    room8 t=%d barrel=(%.2f, %.2f) v=%s transfers %d" % [k, barrel.global_position.x - r.global_position.x, barrel.global_position.y, str(barrel.linear_velocity), pair.transfers])
+				await get_tree().physics_frame
+		broke = await _until(func() -> bool: return not is_instance_valid(wall) or wall.broken, 4.0)
+		for h in pair.history:
+			if h["what"] == barrel and String(h["to"]) == "B2":
+				via_b2 += 1
+		if trace:
+			for h in pair.history:
+				print("    room8 перенос %s %s → %s кадр %d из %s" % [str(h["what"]), h["from"], h["to"], int(h["frame"]), str(_r2(h["c_in"] - r.global_position))])
+			print("    room8 throw %d: broke %s, переносов %d, рычаг %s, бочка %s" % [throws, str(broke), pair.transfers, str(lever.is_on()),
+				str(barrel.global_position - r.global_position) if is_instance_valid(barrel) else "нет"])
+		if broke:
+			break
+	if not broke:
+		info["room8_%s" % ("coop" if coop else "solo")] = {"lever": true, "throws": throws, "wall_broken": false}
+		return false
+	await _wait(0.5)
+	if not coop:
+		await _stand_on(p1, plate)
+	var t1 := pair.transfers
+	var over := false   # сначала над щель (поверх рычага), потом вниз
+	for i in int(5.0 / TICK):
+		if pair.transfers > t1 and pair.history.back()["what"] == p1:
+			break
+		var c := p1.centre_of_mass()
+		over = over or absf(c.x - _at(r, 0.2, 0).x) < 0.4
+		var tgt := Vector2(_at(r, 0.2, -0.8).x, -0.8) if over else Vector2(_at(r, 0.2, 2.2).x, 2.2)
+		p1.input_vec = (tgt - Vector2(c.x, c.y)).normalized()
+		await get_tree().physics_frame
+	p1.input_vec = Vector2.ZERO
+	var in_chamber := pair.transfers > t1 and String(pair.history.back()["to"]) == "B2"
+	await _steer(p1, [Vector2(_at(r, 7.1, 6.8).x, 6.8)], 5.0, 0.5)
+	p1.input_vec = Vector2(0, -0.4)
+	var latched := await _until(func() -> bool: return latch.is_on(), 2.0)
+	p1.input_vec = Vector2.ZERO
+	await _until(func() -> bool: return r.door().is_on(), 2.0)
+	info["room8_%s" % ("coop" if coop else "solo")] = {"lever": true, "throws": throws, "barrel_via_B2": via_b2, "wall_broken": broke,
+		"p1_into_chamber": in_chamber, "latch": latched}
+	return broke and in_chamber and latched
+
+
 ## Границы: в каждой комнате (двери закрыты) кукла 8 раз по 3 с летит в одну сторону изо всех сил, с ускорением — ЦМ не выходит за
 ## внутренность комнаты (+ BOUNDS_MARGIN_M на толщину куклы у стены), комната не сменяется (в тамбур при закрытой двери не попасть).
 const BOUNDS_MARGIN_M := 0.4
@@ -1052,10 +1291,14 @@ func _bounds() -> void:
 	print("--- bounds")
 	await _load_pg(0, false)
 	var worst := {}
-	for i in 6:
+	for i in pg.rooms.size():
 		pg.goto_room(i)
 		var r := pg.rooms[i]
 		var inner := r.inner_global().grow(BOUNDS_MARGIN_M)
+		var pockets: Array = []   # карманы порталов (комнаты 7–8): ЦМ там — не побег, кукла в щели
+		for pp in r.find_children("*", "PortalPair", true, false):
+			for po in (pp as PortalPair).portals():
+				pockets.append((po as Portal).pocket_rect().grow(BOUNDS_MARGIN_M))
 		var p1 := pg.p1
 		var escaped := ""
 		var legit := 0
@@ -1086,7 +1329,7 @@ func _bounds() -> void:
 					else:
 						escaped = "комната сменилась при закрытой двери (направление %d°)" % roundi(rad_to_deg(ang))
 					break
-				if not inner.has_point(c2):
+				if not inner.has_point(c2) and not pockets.any(func(pr: Rect2) -> bool: return pr.has_point(c2)):
 					var out := maxf(maxf(inner.position.x - c2.x, c2.x - inner.end.x), maxf(inner.position.y - c2.y, c2.y - inner.end.y))
 					max_out = maxf(max_out, out)
 					if escaped == "" and r.door().open_frac() < 0.3:

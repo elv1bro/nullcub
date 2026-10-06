@@ -2125,9 +2125,9 @@
 	"сила и удар": "power and shot",
 	"рывок в полёте": "mid-air nudge",
 	"Головоломки вдвоём": "Co-op puzzles",
-	"1–2 игрока · 6 комнат": "1–2 players · 6 rooms",
-	"Шесть комнат: плиты, рычаг, двери, лифт, гравитация вбок и тяжёлый ящик на двоих. Вдвоём веселее, но один тоже пройдёт. Застрял — R вернёт комнату к началу.": "Six rooms: pressure plates, a lever, doors, a lift, sideways gravity and a heavy crate meant for two. It's more fun together, but one player can make it too. Stuck? R resets the room.",
-	"6 комнат": "6 rooms",
+	"1–2 игрока · 8 комнат": "1–2 players · 8 rooms",
+	"Восемь комнат: плиты, рычаг, двери, лифт, гравитация вбок, ящик на двоих и порталы. Вдвоём веселее, но один тоже пройдёт. Застрял — R вернёт комнату к началу.": "Eight rooms: pressure plates, a lever, doors, a lift, sideways gravity, a heavy crate meant for two and portals. It's more fun together, but one player can make it too. Stuck? R resets the room.",
+	"8 комнат": "8 rooms",
 	"взять / положить": "grab / drop",
 	"комната заново": "restart the room",
 	"1–2 игрока · 3 волны": "1–2 players · 3 waves",
@@ -2177,7 +2177,6 @@
 	"отдых": "resting",
 	"тает": "draining",
 	"%d м — ВЕРХ": "%d m — TOP",
-	"ФИНИШ": "FINISH",
 	"Заново — к подножию": "Restart — back to the foot",
 	"Тяжесть шахты: %.0f м/с²": "Shaft gravity: %.0f m/s²",
 	"P2 ушёл — лезешь один": "P2 left — climbing solo",
@@ -2231,5 +2230,10 @@
 	"газ / назад": "drive / reverse",
 	"ручник": "handbrake",
 	"Тридцать метров скалы, а тяга не бесконечная: полёт тратит запас, отдышаться можно только на уступе или на обеих руках. Хватайся за камень и подтягивайся — гладкие синие плиты не держат.": "Thirty metres of rock, and thrust is not endless: flying drains your reserve, and you only catch your breath on a ledge or hanging by both hands. Grab the rock and pull yourself up — the smooth blue slabs won't hold.",
-	"Сто метров плохой дороги и машина с открытым кузовом, полным ящиков. Один за рулём, второй толкает в гору и ловит то, что вылетело на кочках, а перед провалом нужна доска.": "A hundred metres of bad road and a truck with an open bed full of crates. One drives, the other pushes uphill and catches whatever bounces out on the bumps — and the gap needs a plank."
+	"Сто метров плохой дороги и машина с открытым кузовом, полным ящиков. Один за рулём, второй толкает в гору и ловит то, что вылетело на кочках, а перед провалом нужна доска.": "A hundred metres of bad road and a truck with an open bed full of crates. One drives, the other pushes uphill and catches whatever bounces out on the bumps — and the gap needs a plank.",
+	"Разгон с высоты": "Momentum",
+	"Порталы: что ушло в щель A, вылетает из щели B с той же скоростью. Чугунный ящик не поднять — столкни его с полки в A: разгон с высоты донесёт его до весов.": "Portals: whatever goes into slot A flies out of slot B at the same speed. The cast-iron crate can't be lifted — push it off the shelf into A: the speed from the drop carries it to the scale.",
+	"Стрелочник": "Switchman",
+	"Плита включает порталы (таймер 5 с), рычаг выбирает выход A: B1 или B2 в камеру с трещиной. Один стоит на плите, другой ставит рычаг на B2 и бросает бочку в A. Потом — сами через A к двери.": "The plate powers the portals (5 s timer), the lever picks where A leads: B1, or B2 into the cracked chamber. One stands on the plate, the other sets the lever to B2 and throws a barrel into A. Then go through A to the door yourselves.",
+	"Один: встань на плиту — 5 с, чтобы бросить бочку в A; потом снова на плиту и сам в A.": "Solo: step on the plate — you have 5 s to throw the barrel into A; then the plate again and dive into A yourself."
 }
