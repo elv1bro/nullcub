@@ -48,12 +48,17 @@ const PLAYGROUND_OUT := "res://scenes/playground_null_hall.tscn"
 const BEAM_SHADER := "res://assets/shaders/light_beam.gdshader"
 const DRONE_SCRIPT := "res://scenes/arena/drone_orbit.gd"
 const N0_HOST_SCRIPT := "res://scripts/n0/n0_host.gd"
-## толпа: спрайты модульных существ (tools/blender/crowd_sprites.py), приглушены в шейдере (brightness) — фон не спорит с бойцами
+## толпа: очертания людей (06.10, мир людей — tools/gen_crowd_people.py; прежние спрайты кукол — tools/blender/crowd_sprites.py),
+## у каждого зрителя свой цвет одежды (CROWD_COLORS, цвет экземпляра MultiMesh), приглушены в шейдере (brightness) — фон не спорит с бойцами
 const CROWD_ATLAS := "res://assets/textures/crowd/crowd_atlas.png"
 const CROWD_META := "res://assets/textures/crowd/crowd_atlas.json"
 const CROWD_SHADER := "res://assets/shaders/crowd_sprite.gdshader"
 const CROWD_EMPTY := 0.12                  # доля пустых мест
-const CROWD_SCALE := Vector2(0.62, 0.74)   # масштаб спрайта (кукла кита ~1.8 м → зритель 1.1–1.35 м)
+const CROWD_SCALE := Vector2(0.62, 0.74)   # масштаб спрайта (фигура 1.2–1.86 м → зритель 0.75–1.4 м: трибуны под этот масштаб)
+## Цвета одежды зрителей (sRGB): у каждого свой, без деталей — силуэт одного цвета, ноги чуть темнее (атлас).
+const CROWD_COLORS := [Color(0.86, 0.24, 0.2), Color(0.96, 0.55, 0.16), Color(0.95, 0.8, 0.26), Color(0.22, 0.66, 0.56),
+	Color(0.24, 0.46, 0.86), Color(0.16, 0.26, 0.52), Color(0.56, 0.32, 0.76), Color(0.86, 0.36, 0.6), Color(0.32, 0.66, 0.3),
+	Color(0.52, 0.56, 0.26), Color(0.9, 0.9, 0.86), Color(0.52, 0.54, 0.57), Color(0.4, 0.28, 0.22), Color(0.16, 0.16, 0.19)]
 
 const MATS := {
 	"Hall_Steel": {"pbr": "paint_marks", "tint": [0.085, 0.09, 0.105], "rough": 0.75, "metal": 0.35},
@@ -386,10 +391,13 @@ func _crowd_sprites(parent: Node3D, xfs: Array[Transform3D], customs: Array[Colo
 	mat.set_shader_parameter("poses", float(meta.get("poses", 3)))
 	var data := PackedFloat32Array()
 	var colors := PackedColorArray()
+	var crng := RandomNumberGenerator.new()
+	crng.seed = 607
 	for xf in xfs:
 		data.append_array([xf.basis.x.x, xf.basis.x.y, xf.basis.x.z, xf.basis.y.x, xf.basis.y.y, xf.basis.y.z,
 			xf.basis.z.x, xf.basis.z.y, xf.basis.z.z, xf.origin.x, xf.origin.y, xf.origin.z])
-		colors.append(Color.WHITE)
+		var c: Color = CROWD_COLORS[crng.randi() % CROWD_COLORS.size()]
+		colors.append(c * crng.randf_range(0.85, 1.08))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = "Spectators"
 	mmi.set_script(load(CROWD_SCRIPT))

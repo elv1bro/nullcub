@@ -1,7 +1,9 @@
 ## Сборщик сцены главного меню «Гараж + эфир»: scenes/menu/garage_menu.tscn (скрипт поведения — scenes/menu/garage_menu.gd).
 ## Раскладка — по кадру стиля автора docs/refs/menu-garage/G01-garage-keyframe.png: ворота лифта на скошенном левом углу,
-## верстак с перфопанелью и чертежом, стенд на разметке, телевизор на тумбе с полкой трофеев, ящики с кружкой на ковре,
-## справа тёмный угол (шкафчики, стеллаж, тумба с радио, щиток). Модели — assets/models/garage (tools/blender/garage_kit.py).
+## верстак с перфопанелью и чертежом, разметка стенда (стенд с куклой — спящей мастерской), телевизор на тумбе с полкой трофеев,
+## ящики с кружкой на ковре, справа тумба с радио и щиток. 06.10 (мир людей, гараж от первого лица): точки камер — на высоте глаз
+## героя, на верстаке консоль связи с нейрошлемом и кресло пилота рядом, в правом углу — стенд экранов с показателями бойца,
+## N0-помощник. Модели — assets/models/garage (tools/blender/garage_kit.py).
 ##   godot --headless --path godot --import                       (после новых glb — сначала импорт)
 ##   godot --headless --path godot -s res://tools/build_garage_menu.gd
 ## ВНИМАНИЕ: сборщик перезаписывает сцену целиком — правки в редакторе переносить сюда (таблицы ниже), иначе пропадут.
@@ -13,6 +15,25 @@ const M := "res://assets/models/garage/Garage_%s.glb"
 const OUT := "res://scenes/menu/garage_menu.tscn"
 const IMPORT_SCRIPT := "res://tools/garage_import.gd"
 const BACK := -3.0
+## Глаза героя (06.10: гараж от первого лица — точки камер на этой высоте).
+const EYE := 1.66
+## Консоль связи на правом краю верстака (верх столешницы 0.92) и точка, где на её подставке лежит нейрошлем (центр обода; в модели
+## Garage_LinkConsole — HEADSET_REST, tools/blender/garage_kit.py).
+const CONSOLE_POS := Vector3(0.2, 0.92, -2.42)
+const CONSOLE_YAW := -12.0
+const HEADSET_REST := Vector3(0.13, 0.33, 0.0)
+## Стенд экранов поперёк правого заднего угла, лицом в комнату (−X, +Z).
+const RACK_POS := Vector3(3.95, 0, -1.87)
+const RACK_YAW := -45.0
+## Мониторы стенда: модель, место на ферме (x вбок, y высота, z вперёд), что показывает (GarageStatsWall.draw_panel).
+const RACK_SCREENS := [
+	["Flat", Vector3(-0.71, 2.2, 0.07), "energy"], ["Small", Vector3(-0.19, 2.24, 0.07), "pulse"],
+	["Small", Vector3(0.19, 2.24, 0.07), "link"], ["Flat", Vector3(0.71, 2.2, 0.07), "parts"],
+	["Small", Vector3(-0.82, 1.62, 0.07), "weapon"], ["Wide", Vector3(0.0, 1.62, 0.07), "main"],
+	["Small", Vector3(0.82, 1.62, 0.07), "thrust"],
+	["Flat", Vector3(-0.6, 1.1, 0.07), "mass"], ["Small", Vector3(0.0, 1.1, 0.07), "hp"], ["Flat", Vector3(0.6, 1.1, 0.07), "joints"],
+	["CRT", Vector3(-0.5, 0.66, 0.3), "league"], ["CRT", Vector3(0.5, 0.66, 0.3), "hall"],
+]
 
 var scene_root: Node3D
 
@@ -179,27 +200,24 @@ func _props(g: Node3D) -> void:
 	put(g, "Cup_B", Vector3(1.22, 1.64, -2.74), -10.0, "CupTV")
 	put(g, "Books", Vector3(2.22, 1.64, -2.74), 8.0)
 	put(g, "Plant", Vector3(2.6, 1.64, -2.76), 120.0, "PlantTV")
-	# кукла игрока (текущая сборка из мастерской) сидит на ящике слева от телевизора, лицом к экрану (scenes/menu/garage_doll.gd)
-	var seat := Vector3(0.85, 0, -1.35)
-	var to_tv := Vector3(1.62, 0, -2.26) - seat
-	var yaw := rad_to_deg(atan2(to_tv.x, to_tv.z))
-	put(g, "Crate", seat, yaw + 8.0, "CrateSeat")
-	var pd := Node3D.new()
-	pd.name = "PlayerDoll"
-	pd.set_script(load("res://scenes/menu/garage_doll.gd"))
-	pd.position = seat
-	pd.rotation_degrees = Vector3(0, yaw, 0)
-	pd.set("seat_height", 0.5)
-	g.add_child(pd)
-	pd.owner = scene_root
-	# МАСТЕРСКАЯ: верстак, перфопанель, чертёж, стенд на разметке, табурет, лампа
+	# (06.10: кукла больше не сидит на ящике — гараж от первого лица, герой — человек; кукла висит на стенде мастерской всегда:
+	# это стенд и кукла спящей встроенной мастерской, scenes/menu/garage_workshop.gd, «витрина»)
+	# МАСТЕРСКАЯ: верстак, перфопанель, чертёж, разметка стенда (сам стенд — BuildStand мастерской), лампа
 	put(g, "Workbench", Vector3(-0.6, 0, -2.62))
 	put(g, "Pegboard", Vector3(-0.6, 0.97, BACK))
 	put(g, "Card_Blueprint", Vector3(-1.1, 2.42, BACK), 0.0, "Blueprint")
-	put(g, "Stand", Vector3(-0.75, 0, -1.2), 20.0)
 	put(g, "HazardSquare", Vector3(-0.75, 0.0, -1.2))
-	put(g, "Stool", Vector3(0.5, 0, -1.95), 15.0)
 	put(g, "Lamp", Vector3(-0.55, 3.4, -2.05), 0.0, "Lamp")
+	# пилотское место (06.10, LORE_V2 §2а п. 3): консоль связи с нейрошлемом на правом краю верстака, кресло пилота рядом
+	# (кресло брата — он пилотирует отсюда); шлем — отдельный узел: его берут руки героя (scenes/menu/garage_headset.gd)
+	var console := put(g, "LinkConsole", CONSOLE_POS, CONSOLE_YAW, "LinkConsole")
+	var rest := CONSOLE_POS + Basis(Vector3.UP, deg_to_rad(CONSOLE_YAW)) * HEADSET_REST
+	put(g, "NeuroHeadset", rest, CONSOLE_YAW, "Headset")
+	if console != null:
+		console.set_meta("headset_rest", rest)
+	var chair := Vector3(0.95, 0, -1.98)
+	var to_stand := Vector3(-0.75, 0, -1.2) - chair
+	put(g, "PilotChair", chair, rad_to_deg(atan2(to_stand.x, to_stand.z)) + 25.0, "PilotChair")
 	# стена между верстаком и ТВ: флаг лиги, фото, афиша
 	put(g, "Banner", Vector3(0.15, 2.86, -2.97), 0.0, "Banner")
 	var photos := [["A", Vector3(-1.95, 2.3, BACK), 4.0], ["B", Vector3(-1.9, 1.95, BACK), -6.0], ["C", Vector3(-0.33, 2.58, BACK), 3.0],
@@ -215,16 +233,22 @@ func _props(g: Node3D) -> void:
 	put(g, "Crate_Small", Vector3(-4.05, 0.5, 3.5), 10.0, "CrateGate")
 	put(g, "Jerrycan", Vector3(-3.4, 0, 3.85), -30.0)
 	put(g, "Metal_Barrel", Vector3(-3.5, 0, 3.0), 0.0, "Barrel", Vector3.ZERO, "res://assets/models/scrap/props/Metal_Barrel.glb")
-	# правый тёмный угол: шкафчики, стеллаж, лестница, кейсы, покрышка, конус
-	put(g, "Lockers", Vector3(4.05, 0, -2.72))
-	put(g, "Ladder", Vector3(3.45, 0, -2.75), 0.0, "Ladder", Vector3(-14, 0, 0), "res://assets/models/scrap/kit/Ladder.glb")
-	put(g, "Storage", Vector3(4.45, 0, -0.55), -90.0)
-	put(g, "Case_Navy", Vector3(4.45, 0.14, -0.4), -80.0)
-	put(g, "Crate_Small", Vector3(4.45, 0.64, -0.85), -95.0, "CrateShelf")
-	put(g, "Books", Vector3(4.45, 1.14, -0.3), -70.0, "BooksShelf")
-	put(g, "Case_Olive", Vector3(3.85, 0, -1.75), -15.0)
-	put(g, "Tire", Vector3(3.7, 0, 0.6), 0.0)
-	put(g, "Tire", Vector3(3.7, 0.18, 0.62), 25.0, "Tire2")
+	# правый угол — стенд экранов с показателями бойца (06.10, scenes/menu/garage_stats_wall.gd): ферма поперёк угла лицом в комнату,
+	# мониторы по RACK_SCREENS (у каждого meta panel — что показывает, model — размер экрана); стеллаж сдвинут к правой стене
+	var rack := put(g, "ScreenRack", RACK_POS, RACK_YAW, "ScreenRack")
+	if rack != null:
+		for sc in RACK_SCREENS:
+			var mon := put(rack, "Monitor_" + String(sc[0]), sc[1], 0.0, "Screen_" + String(sc[2]))
+			if mon != null:
+				mon.set_meta("panel", String(sc[2]))
+				mon.set_meta("model", String(sc[0]))
+	put(g, "Storage", Vector3(4.45, 0, 0.05), -90.0)
+	put(g, "Case_Navy", Vector3(4.45, 0.14, 0.2), -80.0)
+	put(g, "Crate_Small", Vector3(4.45, 0.64, -0.25), -95.0, "CrateShelf")
+	put(g, "Books", Vector3(4.45, 1.14, 0.3), -70.0, "BooksShelf")
+	put(g, "Case_Olive", Vector3(4.05, 0, -0.95), -60.0)
+	put(g, "Tire", Vector3(3.7, 0, 0.95), 0.0)
+	put(g, "Tire", Vector3(3.7, 0.18, 0.97), 25.0, "Tire2")
 	put(g, "Cone", Vector3(3.3, 0, 1.5), 0.0)
 	# НАСТРОЙКИ / ВЫХОД: тумба с радио, щиток с рубильником на правой стене
 	put(g, "Cabinet", Vector3(4.42, 0, 1.25), -90.0)
@@ -232,6 +256,13 @@ func _props(g: Node3D) -> void:
 	put(g, "Breaker", Vector3(4.7, 1.2, 2.05), -90.0)
 	# передний план слева (размыт в кадре): ящик
 	put(g, "Crate", Vector3(-2.3, 0, 2.7), 18.0, "CrateFront")
+	# N0 — помощник в гараже (06.10, scenes/menu/garage_n0.gd): парит у того, на что смотрит герой
+	var n0 := Node3D.new()
+	n0.name = "N0"
+	n0.set_script(load("res://scenes/menu/garage_n0.gd"))
+	n0.position = Vector3(1.15, 1.95, -1.1)
+	g.add_child(n0)
+	n0.owner = scene_root
 
 
 # ---------------------------------------------------------------- свет (meta zone → garage_menu.gd)
@@ -289,6 +320,10 @@ func _lights(g: Node3D) -> void:
 	# прочее: красная лампа пульта, слабая холодная подсветка со стороны камеры
 	_light(g, "omni", "ControlRed", "room", Vector3(-1.98, 1.6, -2.75), Color(1.0, 0.12, 0.06), 0.7, 1.3)
 	_light(g, "omni", "Fill", "room", Vector3(0.8, 2.6, 2.6), Color(0.5, 0.55, 0.8), 0.35, 9.0, Vector3.ZERO, 0, false, 0.0)
+	# стенд экранов: холодное свечение мониторов на пол и стены угла; консоль связи — голубое кольцо на верстаке
+	_light(g, "omni", "RackGlow", "rack", Vector3(3.55, 1.6, -1.45), Color(0.45, 0.75, 1.0), 0.9, 3.4, Vector3.ZERO, 0, false, 0.6)
+	_light(g, "spot", "RackTop", "rack", Vector3(3.3, 3.1, -1.1), Color(0.75, 0.85, 1.0), 1.6, 4.0, Vector3(3.95, 0.4, -1.87), 50.0, false, 0.4)
+	_light(g, "omni", "LinkGlow", "bench", Vector3(0.3, 1.35, -2.2), Color(0.35, 0.85, 1.0), 0.35, 1.2, Vector3.ZERO, 0, false, 0.2)
 	# тёплая подсветка ящиков и ковра спереди (в концепте они в тёплом свете, а не силуэтом против экрана)
 	_light(g, "omni", "CrateWarm", "tv", Vector3(1.0, 1.3, 0.3), Color(1.0, 0.66, 0.4), 0.9, 3.6, Vector3.ZERO, 0, false, 0.2)
 
@@ -321,13 +356,19 @@ func _spot_yp(g: Node3D, name: String, pos: Vector3, yaw: float, pitch: float, f
 
 
 func _spots(g: Node3D) -> void:
-	_spot_yp(g, "Title", Vector3(2.75, 1.7, 2.3), 18.0, -6.0, 55.0)
-	_spot(g, "Story", Vector3(2.55, 1.38, 0.35), Vector3(1.7, 1.25, -2.6), 0.34, 46.0)
-	_spot(g, "Quick", Vector3(-0.35, 1.6, 0.95), Vector3(-3.45, 1.35, -1.75), 0.36, 50.0)
-	_spot(g, "Workshop", Vector3(0.9, 1.55, 0.85), Vector3(-0.75, 1.05, -2.0), 0.35, 50.0)
-	_spot(g, "Trophies", Vector3(2.45, 1.95, 0.75), Vector3(1.8, 2.45, -2.85), 0.33, 42.0)
-	_spot(g, "Settings", Vector3(1.9, 1.6, 1.15), Vector3(4.55, 1.2, 1.55), 0.36, 50.0)
-	_spot(g, "SettingsClose", Vector3(2.75, 1.5, 2.55), Vector3(4.5, 1.3, 1.55), 0.34, 46.0)
+	# 06.10: от первого лица — камера на высоте глаз героя (EYE); между пунктами он ходит по комнате у ковра (scenes/menu/garage_view.gd)
+	_spot_yp(g, "Title", Vector3(2.75, EYE, 2.3), 18.0, -6.0, 55.0)
+	_spot(g, "Story", Vector3(2.45, EYE - 0.04, 0.55), Vector3(1.7, 1.15, -2.6), 0.34, 48.0)
+	_spot(g, "Quick", Vector3(-0.2, EYE, 0.9), Vector3(-3.45, 1.3, -1.75), 0.36, 52.0)
+	_spot(g, "Workshop", Vector3(1.15, EYE, 0.75), Vector3(-0.6, 1.05, -1.75), 0.36, 52.0)
+	_spot(g, "Fighter", Vector3(1.5, EYE, 0.62), RACK_POS + Vector3(0, 1.55, 0), 0.31, 55.0)
+	_spot(g, "FighterClose", Vector3(2.55, EYE - 0.04, -0.62), RACK_POS + Vector3(0, 1.6, 0), 0.4, 58.0)
+	_spot(g, "Trophies", Vector3(2.35, EYE, 0.6), Vector3(1.8, 2.45, -2.85), 0.33, 44.0)
+	_spot(g, "Settings", Vector3(2.0, EYE, 1.0), Vector3(4.55, 1.2, 1.55), 0.36, 50.0)
+	_spot(g, "SettingsClose", Vector3(3.0, EYE - 0.06, 2.3), Vector3(4.5, 1.3, 1.55), 0.34, 46.0)
+	# у верстака: шлем на подставке консоли перед глазами, руки дотягиваются (scenes/menu/garage_headset.gd)
+	var rest := CONSOLE_POS + Basis(Vector3.UP, deg_to_rad(CONSOLE_YAW)) * HEADSET_REST
+	_spot(g, "Pilot", Vector3(0.38, EYE - 0.02, -1.62), rest + Vector3(0, -0.08, 0), 0.5, 62.0)
 	# ныряние при входе: в экран телевизора, к иллюминатору ворот, к стенду
 	_spot(g, "IntoTV", Vector3(1.62, 1.155, -1.66), Vector3(1.62, 1.155, -2.27), 0.5, 50.0)
 	_spot(g, "IntoGate", Vector3(-2.75, 1.5, -1.0), Vector3(-3.84, 1.6, -2.1), 0.5, 50.0)

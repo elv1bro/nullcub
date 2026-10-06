@@ -37,7 +37,6 @@ func _ready() -> void:
 	menu.dry_run = true
 	add_child(menu)
 	menu.workshop.ws_overrides = {"autosave_name": "_probe_gwh", "load_autosave": false, "start_preset": "kit_brawler"}
-	(menu.player_doll as GarageDoll).blueprint_path = CraftEdit.save_path("_probe_gwh")
 	last_us = Time.get_ticks_usec()
 	_run.call_deferred()
 

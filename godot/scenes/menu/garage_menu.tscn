@@ -1,65 +1,69 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scenes/menu/garage_menu.gd" id="1_s5sbx"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Floor.glb" id="2_yb37q"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Ceiling.glb" id="3_4vppb"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Beam.glb" id="4_pb4no"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Wall.glb" id="5_p13ae"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Wall_Short.glb" id="6_1j84h"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Gate.glb" id="7_pr7o5"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Post_Hazard.glb" id="8_dhou4"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Post.glb" id="9_jm463"]
-[ext_resource type="PackedScene" path="res://assets/models/arena/null_hall/Fighter_Gate.glb" id="10_epjt1"]
-[ext_resource type="Script" path="res://scenes/menu/garage_hall_gate.gd" id="11_bvba2"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Pipe.glb" id="12_tbdvc"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Valve.glb" id="13_tsfwj"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Sideboard.glb" id="14_bd0ga"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_TV.glb" id="15_jnvid"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Rug.glb" id="16_mduh1"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Crate.glb" id="17_6v0yp"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Crate_Small.glb" id="18_rme4n"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Mug.glb" id="19_l6cna"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Toolbox.glb" id="20_arkdm"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Shelf_Wall.glb" id="21_6jk3t"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Plant.glb" id="22_sts70"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Helmet.glb" id="23_cuhsx"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Boombox.glb" id="24_30n87"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_QBox.glb" id="25_svvgc"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Cup_A.glb" id="26_kx8fl"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Cup_B.glb" id="27_op532"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Books.glb" id="28_uf2gi"]
-[ext_resource type="Script" path="res://scenes/menu/garage_doll.gd" id="29_fsbo5"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Workbench.glb" id="30_h03lr"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Pegboard.glb" id="31_nbvnp"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Blueprint.glb" id="32_100ht"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Stand.glb" id="33_f2m1a"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_HazardSquare.glb" id="34_bnho2"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Stool.glb" id="35_nphq8"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Lamp.glb" id="36_yqard"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Banner.glb" id="37_pln2w"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_A.glb" id="38_a4coa"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_B.glb" id="39_mimsx"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_C.glb" id="40_nhtiw"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_D.glb" id="41_wwblo"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_E.glb" id="42_to7m3"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_F.glb" id="43_oeyjy"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Poster_A.glb" id="44_kpn63"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Poster_B.glb" id="45_wqvnt"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_ControlBox.glb" id="46_16i05"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Jerrycan.glb" id="47_py013"]
-[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Metal_Barrel.glb" id="48_vc0le"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Lockers.glb" id="49_x3lea"]
-[ext_resource type="PackedScene" path="res://assets/models/scrap/kit/Ladder.glb" id="50_akcv5"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Storage.glb" id="51_6cvfy"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Case_Navy.glb" id="52_614f7"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Case_Olive.glb" id="53_lpb6q"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Tire.glb" id="54_ye2hs"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Cone.glb" id="55_2jc2q"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Cabinet.glb" id="56_c0l4m"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Radio.glb" id="57_a4tq7"]
-[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Breaker.glb" id="58_lc6fi"]
+[ext_resource type="Script" path="res://scenes/menu/garage_menu.gd" id="1_p13ae"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Floor.glb" id="2_1j84h"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Ceiling.glb" id="3_pr7o5"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Beam.glb" id="4_dhou4"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Wall.glb" id="5_jm463"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Wall_Short.glb" id="6_epjt1"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Gate.glb" id="7_bvba2"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Post_Hazard.glb" id="8_tbdvc"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Post.glb" id="9_tsfwj"]
+[ext_resource type="PackedScene" path="res://assets/models/arena/null_hall/Fighter_Gate.glb" id="10_bd0ga"]
+[ext_resource type="Script" path="res://scenes/menu/garage_hall_gate.gd" id="11_jnvid"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Pipe.glb" id="12_mduh1"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Valve.glb" id="13_6v0yp"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Sideboard.glb" id="14_rme4n"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_TV.glb" id="15_l6cna"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Rug.glb" id="16_arkdm"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Crate.glb" id="17_6jk3t"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Crate_Small.glb" id="18_sts70"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Mug.glb" id="19_cuhsx"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Toolbox.glb" id="20_30n87"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Shelf_Wall.glb" id="21_svvgc"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Plant.glb" id="22_kx8fl"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Helmet.glb" id="23_op532"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Boombox.glb" id="24_uf2gi"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_QBox.glb" id="25_fsbo5"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Cup_A.glb" id="26_h03lr"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Cup_B.glb" id="27_nbvnp"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Books.glb" id="28_100ht"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Workbench.glb" id="29_f2m1a"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Pegboard.glb" id="30_bnho2"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Blueprint.glb" id="31_nphq8"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_HazardSquare.glb" id="32_yqard"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Lamp.glb" id="33_pln2w"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_LinkConsole.glb" id="34_a4coa"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_NeuroHeadset.glb" id="35_mimsx"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_PilotChair.glb" id="36_nhtiw"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Banner.glb" id="37_wwblo"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_A.glb" id="38_to7m3"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_B.glb" id="39_oeyjy"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_C.glb" id="40_kpn63"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_D.glb" id="41_wqvnt"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_E.glb" id="42_16i05"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Photo_F.glb" id="43_py013"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Poster_A.glb" id="44_vc0le"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Card_Poster_B.glb" id="45_x3lea"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_ControlBox.glb" id="46_akcv5"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Jerrycan.glb" id="47_6cvfy"]
+[ext_resource type="PackedScene" path="res://assets/models/scrap/props/Metal_Barrel.glb" id="48_614f7"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_ScreenRack.glb" id="49_lpb6q"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Monitor_Flat.glb" id="50_ye2hs"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Monitor_Small.glb" id="51_2jc2q"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Monitor_Wide.glb" id="52_c0l4m"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Monitor_CRT.glb" id="53_a4tq7"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Storage.glb" id="54_lc6fi"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Case_Navy.glb" id="55_mour5"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Case_Olive.glb" id="56_thfsp"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Tire.glb" id="57_beuow"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Cone.glb" id="58_76ch3"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Cabinet.glb" id="59_of7yb"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Radio.glb" id="60_js51l"]
+[ext_resource type="PackedScene" path="res://assets/models/garage/Garage_Breaker.glb" id="61_67bgk"]
+[ext_resource type="Script" path="res://scenes/menu/garage_n0.gd" id="62_5p83g"]
 
-[sub_resource type="Environment" id="Environment_mour5"]
+[sub_resource type="Environment" id="Environment_p7mfu"]
 background_mode = 1
 background_color = Color(0.006, 0.006, 0.01, 1)
 ambient_light_source = 2
@@ -84,255 +88,313 @@ adjustment_enabled = true
 adjustment_contrast = 1.08
 adjustment_saturation = 1.1
 
-[node name="GarageMenu" type="Node3D" unique_id=1834958184]
-script = ExtResource("1_s5sbx")
+[node name="GarageMenu" type="Node3D" unique_id=1226050184]
+script = ExtResource("1_p13ae")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1054000912]
-environment = SubResource("Environment_mour5")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1557495002]
+environment = SubResource("Environment_p7mfu")
 
-[node name="Room" type="Node3D" parent="." unique_id=1359880086]
+[node name="Room" type="Node3D" parent="." unique_id=998166627]
 
-[node name="Floor" type="Node3D" parent="Room" unique_id=970669351 instance=ExtResource("2_yb37q")]
+[node name="Floor" type="Node3D" parent="Room" unique_id=970669351 instance=ExtResource("2_1j84h")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
 
-[node name="Ceiling" type="Node3D" parent="Room" unique_id=725461680 instance=ExtResource("3_4vppb")]
+[node name="Ceiling" type="Node3D" parent="Room" unique_id=725461680 instance=ExtResource("3_pr7o5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0.5)
 
-[node name="Beam" type="Node3D" parent="Room" unique_id=467920518 instance=ExtResource("4_pb4no")]
+[node name="Beam" type="Node3D" parent="Room" unique_id=467920518 instance=ExtResource("4_dhou4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.08, -2.35)
 
-[node name="Beam2" type="Node3D" parent="Room" unique_id=833923246 instance=ExtResource("4_pb4no")]
+[node name="Beam2" type="Node3D" parent="Room" unique_id=1724881087 instance=ExtResource("4_dhou4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.08, -0.85)
 
-[node name="Beam3" type="Node3D" parent="Room" unique_id=1291237851 instance=ExtResource("4_pb4no")]
+[node name="Beam3" type="Node3D" parent="Room" unique_id=976793755 instance=ExtResource("4_dhou4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.08, 0.65)
 
-[node name="Beam4" type="Node3D" parent="Room" unique_id=536895184 instance=ExtResource("4_pb4no")]
+[node name="Beam4" type="Node3D" parent="Room" unique_id=361166030 instance=ExtResource("4_dhou4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.08, 2.15)
 
-[node name="WallBack" type="Node3D" parent="Room" unique_id=138638821 instance=ExtResource("5_p13ae")]
+[node name="WallBack" type="Node3D" parent="Room" unique_id=138638821 instance=ExtResource("5_jm463")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, -3)
 
-[node name="WallBack2" type="Node3D" parent="Room" unique_id=72787827 instance=ExtResource("5_p13ae")]
+[node name="WallBack2" type="Node3D" parent="Room" unique_id=1866637497 instance=ExtResource("5_jm463")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0, -3)
 
-[node name="WallBack3" type="Node3D" parent="Room" unique_id=1979152340 instance=ExtResource("5_p13ae")]
+[node name="WallBack3" type="Node3D" parent="Room" unique_id=1222868824 instance=ExtResource("5_jm463")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 0, -3)
 
-[node name="WallBack4" type="Node3D" parent="Room" unique_id=1985496001 instance=ExtResource("6_1j84h")]
+[node name="WallBack4" type="Node3D" parent="Room" unique_id=1985496001 instance=ExtResource("6_epjt1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0, -3)
 
-[node name="Gate" type="Node3D" parent="Room" unique_id=482848094 instance=ExtResource("7_pr7o5")]
+[node name="Gate" type="Node3D" parent="Room" unique_id=482848094 instance=ExtResource("7_bvba2")]
 transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, -3.5, 0, -1.8)
 
-[node name="PostGateR" type="Node3D" parent="Room" unique_id=324567243 instance=ExtResource("8_dhou4")]
+[node name="PostGateR" type="Node3D" parent="Room" unique_id=324567243 instance=ExtResource("8_tbdvc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.24, 0, -2.86)
 
-[node name="PostGateL" type="Node3D" parent="Room" unique_id=1814984861 instance=ExtResource("9_jm463")]
+[node name="PostGateL" type="Node3D" parent="Room" unique_id=1814984861 instance=ExtResource("9_tsfwj")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.56, 0, -0.66)
 
-[node name="HallGate" type="Node3D" parent="Room" unique_id=1717432938 instance=ExtResource("10_epjt1")]
+[node name="HallGate" type="Node3D" parent="Room" unique_id=1717432938 instance=ExtResource("10_bd0ga")]
 transform = Transform3D(-2.5352605e-08, 0, 0.58, 0, 0.58, 0, -0.58, 0, -2.5352605e-08, -4.7, 0, 1.2)
-script = ExtResource("11_bvba2")
+script = ExtResource("11_jnvid")
 
-[node name="WallLeft" type="Node3D" parent="Room" unique_id=624503165 instance=ExtResource("6_1j84h")]
+[node name="WallLeft" type="Node3D" parent="Room" unique_id=185866419 instance=ExtResource("6_epjt1")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.7, 0, 3.9)
 
-[node name="WallRight" type="Node3D" parent="Room" unique_id=1997221703 instance=ExtResource("5_p13ae")]
+[node name="WallRight" type="Node3D" parent="Room" unique_id=2009011451 instance=ExtResource("5_jm463")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.7, 0, -2)
 
-[node name="WallRight2" type="Node3D" parent="Room" unique_id=427218624 instance=ExtResource("5_p13ae")]
+[node name="WallRight2" type="Node3D" parent="Room" unique_id=1154096315 instance=ExtResource("5_jm463")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.7, 0, 0)
 
-[node name="WallRight3" type="Node3D" parent="Room" unique_id=1999391587 instance=ExtResource("5_p13ae")]
+[node name="WallRight3" type="Node3D" parent="Room" unique_id=1216570574 instance=ExtResource("5_jm463")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.7, 0, 2)
 
-[node name="WallRight4" type="Node3D" parent="Room" unique_id=323307756 instance=ExtResource("6_1j84h")]
+[node name="WallRight4" type="Node3D" parent="Room" unique_id=1944943263 instance=ExtResource("6_epjt1")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.7, 0, 3.5)
 
-[node name="PostCornerR" type="Node3D" parent="Room" unique_id=63124306 instance=ExtResource("9_jm463")]
+[node name="PostCornerR" type="Node3D" parent="Room" unique_id=1655458141 instance=ExtResource("9_tsfwj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.56, 0, -2.86)
 
-[node name="Pipe" type="Node3D" parent="Room" unique_id=217597558 instance=ExtResource("12_tbdvc")]
+[node name="Pipe" type="Node3D" parent="Room" unique_id=217597558 instance=ExtResource("12_mduh1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 3, -2.82)
 
-[node name="Pipe2" type="Node3D" parent="Room" unique_id=2075066354 instance=ExtResource("12_tbdvc")]
+[node name="Pipe2" type="Node3D" parent="Room" unique_id=656693702 instance=ExtResource("12_mduh1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 3, -2.82)
 
-[node name="Valve" type="Node3D" parent="Room" unique_id=1263345862 instance=ExtResource("13_tsfwj")]
+[node name="Valve" type="Node3D" parent="Room" unique_id=1263345862 instance=ExtResource("13_6v0yp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.05, 3, -2.62)
 
-[node name="Pipe3" type="Node3D" parent="Room" unique_id=1616317740 instance=ExtResource("12_tbdvc")]
+[node name="Pipe3" type="Node3D" parent="Room" unique_id=797530383 instance=ExtResource("12_mduh1")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4, 3, -1.2)
 
-[node name="Props" type="Node3D" parent="." unique_id=1567455119]
+[node name="Props" type="Node3D" parent="." unique_id=462245550]
 
-[node name="Sideboard" type="Node3D" parent="Props" unique_id=942909782 instance=ExtResource("14_bd0ga")]
+[node name="Sideboard" type="Node3D" parent="Props" unique_id=942909782 instance=ExtResource("14_rme4n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0, -2.68)
 
-[node name="TV" type="Node3D" parent="Props" unique_id=1104598436 instance=ExtResource("15_jnvid")]
+[node name="TV" type="Node3D" parent="Props" unique_id=1104598436 instance=ExtResource("15_l6cna")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.62, -2.62)
 
-[node name="Rug" type="Node3D" parent="Props" unique_id=1196233780 instance=ExtResource("16_mduh1")]
+[node name="Rug" type="Node3D" parent="Props" unique_id=1196233780 instance=ExtResource("16_arkdm")]
 transform = Transform3D(0.9975641, 0, 0.06975647, 0, 1, 0, -0.06975647, 0, 0.9975641, 1.6, 0, -0.75)
 
-[node name="Crate" type="Node3D" parent="Props" unique_id=112217455 instance=ExtResource("17_6v0yp")]
+[node name="Crate" type="Node3D" parent="Props" unique_id=112217455 instance=ExtResource("17_6jk3t")]
 transform = Transform3D(0.99254614, 0, 0.12186935, 0, 1, 0, -0.12186935, 0, 0.99254614, 1.62, 0, -1.3)
 
-[node name="Crate_Small" type="Node3D" parent="Props" unique_id=219379377 instance=ExtResource("18_rme4n")]
+[node name="Crate_Small" type="Node3D" parent="Props" unique_id=219379377 instance=ExtResource("18_sts70")]
 transform = Transform3D(0.98768836, 0, -0.15643448, 0, 1, 0, 0.15643448, 0, 0.98768836, 2.28, 0, -1.18)
 
-[node name="Mug" type="Node3D" parent="Props" unique_id=1935016858 instance=ExtResource("19_l6cna")]
+[node name="Mug" type="Node3D" parent="Props" unique_id=1935016858 instance=ExtResource("19_cuhsx")]
 transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, 1.48, 0.5, -1.36)
 
-[node name="Toolbox" type="Node3D" parent="Props" unique_id=203246973 instance=ExtResource("20_arkdm")]
+[node name="Toolbox" type="Node3D" parent="Props" unique_id=203246973 instance=ExtResource("20_30n87")]
 transform = Transform3D(0.92718387, 0, 0.37460658, 0, 1, 0, -0.37460658, 0, 0.92718387, 2.95, 0, -1.65)
 
-[node name="TrophyShelf" type="Node3D" parent="Props" unique_id=323977162 instance=ExtResource("21_6jk3t")]
+[node name="TrophyShelf" type="Node3D" parent="Props" unique_id=323977162 instance=ExtResource("21_svvgc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 2.32, -3)
 
-[node name="PlantShelf" type="Node3D" parent="Props" unique_id=1514806330 instance=ExtResource("22_sts70")]
+[node name="PlantShelf" type="Node3D" parent="Props" unique_id=1514806330 instance=ExtResource("22_kx8fl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.66, 2.32, -2.86)
 
-[node name="Helmet" type="Node3D" parent="Props" unique_id=1095515904 instance=ExtResource("23_cuhsx")]
+[node name="Helmet" type="Node3D" parent="Props" unique_id=1095515904 instance=ExtResource("23_op532")]
 transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, 1.06, 2.32, -2.84)
 
-[node name="Boombox" type="Node3D" parent="Props" unique_id=1733493040 instance=ExtResource("24_30n87")]
+[node name="Boombox" type="Node3D" parent="Props" unique_id=1733493040 instance=ExtResource("24_uf2gi")]
 transform = Transform3D(0.9961947, 0, -0.08715574, 0, 1, 0, 0.08715574, 0, 0.9961947, 1.65, 2.32, -2.86)
 
-[node name="QBox" type="Node3D" parent="Props" unique_id=534866545 instance=ExtResource("25_svvgc")]
+[node name="QBox" type="Node3D" parent="Props" unique_id=534866545 instance=ExtResource("25_fsbo5")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 2.22, 2.32, -2.84)
 
-[node name="Cup_A" type="Node3D" parent="Props" unique_id=796261820 instance=ExtResource("26_kx8fl")]
+[node name="Cup_A" type="Node3D" parent="Props" unique_id=796261820 instance=ExtResource("26_h03lr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.65, 2.32, -2.84)
 
-[node name="Cup_B" type="Node3D" parent="Props" unique_id=996155702 instance=ExtResource("27_op532")]
+[node name="Cup_B" type="Node3D" parent="Props" unique_id=996155702 instance=ExtResource("27_nbvnp")]
 transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 2.96, 2.32, -2.84)
 
-[node name="CupTV" type="Node3D" parent="Props" unique_id=372720369 instance=ExtResource("27_op532")]
+[node name="CupTV" type="Node3D" parent="Props" unique_id=836091187 instance=ExtResource("27_nbvnp")]
 transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 1.22, 1.64, -2.74)
 
-[node name="Books" type="Node3D" parent="Props" unique_id=1531331117 instance=ExtResource("28_uf2gi")]
+[node name="Books" type="Node3D" parent="Props" unique_id=1531331117 instance=ExtResource("28_100ht")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 2.22, 1.64, -2.74)
 
-[node name="PlantTV" type="Node3D" parent="Props" unique_id=235385822 instance=ExtResource("22_sts70")]
+[node name="PlantTV" type="Node3D" parent="Props" unique_id=203103987 instance=ExtResource("22_kx8fl")]
 transform = Transform3D(-0.50000006, 0, 0.8660254, 0, 1, 0, -0.8660254, 0, -0.50000006, 2.6, 1.64, -2.76)
 
-[node name="CrateSeat" type="Node3D" parent="Props" unique_id=2096311792 instance=ExtResource("17_6v0yp")]
-transform = Transform3D(-0.8458549, 0, 0.5334131, 0, 1, 0, -0.5334131, 0, -0.8458549, 0.85, 0, -1.35)
-
-[node name="PlayerDoll" type="Node3D" parent="Props" unique_id=1887918691]
-transform = Transform3D(-0.7633862, 0, 0.64594233, 0, 1, 0, -0.64594233, 0, -0.7633862, 0.85, 0, -1.35)
-script = ExtResource("29_fsbo5")
-
-[node name="Workbench" type="Node3D" parent="Props" unique_id=128086615 instance=ExtResource("30_h03lr")]
+[node name="Workbench" type="Node3D" parent="Props" unique_id=128086615 instance=ExtResource("29_f2m1a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0, -2.62)
 
-[node name="Pegboard" type="Node3D" parent="Props" unique_id=79956902 instance=ExtResource("31_nbvnp")]
+[node name="Pegboard" type="Node3D" parent="Props" unique_id=79956902 instance=ExtResource("30_bnho2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0.97, -3)
 
-[node name="Blueprint" type="Node3D" parent="Props" unique_id=607379901 instance=ExtResource("32_100ht")]
+[node name="Blueprint" type="Node3D" parent="Props" unique_id=607379901 instance=ExtResource("31_nphq8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 2.42, -3)
 
-[node name="Stand" type="Node3D" parent="Props" unique_id=2012511984 instance=ExtResource("33_f2m1a")]
-transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, -0.75, 0, -1.2)
-
-[node name="HazardSquare" type="Node3D" parent="Props" unique_id=476025535 instance=ExtResource("34_bnho2")]
+[node name="HazardSquare" type="Node3D" parent="Props" unique_id=476025535 instance=ExtResource("32_yqard")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0, -1.2)
 
-[node name="Stool" type="Node3D" parent="Props" unique_id=1371768272 instance=ExtResource("35_nphq8")]
-transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, 0.5, 0, -1.95)
-
-[node name="Lamp" type="Node3D" parent="Props" unique_id=1550388492 instance=ExtResource("36_yqard")]
+[node name="Lamp" type="Node3D" parent="Props" unique_id=1550388492 instance=ExtResource("33_pln2w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 3.4, -2.05)
 
-[node name="Banner" type="Node3D" parent="Props" unique_id=464528238 instance=ExtResource("37_pln2w")]
+[node name="LinkConsole" type="Node3D" parent="Props" unique_id=1674930588 instance=ExtResource("34_a4coa")]
+transform = Transform3D(0.9781476, 0, -0.2079117, 0, 1, 0, 0.2079117, 0, 0.9781476, 0.2, 0.92, -2.42)
+metadata/headset_rest = Vector3(0.3271592, 1.25, -2.3929715)
+
+[node name="Headset" type="Node3D" parent="Props" unique_id=143701177 instance=ExtResource("35_mimsx")]
+transform = Transform3D(0.9781476, 0, -0.2079117, 0, 1, 0, 0.2079117, 0, 0.9781476, 0.3271592, 1.25, -2.3929715)
+
+[node name="PilotChair" type="Node3D" parent="Props" unique_id=1920552826 instance=ExtResource("36_nhtiw")]
+transform = Transform3D(0.76206714, 0, -0.647498, 0, 1, 0, 0.647498, 0, 0.76206714, 0.95, 0, -1.98)
+
+[node name="Banner" type="Node3D" parent="Props" unique_id=464528238 instance=ExtResource("37_wwblo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 2.86, -2.97)
 
-[node name="Photo" type="Node3D" parent="Props" unique_id=1365844713 instance=ExtResource("38_a4coa")]
+[node name="Photo" type="Node3D" parent="Props" unique_id=1365844713 instance=ExtResource("38_to7m3")]
 transform = Transform3D(0.9975641, -0.06975647, 0, 0.06975647, 0.9975641, 0, 0, 0, 1, -1.95, 2.3, -3)
 
-[node name="Photo2" type="Node3D" parent="Props" unique_id=361872431 instance=ExtResource("39_mimsx")]
+[node name="Photo2" type="Node3D" parent="Props" unique_id=361872431 instance=ExtResource("39_oeyjy")]
 transform = Transform3D(0.9945219, 0.104528464, 0, -0.104528464, 0.9945219, 0, 0, 0, 1, -1.9, 1.95, -3)
 
-[node name="Photo3" type="Node3D" parent="Props" unique_id=1381763045 instance=ExtResource("40_nhtiw")]
+[node name="Photo3" type="Node3D" parent="Props" unique_id=1381763045 instance=ExtResource("40_kpn63")]
 transform = Transform3D(0.9986295, -0.05233596, 0, 0.05233596, 0.9986295, 0, 0, 0, 1, -0.33, 2.58, -3)
 
-[node name="Photo4" type="Node3D" parent="Props" unique_id=1122126663 instance=ExtResource("41_wwblo")]
+[node name="Photo4" type="Node3D" parent="Props" unique_id=1122126663 instance=ExtResource("41_wqvnt")]
 transform = Transform3D(0.9975641, 0.06975647, 0, -0.06975647, 0.9975641, 0, 0, 0, 1, -0.31, 2.18, -3)
 
-[node name="Photo5" type="Node3D" parent="Props" unique_id=2139334813 instance=ExtResource("42_to7m3")]
+[node name="Photo5" type="Node3D" parent="Props" unique_id=2139334813 instance=ExtResource("42_16i05")]
 transform = Transform3D(0.9945219, -0.104528464, 0, 0.104528464, 0.9945219, 0, 0, 0, 1, 0.66, 1.72, -3)
 
-[node name="Photo6" type="Node3D" parent="Props" unique_id=1268650153 instance=ExtResource("43_oeyjy")]
+[node name="Photo6" type="Node3D" parent="Props" unique_id=1268650153 instance=ExtResource("43_py013")]
 transform = Transform3D(0.9986295, 0.05233596, 0, -0.05233596, 0.9986295, 0, 0, 0, 1, 0.7, 2.06, -3)
 
-[node name="Poster" type="Node3D" parent="Props" unique_id=717419556 instance=ExtResource("44_kpn63")]
+[node name="Poster" type="Node3D" parent="Props" unique_id=717419556 instance=ExtResource("44_vc0le")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.69, 1.75, 3.9)
 
-[node name="Poster2" type="Node3D" parent="Props" unique_id=479047411 instance=ExtResource("45_wqvnt")]
+[node name="Poster2" type="Node3D" parent="Props" unique_id=479047411 instance=ExtResource("45_x3lea")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.69, 1.8, -1.9)
 
-[node name="ControlBox" type="Node3D" parent="Props" unique_id=1161271932 instance=ExtResource("46_16i05")]
+[node name="ControlBox" type="Node3D" parent="Props" unique_id=1161271932 instance=ExtResource("46_akcv5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.98, 1.12, -3)
 
-[node name="CrateGate" type="Node3D" parent="Props" unique_id=1976922314 instance=ExtResource("17_6v0yp")]
+[node name="CrateGate" type="Node3D" parent="Props" unique_id=2108993479 instance=ExtResource("17_6jk3t")]
 transform = Transform3D(0.90630776, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.90630776, -4.1, 0, 3.55)
 
-[node name="CrateGate2" type="Node3D" parent="Props" unique_id=1038043778 instance=ExtResource("18_rme4n")]
+[node name="CrateGate2" type="Node3D" parent="Props" unique_id=471893833 instance=ExtResource("18_sts70")]
 transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -4.05, 0.5, 3.5)
 
-[node name="Jerrycan" type="Node3D" parent="Props" unique_id=214407047 instance=ExtResource("47_py013")]
+[node name="Jerrycan" type="Node3D" parent="Props" unique_id=214407047 instance=ExtResource("47_6cvfy")]
 transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, -3.4, 0, 3.85)
 
-[node name="Barrel" type="Node3D" parent="Props" unique_id=1717163755 instance=ExtResource("48_vc0le")]
+[node name="Barrel" type="Node3D" parent="Props" unique_id=1717163755 instance=ExtResource("48_614f7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, 3)
 
-[node name="Lockers" type="Node3D" parent="Props" unique_id=332580866 instance=ExtResource("49_x3lea")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.05, 0, -2.72)
+[node name="ScreenRack" type="Node3D" parent="Props" unique_id=549232671 instance=ExtResource("49_lpb6q")]
+transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 3.95, 0, -1.87)
 
-[node name="Ladder" type="Node3D" parent="Props" unique_id=822203332 instance=ExtResource("50_akcv5")]
-transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 3.45, 0, -2.75)
+[node name="Screen_energy" type="Node3D" parent="Props/ScreenRack" unique_id=1810165296 instance=ExtResource("50_ye2hs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.71, 2.2, 0.07)
+metadata/panel = "energy"
+metadata/model = "Flat"
 
-[node name="Storage" type="Node3D" parent="Props" unique_id=716897795 instance=ExtResource("51_6cvfy")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.45, 0, -0.55)
+[node name="Screen_pulse" type="Node3D" parent="Props/ScreenRack" unique_id=1500026321 instance=ExtResource("51_2jc2q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19, 2.24, 0.07)
+metadata/panel = "pulse"
+metadata/model = "Small"
 
-[node name="Case_Navy" type="Node3D" parent="Props" unique_id=2022530804 instance=ExtResource("52_614f7")]
-transform = Transform3D(0.17364822, 0, -0.9848077, 0, 1, 0, 0.9848077, 0, 0.17364822, 4.45, 0.14, -0.4)
+[node name="Screen_link" type="Node3D" parent="Props/ScreenRack" unique_id=1077353561 instance=ExtResource("51_2jc2q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.19, 2.24, 0.07)
+metadata/panel = "link"
+metadata/model = "Small"
 
-[node name="CrateShelf" type="Node3D" parent="Props" unique_id=895658066 instance=ExtResource("18_rme4n")]
-transform = Transform3D(-0.08715577, 0, -0.9961947, 0, 1, 0, 0.9961947, 0, -0.08715577, 4.45, 0.64, -0.85)
+[node name="Screen_parts" type="Node3D" parent="Props/ScreenRack" unique_id=929691371 instance=ExtResource("50_ye2hs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.71, 2.2, 0.07)
+metadata/panel = "parts"
+metadata/model = "Flat"
 
-[node name="BooksShelf" type="Node3D" parent="Props" unique_id=867947264 instance=ExtResource("28_uf2gi")]
-transform = Transform3D(0.34202015, 0, -0.9396926, 0, 1, 0, 0.9396926, 0, 0.34202015, 4.45, 1.14, -0.3)
+[node name="Screen_weapon" type="Node3D" parent="Props/ScreenRack" unique_id=1879773189 instance=ExtResource("51_2jc2q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82, 1.62, 0.07)
+metadata/panel = "weapon"
+metadata/model = "Small"
 
-[node name="Case_Olive" type="Node3D" parent="Props" unique_id=1100649255 instance=ExtResource("53_lpb6q")]
-transform = Transform3D(0.9659258, 0, -0.25881904, 0, 1, 0, 0.25881904, 0, 0.9659258, 3.85, 0, -1.75)
+[node name="Screen_main" type="Node3D" parent="Props/ScreenRack" unique_id=875626538 instance=ExtResource("52_c0l4m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.62, 0.07)
+metadata/panel = "main"
+metadata/model = "Wide"
 
-[node name="Tire" type="Node3D" parent="Props" unique_id=1818286498 instance=ExtResource("54_ye2hs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7, 0, 0.6)
+[node name="Screen_thrust" type="Node3D" parent="Props/ScreenRack" unique_id=1987752023 instance=ExtResource("51_2jc2q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82, 1.62, 0.07)
+metadata/panel = "thrust"
+metadata/model = "Small"
 
-[node name="Tire2" type="Node3D" parent="Props" unique_id=1110754065 instance=ExtResource("54_ye2hs")]
-transform = Transform3D(0.90630776, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.90630776, 3.7, 0.18, 0.62)
+[node name="Screen_mass" type="Node3D" parent="Props/ScreenRack" unique_id=404048709 instance=ExtResource("50_ye2hs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 1.1, 0.07)
+metadata/panel = "mass"
+metadata/model = "Flat"
 
-[node name="Cone" type="Node3D" parent="Props" unique_id=516721198 instance=ExtResource("55_2jc2q")]
+[node name="Screen_hp" type="Node3D" parent="Props/ScreenRack" unique_id=259299481 instance=ExtResource("51_2jc2q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0.07)
+metadata/panel = "hp"
+metadata/model = "Small"
+
+[node name="Screen_joints" type="Node3D" parent="Props/ScreenRack" unique_id=47049283 instance=ExtResource("50_ye2hs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 1.1, 0.07)
+metadata/panel = "joints"
+metadata/model = "Flat"
+
+[node name="Screen_league" type="Node3D" parent="Props/ScreenRack" unique_id=1106719372 instance=ExtResource("53_a4tq7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.66, 0.3)
+metadata/panel = "league"
+metadata/model = "CRT"
+
+[node name="Screen_hall" type="Node3D" parent="Props/ScreenRack" unique_id=1866617422 instance=ExtResource("53_a4tq7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.66, 0.3)
+metadata/panel = "hall"
+metadata/model = "CRT"
+
+[node name="Storage" type="Node3D" parent="Props" unique_id=716897795 instance=ExtResource("54_lc6fi")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.45, 0, 0.05)
+
+[node name="Case_Navy" type="Node3D" parent="Props" unique_id=2022530804 instance=ExtResource("55_mour5")]
+transform = Transform3D(0.17364822, 0, -0.9848077, 0, 1, 0, 0.9848077, 0, 0.17364822, 4.45, 0.14, 0.2)
+
+[node name="CrateShelf" type="Node3D" parent="Props" unique_id=698394112 instance=ExtResource("18_sts70")]
+transform = Transform3D(-0.08715577, 0, -0.9961947, 0, 1, 0, 0.9961947, 0, -0.08715577, 4.45, 0.64, -0.25)
+
+[node name="BooksShelf" type="Node3D" parent="Props" unique_id=1749383889 instance=ExtResource("28_100ht")]
+transform = Transform3D(0.34202015, 0, -0.9396926, 0, 1, 0, 0.9396926, 0, 0.34202015, 4.45, 1.14, 0.3)
+
+[node name="Case_Olive" type="Node3D" parent="Props" unique_id=1100649255 instance=ExtResource("56_thfsp")]
+transform = Transform3D(0.49999997, 0, -0.86602545, 0, 1, 0, 0.86602545, 0, 0.49999997, 4.05, 0, -0.95)
+
+[node name="Tire" type="Node3D" parent="Props" unique_id=1818286498 instance=ExtResource("57_beuow")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7, 0, 0.95)
+
+[node name="Tire2" type="Node3D" parent="Props" unique_id=1880748702 instance=ExtResource("57_beuow")]
+transform = Transform3D(0.90630776, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.90630776, 3.7, 0.18, 0.97)
+
+[node name="Cone" type="Node3D" parent="Props" unique_id=516721198 instance=ExtResource("58_76ch3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3, 0, 1.5)
 
-[node name="Cabinet" type="Node3D" parent="Props" unique_id=1086593108 instance=ExtResource("56_c0l4m")]
+[node name="Cabinet" type="Node3D" parent="Props" unique_id=1086593108 instance=ExtResource("59_of7yb")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.42, 0, 1.25)
 
-[node name="Radio" type="Node3D" parent="Props" unique_id=1715912328 instance=ExtResource("57_a4tq7")]
+[node name="Radio" type="Node3D" parent="Props" unique_id=1715912328 instance=ExtResource("60_js51l")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.42, 0.88, 1.25)
 
-[node name="Breaker" type="Node3D" parent="Props" unique_id=1063792395 instance=ExtResource("58_lc6fi")]
+[node name="Breaker" type="Node3D" parent="Props" unique_id=1063792395 instance=ExtResource("61_67bgk")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 4.7, 1.2, 2.05)
 
-[node name="CrateFront" type="Node3D" parent="Props" unique_id=2118572174 instance=ExtResource("17_6v0yp")]
+[node name="CrateFront" type="Node3D" parent="Props" unique_id=2097460296 instance=ExtResource("17_6jk3t")]
 transform = Transform3D(0.95105654, 0, 0.309017, 0, 1, 0, -0.309017, 0, 0.95105654, -2.3, 0, 2.7)
 
-[node name="Lights" type="Node3D" parent="." unique_id=1696522122]
+[node name="N0" type="Node3D" parent="Props" unique_id=1919862665]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.15, 1.95, -1.1)
+script = ExtResource("62_5p83g")
 
-[node name="TvFill" type="OmniLight3D" parent="Lights" unique_id=763603767]
+[node name="Lights" type="Node3D" parent="." unique_id=1614787062]
+
+[node name="TvFill" type="OmniLight3D" parent="Lights" unique_id=408591478]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.62, 1.15, -1.7)
 light_color = Color(0.55, 0.7, 1, 1)
 light_energy = 1.4
@@ -340,7 +402,7 @@ shadow_enabled = true
 omni_range = 5.5
 metadata/zone = "tv"
 
-[node name="TvBeam" type="SpotLight3D" parent="Lights" unique_id=442462517]
+[node name="TvBeam" type="SpotLight3D" parent="Lights" unique_id=918165217]
 transform = Transform3D(-0.99947447, -0.004763683, 0.032063447, 0, 0.9891427, 0.14695746, -0.032415386, 0.14688022, -0.98862296, 1.62, 1.15, -2.2)
 light_color = Color(0.55, 0.7, 1, 1)
 light_energy = 3.0
@@ -351,7 +413,7 @@ spot_angle = 48.0
 spot_angle_attenuation = 0.9
 metadata/zone = "tv"
 
-[node name="LampCone" type="SpotLight3D" parent="Lights" unique_id=541497926]
+[node name="LampCone" type="SpotLight3D" parent="Lights" unique_id=1100332258]
 transform = Transform3D(0.99750626, -0.011468536, 0.06964024, -0.07057826, -0.16208866, 0.9842489, 0, -0.9867095, -0.16249388, -0.55, 2.12, -2.05)
 light_color = Color(1, 0.7, 0.42, 1)
 light_energy = 9.0
@@ -362,7 +424,7 @@ spot_angle = 58.0
 spot_angle_attenuation = 0.9
 metadata/zone = "bench"
 
-[node name="LampGlow" type="OmniLight3D" parent="Lights" unique_id=292032635]
+[node name="LampGlow" type="OmniLight3D" parent="Lights" unique_id=814620788]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 2.2, -2.2)
 light_color = Color(1, 0.7, 0.42, 1)
 light_energy = 0.9
@@ -370,7 +432,7 @@ light_volumetric_fog_energy = 0.4
 omni_range = 2.4
 metadata/zone = "bench"
 
-[node name="BlueprintWash" type="SpotLight3D" parent="Lights" unique_id=550105096]
+[node name="BlueprintWash" type="SpotLight3D" parent="Lights" unique_id=1970267427]
 transform = Transform3D(0.97341716, -0.15472083, 0.16888015, 0, 0.73734105, 0.6755206, -0.2290394, -0.6575633, 0.7177404, -0.9, 3.15, -2.15)
 light_color = Color(1, 0.74, 0.48, 1)
 light_energy = 3.0
@@ -380,14 +442,14 @@ spot_angle = 42.0
 spot_angle_attenuation = 0.9
 metadata/zone = "bench"
 
-[node name="PegboardWarm" type="OmniLight3D" parent="Lights" unique_id=1711523941]
+[node name="PegboardWarm" type="OmniLight3D" parent="Lights" unique_id=1576962483]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 1.25, -2.55)
 light_color = Color(1, 0.62, 0.35, 1)
 light_energy = 0.6
 omni_range = 1.8
 metadata/zone = "bench"
 
-[node name="GateFloor" type="SpotLight3D" parent="Lights" unique_id=1326650668]
+[node name="GateFloor" type="SpotLight3D" parent="Lights" unique_id=1595046291]
 transform = Transform3D(-0.70710677, 0.017772162, -0.70688343, 0, 0.9996841, 0.025133632, 0.70710677, 0.017772162, -0.70688343, -3.45, 0.08, -1.75)
 light_color = Color(0.62, 0.4, 1, 1)
 light_energy = 5.0
@@ -395,7 +457,7 @@ spot_angle = 70.0
 spot_angle_attenuation = 0.9
 metadata/zone = "gate"
 
-[node name="GateGlow" type="OmniLight3D" parent="Lights" unique_id=1545990104]
+[node name="GateGlow" type="OmniLight3D" parent="Lights" unique_id=722998409]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0.25, -1.05)
 light_color = Color(0.62, 0.4, 1, 1)
 light_energy = 0.8
@@ -403,7 +465,7 @@ light_volumetric_fog_energy = 1.5
 omni_range = 3.5
 metadata/zone = "gate"
 
-[node name="Porthole" type="SpotLight3D" parent="Lights" unique_id=604984245]
+[node name="Porthole" type="SpotLight3D" parent="Lights" unique_id=1888801262]
 transform = Transform3D(-0.6787421, 0.08921905, -0.728937, 0, 0.9925927, 0.12148949, 0.73437667, 0.08246003, -0.6737145, -3.8, 1.65, -2.05)
 light_color = Color(0.75, 0.6, 1, 1)
 light_energy = 2.5
@@ -411,7 +473,7 @@ spot_angle = 16.0
 spot_angle_attenuation = 0.9
 metadata/zone = "gate"
 
-[node name="ShelfSpot" type="SpotLight3D" parent="Lights" unique_id=210467112]
+[node name="ShelfSpot" type="SpotLight3D" parent="Lights" unique_id=926177874]
 transform = Transform3D(1, 0, 0, 0, 0.40364012, 0.9149179, 0, -0.9149179, 0.40364012, 1.1, 3, -2.55)
 light_color = Color(1, 0.8, 0.55, 1)
 light_energy = 3.2
@@ -422,7 +484,7 @@ spot_angle = 36.0
 spot_angle_attenuation = 0.9
 metadata/zone = "shelf"
 
-[node name="ShelfSpot2" type="SpotLight3D" parent="Lights" unique_id=1959349084]
+[node name="ShelfSpot2" type="SpotLight3D" parent="Lights" unique_id=1808181968]
 transform = Transform3D(1, 0, 0, 0, 0.40364012, 0.9149179, 0, -0.9149179, 0.40364012, 1.9, 3, -2.55)
 light_color = Color(1, 0.8, 0.55, 1)
 light_energy = 3.2
@@ -433,7 +495,7 @@ spot_angle = 36.0
 spot_angle_attenuation = 0.9
 metadata/zone = "shelf"
 
-[node name="ShelfSpot3" type="SpotLight3D" parent="Lights" unique_id=55090430]
+[node name="ShelfSpot3" type="SpotLight3D" parent="Lights" unique_id=1081102237]
 transform = Transform3D(1, 0, 0, 0, 0.40364012, 0.9149179, 0, -0.9149179, 0.40364012, 2.75, 3, -2.55)
 light_color = Color(1, 0.8, 0.55, 1)
 light_energy = 3.2
@@ -444,14 +506,14 @@ spot_angle = 36.0
 spot_angle_attenuation = 0.9
 metadata/zone = "shelf"
 
-[node name="RadioDial" type="OmniLight3D" parent="Lights" unique_id=1746478822]
+[node name="RadioDial" type="OmniLight3D" parent="Lights" unique_id=427163226]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.95, 1.05, 1.25)
 light_color = Color(1, 0.62, 0.28, 1)
 light_energy = 0.2
 omni_range = 1.1
 metadata/zone = "radio"
 
-[node name="BreakerSpot" type="SpotLight3D" parent="Lights" unique_id=519039819]
+[node name="BreakerSpot" type="SpotLight3D" parent="Lights" unique_id=1629858784]
 transform = Transform3D(-0.09950374, 0.8687951, -0.48507127, 0, 0.4874906, 0.87312824, 0.9950372, 0.08687953, -0.04850714, 3.6, 3, 1.6)
 light_color = Color(1, 0.82, 0.62, 1)
 light_energy = 2.0
@@ -462,14 +524,14 @@ spot_angle = 40.0
 spot_angle_attenuation = 0.9
 metadata/zone = "radio"
 
-[node name="ControlRed" type="OmniLight3D" parent="Lights" unique_id=537503404]
+[node name="ControlRed" type="OmniLight3D" parent="Lights" unique_id=1966985200]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.98, 1.6, -2.75)
 light_color = Color(1, 0.12, 0.06, 1)
 light_energy = 0.7
 omni_range = 1.3
 metadata/zone = "room"
 
-[node name="Fill" type="OmniLight3D" parent="Lights" unique_id=178129208]
+[node name="Fill" type="OmniLight3D" parent="Lights" unique_id=46540296]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 2.6, 2.6)
 light_color = Color(0.5, 0.55, 0.8, 1)
 light_energy = 0.35
@@ -477,7 +539,33 @@ light_volumetric_fog_energy = 0.0
 omni_range = 9.0
 metadata/zone = "room"
 
-[node name="CrateWarm" type="OmniLight3D" parent="Lights" unique_id=28077555]
+[node name="RackGlow" type="OmniLight3D" parent="Lights" unique_id=1919811545]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.55, 1.6, -1.45)
+light_color = Color(0.45, 0.75, 1, 1)
+light_energy = 0.9
+light_volumetric_fog_energy = 0.6
+omni_range = 3.4
+metadata/zone = "rack"
+
+[node name="RackTop" type="SpotLight3D" parent="Lights" unique_id=1733702095]
+transform = Transform3D(0.7641385, 0.6043358, -0.22554499, 0, 0.3496539, 0.936879, 0.64505213, -0.7159053, 0.26718402, 3.3, 3.1, -1.1)
+light_color = Color(0.75, 0.85, 1, 1)
+light_energy = 1.6
+light_volumetric_fog_energy = 0.4
+spot_range = 4.0
+spot_angle = 50.0
+spot_angle_attenuation = 0.9
+metadata/zone = "rack"
+
+[node name="LinkGlow" type="OmniLight3D" parent="Lights" unique_id=1784553435]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 1.35, -2.2)
+light_color = Color(0.35, 0.85, 1, 1)
+light_energy = 0.35
+light_volumetric_fog_energy = 0.2
+omni_range = 1.2
+metadata/zone = "bench"
+
+[node name="CrateWarm" type="OmniLight3D" parent="Lights" unique_id=2114416832]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.3, 0.3)
 light_color = Color(1, 0.66, 0.4, 1)
 light_energy = 0.9
@@ -485,48 +573,60 @@ light_volumetric_fog_energy = 0.2
 omni_range = 3.6
 metadata/zone = "tv"
 
-[node name="CamSpots" type="Node3D" parent="." unique_id=1162477193]
+[node name="CamSpots" type="Node3D" parent="." unique_id=137362980]
 
-[node name="Title" type="Marker3D" parent="CamSpots" unique_id=2080379338]
-transform = Transform3D(0.95105654, -0.032301072, 0.30732417, 0, 0.9945219, 0.104528464, -0.309017, -0.09941248, 0.94584656, 2.75, 1.7, 2.3)
+[node name="Title" type="Marker3D" parent="CamSpots" unique_id=29472731]
+transform = Transform3D(0.95105654, -0.032301072, 0.30732417, 0, 0.9945219, 0.104528464, -0.309017, -0.09941248, 0.94584656, 2.75, 1.66, 2.3)
 metadata/fov = 55.0
 
-[node name="Story" type="Marker3D" parent="CamSpots" unique_id=1618605435]
-transform = Transform3D(0.99904996, -0.0018437449, 0.04354097, 0, 0.9991046, 0.04230714, -0.043579996, -0.042266943, 0.99815536, 2.55, 1.38, 0.35)
+[node name="Story" type="Marker3D" parent="CamSpots" unique_id=139608502]
+transform = Transform3D(0.99989736, 0.0020576902, -0.0141763985, 0, 0.9896295, 0.14364362, 0.014324978, -0.14362887, 0.98952794, 2.45, 1.62, 0.55)
+metadata/fov = 48.0
+
+[node name="Quick" type="Marker3D" parent="CamSpots" unique_id=1716660056]
+transform = Transform3D(0.7969482, -0.051666394, 0.6018342, 0, 0.9963354, 0.08553362, -0.6040478, -0.06816586, 0.7940276, -0.2, 1.66, 0.9)
+metadata/fov = 52.0
+
+[node name="Workshop" type="Marker3D" parent="CamSpots" unique_id=812901753]
+transform = Transform3D(0.93140155, -0.0713481, 0.35693216, 0, 0.98060095, 0.19601487, -0.36399335, -0.18256855, 0.9133332, 1.15, 1.66, 0.75)
+metadata/fov = 52.0
+
+[node name="Fighter" type="Marker3D" parent="CamSpots" unique_id=1301501737]
+transform = Transform3D(0.43976015, 0.028267242, -0.89767027, 0, 0.99950457, 0.031473957, 0.8981153, -0.01384099, 0.4395423, 1.5, 1.66, 0.62)
+metadata/fov = 55.0
+
+[node name="FighterClose" type="Marker3D" parent="CamSpots" unique_id=523817002]
+transform = Transform3D(0.5092052, 0.009170722, -0.8605963, 0, 0.99994326, 0.010655637, 0.8606452, -0.005425906, 0.50917625, 2.55, 1.62, -0.62)
+metadata/fov = 58.0
+
+[node name="Trophies" type="Marker3D" parent="CamSpots" unique_id=789524516]
+transform = Transform3D(0.9966862, -0.017941166, -0.07934004, 0, 0.9753732, -0.22056118, 0.08134328, 0.21983027, 0.9721409, 2.35, 1.66, 0.6)
+metadata/fov = 44.0
+
+[node name="Settings" type="Marker3D" parent="CamSpots" unique_id=1242392606]
+transform = Transform3D(-0.4264014, 0.15707943, -0.8907906, 0, 0.98480606, 0.17365783, 0.90453404, 0.074047945, -0.4199227, 2, 1.66, 1)
+metadata/fov = 50.0
+
+[node name="SettingsClose" type="Marker3D" parent="CamSpots" unique_id=1421753812]
+transform = Transform3D(0.22476771, 0.17158449, -0.9591862, 0, 0.98437405, 0.17609023, 0.9744124, -0.03957939, 0.2212555, 3, 1.6, 2.3)
 metadata/fov = 46.0
 
-[node name="Quick" type="Marker3D" parent="CamSpots" unique_id=1330230093]
-transform = Transform3D(0.8102745, -0.03557379, 0.5849699, 0, 0.9981561, 0.060700893, -0.58605057, -0.04918439, 0.8087804, -0.35, 1.6, 0.95)
-metadata/fov = 50.0
+[node name="Pilot" type="Marker3D" parent="CamSpots" unique_id=1025106595]
+transform = Transform3D(0.99767154, -0.035373084, 0.05831106, 0, 0.8549829, 0.5186561, -0.06820143, -0.5174484, 0.8529922, 0.38, 1.64, -1.62)
+metadata/fov = 62.0
 
-[node name="Workshop" type="Marker3D" parent="CamSpots" unique_id=825927216]
-transform = Transform3D(0.9607665, -0.041633938, 0.2742157, 0, 0.9886694, 0.15010887, -0.27735826, -0.14421958, 0.9498806, 0.9, 1.55, 0.85)
-metadata/fov = 50.0
-
-[node name="Trophies" type="Marker3D" parent="CamSpots" unique_id=1397627148]
-transform = Transform3D(0.99878204, -0.0066815075, -0.048884735, 0, 0.9907883, -0.13541983, 0.04933922, 0.13525489, 0.9895816, 2.45, 1.95, 0.75)
-metadata/fov = 42.0
-
-[node name="Settings" type="Marker3D" parent="CamSpots" unique_id=1366590204]
-transform = Transform3D(-0.36896116, 0.13720237, -0.91926223, 0, 0.98904455, 0.14761755, 0.92944485, 0.054465145, -0.364919, 1.9, 1.6, 1.15)
-metadata/fov = 50.0
-
-[node name="SettingsClose" type="Marker3D" parent="CamSpots" unique_id=1388328513]
-transform = Transform3D(0.27847233, 0.09483704, -0.9557506, 0, 0.995113, 0.09874289, 0.9604443, -0.02749716, 0.2771114, 2.75, 1.5, 2.55)
-metadata/fov = 46.0
-
-[node name="IntoTV" type="Marker3D" parent="CamSpots" unique_id=2051999774]
+[node name="IntoTV" type="Marker3D" parent="CamSpots" unique_id=2132546861]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.62, 1.155, -1.66)
 metadata/fov = 50.0
 
-[node name="IntoGate" type="Marker3D" parent="CamSpots" unique_id=878530037]
+[node name="IntoGate" type="Marker3D" parent="CamSpots" unique_id=145300526]
 transform = Transform3D(0.71032816, 0.045358192, 0.70240766, 0, 0.9979215, -0.06444109, -0.70387065, 0.045774322, 0.70885175, -2.75, 1.5, -1)
 metadata/fov = 50.0
 
-[node name="IntoStand" type="Marker3D" parent="CamSpots" unique_id=2027414544]
+[node name="IntoStand" type="Marker3D" parent="CamSpots" unique_id=2000565954]
 transform = Transform3D(0.9761871, -0.08634153, 0.19900742, 0, 0.917379, 0.39801484, -0.21693043, -0.38853696, 0.8955335, -0.55, 1.4, -0.3)
 metadata/fov = 50.0
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=424484483]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1991433040]
 fov = 50.0
 near = 0.03

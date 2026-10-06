@@ -1,4 +1,7 @@
-"""Зрители-спрайты: модульные существа из деталей кита тела v2 (как бойцы — людей в мире нет, LORE_NULL.md §2), запечённые в
+"""АРХИВ (06.10): зрители купола теперь — очертания людей (мир людей, LORE_V2 §2а), атлас пишет tools/gen_crowd_people.py.
+Этот скрипт пишет прежний атлас кукол в crowd_dolls_atlas.png / .json (не затирает текущий).
+
+Зрители-спрайты: модульные существа из деталей кита тела v2 (как бойцы — людей в мире нет, LORE_NULL.md §2), запечённые в
 атлас. VARIANTS сборок × POSES поз (руки вниз / в стороны / вверх) — ячейки сетки COLS × ROWS, одинаковый масштаб: ячейка =
 CELL_W × CELL_H м. В Godot толпа — один MultiMesh квадов с шейдером assets/shaders/crowd_sprite.gdshader (ячейка по экземпляру,
 позы сменяются, когда толпа болеет): одна текстура и одна отрисовка на весь стадион вместо тысяч мешей.
@@ -27,8 +30,8 @@ import body_kit as BK  # noqa: E402
 
 GODOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT_DIR = os.path.join(GODOT, "assets", "textures", "crowd")
-OUT_PNG = os.path.join(OUT_DIR, "crowd_atlas.png")
-OUT_JSON = os.path.join(OUT_DIR, "crowd_atlas.json")
+OUT_PNG = os.path.join(OUT_DIR, "crowd_dolls_atlas.png")
+OUT_JSON = os.path.join(OUT_DIR, "crowd_dolls_atlas.json")
 
 VARIANTS = 16
 POSES = 3

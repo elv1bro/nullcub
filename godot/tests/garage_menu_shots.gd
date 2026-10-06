@@ -44,6 +44,9 @@ func _save(out: String, name: String) -> void:
 func _stills(out: String, which: String) -> void:
 	DirAccess.make_dir_recursive_absolute(out)
 	var want := func(n: String) -> bool: return which == "all" or which.split(",").has(n)
+	var t0 := Time.get_ticks_msec()
+	while menu.workshop.ws == null and Time.get_ticks_msec() - t0 < 60000:   # кукла на стенде — у спящей мастерской
+		await get_tree().process_frame
 	await _wait(24)
 	if want.call("title"):
 		_save(out, "title")
@@ -60,14 +63,14 @@ func _stills(out: String, which: String) -> void:
 		await _wait(20)
 		_save(out, NAMES[i])
 	if want.call("settings_screen"):
-		menu.set_focus(4, true)
+		menu.set_focus(5, true)
 		menu.activate()
 		menu._move_to("SettingsClose", 0.1, 0.0, true)
 		await _wait(20)
 		_save(out, "settings_screen")
 		menu.settings_ui.close()
 	if want.call("trophies_screen"):    # витрина на «месте для трофея» (третий предмет)
-		menu.set_focus(3, true)
+		menu.set_focus(4, true)
 		menu.activate()
 		menu.trophies_ui.step(1)
 		menu.trophies_ui.step(1)

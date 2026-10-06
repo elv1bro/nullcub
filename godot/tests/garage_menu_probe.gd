@@ -4,6 +4,9 @@
 ## Enter на «Истории» (кампания открывается в эфире ТВ, сцена не меняется; сигнал navigated остаётся для «Быстрого боя» и «Всех режимов»). Проверки: точки камер и цели пунктов существуют,
 ## камера доезжает до точки пункта за ≤ 1.5 × move_time, телевизор переключается на канал пункта, лампы зоны пункта ярче
 ## базы, а чужих зон — тусклее, Esc ведёт к «Выходу», до боя ≤ 2 нажатий, выход гасит свет и шлёт navigated("quit").
+## 06.10 (гараж от первого лица): точки пунктов на высоте глаз, руки героя в кадре внизу, на переходе кадр покачивается (шаги),
+## N0 в кадре у предмета пункта (не под меню), кукла висит на стенде спящей мастерской (витрина), шлем на подставке консоли,
+## стена экранов привязана и показывает ту же сводку, что мастерская (масса, детали, энергия), пункт «БОЕЦ» — к стене и обратно.
 ## В stdout «=== GARAGE MENU PROBE ===» и JSON; exit 0 — всё ок.
 extends Node
 
@@ -102,24 +105,64 @@ func _run() -> void:
 		await get_tree().create_timer(2.5).timeout
 		d1 = (bt.dolls[0] as Doll).centre_of_mass().distance_to((bt.dolls[1] as Doll).centre_of_mass())
 	_check("tv_live_bout", bt != null and absf(d1 - d0) > 0.3 and bt.get_viewport() == menu.tv_vp, [snappedf(d0, 0.01), snappedf(d1, 0.01)])
-	# кукла игрока: собрана, все тела заморожены, бёдра на сиденье
-	var pd := menu.player_doll
-	var frozen := pd != null and pd.doll != null and not pd.doll.parts.is_empty()
+	# 1б. кукла — на стенде спящей мастерской (витрина): видна, заморожена, интерфейс мастерской спрятан, процесс стоит
+	var w := menu.workshop
+	var t_ws := Time.get_ticks_msec()
+	while w.ws == null and Time.get_ticks_msec() - t_ws < 60000:
+		await get_tree().process_frame
+	var ws := w.ws
+	var frozen := ws != null and ws.stand != null and not ws.stand.parts.is_empty()
 	if frozen:
-		for b in pd.doll.parts.values():
+		for b in ws.stand.parts.values():
 			frozen = frozen and (b as RigidBody3D).freeze
-	_check("doll_seated", frozen, [pd.blueprint_source if pd != null else "нет", pd.doll.parts.size() if frozen else 0])
+	var at_stand := ws != null and Vector2(ws.stand_root.global_position.x, ws.stand_root.global_position.z).distance_to(Vector2(-0.75, -1.2)) < 0.05
+	_check("doll_hangs_on_stand", frozen and at_stand and ws.visible and ws.stand.visible and ws.stand_root.visible,
+		[frozen, at_stand, ws.visible if ws != null else null])
+	_check("workshop_sleeps_as_showcase", ws != null and not ws.active and ws.process_mode == Node.PROCESS_MODE_DISABLED
+		and not (ws.get_node("UI") as CanvasLayer).visible, [ws.active if ws != null else null])
+	_check("no_doll_on_crate", menu.get_node_or_null("Props/PlayerDoll") == null and menu.get_node_or_null("Props/CrateSeat") == null, null)
+	# 1в. шлем на подставке консоли, кресло пилота, стена экранов и N0 на месте
+	var hs := menu.get_node_or_null("Props/Headset") as Node3D
+	var con := menu.get_node_or_null("Props/LinkConsole") as Node3D
+	var rest: Vector3 = con.get_meta("headset_rest", Vector3.ZERO) if con != null else Vector3.ZERO
+	_check("headset_on_console", hs != null and con != null and hs.global_position.distance_to(rest) < 0.01 and menu.headset.has_headset(),
+		snappedf(hs.global_position.distance_to(rest), 0.001) if hs != null else null)
+	_check("pilot_chair", menu.get_node_or_null("Props/PilotChair") != null, null)
+	var sw := menu.stats_wall
+	var bound := sw.screens_bound()
+	_check("stats_wall_screens", sw.screens.size() >= 10 and bound >= sw.screens.size(), [sw.screens.size(), bound])
+	var bs := ws.body_stats() if ws != null else {}
+	var sd := sw.data
+	_check("stats_wall_matches_workshop", not sd.is_empty() and int(sd["parts"]) == int(bs.get("parts", -1))
+		and int(sd["energy"]) == int(bs.get("energy", -1)) and absf(float(sd["mass"]) - float(bs.get("mass", -1.0))) < 0.01,
+		[sd.get("parts"), bs.get("parts"), sd.get("energy"), bs.get("energy")])
+	_check("n0_in_garage", menu.n0 != null and menu.n0.drone != null and menu.n0.get_parent().name == "Props", null)
+	# 1г. от первого лица: точки пунктов — на высоте глаз (1.5–1.75 м), руки героя видны внизу кадра
+	var low: Array = []
+	for it in GarageMenu.ITEMS:
+		var y := menu.spot_transform(String(it["spot"])).origin.y
+		if y < 1.5 or y > 1.75:
+			low.append([it["id"], snappedf(y, 0.01)])
+	_check("eye_height_spots", low.is_empty(), low)
+	_check("hands_in_frame", _hands_in_frame(), _hands_screen())
 	# 2. любая клавиша → меню, фокус на «Истории»
 	await _key(KEY_SPACE)
 	_check("any_key_enters_menu", menu.state == "menu" and menu.focus == 0, [menu.state, menu.focus])
 	await _settle()
 	# 3. все пункты вниз: камера, канал ТВ, свет зоны
 	var limit := menu.move_time * 1.5 + 0.2
+	var bob_max := 0.0
 	for i in GarageMenu.ITEMS.size():
 		if i > 0:
 			await _key(KEY_DOWN)
 		var it: Dictionary = GarageMenu.ITEMS[i]
-		var t := await _settle()
+		var t0s := Time.get_ticks_msec()
+		var bob := 0.0
+		while menu.is_moving() and Time.get_ticks_msec() - t0s < 4000:
+			bob = maxf(bob, absf(menu.cam.v_offset))
+			await get_tree().process_frame
+		var t := (Time.get_ticks_msec() - t0s) / 1000.0
+		bob_max = maxf(bob_max, bob)
 		await get_tree().create_timer(0.3).timeout
 		var at := _at_spot(String(it["spot"]))
 		var id := String(it["id"])
@@ -127,8 +170,22 @@ func _run() -> void:
 		_check("camera_%s" % id, at[0] < 0.01 and at[1] < 0.5 and t <= limit, [snappedf(at[0], 0.001), snappedf(at[1], 0.01), snappedf(t, 0.01)], [0.01, 0.5, limit])
 		_check("tv_%s" % id, menu.tv_mode == String(it["tv"]), menu.tv_mode, it["tv"])
 		_check("zone_%s" % id, _zone_ok(String(it["zone"])), it["zone"])
+		await get_tree().create_timer(1.2).timeout     # N0 долетел
+		_check("n0_in_frame_%s" % id, _n0_in_frame(), _n0_screen())
+	_check("walk_bob", bob_max > 0.006 and bob_max < 0.05, snappedf(bob_max, 0.0001), [0.006, 0.05])
+	_check("hands_in_frame_after_walk", _hands_in_frame(), _hands_screen())
+	# 3а. «Боец»: Enter — к стене экранов, Esc — к списку
+	await _key(KEY_4)
+	await _settle()
+	await _key(KEY_ENTER)
+	await _settle()
+	var at_f := _at_spot("FighterClose")
+	_check("fighter_open", menu.state == "fighter" and at_f[0] < 0.01, [menu.state, snappedf(at_f[0], 0.001)])
+	await _key(KEY_ESCAPE)
+	await _settle()
+	_check("fighter_back", menu.state == "menu" and menu.focus == 3, [menu.state, menu.focus])
 	# 3б. «Настройки»: Enter открывает экран у радио, → громкость +10 % (Flow, сохраняется), ← обратно, ↓ графика, Esc — к списку
-	await _key(KEY_5)
+	await _key(KEY_6)
 	await _settle()
 	await _key(KEY_ENTER)
 	await _settle()
@@ -153,18 +210,9 @@ func _run() -> void:
 	_check("settings_gfx", gfx != null and menu.settings_ui.row == 2 and g1 != g0 and g2 == g0, [g0, g1, g2])
 	await _key(KEY_ESCAPE)
 	await _settle()
-	_check("settings_back", menu.state == "menu" and menu.focus == 4 and not menu.settings_ui.visible, [menu.state, menu.focus])
-	# голова куклы поворачивается к месту пункта: на «Быстром бое» (ворота слева) и «Настройках» (справа) — в разные стороны
-	if pd != null and not pd._neck_bodies.is_empty():
-		await _key(KEY_2)
-		await get_tree().create_timer(1.5).timeout
-		var yaw_q := pd._look_yaw
-		await _key(KEY_5)
-		await get_tree().create_timer(1.5).timeout
-		var yaw_s := pd._look_yaw
-		_check("doll_looks", yaw_q * yaw_s < 0.0 and absf(yaw_q - yaw_s) > 30.0, [snappedf(yaw_q, 0.1), snappedf(yaw_s, 0.1)])
+	_check("settings_back", menu.state == "menu" and menu.focus == 5 and not menu.settings_ui.visible, [menu.state, menu.focus])
 	# 3в. «Трофеи»: Enter — витрина, → следующий предмет (камера подъезжает к магнитоле), Esc — к списку
-	await _key(KEY_4)
+	await _key(KEY_5)
 	await _settle()
 	await _key(KEY_ENTER)
 	await _settle()
@@ -180,7 +228,7 @@ func _run() -> void:
 		[menu.state, menu.trophies_ui.index, snappedf(dpos, 0.001), seen])
 	await _key(KEY_ESCAPE)
 	await _settle()
-	_check("trophies_back", menu.state == "menu" and menu.focus == 3 and not menu.trophies_ui.visible, [menu.state, menu.focus])
+	_check("trophies_back", menu.state == "menu" and menu.focus == 4 and not menu.trophies_ui.visible, [menu.state, menu.focus])
 	# 4. цифра 3 → «Мастерская», Esc → «Выход»
 	await _key(KEY_3)
 	_check("digit_jump", menu.focus == 2, menu.focus, 2)
@@ -197,6 +245,41 @@ func _run() -> void:
 	var dt := (Time.get_ticks_msec() - t0) / 1000.0
 	_check("enter_to_ladder_s", menu.campaign.screen == GarageCampaign.Screen.LADDER and dt <= 1.8, snappedf(dt, 0.01), 1.8)
 	_check("presses_to_fight_from_title", true, 2, 2)
+
+
+## Руки героя: узел рук видим (камера гаража текущая), кисти — в кадре, в нижней половине.
+func _hands_screen() -> Array:
+	var out: Array = []
+	var h := menu.view.hands
+	for side in ["R", "L"]:
+		var p := (h.wrist(side) as Node3D).global_transform * Vector3(0, 0, -0.05)
+		out.append(menu.cam.unproject_position(p) if not menu.cam.is_position_behind(p) else Vector2(-1, -1))
+	return out
+
+
+func _hands_in_frame() -> bool:
+	var h := menu.view.hands
+	if h == null or not h.is_visible_in_tree():
+		return false
+	var vp := menu.get_viewport().get_visible_rect().size
+	for p in _hands_screen():
+		var v := p as Vector2
+		if v.x < 0.0 or v.x > vp.x or v.y < vp.y * 0.5 or v.y > vp.y * 1.08:
+			return false
+	return true
+
+
+## N0: перед камерой, ближе 2.6 м, в кадре и левее меню (меню — правые ~38 % кадра).
+func _n0_screen() -> Array:
+	var p := menu.n0.global_position
+	var vp := menu.get_viewport().get_visible_rect().size
+	var sp := menu.cam.unproject_position(p) if not menu.cam.is_position_behind(p) else Vector2(-1, -1)
+	return [snappedf(sp.x / vp.x, 0.01), snappedf(sp.y / vp.y, 0.01), snappedf(p.distance_to(menu.cam.global_position), 0.01)]
+
+
+func _n0_in_frame() -> bool:
+	var s := _n0_screen()
+	return float(s[0]) > 0.02 and float(s[0]) < 0.64 and float(s[1]) > 0.04 and float(s[1]) < 0.9 and float(s[2]) < 2.6
 
 
 func _tv_bound() -> bool:

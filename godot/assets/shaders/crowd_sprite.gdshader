@@ -1,5 +1,6 @@
-// Толпа спрайтами (tools/blender/crowd_sprites.py → assets/textures/crowd/crowd_atlas.png): модульные существа из деталей кита,
-// запечённые в атлас COLS × ROWS; у варианта POSES ячеек подряд (руки вниз / в стороны / вверх). Один MultiMesh квадов
+// Толпа спрайтами (tools/gen_crowd_people.py → assets/textures/crowd/crowd_atlas.png): очертания людей (06.10; до того — модульные
+// существа кита, tools/blender/crowd_sprites.py) в атласе COLS × ROWS; у варианта POSES ячеек подряд (руки вниз / в стороны / вверх).
+// Атлас белый (ноги чуть темнее) — цвет одежды даёт цвет экземпляра MultiMesh (COLOR), у каждого зрителя свой. Один MultiMesh квадов
 // (scenes/arena/crowd_multimesh.gd): квад всегда развёрнут к камере вокруг вертикали (камера боя без наклона, лист камеры).
 // INSTANCE_CUSTOM: x — вариант, y — фаза 0..1, z — яркость экземпляра, w — не занято.
 // cheer 0..1 — насколько болеют (арена поднимает на ударах о мембрану и KO): доля времени с поднятыми руками и частота.
@@ -43,5 +44,5 @@ void fragment() {
 	if (c.a < alpha_cut) {
 		discard;
 	}
-	ALBEDO = c.rgb * tint * brightness * cust.z;
+	ALBEDO = c.rgb * COLOR.rgb * tint * brightness * cust.z;
 }

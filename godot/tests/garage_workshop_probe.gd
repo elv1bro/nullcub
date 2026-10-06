@@ -1,9 +1,10 @@
 ## Проба мастерской внутри гаража меню (scenes/menu/garage_workshop.gd, docs/plan-demo/MENU_GARAGE.md §0) без окна:
 ##   godot --headless --path godot res://tests/garage_workshop_probe.tscn
-## Сценарий: гараж → мастерская грузится в фоне и встаёт в мир спящей → «МАСТЕРСКАЯ» (Enter): состояние workshop, камера у
-## мастерской без скачка, кукла игрока встала с ящика → правка сборки → «Испытать»: кукла оживает на полу гаража в плоскости
-## z = 0, не проваливается, манекен и камера есть → назад к сборке → двойной Esc: обратно в меню, камера гаража, кукла на ящике
-## пересобрана по новой сборке, мастерская уснула. Автосейв и настройки мастерской — свои probe-файлы (сборка игрока не трогается).
+## Сценарий: гараж → мастерская грузится в фоне и встаёт в мир спящей витриной (стенд и кукла видны, интерфейс и процесс — нет) →
+## «МАСТЕРСКАЯ» (Enter): герой идёт к верстаку, руки берут нейрошлем, шлем у лица, визор закрывает кадр — мастерская берёт камеру
+## без скачка → правка сборки → «Испытать»: кукла оживает на полу гаража в плоскости z = 0, не проваливается, манекен и камера есть →
+## назад к сборке → двойной Esc: шлем снят и лежит на подставке, обратно в меню, камера гаража, мастерская уснула витриной, кукла на
+## стенде и стена экранов — по новой сборке. Автосейв и настройки мастерской — свои probe-файлы (сборка игрока не трогается).
 ## В stdout «=== GARAGE WORKSHOP PROBE ===» и JSON; exit 0 — всё ок.
 extends Node
 
@@ -21,7 +22,6 @@ func _ready() -> void:
 	menu.live_tv = false
 	add_child(menu)
 	menu.workshop.ws_overrides = {"autosave_name": PROBE_BP, "load_autosave": false, "start_preset": "kit_human"}
-	(menu.player_doll as GarageDoll).blueprint_path = CraftEdit.save_path(PROBE_BP)
 	await get_tree().process_frame
 	await _run()
 	var ok := true
@@ -67,8 +67,10 @@ func _run() -> void:
 	var ws := w.ws
 	if ws == null:
 		return
-	_check("sleeps_in_menu", not ws.active and not ws.visible and ws.process_mode == Node.PROCESS_MODE_DISABLED,
-		[ws.active, ws.visible, ws.process_mode])
+	_check("sleeps_in_menu", not ws.active and ws.process_mode == Node.PROCESS_MODE_DISABLED and not (ws.get_node("UI") as CanvasLayer).visible,
+		[ws.active, ws.process_mode])
+	_check("showcase_doll_on_stand", ws.visible and ws.stand != null and ws.stand.is_visible_in_tree() and ws.stand_root.is_visible_in_tree(),
+		[ws.visible, ws.stand != null])
 	_check("embedded_no_arena", ws.embedded and ws.arena == null, [ws.embedded, ws.arena])
 	_check("garage_cam_current", menu.cam.is_current() and not ws.build_cam.is_current(), null)
 	# 2. вход: Enter на «Мастерской»
@@ -77,10 +79,20 @@ func _run() -> void:
 	await _key(KEY_3)
 	_check("focus_workshop", menu.focus == 2, menu.focus, 2)
 	await _wait(func() -> bool: return not menu.is_moving(), 4.0)
+	var hs := menu.headset
+	var rest := (menu.get_node("Props/Headset") as Node3D).global_position
+	var t_in := Time.get_ticks_msec()
 	await _key(KEY_ENTER)
 	_check("state_workshop", menu.state == "workshop", menu.state)
-	var opened := await _wait(func() -> bool: return ws.build_cam.is_current(), 4.0)
-	_check("camera_handed_over", opened and not menu.cam.is_current(), opened)
+	# нейрошлем: руки дотянулись и взяли его (шлем ушёл с подставки к лицу), окно визора закрылось
+	var lifted := await _wait(func() -> bool: return hs.headset.global_position.distance_to(rest) > 0.12, 4.0)
+	var hands_near := hs.view.hands.is_visible_in_tree() and (hs.view.hands.wrist("R") as Node3D).global_position.distance_to(hs.headset.global_position) < 0.35
+	_check("headset_lifted_by_hands", lifted and hands_near, [lifted, hands_near])
+	var opened := await _wait(func() -> bool: return ws.build_cam.is_current(), 6.0)
+	_check("camera_handed_over", opened and not menu.cam.is_current() and hs.worn, [opened, hs.worn])
+	_check("headset_ritual_s", (Time.get_ticks_msec() - t_in) / 1000.0 < 3.2, snappedf((Time.get_ticks_msec() - t_in) / 1000.0, 0.01), 3.2)
+	await _wait(func() -> bool: return not hs.busy, 3.0)
+	_check("visor_open_in_workshop", not hs.busy and not hs.overlay.visible, [hs.busy, hs.overlay.visible])
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_check("ws_awake", ws.active and ws.visible and ws.process_mode == Node.PROCESS_MODE_INHERIT, [ws.active, ws.visible])
@@ -90,7 +102,6 @@ func _run() -> void:
 	var dd := ws.build_cam.global_position.distance_to(sp)
 	_check("camera_at_build_frame_m", dd < 0.6, snappedf(dd, 0.001), 0.6)
 	_check("stand_doll_built", ws.stand != null and ws.stand.global_position.distance_to(ws.stand_root.global_position) < 0.5, null)
-	_check("garage_doll_hidden", not menu.player_doll.visible, null)
 	_check("garage_input_idle", menu.state == "workshop", null)
 	var ui_layer := ws.get_node("UI") as CanvasLayer
 	_check("ui_visible", ui_layer.visible and not menu.ui.visible, [ui_layer.visible, menu.ui.visible])
@@ -164,19 +175,24 @@ func _run() -> void:
 		back = await _wait(func() -> bool: return menu.state == "menu", 3.0)
 	_check("double_esc_returns_to_menu", back, menu.state)
 	_check("menu_cam_back", menu.cam.is_current() and not ws.build_cam.is_current(), null)
-	_check("ws_asleep_again", not ws.active and not ws.visible, [ws.active, ws.visible])
+	_check("ws_asleep_again", not ws.active and ws.process_mode == Node.PROCESS_MODE_DISABLED and not (ws.get_node("UI") as CanvasLayer).visible,
+		[ws.active, ws.process_mode])
 	_check("menu_ui_back", menu.ui.visible and menu.menu_box.visible and is_equal_approx(menu.ui.modulate.a, 1.0), null)
-	_check("garage_doll_back", menu.player_doll.visible, null)
+	var hp := (menu.get_node("Props/Headset") as Node3D)
+	_check("headset_back_on_stand", not hs.worn and not hs.busy and hp.get_parent() == menu.get_node("Props") and hp.global_position.distance_to(rest) < 0.01,
+		snappedf(hp.global_position.distance_to(rest), 0.001))
 	await _wait(func() -> bool: return not menu.is_moving(), 4.0)
 	var at := menu.cam.global_position.distance_to(menu.spot_transform("Workshop").origin)
 	_check("camera_back_at_menu_spot_m", at < 0.05, snappedf(at, 0.001), 0.05)
-	var pd := menu.player_doll
-	_check("garage_doll_rebuilt_from_workshop", pd.blueprint_source == "path" and pd.doll.blueprint.nodes.size() == parts_after,
-		[pd.blueprint_source, pd.doll.blueprint.nodes.size(), parts_after])
+	_check("showcase_doll_rebuilt", ws.visible and ws.stand != null and ws.stand.is_visible_in_tree() and ws.blueprint.nodes.size() == parts_after,
+		[ws.blueprint.nodes.size(), parts_after])
+	_check("stats_wall_new_build", int(menu.stats_wall.data.get("parts", -1)) == parts_after, [menu.stats_wall.data.get("parts"), parts_after])
 	# 6. повторный вход: мгновенно, без новой загрузки
 	var t0 := Time.get_ticks_msec()
 	menu.activate()
-	var again := await _wait(func() -> bool: return ws.build_cam.is_current(), 4.0)
+	var again := await _wait(func() -> bool: return ws.build_cam.is_current(), 6.0)
 	_check("reopen_same_instance", again and menu.workshop.ws == ws, snappedf((Time.get_ticks_msec() - t0) / 1000.0, 0.01))
+	await _wait(func() -> bool: return not hs.busy, 3.0)
 	menu.workshop.close()
-	_check("close_api", menu.state == "menu" and not ws.active, menu.state)
+	var closed := await _wait(func() -> bool: return menu.state == "menu" and not hs.busy, 4.0)
+	_check("close_api", closed and not ws.active, menu.state)

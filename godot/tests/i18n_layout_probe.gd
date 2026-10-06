@@ -82,7 +82,7 @@ func _pass() -> Dictionary:
 		menu.set_focus(i, true)
 		await _wait(SETTLE)
 		shots["garage:item%d" % i] = _scan(menu)
-	menu.set_focus(4, true)
+	menu.set_focus(5, true)
 	menu._open_settings()
 	await _wait(SETTLE)
 	shots["garage:settings"] = _scan(menu)
@@ -91,6 +91,12 @@ func _pass() -> Dictionary:
 	await _wait(SETTLE)
 	shots["garage:trophies"] = _scan(menu)
 	menu._close_trophies()
+	# загрузка связи нейрошлема (garage_headset.gd): надпись и строка поверх чёрного визора
+	menu.headset.overlay.visible = true
+	menu.headset._show_boot("NULL LINK", "нейрошлем · фильтр NULL включён · стенд 1")
+	await _wait(SETTLE)
+	shots["garage:headset_boot"] = _scan(menu)
+	menu.headset.overlay.visible = false
 	menu.set_focus(0, true)
 	await _wait(10)
 	menu.activate()

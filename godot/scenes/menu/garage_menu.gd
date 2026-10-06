@@ -10,6 +10,10 @@
 ## Пробы: dry_run (или аргумент `-- menu_dry_run=1`) — Enter не меняет сцену, только сигнал navigated(путь).
 ## API для проб: enter_menu(), set_focus(i, instant), activate(), tv_mode, state, focus, spot_transform(name), is_moving(), workshop.
 ## МАСТЕРСКАЯ — не смена сцены, а состояние "workshop": её сцена грузится в фоне и живёт в этом же мире (garage_workshop.gd).
+## 06.10 (автор: «мир людей»; LORE_V2 §2а — герой-механик): гараж от первого лица — камера = глаза героя, между пунктами он ходит,
+## внизу кадра его руки (garage_view.gd, fp_hands.gd); куклы на ящике нет — кукла висит на стенде мастерской (стенд спящей
+## встроенной мастерской); вход в мастерскую — надеть нейрошлем у верстака (garage_headset.gd); БОЕЦ — стена экранов с показателями
+## сборки (garage_stats_wall.gd); N0 летает по гаражу рядом с героем и говорит реплики (garage_n0.gd).
 class_name GarageMenu
 extends Node3D
 
@@ -26,6 +30,9 @@ const ITEMS := [
 	{"id": "workshop", "title": "МАСТЕРСКАЯ", "l1": "Сборка бойца · детали, шарниры, краска", "l2": "ENERGY ядра — сколько деталей потянет тело",
 		"spot": "Workshop", "zone": "bench", "tv": "build", "go": "res://scenes/workshop/workshop_build.tscn", "via": "IntoStand",
 		"n0": "Говорят, в боксе 07 кто-то собирает бойца из табуреток."},
+	{"id": "fighter", "title": "БОЕЦ", "l1": "Стена экранов · показатели сборки", "l2": "Масса, энергия, детали, шарниры, запас ❤",
+		"spot": "Fighter", "zone": "rack", "tv": "live", "go": "", "via": "",
+		"n0": "Датчики стенда не врут. В отличие от меня — я просто приукрашиваю."},
 	{"id": "trophies", "title": "ТРОФЕИ", "l1": "Детали, взятые у соперников", "l2": "Следующее место на полке пока пустое",
 		"spot": "Trophies", "zone": "shelf", "tv": "replay", "go": "", "via": "",
 		"n0": "Повтор! Следите за головой Полена. Нет, выше. Ещё выше."},
@@ -42,9 +49,14 @@ const SOON := {}
 const LIVE_LINES := ["…и Клёпа улетает в мембрану! Мембрана — один, Клёпа — ноль!", "Гравитация 0.20G — летаем, друзья, летаем!",
 	"Зрители голосуют: ПЕРЕВОРОТ ГРАВИТАЦИИ. Держите обед."]
 const ACCENT := Color(1.0, 0.55, 0.2)
-## Куда смотрит кукла игрока на каждом пункте (точки мира гаража).
-const LOOK := {"story": Vector3(1.62, 1.15, -2.26), "quick": Vector3(-3.5, 1.4, -1.8), "workshop": Vector3(-0.75, 1.0, -1.2),
-	"trophies": Vector3(1.8, 2.5, -2.85), "settings": Vector3(4.4, 1.0, 1.25), "modes": Vector3(1.62, 1.15, -2.26), "exit": Vector3(1.62, 1.15, -2.26)}
+## На что смотрит герой на каждом пункте (точки мира гаража): рядом с этим висит N0; side — с какой стороны от линии взгляда
+## (+1 — справа: предмет в левой трети кадра, N0 — между ним и меню; −1 — слева, если предмет и так у середины кадра).
+const SUBJECT := {"story": [Vector3(1.62, 1.15, -2.26), 1.0], "quick": [Vector3(-3.4, 1.4, -1.7), 1.0],
+	"workshop": [Vector3(-0.75, 1.15, -1.2), 1.0], "fighter": [Vector3(3.95, 1.6, -1.87), 1.0], "trophies": [Vector3(1.8, 2.35, -2.85), 1.0],
+	"settings": [Vector3(4.4, 1.1, 1.25), 1.0], "modes": [Vector3(1.62, 1.3, -2.26), -1.0], "exit": [Vector3(4.6, 1.3, 1.95), -1.0]}
+## Выражение N0 на реплике пункта.
+const N0_MOOD := {"story": "excited", "quick": "happy", "workshop": "curious", "fighter": "happy", "trophies": "happy",
+	"settings": "default", "modes": "confused", "exit": "sad"}
 const SCREEN := Vector2i(768, 576)
 const TV_DIR := "res://assets/textures/garage/tv/"
 const EXHIBIT_CAM := Vector3(0.5, -0.25, 2.15)    # камера витрины «Трофеи» относительно предмета
@@ -66,13 +78,6 @@ var cam: Camera3D
 var spots := {}                 # имя → Transform3D
 var spot_fov := {}
 var zone_lights := {}           # зона → [Light3D]
-var _from := Transform3D()
-var _to := Transform3D()
-var _fov_from := 50.0
-var _fov_to := 50.0
-var _t := 1.0
-var _dur := 0.75
-var _arc := 0.0
 var _tw_lights: Tween
 
 var tv_vp: SubViewport
@@ -97,7 +102,10 @@ var press_label: Label
 var settings_ui: GarageSettings
 var trophies_ui: GarageTrophies
 var _tw_exhibit: Tween
-var player_doll: GarageDoll
+var view: GarageView                   # глаза и руки героя (garage_view.gd)
+var headset: GarageHeadset             # нейрошлем у верстака (garage_headset.gd)
+var n0: GarageN0                       # N0 в гараже (garage_n0.gd)
+var stats_wall: GarageStatsWall        # стена экранов (garage_stats_wall.gd)
 var workshop: GarageWorkshop           # мастерская внутри гаража (scenes/menu/garage_workshop.gd)
 var campaign: GarageCampaign           # кампания в эфире телевизора (scenes/menu/garage_campaign.gd)
 var _live_line := 0
@@ -124,8 +132,16 @@ func _ready() -> void:
 		zone_lights[z].append(l)
 		l.set_meta("base", (l as Light3D).light_energy)
 	_setup_tv()
-	player_doll = get_node_or_null("Props/PlayerDoll") as GarageDoll
+	view = GarageView.new(cam)
+	view.name = "GarageView"
+	add_child(view)
 	_build_ui()
+	headset = GarageHeadset.new(self)
+	headset.name = "GarageHeadset"
+	add_child(headset)
+	n0 = get_node_or_null("Props/N0") as GarageN0
+	if n0 != null:
+		n0.cam = cam
 	workshop = GarageWorkshop.new(self)
 	workshop.name = "GarageWorkshop"
 	add_child(workshop)
@@ -136,13 +152,18 @@ func _ready() -> void:
 	campaign = GarageCampaign.new(self)
 	campaign.name = "GarageCampaign"
 	add_child(campaign)
+	stats_wall = GarageStatsWall.new(self)
+	stats_wall.name = "GarageStatsWall"
+	add_child(stats_wall)
+	workshop.instantiated.connect(func() -> void: stats_wall.refresh())
 	cam.global_transform = spots["Title"]
 	cam.fov = spot_fov["Title"]
-	_to = cam.global_transform
-	_fov_to = cam.fov
 	_show_title(true)
 	_apply_tv("live")
 	_set_zone_mult("", 0.0)
+	if n0 != null:
+		n0.hover_near(Vector3(1.62, 1.2, -2.26), cam.global_position, -1.0)
+		n0.snap_to(n0.target)
 	# вернулись из боя или мастерской (Flow.to_menu): сразу список на том же пункте, из темноты
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null and bool(flow.returning):
@@ -176,8 +197,7 @@ func set_focus(i: int, instant := false) -> void:
 	_apply_tv(String(it["tv"]))
 	_set_zone_mult(String(it["zone"]), 0.0 if instant else move_time)
 	_update_items()
-	if player_doll != null:
-		player_doll.look_toward(LOOK.get(String(it["id"]), LOOK["story"]))
+	_n0_follow(String(it["id"]), String(it["spot"]), instant)
 	if String(it["id"]) == "story":
 		var rv := story_rival()
 		_say(tr("Лига пройдена, чемпион. Табло пишет что-то ещё. Наверное, сбой.") if bool(rv["done"]) else tr(String(it["n0"])) % rv["title"])
@@ -203,6 +223,9 @@ func activate() -> void:
 	if id == "workshop":
 		workshop.open()
 		return
+	if id == "fighter":
+		_open_fighter()
+		return
 	if id == "story":
 		campaign.open()
 		return
@@ -220,6 +243,39 @@ func activate() -> void:
 	t2.tween_interval(0.85)
 	t2.tween_property(fade, "color:a", 1.0, 0.3)
 	t2.tween_callback(_go.bind(go))
+
+
+## N0 летит к тому, на что смотрит герой на пункте id (камера — в точке пункта spot).
+func _n0_follow(id: String, spot: String, instant := false) -> void:
+	if n0 == null or not spots.has(spot):
+		return
+	var sub: Array = SUBJECT.get(id, SUBJECT["story"])
+	n0.hover_near(sub[0] as Vector3, (spots[spot] as Transform3D).origin, float(sub[1]))
+	n0.light(false)
+	if instant:
+		n0.snap_to(n0.target)
+
+
+## БОЕЦ: подойти к стене экранов — данные свежие, N0 читает главное. Esc / Enter — обратно к списку.
+func _open_fighter() -> void:
+	state = "fighter"
+	menu_box.visible = false
+	stats_wall.refresh()
+	_move_to("FighterClose", 0.8, 0.0)
+	var d := stats_wall.data
+	if n0 != null:
+		n0.hover_near(Vector3(3.95, 2.0, -1.87), (spots["FighterClose"] as Transform3D).origin, 1.0)
+	if d.is_empty():
+		_say(tr("Стенд молчит. Сначала собери бойца."))
+		return
+	_say(tr("%s: %.1f кг, энергия %d из %d, деталей %d. Датчики довольны. Я — почти.") % [String(d.get("title", "")).trim_suffix(" *"),
+		float(d["mass"]) + float(d.get("weapon_mass", 0.0)), int(d["energy"]), int(d["budget"]), int(d["parts"])], "happy")
+
+
+func _close_fighter() -> void:
+	state = "menu"
+	menu_box.visible = true
+	set_focus(focus)
 
 
 func _open_settings() -> void:
@@ -309,7 +365,7 @@ func _frame(pos: Vector3, subj: Vector3, frac: float, fov: float) -> Transform3D
 
 
 func is_moving() -> bool:
-	return _t < 1.0
+	return view.is_moving()
 
 
 func spot_transform(name: String) -> Transform3D:
@@ -366,6 +422,9 @@ func _go(target: String) -> void:
 func _exit_sequence() -> void:
 	state = "leaving"
 	_say("")
+	if n0 != null:     # «Свет выключу сам» — N0 летит к рубильнику
+		n0.fly_to(Vector3(4.35, 1.45, 1.95))
+		n0.face_camera = true
 	var tw := create_tween()
 	tw.tween_property(ui, "modulate:a", 0.0, 0.3)
 	var order := ["bench", "shelf", "radio", "room", "gate", "tv"]
@@ -395,6 +454,11 @@ func _unhandled_input(e: InputEvent) -> void:
 		if trophies_ui.handle_input(e):
 			get_viewport().set_input_as_handled()
 		return
+	if state == "fighter":
+		if e.is_action_pressed("ui_cancel") or e.is_action_pressed("ui_accept") or (e is InputEventMouseButton and e.pressed):
+			get_viewport().set_input_as_handled()
+			_close_fighter()
+		return
 	if state == "title":
 		var pressed: bool = (e is InputEventKey and e.pressed and not e.echo) or (e is InputEventJoypadButton and e.pressed) \
 			or (e is InputEventMouseButton and e.pressed)
@@ -422,34 +486,17 @@ func _unhandled_input(e: InputEvent) -> void:
 func _move_to(spot: String, dur: float, arc: float, instant := false, ease_in := false) -> void:
 	if not spots.has(spot):
 		return
-	_move_xf(spots[spot], spot_fov[spot], dur, arc, instant, ease_in)
+	# к экрану ТВ, воротам, стенду — нырок (без шагов), к остальным точкам герой идёт
+	_move_xf(spots[spot], spot_fov[spot], dur, arc, instant, ease_in or spot.begins_with("Into"))
 
 
-func _move_xf(xf: Transform3D, fov: float, dur: float, arc: float, instant := false, ease_in := false) -> void:
-	_from = cam.global_transform
-	_to = xf
-	_fov_from = cam.fov
-	_fov_to = fov
-	_dur = max(dur, 0.01)
-	_arc = arc
-	_t = 1.0 if instant else 0.0
-	set_meta("ease_in", ease_in)
-	if instant:
-		cam.global_transform = _to
-		cam.fov = _fov_to
+## Камера (глаза героя) к кадру xf за dur: шагами (GarageView) или нырком (ease_in). arc — от прежней «дуги» камеры, не используется.
+func _move_xf(xf: Transform3D, fov: float, dur: float, _arc: float, instant := false, ease_in := false) -> void:
+	view.move(xf, fov, dur, instant, ease_in)
 
 
 func _process(delta: float) -> void:
-	if _t < 1.0:
-		_t = min(1.0, _t + delta / _dur)
-		var e := _t * _t * (3.0 - 2.0 * _t)
-		if bool(get_meta("ease_in", false)):
-			e = _t * _t * _t
-		var o := _from.origin.lerp(_to.origin, e)
-		o.y += sin(PI * _t) * _arc
-		var q := _from.basis.get_rotation_quaternion().slerp(_to.basis.get_rotation_quaternion(), e)
-		cam.global_transform = Transform3D(Basis(q), o)
-		cam.fov = lerpf(_fov_from, _fov_to, e)
+	view.process(delta)
 	_tv_process(delta)
 	if state == "title":
 		_live_timer += delta
@@ -955,7 +1002,9 @@ func _update_items() -> void:
 		y += 172.0 if on else 62.0
 
 
-func _say(s: String) -> void:
+func _say(s: String, mood := "") -> void:
+	if n0 != null and s != "":
+		n0.say(s, mood if mood != "" else String(N0_MOOD.get(String(ITEMS[focus]["id"]), "")) if state != "title" else "")
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null and not bool(flow.get_setting("subtitles")):
 		s = ""
