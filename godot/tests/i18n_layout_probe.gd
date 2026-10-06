@@ -21,6 +21,7 @@ const RACE := "res://scenes/playground_race.tscn"
 const ROYALE := "res://scenes/playground_royale.tscn"
 const GOLF := "res://scenes/playground_golf.tscn"
 const PUZZLE := "res://scenes/playground_puzzle.tscn"
+const CONVOY := "res://scenes/playground_convoy.tscn"
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -121,7 +122,7 @@ func _pass() -> Dictionary:
 	menu.queue_free()
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, ROYALE, GOLF, PUZZLE]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, ROYALE, GOLF, PUZZLE, CONVOY]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
@@ -178,6 +179,20 @@ func _pass() -> Dictionary:
 			pz.demo_finished.emit(297.5)
 			await _wait(SETTLE * 2)
 			shots["puzzle:end"] = _scan(inst)
+		if p == CONVOY:   # «Перегон: проба машины» (CONVOY.md): P2 вошёл, P1 за рулём (памятки длиннее), предупреждение и табличка финиша
+			var cv := inst as ConvoyPlayground
+			cv.join_p2()
+			cv.teleport(cv.p1, cv.car.door_global() + Vector3(0.0, 0.7, 0.0))
+			cv.car.enter(cv.p1)
+			cv.hud.refresh_help()
+			cv.pit_t = 0.5
+			await _wait(SETTLE)
+			shots["convoy:drive"] = _scan(inst)
+			cv.pit_t = 0.0
+			cv.done = true
+			cv.finished.emit(83.4, 4, 5)
+			await _wait(SETTLE * 2)
+			shots["convoy:end"] = _scan(inst)
 		inst.queue_free()
 		await _wait(5)
 		if p == SQUAD:   # экран настроек стычки перед боем (SquadSetup): строки, пояснение, кнопки
