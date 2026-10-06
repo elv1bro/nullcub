@@ -1,8 +1,11 @@
 ## Бот «Королевской битвы» (docs/plan-demo/ROYALE.md; MODES_PACK.md §2: «сначала к ближнему ящику, потом держатся внутри зоны и бьют
 ## ближнего, у края зоны — уходят внутрь»). Наследник SquadBrain стычки: держит дистанцию своего оружия, стреляет, когда ствол на цели,
 ## гаусс копит заряд, перезарядка, застревание, ящики. Своё:
-##   • каждый сам за себя: цели — все живые бойцы, кроме себя (группа RoyaleMatch.FIGHTERS_GROUP), разноса «со своими» нет, на линии
+##   • каждый сам за себя: цели — живые бойцы, кроме себя (группа RoyaleMatch.FIGHTERS_GROUP), разноса «со своими» нет, на линии
 ##     огня своих нет (_is_friend); сторона от цели — та, где бот уже есть (ствол перекладывается в руку стороны цели — RoyaleArm);
+##   • зрение (see_m): в сборе (первые ROYALE_BOT_CALM_S боя) — только вплотную, потом ROYALE_BOT_SEE_M (дальнобойный ствол — до
+##     ROYALE_BOT_SEE_FAR_M); кто ранил — виден ROYALE_BOT_GRUDGE_S где угодно. Без цели — патруль внутри будущей зоны (_roam_goal);
+##   • обход (_nav_to): прямой путь к цели движения закрыт — через метки графа видимости RaceNav (RoyaleMatch.NAV_MARKS);
 ##   • зона: все цели движения (_clamp_goal) — внутри стен «через ROYALE_BOT_LOOK_AHEAD_S с» с запасом ROYALE_BOT_EDGE_M; снаружи этих стен —
 ##     состояние «zone»: внутрь полной тягой (снаружи настоящих стен — с рывком), по дороге стреляет; ящики снаружи — не берёт;
 ##   • ящики (_pick_crate): без оружия (или без патронов) — к ближнему ящику с оружием, где бы он ни был; с оружием — к оружию рангом выше
@@ -19,6 +22,7 @@ const ROAM_S := 7.0
 const PICK_EVERY_S := 0.25            # выбор ящика — не чаще
 const NAV_EVERY_S := 0.3              # план пути через метки — не чаще
 const NAV_ARRIVE_M := 1.2             # у метки ближе этого — она пройдена
+const GRUDGE_MIN_HP := 4.0            # удар слабее (и не оружием) — не повод для мести
 
 var _pick_next := -1.0
 var _nav_next := -1.0
@@ -44,7 +48,11 @@ func _brain_ready() -> void:
 	_phase = float(doll.player_index) * 1.3
 
 
-func _on_damaged(_amount: float, attacker: Node, _part: String, _pos: Vector3, _kind: String) -> void:
+## Кто ранил — виден ROYALE_BOT_GRUDGE_S где угодно. Только настоящий удар (оружие или ≥ GRUDGE_MIN_HP): касания в толкотне у ящиков
+## в сборе иначе заводили драки до первого сжатия.
+func _on_damaged(amount: float, attacker: Node, _part: String, _pos: Vector3, kind: String) -> void:
+	if kind != "weapon" and amount < GRUDGE_MIN_HP:
+		return
 	if attacker is Doll and attacker != doll and is_instance_valid(attacker):
 		_grudge = attacker as Doll
 		_grudge_until = _time + Tuning.ROYALE_BOT_GRUDGE_S

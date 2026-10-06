@@ -223,7 +223,7 @@ func _draw_slow() -> void:
 		_draw_weapon_r(vp, view)
 	if _clock < HINT_S:
 		var a := clampf((HINT_S - _clock) / 1.2, 0.0, 1.0)
-		_text(Vector2(vp.x * 0.5, vp.y - 20.0), hint_text, 20, Color(1, 1, 1, 0.75 * a), HORIZONTAL_ALIGNMENT_CENTER, vp.x - 1100.0)
+		_text_wrap(Vector2(vp.x * 0.5, vp.y - 46.0), hint_text, 20, Color(1, 1, 1, 0.75 * a), HORIZONTAL_ALIGNMENT_CENTER, vp.x - 1100.0, 2)
 	canvas = keep
 
 

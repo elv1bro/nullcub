@@ -370,7 +370,9 @@ func _rules() -> void:
 	_heal_all()
 	var d1 := rm.bullet_hit(_doll(3), _doll(1), 10.0, "Torso", _doll(3).centre_of_mass(), Vector3.UP, "pistol")
 	var d2 := rm.bullet_hit(_doll(4), _doll(2), 10.0, "Torso", _doll(4).centre_of_mass(), Vector3.UP, "pistol")
-	_check("damage_any", d1 > 9.0 and d2 > 9.0, "P2 → P4 %.1f, P3 → P5 %.1f" % [d1, d2])
+	var want_d := 10.0 * Tuning.ROYALE_BULLET_MULT   # классов нет: у всех мест пули × 1 (в стычке места 4–5 — громила, × 0.5)
+	_check("damage_any", absf(d1 - want_d) < 0.01 and absf(d2 - want_d) < 0.01, "пуля 10 × %.2f: P2 → P4 %.1f, P3 → P5 %.1f" % [
+		Tuning.ROYALE_BULLET_MULT, d1, d2])
 	_heal_all()
 	_clear_crates()
 	await get_tree().physics_frame
@@ -562,6 +564,14 @@ func _restart_rules() -> void:
 	_check("restart", alive == 8 and armed == 0 and _crates().size() == want_total and rm.places.is_empty() and rm.zone.running
 		and is_equal_approx(rm.zone.left, rm.zone.map_l), "живых %d, с оружием %d, ящиков %d, зона %s" % [alive, armed, _crates().size(),
 		str(rm.zone.edges())])
+	# U: P2 — человек на стрелках (мозга нет, ввод с клавиатуры p2) и снова бот
+	pg.set_p2_bot(false)
+	var p2 := _doll(1)
+	var human_ok := not p2.external_input and p2.get_node_or_null(RoyalePlayground.BOT_NAME) == null and p2.input_prefix == "p2"
+	pg.set_p2_bot(true)
+	await get_tree().physics_frame
+	var bot_ok := p2.external_input and p2.get_node_or_null(RoyalePlayground.BOT_NAME) != null
+	_check("p2_toggle", human_ok and bot_ok, "U: P2 человек %s, снова бот %s" % [human_ok, bot_ok])
 
 
 # ------------------------------------------------------------------ прицел

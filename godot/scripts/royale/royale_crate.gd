@@ -7,7 +7,9 @@
 class_name RoyaleCrate
 extends SupplyCrate
 
-const WEAPON_SCALE := 2.4
+## Модель ствола в ящике — длиной около WEAPON_LEN_M (короткий пистолет крупнее, длинный гаусс — мельче), масштаб в WEAPON_SCALE.
+const WEAPON_LEN_M := 0.9
+const WEAPON_SCALE := Vector2(1.4, 3.4)
 const WEAPON_COLOUR := Color(1.0, 0.9, 0.55)
 const LIFE_FOREVER := 1.0e9
 
@@ -61,9 +63,10 @@ func _ready() -> void:
 	_body = Node3D.new()
 	add_child(_body)
 	var m := SquadGun.build_model(weapon_id, col)
-	m.scale = Vector3.ONE * WEAPON_SCALE
 	var l := float((Tuning.SQUAD_WEAPONS[weapon_id] as Dictionary).get("len", 0.3))
-	m.position = Vector3(-l * 0.4 * WEAPON_SCALE, 0.0, 0.0)   # рукоять у начала координат модели — по центру ящика середина ствола
+	var k := clampf(WEAPON_LEN_M / maxf(l, 0.05), WEAPON_SCALE.x, WEAPON_SCALE.y)
+	m.scale = Vector3.ONE * k
+	m.position = Vector3(-l * 0.4 * k, 0.0, 0.0)   # рукоять у начала координат модели — по центру ящика середина ствола
 	_body.add_child(m)
 	var ring := MeshInstance3D.new()
 	var tm := TorusMesh.new()

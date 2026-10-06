@@ -3,7 +3,9 @@
 ## и начало боя, когда живы все восемь. У каждого кадра — реальное время; в конце — средний fps, перцентили кадра, кадры дольше 33 / 50 /
 ## 100 мс, сколько в среднем было живых, и вердикт ok = fps_avg ≥ min_fps.
 ##   godot/tools/godot_nofocus.sh --path godot --resolution 1920x1080 res://tests/royale_perf_probe.tscn -- "seconds=60,min_fps=55,night=0,dolls=8"
-## → JSON между === ROYALE PERF === и === OK / FAIL ===, exit 0 / 1.
+##   (hud=0 — без HUD; auto=0 — без авто-масштаба 3D, только пресет графики; spike_ms — какие кадры разбирать по событиям)
+## → JSON между === ROYALE PERF === и === OK / FAIL ===, exit 0 / 1; в отчёте — загрузка машины (load_avg): пробы других сессий на той же
+## машине меняют fps в разы.
 extends Node
 
 const SCENE := "res://scenes/playground_royale.tscn"
@@ -15,6 +17,8 @@ var night := false
 var dolls_n: int = Tuning.ROYALE_FIGHTERS
 var spike_ms := 40.0
 var hud := true
+var auto_scale := true
+var _auto_before := true
 var pg: RoyalePlayground
 var rm: RoyaleMatch
 var frames: Array = []
@@ -47,10 +51,26 @@ func _ready() -> void:
 				"dolls": dolls_n = int(kv[1])
 				"spike_ms": spike_ms = float(kv[1])
 				"hud": hud = kv[1] != "0"
+				"auto": auto_scale = kv[1] != "0"
 	_run.call_deferred()
 
 
+## Авто-масштаб 3D (Gfx + DynRes) на время пробы: auto=0 — масштаб только по пресету (без снижения под нагрузкой); в настройки игрока
+## не пишется (set_auto_scale сохранил бы), в конце — как было.
+func _set_auto(on: bool) -> void:
+	var gfx := get_node_or_null("/root/Gfx")
+	if gfx == null:
+		return
+	gfx.set("auto_scale", on)
+	(gfx.get("dyn") as DynRes).reset()
+	gfx.call("_refresh_scale")
+
+
 func _run() -> void:
+	var gfx := get_node_or_null("/root/Gfx")
+	_auto_before = bool(gfx.get("auto_scale")) if gfx != null else true
+	if not auto_scale:
+		_set_auto(false)
 	pg = (load(SCENE_NIGHT if night else SCENE) as PackedScene).instantiate() as RoyalePlayground
 	pg.p1_bot = true
 	pg.fighters = dolls_n
@@ -148,7 +168,9 @@ func _report() -> void:
 		"ms_p99": snappedf(pct.call(0.99), 0.1), "ms_max": snappedf(float(sorted[n - 1]) if n > 0 else 0.0, 0.1), "over_ms": counts,
 		"alive_avg": snappedf(float(alive_sum) / maxf(float(n), 1.0), 0.1), "matches_finished": matches,
 		"render_scale": snappedf(get_window().scaling_3d_scale, 0.01), "hud": hud, "events": ev_count, "spikes": spikes.slice(0, 30),
-		"load_avg": _load_avg()}
+		"load_avg": _load_avg(), "auto_scale": auto_scale}
+	if not auto_scale:
+		_set_auto(_auto_before)
 	print("=== ROYALE PERF ===")
 	print(JSON.stringify(report, " "))
 	print("=== OK ===" if ok else "=== FAIL ===")

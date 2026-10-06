@@ -979,7 +979,8 @@ const ROYALE_ZONE_FINAL := {"wait": 25.0, "shrink": 25.0, "width": 0.0, "dps": 1
 const ROYALE_ZONE_TICK_S := 0.25
 ## Ящики на старте (виды стычки + оружие): столько каждого вида на случайных точках карты (ProvingGround.supply_points — их 13).
 const ROYALE_CRATES := {"weapon": 7, "ammo": 1, "health": 2, "armor": 1, "boost": 1}
-## Оружие в ящиках (Tuning.SQUAD_WEAPONS): weight — доля выпадения, tier — ранг, zoom — камера игрока дальше с этим оружием в руке.
+## Оружие в ящиках (Tuning.SQUAD_WEAPONS): weight — доля выпадения, tier — ранг, zoom — камера игрока дальше с этим оружием в руке,
+## max — не больше стольких на старте (гаусс бьёт сквозь стены по 64 HP: три гаусса на карте решали бой за 40 с, проба 06.10).
 ## Подбор касанием: без оружия — берёшь; то же оружие — как патроны; ранг выше твоего (или у твоего нет патронов совсем) — меняешь,
 ## а твоё остаётся ящиком на этом месте; ранг ниже или равный — ящик не тратится.
 const ROYALE_WEAPONS := {
@@ -988,8 +989,8 @@ const ROYALE_WEAPONS := {
 	"smg": {"weight": 1.6, "tier": 3, "zoom": 1.0},
 	"shotgun": {"weight": 1.3, "tier": 3, "zoom": 1.0},
 	"rifle": {"weight": 1.3, "tier": 3, "zoom": 1.2},
-	"marksman": {"weight": 0.8, "tier": 4, "zoom": 1.3},
-	"gauss": {"weight": 0.5, "tier": 5, "zoom": 1.3},
+	"marksman": {"weight": 0.8, "tier": 4, "zoom": 1.3, "max": 1},
+	"gauss": {"weight": 0.5, "tier": 5, "zoom": 1.3, "max": 1},
 }
 ## Новые ящики — редко (решение 06.10): раз в ROYALE_SUPPLY_EVERY_S один ящик (виды и веса ROYALE_SUPPLY_KINDS) на свободной точке
 ## внутри зоны, если на карте меньше ROYALE_SUPPLY_MAX ящиков. 0 — не появляются.

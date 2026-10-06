@@ -51,7 +51,10 @@ var drops := 0
 var weapons_taken := 0
 var weapon_swaps := 0
 var _nav: RaceNav = null
+var _picked: Dictionary = {}        # ствол → сколько выпало из ящиков в этом бою (ROYALE_WEAPONS.max)
 var _weapons: Dictionary = {}       # player_index → id оружия из ящика ("" — нет)
+## player_index → последнее оружие бойца (в итогах — и у выбывших: _weapons при выбывании стирается).
+var last_weapon: Dictionary = {}
 var _slots: Array = []              # player_index → номер точки Tuning.ROYALE_SPAWN
 var _zone_acc := 0.0
 var _resupply_t := 0.0
@@ -216,6 +219,7 @@ func restart() -> void:
 
 func begin() -> void:
 	_weapons.clear()
+	last_weapon.clear()
 	places.clear()
 	winner_index = -1
 	outside_s.clear()
@@ -223,6 +227,7 @@ func begin() -> void:
 	outside_max.clear()
 	zone_damage.clear()
 	crates_spawned = 0
+	_picked.clear()
 	crates_resupplied = 0
 	drops = 0
 	weapons_taken = 0
@@ -394,16 +399,25 @@ func _add_crate(c: RoyaleCrate) -> void:
 	crates_spawned += 1
 
 
+## Случайный ствол по весам Tuning.ROYALE_WEAPONS; ствол, которого на старте уже max штук, не выпадает (_picked — за этот бой).
 func _pick_weapon() -> String:
+	var ids: Array = []
 	var total := 0.0
 	for id in Tuning.ROYALE_WEAPONS:
-		total += float(Tuning.ROYALE_WEAPONS[id]["weight"])
+		var def: Dictionary = Tuning.ROYALE_WEAPONS[id]
+		if def.has("max") and int(_picked.get(id, 0)) >= int(def["max"]):
+			continue
+		ids.append(id)
+		total += float(def["weight"])
+	var pick := Tuning.SQUAD_START_WEAPON
 	var r := _rng.randf() * total
-	for id in Tuning.ROYALE_WEAPONS:
+	for id in ids:
 		r -= float(Tuning.ROYALE_WEAPONS[id]["weight"])
 		if r <= 0.0:
-			return String(id)
-	return Tuning.SQUAD_START_WEAPON
+			pick = String(id)
+			break
+	_picked[pick] = int(_picked.get(pick, 0)) + 1
+	return pick
 
 
 ## Редкий новый ящик (ROYALE_SUPPLY_*): на свободной точке внутри стен, к которым идёт зона.
@@ -477,6 +491,7 @@ func take_crate(d: Doll, c: RoyaleCrate) -> bool:
 	var old_mag := g.mag
 	var old_res := g.reserve
 	_weapons[d.player_index] = c.weapon_id
+	last_weapon[d.player_index] = c.weapon_id
 	_equip(d)
 	if c.mag >= 0:
 		g.mag = mini(c.mag, g.mag_max)
@@ -572,6 +587,6 @@ func build_results(reason: String = "timeout") -> Dictionary:
 	r["zone_stage"] = zone.stage_no()
 	r["zone_damage"] = zone_damage.duplicate()
 	r["outside_max"] = outside_max.duplicate()
-	r["weapons"] = _weapons.duplicate()
+	r["weapons"] = last_weapon.duplicate()
 	r["mode"] = "royale"
 	return r
