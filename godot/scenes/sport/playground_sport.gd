@@ -7,6 +7,8 @@
 ##       (стрелки / правый Ctrl / Enter) — бот отдаст управление сам.
 ## Камера держит в кадре обе куклы и мяч (группа sport_cam); масштаб игрока (DynamicCamera.user_zoom, общий на все арены, по
 ## умолчанию 1.5× ближе) здесь на время сцены сброшен в 1 — иначе при разлёте по залу мяч или соперник уходили бы за кадр.
+## «Запас из деталей» (PartHp, «;») в зале по умолчанию включён (Tuning.SPORT_PARTHP, автор 06.10) — ставится в _enter_tree, раньше
+## _ready кукол (запасы суставов считаются по режиму); на выходе из зала оба режима отрыва возвращаются как были.
 extends "res://scenes/playground.gd"
 
 const CAM_GROUP := "sport_cam"
@@ -19,6 +21,14 @@ const BOT_NAME := "SportBrain"
 var ball: SportBall
 var sport_hud: SportHud
 var _zoom_before := 1.0
+var _break_modes_before: Array = []   # [PartHp.on, JointBreak.on] до входа в зал
+
+
+func _enter_tree() -> void:
+	_break_modes_before = [PartHp.on, JointBreak.on]
+	if Tuning.SPORT_PARTHP:
+		PartHp.set_on(true)
+		JointBreak.set_on(false)   # один механизм отрыва — два режима сразу не ведём (HitJuice)
 
 
 func _ready() -> void:
@@ -38,6 +48,9 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	DynamicCamera.user_zoom = _zoom_before
+	if _break_modes_before.size() == 2:
+		PartHp.set_on(bool(_break_modes_before[0]))
+		JointBreak.set_on(bool(_break_modes_before[1]))
 
 
 func sport_match() -> SportMatch:

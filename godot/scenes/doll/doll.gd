@@ -154,6 +154,11 @@ var joint_depth: Dictionary = {}
 ## Запас из деталей (PartHp, docs/plan-demo/WORKSHOP_V4.md): имя тела → ❤ детали (масса × материал, PartHp.hp_of). Считается всегда
 ## (_init_part_hp), в бою работает только при PartHp.on: запас бойца = Σ ❤ (parts_hp_total, ставит Match), отрыв уносит ❤ поддерева.
 var part_hp: Dictionary = {}
+## Деталей нет с рождения (спорт-зал, автор 06.10: «между матчами не чиним, оставляем как есть»): имена тел сцены, ставит
+## Match.respawn_doll(keep_lost) до add_child — _ready убирает эти тела, всё, что на них висит, и их суставы до сборки куклы.
+## Торс и голова не убираются. Только кукла из сцены (doll.tscn): ModularDoll строит тела в _ready сама.
+var missing_parts: PackedStringArray = []
+var _born_parts: Array = []   # имена тел после сборки (_ready): чего из них нет в parts — оторвано (lost_part_names)
 ## Связки (KitLink, строит ModularDoll._build_links после спавна в позе; WORKSHOP_V4.md «Связки»): имя связки → {id, type, bodies, joints,
 ## a, b (тела концов), hp (❤), len, strut (сустав телескопа у пружины и поршня), extend, channel}; имя тела связки → имя связки.
 ## Суставы связок не суставы мышц: в joints их нет. Износ связки (link_wear) тратит урон в её тела в любом бою — связку можно перебить.
@@ -242,11 +247,14 @@ func _ready() -> void:
 		_group_zeta[g] = muscle_zeta if muscle_zeta >= 0.0 else float(G.get("zeta", Tuning.MUSCLE_ZETA))
 
 	# части и суставы — из дерева сцены
+	if not missing_parts.is_empty():
+		_drop_missing_parts()
 	for c in get_children():
 		if c is RigidBody3D:
 			parts[c.name] = c
 		elif c is Generic6DOFJoint3D:
 			joints[c.name] = c
+	_born_parts = parts.keys()
 	for j in joints.values():
 		var a := j.get_node_or_null(j.node_a) as RigidBody3D
 		var b := j.get_node_or_null(j.node_b) as RigidBody3D
@@ -301,6 +309,41 @@ func _ready() -> void:
 		add_child(skin)
 		if skin.apply(self, skin_scene, skin_mode, skin_bone_map):
 			_set_rig_visible(false)
+
+
+## Убрать до сборки тела missing_parts (кроме торса и головы), всё, что висит на них по суставам (node_a — родитель, node_b — ребёнок),
+## и суставы, которые к ним шли.
+func _drop_missing_parts() -> void:
+	var gone: Array = []
+	for c in get_children():
+		var base := part_base_name(String(c.name))
+		if c is RigidBody3D and missing_parts.has(String(c.name)) and base != "Torso" and base != "Head":
+			gone.append(c)
+	var js: Array = get_children().filter(func(c: Node) -> bool: return c is Generic6DOFJoint3D)
+	var i := 0
+	while i < gone.size():
+		for j in js:
+			var child := (j as Generic6DOFJoint3D).get_node_or_null((j as Generic6DOFJoint3D).node_b)
+			if (j as Generic6DOFJoint3D).get_node_or_null((j as Generic6DOFJoint3D).node_a) == gone[i] and child is RigidBody3D and not gone.has(child):
+				gone.append(child)
+		i += 1
+	for j in js:
+		var jj := j as Generic6DOFJoint3D
+		if gone.has(jj.get_node_or_null(jj.node_a)) or gone.has(jj.get_node_or_null(jj.node_b)):
+			gone.append(jj)
+	for n in gone:
+		remove_child(n)
+		(n as Node).queue_free()
+
+
+## Имена деталей, которых у куклы уже нет: не было с рождения (missing_parts) и оторванные в бою со всем, что на них висело (detach_part,
+## break_link). Голова и торс не попадают: их отрыв — KO, тела остаются в parts.
+func lost_part_names() -> PackedStringArray:
+	var out := PackedStringArray(missing_parts)
+	for n in _born_parts:
+		if not parts.has(n) and not out.has(String(n)):
+			out.append(String(n))
+	return out
 
 
 ## Ставит суставы групп groups (по порядку: проксимальные раньше) в позу покоя до первого шага физики: дистальная цепь сустава
@@ -680,6 +723,14 @@ func _wear_link(ln: String, dealt: float, by: Node) -> void:
 		break_link.call_deferred(ln, by)
 
 
+## Связка, на которой висит деталь part_name (деталь «на связке»); "" — такой нет.
+func _tether_link_of(part_name: String) -> String:
+	for ln in links_rt:
+		if String(links_rt[ln].get("tether_child", "")) == part_name:
+			return String(ln)
+	return ""
+
+
 ## Порвать связку ln: суставы освобождаются, её тела — обломки (как оторванная деталь), контур раскрывается. В «Запасе из деталей»
 ## запас бойца теряет её ❤. false — такой целой связки нет.
 func break_link(ln: String, by: Node = null) -> bool:
@@ -692,6 +743,7 @@ func break_link(ln: String, by: Node = null) -> bool:
 		if is_instance_valid(b):
 			pos += (b as Node3D).global_position / float(bodies.size())
 	joint_broken.emit(String((bodies[0] as Node).name) if not bodies.is_empty() and is_instance_valid(bodies[0]) else ln, by, pos)   # вспышка и искры (JointBreakFx)
+	var tchild := String(rec.get("tether_child", ""))   # деталь на этой связке: улетит со всей веткой
 	links_rt.erase(ln)
 	link_wear.erase(ln)
 	for j in rec["joints"]:
@@ -721,6 +773,8 @@ func break_link(ln: String, by: Node = null) -> bool:
 						(s as RigidBody3D).remove_collision_exception_with(p))
 	stats["links_broken"] = int(stats.get("links_broken", 0)) + 1
 	link_broken.emit(ln, by, pos)
+	if tchild != "" and parts.has(tchild) and alive:
+		detach_part(tchild, by, true)
 	var lost := float(rec.get("hp", 0.0)) if PartHp.on and alive else 0.0
 	if lost > 0.0:
 		max_hp = maxf(max_hp - lost, 1.0)
@@ -909,7 +963,8 @@ func _tick_charge(delta: float, boosting: bool, spinning: bool) -> void:
 ## мышц и трения; пары мышц поддерева, переопределения и смешивание позы удаляются; DollCombat перестаёт слушать эти тела; оружие
 ## в оторванной кисти выпадает; тела получают мировой дамп и через 0.2 с сталкиваются с куклой (сразу нельзя — они перекрываются
 ## в точке сустава, Jolt растолкнул бы их). Кукла живёт дальше. Голова или торс — KO (kind "detach"). Возвращает оторванное тело.
-func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
+## free_root — тело без сустава подвеса (деталь «на связке», KitJoint on_rope…): зовёт break_link своей связки, когда она рвётся.
+func detach_part(part_name: String, by: Node = null, free_root := false) -> RigidBody3D:
 	var b := parts.get(part_name) as RigidBody3D
 	if b == null or _broken:
 		return null
@@ -927,7 +982,10 @@ func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
 			hang = j
 			hang_name = String(jn)
 			break
-	if hang == null:
+	if hang == null and not free_root:
+		var tl := _tether_link_of(part_name)   # деталь на связке: отрыв = разрыв её связки (он и унесёт ветку)
+		if tl != "" and break_link(tl, by):
+			return b
 		return null
 	# поддерево: b и всё, что висит на нём по суставам
 	var sub: Array = [b]
@@ -948,6 +1006,8 @@ func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
 	for s in sub:
 		sub_names.append(String((s as Node).name))
 	for ln in links_rt.keys():   # связки, которые шли к оторванному куску, рвутся вместе с ним
+		if not links_rt.has(ln):
+			continue   # уже порвана: разрыв связки детали «на связке» уносит ветку, а с ней и связки ниже
 		if sub.has(links_rt[ln]["a"]) or sub.has(links_rt[ln]["b"]):
 			break_link(String(ln), by)
 	# оружие в оторванной кисти выпадает (WeaponPickup и похожие: is_holding / drop)
@@ -956,16 +1016,17 @@ func detach_part(part_name: String, by: Node = null) -> RigidBody3D:
 			for hn in sub_names:
 				if bool(c.call("is_holding", hn)):
 					c.call("drop", hn)
-	var rec := {"hang": hang, "hang_name": hang_name, "parent": hang.get_node_or_null(hang.node_a), "sub": sub,
-		"hang_friction": float(_friction_base.get(hang, 0.0)), "sub_joints": [], "pairs": [], "monitored": []}
+	var rec := {"hang": hang, "hang_name": hang_name, "parent": hang.get_node_or_null(hang.node_a) if hang != null else null, "sub": sub,
+		"hang_friction": float(_friction_base.get(hang, 0.0)) if hang != null else 0.0, "sub_joints": [], "pairs": [], "monitored": []}
 	# сустав подвеса не удаляется: без тел он инертен и остаётся ребёнком куклы (reattach_part подключит его снова)
-	hang.set("angular_motor_z/enabled", false)
-	hang.node_a = NodePath()
-	hang.node_b = NodePath()
-	joints.erase(hang_name)
-	_friction_base.erase(hang)
-	_joint_override.erase(hang_name)
-	_pose_blend.erase(hang_name)
+	if hang != null:
+		hang.set("angular_motor_z/enabled", false)
+		hang.node_a = NodePath()
+		hang.node_b = NodePath()
+		joints.erase(hang_name)
+		_friction_base.erase(hang)
+		_joint_override.erase(hang_name)
+		_pose_blend.erase(hang_name)
 	for jn in sub_joints:
 		var j := joints[jn] as Generic6DOFJoint3D
 		(rec["sub_joints"] as Array).append([String(jn), j, float(_friction_base.get(j, 0.0))])

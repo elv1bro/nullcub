@@ -21,6 +21,8 @@ var _hovered := false
 
 
 static func colour(jt: String) -> Color:
+	if KitJoint.is_tether(jt):   # деталь на связке — цвет вида связки (KitLink.COLORS)
+		return KitLink.colour(KitJoint.tether_link(jt))
 	return COLORS.get(jt if jt != "" else KitJoint.DEFAULT, Color.WHITE)
 
 
@@ -34,7 +36,11 @@ func setup_link(t: String) -> void:
 
 func setup(jt: String) -> void:
 	var e0 := KitJoint.energy_of(jt)
-	_setup_any(jt, tr(String(KitJoint.info(jt).get("title", jt))), tr(String(KitJoint.info(jt).get("hint", ""))), "⚡%d" % e0, colour(jt), e0 > 0, _tooltip(jt))
+	var et := "⚡%d" % e0
+	if KitJoint.is_tether(jt):   # на связке: цена — связка по длине (как на вкладке «Связки»), не ноль
+		et = tr("⚡%d/м") % int(float(KitLink.info(KitJoint.tether_link(jt))["energy_m"]))
+	_setup_any(jt, tr(String(KitJoint.info(jt).get("title", jt))), tr(String(KitJoint.info(jt).get("hint", ""))), et, colour(jt),
+		e0 > 0 or KitJoint.is_tether(jt), _tooltip(jt))
 
 
 func _setup_any(jt: String, title_text: String, hint_text: String, energy_text: String, col: Color, energy_lit: bool, tip: String) -> void:
@@ -131,7 +137,14 @@ func _gui_input(event: InputEvent) -> void:
 static func _tooltip(jt: String) -> String:
 	var info := KitJoint.info(jt)
 	var lines: PackedStringArray = [TranslationServer.translate(String(info.get("title", jt))), TranslationServer.translate(String(info.get("hint", "")))]
-	if KitJoint.is_weld(jt):
+	if KitJoint.is_tether(jt):
+		lines.append(TranslationServer.translate("сустава и мышцы нет: деталь со всем, что на ней, висит на связке «%s»") % KitLink.title_of(KitJoint.tether_link(jt)))
+		lines.append(TranslationServer.translate("клик ещё раз — длиннее: %s м") % " / ".join(KitJoint.tether_lens(jt).map(func(x: Variant) -> String: return "%.1f" % float(x))))
+		lines.append(TranslationServer.translate("энергия — связка по длине и вынос всей ветки дальше от ядра; связку можно перебить"))
+		lines.append(TranslationServer.translate("тяга на ней — мышь крутит её вокруг крепления связки"))
+		if KitLink.uses_channel(KitJoint.tether_link(jt)):
+			lines.append(TranslationServer.translate("канал поршня: вкладка «Связки», инструмент «Поршень» — клик по нему"))
+	elif KitJoint.is_weld(jt):
 		lines.append(TranslationServer.translate("своего тела и сустава нет: масса и формы — у родителя"))
 		lines.append(TranslationServer.translate("нельзя: голова, рука мышью, деталь с суставом на конце"))
 	else:

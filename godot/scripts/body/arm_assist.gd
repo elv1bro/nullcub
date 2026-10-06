@@ -473,6 +473,7 @@ func _setup() -> void:
 			_l1 = (chain[1][1] as Node3D).position.distance_to((chain[2][1] as Node3D).position)
 			_l2 = reach - _l1
 		_setup_ik(chain)
+	_tether_root(chain, cur)
 	_ready_done = true
 	if button == "":
 		button = _button_of(part_name)
@@ -480,6 +481,31 @@ func _setup() -> void:
 		_make_hints()
 	if primary and _auto_part:
 		_spawn_sisters.call_deferred()
+
+
+## Цепь упёрлась в деталь на связке (KitJoint on_rope / on_bar / …, Doll.links_rt[…].tether_child — сустава к родителю нет):
+## центр круга — точка крепления связки на родителе, досягаемость = цепь до детали на связке + путь по ней до связки + длина связки.
+## Мышь крутит кистень вокруг крепления; позой (локоть, IK) цепь за связкой не гнётся.
+func _tether_root(chain: Array, top: RigidBody3D) -> void:
+	var links: Variant = doll.get("links_rt")
+	if not links is Dictionary or top == null:
+		return
+	for ln in links:
+		var rec: Dictionary = links[ln]
+		if String(rec.get("tether_child", "")) != String(top.name) or not is_instance_valid(rec.get("a")):
+			continue
+		var from := grip_local   # точка, где цепь входит в деталь на связке (в её системе): хват или сустав с ребёнком
+		if not chain.is_empty():
+			var low := chain[chain.size() - 1][0] as RigidBody3D
+			from = top.to_local(low.to_global(_pivot_local(low, chain[chain.size() - 1][1])))
+		reach = (0.0 if chain.is_empty() else reach) + from.distance_to(rec["pb"] as Vector3) + float(rec.get("len", 0.0))
+		_root_body = rec["a"] as RigidBody3D
+		_root_local = rec["pa"] as Vector3
+		_mid_joints.clear()
+		_ik = {}
+		_l1 = 0.0
+		_l2 = 0.0
+		return
 
 
 ## Точка сустава joint в системе тела b (его ребёнка). Узлы Generic6DOFJoint3D не двигаются с телами, а Doll._snap_to_pose

@@ -95,6 +95,9 @@ var _bp_pose: Dictionary = {}          # имя сустава -> measured-гр�
 var _chain_inertia: Dictionary = {}    # имя сустава -> кг·м², инерция дистальной цепи вокруг оси сустава (сборка, по прямой)
 var _striker: Dictionary = {}          # имя тела -> true: бьющая деталь (STRIKER_KINDS), монитор контактов в _hook_combat
 var _joint_type: Dictionary = {}       # имя сустава -> тип шарнира KitJoint ("pin", "free", "spring", "motor"), для _update_pair_gains
+## Детали «на связке» (KitJoint on_rope / on_bar / on_spring / on_piston): {uid, a (тело родителя), b (тело детали), link, len, channel,
+## a_frame (кадр якоря в теле родителя), b_frame (кадр Socket в теле детали)} — порядок от корня; связки строит _build_tethers.
+var _tether_specs: Array = []
 var _paint: Dictionary = {}            # uid -> ручка слоя краски BodyPaint.attach_layer {layer, tex, materials, mesh_root}
 var _stickers: Dictionary = {}         # uid -> Array[MeshInstance3D] наклеек узла (BodyPaint.add_sticker)
 ## Активные блоки и пассивы деталей (scripts/active/active_rig.gd, docs/plan-demo/ACTIVE_BLOCKS.md): заряд, каналы 1–3; null — нет.
@@ -116,10 +119,12 @@ func _ready() -> void:
 	set_pose(_bp_pose)
 	if snap:
 		_snap_pose(SPAWN_POSE_GROUPS)
-	if blueprint != null and not blueprint.links.is_empty():
+	if blueprint != null and (not blueprint.links.is_empty() or not _tether_specs.is_empty()):
 		if snap:   # связки строятся в позе покоя целиком (и кисти, и стопы, и шея) — иначе мышцы дотягивали бы позу против связок
 			_snap_pose(LINK_POSE_GROUPS)
+		_place_tethered()
 		_build_links()
+		_build_tethers()
 	child_entered_tree.connect(_on_child_entered)
 	part_reattached.connect(_on_part_reattached)
 	for c in get_children():
@@ -278,6 +283,9 @@ func _snap_pose(groups: Array) -> void:
 				var rb := body as RigidBody3D
 				var tr := rb.global_transform
 				rb.global_transform = Transform3D(rot * tr.basis, pivot + rot * (tr.origin - pivot))
+	if not _tether_specs.is_empty():   # ветки на связках суставом с родителем не связаны — к креплениям, тела связок — между концами
+		_place_tethered()
+		refresh_links()
 
 
 ## Тело b и всё ниже него по суставам.
@@ -356,6 +364,10 @@ func _build() -> void:
 			a = (p["anchors"] as Dictionary)[String(n["anchor"])]
 			a_xf = (p["xf"] as Transform3D) * (a["xf"] as Transform3D)
 			mirror = bool(p["mirror"]) != bool(a["mirror"])
+		var tether := parent != "" and KitJoint.is_tether(blueprint.joint_type_of(uid)) and not blueprint.is_fixed(uid)
+		var a_anchor := a_xf   # кадр якоря родителя — у детали на связке её Socket уходит дальше по оси якоря на длину связки
+		if tether:
+			a_xf = a_xf * Transform3D(Basis.IDENTITY, Vector3(0.0, -KitJoint.tether_len_of(n), 0.0))
 		_mirror_part(inst, mirror)
 		# кит v2 (BODY_KIT.md §4): материал узла — до слияния, пока меши ещё под инстансом детали
 		var mat_id := blueprint.node_mat(uid)
@@ -433,6 +445,11 @@ func _build() -> void:
 		else:
 			rel = float(a["rest_deg"])
 		var host_p: RigidBody3D = info[parent]["body"]
+		if tether:   # на связке: сустава и мышцы нет — связку строит _build_tethers после спавна в позе
+			_tether_specs.append({"uid": uid, "a": host_p, "b": inst, "anchor": a_anchor, "sock": a_xf,
+				"link": KitJoint.tether_link(blueprint.joint_type_of(uid)), "len": KitJoint.tether_len_of(n),
+				"channel": clampi(int(n.get(KitLink.CHANNEL_KEY, 1)), 1, ActiveBlocks.CHANNELS)})
+			continue
 		var a0 := rad_to_deg(_rot_z(xf.basis) - _rot_z((info[parent]["body_xf"] as Transform3D).basis))
 		var jn := blueprint.joint_name_of(uid)
 		var jt := blueprint.joint_type_of(uid)
@@ -501,6 +518,13 @@ func _build() -> void:
 		jd["pos"] = (jd["pos"] as Vector3) + shift
 		_chain_inertia[jd["name"]] = _inertia_about(jd["b"], jd["pos"], todo)
 		add_child(_make_joint(jd))
+	for ts in _tether_specs:   # кадры якоря и Socket — в телах (после сдвига на пол): с ними связка строится в любой позе
+		var an: Transform3D = ts["anchor"]
+		an.origin += shift
+		var sk: Transform3D = ts["sock"]
+		sk.origin += shift
+		ts["a_frame"] = (ts["a"] as RigidBody3D).transform.affine_inverse() * an
+		ts["b_frame"] = (ts["b"] as RigidBody3D).transform.affine_inverse() * sk
 	# модули всей куклы: запас Заряда, раскрутка и отброс (поля Doll), починка износа — _physics_process
 	mod_totals = PartMods.totals(bodies)
 	charge_cap_bonus = float(mod_totals.get("charge_bonus", 0.0))
@@ -538,27 +562,79 @@ func _build_links() -> void:
 			continue
 		var ba := parts.get(uid_body[ua]) as RigidBody3D
 		var bb := parts.get(uid_body[ub]) as RigidBody3D
-		var rec := LinkBuilder.build(self, l, ba, bb)
-		if rec.is_empty():
-			continue
-		var bodies: Array = rec["bodies"]
-		rec["hp"] = float(PartHp.hp_of(KitLink.mass_of(String(rec["type"]), float(rec["len"])), 0.5))
-		for i in range(bodies.size()):
-			var b := bodies[i] as RigidBody3D
-			var bn := String(b.name)
-			if _self_exceptions:
-				for p in parts.values():
-					b.add_collision_exception_with(p)
-			parts[bn] = b
-			link_of_body[bn] = String(rec["name"])
-			part_hp[bn] = float(rec["hp"]) if i == 0 else 0.0
-			b.linear_damp = _part_linear_damp(bn, false)
-			b.angular_damp = _part_angular_damp(bn)
-		links_rt[String(rec["name"])] = rec
+		_register_link(LinkBuilder.build(self, l, ba, bb))
+	_links_done()
+
+
+## Тела связки rec — части куклы: parts, масса, ❤ (PartHp: вся связка — одна деталь, ❤ на первом теле), исключения столкновений со
+## своими телами, дамп; запись — в links_rt.
+func _register_link(rec: Dictionary) -> void:
+	if rec.is_empty():
+		return
+	var bodies: Array = rec["bodies"]
+	rec["hp"] = float(PartHp.hp_of(KitLink.mass_of(String(rec["type"]), float(rec["len"])), 0.5))
+	for i in range(bodies.size()):
+		var b := bodies[i] as RigidBody3D
+		var bn := String(b.name)
+		if _self_exceptions:
+			for p in parts.values():
+				b.add_collision_exception_with(p)
+		parts[bn] = b
+		link_of_body[bn] = String(rec["name"])
+		part_hp[bn] = float(rec["hp"]) if i == 0 else 0.0
+		b.linear_damp = _part_linear_damp(bn, false)
+		b.angular_damp = _part_angular_damp(bn)
+	links_rt[String(rec["name"])] = rec
+
+
+func _links_done() -> void:
 	total_mass = 0.0
 	for p in parts.values():
 		total_mass += (p as RigidBody3D).mass
 	_init_link_wear()
+
+
+## Деталь на связке со всем, что на ней, — к якорю родителя в его текущей позе: Socket на длине связки по оси якоря (спавн в позе
+## повернул родителя, а ветка на связке суставом с ним не связана и осталась на месте сборки).
+func _place_tethered() -> void:
+	for ts in _tether_specs:
+		var a := ts["a"] as RigidBody3D
+		var b := ts["b"] as RigidBody3D
+		var target: Transform3D = a.global_transform * (ts["a_frame"] as Transform3D) * Transform3D(Basis.IDENTITY, Vector3(0.0, -float(ts["len"]), 0.0))
+		var delta: Transform3D = target * (b.global_transform * (ts["b_frame"] as Transform3D)).affine_inverse()
+		if delta.is_equal_approx(Transform3D.IDENTITY):
+			continue
+		for body in tether_subtree_bodies(String(ts["uid"])):
+			(body as RigidBody3D).global_transform = delta * (body as RigidBody3D).global_transform
+			(body as RigidBody3D).reset_physics_interpolation()
+
+
+## Тела ветки узла uid по чертежу (сам узел и всё, что на нём, включая ветки на связках ниже).
+func tether_subtree_bodies(uid: String) -> Array:
+	var out: Array = []
+	var stack: Array = [uid]
+	while not stack.is_empty():
+		var u := String(stack.pop_back())
+		var b: Variant = parts.get(String(uid_body.get(u, "")))
+		if b != null and not out.has(b):
+			out.append(b)
+		for n in blueprint.nodes:
+			if String(n.get("parent", "")) == u:
+				stack.append(String(n.get("uid", "")))
+	return out
+
+
+## Связки деталей «на связке»: имя «Link_T<uid>», rec.tether_child — тело детали (её отрыв рвёт связку, разрыв связки уносит ветку).
+func _build_tethers() -> void:
+	for ts in _tether_specs:
+		var l := {"id": "T" + String(ts["uid"]), "type": String(ts["link"]), "pa": (ts["a_frame"] as Transform3D).origin,
+			"pb": (ts["b_frame"] as Transform3D).origin, KitLink.CHANNEL_KEY: int(ts["channel"])}
+		var rec := LinkBuilder.build(self, l, ts["a"], ts["b"])
+		if rec.is_empty():
+			continue
+		rec["tether_child"] = String((ts["b"] as Node).name)
+		_register_link(rec)
+	_links_done()
 
 
 ## Поршень связки ln (KitLink piston): on — мотор телескопа выдвигает шток до верхнего упора (ход extend), иначе втягивает до нижнего.
@@ -581,7 +657,7 @@ func set_piston(ln: String, on: bool) -> void:
 func refresh_links() -> void:
 	for ln in links_rt:
 		var rec: Dictionary = links_rt[ln]
-		LinkBuilder.place(self, rec, blueprint.find_link(String(rec["id"])))
+		LinkBuilder.place(self, rec)
 
 
 ## Сварка (joint "weld", BODY_KIT.md §5.2, §5.4) замораживает деталь в позе покоя её сустава, а не прямо по якорю: поворот вокруг

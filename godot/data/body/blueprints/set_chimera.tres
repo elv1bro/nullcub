@@ -6,7 +6,7 @@
 script = ExtResource("1_qpxva")
 id = "set_chimera"
 title = "Химера"
-energy_budget = 160
+energy_budget = 220
 nodes = Array[Dictionary]([{
 "anchor": "",
 "name": "Torso",
