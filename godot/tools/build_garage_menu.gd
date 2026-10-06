@@ -215,9 +215,10 @@ func _props(g: Node3D) -> void:
 	put(g, "NeuroHeadset", rest, CONSOLE_YAW, "Headset")
 	if console != null:
 		console.set_meta("headset_rest", rest)
-	var chair := Vector3(0.95, 0, -1.98)
+	# кресло — между стендом и ящиками у телевизора, лицом к стенду; не на линии взгляда на экран ТВ (пункты «История», титул)
+	var chair := Vector3(0.86, 0, -1.42)
 	var to_stand := Vector3(-0.75, 0, -1.2) - chair
-	put(g, "PilotChair", chair, rad_to_deg(atan2(to_stand.x, to_stand.z)) + 25.0, "PilotChair")
+	put(g, "PilotChair", chair, rad_to_deg(atan2(to_stand.x, to_stand.z)) + 12.0, "PilotChair")
 	# стена между верстаком и ТВ: флаг лиги, фото, афиша
 	put(g, "Banner", Vector3(0.15, 2.86, -2.97), 0.0, "Banner")
 	var photos := [["A", Vector3(-1.95, 2.3, BACK), 4.0], ["B", Vector3(-1.9, 1.95, BACK), -6.0], ["C", Vector3(-0.33, 2.58, BACK), 3.0],
@@ -368,7 +369,7 @@ func _spots(g: Node3D) -> void:
 	_spot(g, "SettingsClose", Vector3(3.0, EYE - 0.06, 2.3), Vector3(4.5, 1.3, 1.55), 0.34, 46.0)
 	# у верстака: шлем на подставке консоли перед глазами, руки дотягиваются (scenes/menu/garage_headset.gd)
 	var rest := CONSOLE_POS + Basis(Vector3.UP, deg_to_rad(CONSOLE_YAW)) * HEADSET_REST
-	_spot(g, "Pilot", Vector3(0.38, EYE - 0.02, -1.62), rest + Vector3(0, -0.08, 0), 0.5, 62.0)
+	_spot(g, "Pilot", Vector3(0.36, EYE - 0.08, -1.88), rest + Vector3(0, -0.1, 0), 0.5, 62.0)
 	# ныряние при входе: в экран телевизора, к иллюминатору ворот, к стенду
 	_spot(g, "IntoTV", Vector3(1.62, 1.155, -1.66), Vector3(1.62, 1.155, -2.27), 0.5, 50.0)
 	_spot(g, "IntoGate", Vector3(-2.75, 1.5, -1.0), Vector3(-3.84, 1.6, -2.1), 0.5, 50.0)
