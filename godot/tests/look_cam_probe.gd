@@ -53,6 +53,13 @@ func _ready() -> void:
 	print("=== LOOK CAM PROBE ===")
 	look = get_node_or_null("/root/Look")
 	lc = get_node_or_null("/root/LookCam")
+	# без --fixed-fps кадр под нагрузкой длиннее 1/60 с: кино (часы FxClock по delta) кончается раньше ожидаемых кадров — ложные FAIL.
+	# Флаг движок забирает себе (в get_cmdline_args его нет) — узнаём по delta: с ним каждый кадр ровно 1/60 с
+	var fixed := true
+	for i in 3:
+		await get_tree().process_frame
+		fixed = fixed and absf(get_process_delta_time() - TICK) < 1e-6
+	check("fixed_fps", fixed, "запуск с --fixed-fps 60 (иначе тайминги кино плывут под нагрузкой), delta %.4f" % get_process_delta_time())
 	check("autoloads", look != null and lc != null, "Look и LookCam в автозагрузке")
 	if look == null or lc == null:
 		_finish()
