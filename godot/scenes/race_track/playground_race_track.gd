@@ -11,7 +11,8 @@
 ## разъехался бы на сотню метров — дальше стрелка у края); боты в кадр не тянут (как follow_mode = "humans", но группу собирает
 ## площадка: людей нет — гонщик focus_index матча, пробы). Плюс точка линии трассы на CAM_LOOK_M впереди главного гонщика (CamAnchor):
 ## кадр смотрит, куда лететь (в трубах — вдоль трубы, у пропасти — на мосты), а не держит куклу в центре над полом.
-## Яма и сетка (body_fell карты) — TrackMatch.drop(«fall»): возврат к контрольной точке.
+## Яма и сетка (body_fell карты) — TrackMatch.drop(«fall»): возврат к контрольной точке. Портал развилки B перенёс главного гонщика —
+## камера сразу у выхода (snap).
 class_name TrackPlayground
 extends Node3D
 
@@ -66,6 +67,11 @@ func _ready() -> void:
 	if arena != null:
 		arena.body_fell.connect(_on_body_fell)
 		match_node.bind_arena(arena)
+		var pair := arena.portal_pair()
+		if pair != null:   # портал перенёс главного гонщика на 54 м — кадр сразу у выхода, без проезда сквозь стену
+			pair.transferred.connect(func(what: Node3D, _from: Portal, _to: Portal) -> void:
+				if what == match_node.me():
+					cam.snap())
 	_anchor = CamAnchor.new()
 	_anchor.name = "CamAnchor"
 	add_child(_anchor)

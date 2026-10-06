@@ -23,7 +23,7 @@ signal doll_respawned(doll: Doll)
 ## Окно поиска на линии вокруг прошлого прогресса (м): гонщик не «прыгает» на соседний коридор за стеной.
 const PROJECT_WINDOW_M := 40.0
 const FINISH_PROG_GAP_M := 25.0
-const BRANCH_MARK_M := 8.0
+const BRANCH_MARK_FRAC := 0.2
 
 @export var respawn_s: float = Tuning.TRACK_RESPAWN_S
 @export var finish_wait_s: float = Tuning.TRACK_FINISH_WAIT_S
@@ -236,7 +236,8 @@ func _project(d: Doll, st: Dictionary, window: float) -> void:
 	st["seg"] = int(pr["seg"])
 	st["prog"] = float(pr["prog"])
 	var sg := route.segs[int(pr["seg"])]
-	if sg.kind != "main" and float(pr["s"]) > BRANCH_MARK_M and float(pr["s"]) < sg.length - BRANCH_MARK_M:
+	var frac := float(pr["s"]) / maxf(sg.length, 0.01)
+	if sg.kind != "main" and frac > BRANCH_MARK_FRAC and frac < 1.0 - BRANCH_MARK_FRAC:
 		st["branches"][sg.fork] = sg.kind   # ветка засчитана, когда гонщик в её середине (у концов ветки сходятся)
 
 

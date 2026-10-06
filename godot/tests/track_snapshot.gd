@@ -1,13 +1,13 @@
 ## Снимки «Гонки: трасса» (docs/plan-demo/RACE_TRACK.md; нужно окно): гонка глазами P1 (за него играет бот, камера и HUD ведут его как
-## игрока — TrackMatch.focus_index), ветки P1 заданы (A — трудная под прессами, B — лёгкая трубами, C — трудная коробом), кадры на
-## участках: старт, прессы, трубы, короб с полем вверх, подъём в тяжёлой зоне, яма, итоги; и общий вид участков (своя камера).
+## игрока — TrackMatch.focus_index), ветки P1 заданы (A — трудная под прессами, B — трудная порталом, C — трудная коробом), кадры на
+## участках: старт, прессы, вход в портал A, выход из B, короб с полем вверх, подъём в тяжёлой зоне, яма, итоги; и общий вид участков.
 ##   godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/track_snapshot.tscn -- "out_dir=/abs/dir,level=2,overview=1"
 ## Глазами проверить: участки читаются (цвет, коридор, препятствия), полоска трассы и места в HUD, имена над гонщиками, табличка итогов.
 extends Node
 
 const SCENE := "res://scenes/playground_race_track.tscn"
 ## Кадры гонки: [имя, x ЦМ P1, с которого снимать].
-const SHOTS := [["presses", 99.0], ["pipes", 163.0], ["duct", 252.0], ["heavy", 303.5], ["pit", 362.0]]
+const SHOTS := [["presses", 99.0], ["portal_a", 144.4], ["portal_b", 204.0], ["duct", 252.0], ["heavy", 303.5], ["pit", 362.0]]
 ## Общий вид: [имя, x0, x1, y центра].
 const VIEWS := [["view_s1", -6.0, 64.0, 7.0], ["view_s2", 66.0, 136.0, 9.5], ["view_s3", 136.0, 206.0, 2.5], ["view_s4", 206.0, 288.0, 3.0],
 	["view_s5", 286.0, 342.0, 6.0], ["view_s6", 340.0, 420.0, 0.0]]
@@ -63,7 +63,7 @@ func _p1() -> Doll:
 
 
 func _run() -> void:
-	TrackBrain.force_choices = {0: {"A": "hard", "B": "easy", "C": "hard"}}
+	TrackBrain.force_choices = {0: {"A": "hard", "B": "hard", "C": "hard"}}
 	TrackBrain.seed_salt = 3
 	pg = (load(SCENE) as PackedScene).instantiate() as TrackPlayground
 	pg.p1_bot = true
