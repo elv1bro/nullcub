@@ -10,6 +10,8 @@ class_name SquadMelee
 extends Node
 
 const DROP_FREE_S := 1.5
+const SETUP_RETRY_S := 0.1   # руки ещё нет (тело собирается) — повтор через столько, не больше SETUP_RETRIES раз
+const SETUP_RETRIES := 20
 
 var doll: Doll
 var weapon_id := ""
@@ -18,6 +20,7 @@ var lunge_mult := 1.0
 var cooldown := 0.0
 var lunges := 0
 var _match: Node = null
+var _retries := 0
 
 
 func _ready() -> void:
@@ -80,9 +83,14 @@ func equip(id: String, mult: float = 1.0) -> void:
 		return
 	var a := arm()
 	if a == null or a.part == null or not is_instance_valid(a.part):
-		_setup.call_deferred()   # рука ещё не собрана — позже
+		# рука ещё не собрана — позже, по таймеру (call_deferred из отложенного вызова крутится в том же кадре: руку оторвали —
+		# «Запас из деталей» — очередь сообщений переполнялась и игра падала); оторвана насовсем — без оружия до возврата
 		weapon_id = ""
+		if _retries < SETUP_RETRIES and is_inside_tree():
+			_retries += 1
+			get_tree().create_timer(SETUP_RETRY_S).timeout.connect(_setup)
 		return
+	_retries = 0
 	var w := Weapon.spawn(weapon_id, doll.get_parent(), a.grip_global(), 0.0)
 	if w == null:
 		weapon_id = ""

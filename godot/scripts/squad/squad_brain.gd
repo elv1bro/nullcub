@@ -158,7 +158,7 @@ func _think(delta: float) -> void:
 			if state != "engage":
 				go("engage")
 			want = _hold_range(tp, (band.x + band.y) * 0.5)
-			if g != null and float(g.def["range"]) <= CLOSE_RANGE_M and d > band.y:
+			if g != null and g.weapon != "" and float(g.def["range"]) <= CLOSE_RANGE_M and d > band.y:   # без ствола (громила без кисти) — def пуст
 				dash()   # дробь бьёт только вблизи: сближение рывком, а не шагом под огнём винтовок
 			if no_ammo or d < Tuning.SQUAD_BOT_MELEE_M:
 				go("melee")
