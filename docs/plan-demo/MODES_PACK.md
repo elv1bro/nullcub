@@ -19,7 +19,7 @@
 Сверено по коду 06.10 (main 4d0053b):
 
 - **Режим** = `XxxMatch extends Match` (`scripts/core/match.gd`: `_late_ready`, `begin`, `_start_fight`, `_on_doll_ko`, `_check_over`, `_finish`, `build_results`, `respawn_doll`). Примеры: `SportMatch` (461 строка), `SquadMatch` (602). Бот = кукла с `external_input` + мозг `extends EnemyBrain` (прямое рулёжное управление `steer()`, **поиска пути нет**).
-- **Сцена** `scenes/playground_<режим>.tscn`; куклы кодом, как в `SquadPlayground.make_fighter`. Пункт в «ВСЕ РЕЖИМЫ» — `ITEMS` в `scenes/menu/test_menu.gd`.
+- **Сцена** `scenes/playground_<режим>.tscn`; куклы кодом, как в `SquadPlayground.make_fighter`. Пункт в «ВСЕ РЕЖИМЫ» — строка `MODES` в `scenes/menu/test_menu.gd` (с 06.10 экран с карточками и снимками, как добавить — `MODES_SCREEN.md`).
 - **Проба** — как `tests/squad_probe.gd`: headless, `--fixed-fps 60`, секции `only=…`, JSON между `=== … PROBE ===` и `=== OK/FAIL ===`, код выхода.
 - **Подбор касанием** — `scripts/squad/supply_crate.gd` (любая деталь куклы ближе 0.9 м). **Касание тел** — `SportBall._on_body_entered` + `doll_of()` + `TOUCH_GAP_S`.
 - **Рука** `ArmAssist`: хватает только `RigidBody3D` (предметы, детали чужих кукол — `GRAB_DOLLS`), лёгкое приваривает суставом, бросок к курсору. Одна рука (ЛКМ; ПКМ — вторая тяга). **Стены не хватает.**

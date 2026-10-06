@@ -16,6 +16,7 @@ func _ready() -> void:
 	var dz := get_node_or_null("DeathZone")
 	if dz is Area3D:
 		dz.body_entered.connect(func(b: Node3D) -> void: body_fell.emit(b))
+	NullLook.attach(self, NullLook.KIND_PLAIN)   # упрощённая пыль (docs/plan-demo/look/null.md); Полигон — через super._ready()
 
 
 ## Четыре точки спавна (мировые координаты) из маркеров Spawns/Spawn0..3.

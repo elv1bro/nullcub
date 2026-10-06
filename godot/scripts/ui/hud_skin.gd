@@ -83,6 +83,8 @@ static func cycle() -> String:
 
 ## Шрифт по роли: display — крупные надписи, plate — имена и подписи, digits — цифры табло, body — реплики N0.
 static func font(role: String) -> Font:
+	if ShowTokens.unified:   # «Единый HUD» (панель «ВИД», scripts/show/show_tokens.gd): два шрифта эфира на все HUD
+		return ShowTokens.font(role, id())
 	var key := id() + "/" + role
 	if _fonts.has(key):
 		return _fonts[key]
@@ -417,6 +419,12 @@ static func panel_bg(role: String) -> Color:
 
 ## Тема Root HUD боя: те же имена типов, что в hud_theme.tres (AnnounceLabel, DisplayLabel, WoodFrame, …).
 static func theme() -> Theme:
+	if ShowTokens.unified:
+		return ShowTokens.theme_for(id(), _skin_theme_cached())
+	return _skin_theme_cached()
+
+
+static func _skin_theme_cached() -> Theme:
 	if _themes.has(id()):
 		return _themes[id()]
 	var t: Theme

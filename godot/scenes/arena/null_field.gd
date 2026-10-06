@@ -10,6 +10,8 @@ class_name NullField
 extends Area3D
 
 signal membrane_hit(point: Vector2, speed: float)
+## Поле начало меняться (set_field): новая сила в G и направление — вид смены поля (scripts/look/null_look.gd).
+signal field_changed(g_units: float, dir: Vector2)
 
 ## «Вниз» в плоскости боя (y вверх). Не Vector2.DOWN: в Godot это (0, +1) — экранная ось 2D.
 const FALL := Vector2(0.0, -1.0)
@@ -68,6 +70,7 @@ func set_field(g_units: float, dir: Vector2, blend_s := -1.0) -> void:
 		field_g = _g_to
 		field_dir = _dir_to
 		_apply_gravity(field_g, field_dir)
+	field_changed.emit(_g_to, _dir_to)
 
 
 func is_shifting() -> bool:

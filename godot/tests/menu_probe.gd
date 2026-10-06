@@ -1,6 +1,7 @@
 ## Проба тестового меню сборки (docs/plan-demo/RELEASE_0.0.1.md):
 ##   godot --headless --path godot --fixed-fps 60 res://tests/menu_probe.tscn
-##   menu_items    — пункты меню ведут к существующим сценам, есть «В гараж», первый пункт в фокусе
+##   menu_items    — режимы экрана «ВСЕ РЕЖИМЫ» ведут к существующим сценам, у каждого карточка, есть «В гараж» и ИГРАТЬ, выбран
+##                   первый (экран целиком — tests/modes_screen_probe.tscn)
 ##   menu_version  — строка версии = application/config/version (0.0.1); главная сцена проекта — boot.tscn (лоадер, под ним грузится гараж)
 ##                   (scenes/menu/garage_menu.tscn), в нём есть пункт, ведущий сюда (ВСЕ РЕЖИМЫ)
 ##   menu_open     — каждый пункт открывается (сцена грузится и живёт 1 с без ошибок скрипта)
@@ -28,29 +29,33 @@ func _detach() -> void:
 
 func _run() -> void:
 	var M := load("res://scenes/menu/test_menu.gd")
+	M.set("last_id", "")
+	var modes: Array = M.call("modes")
 	var missing: Array = []
-	for it in M.ITEMS:
-		if not ResourceLoader.exists(String(it[1])):
-			missing.append(it[1])
+	for it in modes:
+		if not ResourceLoader.exists(String(it["scene"])):
+			missing.append(it["scene"])
 	get_tree().change_scene_to_file(MENU)
 	await _frames(5)
 	var menu := get_tree().current_scene
-	var items: Node = menu.get_node("%Items")
-	var first := items.get_child(0) as Button
-	_check("menu_items", missing.is_empty() and items.get_child_count() == M.ITEMS.size() + 2 and first.has_focus(),
-		"пунктов %d (+ выход), нет сцен %s, фокус на первом %s" % [M.ITEMS.size(), missing, first.has_focus()])
+	var cards: Array = menu.get("cards")
+	var back := menu.get("back_btn") as Button
+	var play := menu.get("play_btn") as Button
+	_check("menu_items", missing.is_empty() and cards.size() == modes.size() and back != null and play != null and int(menu.get("sel")) == 0,
+		"режимов %d, карточек %d, нет сцен %s, «В гараж» %s, ИГРАТЬ %s, выбран %d" % [modes.size(), cards.size(), missing, back != null,
+			play != null, menu.get("sel")])
 	var v := String(ProjectSettings.get_setting("application/config/version", ""))
 	var from_garage := GarageMenu.ITEMS.any(func(it: Dictionary) -> bool: return String(it["go"]) == MENU)
-	_check("menu_version", RegEx.create_from_string("^\\d+\\.\\d+\\.\\d+$").search(v) != null and String(menu.get_node("%Version").text).contains(v) and from_garage
+	_check("menu_version", RegEx.create_from_string("^\\d+\\.\\d+\\.\\d+$").search(v) != null and String((menu.get("version_label") as Label).text).contains(v) and from_garage
 		and String(ProjectSettings.get_setting("application/run/main_scene", "")) == "res://scenes/boot.tscn", "версия «%s», главная сцена %s, пункт гаража сюда %s" % [v,
 		ProjectSettings.get_setting("application/run/main_scene", ""), from_garage])
 	var bad: Array = []
-	for it in M.ITEMS:
-		get_tree().change_scene_to_file(String(it[1]))
+	for it in modes:
+		get_tree().change_scene_to_file(String(it["scene"]))
 		await _frames(60)
 		var cs := get_tree().current_scene
-		if cs == null or cs.scene_file_path != String(it[1]):
-			bad.append(it[1])
+		if cs == null or cs.scene_file_path != String(it["scene"]):
+			bad.append(it["scene"])
 	_check("menu_open", bad.is_empty(), "не открылись %s" % [bad])
 	get_tree().change_scene_to_file("res://scenes/playground_null_hall.tscn")
 	await _frames(30)

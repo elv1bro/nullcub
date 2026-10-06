@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, HUD купола с меткой СТАЗИСА, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -12,6 +12,7 @@
 extends Node
 
 const MENU := preload("res://scenes/menu/garage_menu.tscn")
+const MODES := "res://scenes/menu/test_menu.tscn"
 const WORKSHOP := "res://scenes/workshop/workshop_build.tscn"
 const HALL := "res://scenes/playground_null_hall.tscn"
 const SPORT := "res://scenes/playground_sport.tscn"
@@ -120,13 +121,38 @@ func _pass() -> Dictionary:
 	shots["campaign:loss"] = _scan(menu)
 	menu.queue_free()
 	await _wait(5)
+	# экран «ВСЕ РЕЖИМЫ» (docs/plan-demo/MODES_SCREEN.md): выбрана стычка — самое длинное описание и шесть клавиш; потом памятка клавиш
+	var modes := (load(MODES) as PackedScene).instantiate()
+	modes.set("dry_run", true)
+	add_child(modes)
+	await _wait(5)
+	var mlist: Array = modes.get("list")
+	for i in mlist.size():
+		if String(mlist[i]["id"]) == "squad":
+			modes.call("select", i, true)
+	await _wait(SETTLE)
+	shots["modes:squad"] = _scan(modes)
+	modes.call("set_memo", true)
+	await _wait(SETTLE)
+	shots["modes:memo"] = _scan(modes.get("memo"))   # памятка — поверх экрана: тексты под ней закрыты, сравниваем только её
+	modes.queue_free()
+	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, ROYALE, GOLF, PUZZLE]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
 		await _wait(SETTLE * 2)
+		if p == HALL:
+			_settle_show(inst)
+			await _wait(2)
 		shots[p.get_file()] = _scan(inst)
+		if p == HALL:   # панель «ВИД» (Look, LOOK_PASS.md): галочки проб картинки, зарегистрированные куполом
+			Look._panel.set_open(true)
+			await _wait(SETTLE)
+			shots["look:panel"] = _scan(Look)
+			Look._panel.set_open(false)
+			await _look_cam_pass(shots)
 		if p == SQUAD:   # «Стычка 3 на 3» (SQUAD.md): ещё табличка итогов с таблицей бойцов
 			var sm := inst.get_node("Match") as SquadMatch
 			sm.score = [15, 9]
@@ -187,6 +213,34 @@ func _pass() -> Dictionary:
 		if FileAccess.file_exists(g):
 			DirAccess.remove_absolute(g)
 	return shots
+
+
+## Камера прохода по картинке (docs/plan-demo/look/cam.md): табло нокаута и плашка повтора KO-кино, фоторежим (подсказка, рамка).
+func _look_cam_pass(shots: Dictionary) -> void:
+	var ov := KoCamOverlay.new()
+	add_child(ov)
+	ov.show_ko(tr("KO!"), "P2", Tuning.PLAYER_COLORS[1], TranslationServer.translate("IMPACT %.1fG") % 18.4)
+	ov.settle()
+	await _wait(SETTLE)
+	shots["look:ko_cam"] = _scan(ov)
+	ov.show_replay()
+	ov.settle()
+	await _wait(SETTLE)
+	shots["look:ko_replay"] = _scan(ov)
+	ov.queue_free()
+	var lcam := get_node("/root/LookCam")
+	if lcam.call("toggle_photo"):
+		await _wait(SETTLE)
+		shots["look:photo"] = _scan(lcam.get("photo"))
+		lcam.call("toggle_photo")
+		await _wait(5)
+
+
+## Плашки бойцов эфира (LowerThirds, docs/plan-demo/look/show.md) на отсчёте ещё едут — в кадр купола их ставим в конечное положение.
+func _settle_show(inst: Node) -> void:
+	var lt := inst.get_node_or_null("LowerThirds")
+	if lt != null and lt.has_method("pose_full"):
+		lt.call("pose_full")
 
 
 func _wait(n: int) -> void:

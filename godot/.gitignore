@@ -6,3 +6,4 @@ tests/*.png
 tests/clip/
 __pycache__/
 *.pyc
+tests/look_shots/

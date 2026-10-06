@@ -15,6 +15,7 @@ run/main_scene="res://scenes/boot.tscn"
 config/version="0.0.3"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://assets/ui/brand/null_gravity_icon.png"
+config/project_settings_override="user://renderer.cfg"
 
 [autoload]
 
@@ -25,6 +26,9 @@ GameAudio="*res://scripts/audio/game_audio.gd"
 Gfx="*res://scripts/gfx/gfx.gd"
 Flow="*res://scripts/menu/flow.gd"
 Loading="*res://scripts/menu/loading.gd"
+Look="*res://scripts/look/look.gd"
+LookCam="*res://scripts/look/look_cam.gd"
+LookFrame="*res://scripts/look/look_frame.gd"
 
 [display]
 
