@@ -1857,5 +1857,11 @@
 	"ВИД — проба картинки": "LOOK — visual test",
 	"Э — закрыть · Shift+Э — всё до / после": "' — close · Shift+' — all before / after",
 	"НОВЫЙ ВИД (общий рубильник)": "NEW LOOK (master switch)",
-	"пока нет проб в этой сцене": "no visual tests in this scene yet"
+	"пока нет проб в этой сцене": "no visual tests in this scene yet",
+	"Поле NULL": "NULL field",
+	"Пыль на обычных аренах": "Dust on regular arenas",
+	"Пыль и мусор в объёме боя": "Dust and debris in the fight volume",
+	"Кильватер поля за быстрым бойцом": "Field wake behind a fast fighter",
+	"Мембрана-пузырь: преломление, радужный край, рябь": "Bubble membrane: refraction, rainbow rim, ripples",
+	"Смена гравитации: волна по кадру": "Gravity shift: wave across the frame"
 }

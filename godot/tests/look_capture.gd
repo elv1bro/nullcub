@@ -34,6 +34,10 @@ func _ready() -> void:
 				"only": only_after = kv[1] == "after"
 				"hud": hud = kv[1] != "0"
 				"fight": fight = kv[1] == "1"
+				"edge": _null_edge(float(kv[1]))
+				"slam": _null_at(float(kv[1]), "slam")
+				"shift": _null_at(float(kv[1]), "shift")
+				"cam": _null_cam(kv[1])
 				"t":
 					times.clear()
 					for s in kv[1].split(";"):
@@ -109,3 +113,61 @@ func _set_hud(n: Node, v: bool) -> void:
 		if ch is CanvasLayer:
 			(ch as CanvasLayer).visible = v
 		_set_hud(ch, v)
+
+
+# --- поле NULL (look-null, docs/plan-demo/look/null.md) -------------------------------------------------------------------------
+# edge=<x> — обе куклы сцены на старте у края купола (P1 в x − 3, P2 в x, высота 5 м); slam=<t> — в момент t P2 бросает в мембрану
+# вбок (15 м/с к ближнему краю); shift=<t> — в момент t следующее поле NULL (как клавиша G в куполе); cam=x;y;z;tx;ty;tz — своя
+# неподвижная камера (позиция и точка взгляда) вместо камеры боя, fov 40.
+
+func _null_edge(x: float) -> void:
+	while _inst == null or _t0 == 0:
+		await get_tree().process_frame
+	await get_tree().physics_frame
+	var ds: Array = _inst.call("dolls") if _inst.has_method("dolls") else get_tree().get_nodes_in_group("dolls")
+	for i in mini(ds.size(), 2):
+		var d := ds[i] as Node3D
+		if d != null:
+			d.global_position = Vector3(x - 3.0 + 3.0 * i, 5.0, 0.0)
+	print("  null: edge x=%.1f" % x)
+
+
+func _null_at(t: float, what: String) -> void:
+	while _inst == null or _t0 == 0:
+		await get_tree().process_frame
+	while (Time.get_ticks_msec() - _t0) / 1000.0 < t:
+		await get_tree().process_frame
+	var arena: Node = null
+	for a in get_tree().get_nodes_in_group("arena"):
+		if _inst.is_ancestor_of(a):
+			arena = a
+	match what:
+		"slam":
+			var ds: Array = _inst.call("dolls") if _inst.has_method("dolls") else get_tree().get_nodes_in_group("dolls")
+			var d := ds[1] as Doll if ds.size() > 1 else null
+			if d != null:
+				var sx := signf(d.centre_of_mass().x) if absf(d.centre_of_mass().x) > 0.5 else 1.0
+				for b in d.parts.values():
+					(b as RigidBody3D).linear_velocity = Vector3(15.0 * sx, 1.5, 0.0)
+				print("  null: slam at %.2f s" % t)
+		"shift":
+			if arena != null and arena.has_method("set_field"):
+				arena.call("set_field", 0.35, Vector2(0.7, -0.7))
+				print("  null: shift at %.2f s" % t)
+
+
+func _null_cam(spec: String) -> void:
+	var v := spec.split(";")
+	if v.size() < 6:
+		return
+	while _inst == null or _t0 == 0:
+		await get_tree().process_frame
+	var cam := Camera3D.new()
+	cam.fov = 40.0
+	cam.far = 400.0
+	_inst.add_child(cam)
+	cam.global_position = Vector3(float(v[0]), float(v[1]), float(v[2]))
+	cam.look_at(Vector3(float(v[3]), float(v[4]), float(v[5])))
+	while is_instance_valid(cam):
+		cam.make_current()
+		await get_tree().process_frame

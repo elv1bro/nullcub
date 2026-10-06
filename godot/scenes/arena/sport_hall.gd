@@ -23,6 +23,7 @@ var score := [0, 0]
 func _ready() -> void:
 	apply_sport(sport)
 	set_score(0, 0)
+	NullLook.attach(self, NullLook.KIND_HALL)   # пыль поля NULL (docs/plan-demo/look/null.md)
 
 
 func apply_sport(id: String) -> void:
