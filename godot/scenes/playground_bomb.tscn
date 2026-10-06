@@ -1,0 +1,45 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scenes/bomb/playground_bomb.gd" id="1_pg"]
+[ext_resource type="PackedScene" path="res://scenes/arena/null_hall.tscn" id="2_arena"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="3_cam"]
+[ext_resource type="Script" path="res://scripts/bomb/bomb_match.gd" id="4_match"]
+[ext_resource type="Script" path="res://scenes/bomb/bomb_hud.gd" id="5_hud"]
+[ext_resource type="Script" path="res://scenes/bomb/bomb_markers.gd" id="6_mk"]
+
+[node name="PlaygroundBomb" type="Node3D"]
+script = ExtResource("1_pg")
+
+[node name="NullHall" parent="." groups=["arena"] instance=ExtResource("2_arena")]
+debug_keys = false
+
+[node name="Dolls" type="Node3D" parent="."]
+
+[node name="Camera" type="Camera3D" parent="." groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 24)
+fov = 40.0
+far = 400.0
+script = ExtResource("3_cam")
+arena_path = NodePath("../NullHall")
+floor_inset = 0.0
+target_group = "bomb_focus"
+padding = 3.0
+padding_y = 2.2
+min_half_height = 4.4
+max_half_height = 11.0
+zoom_out_tau = 0.25
+zoom_in_tau = 1.0
+follow_tau = 0.3
+
+[node name="Match" type="Node" parent="."]
+script = ExtResource("4_match")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../NullHall")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5_hud")
+
+[node name="Offscreen" type="CanvasLayer" parent="."]
+layer = 5
+script = ExtResource("6_mk")
+dolls_group = "bomb_holder"
