@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, HUD купола с меткой СТАЗИСА, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек» и их итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек» и их итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -117,6 +117,9 @@ func _pass() -> Dictionary:
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
 		await _wait(SETTLE * 2)
+		if p == HALL:
+			_settle_show(inst)
+			await _wait(2)
 		shots[p.get_file()] = _scan(inst)
 		if p == HALL:   # панель «ВИД» (Look, LOOK_PASS.md): галочки проб картинки, зарегистрированные куполом
 			Look._panel.set_open(true)
@@ -182,6 +185,13 @@ func _look_cam_pass(shots: Dictionary) -> void:
 		shots["look:photo"] = _scan(lcam.get("photo"))
 		lcam.call("toggle_photo")
 		await _wait(5)
+
+
+## Плашки бойцов эфира (LowerThirds, docs/plan-demo/look/show.md) на отсчёте ещё едут — в кадр купола их ставим в конечное положение.
+func _settle_show(inst: Node) -> void:
+	var lt := inst.get_node_or_null("LowerThirds")
+	if lt != null and lt.has_method("pose_full"):
+		lt.call("pose_full")
 
 
 func _wait(n: int) -> void:

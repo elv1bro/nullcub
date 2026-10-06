@@ -9,7 +9,12 @@
 ## смена сцены и спрятать после первых кадров новой сцены. load_async(path) — то же без смены сцены, возвращает PackedScene.
 ## Главная сцена проекта — scenes/boot.tscn: лоадер встаёт первым, гараж грузится под ним.
 ## Пробы (dry_run гаража) удержаний не берут и лоадер не показывают.
+## Сигналы opened (лоадер появился) и closing (начал гаснуть) — для оформления эфира: ребёнок LeagueShow (scripts/show/league_show.gd)
+## играет по ним заставку-стингер Лиги и ставит остальной «эфир» (панель «ВИД», группа «Эфир»).
 extends Node
+
+signal opened
+signal closing
 
 const MIN_SHOW_S := 0.45
 const FADE_S := 0.28
@@ -58,6 +63,7 @@ func _ready() -> void:
 	_f_mono = Flow.make_font("res://assets/fonts/JetBrainsMono.ttf", 600)
 	_build()
 	_layer.visible = false
+	add_child(preload("res://scripts/show/league_show.gd").new())
 
 
 func _build() -> void:
@@ -179,6 +185,7 @@ func begin(title := "ЗАГРУЗКА", sub := "") -> void:
 		_tip_i = randi() % TIPS.size()
 		_layer.visible = true
 		_root.modulate.a = 1.0
+		opened.emit()
 	_title.text = tr(title)
 	_sub.text = tr(sub) if sub != "" else ""
 	_tip.text = tr("СОВЕТ · ") + tr(String(TIPS[_tip_i]))
@@ -239,6 +246,7 @@ func _finish_async() -> void:
 		return
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
+	closing.emit()
 	_tw = create_tween()
 	_tw.tween_property(_root, "modulate:a", 0.0, FADE_S)
 	_tw.tween_callback(func() -> void:
