@@ -4,6 +4,9 @@
 ## (трещин больше). Разрушена — куски камня (Destroyed/Piece_*) разлетаются (Breakable._spawn_debris), сама стена исчезает.
 ## Вид строится в _ready (до Breakable._ready): Mesh/Intact — камень с тёмной светящейся трещиной, Mesh/Damaged — трещин больше,
 ## Mesh/Destroyed — 3 × 2 куска. Узел ставится серединой низа на пол (origin — низ).
+## Трещина «ловит» бочку: Area3D "Crack" чуть больше стены — взрывная бочка влетела в неё брошенной (зачёт ThrownCredit) или быстрее
+## CATCH_SPEED — поджиг с CATCH_FUSE_S, взрыв у самой стены. Без этого брошенная бочка, долетев на ~2.9 м/с, давала удар
+## 2.9 × 7 ≈ 20 = её hp — на грани: то рвалась, то ложилась у стены целой (проба комнаты 6).
 class_name PuzzleCrackWall
 extends Breakable
 
@@ -13,6 +16,8 @@ const STONE := "res://assets/textures/pbr/stone/albedo.png"
 
 ## Разрушена (до сброса комнаты: стену пересоздаёт PuzzleRoom.reset).
 var broken := false
+const CATCH_SPEED := 1.5
+const CATCH_FUSE_S := 0.05
 
 
 func _init() -> void:
@@ -34,6 +39,23 @@ func _ready() -> void:
 	mesh_path = ^"Mesh"
 	super._ready()
 	destroyed.connect(func() -> void: broken = true)
+	var crack := Area3D.new()
+	crack.name = "Crack"
+	crack.monitorable = false
+	add_child(crack)
+	PuzzlePart.box_shape(crack, "Shape", Vector3(size.x + 0.5, size.y, 2.0), Vector3(0, size.y * 0.5, 0))
+	crack.body_entered.connect(_on_crack_body)
+
+
+## Бочка в трещине: брошенная или быстрая — поджечь, рванёт у стены.
+func _on_crack_body(b: Node3D) -> void:
+	var barrel := b as ExplosiveBarrel
+	if barrel == null or not is_instance_valid(barrel) or broken or barrel._exploded:
+		return
+	var tc := ThrownCredit.of(barrel)
+	var by: Node = tc.attacker() if tc != null else null
+	if by != null or barrel.linear_velocity.length() >= CATCH_SPEED:
+		barrel.ignite(CATCH_FUSE_S, by)
 
 
 func _stone() -> StandardMaterial3D:

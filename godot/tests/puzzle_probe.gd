@@ -722,7 +722,7 @@ func _exit_via_door(d: Doll, r: PuzzleRoom, max_s := 8.0) -> bool:
 			continue
 		d.input_vec = to.normalized()
 		if trace and int(t / TICK) % 30 == 0:
-			print("    exit %s t=%.1f com=(%.2f, %.2f) → (%.2f, %.2f) door %.2f" % [d.name, t, c.x, c.y, p.x, p.y, r.door().open_frac()])
+			print("    exit %s t=%.1f com=(%.2f, %.2f) → (%.2f, %.2f) door %.2f alive %s ctl %s ext %s tm %.2f stun %s v %s held %s" % [d.name, t, c.x, c.y, p.x, p.y, r.door().open_frac(), d.alive, d.control_enabled, d.external_input, d.thrust_mult, d.is_stunned(), d.com_velocity(), _arm(d).held])
 		await get_tree().physics_frame
 		t += TICK
 	d.input_vec = Vector2.ZERO
@@ -748,9 +748,15 @@ func _rooms(only: String) -> void:
 			await _ticks(3)
 		var r := pg.rooms[i]
 		pg.reset_room()
-		await _wait(0.6)
 		_script_players()
+		var pressed_at_start: Array = []   # игроки у входа не давят плиты ни в один тик, пока встают (руки в Т-позе ±0.9 м)
+		for k in int(1.5 / TICK):
+			await get_tree().physics_frame
+			for part in r.parts():
+				if part is PuzzlePlate and (part as PuzzlePlate).mass_now > 0.1 and not pressed_at_start.has(String((part as Node).name)):
+					pressed_at_start.append(String((part as Node).name))
 		var closed := _door_closed(r)
+		_check("room%d_spawn_clear" % (i + 1), pressed_at_start.is_empty(), "плиты под игроками у входа: %s" % str(pressed_at_start))
 		var t0 := pg.total_time
 		var solved: bool = await call("_solve_%d" % (i + 1), r, true)
 		var opened := r.solved() or r.door().open_frac() > 0.5
@@ -809,6 +815,18 @@ func _solve_1(r: PuzzleRoom, _coop: bool) -> bool:
 
 ## 2. Две плиты: вдвоём — по кукле на плиту; соло — ящик 35 кг на одну, P1 на другую. И → ТАЙМЕР 4 с.
 func _solve_2(r: PuzzleRoom, coop: bool) -> bool:
+	if coop:
+		# R — комната заново: сдвинутый ящик возвращается на место
+		var m0 := r.find("Medium") as Node3D
+		var home := m0.global_position
+		_place(m0 as RigidBody3D, _at(r, 5.0, 4.0))
+		await _ticks(5)
+		pg.reset_room()
+		await _wait(0.3)
+		var m1 := r.find("Medium") as Node3D
+		var back := m1 != null and m1.global_position.distance_to(home) < 0.15
+		_check("room_reset_props", back, "ящик после R: %s" % (str(m1.global_position - home) if m1 != null else "нет"))
+		_script_players()
 	var a := r.find("PlateA") as PuzzlePlate
 	var b := r.find("PlateB") as PuzzlePlate
 	if coop:
@@ -900,30 +918,50 @@ func _solve_4(r: PuzzleRoom, _coop: bool) -> bool:
 	return lever.is_on() and turned and pressed
 
 
-## 5. Лифт: чугунный ящик на платформу; вдвоём — P2 на плите, соло — ящик 35 кг на плите. Лифт наверху — P1 толкает ящик на весы.
+## Толкать чугунный ящик телом вправо, пока его центр не дойдёт до x_to (локально) или не включатся весы; застрял (перелез через ящик,
+## упёрся) — заново из-за ящика, до 3 попыток (как сделал бы игрок). floor_y — высота, на которой стоит ящик (низ).
+func _push_iron(r: PuzzleRoom, iron: RigidBody3D, x_to: float, floor_y: float, scale: PuzzlePlate, lift: PuzzleLift) -> void:
+	for attempt in 3:
+		if scale.is_on() or _com(iron).x - r.global_position.x >= x_to:
+			break
+		var ic0 := _com(iron)
+		_teleport(pg.p1, Vector3(ic0.x - 1.15, floor_y + 1.0, 0))
+		await _wait(0.3)
+		var still := 0.0
+		var last_x := ic0.x
+		for i in int(5.0 / TICK):
+			pg.p1.input_vec = Vector2(1.0, -0.3).normalized()
+			await get_tree().physics_frame
+			var ic := _com(iron)
+			if trace and i % 30 == 0:
+				var pc := pg.p1.centre_of_mass()
+				print("    room5 push #%d t=%.1f iron=(%.2f, %.2f) p1=(%.2f, %.2f) lift %.2f scale %.0f" % [attempt, i * TICK, ic.x - r.global_position.x, ic.y, pc.x - r.global_position.x, pc.y, lift.height_now(), scale.mass_now])
+			if scale.is_on() or ic.x - r.global_position.x >= x_to:
+				break
+			still = still + TICK if absf(ic.x - last_x) < 0.002 else 0.0
+			last_x = ic.x
+			if still > 1.0 or pg.p1.centre_of_mass().x > ic.x + 0.3:
+				break
+	pg.p1.input_vec = Vector2.ZERO
+
+
+## 5. Лифт: P1 толкает чугунный ящик по полу на платформу; вдвоём — P2 на плите, соло — ящик 35 кг на плите; лифт наверху — P1 толкает
+## ящик на весы балкона.
 func _solve_5(r: PuzzleRoom, coop: bool) -> bool:
 	var lift := r.find("Lift") as PuzzleLift
 	var scale := r.find("Scale") as PuzzlePlate
 	var iron := r.find("Iron") as RigidBody3D
-	_place(iron, _at(r, 1.5, 0.57))
+	await _push_iron(r, iron, 1.3, 0.0, scale, lift)
+	var on_lift := absf(_com(iron).x - r.global_position.x - 1.5) < 1.0 and lift.height_now() < 0.1
+	_check("room5_iron_pushed_on_lift_%s" % ("coop" if coop else "solo"), on_lift, "чугунный ящик толкнули по полу на платформу: x %.2f" % (_com(iron).x - r.global_position.x))
+	_teleport(pg.p1, _at(r, 1.5, 7.5))   # P1 подождёт над ящиком (поедет с ним наверх)
 	if coop:
-		_teleport(pg.p2, _at(r, -3.6, 1.0))
+		_teleport(pg.p2, _at(r, 5.6, 1.0))
 	else:
-		_place(r.find("Medium") as RigidBody3D, _at(r, -3.6, 0.45))
+		_place(r.find("Medium") as RigidBody3D, _at(r, 5.6, 0.45))
 	var up := await _until(func() -> bool: return lift.is_on(), 7.0)
 	var rode := _com(iron).y > 5.0
-	_teleport(pg.p1, _at(r, 0.0, 6.0))
-	await _wait(0.4)
-	for i in int(6.0 / TICK):
-		pg.p1.input_vec = Vector2(1.0, -0.15)
-		await get_tree().physics_frame
-		if trace and i % 30 == 0:
-			var ic := _com(iron)
-			var pc := pg.p1.centre_of_mass()
-			print("    room5 push t=%.1f iron=(%.2f, %.2f) p1=(%.2f, %.2f) lift %.2f scale %.0f" % [i * TICK, ic.x - r.global_position.x, ic.y, pc.x - r.global_position.x, pc.y, lift.height_now(), scale.mass_now])
-		if scale.is_on():
-			break
-	pg.p1.input_vec = Vector2.ZERO
+	await _push_iron(r, iron, 99.0, 5.02, scale, lift)
 	var on_scale := await _until(func() -> bool: return scale.is_on(), 2.0)
 	await _until(func() -> bool: return r.door().is_on(), 2.0)
 	var stays := true
@@ -938,21 +976,59 @@ func _solve_5(r: PuzzleRoom, coop: bool) -> bool:
 ## 6. Финал: P1 хватает бочку и бросает в трещину (бросок ArmAssist), стена рушится; P1 на плиту в нише, потом к двери за 6 с.
 func _solve_6(r: PuzzleRoom, _coop: bool) -> bool:
 	var p1 := pg.p1
+	# раздатчик: бочек не осталось, стена цела — через PUZZLE_BARREL_RESPAWN_S падает новая; потом комната заново
+	for n in ["BarrelA", "BarrelB"]:
+		var b0 := r.find(n)
+		if b0 != null:
+			b0.get_parent().remove_child(b0)
+			b0.queue_free()
+	var dispensed := await _until(func() -> bool: return r.find("Dispensed0") is ExplosiveBarrel, Tuning.PUZZLE_BARREL_RESPAWN_S + 1.0)
+	_check("room6_dispenser", dispensed, "бочек не осталось — новая из люка: %s" % str(dispensed))
+	pg.reset_room()
+	await _wait(0.5)
+	_script_players()
+	p1 = pg.p1
 	var wall := r.find("CrackWall") as PuzzleCrackWall
-	var barrel := r.find("BarrelB") as RigidBody3D
 	var plate := r.find("Plate") as PuzzlePlate
-	_place(barrel, _at(r, 2.0, 0.02))
-	_teleport(p1, _at(r, 1.2, 1.0))
-	await _wait(0.6)
 	var arm := _arm(p1)
-	var grabbed := await _grab_with(arm, barrel)
-	for i in 30:
-		arm.set_target_override(arm.root_point() + Vector3(arm.reach, 0.25, 0))
-		await get_tree().physics_frame
-	arm.press_grab()
-	await _ticks(2)
-	arm.clear_target_override()
-	var broke := await _until(func() -> bool: return not is_instance_valid(wall) or wall.broken, 4.0)
+	var grabbed := false
+	var broke := false
+	var throws := 0
+	# бросок в трещину; мимо (бочка рванула не у стены) — следующая бочка, как сделал бы игрок
+	for bn in ["BarrelB", "BarrelA"]:
+		var barrel := r.find(bn) as RigidBody3D
+		if barrel == null or not is_instance_valid(barrel):
+			continue
+		_place(barrel, _at(r, 2.0, 0.02))
+		_teleport(p1, _at(r, 1.2, 1.0))
+		await _wait(0.6)
+		var g := await _grab_with(arm, barrel)
+		grabbed = grabbed or g
+		if not g:
+			continue
+		for i in 30:
+			arm.set_target_override(arm.root_point() + Vector3(arm.reach, 0.25, 0))
+			await get_tree().physics_frame
+		arm.press_grab()
+		throws += 1
+		await _ticks(2)
+		arm.clear_target_override()
+		if trace:
+			for k in 40:
+				if not is_instance_valid(barrel) or barrel.is_queued_for_deletion():
+					print("    room6 throw %d: бочки нет на тике %d, стена hp %.1f" % [throws, k, wall.hp if is_instance_valid(wall) else -1.0])
+					break
+				if k % 5 == 0:
+					print("    room6 throw %d t=%d barrel=(%.2f, %.2f) v=%s held=%s p1=%s" % [throws, k, barrel.global_position.x - r.global_position.x, barrel.global_position.y, barrel.linear_velocity, arm.held, p1.centre_of_mass() - r.global_position])
+				await get_tree().physics_frame
+		broke = await _until(func() -> bool: return not is_instance_valid(wall) or wall.broken, 4.0)
+		if trace:
+			print("    room6 after throw %d: broke %s, бочка %s, стена hp %.1f state %d, P2 %s, тела у стены: %s" % [throws, str(broke),
+				str(barrel.global_position - r.global_position) if is_instance_valid(barrel) else "нет", wall.hp if is_instance_valid(wall) else -1.0,
+				wall.state if is_instance_valid(wall) else -1, str(pg.p2.centre_of_mass() - r.global_position) if pg.p2 != null else "-",
+				str(r.get_node("Props").get_children().map(func(n: Node) -> String: return "%s@%.1f" % [n.name, (n as Node3D).global_position.x - r.global_position.x]))])
+		if broke:
+			break
 	await _wait(1.0)
 	_teleport(p1, _at(r, 4.0, 1.2))
 	await _wait(0.3)
@@ -963,7 +1039,7 @@ func _solve_6(r: PuzzleRoom, _coop: bool) -> bool:
 	var dy := _door_y(r)
 	var t0 := pg.room_time
 	await _steer(p1, [Vector2(_at(r, 4.2, 1.4).x, 1.4), Vector2(_at(r, 4.2, dy + 1.4).x, dy + 1.4)], 4.0, 0.6)
-	info["room6"] = {"grabbed": grabbed, "wall_broken": broke, "plate": pressed, "door": opened, "to_door_s": snappedf(pg.room_time - t0, 0.01)}
+	info["room6"] = {"grabbed": grabbed, "throws": throws, "wall_broken": broke, "plate": pressed, "door": opened, "to_door_s": snappedf(pg.room_time - t0, 0.01)}
 	return grabbed and broke and reached and pressed and opened
 
 

@@ -621,7 +621,7 @@ size = Vector3(6, 1, 4)
 size = Vector3(3, 0.65, 4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ujntj"]
-size = Vector3(4.95, 0.4, 4)
+size = Vector3(5, 0.4, 4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_st8of"]
 size = Vector3(1.8, 0.3, 4)
@@ -728,7 +728,7 @@ size = Vector3(3, 0.65, 2.4)
 
 [sub_resource type="BoxMesh" id="BoxMesh_dw26d"]
 material = SubResource("StandardMaterial3D_n6s5n")
-size = Vector3(4.95, 0.4, 2.4)
+size = Vector3(5, 0.4, 2.4)
 
 [sub_resource type="BoxMesh" id="BoxMesh_8vykl"]
 material = SubResource("StandardMaterial3D_4idwy")
@@ -872,139 +872,139 @@ size = Vector3(1.6, 0.4, 2.4)
 friction = 0.55
 bounce = 0.15
 
-[node name="PlaygroundPuzzle" type="Node3D" unique_id=1868813421]
+[node name="PlaygroundPuzzle" type="Node3D" unique_id=1825530009]
 script = ExtResource("1_6l37m")
 
-[node name="Environment" type="WorldEnvironment" parent="." unique_id=1074853037]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=2077709755]
 environment = SubResource("Environment_jwp8f")
 camera_attributes = SubResource("CameraAttributesPractical_b7tya")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1175014297]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1211893483]
 transform = Transform3D(0.8708243, 0.34465066, -0.35054377, 0, 0.7130752, 0.70108753, 0.49159434, -0.61052406, 0.6209633, 0, 0, 0)
 light_color = Color(1, 0.95, 0.88, 1)
 light_energy = 0.9
 shadow_enabled = true
 directional_shadow_max_distance = 40.0
 
-[node name="Rooms" type="Node3D" parent="." unique_id=275428803]
+[node name="Rooms" type="Node3D" parent="." unique_id=1815053035]
 
-[node name="Room1" type="Node3D" parent="Rooms" unique_id=1208196875]
+[node name="Room1" type="Node3D" parent="Rooms" unique_id=562862126]
 script = ExtResource("2_l5cq2")
 exit_door = NodePath("Mech/ExitDoor")
 
-[node name="Static" type="StaticBody3D" parent="Rooms/Room1" unique_id=991926336]
+[node name="Static" type="StaticBody3D" parent="Rooms/Room1" unique_id=1058394304]
 
-[node name="Floor" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=211288919]
+[node name="Floor" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=1845061370]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_7s5hi")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=1501602566]
+[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=1872724933]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 shape = SubResource("BoxShape3D_oujat")
 
-[node name="WallL" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=1214142349]
+[node name="WallL" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=2042750863]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 shape = SubResource("BoxShape3D_dt4or")
 
-[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=95148154]
+[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=39509698]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5.9, 0)
 shape = SubResource("BoxShape3D_a54ma")
 
-[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=1650345105]
+[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=1920050332]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, -0.5, 0)
 shape = SubResource("BoxShape3D_vu74y")
 
-[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=2114533837]
+[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=531299373]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 3.3, 0)
 shape = SubResource("BoxShape3D_5dixs")
 
-[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=708803189]
+[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=617149121]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 1.4, 0)
 shape = SubResource("BoxShape3D_3mwvr")
 
-[node name="Shelf" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=105894168]
+[node name="Shelf" type="CollisionShape3D" parent="Rooms/Room1/Static" unique_id=1169759097]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2, 4.35, 0)
 shape = SubResource("BoxShape3D_ue1m8")
 
-[node name="Visual" type="Node3D" parent="Rooms/Room1" unique_id=242676430]
+[node name="Visual" type="Node3D" parent="Rooms/Room1" unique_id=929786149]
 
-[node name="Floor" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1878554250]
+[node name="Floor" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=313132737]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("BoxMesh_6qf5u")
 
-[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1545391229]
+[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=521802418]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 mesh = SubResource("BoxMesh_p646s")
 
-[node name="WallL" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1734664602]
+[node name="WallL" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1258241177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 mesh = SubResource("BoxMesh_4bjun")
 
-[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=2102203903]
+[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=475369084]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5.9, 0)
 mesh = SubResource("BoxMesh_d8f0b")
 
-[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1265352620]
+[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1926404163]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, -0.5, 0)
 mesh = SubResource("BoxMesh_q7hoy")
 
-[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1535569551]
+[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1271588611]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 3.3, 0)
 mesh = SubResource("BoxMesh_8f21q")
 
-[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=256176684]
+[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=637822835]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 1.4, 0)
 mesh = SubResource("BoxMesh_o48by")
 
-[node name="Back" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=87819744]
+[node name="Back" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=954086069]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.4)
 mesh = SubResource("BoxMesh_x2d7d")
 
-[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=673851650]
+[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1721714730]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6, 1.4, -1.4)
 mesh = SubResource("BoxMesh_ixxni")
 
-[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1880165289]
+[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1832117437]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -1.2)
 mesh = SubResource("BoxMesh_7o5jx")
 
-[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=156610137]
+[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=235736198]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, -1.2)
 mesh = SubResource("BoxMesh_jp0uu")
 
-[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1612121456]
+[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=2009597286]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_fuof2")
 
-[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=731053563]
+[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=85593324]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_3v8kt")
 
-[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1279395702]
+[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1431722578]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_ruya4")
 
-[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1376482106]
+[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=137584339]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.23)
 mesh = SubResource("BoxMesh_ls2lx")
 
-[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=2039795880]
+[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=860432453]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_fiale")
 
-[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1210863807]
+[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=2040920287]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_vgnjg")
 
-[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1094174702]
+[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=187633098]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_gbpyb")
 
-[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=476172284]
+[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1057075742]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1.23)
 mesh = SubResource("BoxMesh_s2xqk")
 
-[node name="Number" type="Label3D" parent="Rooms/Room1/Visual" unique_id=505876991]
+[node name="Number" type="Label3D" parent="Rooms/Room1/Visual" unique_id=1014065293]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4, 7.4, -1.2)
 pixel_size = 0.006
 double_sided = false
@@ -1014,44 +1014,44 @@ text = "1"
 font_size = 420
 outline_size = 0
 
-[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=352726418]
+[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1028751001]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.94, 1.4, 0)
 mesh = SubResource("BoxMesh_xuvpi")
 
-[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1378349258]
+[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=406031216]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.93, 2.9, 0)
 mesh = SubResource("BoxMesh_x26oa")
 
-[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1242088833]
+[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=277531383]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 2.9, 0)
 mesh = SubResource("BoxMesh_0m77u")
 
-[node name="Shelf" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=766985078]
+[node name="Shelf" type="MeshInstance3D" parent="Rooms/Room1/Visual" unique_id=1346464544]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2, 4.35, 0)
 mesh = SubResource("BoxMesh_rkb4e")
 
-[node name="Mech" type="Node3D" parent="Rooms/Room1" unique_id=791822439]
+[node name="Mech" type="Node3D" parent="Rooms/Room1" unique_id=1111931531]
 
-[node name="ExitDoor" type="Node3D" parent="Rooms/Room1/Mech" unique_id=1580357563 instance=ExtResource("17_dpqid")]
+[node name="ExitDoor" type="Node3D" parent="Rooms/Room1/Mech" unique_id=1040188207 instance=ExtResource("17_dpqid")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, 0)
 script = ExtResource("18_h3vl1")
 input = NodePath("../Plate")
 thickness = 1.0
 
-[node name="Plate" type="Node3D" parent="Rooms/Room1/Mech" unique_id=954825647 instance=ExtResource("19_oi457")]
+[node name="Plate" type="Node3D" parent="Rooms/Room1/Mech" unique_id=413779292 instance=ExtResource("19_oi457")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 script = ExtResource("20_ishp5")
 threshold_kg = 8.0
 
-[node name="Cable" type="Node3D" parent="Rooms/Room1/Mech" unique_id=1416284265 instance=ExtResource("21_3gxb0")]
+[node name="Cable" type="Node3D" parent="Rooms/Room1/Mech" unique_id=1352518092 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Plate")
 points = PackedVector2Array(-1.5, 0.15, -1.5, 3.2, 7.4, 3.2, 7.4, 3)
 
-[node name="Props" type="Node3D" parent="Rooms/Room1" unique_id=1028708042]
+[node name="Props" type="Node3D" parent="Rooms/Room1" unique_id=1102540681]
 
-[node name="Crate" type="RigidBody3D" parent="Rooms/Room1/Props" unique_id=1531787908 instance=ExtResource("23_rnuln")]
+[node name="Crate" type="RigidBody3D" parent="Rooms/Room1/Props" unique_id=513293992 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4, 4.81, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1061,136 +1061,136 @@ linear_damp = 0.2
 angular_damp = 0.8
 script = ExtResource("24_2uws5")
 
-[node name="Spawns" type="Node3D" parent="Rooms/Room1" unique_id=2067584602]
+[node name="Spawns" type="Node3D" parent="Rooms/Room1" unique_id=312245159]
 
-[node name="Spawn0" type="Marker3D" parent="Rooms/Room1/Spawns" unique_id=1024265435]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.05, 0)
+[node name="Spawn0" type="Marker3D" parent="Rooms/Room1/Spawns" unique_id=2013314500]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Rooms/Room1/Spawns" unique_id=1165969144]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0.05, 0)
+[node name="Spawn1" type="Marker3D" parent="Rooms/Room1/Spawns" unique_id=59360544]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.8, 0.05, 0)
 
-[node name="Lamp" type="OmniLight3D" parent="Rooms/Room1" unique_id=120081746]
+[node name="Lamp" type="OmniLight3D" parent="Rooms/Room1" unique_id=2026867949]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, 3.5)
 light_color = Color(1, 0.94, 0.84, 1)
 light_energy = 2.6
 omni_range = 18.0
 omni_attenuation = 0.6
 
-[node name="Room2" type="Node3D" parent="Rooms" unique_id=862797750]
+[node name="Room2" type="Node3D" parent="Rooms" unique_id=918995431]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0, 0)
 script = ExtResource("2_l5cq2")
 index = 1
 exit_door = NodePath("Mech/ExitDoor")
 
-[node name="Static" type="StaticBody3D" parent="Rooms/Room2" unique_id=2120419061]
+[node name="Static" type="StaticBody3D" parent="Rooms/Room2" unique_id=1078114452]
 
-[node name="Floor" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=1728115182]
+[node name="Floor" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=1665674592]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_80v33")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=631518198]
+[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=178211474]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 shape = SubResource("BoxShape3D_x1u57")
 
-[node name="WallL" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=27390942]
+[node name="WallL" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=41106765]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 shape = SubResource("BoxShape3D_vqehr")
 
-[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=223808278]
+[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=1485533695]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5.9, 0)
 shape = SubResource("BoxShape3D_di2ed")
 
-[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=333937539]
+[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=1179140173]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, -0.5, 0)
 shape = SubResource("BoxShape3D_dww5e")
 
-[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=1109655257]
+[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=1193848639]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 3.3, 0)
 shape = SubResource("BoxShape3D_j3jkc")
 
-[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=686151684]
+[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room2/Static" unique_id=625584028]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 1.4, 0)
 shape = SubResource("BoxShape3D_k82d1")
 
-[node name="Visual" type="Node3D" parent="Rooms/Room2" unique_id=1236551669]
+[node name="Visual" type="Node3D" parent="Rooms/Room2" unique_id=1616214646]
 
-[node name="Floor" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1342197101]
+[node name="Floor" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=958996121]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("BoxMesh_08xke")
 
-[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1287318574]
+[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=293820366]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 mesh = SubResource("BoxMesh_nml03")
 
-[node name="WallL" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1982193545]
+[node name="WallL" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1847658286]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 mesh = SubResource("BoxMesh_4wtnr")
 
-[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=792677008]
+[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1725518158]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5.9, 0)
 mesh = SubResource("BoxMesh_bjrr5")
 
-[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=657702465]
+[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=159303182]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, -0.5, 0)
 mesh = SubResource("BoxMesh_k4d5w")
 
-[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=2038684529]
+[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1269823038]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 3.3, 0)
 mesh = SubResource("BoxMesh_ttwor")
 
-[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1790875548]
+[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=439197603]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 1.4, 0)
 mesh = SubResource("BoxMesh_y3gs4")
 
-[node name="Back" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=308518005]
+[node name="Back" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1318239226]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.4)
 mesh = SubResource("BoxMesh_3vy2m")
 
-[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1260038051]
+[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1119209632]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6, 1.4, -1.4)
 mesh = SubResource("BoxMesh_hvprn")
 
-[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1169163348]
+[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=462726168]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -1.2)
 mesh = SubResource("BoxMesh_46vsy")
 
-[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1760825004]
+[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1927892382]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, -1.2)
 mesh = SubResource("BoxMesh_ixm7i")
 
-[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=2099907552]
+[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=792473762]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_d7k12")
 
-[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1259378146]
+[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=2079910957]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_8a6qr")
 
-[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=226111942]
+[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=15327650]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_13dwb")
 
-[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1734368027]
+[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=643806113]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.23)
 mesh = SubResource("BoxMesh_8w01g")
 
-[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=805894129]
+[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1316724570]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_dwwl0")
 
-[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=152605880]
+[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=247150076]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_wnubm")
 
-[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=806189892]
+[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=274788441]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_x66hf")
 
-[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=408324377]
+[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1810338128]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1.23)
 mesh = SubResource("BoxMesh_lwdjf")
 
-[node name="Number" type="Label3D" parent="Rooms/Room2/Visual" unique_id=118527713]
+[node name="Number" type="Label3D" parent="Rooms/Room2/Visual" unique_id=208469189]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4, 7.4, -1.2)
 pixel_size = 0.006
 double_sided = false
@@ -1200,73 +1200,73 @@ text = "2"
 font_size = 420
 outline_size = 0
 
-[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=577286915]
+[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=186162751]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.94, 1.4, 0)
 mesh = SubResource("BoxMesh_3pmg4")
 
-[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=2128277268]
+[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1442259817]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.93, 2.9, 0)
 mesh = SubResource("BoxMesh_cbl70")
 
-[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=315577944]
+[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room2/Visual" unique_id=1805524973]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 2.9, 0)
 mesh = SubResource("BoxMesh_8dxk1")
 
-[node name="Mech" type="Node3D" parent="Rooms/Room2" unique_id=1730020659]
+[node name="Mech" type="Node3D" parent="Rooms/Room2" unique_id=1953306302]
 
-[node name="ExitDoor" type="Node3D" parent="Rooms/Room2/Mech" unique_id=474674009 instance=ExtResource("17_dpqid")]
+[node name="ExitDoor" type="Node3D" parent="Rooms/Room2/Mech" unique_id=188998018 instance=ExtResource("17_dpqid")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, 0)
 script = ExtResource("18_h3vl1")
 input = NodePath("../Timer")
 thickness = 1.0
 
-[node name="PlateA" type="Node3D" parent="Rooms/Room2/Mech" unique_id=759220472 instance=ExtResource("19_oi457")]
+[node name="PlateA" type="Node3D" parent="Rooms/Room2/Mech" unique_id=920852021 instance=ExtResource("19_oi457")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, 0)
 script = ExtResource("20_ishp5")
 
-[node name="PlateB" type="Node3D" parent="Rooms/Room2/Mech" unique_id=105875901 instance=ExtResource("19_oi457")]
+[node name="PlateB" type="Node3D" parent="Rooms/Room2/Mech" unique_id=41762607 instance=ExtResource("19_oi457")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 0, 0)
 script = ExtResource("20_ishp5")
 
-[node name="And" type="Node3D" parent="Rooms/Room2/Mech" unique_id=2044198657 instance=ExtResource("25_kwnnh")]
+[node name="And" type="Node3D" parent="Rooms/Room2/Mech" unique_id=1369870639 instance=ExtResource("25_kwnnh")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.6, -1.15)
 script = ExtResource("26_8mbb1")
 inputs = Array[NodePath]([NodePath("../PlateA"), NodePath("../PlateB")])
 
-[node name="Timer" type="Node3D" parent="Rooms/Room2/Mech" unique_id=1938331293 instance=ExtResource("25_kwnnh")]
+[node name="Timer" type="Node3D" parent="Rooms/Room2/Mech" unique_id=842090212 instance=ExtResource("25_kwnnh")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 4.6, -1.15)
 script = ExtResource("26_8mbb1")
 mode = 2
 inputs = Array[NodePath]([NodePath("../And")])
 hold_s = 4.0
 
-[node name="CableA" type="Node3D" parent="Rooms/Room2/Mech" unique_id=1546626018 instance=ExtResource("21_3gxb0")]
+[node name="CableA" type="Node3D" parent="Rooms/Room2/Mech" unique_id=846540789 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../PlateA")
 points = PackedVector2Array(-3.6, 0.15, -3.6, 4.6, -0.55, 4.6)
 
-[node name="CableB" type="Node3D" parent="Rooms/Room2/Mech" unique_id=1841303609 instance=ExtResource("21_3gxb0")]
+[node name="CableB" type="Node3D" parent="Rooms/Room2/Mech" unique_id=832049181 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../PlateB")
 points = PackedVector2Array(3.6, 0.15, 3.6, 3.6, 0, 3.6, 0, 4.25)
 
-[node name="CableAnd" type="Node3D" parent="Rooms/Room2/Mech" unique_id=497844832 instance=ExtResource("21_3gxb0")]
+[node name="CableAnd" type="Node3D" parent="Rooms/Room2/Mech" unique_id=404717387 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../And")
 points = PackedVector2Array(0.55, 4.6, 4.45, 4.6)
 
-[node name="CableTimer" type="Node3D" parent="Rooms/Room2/Mech" unique_id=445788975 instance=ExtResource("21_3gxb0")]
+[node name="CableTimer" type="Node3D" parent="Rooms/Room2/Mech" unique_id=2131646959 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Timer")
 points = PackedVector2Array(5.55, 4.6, 7.4, 4.6, 7.4, 3)
 
-[node name="Props" type="Node3D" parent="Rooms/Room2" unique_id=905496076]
+[node name="Props" type="Node3D" parent="Rooms/Room2" unique_id=550203328]
 
-[node name="Medium" type="RigidBody3D" parent="Rooms/Room2/Props" unique_id=204001704 instance=ExtResource("23_rnuln")]
+[node name="Medium" type="RigidBody3D" parent="Rooms/Room2/Props" unique_id=1408509487 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.41, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1277,7 +1277,7 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "medium"
 
-[node name="LightA" type="RigidBody3D" parent="Rooms/Room2/Props" unique_id=226388525 instance=ExtResource("23_rnuln")]
+[node name="LightA" type="RigidBody3D" parent="Rooms/Room2/Props" unique_id=1857177586 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.6, 0.31, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1287,7 +1287,7 @@ linear_damp = 0.2
 angular_damp = 0.8
 script = ExtResource("24_2uws5")
 
-[node name="LightB" type="RigidBody3D" parent="Rooms/Room2/Props" unique_id=2109924007 instance=ExtResource("23_rnuln")]
+[node name="LightB" type="RigidBody3D" parent="Rooms/Room2/Props" unique_id=547078706 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.31, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1297,149 +1297,149 @@ linear_damp = 0.2
 angular_damp = 0.8
 script = ExtResource("24_2uws5")
 
-[node name="Spawns" type="Node3D" parent="Rooms/Room2" unique_id=1103454158]
+[node name="Spawns" type="Node3D" parent="Rooms/Room2" unique_id=1607502316]
 
-[node name="Spawn0" type="Marker3D" parent="Rooms/Room2/Spawns" unique_id=1065602544]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.05, 0)
+[node name="Spawn0" type="Marker3D" parent="Rooms/Room2/Spawns" unique_id=581791779]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Rooms/Room2/Spawns" unique_id=32969536]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0.05, 0)
+[node name="Spawn1" type="Marker3D" parent="Rooms/Room2/Spawns" unique_id=715560953]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.8, 0.05, 0)
 
-[node name="Lamp" type="OmniLight3D" parent="Rooms/Room2" unique_id=920739166]
+[node name="Lamp" type="OmniLight3D" parent="Rooms/Room2" unique_id=625525834]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, 3.5)
 light_color = Color(1, 0.94, 0.84, 1)
 light_energy = 2.6
 omni_range = 18.0
 omni_attenuation = 0.6
 
-[node name="Room3" type="Node3D" parent="Rooms" unique_id=969207824]
+[node name="Room3" type="Node3D" parent="Rooms" unique_id=383189140]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 0, 0)
 script = ExtResource("2_l5cq2")
 index = 2
 exit_rect = Rect2(9.2, 3, 2.4, 2.8)
 exit_door = NodePath("Mech/ExitDoor")
 
-[node name="Static" type="StaticBody3D" parent="Rooms/Room3" unique_id=1706908068]
+[node name="Static" type="StaticBody3D" parent="Rooms/Room3" unique_id=668689926]
 
-[node name="Floor" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=497477202]
+[node name="Floor" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=1223787965]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_44udn")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=475196769]
+[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=219117186]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 shape = SubResource("BoxShape3D_rnmuc")
 
-[node name="WallL" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=1581297417]
+[node name="WallL" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=416390805]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 shape = SubResource("BoxShape3D_tyqh1")
 
-[node name="WallR_Low" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=1022781763]
+[node name="WallR_Low" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=1209037752]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 1.5, 0)
 shape = SubResource("BoxShape3D_efr1x")
 
-[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=590286042]
+[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=789680248]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 7.4, 0)
 shape = SubResource("BoxShape3D_gsfny")
 
-[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=124805403]
+[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=710037104]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 2.5, 0)
 shape = SubResource("BoxShape3D_trskt")
 
-[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=596139550]
+[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=1590469821]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 6.3, 0)
 shape = SubResource("BoxShape3D_4601n")
 
-[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=1307284676]
+[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=1226190357]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 4.4, 0)
 shape = SubResource("BoxShape3D_bl5q8")
 
-[node name="Ledge" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=964956705]
+[node name="Ledge" type="CollisionShape3D" parent="Rooms/Room3/Static" unique_id=671105477]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 1.5, 0)
 shape = SubResource("BoxShape3D_yd4j1")
 
-[node name="Visual" type="Node3D" parent="Rooms/Room3" unique_id=435562440]
+[node name="Visual" type="Node3D" parent="Rooms/Room3" unique_id=1358153729]
 
-[node name="Floor" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=464932082]
+[node name="Floor" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=679768140]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("BoxMesh_12par")
 
-[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1225996312]
+[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=659525287]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 mesh = SubResource("BoxMesh_2c2ds")
 
-[node name="WallL" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1563518202]
+[node name="WallL" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=2110330445]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 mesh = SubResource("BoxMesh_yeiub")
 
-[node name="WallR_Low" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=2115927097]
+[node name="WallR_Low" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=2107462780]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 1.5, 0)
 mesh = SubResource("BoxMesh_m8a12")
 
-[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=130287622]
+[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1758230275]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 7.4, 0)
 mesh = SubResource("BoxMesh_ecvcm")
 
-[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=255039660]
+[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=337119459]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 2.5, 0)
 mesh = SubResource("BoxMesh_hv0te")
 
-[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1811287670]
+[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=23960142]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 6.3, 0)
 mesh = SubResource("BoxMesh_adq0j")
 
-[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1906940392]
+[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=2082090046]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 4.4, 0)
 mesh = SubResource("BoxMesh_7qjuk")
 
-[node name="Back" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=298323164]
+[node name="Back" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1219986323]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.4)
 mesh = SubResource("BoxMesh_xrju5")
 
-[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=200802431]
+[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=182681963]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6, 4.4, -1.4)
 mesh = SubResource("BoxMesh_rbrqv")
 
-[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=582099082]
+[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1886593018]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -1.2)
 mesh = SubResource("BoxMesh_6sp0o")
 
-[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1239355048]
+[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=26404960]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, -1.2)
 mesh = SubResource("BoxMesh_wxhx0")
 
-[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=2036888235]
+[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=151889177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_yq20g")
 
-[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1452408095]
+[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1298791072]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_uuavb")
 
-[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1522034259]
+[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=319348569]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_qqidy")
 
-[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=426504256]
+[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1215601476]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.23)
 mesh = SubResource("BoxMesh_pnu0j")
 
-[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=454983134]
+[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=183138755]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_3ggf8")
 
-[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1659277314]
+[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=146911901]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_0fg4d")
 
-[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1377712940]
+[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=32807062]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_q3o8p")
 
-[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1497348443]
+[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1188611931]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1.23)
 mesh = SubResource("BoxMesh_cpk26")
 
-[node name="Number" type="Label3D" parent="Rooms/Room3/Visual" unique_id=2113028074]
+[node name="Number" type="Label3D" parent="Rooms/Room3/Visual" unique_id=1320870622]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4, 7.4, -1.2)
 pixel_size = 0.006
 double_sided = false
@@ -1449,35 +1449,35 @@ text = "3"
 font_size = 420
 outline_size = 0
 
-[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1387718958]
+[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=647875456]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.94, 1.4, 0)
 mesh = SubResource("BoxMesh_0ycgi")
 
-[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=364907205]
+[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=2143673271]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.93, 2.9, 0)
 mesh = SubResource("BoxMesh_4c6ng")
 
-[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1245543667]
+[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=202897097]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5.9, 0)
 mesh = SubResource("BoxMesh_bo5cd")
 
-[node name="Ledge" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=1237221579]
+[node name="Ledge" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=473396417]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 1.5, 0)
 mesh = SubResource("BoxMesh_cvxbk")
 
-[node name="LedgeEdge" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=2025293067]
+[node name="LedgeEdge" type="MeshInstance3D" parent="Rooms/Room3/Visual" unique_id=29254934]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.91, 0)
 mesh = SubResource("BoxMesh_fxfa8")
 
-[node name="Mech" type="Node3D" parent="Rooms/Room3" unique_id=435333163]
+[node name="Mech" type="Node3D" parent="Rooms/Room3" unique_id=1007122292]
 
-[node name="ExitDoor" type="Node3D" parent="Rooms/Room3/Mech" unique_id=2030359039 instance=ExtResource("17_dpqid")]
+[node name="ExitDoor" type="Node3D" parent="Rooms/Room3/Mech" unique_id=339779990 instance=ExtResource("17_dpqid")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 3, 0)
 script = ExtResource("18_h3vl1")
 input = NodePath("../Scale")
 thickness = 1.0
 
-[node name="Scale" type="Node3D" parent="Rooms/Room3/Mech" unique_id=551357708 instance=ExtResource("19_oi457")]
+[node name="Scale" type="Node3D" parent="Rooms/Room3/Mech" unique_id=395488010 instance=ExtResource("19_oi457")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, 0)
 script = ExtResource("20_ishp5")
 threshold_kg = 55.0
@@ -1485,15 +1485,15 @@ count_dolls = false
 width = 2.6
 pad_colour = Color(0.3, 0.65, 1, 1)
 
-[node name="Cable" type="Node3D" parent="Rooms/Room3/Mech" unique_id=713453135 instance=ExtResource("21_3gxb0")]
+[node name="Cable" type="Node3D" parent="Rooms/Room3/Mech" unique_id=2133910726 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Scale")
 points = PackedVector2Array(5, 3.15, 5, 6.4, 7.4, 6.4, 7.4, 6)
 
-[node name="Props" type="Node3D" parent="Rooms/Room3" unique_id=1784922023]
+[node name="Props" type="Node3D" parent="Rooms/Room3" unique_id=1969706745]
 
-[node name="Duo" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=620340544 instance=ExtResource("23_rnuln")]
+[node name="Duo" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=781857285 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.51, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1504,7 +1504,7 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "duo"
 
-[node name="Box1" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=461298941 instance=ExtResource("23_rnuln")]
+[node name="Box1" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=2064877106 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.32, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1515,7 +1515,7 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "box15"
 
-[node name="Box2" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=1855422357 instance=ExtResource("23_rnuln")]
+[node name="Box2" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=247899446 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.32, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1526,7 +1526,7 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "box15"
 
-[node name="Box3" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=295719047 instance=ExtResource("23_rnuln")]
+[node name="Box3" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=1692783931 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.32, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1537,7 +1537,7 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "box15"
 
-[node name="Box4" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=1858865662 instance=ExtResource("23_rnuln")]
+[node name="Box4" type="RigidBody3D" parent="Rooms/Room3/Props" unique_id=1796556550 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.96, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1548,140 +1548,140 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "box15"
 
-[node name="Spawns" type="Node3D" parent="Rooms/Room3" unique_id=2066593944]
+[node name="Spawns" type="Node3D" parent="Rooms/Room3" unique_id=1110326739]
 
-[node name="Spawn0" type="Marker3D" parent="Rooms/Room3/Spawns" unique_id=416123322]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.05, 0)
+[node name="Spawn0" type="Marker3D" parent="Rooms/Room3/Spawns" unique_id=1322113959]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Rooms/Room3/Spawns" unique_id=1550081395]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0.05, 0)
+[node name="Spawn1" type="Marker3D" parent="Rooms/Room3/Spawns" unique_id=63661190]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.8, 0.05, 0)
 
-[node name="Lamp" type="OmniLight3D" parent="Rooms/Room3" unique_id=54070065]
+[node name="Lamp" type="OmniLight3D" parent="Rooms/Room3" unique_id=733828096]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, 3.5)
 light_color = Color(1, 0.94, 0.84, 1)
 light_energy = 2.6
 omni_range = 18.0
 omni_attenuation = 0.6
 
-[node name="Room4" type="Node3D" parent="Rooms" unique_id=637454183]
+[node name="Room4" type="Node3D" parent="Rooms" unique_id=1260382460]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 0, 0)
 script = ExtResource("2_l5cq2")
 index = 3
 exit_door = NodePath("Mech/ExitDoor")
 
-[node name="Static" type="StaticBody3D" parent="Rooms/Room4" unique_id=1514413701]
+[node name="Static" type="StaticBody3D" parent="Rooms/Room4" unique_id=262900487]
 
-[node name="Floor" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=487426894]
+[node name="Floor" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=604144584]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_qh2g8")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=650239085]
+[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=190011887]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 shape = SubResource("BoxShape3D_fjxde")
 
-[node name="WallL" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=782204397]
+[node name="WallL" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=570414890]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 shape = SubResource("BoxShape3D_u3vos")
 
-[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=1617903714]
+[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=1828557303]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5.9, 0)
 shape = SubResource("BoxShape3D_3kgjn")
 
-[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=1135534879]
+[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=1888416120]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, -0.5, 0)
 shape = SubResource("BoxShape3D_1pf7k")
 
-[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=1740603213]
+[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=1296998608]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 3.3, 0)
 shape = SubResource("BoxShape3D_c5gce")
 
-[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=608639248]
+[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=1169859438]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 1.4, 0)
 shape = SubResource("BoxShape3D_o3oeu")
 
-[node name="Shelf" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=596980639]
+[node name="Shelf" type="CollisionShape3D" parent="Rooms/Room4/Static" unique_id=1761241787]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 4.3, 0)
 shape = SubResource("BoxShape3D_6l713")
 
-[node name="Visual" type="Node3D" parent="Rooms/Room4" unique_id=1576899533]
+[node name="Visual" type="Node3D" parent="Rooms/Room4" unique_id=986770683]
 
-[node name="Floor" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=305889079]
+[node name="Floor" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=2144874662]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("BoxMesh_a1cwc")
 
-[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=322386328]
+[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=693292617]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 mesh = SubResource("BoxMesh_h6y22")
 
-[node name="WallL" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1609425328]
+[node name="WallL" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=239793594]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 mesh = SubResource("BoxMesh_aqx4a")
 
-[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=2000061295]
+[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=505738947]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5.9, 0)
 mesh = SubResource("BoxMesh_dxehy")
 
-[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1329197052]
+[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=845708823]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, -0.5, 0)
 mesh = SubResource("BoxMesh_jp05e")
 
-[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=805250764]
+[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1580141086]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 3.3, 0)
 mesh = SubResource("BoxMesh_swxom")
 
-[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1145711905]
+[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1948148696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 1.4, 0)
 mesh = SubResource("BoxMesh_0t0pm")
 
-[node name="Back" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1536317414]
+[node name="Back" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1721940981]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.4)
 mesh = SubResource("BoxMesh_advhs")
 
-[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=254144717]
+[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1760217174]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6, 1.4, -1.4)
 mesh = SubResource("BoxMesh_73of0")
 
-[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1524511683]
+[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1296838417]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -1.2)
 mesh = SubResource("BoxMesh_4kf2b")
 
-[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1953398919]
+[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1812288227]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, -1.2)
 mesh = SubResource("BoxMesh_ofuua")
 
-[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1511265528]
+[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1641926438]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_xg1at")
 
-[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=291919473]
+[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1601517259]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_p66h1")
 
-[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1517408475]
+[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=716319738]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_eergc")
 
-[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1370379373]
+[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=523452992]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.23)
 mesh = SubResource("BoxMesh_echkf")
 
-[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1423886684]
+[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1165869723]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_odr4p")
 
-[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1617875223]
+[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1183345492]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_arywv")
 
-[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=561906219]
+[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1648618288]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_1j4cn")
 
-[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1655022696]
+[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=2005256895]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1.23)
 mesh = SubResource("BoxMesh_nwt3i")
 
-[node name="Number" type="Label3D" parent="Rooms/Room4/Visual" unique_id=2143273464]
+[node name="Number" type="Label3D" parent="Rooms/Room4/Visual" unique_id=1187413546]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4, 7.4, -1.2)
 pixel_size = 0.006
 double_sided = false
@@ -1691,45 +1691,45 @@ text = "4"
 font_size = 420
 outline_size = 0
 
-[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1306874212]
+[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1914278827]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.94, 1.4, 0)
 mesh = SubResource("BoxMesh_ie5wh")
 
-[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=810073948]
+[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=524258274]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.93, 2.9, 0)
 mesh = SubResource("BoxMesh_rivj6")
 
-[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1845499661]
+[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=1476201245]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 2.9, 0)
 mesh = SubResource("BoxMesh_tofm0")
 
-[node name="Shelf" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=641208524]
+[node name="Shelf" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=244706465]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 4.3, 0)
 mesh = SubResource("BoxMesh_wt3jt")
 
-[node name="Bracket" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=955837980]
+[node name="Bracket" type="MeshInstance3D" parent="Rooms/Room4/Visual" unique_id=2027641179]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 2.05, -1.15)
 mesh = SubResource("BoxMesh_8rsyp")
 
-[node name="Mech" type="Node3D" parent="Rooms/Room4" unique_id=827354451]
+[node name="Mech" type="Node3D" parent="Rooms/Room4" unique_id=1200197293]
 
-[node name="ExitDoor" type="Node3D" parent="Rooms/Room4/Mech" unique_id=1904976802 instance=ExtResource("17_dpqid")]
+[node name="ExitDoor" type="Node3D" parent="Rooms/Room4/Mech" unique_id=426717798 instance=ExtResource("17_dpqid")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, 0)
 script = ExtResource("18_h3vl1")
 input = NodePath("../WallPlate")
 thickness = 1.0
 
-[node name="Gravity" type="Node3D" parent="Rooms/Room4/Mech" unique_id=595715993 instance=ExtResource("27_dbwrq")]
+[node name="Gravity" type="Node3D" parent="Rooms/Room4/Mech" unique_id=1452386265 instance=ExtResource("27_dbwrq")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
 script = ExtResource("28_s8r5f")
 input = NodePath("../Lever")
 sign_offset = Vector3(-3.4, 2.2, -1.15)
 
-[node name="Lever" type="Node3D" parent="Rooms/Room4/Mech" unique_id=1370303562 instance=ExtResource("29_wsq03")]
+[node name="Lever" type="Node3D" parent="Rooms/Room4/Mech" unique_id=116128458 instance=ExtResource("29_wsq03")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, 0)
 script = ExtResource("30_yg0o3")
 
-[node name="WallPlate" type="Node3D" parent="Rooms/Room4/Mech" unique_id=242154057 instance=ExtResource("19_oi457")]
+[node name="WallPlate" type="Node3D" parent="Rooms/Room4/Mech" unique_id=815606870 instance=ExtResource("19_oi457")]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 8, 5.3, 0)
 script = ExtResource("20_ishp5")
 threshold_kg = 50.0
@@ -1737,21 +1737,21 @@ count_dolls = false
 width = 2.8
 pad_colour = Color(0.3, 0.65, 1, 1)
 
-[node name="CableLever" type="Node3D" parent="Rooms/Room4/Mech" unique_id=811312475 instance=ExtResource("21_3gxb0")]
+[node name="CableLever" type="Node3D" parent="Rooms/Room4/Mech" unique_id=1637061605 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Lever")
 points = PackedVector2Array(-3.6, 0.3, -3.6, 1.2, -4.4, 1.2, -4.4, 6.7, -4.15, 6.7)
 
-[node name="CablePlate" type="Node3D" parent="Rooms/Room4/Mech" unique_id=821108600 instance=ExtResource("21_3gxb0")]
+[node name="CablePlate" type="Node3D" parent="Rooms/Room4/Mech" unique_id=102953562 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../WallPlate")
 points = PackedVector2Array(7.6, 6.9, 6.6, 6.9, 6.6, 3.4, 7.4, 3.4, 7.4, 3)
 
-[node name="Props" type="Node3D" parent="Rooms/Room4" unique_id=1631658169]
+[node name="Props" type="Node3D" parent="Rooms/Room4" unique_id=100323128]
 
-[node name="Iron" type="RigidBody3D" parent="Rooms/Room4/Props" unique_id=1628912074 instance=ExtResource("23_rnuln")]
+[node name="Iron" type="RigidBody3D" parent="Rooms/Room4/Props" unique_id=398060200 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 5.06, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1762,7 +1762,7 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "iron"
 
-[node name="LightA" type="RigidBody3D" parent="Rooms/Room4/Props" unique_id=1102439510 instance=ExtResource("23_rnuln")]
+[node name="LightA" type="RigidBody3D" parent="Rooms/Room4/Props" unique_id=447300272 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.31, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1772,7 +1772,7 @@ linear_damp = 0.2
 angular_damp = 0.8
 script = ExtResource("24_2uws5")
 
-[node name="LightB" type="RigidBody3D" parent="Rooms/Room4/Props" unique_id=1382244795 instance=ExtResource("23_rnuln")]
+[node name="LightB" type="RigidBody3D" parent="Rooms/Room4/Props" unique_id=707496631 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 0.31, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1782,157 +1782,157 @@ linear_damp = 0.2
 angular_damp = 0.8
 script = ExtResource("24_2uws5")
 
-[node name="Spawns" type="Node3D" parent="Rooms/Room4" unique_id=675389345]
+[node name="Spawns" type="Node3D" parent="Rooms/Room4" unique_id=12992486]
 
-[node name="Spawn0" type="Marker3D" parent="Rooms/Room4/Spawns" unique_id=1534751037]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.05, 0)
+[node name="Spawn0" type="Marker3D" parent="Rooms/Room4/Spawns" unique_id=1460810313]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Rooms/Room4/Spawns" unique_id=1174516082]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0.05, 0)
+[node name="Spawn1" type="Marker3D" parent="Rooms/Room4/Spawns" unique_id=1175786126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.8, 0.05, 0)
 
-[node name="Lamp" type="OmniLight3D" parent="Rooms/Room4" unique_id=592892645]
+[node name="Lamp" type="OmniLight3D" parent="Rooms/Room4" unique_id=493190376]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, 3.5)
 light_color = Color(1, 0.94, 0.84, 1)
 light_energy = 2.6
 omni_range = 18.0
 omni_attenuation = 0.6
 
-[node name="Room5" type="Node3D" parent="Rooms" unique_id=1364759545]
+[node name="Room5" type="Node3D" parent="Rooms" unique_id=114312994]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104, 0, 0)
 script = ExtResource("2_l5cq2")
 index = 4
 exit_rect = Rect2(9.2, 5, 2.4, 2.8)
 exit_door = NodePath("Mech/ExitDoor")
 
-[node name="Static" type="StaticBody3D" parent="Rooms/Room5" unique_id=1486259950]
+[node name="Static" type="StaticBody3D" parent="Rooms/Room5" unique_id=982889387]
 
-[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=447238]
+[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1329235616]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 shape = SubResource("BoxShape3D_o86my")
 
-[node name="WallL" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1107476621]
+[node name="WallL" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=185813246]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 shape = SubResource("BoxShape3D_n2di4")
 
-[node name="WallR_Low" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=273637998]
+[node name="WallR_Low" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=2070959023]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 2.5, 0)
 shape = SubResource("BoxShape3D_ylocv")
 
-[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1871088241]
+[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1914449376]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 8.4, 0)
 shape = SubResource("BoxShape3D_pjf54")
 
-[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=286944049]
+[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1798381902]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 4.5, 0)
 shape = SubResource("BoxShape3D_ndvs1")
 
-[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=375155311]
+[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=2064226910]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 8.3, 0)
 shape = SubResource("BoxShape3D_l6l0u")
 
-[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1594233052]
+[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1027425715]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 6.4, 0)
 shape = SubResource("BoxShape3D_bmwri")
 
-[node name="FloorL" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1496137392]
+[node name="FloorL" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=104014037]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, -0.5, 0)
 shape = SubResource("BoxShape3D_of36u")
 
-[node name="FloorR" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=338644882]
+[node name="FloorR" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1870535454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, -0.5, 0)
 shape = SubResource("BoxShape3D_s12w7")
 
-[node name="Pit" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=271296255]
+[node name="Pit" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1190996674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, -0.675, 0)
 shape = SubResource("BoxShape3D_duehu")
 
-[node name="Balcony" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1226865470]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.525, 4.8, 0)
+[node name="Balcony" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=1556352803]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 4.8, 0)
 shape = SubResource("BoxShape3D_ujntj")
 
-[node name="Shelf" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=513797501]
+[node name="Shelf" type="CollisionShape3D" parent="Rooms/Room5/Static" unique_id=54032639]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.1, 2.85, 0)
 shape = SubResource("BoxShape3D_st8of")
 
-[node name="Visual" type="Node3D" parent="Rooms/Room5" unique_id=1581624962]
+[node name="Visual" type="Node3D" parent="Rooms/Room5" unique_id=1335067392]
 
-[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1236975092]
+[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=2142173154]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 mesh = SubResource("BoxMesh_ce6q6")
 
-[node name="WallL" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=403897474]
+[node name="WallL" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1053473008]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 mesh = SubResource("BoxMesh_in7ac")
 
-[node name="WallR_Low" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=2114191045]
+[node name="WallR_Low" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=810079305]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 2.5, 0)
 mesh = SubResource("BoxMesh_f45on")
 
-[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1058869576]
+[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1617250441]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 8.4, 0)
 mesh = SubResource("BoxMesh_ona8n")
 
-[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=856820710]
+[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1027173748]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 4.5, 0)
 mesh = SubResource("BoxMesh_jpmj8")
 
-[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=581354939]
+[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=323884887]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 8.3, 0)
 mesh = SubResource("BoxMesh_kxp8w")
 
-[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1942619098]
+[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=713453149]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 6.4, 0)
 mesh = SubResource("BoxMesh_3abg1")
 
-[node name="Back" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=429719393]
+[node name="Back" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1046355417]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.4)
 mesh = SubResource("BoxMesh_22h26")
 
-[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1745704075]
+[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1948930340]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6, 6.4, -1.4)
 mesh = SubResource("BoxMesh_8iy13")
 
-[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1523494691]
+[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=100439315]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -1.2)
 mesh = SubResource("BoxMesh_xspac")
 
-[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1627192688]
+[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=516129824]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, -1.2)
 mesh = SubResource("BoxMesh_8m2jb")
 
-[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1471077894]
+[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=286720254]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_crh07")
 
-[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1066926726]
+[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1433323815]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_s1ond")
 
-[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=955479649]
+[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=2000106017]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_mq55r")
 
-[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=2049849387]
+[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1260993306]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.23)
 mesh = SubResource("BoxMesh_e20jl")
 
-[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1514466120]
+[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1402357112]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_m7lvr")
 
-[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=962223766]
+[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=842273730]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_bg3x0")
 
-[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=2137813744]
+[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1892098283]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_x0ag3")
 
-[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=966124771]
+[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=48807331]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1.23)
 mesh = SubResource("BoxMesh_fda0h")
 
-[node name="Number" type="Label3D" parent="Rooms/Room5/Visual" unique_id=21499084]
+[node name="Number" type="Label3D" parent="Rooms/Room5/Visual" unique_id=1141086577]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4, 7.4, -1.2)
 pixel_size = 0.006
 double_sided = false
@@ -1942,68 +1942,68 @@ text = "5"
 font_size = 420
 outline_size = 0
 
-[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=2022646902]
+[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=312124914]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.94, 1.4, 0)
 mesh = SubResource("BoxMesh_ursu8")
 
-[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=378346353]
+[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=731532002]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.93, 2.9, 0)
 mesh = SubResource("BoxMesh_1niob")
 
-[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1570976428]
+[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1716245321]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 7.9, 0)
 mesh = SubResource("BoxMesh_xfcpa")
 
-[node name="FloorL" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=925822371]
+[node name="FloorL" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=690628862]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, -0.5, 0)
 mesh = SubResource("BoxMesh_tel2o")
 
-[node name="FloorR" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=967213615]
+[node name="FloorR" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1891660768]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, -0.5, 0)
 mesh = SubResource("BoxMesh_a08h7")
 
-[node name="Pit" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1542232524]
+[node name="Pit" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1969474255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, -0.675, 0)
 mesh = SubResource("BoxMesh_v01ma")
 
-[node name="Balcony" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=591261820]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.525, 4.8, 0)
+[node name="Balcony" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1638983445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 4.8, 0)
 mesh = SubResource("BoxMesh_dw26d")
 
-[node name="BalconyEdge" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1016566194]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.15, 4.91, 0)
+[node name="BalconyEdge" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=444653133]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1, 4.91, 0)
 mesh = SubResource("BoxMesh_8vykl")
 
-[node name="Shelf" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1215763539]
+[node name="Shelf" type="MeshInstance3D" parent="Rooms/Room5/Visual" unique_id=1922683615]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.1, 2.85, 0)
 mesh = SubResource("BoxMesh_e6vfr")
 
-[node name="Mech" type="Node3D" parent="Rooms/Room5" unique_id=510587740]
+[node name="Mech" type="Node3D" parent="Rooms/Room5" unique_id=1727669585]
 
-[node name="ExitDoor" type="Node3D" parent="Rooms/Room5/Mech" unique_id=1190974778 instance=ExtResource("17_dpqid")]
+[node name="ExitDoor" type="Node3D" parent="Rooms/Room5/Mech" unique_id=947240667 instance=ExtResource("17_dpqid")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5, 0)
 script = ExtResource("18_h3vl1")
 input = NodePath("../Scale")
 thickness = 1.0
 
-[node name="Plate" type="Node3D" parent="Rooms/Room5/Mech" unique_id=260248243 instance=ExtResource("19_oi457")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, 0)
+[node name="Plate" type="Node3D" parent="Rooms/Room5/Mech" unique_id=648604853 instance=ExtResource("19_oi457")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 0, 0)
 script = ExtResource("20_ishp5")
 
-[node name="Timer" type="Node3D" parent="Rooms/Room5/Mech" unique_id=1076559378 instance=ExtResource("25_kwnnh")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 6.6, -1.15)
+[node name="Timer" type="Node3D" parent="Rooms/Room5/Mech" unique_id=353872327 instance=ExtResource("25_kwnnh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 3.4, -1.15)
 script = ExtResource("26_8mbb1")
 mode = 2
 inputs = Array[NodePath]([NodePath("../Plate")])
 hold_s = 8.0
 
-[node name="Lift" type="Node3D" parent="Rooms/Room5/Mech" unique_id=244290867 instance=ExtResource("31_pdydf")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
+[node name="Lift" type="Node3D" parent="Rooms/Room5/Mech" unique_id=998719893 instance=ExtResource("31_pdydf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, -0.02, 0)
 script = ExtResource("32_nut21")
 input = NodePath("../Timer")
-width = 2.96
+travel = 5.04
 
-[node name="Scale" type="Node3D" parent="Rooms/Room5/Mech" unique_id=2014018507 instance=ExtResource("19_oi457")]
+[node name="Scale" type="Node3D" parent="Rooms/Room5/Mech" unique_id=1154660784 instance=ExtResource("19_oi457")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8, 5, 0)
 script = ExtResource("20_ishp5")
 threshold_kg = 50.0
@@ -2011,27 +2011,27 @@ count_dolls = false
 width = 2.4
 pad_colour = Color(0.3, 0.65, 1, 1)
 
-[node name="CablePlate" type="Node3D" parent="Rooms/Room5/Mech" unique_id=549843954 instance=ExtResource("21_3gxb0")]
+[node name="CablePlate" type="Node3D" parent="Rooms/Room5/Mech" unique_id=1675777007 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Plate")
-points = PackedVector2Array(-3.6, 0.15, -3.6, 6.6, -1.95, 6.6)
+points = PackedVector2Array(5.6, 0.15, 5.6, 2.6, 4.6, 2.6, 4.6, 3.05)
 
-[node name="CableTimer" type="Node3D" parent="Rooms/Room5/Mech" unique_id=1601189229 instance=ExtResource("21_3gxb0")]
+[node name="CableTimer" type="Node3D" parent="Rooms/Room5/Mech" unique_id=278073490 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Timer")
-points = PackedVector2Array(-0.85, 6.6, 1.5, 6.6, 1.5, 5.9)
+points = PackedVector2Array(4.05, 3.4, 3.4, 3.4, 3.4, 7.4, 1.5, 7.4, 1.5, 6.8)
 
-[node name="CableScale" type="Node3D" parent="Rooms/Room5/Mech" unique_id=1686282854 instance=ExtResource("21_3gxb0")]
+[node name="CableScale" type="Node3D" parent="Rooms/Room5/Mech" unique_id=1509165111 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Scale")
 points = PackedVector2Array(5.8, 5.15, 5.8, 8.3, 7.4, 8.3, 7.4, 7.8)
 
-[node name="Props" type="Node3D" parent="Rooms/Room5" unique_id=91047099]
+[node name="Props" type="Node3D" parent="Rooms/Room5" unique_id=1929263934]
 
-[node name="Iron" type="RigidBody3D" parent="Rooms/Room5/Props" unique_id=351592539 instance=ExtResource("23_rnuln")]
+[node name="Iron" type="RigidBody3D" parent="Rooms/Room5/Props" unique_id=716775044 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 0.56, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -2042,7 +2042,7 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "iron"
 
-[node name="Medium" type="RigidBody3D" parent="Rooms/Room5/Props" unique_id=684943929 instance=ExtResource("23_rnuln")]
+[node name="Medium" type="RigidBody3D" parent="Rooms/Room5/Props" unique_id=823019008 instance=ExtResource("23_rnuln")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.1, 3.41, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -2053,153 +2053,153 @@ angular_damp = 0.8
 script = ExtResource("24_2uws5")
 kind = "medium"
 
-[node name="Spawns" type="Node3D" parent="Rooms/Room5" unique_id=890960525]
+[node name="Spawns" type="Node3D" parent="Rooms/Room5" unique_id=527888770]
 
-[node name="Spawn0" type="Marker3D" parent="Rooms/Room5/Spawns" unique_id=1011646532]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.05, 0)
+[node name="Spawn0" type="Marker3D" parent="Rooms/Room5/Spawns" unique_id=1169118097]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Rooms/Room5/Spawns" unique_id=267601546]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0.05, 0)
+[node name="Spawn1" type="Marker3D" parent="Rooms/Room5/Spawns" unique_id=1286670879]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.8, 0.05, 0)
 
-[node name="Lamp" type="OmniLight3D" parent="Rooms/Room5" unique_id=862144156]
+[node name="Lamp" type="OmniLight3D" parent="Rooms/Room5" unique_id=207192300]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, 3.5)
 light_color = Color(1, 0.94, 0.84, 1)
 light_energy = 2.6
 omni_range = 18.0
 omni_attenuation = 0.6
 
-[node name="Room6" type="Node3D" parent="Rooms" unique_id=1070336494]
+[node name="Room6" type="Node3D" parent="Rooms" unique_id=2070240243]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 0, 0)
 script = ExtResource("2_l5cq2")
 index = 5
 exit_rect = Rect2(9.2, 5.6, 2.4, 2.8)
 exit_door = NodePath("Mech/ExitDoor")
 
-[node name="Static" type="StaticBody3D" parent="Rooms/Room6" unique_id=970832997]
+[node name="Static" type="StaticBody3D" parent="Rooms/Room6" unique_id=599115491]
 
-[node name="Floor" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1528910871]
+[node name="Floor" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=632920233]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_5w3x5")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=386843988]
+[node name="Ceiling" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1351513548]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 shape = SubResource("BoxShape3D_fjict")
 
-[node name="WallL" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1786893416]
+[node name="WallL" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=929762154]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 shape = SubResource("BoxShape3D_qd7w4")
 
-[node name="WallR_Low" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1148338158]
+[node name="WallR_Low" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1898888511]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 2.8, 0)
 shape = SubResource("BoxShape3D_frodf")
 
-[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1851040168]
+[node name="WallR_High" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1583765322]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 8.7, 0)
 shape = SubResource("BoxShape3D_jx0t3")
 
-[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=903519104]
+[node name="ExitFloor" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=296144524]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 5.1, 0)
 shape = SubResource("BoxShape3D_d8rua")
 
-[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=419561204]
+[node name="ExitCeiling" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=485804788]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 8.9, 0)
 shape = SubResource("BoxShape3D_wfdmo")
 
-[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=2138665527]
+[node name="ExitEnd" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1244381387]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 7, 0)
 shape = SubResource("BoxShape3D_4qkn3")
 
-[node name="NicheRoof" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=449173768]
+[node name="NicheRoof" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=458062978]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.45, 3.2, 0)
 shape = SubResource("BoxShape3D_l1h5d")
 
-[node name="DoorLedge" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=270858148]
+[node name="DoorLedge" type="CollisionShape3D" parent="Rooms/Room6/Static" unique_id=1263119802]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2, 5.4, 0)
 shape = SubResource("BoxShape3D_2y3an")
 
-[node name="Visual" type="Node3D" parent="Rooms/Room6" unique_id=86749275]
+[node name="Visual" type="Node3D" parent="Rooms/Room6" unique_id=1252342485]
 
-[node name="Floor" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1822655169]
+[node name="Floor" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=255045909]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("BoxMesh_unt5e")
 
-[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=673501679]
+[node name="Ceiling" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=2008424335]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, 0)
 mesh = SubResource("BoxMesh_1jy63")
 
-[node name="WallL" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1476869298]
+[node name="WallL" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1810449967]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 4.5, 0)
 mesh = SubResource("BoxMesh_bnftd")
 
-[node name="WallR_Low" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1822901641]
+[node name="WallR_Low" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=278780648]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 2.8, 0)
 mesh = SubResource("BoxMesh_uneny")
 
-[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1502723906]
+[node name="WallR_High" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1797060576]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 8.7, 0)
 mesh = SubResource("BoxMesh_7ibmn")
 
-[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=606808495]
+[node name="ExitFloor" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1744027297]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 5.1, 0)
 mesh = SubResource("BoxMesh_q2gih")
 
-[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=840770811]
+[node name="ExitCeiling" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=732737434]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.75, 8.9, 0)
 mesh = SubResource("BoxMesh_tf3uw")
 
-[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1963481127]
+[node name="ExitEnd" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=2117439790]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.05, 7, 0)
 mesh = SubResource("BoxMesh_ktuxg")
 
-[node name="Back" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=345038625]
+[node name="Back" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=466530770]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.4)
 mesh = SubResource("BoxMesh_edufm")
 
-[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=161410825]
+[node name="ExitBack" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1784448573]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6, 7, -1.4)
 mesh = SubResource("BoxMesh_dtot5")
 
-[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=167589420]
+[node name="TrimLow" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=2006390815]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -1.2)
 mesh = SubResource("BoxMesh_vtscg")
 
-[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1197127467]
+[node name="TrimHigh" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1725930115]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, -1.2)
 mesh = SubResource("BoxMesh_biyob")
 
-[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1424825174]
+[node name="Seam0" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1373199585]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_n340a")
 
-[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=307169686]
+[node name="Seam1" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=2028830882]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_bfc1u")
 
-[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=277511548]
+[node name="Seam2" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1009444035]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_2vfud")
 
-[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=650955152]
+[node name="Seam3" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1632346006]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.23)
 mesh = SubResource("BoxMesh_mkl52")
 
-[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1803624382]
+[node name="Seam4" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1179920086]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 4.5, -1.23)
 mesh = SubResource("BoxMesh_nshst")
 
-[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=151082638]
+[node name="Seam5" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=534131425]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 4.5, -1.23)
 mesh = SubResource("BoxMesh_de1nb")
 
-[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=566794023]
+[node name="Seam6" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=660824399]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 4.5, -1.23)
 mesh = SubResource("BoxMesh_h7bsq")
 
-[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1392776420]
+[node name="SeamH" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=882964177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1.23)
 mesh = SubResource("BoxMesh_r08n0")
 
-[node name="Number" type="Label3D" parent="Rooms/Room6/Visual" unique_id=888517727]
+[node name="Number" type="Label3D" parent="Rooms/Room6/Visual" unique_id=656476804]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4, 7.4, -1.2)
 pixel_size = 0.006
 double_sided = false
@@ -2209,67 +2209,67 @@ text = "6"
 font_size = 420
 outline_size = 0
 
-[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1562709664]
+[node name="EntryDoor" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1521127828]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.94, 1.4, 0)
 mesh = SubResource("BoxMesh_k4i1p")
 
-[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=2091778198]
+[node name="EntryFrame" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=248072401]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.93, 2.9, 0)
 mesh = SubResource("BoxMesh_gl2nw")
 
-[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=833429689]
+[node name="DoorFrame" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=572904372]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 8.5, 0)
 mesh = SubResource("BoxMesh_x48lm")
 
-[node name="NicheRoof" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1762409878]
+[node name="NicheRoof" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=139217622]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.45, 3.2, 0)
 mesh = SubResource("BoxMesh_1edve")
 
-[node name="DoorLedge" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1350963559]
+[node name="DoorLedge" type="MeshInstance3D" parent="Rooms/Room6/Visual" unique_id=1053420205]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2, 5.4, 0)
 mesh = SubResource("BoxMesh_68i6w")
 
-[node name="Mech" type="Node3D" parent="Rooms/Room6" unique_id=557063605]
+[node name="Mech" type="Node3D" parent="Rooms/Room6" unique_id=319538482]
 
-[node name="ExitDoor" type="Node3D" parent="Rooms/Room6/Mech" unique_id=1430812017 instance=ExtResource("17_dpqid")]
+[node name="ExitDoor" type="Node3D" parent="Rooms/Room6/Mech" unique_id=1604588714 instance=ExtResource("17_dpqid")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 5.6, 0)
 script = ExtResource("18_h3vl1")
 input = NodePath("../Timer")
 thickness = 1.0
 
-[node name="Plate" type="Node3D" parent="Rooms/Room6/Mech" unique_id=1274831054 instance=ExtResource("19_oi457")]
+[node name="Plate" type="Node3D" parent="Rooms/Room6/Mech" unique_id=9865481 instance=ExtResource("19_oi457")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.85, 0, 0)
 script = ExtResource("20_ishp5")
 width = 1.9
 
-[node name="Timer" type="Node3D" parent="Rooms/Room6/Mech" unique_id=616373439 instance=ExtResource("25_kwnnh")]
+[node name="Timer" type="Node3D" parent="Rooms/Room6/Mech" unique_id=1925556308 instance=ExtResource("25_kwnnh")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 7.2, -1.15)
 script = ExtResource("26_8mbb1")
 mode = 2
 inputs = Array[NodePath]([NodePath("../Plate")])
 hold_s = 6.0
 
-[node name="CablePlate" type="Node3D" parent="Rooms/Room6/Mech" unique_id=525302950 instance=ExtResource("21_3gxb0")]
+[node name="CablePlate" type="Node3D" parent="Rooms/Room6/Mech" unique_id=1990064056 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Plate")
 points = PackedVector2Array(6.85, 0.15, 6.85, 2.6, 4.6, 2.6, 4.6, 6.4, 3.6, 6.4, 3.6, 6.85)
 
-[node name="CableTimer" type="Node3D" parent="Rooms/Room6/Mech" unique_id=1924291632 instance=ExtResource("21_3gxb0")]
+[node name="CableTimer" type="Node3D" parent="Rooms/Room6/Mech" unique_id=615832233 instance=ExtResource("21_3gxb0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.15)
 script = ExtResource("22_swb1x")
 source = NodePath("../Timer")
 points = PackedVector2Array(4.15, 7.2, 7.4, 7.2, 7.4, 8.5)
 
-[node name="Dispenser" type="Node3D" parent="Rooms/Room6/Mech" unique_id=717006766 instance=ExtResource("33_3i2g8")]
+[node name="Dispenser" type="Node3D" parent="Rooms/Room6/Mech" unique_id=1378668034 instance=ExtResource("33_3i2g8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 8.75, 0)
 script = ExtResource("34_fooy4")
 until = NodePath("../../Props/CrackWall")
 into = NodePath("../../Props")
 
-[node name="Props" type="Node3D" parent="Rooms/Room6" unique_id=1049253031]
+[node name="Props" type="Node3D" parent="Rooms/Room6" unique_id=474218280]
 
-[node name="CrackWall" type="RigidBody3D" parent="Rooms/Room6/Props" unique_id=93903075 instance=ExtResource("35_821by")]
+[node name="CrackWall" type="RigidBody3D" parent="Rooms/Room6/Props" unique_id=1454991555 instance=ExtResource("35_821by")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, 0)
 mass = 24.0
 freeze = true
@@ -2294,7 +2294,7 @@ angular_damp = 0.5
 script = ExtResource("38_q06ka")
 hp = 20.0
 
-[node name="BarrelB" type="RigidBody3D" parent="Rooms/Room6/Props" unique_id=890399448 instance=ExtResource("37_2hsvu")]
+[node name="BarrelB" type="RigidBody3D" parent="Rooms/Room6/Props" unique_id=822217734 instance=ExtResource("37_2hsvu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 0.02, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -2309,24 +2309,24 @@ angular_damp = 0.5
 script = ExtResource("38_q06ka")
 hp = 20.0
 
-[node name="Spawns" type="Node3D" parent="Rooms/Room6" unique_id=1513508609]
+[node name="Spawns" type="Node3D" parent="Rooms/Room6" unique_id=1454199064]
 
-[node name="Spawn0" type="Marker3D" parent="Rooms/Room6/Spawns" unique_id=699401032]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.05, 0)
+[node name="Spawn0" type="Marker3D" parent="Rooms/Room6/Spawns" unique_id=1954112825]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Rooms/Room6/Spawns" unique_id=40144969]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0.05, 0)
+[node name="Spawn1" type="Marker3D" parent="Rooms/Room6/Spawns" unique_id=987135373]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.8, 0.05, 0)
 
-[node name="Lamp" type="OmniLight3D" parent="Rooms/Room6" unique_id=138021944]
+[node name="Lamp" type="OmniLight3D" parent="Rooms/Room6" unique_id=170891090]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, 3.5)
 light_color = Color(1, 0.94, 0.84, 1)
 light_energy = 2.6
 omni_range = 18.0
 omni_attenuation = 0.6
 
-[node name="Dolls" type="Node3D" parent="." unique_id=422168583]
+[node name="Dolls" type="Node3D" parent="." unique_id=1167910017]
 
-[node name="Camera" type="Camera3D" parent="." unique_id=1305078956 groups=["camera"]]
+[node name="Camera" type="Camera3D" parent="." unique_id=2139104579 groups=["camera"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 16)
 fov = 40.0
 script = ExtResource("39_gti64")
@@ -2337,11 +2337,11 @@ min_half_height = 5.6
 max_half_height = 5.6
 follow_tau = 0.25
 
-[node name="Match" type="Node" parent="." unique_id=2109700057]
+[node name="Match" type="Node" parent="." unique_id=754335297]
 script = ExtResource("40_mhny6")
 camera_path = NodePath("../Camera")
 arena_path = NodePath("..")
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=1108034550]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=65722917]
 layer = 10
 script = ExtResource("41_6w36y")

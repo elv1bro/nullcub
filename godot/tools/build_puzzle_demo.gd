@@ -248,7 +248,7 @@ func _room(holder: Node, i: int, door_y: float) -> Node3D:
 	for k in 2:
 		var m := Marker3D.new()
 		m.name = "Spawn%d" % k
-		m.position = Vector3(-hw + 1.4 + 1.4 * k, 0.05, 0)
+		m.position = Vector3(-hw + 1.0 + 1.2 * k, 0.05, 0)   # у левой стены: руки куклы в Т-позе (±0.9 м) не достают до плит
 		r.get_node("Spawns").add_child(m)
 	return r
 
@@ -329,8 +329,9 @@ func _room4(r: Node3D) -> void:
 	_crate(r, "LightB", "light", 4.6, 0.0)
 
 
-## 5. Лифт: чугунный ящик закатить на лифт (в яме у пола), лифт едет вверх, пока горит ТАЙМЕР 8 с от плиты; наверху — балкон с
-## грузовыми весами 50 кг → дверь над балконом. Соло: ящик 35 кг с полки слева — на плиту (лифт ждёт) или успеть за 8 с.
+## 5. Лифт: чугунный ящик толкнуть по полу на лифт (в яме у пола), лифт едет вверх, пока горит ТАЙМЕР 8 с от плиты под балконом;
+## наверху — балкон с грузовыми весами 50 кг → дверь над балконом. Соло: ящик 35 кг с полки слева — волоком на плиту (лифт ждёт) или
+## встать на плиту и успеть наверх за 8 с.
 func _room5(r: Node3D) -> void:
 	# яма лифта: пол x 0…3 ниже на 0.35 (платформа вровень с полом)
 	var fl := r.get_node("Static/Floor")
@@ -342,20 +343,23 @@ func _room5(r: Node3D) -> void:
 	_solid(r, "FloorL", -W * 0.5 - 1.0, 0.0, -1.0, 0.0, "floor")
 	_solid(r, "FloorR", 3.0, W * 0.5 + 1.0, -1.0, 0.0, "floor")
 	_solid(r, "Pit", 0.0, 3.0, -1.0, -0.35, "iron")
-	_solid(r, "Balcony", 3.05, 8.0, 4.6, 5.0, "iron")
-	_decor(r, "BalconyEdge", Vector3(0.2, 0.18, 2.44), Vector3(3.15, 4.91, 0), "hazard")
+	_solid(r, "Balcony", 3.0, 8.0, 4.6, 5.0, "iron")
+	_decor(r, "BalconyEdge", Vector3(0.2, 0.18, 2.44), Vector3(3.1, 4.91, 0), "hazard")
 	_solid(r, "Shelf", -8.0, -6.2, 2.7, 3.0, "iron")
-	var plate := _inst(r.get_node("Mech"), "plate", "Plate", Vector3(-3.6, 0, 0), {"threshold_kg": 30.0, "width": 2.0})
-	var tm := _inst(r.get_node("Mech"), "logic", "Timer", Vector3(-1.4, 6.6, CABLE_Z), {"mode": PuzzleLogic.Mode.TIMER, "hold_s": 8.0})
+	# плита — под балконом, в стороне от дорожки, по которой толкают ящик к лифту (кукла рукой задела бы её с пола)
+	var plate := _inst(r.get_node("Mech"), "plate", "Plate", Vector3(5.6, 0, 0), {"threshold_kg": 30.0, "width": 2.0})
+	var tm := _inst(r.get_node("Mech"), "logic", "Timer", Vector3(4.6, 3.4, CABLE_Z), {"mode": PuzzleLogic.Mode.TIMER, "hold_s": 8.0})
 	tm.set("inputs", [tm.get_path_to(plate)] as Array[NodePath])
-	var lift := _inst(r.get_node("Mech"), "lift", "Lift", Vector3(1.5, 0, 0), {"width": 2.96, "travel": 5.0})
+	# платформа внизу на 2 см ниже пола, наверху на 2 см выше балкона: ящик, который толкают вправо, съезжает со ступеньки вниз и не
+	# цепляется за стык (Jolt ловит угол на шве двух коробок вровень — чугунный ящик вставал намертво)
+	var lift := _inst(r.get_node("Mech"), "lift", "Lift", Vector3(1.5, -0.02, 0), {"width": 3.0, "travel": 5.04})   # вплотную к полу и балкону, щелей нет: кукла в шов не застревает
 	lift.set("input", lift.get_path_to(tm))
 	var scale := _inst(r.get_node("Mech"), "plate", "Scale", Vector3(5.8, 5.0, 0), {"threshold_kg": 50.0, "width": 2.4,
 		"count_dolls": false, "pad_colour": Color(0.3, 0.65, 1.0)})
 	var door := r.get_node("Mech/ExitDoor")
 	door.set("input", door.get_path_to(scale))
-	_cable(r, "CablePlate", plate, [Vector2(-3.6, 0.15), Vector2(-3.6, 6.6), Vector2(-1.95, 6.6)])
-	_cable(r, "CableTimer", tm, [Vector2(-0.85, 6.6), Vector2(1.5, 6.6), Vector2(1.5, 5.9)])
+	_cable(r, "CablePlate", plate, [Vector2(5.6, 0.15), Vector2(5.6, 2.6), Vector2(4.6, 2.6), Vector2(4.6, 3.05)])
+	_cable(r, "CableTimer", tm, [Vector2(4.05, 3.4), Vector2(3.4, 3.4), Vector2(3.4, 7.4), Vector2(1.5, 7.4), Vector2(1.5, 6.8)])
 	_cable(r, "CableScale", scale, [Vector2(5.8, 5.15), Vector2(5.8, 8.3), Vector2(7.4, 8.3), Vector2(7.4, 7.8)])
 	_crate(r, "Iron", "iron", -1.4, 0.0)
 	_crate(r, "Medium", "medium", -7.1, 3.0)

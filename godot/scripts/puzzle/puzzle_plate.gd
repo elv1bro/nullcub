@@ -57,12 +57,12 @@ func _ready() -> void:
 	lamp.mesh = sm
 	lamp.position = Vector3(width * 0.5 + 0.05, -0.08, FRONT_Z)
 	add_child(lamp)
-	var track := box_mesh(self, "BarTrack", Vector3(width - 0.3, 0.06, 0.02), Vector3(0, -0.13, FRONT_Z), flat_material(Color(0.04, 0.04, 0.05), 0.0, 0.9))
+	var track := box_mesh(self, "BarTrack", Vector3(width - 0.3, 0.06, 0.02), Vector3(0, -0.09, FRONT_Z), flat_material(Color(0.04, 0.04, 0.05), 0.0, 0.9))
 	track.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_bar_mat = glow_material(COLOUR_OFF, 1.4)
-	_bar = box_mesh(self, "Bar", Vector3(width - 0.3, 0.06, 0.02), Vector3(0, -0.13, FRONT_Z + 0.012), _bar_mat)
+	_bar = box_mesh(self, "Bar", Vector3(width - 0.3, 0.06, 0.02), Vector3(0, -0.09, FRONT_Z + 0.012), _bar_mat)
 	_bar.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_label = label(self, "Kg", "", Vector3(0, -0.42, FRONT_Z + 0.02), 40, Color(0.92, 0.94, 0.96))
+	_label = label(self, "Kg", "", Vector3(0, -0.3, FRONT_Z + 0.02), 40, Color(0.92, 0.94, 0.96))
 	_refresh_visual()
 
 
