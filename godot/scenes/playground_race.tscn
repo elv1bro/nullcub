@@ -1,0 +1,116 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scenes/race/playground_race.gd" id="1_pg"]
+[ext_resource type="PackedScene" path="res://scenes/arena/proving_ground.tscn" id="2_arena"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="3_cam"]
+[ext_resource type="Script" path="res://scripts/race/race_match.gd" id="4_match"]
+[ext_resource type="Script" path="res://scenes/race/race_hud.gd" id="5_hud"]
+[ext_resource type="Script" path="res://scenes/ui/offscreen_markers.gd" id="6_off"]
+
+[node name="PlaygroundRace" type="Node3D"]
+script = ExtResource("1_pg")
+map_id = "proving"
+
+[node name="ProvingGround" parent="." groups=["arena"] instance=ExtResource("2_arena")]
+
+[node name="RaceMarks" type="Node3D" parent="."]
+
+[node name="Gate" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+
+[node name="TowerTop" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+
+[node name="BarrelL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 2.6, 0)
+
+[node name="BarrelR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.6, 0)
+
+[node name="HighL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 10.5, 0)
+
+[node name="HighR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 10.5, 0)
+
+[node name="CoverNearL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 3.4, 0)
+
+[node name="CoverNearR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.4, 0)
+
+[node name="UnderFloatL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 2.1, 0)
+
+[node name="UnderFloatR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 2.1, 0)
+
+[node name="OverFloatL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 6.3, 0)
+
+[node name="OverFloatR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 6.3, 0)
+
+[node name="CoverFarL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 3.9, 0)
+
+[node name="CoverFarR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.9, 0)
+
+[node name="SkyL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, 8.5, 0)
+
+[node name="SkyR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 8.5, 0)
+
+[node name="FieldL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.5, 1.7, 0)
+
+[node name="FieldR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.5, 1.7, 0)
+
+[node name="BaseL" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 4.5, 0)
+
+[node name="BaseR" type="Marker3D" parent="RaceMarks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 4.5, 0)
+
+[node name="RaceStart" type="Node3D" parent="."]
+
+[node name="Start0" type="Marker3D" parent="RaceStart"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0.45, 0)
+
+[node name="Start1" type="Marker3D" parent="RaceStart"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.45, 0)
+
+[node name="Start2" type="Marker3D" parent="RaceStart"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.45, 0)
+
+[node name="Start3" type="Marker3D" parent="RaceStart"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.45, 0)
+
+[node name="Dolls" type="Node3D" parent="."]
+
+[node name="Camera" type="Camera3D" parent="." groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 16)
+fov = 45.0
+script = ExtResource("3_cam")
+arena_path = NodePath("../ProvingGround")
+floor_inset = 1.5
+target_group = "race_focus"
+padding = 3.2
+padding_y = 2.6
+min_half_height = 5.5
+max_half_height = 9.0
+
+[node name="Match" type="Node" parent="."]
+script = ExtResource("4_match")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../ProvingGround")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5_hud")
+
+[node name="OffscreenMarkers" type="CanvasLayer" parent="."]
+layer = 9
+script = ExtResource("6_off")

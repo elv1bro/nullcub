@@ -48,6 +48,7 @@ func _ev(what: String) -> void:
 func _run() -> void:
 	pg = (load(SCENE_NIGHT if night else SCENE) as PackedScene).instantiate() as SquadPlayground
 	pg.p1_bot = true
+	pg.use_settings = false
 	sm = pg.get_node("Match") as SquadMatch
 	sm.focus_index = 0
 	sm.score_to_win = 1000

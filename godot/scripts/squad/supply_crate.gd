@@ -2,7 +2,8 @@
 ## должны появляться»). Его ставит SquadMatch на точку карты (ProvingGround.supply_points). Ящик Руин (Crate.glb) висит в воздухе
 ## и покачивается (поле NULL), под ним — светящееся кольцо цвета вида, над ним — надпись. Физики нет: пули сквозь него, толкать нечем.
 ## Берёт живой боец, коснувшийся его любой деталью (ближе Tuning.SQUAD_SUPPLY_PICK_M к центру) — SquadMatch.take_supply решает,
-## нужен ли он (полный запас — ящик не тратится). Живёт Tuning.SQUAD_SUPPLY_LIFE_S, последние 3 с мигает.
+## нужен ли он (полный запас — ящик не тратится). Живёт Tuning.SQUAD_SUPPLY_LIFE_S, последние 3 с мигает. Вид, цвет и надпись —
+## Tuning.SQUAD_SUPPLY; бонусы на время (обзор, ярость, форсаж) — не ящик, а светящийся кристалл: видно издалека, что это не патроны.
 class_name SupplyCrate
 extends Node3D
 
@@ -12,8 +13,6 @@ const MODEL := "res://assets/models/props/Crate.glb"
 const BOB_M := 0.12
 const BOB_HZ := 0.5
 const SPIN_DEG_S := 40.0
-const COLOURS := {"ammo": Color(1.0, 0.78, 0.25), "health": Color(0.35, 0.95, 0.45), "armor": Color(0.45, 0.78, 1.0)}
-const LABELS := {"ammo": "ПАТРОНЫ", "health": "+ЖИЗНИ", "armor": "БРОНЯ"}
 
 var kind := "ammo"
 var life := 0.0
@@ -25,7 +24,7 @@ var _label: Label3D
 
 static func make(kind_: String, at: Vector3) -> SupplyCrate:
 	var c := SupplyCrate.new()
-	c.kind = kind_ if COLOURS.has(kind_) else "ammo"
+	c.kind = kind_ if Tuning.SQUAD_SUPPLY.has(kind_) else "ammo"
 	c.home = Vector3(at.x, at.y, 0.0)
 	c.life = Tuning.SQUAD_SUPPLY_LIFE_S
 	c.name = "Supply_%s" % c.kind
@@ -35,10 +34,26 @@ static func make(kind_: String, at: Vector3) -> SupplyCrate:
 func _ready() -> void:
 	add_to_group("squad_supply")
 	global_position = home
-	var col: Color = COLOURS[kind]
+	var col: Color = Tuning.SQUAD_SUPPLY[kind]["colour"]
 	_body = Node3D.new()
 	add_child(_body)
-	if ResourceLoader.exists(MODEL):
+	if Tuning.SQUAD_BOOSTS.has(kind):
+		var gem := MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 0.32
+		sm.height = 0.64
+		sm.radial_segments = 6
+		sm.rings = 2   # гранёный кристалл
+		gem.mesh = sm
+		var gm := StandardMaterial3D.new()
+		gm.albedo_color = col
+		gm.emission_enabled = true
+		gm.emission = col
+		gm.emission_energy_multiplier = 2.0
+		gm.roughness = 0.2
+		gem.material_override = gm
+		_body.add_child(gem)
+	elif ResourceLoader.exists(MODEL):
 		var m := (load(MODEL) as PackedScene).instantiate() as Node3D
 		m.scale = Vector3.ONE * 0.75
 		m.position = Vector3(0.0, -0.26, 0.0)
@@ -59,7 +74,7 @@ func _ready() -> void:
 	ring.rotation_degrees = Vector3(90.0, 0.0, 0.0)   # лицом к камере
 	add_child(ring)
 	_label = Label3D.new()
-	_label.text = tr(String(LABELS[kind]))
+	_label.text = tr(String(Tuning.SQUAD_SUPPLY[kind]["title"]))
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.font_size = 56
 	_label.pixel_size = 0.006
