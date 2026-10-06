@@ -22,6 +22,7 @@ const RECIPES := {
 	"scrap": ["duel", 5.0, 1.0], "body": ["duel", 5.0, 1.0],
 	"squad": ["p1_bot", 9.0, 0.6], "royale": ["p1_bot", 9.0, 0.6], "bomb": ["bomb", 4.0, 1.0, 3], "golf": ["p1_bot", 7.0, 0.7],
 	"race_proving": ["p1_bot", 6.0, 0.7], "race_ruins": ["p1_bot", 6.0, 1.0], "race_scrap": ["p1_bot", 6.0, 0.6],
+	"race_track": ["p1_bot", 12.0, 0.8],
 	"football": ["sport", 5.0, 0.75], "basketball": ["sport", 5.0, 0.75], "volleyball": ["sport", 5.0, 0.75],
 	"puzzle": ["puzzle", 5.0, 1.0],
 	"pve": ["pve", 9.0, 0.75], "stasis": ["pve", 9.0, 0.75],

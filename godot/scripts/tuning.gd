@@ -1273,3 +1273,59 @@ const CONVOY_PLANK_LEVEL_TORQUE := 150.0
 ## Провал: машина ниже кромки на PIT_DROP_M дольше PIT_RESET_S — назад на старт участка (с грузом, что в кузове).
 const CONVOY_PIT_DROP_M := 1.0
 const CONVOY_PIT_RESET_S := 1.5
+
+# --- ГОНКА: ТРАССА (docs/plan-demo/RACE_TRACK.md, 06.10) ---
+## Автор 06.10: «в гонке мы можем сделать длинную сложную карту с разными сложностями на ней?» → «делаем». Длинная карта старт →
+## финиш вбок (~420 м), шесть участков, сложность растёт к концу; развилки — длинный лёгкий путь и короткий трудный. TrackMatch
+## (scripts/race_track/track_match.gd), бот TrackBrain, площадка scenes/race_track/, карта scenes/arena/race_track.tscn (сборщик
+## tools/build_race_track.gd). Где стены и зоны — в сборщике; здесь — правила и сила препятствий.
+## Гонщиков: P1 + боты (P2 — бот или второй игрок на стрелках, клавиша U), как в «Гонке: 10 точек».
+const TRACK_RACERS := 4
+## KO, яма (DeathZone), «застрял» или Q → возврат к своей последней контрольной точке через TRACK_RESPAWN_S; первые
+## TRACK_SPAWN_SHIELD_S урон не проходит. «Застрял» — продвинулся по трассе меньше TRACK_STUCK_M за TRACK_STUCK_S.
+const TRACK_RESPAWN_S := 2.0
+const TRACK_SPAWN_SHIELD_S := 1.5
+const TRACK_STUCK_S := 8.0
+const TRACK_STUCK_M := 2.0
+## После первого финиша остальным даётся TRACK_FINISH_WAIT_S, потом итоги (кто не доехал — места по пройденному пути). Лимит гонки.
+const TRACK_FINISH_WAIT_S := 30.0
+const TRACK_TIME_LIMIT_S := 480.0
+## Кольца на разгоне: пролёт сквозь кольцо (ЦМ ближе TRACK_RING_R к центру) — +TRACK_RING_CHARGE Заряда, каждое кольцо — раз на гонщика.
+const TRACK_RING_R := 1.45
+const TRACK_RING_CHARGE := 25.0
+## Прессы (PressMachine, auto_cycle): цикл off / warning / active / cooldown, с; удар — урон окружения пресса (30) и отброс.
+const TRACK_PRESS_CYCLE := [1.6, 0.7, 0.25, 0.9]
+## Магниты (MagnetMachine — вид и цикл): пока включён, тянет куклу целиком к полюсу, Н (вес куклы ~80 Н, тяга ~480 Н), спад к краю
+## радиуса; цикл off / warning / active / cooldown, с.
+const TRACK_MAGNET_FORCE := 260.0
+const TRACK_MAGNET_RADIUS := 6.0
+const TRACK_MAGNET_CYCLE := [2.0, 0.8, 2.6, 0.6]
+## Стенки-мембраны труб: в слое TRACK_MEMBRANE_SKIN м у стенки — ускорение TRACK_MEMBRANE_K м/с² на метр вдавливания от стенки и
+## гашение скорости к стенке TRACK_MEMBRANE_DAMP (1/с).
+const TRACK_MEMBRANE_SKIN := 0.55
+const TRACK_MEMBRANE_K := 70.0
+const TRACK_MEMBRANE_DAMP := 6.0
+## Поля гравитации участка 4, G (1 G = G_EARTH): встречное (вбок назад) и вверх (в потолке короткого пути — сетка KO).
+const TRACK_SIDE_G := 0.45
+const TRACK_UP_G := 0.5
+## Тяжёлая зона (участок 5), G вниз: тяга куклы 12 м/с² его не держит (1.3 G = 12.8 м/с² — медленно тонет), с ускорением (×1.8, за Заряд)
+## — поднимается (21.6 м/с²: прямо вверх быстро, наискось — медленно). Полного Заряда (2.9 с ускорения) на подъём над стеной хватает.
+const TRACK_HEAVY_G := 1.3
+## Яма (участок 6): поле вниз, G; мост рвётся, если на нём (у досок) кто-то TRACK_BRIDGE_BREAK_S, и встаёт заново через
+## TRACK_BRIDGE_RESPAWN_S; бочка поджигается, когда кукла ближе TRACK_BARREL_FUSE_M (взрыв через TRACK_BARREL_FUSE_S), новая — через
+## TRACK_BARREL_RESPAWN_S.
+const TRACK_PIT_G := 0.6
+const TRACK_BRIDGE_BREAK_S := 0.8
+const TRACK_BRIDGE_RESPAWN_S := 7.0
+const TRACK_BARREL_FUSE_M := 2.6
+const TRACK_BARREL_FUSE_S := 0.9
+const TRACK_BARREL_RESPAWN_S := 8.0
+## Камера: второй человек (P2) в кадре вместе с P1, только пока ближе TRACK_CAM_PAIR_M (дальше — стрелка у края).
+const TRACK_CAM_PAIR_M := 14.0
+## Бот трассы (TrackBrain) по уровням 1–3: max_in — доля тяги; cruise — скорость на прямой, м/с; dash — ускорение на прямой (в тяжёлой
+## зоне и на подъёме — всегда); hard — вероятность взять короткий трудный путь на развилке; shove — вероятность толкнуть соседа впереди.
+const TRACK_BOT_LEVELS := {
+	1: {"max_in": 0.85, "cruise": 6.5, "dash": false, "hard": 0.0, "shove": 0.0},
+	2: {"max_in": 0.95, "cruise": 8.0, "dash": true, "hard": 0.5, "shove": 0.3},
+	3: {"max_in": 1.0, "cruise": 9.0, "dash": true, "hard": 1.0, "shove": 0.6},
+}
