@@ -125,6 +125,7 @@ static func label(parent: Node, n: String, text: String, pos: Vector3, px: int =
 	l.modulate = c
 	l.shaded = false
 	l.double_sided = false
+	l.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF   # иначе квадрат подписи бросает тень
 	l.position = pos
 	parent.add_child(l)
 	return l

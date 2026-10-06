@@ -204,17 +204,18 @@ func bind(pg: ConvoyPlayground) -> void:
 	pg.p2_changed.connect(func(_j: bool) -> void: refresh_help())
 	door_hint = Label3D.new()
 	door_hint.name = "DoorHint"
-	door_hint.font_size = 44
-	door_hint.pixel_size = 0.0045
+	door_hint.font_size = 56
+	door_hint.pixel_size = 0.0042
 	door_hint.outline_size = 12
 	door_hint.outline_modulate = Color(0.02, 0.02, 0.03, 0.9)
-	door_hint.modulate = Color(1.0, 0.95, 0.8)
+	door_hint.modulate = Color(1.0, 0.92, 0.55)
 	door_hint.shaded = false
+	door_hint.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	door_hint.no_depth_test = true
 	door_hint.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	door_hint.visible = false
 	pg.car.chassis.add_child(door_hint)
-	door_hint.position = ConvoyCar.DOOR_LOCAL + Vector3(0.0, 1.35, 0.7)
+	door_hint.position = ConvoyCar.DOOR_LOCAL + Vector3(0.0, -0.2, ConvoyCar.DEPTH * 0.5 + 0.05)   # на самой двери кабины
 	refresh_help()
 
 

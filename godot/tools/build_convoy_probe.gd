@@ -37,13 +37,12 @@ const DECOR := [
 	["res://assets/models/scrap/props/Pipe_Bundle.glb", Vector3(46.0, 0.0, -2.4), 0.0, 1.0],
 	["res://assets/models/scrap/props/Overturned_Junk_Cart.glb", Vector3(96.0, 0.0, -2.6), 0.3, 1.0],
 	["res://assets/models/scrap/props/Rail_Scrap_Wagon.glb", Vector3(104.0, 0.0, -2.4), 0.0, 1.0],
-	["res://assets/models/scrap/props/Wooden_Beam_Stack.glb", Vector3(76.5, 5.5, -2.3), 0.0, 1.0],
 ]
 
 # --- профиль (м) ---
 const X_LEFT := -11.0
 const X_RIGHT := 108.0
-const BASE_Y := -1.5
+const BASE_Y := -3.0
 const BUMPS_X0 := 22.0
 const BUMPS_X1 := 44.0
 ## Кочки: [x вершины, высота, полуширина основания].
@@ -136,7 +135,7 @@ func _build() -> bool:
 	root.set("pit_x1", PIT_X1)
 	root.set("pit_top_y", HILL_H)
 	root.set("plank_spots", spots)
-	root.set("level_rect", Rect2(X_LEFT - 1.0, -3.0, X_RIGHT - X_LEFT + 2.0, 26.0))
+	root.set("level_rect", Rect2(X_LEFT - 1.0, BASE_Y, X_RIGHT - X_LEFT + 2.0, 26.0))
 	root.set("sections", [[-100.0, "flat"], [BUMPS_X0, "bumps"], [BUMPS_X1, "runup"], [HILL_X0, "hill"],
 		[hill_x1(), "pit"], [PIT_X1 + 1.0, "descent"], [desc_x1(), "finish"]])
 	_own(root)
@@ -193,6 +192,15 @@ func _mat(kind: String, tint: Color, scale: float = 0.35, metal: float = 0.1) ->
 func _materials() -> void:
 	mats["dirt"] = _mat("dirt", Color(0.86, 0.78, 0.68), 0.35)
 	mats["stone"] = _mat("stone", Color(0.62, 0.58, 0.56), 0.22)
+	mats["earth"] = _mat("dirt", Color(0.5, 0.4, 0.36), 0.18)   # срез земли к камере: тот же грунт темнее (камень читался кирпичом)
+	var far := StandardMaterial3D.new()   # дальние холмы — силуэт без света и теней
+	far.albedo_color = Color(0.36, 0.27, 0.33)
+	far.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mats["far"] = far
+	var far2 := StandardMaterial3D.new()
+	far2.albedo_color = Color(0.47, 0.36, 0.42)
+	far2.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mats["far2"] = far2
 	mats["wood"] = _mat("wood", Color(0.9, 0.82, 0.7), 0.6)
 	mats["iron"] = _mat("iron", Color(0.65, 0.66, 0.68), 0.5, 0.5)
 	mats["hazard"] = ConvoyGeo.flat(Color(1.0, 0.75, 0.15), 0.2, 0.6)
@@ -267,7 +275,7 @@ func _ground(course: Node3D, look: Node3D) -> void:
 		k += 1
 	var mi := MeshInstance3D.new()
 	mi.name = "Ground"
-	mi.mesh = _prism(poly, FRONT_Z, BACK_Z, mats["stone"], mats["dirt"])
+	mi.mesh = _prism(poly, FRONT_Z, BACK_Z, mats["earth"], mats["dirt"])
 	look.add_child(mi)
 	# линии старта и финиша — полосы на лицевой грани земли
 	ConvoyGeo.box_xy(look, "StartLine", START_X - 0.08, START_X + 0.08, BASE_Y, 0.0, 0.04, mats["white"], FRONT_Z + 0.02)
@@ -356,11 +364,15 @@ func _walls(course: Node3D, look: Node3D) -> void:
 	course.add_child(st)
 	ConvoyGeo.shape_xy(st, "Left", X_LEFT - 1.0, X_LEFT, BASE_Y, 20.0, COLL_DEPTH)
 	ConvoyGeo.shape_xy(st, "Right", X_RIGHT, X_RIGHT + 1.0, BASE_Y, 20.0, COLL_DEPTH)
-	ConvoyGeo.box_xy(look, "WallL", X_LEFT - 1.0, X_LEFT, BASE_Y, 9.0, FRONT_Z - BACK_Z, mats["stone"], (FRONT_Z + BACK_Z) * 0.5)
-	ConvoyGeo.box_xy(look, "WallR", X_RIGHT, X_RIGHT + 1.0, BASE_Y, 9.0, FRONT_Z - BACK_Z, mats["stone"], (FRONT_Z + BACK_Z) * 0.5)
-	# дальний гребень — фон по всей дороге
-	ConvoyGeo.box_xy(look, "Ridge", X_LEFT - 20.0, X_RIGHT + 20.0, BASE_Y, 3.0, 1.0, mats["stone"], -9.0)
-	ConvoyGeo.box_xy(look, "RidgeHigh", 40.0, 95.0, 3.0, 9.0, 1.0, mats["stone"], -10.0)
+	ConvoyGeo.box_xy(look, "WallL", X_LEFT - 1.0, X_LEFT, BASE_Y, 9.0, FRONT_Z - BACK_Z, mats["earth"], (FRONT_Z + BACK_Z) * 0.5)
+	ConvoyGeo.box_xy(look, "WallR", X_RIGHT, X_RIGHT + 1.0, BASE_Y, 9.0, FRONT_Z - BACK_Z, mats["earth"], (FRONT_Z + BACK_Z) * 0.5)
+	# дальние холмы — два слоя силуэтов без света (тени стеллажа и машины на них не падают)
+	var hills := [[-40.0, 6.0, 2.5], [-14.0, 18.0, 4.0], [14.0, 12.0, 3.0], [34.0, 22.0, 6.5], [62.0, 16.0, 9.5], [86.0, 20.0, 5.0],
+		[112.0, 26.0, 3.5]]
+	for k in hills.size():
+		var h: Array = hills[k]
+		ConvoyGeo.box_xy(look, "Hill%d" % k, float(h[0]), float(h[0]) + float(h[1]), BASE_Y, float(h[2]), 1.0, mats["far2"], -26.0)
+		ConvoyGeo.box_xy(look, "HillNear%d" % k, float(h[0]) + 6.0, float(h[0]) + 6.0 + float(h[1]) * 0.7, BASE_Y, float(h[2]) * 0.6, 1.0, mats["far"], -16.0)
 
 
 ## Стеллаж с досками над площадкой за провалом: по паре кронштейнов на каждую доску (ярусы через SHELF_STEP); концы досок свисают
@@ -391,10 +403,11 @@ func _shelf(course: Node3D, look: Node3D) -> PackedVector3Array:
 	return spots
 
 
-func _sign(parent: Node3D, n: String, text: String, x: float, ground: float, colour := Color(1.0, 0.92, 0.75)) -> void:
-	ConvoyGeo.box_xy(parent, n + "Post", x - 0.06, x + 0.06, ground, ground + 2.6, 0.12, mats["dark"], -1.7)
-	ConvoyGeo.box_xy(parent, n + "Board", x - 1.3, x + 1.3, ground + 2.0, ground + 2.9, 0.08, mats["dark"], -1.62)
-	var l := ConvoyGeo.label(parent, n, text, Vector3(x, ground + 2.45, -1.56), 64, colour)
+## Табличка на столбе за дорогой; lift — выше обычного (над машиной, что встанет рядом).
+func _sign(parent: Node3D, n: String, text: String, x: float, ground: float, colour := Color(1.0, 0.92, 0.75), lift := 0.0, half_w := 1.3) -> void:
+	ConvoyGeo.box_xy(parent, n + "Post", x - 0.06, x + 0.06, ground, ground + 2.6 + lift, 0.12, mats["dark"], -1.7)
+	ConvoyGeo.box_xy(parent, n + "Board", x - half_w, x + half_w, ground + 2.0 + lift, ground + 2.9 + lift, 0.08, mats["dark"], -1.62)
+	var l := ConvoyGeo.label(parent, n, text, Vector3(x, ground + 2.45 + lift, -1.56), 64, colour)
 	l.pixel_size = 0.0045
 
 
@@ -405,9 +418,9 @@ func _signs(course: Node3D) -> void:
 	_sign(s, "Start", "СТАРТ", START_X + 1.5, 0.0)
 	_sign(s, "Bumps", "КОЧКИ", BUMPS_X0, 0.0)
 	_sign(s, "Hill", "ПОДЪЁМ — толкай", HILL_X0 - 3.0, 0.0)
-	_sign(s, "Pit", "ПРОВАЛ — положи доску", hill_x1() + 1.6, HILL_H)
+	_sign(s, "Pit", "ПРОВАЛ — положи доску", PIT_X0 - 2.6, HILL_H, Color(1.0, 0.92, 0.75), 1.6, 2.2)
 	_sign(s, "Finish", "ФИНИШ", FINISH_X, 0.0, Color(0.6, 1.0, 0.65))
-	var planks := ConvoyGeo.label(s, "Planks", "ДОСКИ", Vector3((SHELF_X0 + SHELF_X1) * 0.5, HILL_H + SHELF_UP + SHELF_STEP * 3.0, -0.5), 40,
+	var planks := ConvoyGeo.label(s, "Planks", "ДОСКИ", Vector3((SHELF_X0 + SHELF_X1) * 0.5, HILL_H + SHELF_UP - 0.35, -0.5), 40,
 		Color(1.0, 0.85, 0.4))
 	planks.pixel_size = 0.004
 
