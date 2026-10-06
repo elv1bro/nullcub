@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, «Подъём: проба стены» вдвоём и её финиш, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -23,6 +23,8 @@ const ROYALE := "res://scenes/playground_royale.tscn"
 const GOLF := "res://scenes/playground_golf.tscn"
 const PUZZLE := "res://scenes/playground_puzzle.tscn"
 const TRACK := "res://scenes/playground_race_track.tscn"
+const CLIMB := "res://scenes/playground_climb.tscn"
+const CONVOY := "res://scenes/playground_convoy.tscn"
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -140,8 +142,10 @@ func _pass() -> Dictionary:
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
+		if p == CLIMB:
+			ClimbMatch.best_time = -1.0   # лучшее время сессии — static: на каждом языке экран тот же («—»)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
 		await _wait(SETTLE * 2)
@@ -214,6 +218,33 @@ func _pass() -> Dictionary:
 			pz.demo_finished.emit(297.5)
 			await _wait(SETTLE * 2)
 			shots["puzzle:end"] = _scan(inst)
+		if p == CLIMB:   # «Подъём: проба стены» (CLIMB.md): P2 вошёл (две строки игроков, памятка P2), тост и табличка «ВЕРХ!»
+			var cp := inst as ClimbPlayground
+			cp.join_p2()
+			cp.hud.toast(tr("P2 сорвался: %.1f м вниз") % [2, 12.5])
+			await _wait(SETTLE)
+			shots["climb:p2"] = _scan(inst)
+			cp.match_node.players[0]["falls"] = 3
+			cp.match_node.players[0]["max_fall"] = 12.5
+			ClimbMatch.best_time = 154.3
+			cp.match_node.finished.emit(cp.p1, 161.8)
+			await _wait(SETTLE * 2)
+			shots["climb:end"] = _scan(inst)
+			ClimbMatch.best_time = -1.0
+		if p == CONVOY:   # «Перегон: проба машины» (CONVOY.md): P2 вошёл, P1 за рулём (памятки длиннее), предупреждение и табличка финиша
+			var cv := inst as ConvoyPlayground
+			cv.join_p2()
+			cv.teleport(cv.p1, cv.car.door_global() + Vector3(0.0, 0.7, 0.0))
+			cv.car.enter(cv.p1)
+			cv.hud.refresh_help()
+			cv.pit_t = 0.5
+			await _wait(SETTLE)
+			shots["convoy:drive"] = _scan(inst)
+			cv.pit_t = 0.0
+			cv.done = true
+			cv.finished.emit(83.4, 4, 5)
+			await _wait(SETTLE * 2)
+			shots["convoy:end"] = _scan(inst)
 		inst.queue_free()
 		await _wait(5)
 		if p == SQUAD:   # экран настроек стычки перед боем (SquadSetup): строки, пояснение, кнопки
