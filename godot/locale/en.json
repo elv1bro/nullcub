@@ -1889,5 +1889,15 @@
 	"Последние 10 с: свет купола гаснет": "Last 10 s: dome lights dim",
 	"Единый HUD (шрифты и плашки режимов)": "Unified HUD (fonts and mode panels)",
 	"СЕРИЯ %d – %d": "SERIES %d – %d",
-	"● ЭФИР ЛИГИ": "● LEAGUE LIVE"
+	"● ЭФИР ЛИГИ": "● LEAGUE LIVE",
+	"Контровой свет на бойцов": "Rim light on fighters",
+	"Свечение цвета игрока": "Player colour glow",
+	"Тень-пятно у пола и стен": "Contact shadow on floor and walls",
+	"Фон отступает: туман глубины, цвет": "Background recedes: depth fog, grading",
+	"Лампы купола тише": "Dimmer dome lamps",
+	"Лак на краске и пластике": "Clear coat on paint and plastic",
+	"Отражения арены": "Arena reflections",
+	"Кадр": "Frame",
+	"Пластик": "Plastic",
+	" · рендерер — после перезапуска": " · renderer — after restart"
 }

@@ -41,6 +41,7 @@ func _ready() -> void:
 				"scale3d": _scale3d = float(kv[1])
 				"faces": _faces = int(kv[1])
 				"ko": _ko_at = float(kv[1])
+				"champ": _lf_champion.call_deferred(float(kv[1]))
 				"t":
 					times.clear()
 					for s in kv[1].split(";"):
@@ -179,3 +180,12 @@ func _force_ko() -> void:
 	var v := ds[1] as Doll
 	if v.alive:
 		v.knock_out(ds[0] as Doll, {"kind": "head", "part": "Head", "damage": 40.0})
+
+
+## look-frame (docs/plan-demo/look/frame.md): champ=<с> — через столько секунд вызвать чемпиона лиги (купол, как клавиша K): кукла
+## кита в кадре (лак, свечение ядра и суставов).
+func _lf_champion(at: float) -> void:
+	await get_tree().create_timer(maxf(at, 0.1)).timeout
+	var arena := get_tree().get_first_node_in_group("arena")
+	if arena != null and arena.has_method("call_champion"):
+		arena.call("call_champion")
