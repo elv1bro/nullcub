@@ -1075,6 +1075,12 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	respawn_queued.emit(victim, respawn_s)
 
 
+## Крючок наследнику со своими правилами выбывания (RoyaleMatch, docs/plan-demo/ROYALE.md): KO по правилам Match (запись, сигнал ko,
+## проверка конца) — без очков команд и возрождения стычки.
+func _match_on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
+	super._on_doll_ko(attacker, record, victim)
+
+
 static func _is_human(d: Object) -> bool:
 	return d != null and is_instance_valid(d) and d is Doll and not (d as Doll).external_input
 
