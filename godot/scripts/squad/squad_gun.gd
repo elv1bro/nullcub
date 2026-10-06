@@ -11,8 +11,8 @@
 ##     (pierce) — летит дальше сквозь бойцов; в тело — импульс, в бойца — SquadMatch.bullet_hit (урон без тряски камеры), Breakable —
 ##     урон (ящик ломается, взрывная бочка загорается); прошла range — гаснет; стрелку — отдача в кисть, вспышка у дула, звук;
 ##   • молчит, пока кукла не жива, разбита, без управления (отсчёт, итоги) или в стане.
-## Match.respawn_doll создаёт узел заново (script.new()): оружие и усиления он берёт у матча (SquadMatch.loadout по player_index),
-## патроны — полные.
+## Match.respawn_doll создаёт узел заново (script.new()): оружие и усиления он берёт у матча (SquadMatch.kit по классу и уровню
+## куклы), патроны — полные. У громилы (рукопашный класс) ствола нет: disarm() — узел молчит, модели нет.
 class_name SquadGun
 extends Node
 
@@ -47,8 +47,35 @@ var _arm: ArmAssist = null
 var _match: Node = null
 ## Пули в полёте: [{pos, vel, left (м до range), ex (RID, которые не задевать), pierced, node}].
 var balls: Array = []
-static var _glow: Dictionary = {}   # цвет шарика → материал (не новый на каждую пулю)
-static var _ball_mesh: SphereMesh = null
+static var _glow: Dictionary = {}   # цвет оружия / команда / яркость → материал (не новый на каждую пулю)
+static var _streak_mesh: QuadMesh = null
+static var _streak_shader: Shader = null
+## Толщина квада трассера × ball оружия (ядро — треть, остальное — ореол) и длина хвоста × streak.
+const WIDTH_MULT := 3.2
+const STREAK_MULT := 1.5
+## Трассер пули: квад в плоскости боя вдоль полёта; голова (UV.x = 1) — горячее белое ядро цвета оружия (tint), вокруг — ореол
+## цвета команды (rim: видно, чья пуля), хвост гаснет к UV.x = 0. Смешение обычное, не сложение, и днём яркость около 1: на светлом
+## камне сложение и пересвет выбеливали трассер в бледную нитку (кадры 06.10). Ночью ярче — светится (ProvingGround.night_now).
+const STREAK_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_mix, cull_disabled, depth_draw_never, shadows_disabled;
+uniform vec4 tint : source_color = vec4(1.0, 0.8, 0.4, 1.0);
+uniform vec4 rim : source_color = vec4(1.0, 0.6, 0.2, 1.0);
+uniform float energy = 1.1;
+void fragment() {
+	float along = UV.x;
+	float across = abs(UV.y - 0.5) * 2.0;
+	float tail = pow(along, 1.2);
+	float core = 1.0 - smoothstep(0.2, 0.45, across);
+	float halo = 1.0 - smoothstep(0.45, 1.0, across);
+	float tip = smoothstep(0.75, 1.0, along);
+	vec3 hot = mix(tint.rgb, vec3(1.0), 0.35 + 0.45 * tip);
+	ALBEDO = mix(rim.rgb, hot, core) * energy * (0.9 + tip * 0.5);
+	ALPHA = clamp(max(core, halo * 0.85) * (0.25 + 0.75 * tail) + tip * core * 0.5, 0.0, 1.0);
+}
+"""
+const ENERGY_DAY := 1.1
+const ENERGY_NIGHT := 2.2
 
 
 func _ready() -> void:
@@ -62,8 +89,26 @@ func _ready() -> void:
 			return
 	_rng.seed = hash(String(doll.name)) ^ 0x6a17
 	_match = get_tree().get_first_node_in_group(Match.GROUP)
-	var lo: Dictionary = _match.call("loadout", doll.player_index) if _match != null and _match.has_method("loadout") else {}
-	equip(String(lo.get("weapon", Tuning.SQUAD_START_WEAPON)), lo.get("perks", {}))
+	var k: Dictionary = _match.call("kit", doll.player_index) if _match != null and _match.has_method("kit") else {"weapon": Tuning.SQUAD_START_WEAPON}
+	if String(k.get("weapon", "")) == "":
+		disarm()
+	else:
+		equip(String(k["weapon"]), k.get("perks", {}))
+
+
+## Без ствола (рукопашный класс): стрелять нечем, модели нет, патронов нет.
+func disarm() -> void:
+	weapon = ""
+	def = {}
+	mag = 0
+	reserve = 0
+	mag_max = 0
+	reserve_max = 0
+	reloading = 0.0
+	trigger = false
+	if _model != null and is_instance_valid(_model):
+		_model.queue_free()
+	_model = null
 
 
 ## Оружие id с усилениями perks ({id усиления: раз}); патроны — полные.
@@ -93,12 +138,12 @@ static func stats_of(id: String, perks: Dictionary = {}) -> Dictionary:
 
 
 func out_of_ammo() -> bool:
-	return mag <= 0 and reserve <= 0 and reloading <= 0.0
+	return weapon != "" and mag <= 0 and reserve <= 0 and reloading <= 0.0
 
 
 ## Перезарядка (клавиша): магазин не полный и запас есть.
 func reload() -> bool:
-	if reloading > 0.0 or mag >= mag_max or reserve <= 0:
+	if weapon == "" or reloading > 0.0 or mag >= mag_max or reserve <= 0:
 		return false
 	reloading = float(def["reload_s"])
 	reload_started.emit(reloading)
@@ -143,7 +188,7 @@ func aim_ray() -> Array:
 	if dir.length_squared() < 1e-4:
 		return []
 	dir = dir.normalized()
-	var o := grip + dir * float(def.get("len", 0.3)) * MODEL_SCALE   # дуло — кончик модели ствола
+	var o := grip + dir * float(def.get("len", 0.15)) * MODEL_SCALE   # дуло — кончик модели ствола
 	return [Vector3(o.x, o.y, 0.0), dir]
 
 
@@ -153,7 +198,10 @@ func can_fire() -> bool:
 
 
 func _physics_process(dt: float) -> void:
-	if doll == null or not is_instance_valid(doll) or def.is_empty():
+	if doll == null or not is_instance_valid(doll):
+		return
+	if def.is_empty():
+		_step_balls(dt)   # громила: свои пули, выпущенные до смены класса, долетают
 		return
 	cooldown = maxf(cooldown - dt, 0.0)
 	if reloading > 0.0:
@@ -195,28 +243,51 @@ func _fire() -> void:
 		_match.call("gun_sound", doll, def)
 
 
-## Пуля-шарик: светящаяся сфера своего цвета, летит из o по d со скоростью оружия.
+## Пуля: светящийся трассер своего цвета (квад вдоль полёта, STREAK_SHADER), летит из o по d со скоростью оружия. Длина хвоста —
+## streak, но не больше пройденного пути (у дула хвост не торчит назад сквозь ствол).
 func _spawn_ball(o: Vector3, d: Vector3, ex: Array[RID]) -> void:
 	var mi := MeshInstance3D.new()
-	if _ball_mesh == null:
-		_ball_mesh = SphereMesh.new()
-		_ball_mesh.radius = 0.5
-		_ball_mesh.height = 1.0
-		_ball_mesh.radial_segments = 10
-		_ball_mesh.rings = 6
-	mi.mesh = _ball_mesh
+	if _streak_mesh == null:
+		_streak_mesh = QuadMesh.new()
+		_streak_mesh.size = Vector2.ONE
+		_streak_mesh.center_offset = Vector3(-0.5, 0.0, 0.0)   # голова — в начале координат узла, хвост — назад по −X
+	mi.mesh = _streak_mesh
 	var col: Color = def["tracer"]
-	var key := col.to_html()
+	var team := SquadMatch.team_of(doll)
+	var energy := ENERGY_NIGHT if ProvingGround.night_now else ENERGY_DAY
+	var key := "%s/%d/%.1f" % [col.to_html(), team, energy]
 	if not _glow.has(key):
-		_glow[key] = _mat(col, 0.0, 4.0)
+		if _streak_shader == null:
+			_streak_shader = Shader.new()
+			_streak_shader.code = STREAK_SHADER
+		var sm := ShaderMaterial.new()
+		sm.shader = _streak_shader
+		sm.set_shader_parameter("tint", col)
+		sm.set_shader_parameter("rim", SquadMatch.team_colour(team).lightened(0.15) if team >= 0 else col)
+		sm.set_shader_parameter("energy", energy)
+		_glow[key] = sm
 	mi.material_override = _glow[key]
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.top_level = true
-	mi.scale = Vector3.ONE * float(def["ball"]) * 2.0
 	add_child(mi)
-	mi.global_position = o
-	balls.append({"pos": o, "vel": d * float(def["speed"]), "left": float(def["range"]), "ex": ex, "pierced": 0, "node": mi,
-		"weapon": weapon, "damage": float(def["damage"]), "impulse": float(def["impulse"]), "pierce": bool(def["pierce"])})
+	var b := {"pos": o, "vel": d * float(def["speed"]), "left": float(def["range"]), "ex": ex, "pierced": 0, "node": mi,
+		"weapon": weapon, "damage": float(def["damage"]), "impulse": float(def["impulse"]), "pierce": bool(def["pierce"]),
+		"streak": float(def.get("streak", 0.5)) * STREAK_MULT, "width": float(def["ball"]) * WIDTH_MULT, "flown": 0.0}
+	balls.append(b)
+	_place_streak(b)
+
+
+## Трассер пули b: голова в точке пули, ось X — по полёту, длина — min(streak, пройдено), толщина — width (квад в плоскости боя).
+func _place_streak(b: Dictionary) -> void:
+	var node := b["node"] as Node3D
+	if not is_instance_valid(node):
+		return
+	var d := (b["vel"] as Vector3).normalized()
+	var x := d
+	var z := Vector3.BACK
+	var y := z.cross(x).normalized()
+	var length := clampf(float(b["flown"]), 0.05, float(b["streak"]))
+	node.global_transform = Transform3D(Basis(x * length, y * float(b["width"]), z), b["pos"])
 
 
 ## Полёт пуль за тик: отрезок пути — луч (свои детали и уже пробитые бойцы — мимо); попала — урон и импульс, пробивающая летит
@@ -268,10 +339,10 @@ func _step_balls(dt: float) -> void:
 			to = at
 			done = true
 		b["left"] = float(b["left"]) - start.distance_to(to) if not done else 0.0
+		b["flown"] = float(b["flown"]) + start.distance_to(to)
 		b["pos"] = to
 		var node := b["node"] as Node3D
-		if is_instance_valid(node):
-			node.global_position = to
+		_place_streak(b)
 		if done or float(b["left"]) <= 0.0:
 			if is_instance_valid(node):
 				node.queue_free()

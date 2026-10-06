@@ -115,10 +115,12 @@ func _physics_process(delta: float) -> void:
 	while i < _pending_release.size():
 		var e: Array = _pending_release[i]
 		if _time >= e[1]:
-			var w: Weapon = e[0]
-			if is_instance_valid(w) and not w.is_held():
+			# оружие могли освободить, пока шёл кулдаун (сломалось, убрали): присваивание освобождённого в типизированную
+			# переменную в Godot 4.7 обрывает функцию — сначала is_instance_valid, потом приведение
+			var wv: Variant = e[0]
+			if is_instance_valid(wv) and not (wv as Weapon).is_held():
 				for part in doll.parts.values():
-					w.remove_collision_exception_with(part)
+					(wv as Weapon).remove_collision_exception_with(part)
 			_pending_release.remove_at(i)
 		else:
 			i += 1

@@ -9,18 +9,19 @@
 ##     возвращается на свою точку базы через SQUAD_RESPAWN_S, первые SQUAD_SPAWN_SHIELD_S урон не проходит;
 ##   • конец: SQUAD_SCORE_TO_WIN очков, или время SQUAD_TIME_LIMIT_S — ведущий победил, равный счёт — ничья. Last man standing базового
 ##     Match выключен (_check_over), Sudden Death тоже;
-##   • оружие — SquadGun на кукле; урон пули идёт через bullet_hit, а не Match.on_hit: без тряски и толчков камеры, стоп-кадров и
-##     замедлений (с ДРАЙВОМ каждая пуля дёргала кадр и время — «слишком трясётся»), только искры, звук и сигнал hit;
-##   • улучшения (loadout по player_index, переживают возрождение, сбрасываются на begin): очки — за фраг и за каждые
-##     SQUAD_POINTS_DAMAGE урона по соперникам; offers(pi) — что можно взять сейчас: пистолет → ветка из трёх (SQUAD_BRANCHES), первый
-##     уровень ветки → её второй уровень, второй → усиления (SQUAD_PERKS); choose(pi, i) — взять (новое оружие у живого — сразу, с
-##     полными патронами);
+##   • оружие — SquadGun (стрелки) или SquadMelee (громила) на кукле; урон пули идёт через bullet_hit, удар телом и оружием — через
+##     свой on_hit: без тряски и толчков камеры, стоп-кадров и замедлений (с ДРАЙВОМ каждая пуля и каждое касание дёргали кадр и
+##     время — «слишком трясётся… и не прерывается»), только искры, звук и сигнал hit; камеру чуть трясёт сильный удар с человеком;
+##   • классы и опыт (loadout по player_index: класс, следующий класс, опыт, уровень; сбрасываются на begin): опыт — за урон по
+##     соперникам и за фраг (SQUAD_XP_*), уровень растёт сам по SQUAD_XP_LEVELS и сразу открывает, что записано в классе
+##     (SQUAD_CLASSES: оружие, рукопашное оружие, усиление) — сигнал leveled для HUD «что ты теперь можешь»; класс меняется
+##     set_class (на отсчёте — сразу, в бою — с возрождения), опыт и уровень остаются; запас HP и броня при возврате — по классу;
 ##   • броня (armor по player_index, на возрождении — 0): пока она есть, Doll.incoming_mult = SQUAD_ARMOR_MULT, прошедший урон снимается
 ##     и с брони; ящики снабжения (SupplyCrate) — раз в SQUAD_SUPPLY_EVERY_S на свободной точке карты, take_supply решает, нужен ли;
 ##   • KO: замедление короче (SQUAD_KO_SLOWMO_S) и только когда в нокауте участвует человек; крит-кино выключено;
 ##   • корпус бойцов держится вертикально (SQUAD_UPRIGHT, _posture) — иначе рука с оружием не достаёт целей над головой.
-## Сигналы для HUD (scenes/squad/squad_hud.gd): score_changed, frag, respawn_queued, doll_respawned, points_changed, upgraded,
-## bullet_landed, supply_taken + унаследованные. tally — счёт кукол по player_index: {kills, deaths, damage}; frags — журнал проб.
+## Сигналы для HUD (scenes/squad/squad_hud.gd): score_changed, frag, respawn_queued, doll_respawned, xp_changed, leveled,
+## class_changed, bullet_landed, melee_landed, supply_taken + унаследованные. tally — счёт кукол по player_index: {kills, deaths, damage}; frags — журнал проб.
 class_name SquadMatch
 extends Match
 
@@ -28,9 +29,11 @@ signal score_changed(score: Array)
 signal frag(killer: Doll, victim: Doll, team: int)
 signal respawn_queued(victim: Doll, seconds: float)
 signal doll_respawned(doll: Doll)
-signal points_changed(player_index: int, points: int)
-signal upgraded(player_index: int, offer: Dictionary)
+signal xp_changed(player_index: int, xp: float, level: int)
+signal leveled(player_index: int, level: int, unlock: Dictionary)
+signal class_changed(player_index: int, class_id: String, pending: bool)
 signal bullet_landed(victim: Doll, shooter: Doll, damage: float, position: Vector3)
+signal melee_landed(victim: Doll, attacker: Doll, damage: float, position: Vector3)
 signal supply_taken(doll: Doll, kind: String)
 
 const GROUP_PREFIX := "squad_"
@@ -49,8 +52,11 @@ var tally: Dictionary = {}          # player_index → {kills, deaths, damage}
 var winner_team := -1
 ## Кукла «я» для HUD и камеры, когда людей нет (пробы и снимки: за P1 играет бот): player_index или −1.
 var focus_index := -1
-## player_index → {weapon, branch (−1 — пистолет), perks {id: раз}, points, dmg_bank}
+## player_index → {class, next_class, xp, level}
 var loadouts: Dictionary = {}
+## Счётчики для проб: ударов телом / оружием (on_hit), из них с тряской камеры.
+var melee_hits := 0
+var melee_shakes := 0
 ## player_index → броня (0..SQUAD_ARMOR_MAX)
 var armor: Dictionary = {}
 var supplies_spawned := 0
@@ -59,6 +65,9 @@ var _respawns: Array = []           # [[Doll, осталось с]]
 var _sfx: Node = null
 var _supply_t := 0.0
 var _rng := RandomNumberGenerator.new()
+## Заранее загруженные сцены (оружие громилы всех уровней, ящик): первая сковорода / меч / ящик посреди боя иначе читались бы с
+## диска синхронно — заметная заминка (автор 06.10: «иногда подвисает во время битвы»). Ссылки держат ресурсы в кэше.
+var _warm: Array[Resource] = []
 
 
 func _ready() -> void:
@@ -68,6 +77,18 @@ func _ready() -> void:
 	crit_enabled = false
 	_rng.seed = 0x5a1d
 	hit.connect(_on_hit_tally)
+	_prewarm()
+
+
+func _prewarm() -> void:
+	var paths: Array[String] = [SupplyCrate.MODEL]
+	for id in Tuning.SQUAD_MELEE:
+		paths.append(Weapon.scene_path(String(id)))
+	for p in paths:
+		if ResourceLoader.exists(p):
+			var r := load(p)
+			if r != null:
+				_warm.append(r)
 
 
 # --- команды ---
@@ -93,6 +114,16 @@ static func gun_of(d: Object) -> SquadGun:
 		return null
 	for c in (d as Node).get_children():
 		if c is SquadGun and not c.is_queued_for_deletion():
+			return c
+	return null
+
+
+## Рукопашное оружие куклы (SquadMelee) или null.
+static func melee_of(d: Object) -> SquadMelee:
+	if d == null or not is_instance_valid(d) or not (d is Node):
+		return null
+	for c in (d as Node).get_children():
+		if c is SquadMelee and not c.is_queued_for_deletion():
 			return c
 	return null
 
@@ -132,10 +163,7 @@ func register(d: Doll) -> void:
 		d.ready.connect(_dress.bind(d), CONNECT_ONE_SHOT)
 	if not tally.has(d.player_index):
 		tally[d.player_index] = {"kills": 0, "deaths": 0, "damage": 0.0}
-	if not loadouts.has(d.player_index):
-		loadouts[d.player_index] = _fresh_loadout()
-	armor[d.player_index] = 0.0
-	d.incoming_mult = 1.0
+	_apply_class_stats(d)
 	d.damaged.connect(_on_armor_damaged.bind(d))
 
 
@@ -159,20 +187,18 @@ func begin() -> void:
 	for k in tally.keys():
 		tally[k] = {"kills": 0, "deaths": 0, "damage": 0.0}
 	for k in loadouts.keys():
-		loadouts[k] = _fresh_loadout()
+		var cls := String(loadouts[k]["next_class"])
+		loadouts[k] = _fresh_loadout(cls)
 	_clear_supplies()
 	supplies_spawned = 0
 	supplies_taken = {"ammo": 0, "health": 0, "armor": 0}
 	_supply_t = 0.0
 	play_state = "countdown"
-	super.begin()   # пересоздаёт сломанных — новое оружие возьмёт пистолет из свежего loadout
+	super.begin()   # пересоздаёт сломанных — оружие возьмут из свежего loadout
 	for d in dolls():
-		armor[(d as Doll).player_index] = 0.0
-		(d as Doll).incoming_mult = 1.0
-		var g := gun_of(d)
-		if g != null:
-			g.equip(Tuning.SQUAD_START_WEAPON)
-		points_changed.emit((d as Doll).player_index, 0)
+		_apply_class_stats(d as Doll)
+		_equip(d as Doll)
+		xp_changed.emit((d as Doll).player_index, 0.0, 1)
 	score_changed.emit(score.duplicate())
 
 
@@ -249,6 +275,7 @@ func bullet_hit(victim: Doll, shooter: Doll, amount: float, part: String, pos: V
 	if not combat_active() or victim == null or not is_instance_valid(victim) or not victim.alive or not victim.can_take_damage():
 		return 0.0
 	amount *= Damage.armor_mult_of_body(victim.parts.get(part) as Node)
+	amount *= float((Tuning.SQUAD_CLASSES[String(loadout(victim.player_index)["class"])] as Dictionary).get("bullet_mult", 1.0))
 	victim.hit_meta = {"speed": 0.0, "weapon_id": "squad_" + weapon_id, "striker": shooter, "combo_mult": 1.0, "double_blow": false,
 		"knockback_mult": 0.0, "stun_s": 0.0, "bullet": true}
 	var hp0 := victim.hp
@@ -265,6 +292,38 @@ func bullet_hit(victim: Doll, shooter: Doll, amount: float, part: String, pos: V
 		ImpactFx.spawn_impact(victim, pos, normal, clampf(dealt, 4.0, 18.0), "light")
 		_play("hit_l", -14.0 + minf(dealt, 30.0) * 0.25, randf_range(1.1, 1.35), pos)
 	return dealt
+
+
+## Удар телом или оружием в руке (зовёт DollCombat): в стычке — без Match.on_hit-эффектов. Там на каждый удар — тряска и толчок
+## кадра, стоп-кадр и микрозамедление (с ДРАЙВОМ — от 2.5 HP), а шесть бойцов в свалке касаются друг друга непрерывно: автор 06.10
+## «в рукопашке всё трясётся, и не прерывается». Здесь: сигнал hit (счёт, опыт, ИИ), Заряд за удар (как в бою — Charge.apply_hit),
+## звук (искры в точке удара ставит сам DollCombat); камеру чуть трясёт только удар не слабее SQUAD_MELEE_SHAKE_MIN, если в нём участвует человек.
+func on_hit(victim: Doll, attacker: Node, damage: float, kind: String, position: Vector3, combo_n: int, double_blow: bool, weapon_id: String, speed: float) -> void:
+	hit.emit(victim, attacker, damage, kind, position)
+	if victim == null or not is_instance_valid(victim) or damage <= 0.0 or kind == "environment":
+		return
+	melee_hits += 1
+	Charge.apply_hit(make_hit_ctx(victim, attacker, damage, kind, position, combo_n, double_blow, weapon_id, speed))
+	if attacker is Doll and is_instance_valid(attacker):
+		melee_landed.emit(victim, attacker as Doll, damage, position)
+	if not feel_enabled:
+		return
+	_play("hit_m" if damage >= 10.0 else "hit_l", -8.0 + minf(damage, 30.0) * 0.2, randf_range(0.95, 1.1), position)
+	if damage >= Tuning.SQUAD_MELEE_SHAKE_MIN and (_is_human(victim) or _is_human(attacker)):
+		melee_shakes += 1
+		_camera_fx(minf(damage, 40.0) * Tuning.SQUAD_MELEE_SHAKE_MULT, position)
+
+
+## Удар о стену или пол без урона: эффекты (с тряской и наездом камеры) — только у человека, у ботов — тишина.
+func _emit_env_slam(ctx: Dictionary) -> void:
+	if _is_human(ctx.get("doll")):
+		super._emit_env_slam(ctx)
+
+
+## Выпад громилы (SquadMelee): свист замаха.
+func lunge_sound(d: Doll) -> void:
+	if feel_enabled and is_instance_valid(d):
+		_play("swing_h", -8.0 + (4.0 if _is_human(d) else 0.0), randf_range(0.9, 1.05), d.centre_of_mass())
 
 
 ## Выстрел (SquadGun): звук оружия (Tuning.SQUAD_WEAPONS[…].sound — [слой, питч]) с панорамой по x; дальше 26 м от камеры — тишина.
@@ -307,88 +366,136 @@ func _on_armor_damaged(amount: float, _attacker: Node, _part: String, _pos: Vect
 	add_armor(d, -amount * (1.0 - Tuning.SQUAD_ARMOR_MULT) / Tuning.SQUAD_ARMOR_MULT)
 
 
-# --- улучшения ---
+# --- классы и опыт ---
 
-func _fresh_loadout() -> Dictionary:
-	return {"weapon": Tuning.SQUAD_START_WEAPON, "branch": -1, "perks": {}, "points": 0, "dmg_bank": 0.0}
+func _fresh_loadout(cls: String = "") -> Dictionary:
+	var c := cls if Tuning.SQUAD_CLASSES.has(cls) else "assault"
+	return {"class": c, "next_class": c, "xp": 0.0, "level": 1}
 
 
-## Оружие и усиления куклы player_index (SquadGun берёт отсюда при появлении).
+## Класс, опыт и уровень куклы player_index (новой — класс бота по SQUAD_BOT_CLASSES, у P1 — штурмовик).
 func loadout(pi: int) -> Dictionary:
 	if not loadouts.has(pi):
-		loadouts[pi] = _fresh_loadout()
+		loadouts[pi] = _fresh_loadout(String(Tuning.SQUAD_BOT_CLASSES.get(pi, "assault")))
 	return loadouts[pi]
 
 
-func add_points(pi: int, n: int) -> void:
-	var lo := loadout(pi)
-	lo["points"] = int(lo["points"]) + n
-	points_changed.emit(pi, int(lo["points"]))
-
-
-## Что можно взять сейчас (по порядку — клавиши 1 / 2 / 3): [{kind: "weapon" | "perk", id, title, note, cost, branch}]. Пусто — нечего.
-func offers(pi: int) -> Array:
-	var lo := loadout(pi)
-	var out: Array = []
-	var w := String(lo["weapon"])
-	var tier := int((Tuning.SQUAD_WEAPONS[w] as Dictionary)["tier"])
-	if tier == 0:
-		for b in Tuning.SQUAD_BRANCHES.size():
-			var id: String = Tuning.SQUAD_BRANCHES[b][0]
-			out.append({"kind": "weapon", "id": id, "branch": b, "cost": int(Tuning.SQUAD_UPGRADE_COST["branch"]),
-				"title": String(Tuning.SQUAD_WEAPONS[id]["title"]), "note": String(Tuning.SQUAD_WEAPONS[id]["note"])})
-	elif tier == 1:
-		var id2: String = Tuning.SQUAD_BRANCHES[int(lo["branch"])][1]
-		out.append({"kind": "weapon", "id": id2, "branch": int(lo["branch"]), "cost": int(Tuning.SQUAD_UPGRADE_COST["tier2"]),
-			"title": String(Tuning.SQUAD_WEAPONS[id2]["title"]), "note": String(Tuning.SQUAD_WEAPONS[id2]["note"])})
-	else:
-		var perks: Dictionary = lo["perks"]
-		for p in Tuning.SQUAD_PERK_ORDER:
-			if int(perks.get(p, 0)) < Tuning.SQUAD_PERK_MAX:
-				out.append({"kind": "perk", "id": p, "branch": int(lo["branch"]), "cost": int(Tuning.SQUAD_UPGRADE_COST["perk"]),
-					"title": String(Tuning.SQUAD_PERKS[p]["title"]), "note": "%d / %d" % [int(perks.get(p, 0)), Tuning.SQUAD_PERK_MAX]})
+## Что открыто у класса cls на уровне level: {weapon (огнестрел, "" — нет), melee (рукопашное, "" — нет), perks {id: раз}}.
+static func kit_of(cls: String, level: int) -> Dictionary:
+	var c: Dictionary = Tuning.SQUAD_CLASSES.get(cls, Tuning.SQUAD_CLASSES["assault"])
+	var out := {"weapon": "", "melee": "", "perks": {}}
+	var levels: Array = c["levels"]
+	for i in range(mini(level, levels.size())):
+		var u: Dictionary = levels[i]
+		if u.has("weapon"):
+			out["weapon"] = String(u["weapon"])
+		if u.has("melee"):
+			out["melee"] = String(u["melee"])
+		if u.has("perk"):
+			var perks: Dictionary = out["perks"]
+			perks[String(u["perk"])] = int(perks.get(String(u["perk"]), 0)) + 1
 	return out
 
 
-## Хватает ли очков хоть на что-то.
-func can_upgrade(pi: int) -> bool:
-	var pts := int(loadout(pi)["points"])
-	for o in offers(pi):
-		if pts >= int(o["cost"]):
-			return true
-	return false
-
-
-## Взять предложение i (0..2) за очки: оружие — сразу в руки живому бойцу (полные патроны), усиление — пересчёт чисел (патроны
-## в магазине и запасе остаются, только не больше нового максимума). false — нет такого или не хватает очков.
-func choose(pi: int, i: int) -> bool:
-	var of := offers(pi)
-	if i < 0 or i >= of.size():
-		return false
-	var o: Dictionary = of[i]
+## Набор куклы сейчас (по её классу и уровню).
+func kit(pi: int) -> Dictionary:
 	var lo := loadout(pi)
-	if int(lo["points"]) < int(o["cost"]):
+	return kit_of(String(lo["class"]), int(lo["level"]))
+
+
+## Уровень по опыту (1…SQUAD_XP_LEVELS.size()).
+static func level_for(xp: float) -> int:
+	var lv := 1
+	for i in range(Tuning.SQUAD_XP_LEVELS.size()):
+		if xp >= float(Tuning.SQUAD_XP_LEVELS[i]):
+			lv = i + 1
+	return lv
+
+
+## Доля пути к следующему уровню 0..1 (1 — последний уровень).
+func xp_progress(pi: int) -> float:
+	var lo := loadout(pi)
+	var lv := int(lo["level"])
+	if lv >= Tuning.SQUAD_XP_LEVELS.size():
+		return 1.0
+	var a := float(Tuning.SQUAD_XP_LEVELS[lv - 1])
+	var b := float(Tuning.SQUAD_XP_LEVELS[lv])
+	return clampf((float(lo["xp"]) - a) / maxf(b - a, 1.0), 0.0, 1.0)
+
+
+## Опыт: уровень растёт сам; каждый новый уровень — открытие класса (leveled) и сразу у живого бойца.
+func add_xp(pi: int, amount: float) -> void:
+	if amount <= 0.0:
+		return
+	var lo := loadout(pi)
+	lo["xp"] = float(lo["xp"]) + amount
+	var lv := level_for(float(lo["xp"]))
+	while int(lo["level"]) < lv:
+		lo["level"] = int(lo["level"]) + 1
+		var c: Dictionary = Tuning.SQUAD_CLASSES[String(lo["class"])]
+		var levels: Array = c["levels"]
+		var unlock: Dictionary = levels[int(lo["level"]) - 1] if int(lo["level"]) - 1 < levels.size() else {}
+		var d := _doll_of_index(pi)
+		if d != null and d.alive:
+			_equip(d, true)
+			if String(unlock.get("perk", "")) == "tough":
+				add_armor(d, float(Tuning.SQUAD_PERKS["tough"]["armor"]))
+		leveled.emit(pi, int(lo["level"]), unlock)
+	xp_changed.emit(pi, float(lo["xp"]), int(lo["level"]))
+
+
+## Сменить класс: на отсчёте — сразу (оружие, запас HP, броня), в бою — с возрождения (живому — «сменится при возврате»).
+func set_class(pi: int, cls: String) -> bool:
+	if not Tuning.SQUAD_CLASSES.has(cls):
 		return false
-	lo["points"] = int(lo["points"]) - int(o["cost"])
+	var lo := loadout(pi)
+	lo["next_class"] = cls
 	var d := _doll_of_index(pi)
+	var now := play_state != "play" or d == null
+	if now:
+		lo["class"] = cls
+		if d != null:
+			_apply_class_stats(d)
+			_equip(d)
+	class_changed.emit(pi, cls, not now)
+	return true
+
+
+## Запас HP класса (с ДРАЙВОМ — в той же пропорции, что у обычной куклы) и броня возврата (класс + усиления «броня»).
+func _apply_class_stats(d: Doll) -> void:
+	var lo := loadout(d.player_index)
+	var c: Dictionary = Tuning.SQUAD_CLASSES[String(lo["class"])]
+	var hp := float(c["hp"]) * (Tuning.DRIVE_MAX_HP / Tuning.MAX_HP if Drive.on else 1.0)
+	d.max_hp = hp
+	d.hp = hp
+	armor[d.player_index] = 0.0
+	d.incoming_mult = 1.0
+	var tough := int((kit(d.player_index)["perks"] as Dictionary).get("tough", 0))
+	var a := float(c["armor"]) + float(Tuning.SQUAD_PERKS["tough"]["armor"]) * tough
+	if a > 0.0:
+		add_armor(d, a)
+	hp_changed.emit(d, d.hp, d.max_hp)
+
+
+## Оружие куклы по набору: стрелку — SquadGun.equip (keep_ammo — усиление посреди боя: патроны остаются), громиле — SquadMelee.
+func _equip(d: Doll, keep_ammo := false) -> void:
+	var k := kit(d.player_index)
 	var g := gun_of(d)
-	if String(o["kind"]) == "weapon":
-		lo["weapon"] = String(o["id"])
-		lo["branch"] = int(o["branch"])
-		if g != null:
-			g.equip(String(o["id"]), lo["perks"])
-	else:
-		var perks: Dictionary = lo["perks"]
-		perks[String(o["id"])] = int(perks.get(String(o["id"]), 0)) + 1
-		if g != null:
+	if g != null:
+		if String(k["weapon"]) == "":
+			g.disarm()
+		elif keep_ammo and g.weapon == String(k["weapon"]):
 			var m := g.mag
 			var r := g.reserve
-			g.equip(String(lo["weapon"]), perks)
-			g.mag = mini(m, g.mag_max) if String(o["id"]) != "mag" else g.mag_max
-			g.reserve = mini(r, g.reserve_max) if String(o["id"]) != "mag" else g.reserve_max
-	points_changed.emit(pi, int(lo["points"]))
-	upgraded.emit(pi, o)
-	return true
+			g.equip(String(k["weapon"]), k["perks"])
+			g.mag = mini(m, g.mag_max)
+			g.reserve = mini(maxi(r, g.reserve), g.reserve_max)
+		else:
+			g.equip(String(k["weapon"]), k["perks"])
+	var ml := melee_of(d)
+	if ml != null:
+		var lunges := int((k["perks"] as Dictionary).get("lunge", 0))
+		ml.equip(String(k["melee"]), pow(float(Tuning.SQUAD_PERKS["lunge"]["lunge"]), lunges))
 
 
 func _doll_of_index(pi: int) -> Doll:
@@ -460,7 +567,7 @@ func take_supply(d: Doll, kind: String) -> bool:
 	match kind:
 		"ammo":
 			var g := gun_of(d)
-			if g == null or g.reserve >= g.reserve_max:
+			if g == null or g.weapon == "" or g.reserve >= g.reserve_max:
 				return false
 			g.add_ammo(amount)
 		"health":
@@ -519,10 +626,9 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	_tally(victim.player_index, "deaths", 1)
 	if killer != null:
 		_tally(killer.player_index, "kills", 1)
-		add_points(killer.player_index, Tuning.SQUAD_POINTS_PER_FRAG)
-	var g := gun_of(killer) if killer != null else null
+		add_xp(killer.player_index, Tuning.SQUAD_XP_PER_FRAG)
 	frags.append({"t": snappedf(fight_time, 0.01), "victim": victim.player_index, "killer": killer.player_index if killer != null else -1,
-		"team": other, "kind": String(record.get("kind", "")), "weapon": g.weapon if g != null else "", "score": score.duplicate()})
+		"team": other, "kind": String(record.get("kind", "")), "weapon": weapon_name(killer), "score": score.duplicate()})
 	score_changed.emit(score.duplicate())
 	frag.emit(killer, victim, other)
 	if feel and (_is_human(victim) or _is_human(killer)):
@@ -547,17 +653,26 @@ func _tally(pi: int, key: String, v: float) -> void:
 	t[key] = (t[key] + int(v)) if t[key] is int else (float(t[key]) + v)
 
 
-## Урон по соперникам: в таблицу итогов и в очки улучшения (каждые SQUAD_POINTS_DAMAGE — очко).
+## Урон по соперникам: в таблицу итогов и в опыт.
 func _on_hit_tally(victim: Doll, attacker: Node, damage: float, _kind: String, _pos: Vector3) -> void:
 	if not (attacker is Doll) or not is_instance_valid(attacker) or attacker == victim or team_of(attacker) == team_of(victim):
 		return
 	var pi := (attacker as Doll).player_index
 	_tally(pi, "damage", damage)
-	var lo := loadout(pi)
-	lo["dmg_bank"] = float(lo["dmg_bank"]) + damage
-	while float(lo["dmg_bank"]) >= Tuning.SQUAD_POINTS_DAMAGE:
-		lo["dmg_bank"] = float(lo["dmg_bank"]) - Tuning.SQUAD_POINTS_DAMAGE
-		add_points(pi, 1)
+	add_xp(pi, damage * Tuning.SQUAD_XP_PER_DAMAGE)
+
+
+## Название оружия куклы для ленты (огнестрел, рукопашное, «руки»).
+func weapon_name(d: Object) -> String:
+	if d == null or not is_instance_valid(d):
+		return ""
+	var g := gun_of(d)
+	if g != null and g.weapon != "":
+		return String(Tuning.SQUAD_WEAPONS[g.weapon]["title"])
+	var ml := melee_of(d)
+	if ml != null and ml.weapon_id != "":
+		return String(Tuning.SQUAD_MELEE.get(ml.weapon_id, ""))
+	return "РУКИ"
 
 
 ## Секунды до возрождения куклы (−1 — не ждёт).
@@ -579,12 +694,11 @@ func _tick_respawns(delta: float) -> void:
 		_respawns.remove_at(i)
 		var d: Variant = e[0]
 		if is_instance_valid(d) and (d as Doll).is_inside_tree() and not (d as Doll).alive:
+			var lo := loadout((d as Doll).player_index)
+			lo["class"] = String(lo["next_class"])   # новый класс — с возрождения
 			var nd := respawn_doll(d as Doll)
 			nd.control_enabled = true
-			nd.grace_until = maxf(nd.grace_until, Tuning.SQUAD_SPAWN_SHIELD_S)   # _time новой куклы ≈ 0
-			armor[nd.player_index] = 0.0
-			nd.incoming_mult = 1.0
-			hp_changed.emit(nd, nd.hp, nd.max_hp)
+			nd.grace_until = maxf(nd.grace_until, Tuning.SQUAD_SPAWN_SHIELD_S)   # _time новой куклы ≈ 0 (запас и броня класса — register)
 			doll_respawned.emit(nd)
 
 

@@ -5,9 +5,10 @@
 ##   • над каждым живым бойцом — полоска HP цвета команды (под ней — броня) и имя (ТЫ, СИНИЙ 2, КРАСНЫЙ 1…); соперник за кадром —
 ##     стрелка у края экрана с метрами (от игрока); у игрока — луч прицела от ствола (куда уйдёт пуля), над попаданиями игрока —
 ##     цифры урона;
-##   • слева снизу — HP, броня, оружие и патроны игрока («12 / 48»: магазин / запас; полоса — магазин, на перезарядке — её ход),
-##     очки улучшения; подсказка клавиш первые HINT_S секунд;
-##   • снизу по центру — улучшения, пока на них хватает очков: [1] [2] [3] — ветка из трёх, второй уровень, усиления (SquadMatch.offers);
+##   • слева снизу — HP, броня, оружие и патроны игрока («12 / 48»: магазин / запас; полоса — магазин, на перезарядке — её ход; у
+##     громилы — рукопашное оружие и готовность выпада), уровень и класс, полоса опыта; подсказка клавиш первые HINT_S секунд;
+##   • снизу по центру — новый уровень: «УРОВЕНЬ 3 · ШТУРМОВИК — теперь: АВТОМАТ…» (что открылось, LEVEL_CARD_S); на отсчёте и пока
+##     ждёшь возврата — выбор класса [1]–[4] (текущий подсвечен, «сменится при возврате»);
 ##   • игрок выбыл — по центру «ВОЗВРАТ ЧЕРЕЗ N»; конец — табличка победителя со счётом и таблицей бойцов (фраги / выбывания),
 ##     «R — заново».
 ## Диктор (Announcer) — только отсчёт, FIGHT!, KO! игрока (его фраг), новое оружие и взятый ящик игрока; надписи ударов шести бойцов
@@ -32,6 +33,7 @@ const DIGIT_S := 0.7              # цифра урона живёт столь�
 const DIGIT_RISE := 46.0
 const AIM_DASH := 0.35            # м: штрих луча прицела
 const SUPPLY_WORDS := {"ammo": "+ПАТРОНЫ", "health": "+ЖИЗНИ", "armor": "+БРОНЯ"}
+const LEVEL_CARD_S := 3.5
 
 var match_node: SquadMatch
 var root: Control
@@ -46,10 +48,12 @@ var me_armor: ProgressBar
 var me_ammo: ProgressBar
 var me_label: Label
 var me_weapon: Label
-var me_points: Label
+var me_level: Label
+var me_xp: ProgressBar
 var up_panel: PanelContainer
 var up_title: Label
-var up_cards: Array = []          # Label × 3
+var up_cards: Array = []          # Label × 4: карточка уровня (1 строка) или выбор класса (4 строки)
+var _level_card := {}             # {pi, title, line, left}: показ нового уровня
 var hint: Label
 var respawn_label: Label
 var end_panel: PanelContainer
@@ -186,7 +190,7 @@ func _build_me() -> void:
 	box.anchor_bottom = 1.0
 	box.offset_left = 28.0
 	box.offset_right = 448.0
-	box.offset_top = -236.0
+	box.offset_top = -250.0
 	box.offset_bottom = -24.0
 	box.add_theme_constant_override("separation", 5)
 	root.add_child(box)
@@ -205,9 +209,13 @@ func _build_me() -> void:
 	me_ammo = _bar(Color(1.0, 0.8, 0.3))
 	me_ammo.custom_minimum_size.y = 12.0
 	box.add_child(me_ammo)
-	me_points = _label("Points", 20, Color(0.75, 1.0, 0.7))
-	me_points.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	box.add_child(me_points)
+	me_level = _label("Level", 20, Color(0.75, 1.0, 0.7))
+	me_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	box.add_child(me_level)
+	me_xp = _bar(Color(0.55, 1.0, 0.5))
+	me_xp.custom_minimum_size.y = 6.0
+	me_xp.max_value = 1.0
+	box.add_child(me_xp)
 	hint = _label("Hint", 22, Color(1, 1, 1, 0.8))
 	hint.anchor_left = 0.5
 	hint.anchor_right = 0.5
@@ -217,11 +225,11 @@ func _build_me() -> void:
 	hint.offset_right = 640.0
 	hint.offset_top = -64.0
 	hint.offset_bottom = -24.0
-	hint.text = tr("WASD — лететь · мышь — прицел · ЛКМ — огонь · Q — перезарядка · 1 / 2 / 3 — улучшения · Shift — рывок")
+	hint.text = tr("WASD — лететь · мышь — прицел · ЛКМ — огонь (громила — выпад) · Q — перезарядка · 1–4 — класс · Shift — рывок")
 	root.add_child(hint)
 
 
-## Улучшения: снизу по центру, над подсказкой — заголовок с очками и до трёх карточек «[1] АВТОМАТ — очередь, магазин 30 · 1 очко».
+## Снизу по центру, над подсказкой: карточка нового уровня или выбор класса (заголовок и до четырёх строк).
 func _build_upgrades() -> void:
 	up_panel = PanelContainer.new()
 	up_panel.name = "Upgrades"
@@ -230,8 +238,8 @@ func _build_upgrades() -> void:
 	up_panel.anchor_right = 0.5
 	up_panel.anchor_top = 1.0
 	up_panel.anchor_bottom = 1.0
-	up_panel.offset_left = -470.0
-	up_panel.offset_right = 470.0
+	up_panel.offset_left = -300.0   # правее центра: слева внизу — панель игрока (оружие, уровень), карточка на неё не наезжает
+	up_panel.offset_right = 700.0
 	up_panel.offset_top = -78.0
 	up_panel.offset_bottom = -78.0
 	up_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN   # высота — по числу карточек, растёт вверх от подсказки
@@ -242,7 +250,7 @@ func _build_upgrades() -> void:
 	up_panel.add_child(v)
 	up_title = _label("Title", 24, Color(0.75, 1.0, 0.7))
 	v.add_child(up_title)
-	for k in 3:
+	for k in 4:
 		var l := _label("Card%d" % k, 24, Color.WHITE)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		v.add_child(l)
@@ -337,7 +345,8 @@ func _apply_skin() -> void:
 func bind(m: SquadMatch) -> void:
 	match_node = m
 	var pairs := [["score_changed", _on_score], ["frag", _on_frag], ["announce", _on_announce], ["time_left", _on_time],
-		["match_over", _on_over], ["phase_changed", _on_phase], ["bullet_landed", _on_bullet], ["upgraded", _on_upgraded],
+		["match_over", _on_over], ["phase_changed", _on_phase], ["bullet_landed", _on_bullet], ["melee_landed", _on_bullet],
+		["leveled", _on_leveled], ["class_changed", _on_class_changed],
 		["supply_taken", _on_supply]]
 	for p in pairs:
 		if m.has_signal(p[0]) and not m.is_connected(p[0], p[1]):
@@ -391,8 +400,7 @@ func _on_frag(killer: Doll, victim: Doll, team: int) -> void:
 	var vname := name_of(victim)
 	if killer != null:
 		var kc := SquadMatch.team_colour(SquadMatch.team_of(killer)).lightened(0.35).to_html(false)
-		var g := SquadMatch.gun_of(killer)
-		var wn := tr(String(Tuning.SQUAD_WEAPONS[g.weapon]["title"])) if g != null and g.weapon != "" else "▸"
+		var wn := tr(match_node.weapon_name(killer)) if match_node != null else "▸"
 		row.text = "[right][color=#%s]%s[/color]  [color=#c8c8c8]%s[/color]  [color=#%s]%s[/color][/right]" % [kc, name_of(killer), wn, vc, vname]
 	else:
 		row.text = "[right][color=#%s]%s[/color]  %s[/right]" % [vc, vname, tr("выбыл")]
@@ -414,10 +422,35 @@ func _on_bullet(_victim: Doll, shooter: Doll, damage: float, pos: Vector3) -> vo
 		_digits.pop_front()
 
 
-func _on_upgraded(pi: int, offer: Dictionary) -> void:
+## Новый уровень у игрока: карточка «что ты теперь можешь» на LEVEL_CARD_S и строка диктора.
+func _on_leveled(pi: int, level: int, unlock: Dictionary) -> void:
+	var me := _human()
+	if me == null or me.player_index != pi:
+		return
+	var cls := String(match_node.loadout(pi)["class"])
+	var what := unlock_text(unlock)
+	_level_card = {"pi": pi, "title": tr("УРОВЕНЬ %d · %s") % [level, tr(String(Tuning.SQUAD_CLASSES[cls]["title"]))],
+		"line": tr("ТЕПЕРЬ: %s") % what, "left": LEVEL_CARD_S}
+	announcer.announce(tr("УРОВЕНЬ %d") % level, Color(0.6, 1.0, 0.55), "event")
+
+
+## Что открыл уровень — для карточки: оружие с пояснением, рукопашное оружие, усиление.
+static func unlock_text(unlock: Dictionary) -> String:
+	if unlock.has("weapon"):
+		var w: Dictionary = Tuning.SQUAD_WEAPONS[String(unlock["weapon"])]
+		return "%s — %s" % [TranslationServer.translate(String(w["title"])), TranslationServer.translate(String(w["note"]))]
+	if unlock.has("melee"):
+		return TranslationServer.translate("%s в руке") % TranslationServer.translate(String(Tuning.SQUAD_MELEE[String(unlock["melee"])]))
+	if unlock.has("perk"):
+		return TranslationServer.translate(String(Tuning.SQUAD_PERKS[String(unlock["perk"])]["title"]))
+	return ""
+
+
+func _on_class_changed(pi: int, cls: String, pending: bool) -> void:
 	var me := _human()
 	if me != null and me.player_index == pi:
-		announcer.announce(tr(String(offer.get("title", ""))), Color(0.6, 1.0, 0.55), "event")
+		var t := tr(String(Tuning.SQUAD_CLASSES[cls]["title"]))
+		announcer.announce(tr("%s — С ВОЗВРАТА") % t if pending else t, Color(0.9, 0.9, 0.95), "event")
 
 
 func _on_supply(d: Doll, kind: String) -> void:
@@ -440,6 +473,7 @@ func _on_phase(p: int) -> void:
 			(r[0] as Node).queue_free()
 		_feed_rows.clear()
 		_digits.clear()
+		_level_card = {}
 
 
 func _on_over(_winner: Doll, results: Dictionary) -> void:
@@ -518,7 +552,13 @@ func _process(delta: float) -> void:
 		me_hp.value = me.hp if me.alive else 0.0
 		me_armor.value = match_node.armor_of(me) if me.alive else 0.0
 		var g := SquadMatch.gun_of(me)
-		if g != null and g.weapon != "":
+		var ml := SquadMatch.melee_of(me)
+		if (g == null or g.weapon == "") and ml != null and ml.weapon_id != "":
+			me_weapon.text = "%s · %s" % [tr(String(Tuning.SQUAD_MELEE[ml.weapon_id])), tr("ВЫПАД")]
+			me_ammo.max_value = 1.0
+			me_ammo.value = ml.ready_frac()
+			me_ammo.modulate = Color.WHITE if ml.ready_frac() >= 1.0 else Color(1, 1, 1, 0.55)
+		elif g != null and g.weapon != "":
 			var wt := tr(String(Tuning.SQUAD_WEAPONS[g.weapon]["title"]))
 			var rp := g.reload_progress()
 			if g.out_of_ammo():
@@ -531,8 +571,10 @@ func _process(delta: float) -> void:
 			me_ammo.value = rp if rp >= 0.0 else float(g.mag) / maxf(float(g.mag_max), 1.0)
 			me_ammo.modulate = Color(1, 1, 1, 0.55) if rp >= 0.0 else Color.WHITE
 		var lo := match_node.loadout(me.player_index)
-		me_points.text = tr("ОЧКИ УЛУЧШЕНИЯ: %d") % int(lo["points"])
-		_update_upgrades(me)
+		var cls_t := tr(String(Tuning.SQUAD_CLASSES[String(lo["class"])]["title"]))
+		me_level.text = tr("УР. %d · %s") % [int(lo["level"]), cls_t]
+		me_xp.value = match_node.xp_progress(me.player_index)
+		_update_cards(me, real)
 		if not me.alive and match_node != null and match_node.play_state == "play":
 			var left := match_node.respawn_left(me)
 			if left >= 0.0:
@@ -550,24 +592,42 @@ func _process(delta: float) -> void:
 	marks.queue_redraw()
 
 
-## Карточки улучшений: видны, пока на что-то хватает очков; карточка, на которую очков мало, — бледная.
-func _update_upgrades(me: Doll) -> void:
+## Карточки снизу: на отсчёте и пока ждёшь возврата — выбор класса; иначе — карточка нового уровня, пока не истекла.
+func _update_cards(me: Doll, real: float) -> void:
 	var pi := me.player_index
-	var show := match_node.play_state != "over" and match_node.can_upgrade(pi)
-	up_panel.visible = show
-	if not show:
+	var picking := match_node.play_state == "countdown" or (match_node.play_state == "play" and not me.alive)
+	if picking:
+		var lo := match_node.loadout(pi)
+		var pending := String(lo["next_class"]) != String(lo["class"])
+		up_title.text = tr("КЛАСС · ЖМИ 1–4") + ("  ·  " + tr("сменится при возврате") if pending else "")
+		for k in up_cards.size():
+			var l := up_cards[k] as Label
+			var id := String(Tuning.SQUAD_CLASS_ORDER[k]) if k < Tuning.SQUAD_CLASS_ORDER.size() else ""
+			l.visible = id != ""
+			if id == "":
+				continue
+			var c: Dictionary = Tuning.SQUAD_CLASSES[id]
+			var mark := "▶ " if id == String(lo["next_class"]) else "   "
+			l.text = "%s[%d]  %s — %s" % [mark, k + 1, tr(String(c["title"])), tr(String(c["note"]))]
+			l.modulate = Color.WHITE if id == String(lo["next_class"]) else Color(1, 1, 1, 0.6)
+		up_panel.visible = true
+		up_panel.modulate.a = 1.0
 		return
-	var pts := int(match_node.loadout(pi)["points"])
-	var of := match_node.offers(pi)
-	up_title.text = tr("УЛУЧШЕНИЕ · ОЧКОВ: %d · ЖМИ 1 / 2 / 3") % pts
+	if not _level_card.is_empty():
+		_level_card["left"] = float(_level_card["left"]) - real
+		if float(_level_card["left"]) <= 0.0 or int(_level_card["pi"]) != pi:   # «я» сменился (снимки, фокус) — карточка не его
+			_level_card = {}
+	up_panel.visible = not _level_card.is_empty() and match_node.play_state == "play"
+	if not up_panel.visible:
+		return
+	up_title.text = String(_level_card["title"])
 	for k in up_cards.size():
 		var l := up_cards[k] as Label
-		l.visible = k < of.size()
-		if not l.visible:
-			continue
-		var o: Dictionary = of[k]
-		l.text = tr("[%d]  %s — %s · очков: %d") % [k + 1, tr(String(o["title"])), tr(String(o["note"])), int(o["cost"])]
-		l.modulate = Color.WHITE if pts >= int(o["cost"]) else Color(1, 1, 1, 0.4)
+		l.visible = k == 0
+		if k == 0:
+			l.text = String(_level_card["line"])
+			l.modulate = Color.WHITE
+	up_panel.modulate.a = clampf(float(_level_card["left"]) / 0.4, 0.0, 1.0)
 
 
 ## Полоски HP и имена над бойцами, стрелки к соперникам за кадром.

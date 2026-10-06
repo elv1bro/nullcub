@@ -8,6 +8,8 @@ extends RuinsArena
 ## дневной нарисованный фон Руин скрипт затемняет в лунный синий (множитель цвета слоёв) и добавляет на небо звёзды и луну.
 ## Днём и ночью ближний слой фона (размытая полоса травы перед плоскостью боя) спрятан.
 @export var night := false
+## Ночь ли на карте, что загружена сейчас (трассеры пуль SquadGun ночью ярче — светятся).
+static var night_now := false
 
 ## Множитель цвета слоёв фона ночью: небо, дальний, средний, ближний.
 const NIGHT_TINT := {"Layer4Sky": Color(0.1, 0.13, 0.27), "Layer3Far": Color(0.14, 0.17, 0.3), "Layer2Mid": Color(0.17, 0.2, 0.32),
@@ -22,6 +24,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
+	night_now = night
 	var fore := get_node_or_null("Parallax/Layer1Fore") as Node3D
 	if fore != null:
 		fore.visible = false   # ближний слой фона — размытая полоса травы перед бойцами (автор 05.10: «как-то размыто всё»)

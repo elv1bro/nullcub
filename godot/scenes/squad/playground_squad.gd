@@ -5,10 +5,11 @@
 ## различают рубашка, обводка и имена цветом команды. Рука с оружием — Tuning.SQUAD_GUN_HAND: со стороны соперника на экране (у синих
 ## — кисть Hand_L, у красных — Hand_R; кукла смотрит в камеру), она же blueprint.control.
 ##   P1 (player_index 0) — человек: WASD летать, Shift рывок; рука с оружием всегда тянется к курсору (автор 05.10: «рука всегда за
-##   мышкой, без ЛКМ, а огонь на ЛКМ»), кольцо тяги — прицел; ЛКМ (или I, X геймпада) — огонь, пока зажата; Q (или Y геймпада) —
-##   перезарядка, пустой магазин перезаряжается сам; 1 / 2 / 3 — взять улучшение (SquadHud показывает, какие есть и хватает ли очков);
+##   мышкой, без ЛКМ, а огонь на ЛКМ»), кольцо тяги — прицел; ЛКМ (или I, X геймпада) — огонь, пока зажата (громила — выпад к
+##   курсору); Q (или Y геймпада) — перезарядка, пустой магазин перезаряжается сам; 1 / 2 / 3 / 4 — класс (штурмовик, снайпер,
+##   налётчик, громила; на отсчёте — сразу, в бою — с возрождения); оружие и усиления открываются сами по опыту (SquadMatch);
 ##   боты 1–5 — SquadBrain, уровень bot_level (SquadBrain.default_level: мозг после возрождения — новый экземпляр без настроек).
-## Клавиши: R — заново, Esc — пауза (Flow), 4–9 — площадки хаба, M / N — музыка / толпа, H — скин HUD, K — уровень ботов 1 → 2 → 3.
+## Клавиши: R — заново, Esc — пауза (Flow), 5–9 — площадки хаба, M / N — музыка / толпа, H — скин HUD, K — уровень ботов 1 → 2 → 3.
 ## Пропасти нет; страховочный низ карты (body_fell) — KO, как в бою. Масштаб камеры игрока (DynamicCamera.user_zoom, общий на все
 ## арены) на время сцены — 1: карта шире купола, на ближнем масштабе соперники всё время за кадром.
 class_name SquadPlayground
@@ -20,7 +21,7 @@ const FOCUS_GROUP := "squad_focus"
 const PLAYERS_GROUP := "players"
 ## Камера: игрок и ближайший соперник ближе этого (м) — в кадре вместе; дальше — только игрок (стрелка у края экрана).
 const FOCUS_ENEMY_M := 10.0
-const UPGRADE_KEYS := [KEY_1, KEY_2, KEY_3]
+const CLASS_KEYS := [KEY_1, KEY_2, KEY_3, KEY_4]   # по порядку Tuning.SQUAD_CLASS_ORDER
 
 @export var bot_level := 2
 ## Пробы: P1 тоже бот (бой 3 на 3 одними ботами).
@@ -90,8 +91,8 @@ static func make_fighter(i: int, human: bool) -> ModularDoll:
 	return d
 
 
-## Рука, оружие, мозг — в этом порядке: Match.respawn_doll пересоздаёт детей со скриптом в том же порядке, а настройки у них — в _init
-## и из матча, не из экспортов.
+## Рука, ствол, рукопашное оружие, мозг — в этом порядке: Match.respawn_doll пересоздаёт детей со скриптом в том же порядке, а
+## настройки у них — в _init и из матча (класс и уровень), не из экспортов. Ствол и рукопашное есть у всех — работает то, что даёт класс.
 static func attach_children(d: Doll, human: bool) -> void:
 	var r := SquadArm.new()
 	r.name = "ArmAssist"
@@ -99,6 +100,9 @@ static func attach_children(d: Doll, human: bool) -> void:
 	var g := SquadGun.new()
 	g.name = "SquadGun"
 	d.add_child(g)
+	var m := SquadMelee.new()
+	m.name = "SquadMelee"
+	d.add_child(m)
 	if not human:
 		var b := SquadBrain.new()
 		b.name = "SquadBrain"
@@ -134,8 +138,12 @@ func _human_gun() -> void:
 			a.set_target_override(mp)
 		else:
 			a.clear_target_override()
-	g.trigger = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) \
+	var pressed := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) \
 		or (InputMap.has_action("p1_act1") and Input.is_action_pressed("p1_act1"))
+	g.trigger = pressed
+	var ml := SquadMatch.melee_of(p)
+	if pressed and ml != null and ml.weapon_id != "" and a != null:
+		ml.lunge(a.mouse_on_plane() if a.mouse_on_plane() is Vector3 else p.centre_of_mass() + Vector3(1.0, 0.0, 0.0))
 	if Input.is_physical_key_pressed(KEY_Q) or (InputMap.has_action("p1_act2") and Input.is_action_pressed("p1_act2")):
 		if g.mag < g.mag_max:
 			g.reload()
@@ -174,9 +182,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	var k: int = event.physical_keycode
-	if UPGRADE_KEYS.has(k):
+	if CLASS_KEYS.has(k):
 		var p := human()
-		if p != null and match_node.choose(p.player_index, UPGRADE_KEYS.find(k)):
+		if p != null:
+			match_node.set_class(p.player_index, String(Tuning.SQUAD_CLASS_ORDER[CLASS_KEYS.find(k)]))
 			get_viewport().set_input_as_handled()
 		return
 	match k:

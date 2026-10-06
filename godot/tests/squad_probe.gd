@@ -2,20 +2,20 @@
 ## SquadMatch, SquadGun, SquadHud).
 ##   aim (боты молчат): рука с оружием своей команды (у синих — кисть Hand_L, у красных — Hand_R) наводит ствол на точку в 8 м в
 ##     пяти направлениях к стороне соперника (±60°) — угол ствола к цели, медиана и худший; у команд одинаково;
-##   rules (P1 — человек без ввода, боты молчат, ящики выключены): шесть бойцов и команды; у каждого одна рука (своей стороны) и
-##     пистолет с полным магазином; свои не ранят ни ударом, ни пулей; пуля — урон без Match.on_hit (ни стоп-кадров, ни замедлений,
-##     ни эффектов удара); темп не выше interval, магазин тратится, пустой — перезарядка сама за reload_s, клавишей — тоже; патронов
-##     нет — спуск молчит; очки за урон и фраг, улучшения: ветка из трёх → второй уровень → усиления, оружие и усиления переживают
-##     возврат; броня: урон × 0.5 и снимается с неё; ящики: патроны / жизни / броня берутся касанием, полный запас — не берётся,
-##     ящики появляются сами; нокаут — очко и фраг, возврат на базу со щитом; падение — очко сопернику; конец по очкам и по времени,
-##     заново — всё сброшено;
+##   rules (P1 — человек без ввода, боты молчат, ящики выключены): шесть бойцов и команды; классы (P1 — штурмовик, боты — по
+##     SQUAD_BOT_CLASSES), у стрелков одна рука своей стороны и пистолет 12 / 48, у громилы — сковорода в той же руке, запас HP и броня
+##     класса; свои не ранят ни ударом, ни пулей; пуля и удар телом — без эффектов удара, стоп-кадров и замедлений (камеру трясёт
+##     только сильный удар с человеком); пули — трассеры; темп, магазин, перезарядка сама и клавишей, без патронов — молчит; опыт за
+##     урон и фраг, уровни открывают оружие класса (автомат, пулемёт, меч…) и усиления, переживают возврат; смена класса — на отсчёте
+##     сразу, в бою — с возрождения; выпад громилы и пауза; броня; ящики; нокаут — очко и фраг, возврат; конец; заново — сброс;
 ##   night: ночная карта (playground_squad_night.tscn) — окружение тёмное, луна слабая, фонари есть, фон затемнён, звёзды и луна на небе,
 ##     у обеих карт нет глубины резкости; 20 с боя ботов ночью — пули летят и попадают;
-##   bots (P1 тоже бот): матч ботов до конца — все стреляют, пули попадают, урона по своим нет, фраги у обеих команд, первый фраг не
-##     поздно, перезарядки, улучшения и ящики были, никто не застрял надолго, все в границах карты; пули не дали эффектов удара
-##     (hit_fx — от ударов телом); темп и счёт — в info.
+##   bots (P1 тоже бот): матч ботов до score очков — все стреляют (громилы — бьют), пули попадают, урона по своим нет, фраги у обеих
+##     команд, первый фраг не поздно, перезарядки, новые уровни, рукопашная и ящики были, ни одного тика замедления времени и ни
+##     одной тряски от ударов (людей нет), никто не застрял надолго, все в границах карты; темп и счёт — в info.
 ## Headless:
-##   godot --headless --path godot --fixed-fps 60 res://tests/squad_probe.tscn -- "only=aim|rules|night|bots,max_s=330,level=2,trace=1,out=<json>"
+##   godot --headless --path godot --fixed-fps 60 res://tests/squad_probe.tscn -- "only=aim|rules|night|bots|aim+rules…,max_s=900,level=2,score=20,trace=1,out=<json>"
+##   (score — до скольких очков матч ботов: по умолчанию 20 — быстрее; в игре 100)
 ## → JSON между === SQUAD PROBE === и === OK / FAIL ===, exit 0/1. errors_script — SCRIPT ERROR за прогон (Logger).
 extends Node
 
@@ -58,7 +58,7 @@ func _check(id: String, cond: bool, detail: Variant = "") -> void:
 
 
 func _args() -> Dictionary:
-	var out := {"only": "", "max_s": "330", "level": "2", "trace": "0", "out": ""}
+	var out := {"only": "", "max_s": "900", "level": "2", "trace": "0", "out": "", "score": "20"}
 	for a in OS.get_cmdline_user_args():
 		for part in String(a).split(","):
 			var kv := part.split("=")
@@ -67,18 +67,23 @@ func _args() -> Dictionary:
 	return out
 
 
+## only — раздел или несколько через «+» (only=aim+rules); пусто — все.
+func _want(a: Dictionary, section: String) -> bool:
+	return String(a["only"]) == "" or section in String(a["only"]).split("+")
+
+
 func _ready() -> void:
 	OS.add_logger(errs)
 	print("=== SQUAD PROBE ===")
 	var a := _args()
-	if String(a["only"]) in ["", "aim"]:
+	if _want(a, "aim"):
 		await _aim()
-	if String(a["only"]) in ["", "rules"]:
+	if _want(a, "rules"):
 		await _rules()
-	if String(a["only"]) in ["", "night"]:
+	if _want(a, "night"):
 		await _night()
-	if String(a["only"]) in ["", "bots"]:
-		await _bots(float(a["max_s"]), int(a["level"]), String(a["trace"]) == "1")
+	if _want(a, "bots"):
+		await _bots(float(a["max_s"]), int(a["level"]), String(a["trace"]) == "1", int(a["score"]))
 	_check("errors_script", errs.count == 0, "ошибок скриптов %d; первая: %s" % [errs.count, errs.first])
 	var report := {"ok": ok, "checks": checks, "info": info}
 	print(JSON.stringify(report, " "))
@@ -223,16 +228,30 @@ func _rules() -> void:
 			and (d as Node).is_in_group(SquadMatch.team_group(t)) and not (d as Node).is_in_group(SquadMatch.team_group(1 - t))
 	_check("six_fighters", ds.size() == 6 and teams == [3, 3] and team_ok, "бойцов %d, синих / красных %s, команды и группы %s" % [ds.size(), str(teams), str(team_ok)])
 	var hands_ok := 0
-	var pistols := 0
+	var armed_ok := 0
+	var classes := []
 	for d in ds:
 		var want := "Hand_L" if SquadMatch.team_of(d) == 0 else "Hand_R"
 		if _arms(d) == [want]:
 			hands_ok += 1
+		var cls := String(sm.loadout((d as Doll).player_index)["class"])
+		classes.append("%d:%s" % [(d as Doll).player_index, cls])
 		var g := SquadMatch.gun_of(d)
-		if g != null and g.weapon == "pistol" and g.mag == 12 and g.reserve == 48:
-			pistols += 1
+		var ml := SquadMatch.melee_of(d)
+		if cls == "brawler":
+			if g.weapon == "" and ml.weapon_id == "pan" and is_instance_valid(ml.weapon) and ml.weapon.is_held():
+				armed_ok += 1
+		elif g != null and g.weapon == "pistol" and g.mag == 12 and g.reserve == 48 and ml.weapon_id == "":
+			armed_ok += 1
+	classes.sort()
+	_check("classes", String(sm.loadout(0)["class"]) == "assault" and String(sm.loadout(5)["class"]) == "brawler"
+		and String(sm.loadout(2)["class"]) == "sniper" and String(sm.loadout(3)["class"]) == "sniper", "классы %s" % str(classes))
 	_check("one_arm_team_side", hands_ok == 6, "одна рука своей стороны (синие — Hand_L, красные — Hand_R) у %d из 6" % hands_ok)
-	_check("start_pistol", pistols == 6, "пистолет 12 / 48 у %d из 6" % pistols)
+	_check("start_kit", armed_ok == 6, "стрелки — пистолет 12 / 48, громилы — сковорода в руке: %d из 6" % armed_ok)
+	var br := _doll(5)
+	var hp_k := Tuning.DRIVE_MAX_HP / Tuning.MAX_HP if Drive.on else 1.0
+	_check("class_stats", is_equal_approx(br.max_hp, 140.0 * hp_k) and is_equal_approx(sm.armor_of(br), 30.0) and is_equal_approx(_doll(2).max_hp, 90.0 * hp_k),
+		"громила %.0f HP и броня %.0f, снайпер %.0f HP" % [br.max_hp, sm.armor_of(br), _doll(2).max_hp])
 	var p1arm := _doll(0).get_node_or_null("ArmAssist") as ArmAssist
 	var botarm := _doll(1).get_node_or_null("ArmAssist") as ArmAssist
 	_check("p1_arm_follows_mouse", p1arm != null and p1arm.show_hints and p1arm.arm_active and botarm != null and not botarm.show_hints
@@ -261,6 +280,20 @@ func _rules() -> void:
 	var dealt := sm.bullet_hit(r1, b0, 9.0, "Torso", r1.centre_of_mass(), Vector3.UP, "pistol")
 	_check("bullet_no_shake", r1.hp < hp1 - 5.0 and sm.hit_fx_count == fx0 and sm._time_effects.is_empty() and is_equal_approx(Engine.time_scale, 1.0),
 		"пуля сняла %.1f HP; эффектов удара %d, замедлений %d, масштаб времени %.2f" % [dealt, sm.hit_fx_count - fx0, sm._time_effects.size(), Engine.time_scale])
+	# удар телом / оружием: как пуля — без эффектов удара и замедлений; камеру трясёт только сильный удар с человеком
+	sm.feel_enabled = true
+	var sh0 := sm.melee_shakes
+	sm.on_hit(r1, _doll(2), 25.0, "body", r1.centre_of_mass(), 0, false, "", 6.0)
+	var bot_shake := sm.melee_shakes - sh0
+	sm.on_hit(r1, b0, 6.0, "body", r1.centre_of_mass(), 0, false, "", 3.0)
+	var weak_shake := sm.melee_shakes - sh0
+	sm.on_hit(r1, b0, 25.0, "body", r1.centre_of_mass(), 0, false, "", 6.0)
+	var human_shake := sm.melee_shakes - sh0
+	_check("melee_no_shake", sm.hit_fx_count == fx0 and sm._time_effects.is_empty() and is_equal_approx(Engine.time_scale, 1.0)
+		and bot_shake == 0 and weak_shake == 0 and human_shake == 1,
+		"удары телом: эффектов удара %d, замедлений %d; тряска — бот×бот %d, слабый с игроком %d, сильный с игроком %d" % [sm.hit_fx_count - fx0,
+		sm._time_effects.size(), bot_shake, weak_shake, human_shake])
+	sm.feel_enabled = false
 	await _gun_rules()
 	await _upgrade_rules()
 	await _armor_supply_rules()
@@ -291,8 +324,10 @@ func _gun_rules() -> void:
 	var p0: Vector3 = (g.balls[0]["pos"] as Vector3) if flying > 0 else Vector3.ZERO
 	await get_tree().physics_frame
 	var step := ((g.balls[0]["pos"] as Vector3).distance_to(p0)) if g.balls_in_flight() > 0 else 0.0
-	_check("bullets_are_balls", flying >= 1 and absf(step - 40.0 / 60.0) < 0.05 and (g.balls[0]["node"] as MeshInstance3D).mesh is SphereMesh,
-		"в полёте %d, шарик за тик прошёл %.2f м (ждём %.2f — 40 м/с)" % [flying, step, 40.0 / 60.0])
+	var node: MeshInstance3D = g.balls[0]["node"] if g.balls_in_flight() > 0 else null
+	_check("bullets_are_tracers", flying >= 1 and absf(step - 40.0 / 60.0) < 0.05 and node != null and node.mesh is QuadMesh
+		and node.material_override is ShaderMaterial, "в полёте %d, трассер за тик прошёл %.2f м (ждём %.2f — 40 м/с), квад с шейдером трассера" % [flying,
+		step, 40.0 / 60.0])
 	await _until(func() -> bool: return g.mag == 0, 5.0)
 	var empty_at := Engine.get_physics_frames()
 	await _until(func() -> bool: return g.reloading > 0.0, 0.2)   # перезарядка — со следующего тика после последнего патрона
@@ -324,45 +359,71 @@ func _gun_rules() -> void:
 	g.equip("pistol")
 
 
-## Улучшения: очки за урон, ветка из трёх → второй уровень → усиления; всё переживает возврат.
+## Опыт и классы: опыт за урон и фраг, уровни открывают оружие и усиления класса, всё переживает возврат; смена класса; выпад громилы.
 func _upgrade_rules() -> void:
-	var pi := 2
+	var pi := 0   # штурмовик
+	var lv_seen: Array = []
+	sm.leveled.connect(func(p: int, lv: int, u: Dictionary) -> void:
+		if p == pi:
+			lv_seen.append([lv, u]))
 	var r1 := _doll(1)
-	var p0 := int(sm.loadout(pi)["points"])
-	var bank := 0.0
-	while bank < Tuning.SQUAD_POINTS_DAMAGE and r1.alive:
-		bank += sm.bullet_hit(r1, _doll(pi), 9.0, "Torso", r1.centre_of_mass(), Vector3.UP, "pistol")
-		r1.grace_until = 0.0
-	_check("points_for_damage", int(sm.loadout(pi)["points"]) >= p0 + 1, "очков %d → %d за %.0f урона" % [p0, int(sm.loadout(pi)["points"]), bank])
-	sm.loadouts[pi]["points"] = 0
-	sm.add_points(pi, 1)
-	var of := sm.offers(pi)
-	var ids := of.map(func(o: Dictionary) -> String: return String(o["id"]))
-	_check("offers_branches", ids == ["smg", "sawnoff", "rifle"] and sm.can_upgrade(pi), "предложено %s" % str(ids))
-	var chose := sm.choose(pi, 0)
+	r1.grace_until = 0.0
+	var xp0 := float(sm.loadout(pi)["xp"])
+	var dealt := sm.bullet_hit(r1, _doll(pi), 9.0, "Torso", r1.centre_of_mass(), Vector3.UP, "pistol")
+	_check("xp_for_damage", is_equal_approx(float(sm.loadout(pi)["xp"]) - xp0, dealt * Tuning.SQUAD_XP_PER_DAMAGE), "опыт +%.1f за %.1f урона" % [
+		float(sm.loadout(pi)["xp"]) - xp0, dealt])
+	sm.add_xp(pi, float(Tuning.SQUAD_XP_LEVELS[1]))
 	var g := _gun(pi)
-	_check("upgrade_branch", chose and g.weapon == "smg" and g.mag == 30 and int(sm.loadout(pi)["points"]) == 0, "взят %s, магазин %d" % [g.weapon, g.mag])
-	_check("upgrade_needs_points", not sm.choose(pi, 0) and _gun(pi).weapon == "smg", "второй уровень без очков — нельзя")
-	sm.add_points(pi, int(Tuning.SQUAD_UPGRADE_COST["tier2"]))
-	_check("upgrade_tier2", sm.offers(pi).size() == 1 and sm.choose(pi, 0) and _gun(pi).weapon == "mg", "второй уровень ветки: %s" % _gun(pi).weapon)
-	sm.add_points(pi, int(Tuning.SQUAD_UPGRADE_COST["perk"]))
-	var perk_ids: Array = sm.offers(pi).map(func(o: Dictionary) -> String: return String(o["id"]))
-	sm.choose(pi, 0)
-	var dmg := float(_gun(pi).def["damage"])
-	_check("upgrade_perk", perk_ids == ["damage", "mag", "speed"] and is_equal_approx(dmg, 6.0 * 1.2), "усиления %s; урон пулемёта %.1f (6 × 1.2)" % [str(perk_ids), dmg])
+	_check("level2_smg", int(sm.loadout(pi)["level"]) == 2 and g.weapon == "smg" and g.mag == 30 and lv_seen.size() == 1
+		and String((lv_seen[0][1] as Dictionary).get("weapon", "")) == "smg", "уровень 2: %s, магазин %d, сигнал leveled %s" % [g.weapon, g.mag, str(lv_seen)])
+	sm.add_xp(pi, float(Tuning.SQUAD_XP_LEVELS[4]))
+	g = _gun(pi)
+	_check("level5_mg_perks", int(sm.loadout(pi)["level"]) == 5 and g.weapon == "mg" and g.mag_max == int(round(70 * 1.5)) and lv_seen.size() == 4,
+		"уровень 5: %s, магазин %d (70 × 1.5 — усиление «магазин»), уровней открыто %d" % [g.weapon, g.mag_max, lv_seen.size()])
+	# громила: меч на 2-м уровне, броня на 3-м
+	var b := 5
+	var br := _doll(b)
+	var a0 := sm.armor_of(br)
+	sm.add_xp(b, float(Tuning.SQUAD_XP_LEVELS[2]))
+	var ml := SquadMatch.melee_of(br)
+	_check("brawler_levels", ml.weapon_id == "sword" and is_instance_valid(ml.weapon) and ml.weapon.is_held() and sm.armor_of(br) > a0 + 25.0,
+		"громила уровень %d: %s в руке, броня %.0f → %.0f" % [int(sm.loadout(b)["level"]), ml.weapon_id, a0, sm.armor_of(br)])
+	# выпад: торс разгоняется к точке, вторым — нельзя до паузы
+	br.grace_until = 0.0
+	var v0 := br.torso().linear_velocity
+	var target := br.centre_of_mass() + Vector3(-5.0, 0.0, 0.0)
+	var l1 := ml.lunge(target)
+	var dv := (br.torso().linear_velocity - v0).x
+	var l2 := ml.lunge(target)
+	_check("brawler_lunge", l1 and not l2 and dv < -Tuning.SQUAD_LUNGE_DV * 0.9, "выпад: торс Δv %.1f м/с к цели, второй сразу — %s" % [dv, str(l2)])
+	# опыт и оружие переживают возврат
 	_doll(pi).knock_out(_doll(1), {"kind": "body"})
 	await _wait(Tuning.SQUAD_RESPAWN_S + 0.3)
 	var ng := _gun(pi)
-	_check("upgrade_survives_respawn", ng != null and ng.weapon == "mg" and is_equal_approx(float(ng.def["damage"]), 6.0 * 1.2) and ng.mag == ng.mag_max,
-		"после возврата: %s, урон %.1f, магазин %d / %d" % [ng.weapon if ng != null else "-", float(ng.def["damage"]) if ng != null else 0.0,
-		ng.mag if ng != null else 0, ng.mag_max if ng != null else 0])
+	_check("level_survives_respawn", ng != null and ng.weapon == "mg" and ng.mag == ng.mag_max and int(sm.loadout(pi)["level"]) == 5,
+		"после возврата: уровень %d, %s %d / %d" % [int(sm.loadout(pi)["level"]), ng.weapon if ng != null else "-", ng.mag if ng != null else 0,
+		ng.mag_max if ng != null else 0])
+	# смена класса в бою — с возрождения: штурмовик → громила
+	sm.set_class(pi, "brawler")
+	_check("class_pending", String(sm.loadout(pi)["class"]) == "assault" and String(sm.loadout(pi)["next_class"]) == "brawler" and _gun(pi).weapon == "mg",
+		"в бою: класс пока штурмовик, следующий — громила")
+	await _wait(Tuning.SQUAD_SPAWN_SHIELD_S + 0.2)
+	_doll(pi).knock_out(_doll(1), {"kind": "body"})
+	await _wait(Tuning.SQUAD_RESPAWN_S + 0.4)
+	var nd := _doll(pi)
+	var nml := SquadMatch.melee_of(nd)
+	var want_melee := String(SquadMatch.kit_of("brawler", int(sm.loadout(pi)["level"]))["melee"])
+	_check("class_on_respawn", String(sm.loadout(pi)["class"]) == "brawler" and _gun(pi).weapon == "" and nml.weapon_id == want_melee
+		and is_instance_valid(nml.weapon) and nml.weapon.is_held(), "после возврата — громила %d уровня: %s в руке" % [int(sm.loadout(pi)["level"]), nml.weapon_id])
+	sm.set_class(pi, "assault")
 
 
 ## Броня и ящики.
 func _armor_supply_rules() -> void:
 	await _wait(Tuning.SQUAD_SPAWN_SHIELD_S + 0.2)
-	var r := _doll(3)
+	var r := _doll(1)   # штурмовик: своей брони у класса нет
 	r.grace_until = 0.0
+	sm.add_armor(r, -1000.0)
 	sm.add_armor(r, 50.0)
 	var hp0 := r.hp
 	r.take_damage(20.0, _doll(0), "Torso", r.centre_of_mass(), Vector3.UP, "body")
@@ -370,8 +431,12 @@ func _armor_supply_rules() -> void:
 		"урон 20 при броне 50: HP −%.1f, броня %.1f" % [hp0 - r.hp, sm.armor_of(r)])
 	r.take_damage(100.0, _doll(0), "Torso", r.centre_of_mass(), Vector3.UP, "body")
 	_check("armor_runs_out", (sm.armor_of(r) <= 0.0 and is_equal_approx(r.incoming_mult, 1.0)) or not r.alive, "броня кончилась — урон снова полный")
-	var d := _doll(4)
+	if r.alive:   # раненый сосед по базе (P2 стоит рядом с P4) взял бы ящики ниже раньше P4 — снова полный запас
+		r.hp = r.max_hp
+		sm.add_armor(r, Tuning.SQUAD_ARMOR_MAX)
+	var d := _doll(3)   # красный снайпер: ствол есть; броню (на всякий случай) — в ноль
 	d.grace_until = 0.0
+	sm.add_armor(d, -1000.0)
 	var g := SquadMatch.gun_of(d)
 	g.reserve = 0
 	var c1 := sm.spawn_supply("ammo", d.centre_of_mass())
@@ -383,11 +448,13 @@ func _armor_supply_rules() -> void:
 	_check("supply_not_needed", is_instance_valid(c2) and int(sm.supplies_taken["ammo"]) == 1, "полный запас — ящик остался")
 	if is_instance_valid(c2):
 		c2.queue_free()
-	d.take_damage(50.0, _doll(1), "Torso", d.centre_of_mass(), Vector3.UP, "body")
+	d.take_damage(50.0, _doll(0), "Torso", d.centre_of_mass(), Vector3.UP, "body")   # синий по красному (свои не ранят)
 	var hp1 := d.hp
-	sm.spawn_supply("health", d.centre_of_mass())
+	var ch := sm.spawn_supply("health", d.centre_of_mass())
+	var taker := [-1]
+	ch.taken.connect(func(_c: SupplyCrate, who: Doll) -> void: taker[0] = who.player_index)
 	await _wait(0.2)
-	_check("supply_health", d.hp > hp1 + 30.0, "жизни: %.0f → %.0f" % [hp1, d.hp])
+	_check("supply_health", d.hp > hp1 + 30.0, "жизни: %.0f → %.0f (ящик взял P%d)" % [hp1, d.hp, taker[0] + 1])
 	sm.spawn_supply("armor", d.centre_of_mass())
 	await _wait(0.2)
 	_check("supply_armor", is_equal_approx(sm.armor_of(d), 50.0), "броня: 0 → %.0f" % sm.armor_of(d))
@@ -407,8 +474,12 @@ func _score_rules() -> void:
 	sm.restart()
 	await _until(func() -> bool: return sm.play_state == "play", 6.0)
 	_brains_off()
-	_check("restart_resets", sm.score == [0, 0] and _gun(2).weapon == "pistol" and int(sm.loadout(2)["points"]) == 0 and sm.alive_dolls().size() == 6,
-		"счёт %s, у синего 2 — %s, очков %d" % [str(sm.score), _gun(2).weapon, int(sm.loadout(2)["points"])])
+	_check("restart_resets", sm.score == [0, 0] and _gun(0).weapon == "pistol" and int(sm.loadout(0)["level"]) == 1
+		and float(sm.loadout(0)["xp"]) == 0.0 and String(sm.loadout(0)["class"]) == "assault" and sm.alive_dolls().size() == 6,
+		"счёт %s, P1: %s, уровень %d, опыт %.0f" % [str(sm.score), _gun(0).weapon, int(sm.loadout(0)["level"]), float(sm.loadout(0)["xp"])])
+	sm.set_class(0, "sniper")
+	_check("class_now_on_countdown_or_play", String(sm.loadout(0)["next_class"]) == "sniper", "выбор класса записан")
+	sm.set_class(0, "assault")
 	await _wait(1.0)
 	var frag_seen: Array = []
 	sm.frag.connect(func(k: Doll, v: Doll, t: int) -> void: frag_seen.append([k, v, t]))
@@ -417,16 +488,17 @@ func _score_rules() -> void:
 	r1.knock_out(b0, {"kind": "body"})
 	await get_tree().physics_frame
 	_check("ko_scores", sm.score == [1, 0] and int(sm.tally[0]["kills"]) == 1 and int(sm.tally[1]["deaths"]) == 1 and frag_seen.size() == 1
-		and frag_seen[0][0] == b0 and int(sm.loadout(0)["points"]) == Tuning.SQUAD_POINTS_PER_FRAG,
-		"счёт %s, фраги P0 %d, очков у P0 %d" % [str(sm.score), int(sm.tally[0]["kills"]), int(sm.loadout(0)["points"])])
+		and frag_seen[0][0] == b0 and is_equal_approx(float(sm.loadout(0)["xp"]), Tuning.SQUAD_XP_PER_FRAG),
+		"счёт %s, фраги P0 %d, опыт P0 %.0f" % [str(sm.score), int(sm.tally[0]["kills"]), float(sm.loadout(0)["xp"])])
 	await _wait(Tuning.SQUAD_RESPAWN_S + 0.2)
 	var nr1 := _doll(1)
 	_check("respawn_at_base", nr1 != null and nr1 != r1 and nr1.alive and nr1.centre_of_mass().x > 18.0 and not nr1.can_take_damage(),
 		"новая кукла P1 жива на x = %.1f, щит возрождения" % (nr1.centre_of_mass().x if nr1 != null else 0.0))
 	_check("respawn_keeps_parts", nr1 != null and nr1.team == "squad_1" and nr1.has_meta(DollOutline.META) and nr1.get_node_or_null("SquadBrain") != null
 		and _arms(nr1) == ["Hand_R"] and SquadMatch.gun_of(nr1) != null and SquadMatch.gun_of(nr1).mag == 12
-		and nr1.get_children().filter(func(c: Node) -> bool: return c is SquadGun and not c.is_queued_for_deletion()).size() == 1,
-		"команда, обводка, мозг, одна рука Hand_R, одно оружие с полным магазином")
+		and nr1.get_children().filter(func(c: Node) -> bool: return c is SquadGun and not c.is_queued_for_deletion()).size() == 1
+		and nr1.get_children().filter(func(c: Node) -> bool: return c is SquadMelee and not c.is_queued_for_deletion()).size() == 1,
+		"команда, обводка, мозг, одна рука Hand_R, одно оружие с полным магазином, один узел рукопашной")
 	_doll(4).knock_out(null, {"kind": "self"})
 	await get_tree().physics_frame
 	_check("self_ko_scores", sm.score == [1, 1] and frag_seen.size() == 2 and frag_seen[1][0] == null, "счёт %s" % str(sm.score))
@@ -503,9 +575,11 @@ func _night() -> void:
 
 # ------------------------------------------------------------------ матч ботов
 
-func _bots(max_s: float, level: int, trace: bool) -> void:
-	print("--- bots (level %d)" % level)
+func _bots(max_s: float, level: int, trace: bool, score_to_win: int = 20) -> void:
+	print("--- bots (level %d, до %d)" % [level, score_to_win])
 	await _load(true, level, 3.0, true)
+	sm.score_to_win = score_to_win
+	var slow_ticks := {"n": 0}
 	var acc := {"friendly": 0.0, "all": 0.0, "bullet": 0.0, "bullet_hits": 0, "reloads": 0, "upgrades": 0}
 	sm.hit.connect(func(v: Doll, a: Node, dmg: float, _k: String, _p: Vector3) -> void:
 		acc["all"] = float(acc["all"]) + dmg
@@ -514,7 +588,8 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 	sm.bullet_landed.connect(func(_v: Doll, _s: Doll, dmg: float, _p: Vector3) -> void:
 		acc["bullet"] = float(acc["bullet"]) + dmg
 		acc["bullet_hits"] = int(acc["bullet_hits"]) + 1)
-	sm.upgraded.connect(func(_pi: int, _o: Dictionary) -> void: acc["upgrades"] = int(acc["upgrades"]) + 1)
+	sm.leveled.connect(func(_pi: int, _lv: int, _u: Dictionary) -> void: acc["upgrades"] = int(acc["upgrades"]) + 1)
+	var lunges0 := 0
 	var ff := {"t": -1.0}
 	sm.frag.connect(func(_k: Doll, _v: Doll, _t: int) -> void:
 		if float(ff["t"]) < 0.0:
@@ -526,6 +601,7 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 	var melee_no_ammo := 0
 	var last_pos: Dictionary = {}
 	var stuck_max := 0.0
+	var stuck_who := ""
 	var out_of_bounds := 0
 	var b: AABB = pg.arena.call("bounds")
 	var props0: int = (pg.arena.call("breakables") as Array).size()
@@ -535,6 +611,8 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 	while over_count == 0 and sm.fight_time < max_s:
 		await get_tree().physics_frame
 		frames += 1
+		if Engine.time_scale < 0.99:
+			slow_ticks["n"] = int(slow_ticks["n"]) + 1
 		for d in sm.dolls():
 			var dd := d as Doll
 			var g := SquadMatch.gun_of(dd)
@@ -557,8 +635,25 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 			var lp: Array = last_pos.get(dd.player_index, [])
 			if lp.is_empty() or (lp[0] as Vector3).distance_to(c) > 1.5:
 				last_pos[dd.player_index] = [c, sm.fight_time]
-			else:
-				stuck_max = maxf(stuck_max, sm.fight_time - float(lp[1]))
+			elif trace and sm.fight_time - float(lp[1]) > 10.0 and int(sm.fight_time * 60.0) % 120 == 0:
+				var sb2 := dd.get_node_or_null("SquadBrain") as SquadBrain
+				var ml2 := SquadMatch.melee_of(dd)
+				var touching := []
+				for pn in ["Torso", "Head", "Hand_L", "Hand_R"]:
+					var pb := dd.parts.get(pn) as RigidBody3D
+					if pb != null and pb.contact_monitor:
+						for cb in pb.get_colliding_bodies():
+							touching.append("%s>%s" % [pn, cb.name])
+				var wpos := ml2.weapon.global_position if ml2 != null and is_instance_valid(ml2.weapon) else Vector3.ZERO
+				print("    STUCK P%d %.0f с: %s, стан %s, ввод %s, v %.2f, оружие %s в %s, касания %s, цель %s" % [dd.player_index,
+					sm.fight_time - float(lp[1]), sb2.state if sb2 != null else "-", str(dd.is_stunned()), str(dd.input_vec.snapped(Vector2(0.01, 0.01))),
+					dd.torso().linear_velocity.length(), ml2.weapon_id if ml2 != null else "-", str(wpos.snapped(Vector3(0.1, 0.1, 0.1))), str(touching),
+					(sb2.target.name if sb2 != null and sb2.target != null and is_instance_valid(sb2.target) else "-")])
+			if not lp.is_empty() and sm.fight_time - float(lp[1]) > stuck_max:
+				stuck_max = sm.fight_time - float(lp[1])
+				var sb := dd.get_node_or_null("SquadBrain") as SquadBrain
+				stuck_who = "P%d %s в (%.1f, %.1f), состояние %s" % [dd.player_index, String(sm.loadout(dd.player_index)["class"]), c.x, c.y,
+					sb.state if sb != null else "-"]
 		if trace and sm.fight_time - trace_t >= 10.0:
 			trace_t = sm.fight_time
 			var row := []
@@ -572,22 +667,32 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 	var wall_ms := float(Time.get_ticks_usec() - t0) / 1000.0
 	var weapons := {}
 	for pi in sm.loadouts:
-		weapons[pi] = {"weapon": sm.loadouts[pi]["weapon"], "perks": sm.loadouts[pi]["perks"]}
+		weapons[pi] = {"class": sm.loadouts[pi]["class"], "level": sm.loadouts[pi]["level"], "kit": sm.kit(int(pi))}
 	var kills := [0, 0]
 	for pi in sm.tally:
 		kills[int(pi) % 2] += int(sm.tally[pi]["kills"])
 	var shooters := 0
-	for pi in shots:
-		if int(shots[pi]) > 10:
-			shooters += 1
-	var tier_max := 0
+	var gunners := 0
 	for pi in sm.loadouts:
-		tier_max = maxi(tier_max, int(Tuning.SQUAD_WEAPONS[String(sm.loadouts[pi]["weapon"])]["tier"]))
+		if String(sm.loadouts[pi]["class"]) == "brawler":
+			continue
+		gunners += 1
+		if int(shots.get(pi, 0)) > 10:
+			shooters += 1
+	var level_max := 0
+	var lunges := 0
+	for pi in sm.loadouts:
+		level_max = maxi(level_max, int(sm.loadouts[pi]["level"]))
+	for d in sm.dolls():
+		var mm := SquadMatch.melee_of(d)
+		if mm != null:
+			lunges += mm.lunges
 	var hitfx := sm.hit_fx_count - fx0
 	info["bots"] = {"level": level, "fight_s": snappedf(sm.fight_time, 0.1), "score": sm.score.duplicate(), "frags": sm.frags.size(),
 		"first_frag_s": snappedf(float(ff["t"]), 0.1), "kills_by_team": kills, "shots": shots, "bullet_hits": acc["bullet_hits"],
 		"bullet_damage_share": snappedf(float(acc["bullet"]) / maxf(float(acc["all"]), 1.0), 0.01), "hit_fx_melee": hitfx,
-		"reloads": acc["reloads"], "upgrades": acc["upgrades"], "weapons_end": weapons, "supplies_spawned": sm.supplies_spawned,
+		"reloads": acc["reloads"], "level_ups": acc["upgrades"], "weapons_end": weapons, "melee_hits": sm.melee_hits,
+		"melee_shakes": sm.melee_shakes, "slow_ticks": int(slow_ticks["n"]), "lunges_alive_dolls": lunges, "supplies_spawned": sm.supplies_spawned,
 		"supplies_taken": sm.supplies_taken.duplicate(), "melee_no_ammo_ticks": melee_no_ammo, "stuck_max_s": snappedf(stuck_max, 0.1),
 		"ms_per_physics_frame": snappedf(wall_ms / maxf(frames, 1), 0.01), "tally": sm.tally.duplicate(true),
 		"props_broken": props0 - (pg.arena.call("breakables") as Array).size(), "props": props0}
@@ -596,15 +701,19 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 	for k in sm.supplies_taken:
 		taken += int(sm.supplies_taken[k])
 	_check("bots_match_ends", over_count == 1, "матч кончился: %s за %.0f с, счёт %s" % [str(over_count == 1), sm.fight_time, str(sm.score)])
-	_check("bots_all_shoot", shooters == 6, "стреляли (> 10 выстрелов) %d из 6; выстрелов %s" % [shooters, str(shots)])
+	_check("bots_all_shoot", shooters == gunners and gunners >= 3, "стреляли (> 10 выстрелов) %d из %d стрелков; выстрелов %s" % [shooters, gunners, str(shots)])
 	_check("bots_bullets_hit", int(acc["bullet_hits"]) > 100, "попаданий пулями %d (%.0f HP)" % [int(acc["bullet_hits"]), float(acc["bullet"])])
 	_check("bots_no_friendly", float(acc["friendly"]) <= 0.01, "урон по своим %.1f HP" % float(acc["friendly"]))
 	_check("bots_bullets_no_fx", hitfx < int(acc["bullet_hits"]) / 5, "эффектов удара %d на %d попаданий пулями (эффекты — только от ударов телом)" % [hitfx, int(acc["bullet_hits"])])
 	_check("bots_both_frag", kills[0] > 0 and kills[1] > 0, "фраги синих / красных %s" % str(kills))
 	_check("bots_first_frag", float(ff["t"]) >= 0.0 and float(ff["t"]) < 60.0, "первый фраг на %.1f с" % float(ff["t"]))
 	_check("bots_reload", int(acc["reloads"]) >= 6, "перезарядок %d" % int(acc["reloads"]))
-	_check("bots_upgrade", int(acc["upgrades"]) >= 3 and tier_max >= 1, "улучшений %d, высший уровень оружия %d" % [int(acc["upgrades"]), tier_max])
+	_check("bots_level_up", int(acc["upgrades"]) >= 6 and level_max >= 3, "новых уровней %d, высший уровень %d" % [int(acc["upgrades"]), level_max])
+	_check("bots_brawl", sm.melee_hits > 10, "ударов телом и оружием %d (громилы и наскоки)" % sm.melee_hits)
+	_check("bots_no_slowdown", int(slow_ticks["n"]) == 0 and sm.melee_shakes == 0, "тиков с замедлением времени %d, тряски от ударов %d (людей нет)" % [
+		int(slow_ticks["n"]), sm.melee_shakes])
 	_check("bots_supplies", taken >= 3, "взято ящиков %d из %d появившихся" % [taken, sm.supplies_spawned])
-	_check("bots_not_stuck", stuck_max < 25.0, "дольше всего на месте (в радиусе 1.5 м) %.1f с" % stuck_max)
+	_check("bots_not_stuck", stuck_max < 25.0, "дольше всего на месте (в радиусе 1.5 м) %.1f с — %s" % [stuck_max, stuck_who])
 	_check("bots_in_bounds", out_of_bounds == 0, "тиков вне границ карты %d" % out_of_bounds)
 	await _unload()
+

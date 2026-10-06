@@ -10,9 +10,11 @@
 ##     Дробь (дальность ≤ CLOSE_RANGE_M) сближается рывком;
 ##   • reload  — идёт перезарядка: отход подальше от цели;
 ##   • supply  — к ящику (SupplyCrate): патронов нет совсем — к любому ящику с патронами; мало жизней, мало запаса или нет брони — к
-##     такому ящику, если он ближе Tuning.SQUAD_BOT_SUPPLY_M; по дороге стреляет, если может;
-##   • melee   — цель ближе SQUAD_BOT_MELEE_M или патронов нет и ящика с ними нет: наскок тягой с ускорением (кукла бьёт телом).
-## Улучшения берёт сам, как только хватает очков: ветка — по номеру бота в команде (разное оружие в отряде), дальше — по порядку.
+##     такому ящику, если он ближе Tuning.SQUAD_BOT_SUPPLY_M; по дороге стреляет, если может; не добрался за CRATE_GIVE_UP_S —
+##     ящик брошен на CRATE_SKIP_S (пути бот не ищет — идёт напрямую);
+##   • melee   — цель ближе SQUAD_BOT_MELEE_M или патронов нет и ящика с ними нет: наскок тягой с ускорением (кукла бьёт телом);
+##   • brawl   — громила (рукопашный класс, SquadMelee): к цели с рывком, рука с оружием — на неё, ближе BRAWL_LUNGE_M — выпад.
+## Класс и оружие бота — от матча (SquadMatch: класс по SQUAD_BOT_CLASSES, оружие — по опыту, само).
 class_name SquadBrain
 extends EnemyBrain
 
@@ -25,8 +27,14 @@ const FLOOR_Y := 0.9                # ниже — тяга вверх (не п�
 const CEIL_MARGIN := 2.0            # м под потолком карты
 const MELEE_S := 0.8
 const LOW_HP := 0.45                # доля HP: ниже — к ящику жизней
-const UPGRADE_CHECK_S := 0.5
-const CLOSE_RANGE_M := 12.0         # оружие с дальностью не больше этой (обрез, дробовик) — сближаться рывком
+const CLOSE_RANGE_M := 12.0
+const BRAWL_LUNGE_M := 5.0           # громила: ближе — выпад (выпад 7.5 м/с покрывает это за ~0.6 с)
+const BRAWL_DASH_M := 6.0            # громила: дальше — рывок на сближение
+const CRATE_GIVE_UP_S := 6.0         # к ящику не добрался за столько (пути нет: напрямую, а сверху настил) — бросить его …
+const CRATE_SKIP_S := 15.0           # … на столько
+const STUCK_RADIUS_M := 1.5
+const STUCK_AREA_S := 5.0
+const UNSTICK_DIRS := [Vector2(0.6, 0.9), Vector2(1.0, -0.15), Vector2(0.5, -0.9), Vector2(-0.6, 0.9), Vector2(-1.0, -0.15)]         # оружие с дальностью не больше этой (обрез, дробовик) — сближаться рывком
 
 ## Уровень 1..3 (Tuning.SQUAD_BOT_LEVELS); 0 — default_level (его ставит площадка: Match.respawn_doll создаёт мозг заново, экспорт теряется).
 @export var level := 0
@@ -38,9 +46,13 @@ var fire_cone_deg := 10.0
 var firing := false
 var shots_blocked := 0
 var crate: SupplyCrate = null
+var _crate_t := 0.0
+var _crate_skip: Dictionary = {}     # instance id ящика → до какого _time его не брать
+var _stuck_anchor := Vector2.ZERO
+var _stuck_anchor_t := 0.0
+var _unstick_n := 0
 var _lane := 1.2
 var _phase := 0.0
-var _upgrade_t := 0.0
 
 
 func _init() -> void:
@@ -86,9 +98,17 @@ func arm() -> ArmAssist:
 
 
 func _think(delta: float) -> void:
-	_upgrade(delta)
 	var g := gun()
+	var had := crate
 	_pick_crate(g)
+	if crate != null and crate == had:
+		_crate_t += delta
+		if _crate_t > CRATE_GIVE_UP_S:
+			_crate_skip[crate.get_instance_id()] = _time + CRATE_SKIP_S
+			crate = null
+			_crate_t = 0.0
+	else:
+		_crate_t = 0.0
 	var has_target := target != null and is_instance_valid(target) and target.alive
 	if crate != null:
 		go("supply")
@@ -106,6 +126,10 @@ func _think(delta: float) -> void:
 		_advance()
 		_release_arm()
 		_trigger(false)
+		return
+	var ml := SquadMatch.melee_of(doll)
+	if ml != null and ml.weapon_id != "" and (g == null or g.weapon == ""):
+		_brawl(ml)
 		return
 	var tp := predicted()
 	var d := my_pos().distance_to(com2(target))
@@ -172,7 +196,7 @@ func _pick_crate(g: SquadGun) -> void:
 	var best_d := INF if far_ok else Tuning.SQUAD_BOT_SUPPLY_M
 	for n in get_tree().get_nodes_in_group(SquadMatch.SUPPLY_GROUP):
 		var c := n as SupplyCrate
-		if c == null or not kinds.has(c.kind) or c.is_queued_for_deletion():
+		if c == null or not kinds.has(c.kind) or c.is_queued_for_deletion() or float(_crate_skip.get(c.get_instance_id(), -1.0)) > _time:
 			continue
 		var cp := c.global_position
 		var dd := my_pos().distance_to(Vector2(cp.x, cp.y))
@@ -182,22 +206,20 @@ func _pick_crate(g: SquadGun) -> void:
 	crate = best
 
 
-## Улучшения: как только хватает очков — ветка по номеру бота в команде (0, 1, 2 → три разных оружия в отряде), дальше — первое.
-func _upgrade(delta: float) -> void:
-	_upgrade_t -= delta
-	if _upgrade_t > 0.0:
-		return
-	_upgrade_t = UPGRADE_CHECK_S
-	var m := get_tree().get_first_node_in_group(Match.GROUP) as SquadMatch
-	if m == null or not m.can_upgrade(doll.player_index):
-		return
-	var of := m.offers(doll.player_index)
-	var pick := 0
-	if of.size() == 3 and String(of[0]["kind"]) == "weapon":
-		pick = (int(doll.player_index) / 2 + team) % 3
-	elif String(of[0]["kind"]) == "perk":
-		pick = _rng.randi_range(0, of.size() - 1)
-	m.choose(doll.player_index, pick)
+## Громила: к цели полной тягой (дальше BRAWL_DASH_M — с рывком), рука с оружием на упреждённую цель, ближе BRAWL_LUNGE_M — выпад.
+func _brawl(ml: SquadMelee) -> void:
+	if state != "brawl":
+		go("brawl")
+	var tp := predicted()
+	var d := my_pos().distance_to(com2(target))
+	want = steer(tp, max_in)
+	if d > BRAWL_DASH_M:
+		dash()
+	_aim(tp)
+	_trigger(false)
+	if d < BRAWL_LUNGE_M and ml.can_lunge():
+		if ml.lunge(Vector3(tp.x, tp.y, 0.0)):
+			note_attack()
 
 
 ## Переход: к ближайшему сопернику (или к середине карты, если их нет), на своей полке высоты.
@@ -279,7 +301,34 @@ func _can_hit(g: SquadGun, tp: Vector2, d: float) -> bool:
 
 
 func _stuck_allowed() -> bool:
-	return state in ["advance", "engage", "reload", "supply"]
+	return state in ["advance", "engage", "reload", "supply", "brawl"]
+
+
+## Застревание (поверх EnemyBrain: там только «жмёт, а стоит», и выход всегда вверх-вбок). Ещё и «жмёт, а топчется на месте»: ЦМ
+## не вышел из круга STUCK_RADIUS_M за STUCK_AREA_S (бот бьётся о стену и отскакивает — скорость есть, хода нет). Выход — по кругу
+## направлений UNSTICK_DIRS: под настилом вверх не выйти, у стены укрытия — вбок не выйти (проба 06.10: громила 58 с у укрытия,
+## снайпер — головой в палубу базы снизу).
+func _tick_stuck(delta: float) -> void:
+	if _time < _unstick_until:
+		want = _unstick_dir
+		return
+	var me := my_pos()
+	var pushing := _stuck_allowed() and want.length() >= STUCK_INPUT
+	if not pushing or me.distance_to(_stuck_anchor) > STUCK_RADIUS_M:
+		_stuck_anchor = me
+		_stuck_anchor_t = _time
+	_stuck_t = _stuck_t + delta if pushing and my_vel().length() < STUCK_SPEED else 0.0
+	if _stuck_t < STUCK_S and _time - _stuck_anchor_t < STUCK_AREA_S:
+		return
+	_stuck_t = 0.0
+	_stuck_anchor = me
+	_stuck_anchor_t = _time
+	_unstick_until = _time + UNSTICK_S
+	var sx := -signf(want.x) if absf(want.x) > 0.2 else 1.0
+	var d: Vector2 = UNSTICK_DIRS[_unstick_n % UNSTICK_DIRS.size()]
+	_unstick_n += 1
+	_unstick_dir = Vector2(d.x * sx, d.y)
+	counters["unstick"] = int(counters.get("unstick", 0)) + 1
 
 
 func _silenced(_why: String) -> void:

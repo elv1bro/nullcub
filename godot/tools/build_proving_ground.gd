@@ -272,7 +272,9 @@ func _bounds() -> void:
 ## Точки возрождения в порядке player_index (Match.spawn_point_for): 0, 2, 4 — синие слева, 1, 3, 5 — красные справа.
 func _spawns() -> void:
 	var holder := _group("Spawns")
-	var per_team := [Vector2(30.0, G + 0.05), Vector2(BASE_X, DECK_Y + 0.05), Vector2(23.8, G + 0.05)]
+	# не под палубой базы: у земли под настилом бот рвался вверх к своей «полке» и упирался головой в доски (проба 06.10) — первая
+	# точка — в воздухе над палубой (поле NULL держит, кукла зависает)
+	var per_team := [Vector2(BASE_X + 0.5, DECK_Y + 2.0), Vector2(BASE_X, DECK_Y + 0.05), Vector2(23.8, G + 0.05)]
 	var i := 0
 	for p in per_team:
 		for s in [-1.0, 1.0]:

@@ -107,16 +107,16 @@ size = Vector3(66, 1, 8)
 [sub_resource type="BoxShape3D" id="BoxShape3D_ybhu8"]
 size = Vector3(68, 1, 8)
 
-[node name="ProvingGround" type="Node3D" unique_id=260341029]
+[node name="ProvingGround" type="Node3D" unique_id=1203136310]
 script = ExtResource("1_42djl")
 night = true
 arena_bounds = AABB(-32, -2, -1, 64, 18, 2)
 
-[node name="Environment" type="WorldEnvironment" parent="." unique_id=745054150]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=1429087974]
 environment = SubResource("Environment_yujeh")
 camera_attributes = SubResource("CameraAttributesPractical_nlhg2")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=185161401]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=338241452]
 transform = Transform3D(0.66436386, 0.59718144, -0.44943854, 0, 0.60132855, 0.79900193, 0.7474093, -0.530828, 0.39950097, 0, 0, 0)
 light_color = Color(0.62, 0.72, 1, 1)
 light_energy = 0.55
@@ -129,7 +129,7 @@ directional_shadow_split_2 = 0.35
 directional_shadow_split_3 = 0.6
 directional_shadow_max_distance = 60.0
 
-[node name="Parallax" type="Node3D" parent="." unique_id=793960849 instance=ExtResource("2_6ulyl")]
+[node name="Parallax" type="Node3D" parent="." unique_id=1102260762 instance=ExtResource("2_6ulyl")]
 script = ExtResource("3_v3bft")
 layer2_y_offset = -0.6
 layer4_scroll = 0.0
@@ -138,84 +138,84 @@ layer2_scroll = 0.55
 layer1_scroll = 0.8
 scroll_vertical = false
 
-[node name="Ground" type="Node3D" parent="." unique_id=595017704]
+[node name="Ground" type="Node3D" parent="." unique_id=2023249906]
 
 [node name="Ground" type="StaticBody3D" parent="Ground" unique_id=1855928111 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_1" type="StaticBody3D" parent="Ground" unique_id=1712724071 instance=ExtResource("4_hsha8")]
+[node name="Ground_1" type="StaticBody3D" parent="Ground" unique_id=1919633788 instance=ExtResource("4_hsha8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -26, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_2" type="StaticBody3D" parent="Ground" unique_id=526279366 instance=ExtResource("4_hsha8")]
+[node name="Ground_2" type="StaticBody3D" parent="Ground" unique_id=2086360493 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_3" type="StaticBody3D" parent="Ground" unique_id=857338148 instance=ExtResource("4_hsha8")]
+[node name="Ground_3" type="StaticBody3D" parent="Ground" unique_id=1740225366 instance=ExtResource("4_hsha8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -18, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_4" type="StaticBody3D" parent="Ground" unique_id=1924716738 instance=ExtResource("4_hsha8")]
+[node name="Ground_4" type="StaticBody3D" parent="Ground" unique_id=594523448 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_5" type="StaticBody3D" parent="Ground" unique_id=1654921697 instance=ExtResource("4_hsha8")]
+[node name="Ground_5" type="StaticBody3D" parent="Ground" unique_id=1492110485 instance=ExtResource("4_hsha8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -10, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_6" type="StaticBody3D" parent="Ground" unique_id=1917001858 instance=ExtResource("4_hsha8")]
+[node name="Ground_6" type="StaticBody3D" parent="Ground" unique_id=1355550379 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_7" type="StaticBody3D" parent="Ground" unique_id=1572029336 instance=ExtResource("4_hsha8")]
+[node name="Ground_7" type="StaticBody3D" parent="Ground" unique_id=415951896 instance=ExtResource("4_hsha8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -2, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_8" type="StaticBody3D" parent="Ground" unique_id=1594624958 instance=ExtResource("4_hsha8")]
+[node name="Ground_8" type="StaticBody3D" parent="Ground" unique_id=1285143811 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_9" type="StaticBody3D" parent="Ground" unique_id=534706875 instance=ExtResource("4_hsha8")]
+[node name="Ground_9" type="StaticBody3D" parent="Ground" unique_id=1657703678 instance=ExtResource("4_hsha8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_10" type="StaticBody3D" parent="Ground" unique_id=1338787834 instance=ExtResource("4_hsha8")]
+[node name="Ground_10" type="StaticBody3D" parent="Ground" unique_id=1567850893 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_11" type="StaticBody3D" parent="Ground" unique_id=122225346 instance=ExtResource("4_hsha8")]
+[node name="Ground_11" type="StaticBody3D" parent="Ground" unique_id=251481272 instance=ExtResource("4_hsha8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 14, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_12" type="StaticBody3D" parent="Ground" unique_id=1106997553 instance=ExtResource("4_hsha8")]
+[node name="Ground_12" type="StaticBody3D" parent="Ground" unique_id=2132180250 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_13" type="StaticBody3D" parent="Ground" unique_id=1982552347 instance=ExtResource("4_hsha8")]
+[node name="Ground_13" type="StaticBody3D" parent="Ground" unique_id=156821495 instance=ExtResource("4_hsha8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 22, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_14" type="StaticBody3D" parent="Ground" unique_id=1958168714 instance=ExtResource("4_hsha8")]
+[node name="Ground_14" type="StaticBody3D" parent="Ground" unique_id=1112035925 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="Ground_15" type="StaticBody3D" parent="Ground" unique_id=1438720090 instance=ExtResource("4_hsha8")]
+[node name="Ground_15" type="StaticBody3D" parent="Ground" unique_id=567104359 instance=ExtResource("4_hsha8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 30, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
@@ -226,218 +226,218 @@ physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_1" type="StaticBody3D" parent="Ground" unique_id=1566787576 instance=ExtResource("6_066ws")]
+[node name="Foundation_1" type="StaticBody3D" parent="Ground" unique_id=1764278378 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_2" type="StaticBody3D" parent="Ground" unique_id=1528415037 instance=ExtResource("6_066ws")]
+[node name="Foundation_2" type="StaticBody3D" parent="Ground" unique_id=1802057386 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_3" type="StaticBody3D" parent="Ground" unique_id=1573486995 instance=ExtResource("6_066ws")]
+[node name="Foundation_3" type="StaticBody3D" parent="Ground" unique_id=418556820 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_4" type="StaticBody3D" parent="Ground" unique_id=1791348849 instance=ExtResource("6_066ws")]
+[node name="Foundation_4" type="StaticBody3D" parent="Ground" unique_id=1833501375 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_5" type="StaticBody3D" parent="Ground" unique_id=1388380853 instance=ExtResource("6_066ws")]
+[node name="Foundation_5" type="StaticBody3D" parent="Ground" unique_id=1883635866 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_6" type="StaticBody3D" parent="Ground" unique_id=402535734 instance=ExtResource("6_066ws")]
+[node name="Foundation_6" type="StaticBody3D" parent="Ground" unique_id=841088732 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_7" type="StaticBody3D" parent="Ground" unique_id=1340769162 instance=ExtResource("6_066ws")]
+[node name="Foundation_7" type="StaticBody3D" parent="Ground" unique_id=1500507412 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_8" type="StaticBody3D" parent="Ground" unique_id=55876034 instance=ExtResource("6_066ws")]
+[node name="Foundation_8" type="StaticBody3D" parent="Ground" unique_id=189305752 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_9" type="StaticBody3D" parent="Ground" unique_id=1022103033 instance=ExtResource("6_066ws")]
+[node name="Foundation_9" type="StaticBody3D" parent="Ground" unique_id=449383067 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_10" type="StaticBody3D" parent="Ground" unique_id=1102958336 instance=ExtResource("6_066ws")]
+[node name="Foundation_10" type="StaticBody3D" parent="Ground" unique_id=1759866869 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_11" type="StaticBody3D" parent="Ground" unique_id=1785377534 instance=ExtResource("6_066ws")]
+[node name="Foundation_11" type="StaticBody3D" parent="Ground" unique_id=164819234 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_12" type="StaticBody3D" parent="Ground" unique_id=1470138896 instance=ExtResource("6_066ws")]
+[node name="Foundation_12" type="StaticBody3D" parent="Ground" unique_id=1539327283 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_13" type="StaticBody3D" parent="Ground" unique_id=253646147 instance=ExtResource("6_066ws")]
+[node name="Foundation_13" type="StaticBody3D" parent="Ground" unique_id=1331714794 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_14" type="StaticBody3D" parent="Ground" unique_id=889141295 instance=ExtResource("6_066ws")]
+[node name="Foundation_14" type="StaticBody3D" parent="Ground" unique_id=417767313 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_15" type="StaticBody3D" parent="Ground" unique_id=600788407 instance=ExtResource("6_066ws")]
+[node name="Foundation_15" type="StaticBody3D" parent="Ground" unique_id=1594457858 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_16" type="StaticBody3D" parent="Ground" unique_id=140542524 instance=ExtResource("6_066ws")]
+[node name="Foundation_16" type="StaticBody3D" parent="Ground" unique_id=45934042 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_17" type="StaticBody3D" parent="Ground" unique_id=468061827 instance=ExtResource("6_066ws")]
+[node name="Foundation_17" type="StaticBody3D" parent="Ground" unique_id=496820075 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_18" type="StaticBody3D" parent="Ground" unique_id=305360187 instance=ExtResource("6_066ws")]
+[node name="Foundation_18" type="StaticBody3D" parent="Ground" unique_id=417603031 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_19" type="StaticBody3D" parent="Ground" unique_id=1617040829 instance=ExtResource("6_066ws")]
+[node name="Foundation_19" type="StaticBody3D" parent="Ground" unique_id=2105576546 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_20" type="StaticBody3D" parent="Ground" unique_id=1141093891 instance=ExtResource("6_066ws")]
+[node name="Foundation_20" type="StaticBody3D" parent="Ground" unique_id=1913826213 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_21" type="StaticBody3D" parent="Ground" unique_id=1436489323 instance=ExtResource("6_066ws")]
+[node name="Foundation_21" type="StaticBody3D" parent="Ground" unique_id=839486714 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_22" type="StaticBody3D" parent="Ground" unique_id=591242053 instance=ExtResource("6_066ws")]
+[node name="Foundation_22" type="StaticBody3D" parent="Ground" unique_id=1376379816 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_23" type="StaticBody3D" parent="Ground" unique_id=1688124733 instance=ExtResource("6_066ws")]
+[node name="Foundation_23" type="StaticBody3D" parent="Ground" unique_id=1851506652 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_24" type="StaticBody3D" parent="Ground" unique_id=35065206 instance=ExtResource("6_066ws")]
+[node name="Foundation_24" type="StaticBody3D" parent="Ground" unique_id=295667034 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_25" type="StaticBody3D" parent="Ground" unique_id=815955546 instance=ExtResource("6_066ws")]
+[node name="Foundation_25" type="StaticBody3D" parent="Ground" unique_id=38542448 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_26" type="StaticBody3D" parent="Ground" unique_id=680169729 instance=ExtResource("6_066ws")]
+[node name="Foundation_26" type="StaticBody3D" parent="Ground" unique_id=793151373 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_27" type="StaticBody3D" parent="Ground" unique_id=2063648114 instance=ExtResource("6_066ws")]
+[node name="Foundation_27" type="StaticBody3D" parent="Ground" unique_id=912073851 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_28" type="StaticBody3D" parent="Ground" unique_id=1869024175 instance=ExtResource("6_066ws")]
+[node name="Foundation_28" type="StaticBody3D" parent="Ground" unique_id=1033745393 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_29" type="StaticBody3D" parent="Ground" unique_id=904783815 instance=ExtResource("6_066ws")]
+[node name="Foundation_29" type="StaticBody3D" parent="Ground" unique_id=1621102426 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_30" type="StaticBody3D" parent="Ground" unique_id=1200226423 instance=ExtResource("6_066ws")]
+[node name="Foundation_30" type="StaticBody3D" parent="Ground" unique_id=1510584438 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Foundation_31" type="StaticBody3D" parent="Ground" unique_id=905852918 instance=ExtResource("6_066ws")]
+[node name="Foundation_31" type="StaticBody3D" parent="Ground" unique_id=2000384317 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, -3, 0.55)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="BaseBlue" type="Node3D" parent="." unique_id=1118833267]
+[node name="BaseBlue" type="Node3D" parent="." unique_id=175427833]
 
 [node name="Deck" type="StaticBody3D" parent="BaseBlue" unique_id=51681926 instance=ExtResource("7_4l0w2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0.4, 0)
 physics_material_override = SubResource("PhysicsMaterial_ikkq8")
 script = ExtResource("5_tp77g")
 
-[node name="Tower" type="StaticBody3D" parent="BaseBlue" unique_id=1152669030 instance=ExtResource("6_066ws")]
+[node name="Tower" type="StaticBody3D" parent="BaseBlue" unique_id=1416560315 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 0.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_1" type="StaticBody3D" parent="BaseBlue" unique_id=216121003 instance=ExtResource("6_066ws")]
+[node name="Tower_1" type="StaticBody3D" parent="BaseBlue" unique_id=1160983542 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 3.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_2" type="StaticBody3D" parent="BaseBlue" unique_id=989099441 instance=ExtResource("6_066ws")]
+[node name="Tower_2" type="StaticBody3D" parent="BaseBlue" unique_id=70408252 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 0.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_3" type="StaticBody3D" parent="BaseBlue" unique_id=1959637775 instance=ExtResource("6_066ws")]
+[node name="Tower_3" type="StaticBody3D" parent="BaseBlue" unique_id=824459137 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 3.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
@@ -454,197 +454,197 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.4, 2.65, -0.5)
 script = ExtResource("10_dtnos")
 color = "blue"
 
-[node name="Banner_1" type="Node3D" parent="BaseBlue" unique_id=1916724 instance=ExtResource("9_vf2mj")]
+[node name="Banner_1" type="Node3D" parent="BaseBlue" unique_id=1665461318 instance=ExtResource("9_vf2mj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 6.4, -0.5)
 script = ExtResource("10_dtnos")
 color = "blue"
 
-[node name="CoverFar" type="StaticBody3D" parent="BaseBlue" unique_id=1951102914 instance=ExtResource("6_066ws")]
+[node name="CoverFar" type="StaticBody3D" parent="BaseBlue" unique_id=1494007937 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, -0.8, 0)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 
-[node name="CoverFar_Top" type="StaticBody3D" parent="BaseBlue" unique_id=8438680 instance=ExtResource("8_dlb6l")]
+[node name="CoverFar_Top" type="StaticBody3D" parent="BaseBlue" unique_id=2077996739 instance=ExtResource("8_dlb6l")]
 transform = Transform3D(1.2044661, -0.03705877, 0.28470096, 0.08719559, 0.5486603, 0, -0.32273573, 0.0099298665, 1.0625184, -21, 2.2, 0)
 physics_material_override = SubResource("PhysicsMaterial_5i7ua")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Float" type="StaticBody3D" parent="BaseBlue" unique_id=1323525329 instance=ExtResource("4_hsha8")]
+[node name="Float" type="StaticBody3D" parent="BaseBlue" unique_id=1874575826 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 4.4, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="CoverNear" type="StaticBody3D" parent="BaseBlue" unique_id=1005349729 instance=ExtResource("6_066ws")]
+[node name="CoverNear" type="StaticBody3D" parent="BaseBlue" unique_id=571480181 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, -1.2, 0)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 
-[node name="CoverNear_Top" type="StaticBody3D" parent="BaseBlue" unique_id=937264077 instance=ExtResource("8_dlb6l")]
+[node name="CoverNear_Top" type="StaticBody3D" parent="BaseBlue" unique_id=2045354091 instance=ExtResource("8_dlb6l")]
 transform = Transform3D(1.173006, 0.027048843, -0.3762221, -0.06541995, 0.54924625, 0, 0.4269392, 0.009844972, 1.0336618, -11, 1.8, 0)
 physics_material_override = SubResource("PhysicsMaterial_5i7ua")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Ruin" type="StaticBody3D" parent="BaseBlue" unique_id=1025254190 instance=ExtResource("6_066ws")]
+[node name="Ruin" type="StaticBody3D" parent="BaseBlue" unique_id=1145810995 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, -0.6, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Ruin_1" type="StaticBody3D" parent="BaseBlue" unique_id=1091664289 instance=ExtResource("6_066ws")]
+[node name="Ruin_1" type="StaticBody3D" parent="BaseBlue" unique_id=1145603089 instance=ExtResource("6_066ws")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -13.5, -0.1, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Ruin_Top" type="StaticBody3D" parent="BaseBlue" unique_id=1190764353 instance=ExtResource("8_dlb6l")]
+[node name="Ruin_Top" type="StaticBody3D" parent="BaseBlue" unique_id=560714724 instance=ExtResource("8_dlb6l")]
 transform = Transform3D(1.2180319, -0.046888147, 0.22870287, 0.10894467, 0.5479071, 0, -0.25890067, 0.009966384, 1.0759624, -18.2, 2.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_5i7ua")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Torches" type="Node3D" parent="." unique_id=174456600]
+[node name="Torches" type="Node3D" parent="." unique_id=10958803]
 
 [node name="Torch" type="Node3D" parent="Torches" unique_id=1226746978 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 4.7, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_1" type="Node3D" parent="Torches" unique_id=1879137519 instance=ExtResource("11_waq7n")]
+[node name="Torch_1" type="Node3D" parent="Torches" unique_id=2083579864 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 2, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_2" type="Node3D" parent="Torches" unique_id=1502722778 instance=ExtResource("11_waq7n")]
+[node name="Torch_2" type="Node3D" parent="Torches" unique_id=799677049 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 2.3, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_3" type="Node3D" parent="Torches" unique_id=149734068 instance=ExtResource("11_waq7n")]
+[node name="Torch_3" type="Node3D" parent="Torches" unique_id=2119135167 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 4.7, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_4" type="Node3D" parent="Torches" unique_id=174526096 instance=ExtResource("11_waq7n")]
+[node name="Torch_4" type="Node3D" parent="Torches" unique_id=2029644506 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 2, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_5" type="Node3D" parent="Torches" unique_id=1907875926 instance=ExtResource("11_waq7n")]
+[node name="Torch_5" type="Node3D" parent="Torches" unique_id=205827890 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 2.3, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_6" type="Node3D" parent="Torches" unique_id=1505274538 instance=ExtResource("11_waq7n")]
+[node name="Torch_6" type="Node3D" parent="Torches" unique_id=645185268 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.9, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_7" type="Node3D" parent="Torches" unique_id=167473960 instance=ExtResource("11_waq7n")]
+[node name="Torch_7" type="Node3D" parent="Torches" unique_id=411961430 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.9, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_8" type="Node3D" parent="Torches" unique_id=798119441 instance=ExtResource("11_waq7n")]
+[node name="Torch_8" type="Node3D" parent="Torches" unique_id=1319920749 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 4.7, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="Torch_9" type="Node3D" parent="Torches" unique_id=701239927 instance=ExtResource("11_waq7n")]
+[node name="Torch_9" type="Node3D" parent="Torches" unique_id=1753972949 instance=ExtResource("11_waq7n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 4.7, 0.05)
 script = ExtResource("12_3pre3")
 
-[node name="BaseRed" type="Node3D" parent="." unique_id=1634152225]
+[node name="BaseRed" type="Node3D" parent="." unique_id=1704270076]
 
-[node name="Deck_1" type="StaticBody3D" parent="BaseRed" unique_id=2049122639 instance=ExtResource("7_4l0w2")]
+[node name="Deck_1" type="StaticBody3D" parent="BaseRed" unique_id=1961090632 instance=ExtResource("7_4l0w2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.4, 0)
 physics_material_override = SubResource("PhysicsMaterial_ikkq8")
 script = ExtResource("5_tp77g")
 
-[node name="Tower_4" type="StaticBody3D" parent="BaseRed" unique_id=1076126631 instance=ExtResource("6_066ws")]
+[node name="Tower_4" type="StaticBody3D" parent="BaseRed" unique_id=1539267155 instance=ExtResource("6_066ws")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 30.5, 0.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_5" type="StaticBody3D" parent="BaseRed" unique_id=277918112 instance=ExtResource("6_066ws")]
+[node name="Tower_5" type="StaticBody3D" parent="BaseRed" unique_id=637704611 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 3.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_6" type="StaticBody3D" parent="BaseRed" unique_id=1104118476 instance=ExtResource("6_066ws")]
+[node name="Tower_6" type="StaticBody3D" parent="BaseRed" unique_id=772037729 instance=ExtResource("6_066ws")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 25.5, 0.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_7" type="StaticBody3D" parent="BaseRed" unique_id=1528730386 instance=ExtResource("6_066ws")]
+[node name="Tower_7" type="StaticBody3D" parent="BaseRed" unique_id=712888216 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 3.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=858414666 instance=ExtResource("8_dlb6l")]
+[node name="Tower_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=1141405823 instance=ExtResource("8_dlb6l")]
 transform = Transform3D(1.228011, -0.037783194, 0.19101298, 0.08719559, 0.5486603, 0, -0.21653146, 0.006662196, 1.0832886, 30.3, 6.4, -0.65)
 physics_material_override = SubResource("PhysicsMaterial_5i7ua")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Banner_2" type="Node3D" parent="BaseRed" unique_id=810654890 instance=ExtResource("9_vf2mj")]
+[node name="Banner_2" type="Node3D" parent="BaseRed" unique_id=1320320642 instance=ExtResource("9_vf2mj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.4, 2.65, -0.5)
 script = ExtResource("10_dtnos")
 
-[node name="Banner_3" type="Node3D" parent="BaseRed" unique_id=6898884 instance=ExtResource("9_vf2mj")]
+[node name="Banner_3" type="Node3D" parent="BaseRed" unique_id=1693469786 instance=ExtResource("9_vf2mj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 6.4, -0.5)
 script = ExtResource("10_dtnos")
 
-[node name="CoverFar_1" type="StaticBody3D" parent="BaseRed" unique_id=810515235 instance=ExtResource("6_066ws")]
+[node name="CoverFar_1" type="StaticBody3D" parent="BaseRed" unique_id=1073749483 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, -0.8, 0)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 
-[node name="CoverFar_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=252012812 instance=ExtResource("8_dlb6l")]
+[node name="CoverFar_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=234921855 instance=ExtResource("8_dlb6l")]
 transform = Transform3D(1.2044661, 0.03705877, 0.28470096, -0.08719559, 0.5486603, 0, -0.32273573, -0.0099298665, 1.0625184, 21, 2.2, 0)
 physics_material_override = SubResource("PhysicsMaterial_5i7ua")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Float_1" type="StaticBody3D" parent="BaseRed" unique_id=1713479213 instance=ExtResource("4_hsha8")]
+[node name="Float_1" type="StaticBody3D" parent="BaseRed" unique_id=521525092 instance=ExtResource("4_hsha8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 4.4, 0)
 physics_material_override = SubResource("PhysicsMaterial_ujmvc")
 script = ExtResource("5_tp77g")
 
-[node name="CoverNear_1" type="StaticBody3D" parent="BaseRed" unique_id=702412259 instance=ExtResource("6_066ws")]
+[node name="CoverNear_1" type="StaticBody3D" parent="BaseRed" unique_id=1391269840 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -1.2, 0)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 
-[node name="CoverNear_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=1006529532 instance=ExtResource("8_dlb6l")]
+[node name="CoverNear_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=1308816867 instance=ExtResource("8_dlb6l")]
 transform = Transform3D(1.173006, -0.027048843, -0.3762221, 0.06541995, 0.54924625, 0, 0.4269392, -0.009844972, 1.0336618, 11, 1.8, 0)
 physics_material_override = SubResource("PhysicsMaterial_5i7ua")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Ruin_2" type="StaticBody3D" parent="BaseRed" unique_id=1533236668 instance=ExtResource("6_066ws")]
+[node name="Ruin_2" type="StaticBody3D" parent="BaseRed" unique_id=364194675 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, -0.6, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Ruin_3" type="StaticBody3D" parent="BaseRed" unique_id=964539202 instance=ExtResource("6_066ws")]
+[node name="Ruin_3" type="StaticBody3D" parent="BaseRed" unique_id=69708697 instance=ExtResource("6_066ws")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 13.5, -0.1, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Ruin_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=676549644 instance=ExtResource("8_dlb6l")]
+[node name="Ruin_Top_1" type="StaticBody3D" parent="BaseRed" unique_id=1757626227 instance=ExtResource("8_dlb6l")]
 transform = Transform3D(1.2180319, -0.046888147, 0.22870287, 0.10894467, 0.5479071, 0, -0.25890067, 0.009966384, 1.0759624, 18.2, 2.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_5i7ua")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Centre" type="Node3D" parent="." unique_id=195143299]
+[node name="Centre" type="Node3D" parent="." unique_id=2081137889]
 
-[node name="Tower_8" type="StaticBody3D" parent="Centre" unique_id=1204185663 instance=ExtResource("6_066ws")]
+[node name="Tower_8" type="StaticBody3D" parent="Centre" unique_id=1334208072 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_9" type="StaticBody3D" parent="Centre" unique_id=2132438278 instance=ExtResource("6_066ws")]
+[node name="Tower_9" type="StaticBody3D" parent="Centre" unique_id=657469744 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 3.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
@@ -655,19 +655,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 8.6, 0)
 physics_material_override = SubResource("PhysicsMaterial_preqw")
 script = ExtResource("5_tp77g")
 
-[node name="Tower_10" type="StaticBody3D" parent="Centre" unique_id=1029062746 instance=ExtResource("6_066ws")]
+[node name="Tower_10" type="StaticBody3D" parent="Centre" unique_id=2101628328 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Tower_11" type="StaticBody3D" parent="Centre" unique_id=1882336096 instance=ExtResource("6_066ws")]
+[node name="Tower_11" type="StaticBody3D" parent="Centre" unique_id=1564226420 instance=ExtResource("6_066ws")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 3.5, 3.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="High_1" type="StaticBody3D" parent="Centre" unique_id=1601606496 instance=ExtResource("13_tu5qp")]
+[node name="High_1" type="StaticBody3D" parent="Centre" unique_id=2034835573 instance=ExtResource("13_tu5qp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 8.6, 0)
 physics_material_override = SubResource("PhysicsMaterial_preqw")
 script = ExtResource("5_tp77g")
@@ -677,18 +677,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -0.7)
 script = ExtResource("15_8w8vc")
 open = true
 
-[node name="Bridge" type="StaticBody3D" parent="Centre" unique_id=1199426489 instance=ExtResource("13_tu5qp")]
+[node name="Bridge" type="StaticBody3D" parent="Centre" unique_id=2138132549 instance=ExtResource("13_tu5qp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
 physics_material_override = SubResource("PhysicsMaterial_preqw")
 script = ExtResource("5_tp77g")
 
-[node name="BackWall" type="StaticBody3D" parent="Centre" unique_id=720344055 instance=ExtResource("6_066ws")]
+[node name="BackWall" type="StaticBody3D" parent="Centre" unique_id=421337670 instance=ExtResource("6_066ws")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 3.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="BackWall_1" type="StaticBody3D" parent="Centre" unique_id=1559458802 instance=ExtResource("6_066ws")]
+[node name="BackWall_1" type="StaticBody3D" parent="Centre" unique_id=111463799 instance=ExtResource("6_066ws")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1, 3.4, -0.7)
 physics_material_override = SubResource("PhysicsMaterial_en74r")
 script = ExtResource("5_tp77g")
@@ -699,29 +699,29 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 6.4, 0)
 physics_material_override = SubResource("PhysicsMaterial_5hhdj")
 script = ExtResource("5_tp77g")
 
-[node name="TopDeck_1" type="StaticBody3D" parent="Centre" unique_id=343323565 instance=ExtResource("16_ndxng")]
+[node name="TopDeck_1" type="StaticBody3D" parent="Centre" unique_id=316528925 instance=ExtResource("16_ndxng")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.4, 0)
 physics_material_override = SubResource("PhysicsMaterial_5hhdj")
 script = ExtResource("5_tp77g")
 
-[node name="TopDeck_2" type="StaticBody3D" parent="Centre" unique_id=2020211355 instance=ExtResource("16_ndxng")]
+[node name="TopDeck_2" type="StaticBody3D" parent="Centre" unique_id=209833346 instance=ExtResource("16_ndxng")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 6.4, 0)
 physics_material_override = SubResource("PhysicsMaterial_5hhdj")
 script = ExtResource("5_tp77g")
 
-[node name="TopRuin" type="Node3D" parent="Centre" unique_id=137258977 instance=ExtResource("14_53t0n")]
+[node name="TopRuin" type="Node3D" parent="Centre" unique_id=122976215 instance=ExtResource("14_53t0n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 6.65, -0.7)
 script = ExtResource("15_8w8vc")
 open = true
 doors = false
 
-[node name="TopRuin_Rubble" type="StaticBody3D" parent="Centre" unique_id=532912655 instance=ExtResource("8_dlb6l")]
+[node name="TopRuin_Rubble" type="StaticBody3D" parent="Centre" unique_id=1912473536 instance=ExtResource("8_dlb6l")]
 transform = Transform3D(1.2263253, -0.047207404, -0.19101298, 0.10894467, 0.5479071, 0, 0.21623424, -0.008323939, 1.0832886, 3.6, 6.65, -0.6)
 physics_material_override = SubResource("PhysicsMaterial_5i7ua")
 script = ExtResource("5_tp77g")
 solid = false
 
-[node name="Props" type="Node3D" parent="." unique_id=1559119627]
+[node name="Props" type="Node3D" parent="." unique_id=1511790139]
 
 [node name="Crate" type="RigidBody3D" parent="Props" unique_id=124550438 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.3, 2.67, 0)
@@ -739,7 +739,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_1" type="RigidBody3D" parent="Props" unique_id=1204529348 instance=ExtResource("17_qvu5o")]
+[node name="Crate_1" type="RigidBody3D" parent="Props" unique_id=487908396 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.3, 3.39, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -755,7 +755,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_2" type="RigidBody3D" parent="Props" unique_id=1235356543 instance=ExtResource("17_qvu5o")]
+[node name="Crate_2" type="RigidBody3D" parent="Props" unique_id=1706329821 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.4, 0.42, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -771,7 +771,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_3" type="RigidBody3D" parent="Props" unique_id=1061905234 instance=ExtResource("17_qvu5o")]
+[node name="Crate_3" type="RigidBody3D" parent="Props" unique_id=1436557321 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.3, 0.42, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -787,7 +787,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_4" type="RigidBody3D" parent="Props" unique_id=1173820757 instance=ExtResource("17_qvu5o")]
+[node name="Crate_4" type="RigidBody3D" parent="Props" unique_id=825978450 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.3, 1.14, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -803,7 +803,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_5" type="RigidBody3D" parent="Props" unique_id=302137633 instance=ExtResource("17_qvu5o")]
+[node name="Crate_5" type="RigidBody3D" parent="Props" unique_id=1798716910 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.8, 4.82, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -819,7 +819,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_6" type="RigidBody3D" parent="Props" unique_id=917098193 instance=ExtResource("17_qvu5o")]
+[node name="Crate_6" type="RigidBody3D" parent="Props" unique_id=720321810 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 9.02, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -835,7 +835,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_7" type="RigidBody3D" parent="Props" unique_id=294569970 instance=ExtResource("17_qvu5o")]
+[node name="Crate_7" type="RigidBody3D" parent="Props" unique_id=322905633 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 6.67, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -851,7 +851,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_8" type="RigidBody3D" parent="Props" unique_id=1050636717 instance=ExtResource("17_qvu5o")]
+[node name="Crate_8" type="RigidBody3D" parent="Props" unique_id=767664427 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.3, 2.67, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -867,7 +867,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_9" type="RigidBody3D" parent="Props" unique_id=1344062042 instance=ExtResource("17_qvu5o")]
+[node name="Crate_9" type="RigidBody3D" parent="Props" unique_id=1468254325 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.3, 3.39, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -883,7 +883,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_10" type="RigidBody3D" parent="Props" unique_id=1637977356 instance=ExtResource("17_qvu5o")]
+[node name="Crate_10" type="RigidBody3D" parent="Props" unique_id=2032727307 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.4, 0.42, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -899,7 +899,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_11" type="RigidBody3D" parent="Props" unique_id=1758684807 instance=ExtResource("17_qvu5o")]
+[node name="Crate_11" type="RigidBody3D" parent="Props" unique_id=663636514 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.3, 0.42, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -915,7 +915,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_12" type="RigidBody3D" parent="Props" unique_id=1310468397 instance=ExtResource("17_qvu5o")]
+[node name="Crate_12" type="RigidBody3D" parent="Props" unique_id=1059477116 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.3, 1.14, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -931,7 +931,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_13" type="RigidBody3D" parent="Props" unique_id=666659422 instance=ExtResource("17_qvu5o")]
+[node name="Crate_13" type="RigidBody3D" parent="Props" unique_id=1375984946 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.8, 4.82, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -947,7 +947,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_14" type="RigidBody3D" parent="Props" unique_id=63514861 instance=ExtResource("17_qvu5o")]
+[node name="Crate_14" type="RigidBody3D" parent="Props" unique_id=1616607165 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 9.02, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -963,7 +963,7 @@ script = ExtResource("18_ilnei")
 kind = "crate"
 hp = 20.0
 
-[node name="Crate_15" type="RigidBody3D" parent="Props" unique_id=325048687 instance=ExtResource("17_qvu5o")]
+[node name="Crate_15" type="RigidBody3D" parent="Props" unique_id=1694628229 instance=ExtResource("17_qvu5o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 6.67, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -993,7 +993,7 @@ linear_damp = 0.2
 angular_damp = 0.5
 script = ExtResource("18_ilnei")
 
-[node name="Barrel_1" type="RigidBody3D" parent="Props" unique_id=891752162 instance=ExtResource("19_s4tn5")]
+[node name="Barrel_1" type="RigidBody3D" parent="Props" unique_id=1142777120 instance=ExtResource("19_s4tn5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.8, 0.42, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1007,7 +1007,7 @@ linear_damp = 0.2
 angular_damp = 0.5
 script = ExtResource("18_ilnei")
 
-[node name="Barrel_2" type="RigidBody3D" parent="Props" unique_id=1744367323 instance=ExtResource("19_s4tn5")]
+[node name="Barrel_2" type="RigidBody3D" parent="Props" unique_id=638249830 instance=ExtResource("19_s4tn5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 6.67, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1036,7 +1036,7 @@ angular_damp = 0.5
 script = ExtResource("21_1rcyo")
 hp = 20.0
 
-[node name="MetalBarrel_1" type="RigidBody3D" parent="Props" unique_id=1736211404 instance=ExtResource("20_sj0uh")]
+[node name="MetalBarrel_1" type="RigidBody3D" parent="Props" unique_id=92643120 instance=ExtResource("20_sj0uh")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0.42, 0)
 axis_lock_linear_z = true
 axis_lock_angular_x = true
@@ -1051,140 +1051,140 @@ angular_damp = 0.5
 script = ExtResource("21_1rcyo")
 hp = 20.0
 
-[node name="Bounds" type="StaticBody3D" parent="." unique_id=1459472761]
+[node name="Bounds" type="StaticBody3D" parent="." unique_id=260232688]
 
-[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=1705286784]
+[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=906625030]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.5, 10, 0)
 shape = SubResource("BoxShape3D_1rrtv")
 
-[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=1751558704]
+[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=9641865]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.5, 10, 0)
 shape = SubResource("BoxShape3D_q7fkn")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=488899757]
+[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=1343136107]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16.5, 0)
 shape = SubResource("BoxShape3D_cu7pj")
 
-[node name="DeathZone" type="Area3D" parent="." unique_id=1483883256]
+[node name="DeathZone" type="Area3D" parent="." unique_id=975264593]
 
-[node name="Floor" type="CollisionShape3D" parent="DeathZone" unique_id=1188832025]
+[node name="Floor" type="CollisionShape3D" parent="DeathZone" unique_id=687148111]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -14.5, 0)
 shape = SubResource("BoxShape3D_ybhu8")
 
-[node name="Spawns" type="Node3D" parent="." unique_id=104400585]
+[node name="Spawns" type="Node3D" parent="." unique_id=1196668064]
 
-[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=111325147]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.45, 0)
+[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=91950321]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.5, 4.65, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=712604391]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.45, 0)
+[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=1717655859]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.5, 4.65, 0)
 
-[node name="Spawn2" type="Marker3D" parent="Spawns" unique_id=1885522015]
+[node name="Spawn2" type="Marker3D" parent="Spawns" unique_id=461860533]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 2.7, 0)
 
-[node name="Spawn3" type="Marker3D" parent="Spawns" unique_id=2034765755]
+[node name="Spawn3" type="Marker3D" parent="Spawns" unique_id=654236421]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 2.7, 0)
 
-[node name="Spawn4" type="Marker3D" parent="Spawns" unique_id=2025722410]
+[node name="Spawn4" type="Marker3D" parent="Spawns" unique_id=593920833]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.8, 0.45, 0)
 
-[node name="Spawn5" type="Marker3D" parent="Spawns" unique_id=313260789]
+[node name="Spawn5" type="Marker3D" parent="Spawns" unique_id=456259393]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.8, 0.45, 0)
 
-[node name="Lamps" type="Node3D" parent="." unique_id=1245350618]
+[node name="Lamps" type="Node3D" parent="." unique_id=482116196]
 
-[node name="BaseLamp" type="OmniLight3D" parent="Lamps" unique_id=276959559]
+[node name="BaseLamp" type="OmniLight3D" parent="Lamps" unique_id=805822827]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 5.25, 1.2)
 light_color = Color(0.45, 0.6, 1, 1)
 light_energy = 3.0
 omni_range = 10.0
 omni_attenuation = 1.2
 
-[node name="TowerLamp" type="OmniLight3D" parent="Lamps" unique_id=1226576411]
+[node name="TowerLamp" type="OmniLight3D" parent="Lamps" unique_id=638856710]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.5, 7, 0.8)
 light_color = Color(0.45, 0.6, 1, 1)
 light_energy = 2.0
 omni_range = 8.0
 omni_attenuation = 1.2
 
-[node name="CoverLamp" type="OmniLight3D" parent="Lamps" unique_id=1970217343]
+[node name="CoverLamp" type="OmniLight3D" parent="Lamps" unique_id=123343242]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 3.8, 1)
 light_color = Color(0.67, 0.76, 1, 1)
 light_energy = 1.2
 omni_range = 6.5
 omni_attenuation = 1.2
 
-[node name="FloatLamp" type="OmniLight3D" parent="Lamps" unique_id=1113108224]
+[node name="FloatLamp" type="OmniLight3D" parent="Lamps" unique_id=650207793]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 6.8, 1.2)
 light_color = Color(0.7, 0.8, 1, 1)
 light_energy = 1.4
 omni_range = 7.0
 omni_attenuation = 1.2
 
-[node name="HighLamp" type="OmniLight3D" parent="Lamps" unique_id=25885446]
+[node name="HighLamp" type="OmniLight3D" parent="Lamps" unique_id=1301371938]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 10.6, 1.2)
 light_color = Color(0.7, 0.8, 1, 1)
 light_energy = 1.2
 omni_range = 6.5
 omni_attenuation = 1.2
 
-[node name="MidLamp" type="OmniLight3D" parent="Lamps" unique_id=1359976543]
+[node name="MidLamp" type="OmniLight3D" parent="Lamps" unique_id=111058891]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 3, 1.4)
 light_color = Color(1, 0.7, 0.42, 1)
 light_energy = 1.6
 omni_range = 7.0
 omni_attenuation = 1.2
 
-[node name="BaseLamp_1" type="OmniLight3D" parent="Lamps" unique_id=1766102914]
+[node name="BaseLamp_1" type="OmniLight3D" parent="Lamps" unique_id=1707825955]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 5.25, 1.2)
 light_color = Color(1, 0.45, 0.4, 1)
 light_energy = 3.0
 omni_range = 10.0
 omni_attenuation = 1.2
 
-[node name="TowerLamp_1" type="OmniLight3D" parent="Lamps" unique_id=267099611]
+[node name="TowerLamp_1" type="OmniLight3D" parent="Lamps" unique_id=30687290]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 7, 0.8)
 light_color = Color(1, 0.45, 0.4, 1)
 light_energy = 2.0
 omni_range = 8.0
 omni_attenuation = 1.2
 
-[node name="CoverLamp_1" type="OmniLight3D" parent="Lamps" unique_id=490883366]
+[node name="CoverLamp_1" type="OmniLight3D" parent="Lamps" unique_id=195713852]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.8, 1)
 light_color = Color(1, 0.67, 0.64, 1)
 light_energy = 1.2
 omni_range = 6.5
 omni_attenuation = 1.2
 
-[node name="FloatLamp_1" type="OmniLight3D" parent="Lamps" unique_id=2147191742]
+[node name="FloatLamp_1" type="OmniLight3D" parent="Lamps" unique_id=1243536805]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 6.8, 1.2)
 light_color = Color(0.7, 0.8, 1, 1)
 light_energy = 1.4
 omni_range = 7.0
 omni_attenuation = 1.2
 
-[node name="HighLamp_1" type="OmniLight3D" parent="Lamps" unique_id=892028078]
+[node name="HighLamp_1" type="OmniLight3D" parent="Lamps" unique_id=1703620778]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 10.6, 1.2)
 light_color = Color(0.7, 0.8, 1, 1)
 light_energy = 1.2
 omni_range = 6.5
 omni_attenuation = 1.2
 
-[node name="MidLamp_1" type="OmniLight3D" parent="Lamps" unique_id=1943451587]
+[node name="MidLamp_1" type="OmniLight3D" parent="Lamps" unique_id=278712536]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 3, 1.4)
 light_color = Color(1, 0.7, 0.42, 1)
 light_energy = 1.6
 omni_range = 7.0
 omni_attenuation = 1.2
 
-[node name="CentreLamp" type="OmniLight3D" parent="Lamps" unique_id=1049026727]
+[node name="CentreLamp" type="OmniLight3D" parent="Lamps" unique_id=705899031]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.6, 1.4)
 light_color = Color(1, 0.72, 0.45, 1)
 light_energy = 2.4
 omni_range = 10.0
 omni_attenuation = 1.2
 
-[node name="GateLamp" type="OmniLight3D" parent="Lamps" unique_id=1684547652]
+[node name="GateLamp" type="OmniLight3D" parent="Lamps" unique_id=1574502966]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 1.2)
 light_color = Color(1, 0.7, 0.42, 1)
 light_energy = 1.6
