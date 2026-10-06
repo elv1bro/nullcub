@@ -3,11 +3,13 @@
 ##   Route/<отрезок> (Node3D, мета kind = main | easy | hard, fork = "" | "A" | "B" | "C", next = PackedStringArray имён следующих)
 ##     └── W00, W01, … (Marker3D, точки линии по порядку; мета v — предел скорости бота у точки, м/с; dash — бот держит ускорение;
 ##         press — путь от карты до пресса, перед которым бот ждёт такта; look — насколько вперёд бот смотрит, м; charge — бот ждёт у
-##         точки, пока Заряд не наберётся до стольких).
+##         точки, пока Заряд не наберётся до стольких; jump — от этой точки до следующей перенос порталом: кусок нулевой длины, по нему
+##         не проецируют, «морковка» за ним продолжает прямую входа — бот влетает в щель, а после выхода летит дальше по линии).
 ## Отрезки: main0 → развилка A (easy | hard) → main1 → развилка B → main2 → развилка C → main3 → финиш. Последняя точка отрезка
 ## совпадает с первой точкой следующего.
-## Прогресс (метры от старта): главные отрезки — своей длиной; обе ветки развилки ложатся на один отрезок прогресса длиной короткой
-## (трудной) ветки — линейно по доле пройденного, поэтому «кто впереди» сравнимо, кто бы какой путь ни выбрал.
+## Прогресс (метры от старта): главные отрезки — своей длиной; обе ветки развилки ложатся на один отрезок прогресса длиной длинной
+## (лёгкой) ветки — линейно по доле пройденного, поэтому «кто впереди» сравнимо, кто бы какой путь ни выбрал: короткий путь (и
+## перенос порталом) даёт прогресс быстрее, а на длинном прогресс не «ползёт» (правило «застрял» не срабатывает зря).
 class_name TrackRoute
 extends RefCounted
 
@@ -59,7 +61,7 @@ func build(route: Node) -> void:
 				var p := (w as Node3D).global_position
 				s.pts.append(Vector2(p.x, p.y))
 				var m := {}
-				for k in ["v", "dash", "press", "look", "charge"]:
+				for k in ["v", "dash", "press", "look", "charge", "jump"]:
 					if w.has_meta(k):
 						m[k] = w.get_meta(k)
 				s.meta.append(m)
@@ -78,10 +80,25 @@ static func _measure(s: Seg) -> void:
 	s.cum.resize(s.pts.size())
 	var acc := 0.0
 	for i in s.pts.size():
-		if i > 0:
+		if i > 0 and not is_jump(s, i - 1):
 			acc += s.pts[i - 1].distance_to(s.pts[i])
 		s.cum[i] = acc
 	s.length = acc
+
+
+## s на куске k «за переносом»: кусок сразу после портала начинается с того же s, что и точка входа, — без сдвига «морковка»
+## решила бы, что перенос ещё впереди, и повела бы назад в щель выхода (пинг-понг). Сдвигает s на JUMP_EPS за точку переноса.
+const JUMP_EPS := 0.05
+
+static func past_jump(sg: Seg, k: int, s: float) -> float:
+	if k >= 1 and is_jump(sg, k - 1) and s < sg.cum[k] + JUMP_EPS:
+		return sg.cum[k] + JUMP_EPS
+	return s
+
+
+## Кусок k → k + 1 отрезка — перенос порталом (мета jump у точки k).
+static func is_jump(s: Seg, k: int) -> bool:
+	return k >= 0 and k < s.meta.size() and bool((s.meta[k] as Dictionary).get("jump", false))
 
 
 ## Прогресс по отрезкам: от main0 по цепочке; у развилки обе ветки — один отрезок длиной короткой.
@@ -100,7 +117,7 @@ func _progress() -> void:
 		elif s.next.size() >= 2:
 			var a := segs[s.next[0]]
 			var b := segs[s.next[1]]
-			var l := minf(a.length, b.length)
+			var l := maxf(a.length, b.length)
 			for br in [a, b]:
 				(br as Seg).p0 = p
 				(br as Seg).p1 = p + l
@@ -135,6 +152,8 @@ func project(pos: Vector2, hint := 0.0, window := -1.0, prefer := -1) -> Diction
 		if window >= 0.0 and (s.p1 < hint - window or s.p0 > hint + window):
 			continue
 		for k in s.pts.size() - 1:
+			if is_jump(s, k):
+				continue   # перенос порталом — сквозь стену проекции нет
 			var a := s.pts[k]
 			var b := s.pts[k + 1]
 			var ab := b - a
@@ -146,6 +165,7 @@ func project(pos: Vector2, hint := 0.0, window := -1.0, prefer := -1) -> Diction
 			if score < best_score:
 				best_score = score
 				var along := s.cum[k] + sqrt(l2) * t
+				along = past_jump(s, k, along)
 				best = {"seg": si, "k": k, "t": t, "s": along, "prog": s.prog_at(along), "dist": d, "point": c}
 	return best
 
@@ -154,13 +174,20 @@ func project(pos: Vector2, hint := 0.0, window := -1.0, prefer := -1) -> Diction
 func point_ahead(seg: int, s: float, ahead: float, choice: Dictionary = {}) -> Vector2:
 	var si := seg
 	var along := s + ahead
+	var from := s
 	var guard := 0
 	while si >= 0 and guard < 16:
 		guard += 1
 		var sg := segs[si]
+		# перенос порталом впереди — «морковка» продолжает прямую входа в щель (за щелью линия начинается у выхода)
+		for k in sg.pts.size() - 1:
+			if is_jump(sg, k) and sg.cum[k] >= from - 0.01 and sg.cum[k] < along:
+				var dir := (sg.pts[k] - sg.pts[k - 1]).normalized() if k > 0 else Vector2.RIGHT
+				return sg.pts[k] + dir * (along - sg.cum[k])
 		if along <= sg.length or sg.next.is_empty():
 			return _point_on(sg, minf(along, sg.length))
 		along -= sg.length
+		from = 0.0
 		si = next_of(si, choice)
 	return segs[seg].pts[segs[seg].pts.size() - 1] if seg >= 0 else Vector2.ZERO
 
@@ -182,6 +209,8 @@ func next_of(si: int, choice: Dictionary = {}) -> int:
 
 func _point_on(sg: Seg, s: float) -> Vector2:
 	for k in sg.pts.size() - 1:
+		if is_jump(sg, k):
+			continue
 		if s <= sg.cum[k + 1] or k == sg.pts.size() - 2:
 			var l := sg.cum[k + 1] - sg.cum[k]
 			var t := clampf((s - sg.cum[k]) / l, 0.0, 1.0) if l > 1e-6 else 0.0

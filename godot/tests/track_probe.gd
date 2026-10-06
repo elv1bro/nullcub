@@ -255,13 +255,19 @@ func _build() -> void:
 		var b3 := (ps[1] as Node3D)
 		var na: Vector3 = a3.get_meta("normal", Vector3.ZERO)
 		var nb: Vector3 = b3.get_meta("normal", Vector3.ZERO)
-		var clear := RaceNav.clear(space, Vector2(a3.global_position.x, a3.global_position.y), Vector2(b3.global_position.x, b3.global_position.y), [], 0.6)
+		# сквозной щели нет: от кармана A до кармана B — стена
+		var closed := not RaceNav.ray(space, Vector2(a3.global_position.x + 1.0, a3.global_position.y), Vector2(b3.global_position.x - 1.0, b3.global_position.y)).is_empty()
+		var pair := ar.portal_pair()
+		var at_slots := pair != null and pair.a != null and pair.b != null \
+			and pair.a.global_position.distance_to(a3.global_position) < 0.01 and pair.b.global_position.distance_to(b3.global_position) < 0.01 \
+			and Vector3(pair.a.normal()).is_equal_approx(na) and Vector3(pair.b.normal()).is_equal_approx(nb)
 		portal_ok = na.is_equal_approx(Vector3(-1, 0, 0)) and nb.is_equal_approx(Vector3(1, 0, 0)) and a3.global_position.x < b3.global_position.x \
-			and a3.global_basis.x.is_equal_approx(na) and b3.global_basis.x.is_equal_approx(nb) and clear
-		pd = "A (%.1f, %.1f) n %s, B (%.1f, %.1f) n %s, между ними %.0f м, щель сквозная: %s" % [a3.global_position.x, a3.global_position.y,
-			str(na), b3.global_position.x, b3.global_position.y, str(nb), b3.global_position.x - a3.global_position.x, str(clear)]
+			and a3.global_basis.x.is_equal_approx(na) and b3.global_basis.x.is_equal_approx(nb) and closed and at_slots and pair.is_powered()
+		pd = "A (%.1f, %.1f) n %s, B (%.1f, %.1f) n %s, между ними %.0f м; пара на метках: %s, под током: %s, щель закрыта: %s" % [
+			a3.global_position.x, a3.global_position.y, str(na), b3.global_position.x, b3.global_position.y, str(nb),
+			b3.global_position.x - a3.global_position.x, str(at_slots), str(pair != null and pair.is_powered()), str(closed)]
 		info["portal_slots"] = pd
-	_check("portal_slots", portal_ok, pd if pd != "" else "нет PortalSlotA / PortalSlotB")
+	_check("portal_pair", portal_ok, pd if pd != "" else "нет PortalSlotA / PortalSlotB")
 	# развилки
 	var forks := {}
 	var forks_ok := rt.forks.size() == 3
@@ -283,7 +289,7 @@ func _build() -> void:
 			var h3 := _static_hit(space, Vector3(0.5, 0.5, 0.4), sg.pts[i])
 			if h3 != "":
 				bad_pts.append("%s/W%02d %s:%s" % [sg.name, i, str(sg.pts[i]), h3])
-			if i > 0 and not RaceNav.ray(space, sg.pts[i - 1], sg.pts[i]).is_empty():
+			if i > 0 and not TrackRoute.is_jump(sg, i - 1) and not RaceNav.ray(space, sg.pts[i - 1], sg.pts[i]).is_empty():
 				bad_legs.append("%s/W%02d→W%02d" % [sg.name, i - 1, i])
 	_check("route_in_air", bad_pts.is_empty() and bad_legs.is_empty(), "точки в стене: %s; отрезки сквозь стену: %s" % [str(bad_pts), str(bad_legs)])
 	# кольца на линии
@@ -317,8 +323,11 @@ func _dump(path: String) -> void:
 	var rt := ar.route()
 	for sg in rt.segs:
 		var pts: Array = []
-		for p in sg.pts:
-			pts.append([p.x, p.y])
+		for i in sg.pts.size():
+			pts.append([sg.pts[i].x, sg.pts[i].y])
+			if TrackRoute.is_jump(sg, i):   # перенос порталом — линия рвётся
+				out["route"].append({"name": sg.name, "kind": sg.kind, "fork": sg.fork, "pts": pts})
+				pts = []
 		out["route"].append({"name": sg.name, "kind": sg.kind, "fork": sg.fork, "pts": pts})
 	for c in ar.checkpoints():
 		out["cps"].append([(c as Node3D).global_position.x, (c as TrackCheckpoint).gate_h, (c as TrackCheckpoint).index])
@@ -406,6 +415,8 @@ func _section_run(sec: int, branch: String, level: int, max_s: float, trace: boo
 	var t0 := tm.fight_time
 	var goal_prog := float(tm.cp_prog[sec]) if sec < tm.cp_prog.size() else INF
 	var drops0 := tm.journal.filter(func(e: Dictionary) -> bool: return int(e["pi"]) == 0 and String(e["what"]) in ["ko", "fall", "stuck", "reset"]).size()
+	var pair := pg.arena.portal_pair()
+	var hist0 := pair.history.size() if pair != null else 0
 	var anchor := Vector3.INF
 	var anchor_t := 0.0
 	var stuck_max := 0.0
@@ -435,7 +446,18 @@ func _section_run(sec: int, branch: String, level: int, max_s: float, trace: boo
 	var whys: Array = tm.journal.filter(func(e: Dictionary) -> bool: return int(e["pi"]) == 0 and String(e["what"]) in ["ko", "fall", "stuck"]).map(
 		func(e: Dictionary) -> String: return "%s@%.0f(%s)" % [e["what"], e["t"], str(e.get("at", ""))])
 	var br2 := cur2.get_node_or_null(TrackPlayground.BRAIN) as TrackBrain
+	var ab := 0
+	var ba := 0
+	if pair != null:
+		for h in pair.history.slice(hist0):
+			if (h as Dictionary).get("kind", "") != "doll":
+				continue
+			if String(h.get("from", "")) == "A":
+				ab += 1
+			else:
+				ba += 1
 	return {"done": done, "s": snappedf(tm.fight_time - t0, 0.1), "drops": drops, "whys": whys, "stuck_max": snappedf(stuck_max, 0.1),
+		"portal_ab": ab, "portal_ba": ba,
 		"branches": (cst2["branches"] as Dictionary).duplicate(), "hold_s": snappedf(br2.hold_s, 0.1) if br2 != null else 0.0,
 		"dash_ticks": br2.forced_dash_ticks if br2 != null else 0}
 
@@ -459,9 +481,11 @@ func _sections(level: int, only_sec: String, only_branch: String, trace: bool) -
 		var out := await _section_run(int(r[0]), String(r[1]), level, 90.0, trace)
 		res[key] = out
 		var fork_ok := String(r[1]) == "" or String((out["branches"] as Dictionary).get({2: "A", 3: "B", 4: "C"}[int(r[0])], "")) == String(r[1])
-		_check("section_%s" % key, bool(out["done"]) and int(out["drops"]) == 0 and fork_ok and float(out["stuck_max"]) <= 10.0,
-			"пройден: %s за %.1f с, возвратов %d %s, на месте до %.1f с, ветки %s, ждал прессов %.1f с" % [str(out["done"]), float(out["s"]),
-			int(out["drops"]), str(out["whys"]), float(out["stuck_max"]), str(out["branches"]), float(out["hold_s"])])
+		var portal_ok := int(out["portal_ba"]) == 0 and (int(out["portal_ab"]) == 1 if key == "S3_hard" else int(out["portal_ab"]) == 0)
+		_check("section_%s" % key, bool(out["done"]) and int(out["drops"]) == 0 and fork_ok and portal_ok and float(out["stuck_max"]) <= 10.0,
+			"пройден: %s за %.1f с, возвратов %d %s, на месте до %.1f с, ветки %s, ждал прессов %.1f с, порталом A→B %d / B→A %d" % [
+			str(out["done"]), float(out["s"]), int(out["drops"]), str(out["whys"]), float(out["stuck_max"]), str(out["branches"]),
+			float(out["hold_s"]), int(out["portal_ab"]), int(out["portal_ba"])])
 	info["sections_level%d" % level] = res
 	TrackBrain.force_choices = {}
 	await _unload()
@@ -578,7 +602,7 @@ func _checks() -> void:
 # ------------------------------------------------------------------ hazards
 
 ## Препятствия по отдельности (мозги сняты, куклы ставит проба): тяжёлое поле без ускорения не поднять / с ускорением — да; встречное
-## поле сносит; поле вверх уносит в сетку KO; мембрана щели отталкивает; магнит тянет; пресс бьёт; мост рвётся и встаёт; бочка рвётся.
+## поле сносит; поле вверх уносит в сетку KO; мембрана трубы отталкивает; магнит тянет; пресс бьёт; мост рвётся и встаёт; бочка рвётся.
 func _hazards() -> void:
 	print("--- hazards")
 	await _load(true, 2, 0.3)
@@ -620,10 +644,10 @@ func _hazards() -> void:
 	_check("up_field_into_grid", up_ko, "без ввода в коробе с полем вверх — в сетку и KO: %s" % str(up_ko))
 	await _until(func() -> bool: return _doll(2).alive, Tuning.TRACK_RESPAWN_S + 1.0)
 	_freeze(_doll(2), Vector3(-5.5, 8.0, 0.0))
-	# 4) мембрана щели: тяга вверх в стенку — отталкивает, сквозь не пускает
+	# 4) мембрана трубы (P1 лёгкого пути B, потолок y 3.4): тяга вверх в стенку — отталкивает, сквозь не пускает
 	var mem := ar.get_node("Hazards/Membranes") as TrackMembrane
 	var p0 := mem.pushes
-	var d4 := _unfreeze(_doll(3), Vector3(170.0, 7.0, 0.0))
+	var d4 := _unfreeze(_doll(3), Vector3(151.0, 1.7, 0.0))
 	d4.input_vec = Vector2(0.0, 1.0)
 	var top := -INF
 	for i in 90:
@@ -631,8 +655,8 @@ func _hazards() -> void:
 		var head: Node3D = d4.parts.get("Head", d4.torso())
 		top = maxf(top, head.global_position.y)
 	d4.input_vec = Vector2.ZERO
-	_check("membrane_pushes", mem.pushes > p0 and mem.max_pen > 0.05 and top < 8.3,
-		"тяга в стенку щели: толчков мембраны %d, вдавливание до %.2f м, голова не выше %.2f (стенка 8.3)" % [mem.pushes - p0, mem.max_pen, top])
+	_check("membrane_pushes", mem.pushes > p0 and mem.max_pen > 0.05 and top < 3.4,
+		"тяга в потолок трубы: толчков мембраны %d, вдавливание до %.2f м, голова не выше %.2f (стенка 3.4)" % [mem.pushes - p0, mem.max_pen, top])
 	_freeze(d4, Vector3(-5.5, 10.5, 0.0))
 	# 5) магнит тянет к полюсу
 	var mg := ar.get_node("Machines/Magnet1") as MagnetMachine
@@ -736,6 +760,18 @@ func _bots(seed_v: int, level: int, max_s: float, stuck_s: float, trace: bool) -
 	tm.hit.connect(func(_v: Doll, a: Node, dmg: float, _k: String, _p: Vector3) -> void:
 		if a is Doll and dmg > 0.0:
 			hits["n"] = int(hits["n"]) + 1)
+	var pair := pg.arena.portal_pair()
+	var pockets: Array = []
+	if pair != null:
+		for pt in pair.portals():
+			pockets.append((pt as Portal).pocket_rect())
+	var moved: Array = []              # [player_index, откуда] — переносы кукол парой (сигнал: кукла после KO уже пересоздана)
+	if pair != null:
+		pair.transferred.connect(func(what: Node3D, from: Portal, _to: Portal) -> void:
+			if what is Doll:
+				moved.append([(what as Doll).player_index, String(from.name)]))
+	var in_pocket: Dictionary = {}     # pi → с какого времени ЦМ в кармане
+	var pocket_max := 0.0
 	var t0 := Time.get_ticks_usec()
 	var frames := 0
 	var trace_t := 0.0
@@ -751,6 +787,15 @@ func _bots(seed_v: int, level: int, max_s: float, stuck_s: float, trace: bool) -
 				anchor.erase(dd.player_index)
 				continue
 			var c := dd.centre_of_mass()
+			var inside := false
+			for r in pockets:
+				inside = inside or (r as Rect2).has_point(Vector2(c.x, c.y))
+			if inside:
+				if not in_pocket.has(dd.player_index):
+					in_pocket[dd.player_index] = tm.fight_time
+				pocket_max = maxf(pocket_max, tm.fight_time - float(in_pocket[dd.player_index]))
+			else:
+				in_pocket.erase(dd.player_index)
 			if c.x < b.position.x or c.x > b.end.x or c.y < b.position.y or c.y > b.end.y:
 				oob += 1
 				oob_who = "P%d (%.1f, %.1f)" % [dd.player_index + 1, c.x, c.y]
@@ -801,9 +846,24 @@ func _bots(seed_v: int, level: int, max_s: float, stuck_s: float, trace: bool) -
 		order_ok = order_ok and (places[0] as Doll).player_index == int(fo[0]) and int(over_results.get("winner_index", -1)) == int(fo[0])
 	for i in mini(places.size(), fo.size()):
 		order_ok = order_ok and (places[i] as Doll).player_index == int(fo[i])
+	var p_ab := 0
+	var p_ba := 0
+	var p_per := {}
+	for mv in moved:
+		var who := "P%d" % (int(mv[0]) + 1)
+		if String(mv[1]) == "A":
+			p_ab += 1
+			p_per[who] = int(p_per.get(who, 0)) + 1
+		else:
+			p_ba += 1
+	var hard_b := 0
+	for d in tm.dolls():
+		if String((res.get((d as Doll).player_index, {}) as Dictionary).get("branches", {}).get("B", "")) == "hard":
+			hard_b += 1
 	var key := "bots_s%d_l%d" % [seed_v, level]
 	info[key] = {"race_s": snappedf(tm.fight_time, 0.1), "winner_s": snappedf(float(over_results.get("winner_time", -1.0)), 0.1),
-		"racers": per, "drops": drops, "drops_at": where, "hits": int(hits["n"]), "stuck_max_s": snappedf(stuck_max, 0.1), "end": String(over_results.get("end_reason", "")),
+		"racers": per, "drops": drops, "drops_at": where, "hits": int(hits["n"]), "portal_ab": p_ab, "portal_ba": p_ba,
+		"portal_by": p_per, "b_hard": hard_b, "pocket_max_s": snappedf(pocket_max, 0.1), "stuck_max_s": snappedf(stuck_max, 0.1), "end": String(over_results.get("end_reason", "")),
 		"ms_per_physics_frame": snappedf(wall_ms / maxf(frames, 1), 0.01)}
 	print("  " + JSON.stringify(info[key]))
 	_check(key + "_finish", over_count == 1 and all_done and String(over_results.get("end_reason", "")) == "all",
@@ -811,5 +871,7 @@ func _bots(seed_v: int, level: int, max_s: float, stuck_s: float, trace: bool) -
 		float(over_results.get("winner_time", -1.0)), String(over_results.get("end_reason", "—"))])
 	_check(key + "_not_stuck", stuck_max <= stuck_s, "дольше всего на месте (в круге %.1f м) %.1f с — %s" % [STUCK_R, stuck_max, stuck_who])
 	_check(key + "_in_bounds", oob == 0, "тиков вне границ %d %s" % [oob, oob_who])
+	_check(key + "_portal", p_ba == 0 and pocket_max <= 1.0 and p_ab >= hard_b,
+		"порталом A→B %d (короткую ветку B взяли %d), назад B→A %d, дольше всего в кармане %.1f с" % [p_ab, hard_b, p_ba, pocket_max])
 	_check(key + "_places", order_ok, "порядок финиша %s, места %s" % [str(fo), str(places.map(func(d: Doll) -> int: return d.player_index))])
 	await _unload()

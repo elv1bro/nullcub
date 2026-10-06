@@ -1,7 +1,7 @@
 ## Карта «Гонка: трасса» (docs/plan-demo/RACE_TRACK.md) — только поведение; сцену race_track.tscn собирает tools/build_race_track.gd.
 ## Длинная трасса старт → финиш вбок (~420 м, x −8…426), шесть участков: разгон с кольцами, прессы и магниты Свалки, узкие трубы со
 ## стенками-мембранами, поля гравитации, тяжёлая зона, яма с рвущимися мостами и бочками → финиш. Развилки A, B, C — длинный лёгкий и
-## короткий трудный путь; на развилке B короткий путь — щель между метками PortalSlotA / PortalSlotB (место под пару порталов).
+## короткий трудный путь; на развилке B короткий путь — пара порталов (Portal/PortalPairB: A на метке PortalSlotA → B на PortalSlotB).
 ## Здесь: границы для камеры, старт (Spawns/Spawn0..3), контрольные точки (Checkpoints/*, TrackCheckpoint), линия ботов (Route — её
 ## читает TrackRoute), участки (Sections/S1..S6: мета x0, x1), финиш (Finish: мета x), сигнал body_fell от всех зон KO (группа
 ## TrackArena.DEATH_GROUP: яма, сетка в потолке короткого пути развилки C).
@@ -114,7 +114,12 @@ func finish_x() -> float:
 	return float(f.get_meta("x", 404.0)) if f != null else 404.0
 
 
-## Метки места под пару порталов (развилка B): [PortalSlotA, PortalSlotB] или пусто.
+## Пара порталов развилки B (PortalPair) или null.
+func portal_pair() -> PortalPair:
+	return get_node_or_null("Portal/PortalPairB") as PortalPair
+
+
+## Метки пары порталов (развилка B): [PortalSlotA, PortalSlotB] или пусто.
 func portal_slots() -> Array:
 	var a := find_child("PortalSlotA", true, false)
 	var b := find_child("PortalSlotB", true, false)
