@@ -91,6 +91,8 @@ var incoming_mult := 1.0
 ## Множители тяги и потолка скорости управления (по умолчанию 1; стычка: бонус «форсаж», несущий флаг, полёт громилы — потолок; держатель бомбы ×1.2 — BombMatch, BOMB.md).
 var thrust_mult := 1.0
 var speed_cap_mult := 1.0
+## Запас тяги (О4, docs/plan-demo/CLIMB.md): узел ThrustStamina ставит сам себя; null — запаса нет (все режимы, кроме «Подъёма»).
+var stamina: ThrustStamina = null
 ## Без торможения торса при нулевом вводе (стычка: громилу тянет оружие, клавиши движения можно не жать).
 var brake_off := false
 
@@ -1766,6 +1768,10 @@ func _physics_process(delta: float) -> void:
 	var locked := _time < thrust_lock_until
 	if locked:
 		v = Vector2.ZERO   # отдача после удара: тяги нет (RM: бьющий не дожимает жертву)
+	if stamina != null:   # запас тяги (Подъём): тратит запас; пусто — ни тяги, ни рывка
+		v = stamina.gate(v, boost_held, delta)
+		if v == Vector2.ZERO:
+			boost_held = false
 	_set_idle_brake(v.length_squared() <= 0.0001 and _time >= knockback_until and not brake_off)
 	var control := 1.0 - Tuning.STUN_CONTROL_LOSS if is_stunned() else 1.0
 	var share := _head_share()
