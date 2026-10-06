@@ -1110,7 +1110,9 @@ func _solve_6(r: PuzzleRoom, _coop: bool) -> bool:
 
 ## 7. «Разгон» (порталы): P1 встаёт на полку за чугунным ящиком и толкает его вправо — ящик падает в щель A на полу, вылетает из B
 ## в левой стене и ложится на весы уступа (бортик ловит). Застрял (перелез через ящик) — заново из-за ящика, до 3 попыток.
-func _solve_7(r: PuzzleRoom, _coop: bool) -> bool:
+## Весы включают тяжёлую шахту над A; кукла (вдвоём — P2, один — P1) «выстреливает» себя: из шахты вниз в A, из B — на уступ, в зону
+## «кукла сюда» → ВСЕ → ТАЙМЕР 5 с → дверь. Вдвоём P2 остаётся на уступе; один — P1 уходит с уступа влево-вверх, мимо полки, к двери.
+func _solve_7(r: PuzzleRoom, coop: bool) -> bool:
 	var iron := r.find("Iron") as RigidBody3D
 	var scale := r.find("Scale") as PuzzlePlate
 	var pair := r.find("Portals") as PortalPair
@@ -1182,7 +1184,37 @@ func _solve_7(r: PuzzleRoom, _coop: bool) -> bool:
 	info["room7"] = {"iron_transfers": pair.history.filter(func(h: Dictionary) -> bool: return h["what"] == iron).size(),
 		"speed_into_A": snappedf(v_fall, 0.01), "iron_at": [snappedf(ic.x - r.global_position.x, 0.01), snappedf(ic.y, 0.01)],
 		"scale_kg": snappedf(scale.mass_now, 0.1), "transfers": pair.transfers - t0}
-	return on
+	if not on:
+		return false
+	# кукла сама: шахта → A → B → уступ
+	var flier: Doll = pg.p2 if coop and pg.p2 != null and is_instance_valid(pg.p2) else pg.p1
+	var zone := r.find("DollZone") as PuzzleDollZone
+	var shaft := r.find("Shaft") as PuzzleGravity
+	await _until(func() -> bool: return shaft.is_on(), 2.5)
+	var heavy := shaft.field.field_g
+	_teleport(flier, _at(r, 7.0, 5.0))
+	await _wait(0.2)
+	var t1 := pair.transfers
+	for i in int(4.0 / TICK):
+		if pair.transfers > t1 and pair.history.back()["what"] == flier:
+			break
+		flier.input_vec = Vector2(0, -1)   # вниз по шахте, как игрок
+		await get_tree().physics_frame
+	flier.input_vec = Vector2.ZERO
+	var flung: bool = pair.transfers > t1 and pair.history.back()["what"] == flier
+	var v_shaft := (pair.history.back()["v_in"] as Vector3).length() if flung else 0.0
+	var v_exit := (pair.history.back()["v_out"] as Vector3).length() if flung else 0.0
+	await _steer(flier, [Vector2(zone.global_position.x, zone.global_position.y + 1.1)], 5.0, 0.6)
+	flier.input_vec = Vector2(0, -0.4)
+	var zoned := await _until(func() -> bool: return zone.is_on(), 2.0)
+	flier.input_vec = Vector2.ZERO
+	var opened := await _until(func() -> bool: return r.door().is_on(), 2.0)
+	if not coop:
+		# с уступа — влево из-под полки и вверх (над полкой — к двери: ТАЙМЕР 5 с)
+		await _steer(flier, [Vector2(_at(r, 0.5, 4.2).x, 4.2), Vector2(_at(r, 0.5, 8.0).x, 8.0)], 4.0, 0.6)
+	info["room7_%s" % ("coop" if coop else "solo")] = {"shaft_g": snappedf(heavy, 0.01), "flung": flung, "v_into_A": snappedf(v_shaft, 0.01),
+		"v_out_B": snappedf(v_exit, 0.01), "doll_zone": zoned, "door": opened}
+	return on and flung and zoned and opened
 
 
 ## Бочка комнаты, которую ещё можно бросить (целая взрывная в Props), или null.

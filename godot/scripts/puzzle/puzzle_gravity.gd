@@ -12,6 +12,8 @@ extends PuzzlePart
 @export var off_dir := Vector2(0.0, -1.0)
 ## Сила поля в G; ≤ 0 — как в мире (Tuning.GRAVITY / Tuning.G_EARTH).
 @export var g_units := 0.0
+## Сила при токе в G (тяжёлая шахта комнаты 7, PORTAL.md); ≤ 0 — та же g_units (при токе поворачивается только «низ»).
+@export var on_g := 0.0
 ## Знак на задней стене: смещение от центра (м).
 @export var sign_offset := Vector3(0.0, 2.5, -0.9)
 
@@ -19,6 +21,7 @@ var field: NullField
 var _want := false
 var _arrow: Node3D
 var _sign_mat: StandardMaterial3D
+var _caption: Label3D
 
 
 func _ready() -> void:
@@ -68,7 +71,7 @@ func _build_sign() -> void:
 	head.rotation_degrees = Vector3(0, 0, 180)
 	head.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_arrow.add_child(head)
-	label(holder, "Caption", "G", Vector3(0.0, 0.95, 0.06), 44, Color(0.6, 0.85, 1.0))
+	_caption = label(holder, "Caption", "G", Vector3(0.0, 0.95, 0.06), 44, Color(0.6, 0.85, 1.0))
 
 
 func reset_state() -> void:
@@ -88,7 +91,7 @@ func _physics_process(_delta: float) -> void:
 	var w := power_of(input)
 	if w != _want:
 		_want = w
-		field.set_field(g_units, on_dir if w else off_dir, Tuning.PUZZLE_GRAVITY_BLEND_S)
+		field.set_field(on_g if (w and on_g > 0.0) else g_units, on_dir if w else off_dir, Tuning.PUZZLE_GRAVITY_BLEND_S)
 		sfx("sub", -2.0, 0.7 if w else 0.9)
 	_set_on(w and not field.is_shifting())
 	_refresh_visual()
@@ -103,3 +106,5 @@ func _refresh_visual() -> void:
 	var c := Color(1.0, 0.75, 0.25) if _want else Color(0.4, 0.8, 1.0)
 	_sign_mat.albedo_color = c
 	_sign_mat.emission = c
+	if _caption != null:
+		_caption.text = ("G ×%s" % str(snappedf(on_g / maxf(g_units, 0.001), 0.1))) if (_want and on_g > 0.0) else "G"

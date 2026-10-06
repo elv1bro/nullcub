@@ -13,6 +13,7 @@ var out_dir := "/tmp"
 var rooms := "1+2+3+4+5+6"
 var action := true
 var portal := false
+var upright := false
 var pg: PuzzlePlayground
 
 
@@ -28,6 +29,7 @@ func _ready() -> void:
 				"rooms": rooms = kv[1]
 				"action": action = kv[1] == "1"
 				"portal": portal = kv[1] == "1"
+				"upright": upright = kv[1] == "1"
 	_run.call_deferred()
 
 
@@ -98,7 +100,45 @@ func _run() -> void:
 	if portal:
 		await _fling()
 		await _switch()
+	if upright:
+		await _upright()
 	get_tree().quit(0)
+
+
+## Комната 7: груз на весах — шахта тяжёлая; P1 ныряет в шахту → A → из B боком и за 0.3–0.4 с встаёт головой вверх (выход «как в
+## Portal»). Кадры: upright_0 (момент выхода), _1 (0.1 с), _2 (0.2 с), _3 (0.4 с).
+func _upright() -> void:
+	pg.goto_room(6)
+	pg.reset_room()
+	await _wait(2.4)
+	var r := pg.rooms[6]
+	var pair := r.find("Portals") as PortalPair
+	var iron := r.find("Iron") as RigidBody3D
+	iron.global_position = _at(r, 3.0, 3.6)
+	_teleport(pg.p2, _at(r, -4.0, 1.0))
+	var shaft := r.find("Shaft") as PuzzleGravity
+	for i in 240:
+		await get_tree().physics_frame
+		if shaft.is_on():
+			break
+	_teleport(pg.p1, _at(r, 7.0, 5.0))
+	var t0 := pair.transfers
+	for i in 300:
+		pg.p1.input_vec = Vector2(0, -1)
+		await get_tree().physics_frame
+		if pair.transfers > t0:
+			break
+	pg.p1.input_vec = Vector2.ZERO
+	pg.hud.visible = false   # плашка комнаты закрывает щель B
+	var marks := [0, 6, 12, 24]
+	var done := 0
+	for k in 25:
+		if k == marks[done]:
+			await _shot("upright_%d" % done)
+			done += 1
+			if done >= marks.size():
+				break
+		await get_tree().physics_frame
 
 
 ## Комната 7: чугунный ящик столкнули с полки — через щель A на полу он вылетает из B в левой стене (кадр — в полёте).

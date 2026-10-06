@@ -500,6 +500,25 @@ func _checks() -> void:
 	for pi in Tuning.TRACK_RACERS:
 		_silence(_doll(pi), true)
 	var ar := pg.arena
+	# 0) пара развилки B — односторонняя (PORTAL.md, 06.10): кукла влетает в B (выход) на 6 м/с — не переносится, к A не попадает
+	var opair := ar.portal_pair()
+	if opair != null:
+		var pw := _doll(3)
+		var home := pw.centre_of_mass()
+		var t_b := opair.transfers
+		_teleport(pw, opair.b.global_position + opair.b.normal() * 1.4)
+		for b in pw.parts.values():
+			(b as RigidBody3D).linear_velocity = -opair.b.normal() * 6.0
+		var near_a := false
+		for k in int(1.5 / (1.0 / 60.0)):
+			near_a = near_a or pw.centre_of_mass().distance_to(opair.a.global_position) < 3.0
+			await get_tree().physics_frame
+		var moved := opair.transfers - t_b
+		var in_b := opair.b.height_of(pw.centre_of_mass()) < 1.2
+		info["portal_one_way"] = {"transfers": moved, "near_a": near_a, "doll_at_b": in_b, "one_way": opair.one_way, "b_exit_only": opair.b.exit_only}
+		_check("portal_b_one_way", opair.one_way and opair.b.exit_only and moved == 0 and not near_a,
+			"влёт в B на 6 м/с: переносов %d, у A %s, кукла у щели B %s (пара односторонняя %s)" % [moved, str(near_a), str(in_b), str(opair.one_way)])
+		_teleport(pw, home)
 	# 1) яма: P1 с точкой 5 — в дно ямы → возврат у CP5 через TRACK_RESPAWN_S
 	var p1 := _doll(0)
 	tm.state_of(p1)["cp"] = 5
