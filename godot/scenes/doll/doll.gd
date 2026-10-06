@@ -154,11 +154,13 @@ var joint_depth: Dictionary = {}
 ## Запас из деталей (PartHp, docs/plan-demo/WORKSHOP_V4.md): имя тела → ❤ детали (масса × материал, PartHp.hp_of). Считается всегда
 ## (_init_part_hp), в бою работает только при PartHp.on: запас бойца = Σ ❤ (parts_hp_total, ставит Match), отрыв уносит ❤ поддерева.
 var part_hp: Dictionary = {}
-## Деталей нет с рождения (спорт-зал, автор 06.10: «между матчами не чиним, оставляем как есть»): имена тел сцены, ставит
-## Match.respawn_doll(keep_lost) до add_child — _ready убирает эти тела, всё, что на них висит, и их суставы до сборки куклы.
-## Торс и голова не убираются. Только кукла из сцены (doll.tscn): ModularDoll строит тела в _ready сама.
+## Деталей нет с рождения (спорт-зал, автор 06.10: «между матчами не чиним, оставляем как есть»): имена тел и порванных связок
+## («Link_<id>»), ставит Match.respawn_doll(keep_lost) до add_child. Кукла из сцены (doll.tscn) — _ready убирает эти тела, всё, что на
+## них висит, и их суставы до сборки; ModularDoll — _build не строит такие узлы чертежа со всей веткой, _build_links — такие связки.
+## Торс (ядро) и голова не убираются.
 var missing_parts: PackedStringArray = []
 var _born_parts: Array = []   # имена тел после сборки (_ready): чего из них нет в parts — оторвано (lost_part_names)
+var _broken_links: PackedStringArray = []   # связки, порванные в бою (break_link) — тоже в lost_part_names
 ## Связки (KitLink, строит ModularDoll._build_links после спавна в позе; WORKSHOP_V4.md «Связки»): имя связки → {id, type, bodies, joints,
 ## a, b (тела концов), hp (❤), len, strut (сустав телескопа у пружины и поршня), extend, channel}; имя тела связки → имя связки.
 ## Суставы связок не суставы мышц: в joints их нет. Износ связки (link_wear) тратит урон в её тела в любом бою — связку можно перебить.
@@ -336,11 +338,11 @@ func _drop_missing_parts() -> void:
 		(n as Node).queue_free()
 
 
-## Имена деталей, которых у куклы уже нет: не было с рождения (missing_parts) и оторванные в бою со всем, что на них висело (detach_part,
-## break_link). Голова и торс не попадают: их отрыв — KO, тела остаются в parts.
+## Имена деталей, которых у куклы уже нет: не было с рождения (missing_parts), оторванные в бою со всем, что на них висело (detach_part),
+## и порванные связки («Link_<id>», break_link). Голова и торс не попадают: их отрыв — KO, тела остаются в parts.
 func lost_part_names() -> PackedStringArray:
 	var out := PackedStringArray(missing_parts)
-	for n in _born_parts:
+	for n in _born_parts + Array(_broken_links):
 		if not parts.has(n) and not out.has(String(n)):
 			out.append(String(n))
 	return out
@@ -745,6 +747,7 @@ func break_link(ln: String, by: Node = null) -> bool:
 	joint_broken.emit(String((bodies[0] as Node).name) if not bodies.is_empty() and is_instance_valid(bodies[0]) else ln, by, pos)   # вспышка и искры (JointBreakFx)
 	var tchild := String(rec.get("tether_child", ""))   # деталь на этой связке: улетит со всей веткой
 	links_rt.erase(ln)
+	_broken_links.append(ln)
 	link_wear.erase(ln)
 	for j in rec["joints"]:
 		if is_instance_valid(j):

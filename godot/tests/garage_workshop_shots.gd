@@ -21,7 +21,6 @@ func _ready() -> void:
 	menu.dry_run = true
 	add_child(menu)
 	menu.workshop.ws_overrides = {"autosave_name": "_probe_gw", "load_autosave": false, "start_preset": "kit_brawler"}
-	(menu.player_doll as GarageDoll).blueprint_path = CraftEdit.save_path("_probe_gw")
 	await _run()
 	for f in [CraftEdit.save_path("_probe_gw"), ProjectSettings.globalize_path("user://_probe_gw_prefs.cfg")]:
 		if FileAccess.file_exists(f):

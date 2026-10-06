@@ -32,7 +32,7 @@
 ##   на CPU), узлы, добавленные в кадр (ADDED{класс:имя×N}), события удара рядом; проверки perf_frame_p99_ms / perf_frame_max_ms /
 ##   perf_nodes_per_frame (limits p99_ms= max_ms= max_nodes=), info.perf; spikes=1 — то же, но только печать рывков > spike_ms (окно).
 ##   joints=1 — пробный режим «Прочность суставов» (JointBreak, JOINT_BREAK.md): info.joints_broken — что и когда отлетело до KO.
-##   parts=1 — пробный режим «Запас из деталей» (PartHp, WORKSHOP_V4.md): info.parts — запас на старте боя (max_hp из ❤ деталей),
+##   parts=0 / parts=1 — «Запас из деталей» (PartHp, WORKSHOP_V4.md; стандарт с 06.10 — включён и без опции) выкл / вкл: info.parts — запас на старте боя (max_hp из ❤ деталей),
 ##   что и когда отлетело (part_detached: деталь, t, hp до и после, потерянные ❤), остаток.
 ##   d1=<id> / d2=<id> — вместо обычной куклы P1 / P2 пресет scenes/body/presets/<id>.tscn (калибровка сборок друг против друга;
 ##   проверки «частей 14» у KO для сборок с другим числом тел не про них).
@@ -314,7 +314,7 @@ func _ready() -> void:
 				"max_ms": limit_max_ms = float(p[1])
 				"max_nodes": limit_nodes = int(p[1])
 				"joints": JointBreak.set_on(p[1] != "0")   # пробный режим «Прочность суставов»: info.joints_broken — кто что потерял
-				"parts": PartHp.set_on(p[1] != "0")        # пробный режим «Запас из деталей»: info.parts
+				"parts": PartHp.set_on(p[1] != "0")        # «Запас из деталей» (стандарт, вкл): parts=0 — выкл; info.parts
 				"d1": doll_presets["P1"] = p[1]
 				"d2": doll_presets["P2"] = p[1]
 				"lk": link_type = p[1]

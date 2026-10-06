@@ -47,6 +47,7 @@ func _frames(n: int) -> void:
 
 
 func _ready() -> void:
+	PartHp.set_on(false)   # меряем «Прочность суставов» (C): «Запас из деталей» (стандарт с 06.10) строит таблицу отрыва по своим ❤
 	var was := JointBreak.on
 	# формула
 	var f := [JointBreak.hp_for_depth(1), JointBreak.hp_for_depth(2), JointBreak.hp_for_depth(3), JointBreak.hp_for_depth(12)]

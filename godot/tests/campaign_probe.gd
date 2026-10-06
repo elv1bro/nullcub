@@ -9,7 +9,8 @@
 ##   win_advance       победа: шаг +1, трофей на полке
 ##   save_load         сохранение → загрузка: шаг, победы, поражения, трофеи, журнал и сборка те же
 ##   weapon_energy     регламент: оружие в руке ест энергию по массе (киянка 2.1 кг → 11, стартовое тело + киянка в бюджете,
-##                     + молот — перерасход и «не готова к бою»); без регламента (свободная мастерская) оружие энергию не ест
+##                     + молот — перерасход и «не готова к бою»; в «Запасе из деталей» голова не стоит энергии — перерасход даёт
+##                     кистень); без регламента (свободная мастерская) оружие энергию не ест
 ##   flow_ladder       сцена кампании открывается лестницей, 4 соперника, кнопка «В БОЙ» активна
 ##   flow_fight        «В БОЙ»: в Stage сцена боя, P1 — сборка игрока, P2 — чертёж соперника с RivalBrain уровня шага
 ##   rival_fights      соперник ищет игрока: за 25 с боя подлетает ближе 2 м и бьёт (Match.hit от P2 ≥ 1)
@@ -121,16 +122,20 @@ func _rules() -> void:
 	var mallet_total := k.energy_used()
 	var mallet_ok := CraftEdit.friendly_errors(k).is_empty()
 	var kd := CraftEdit.dup_body(k)
-	k.weapon = CraftEdit.load_weapon_preset("hammer")
+	# перерасход: в «Запасе из деталей» (стандарт с 06.10) голова энергии не стоит — тело на 10 дешевле, молот (+21) влезает; не влезает
+	# кистень (+33). Без режима — молот, как раньше.
+	var heavy := "flail" if PartHp.on else "hammer"
+	var heavy_e := 33 if PartHp.on else 21
+	k.weapon = CraftEdit.load_weapon_preset(heavy)
 	var hammer_total := k.energy_used()
 	var hammer_bad := not CraftEdit.friendly_errors(k).is_empty()
 	var free := CraftEdit.load_body_preset("kit_human")
 	var free_body := free.energy_used()
 	free.weapon = CraftEdit.load_weapon_preset("hammer")
 	_check("weapon_energy", mallet_e == 11 and mallet_total == body_e + 11 and mallet_ok and kd.energy_used() == mallet_total
-		and hammer_total == body_e + 21 and hammer_bad and free.energy_used() == free_body,
-		"тело %d; киянка +%d = %d (готова %s, копия %d); молот = %d (перерасход %s); без регламента с молотом %d" % [
-		body_e, mallet_e, mallet_total, mallet_ok, kd.energy_used(), hammer_total, hammer_bad, free.energy_used()])
+		and hammer_total == body_e + heavy_e and hammer_bad and free.energy_used() == free_body,
+		"тело %d; киянка +%d = %d (готова %s, копия %d); %s = %d (перерасход %s); без регламента с молотом %d" % [
+		body_e, mallet_e, mallet_total, mallet_ok, kd.energy_used(), heavy, hammer_total, hammer_bad, free.energy_used()])
 
 
 # ------------------------------------------------------------------ поток экранов

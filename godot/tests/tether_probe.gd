@@ -14,7 +14,7 @@
 ##     «Ось» возвращает сустав;
 ##   • края: зеркальная копия ноги на тросе, канал кисти на поршне (и клик инструментом «Поршень» по нему), сохранение и загрузка,
 ##     цепочка «предплечье на тросе → кисть на тросе», оружие в кисти на тросе, прирастание детали с порванным тросом (не прирастает,
-##     без ошибок), режим «Прочность суставов» (C), KO, клик по связке детали другим инструментом, стенд после позы, кукла в гараже.
+##     без ошибок), режим «Прочность суставов» (C), KO, клик по связке детали другим инструментом, стенд после позы.
 ## В stdout — «=== TETHER PROBE ===» и JSON.
 extends Node3D
 
@@ -419,22 +419,4 @@ func _edges() -> void:
 	_check(held != null and String(wr.get("uid", "")) == "9" and ok_pos and ws.test_doll.alive and ws.test_doll.links_rt.has("Link_T9"), "молот в кисти на тросе: «В руку» — в неё, держит, 2 с испытания без NaN", [held, wr.get("uid"), ok_pos])
 	ws.queue_free()
 	await _frames(2)
-	# кукла в гараже: нога на тросе не уходит под пол, кисть на поршне рядом с предплечьем
-	var gb := _bp({"A": {"joint": "on_rope"}, "9": {"joint": "on_piston"}})
-	ResourceSaver.save(gb, "user://tether_probe_garage.tres")
-	var gd := Node3D.new()
-	gd.set_script(load("res://scenes/menu/garage_doll.gd"))
-	gd.set("blueprint_path", "user://tether_probe_garage.tres")
-	gd.position = Vector3(_x, 0.0, 0.0)   # пол гаража — y = 0 узла (GarageDoll._seat считает высоту в мире)
-	_x += 6.0
-	add_child(gd)
-	await _frames(2)
-	var gdoll := gd.get("doll") as ModularDoll
-	var low := INF
-	for nm in ["UpperLeg_R", "LowerLeg_R", "Foot_R"]:
-		low = minf(low, float(gd.call("_lowest_y", [gdoll.parts[nm]])))
-	var hand_gap := _link_len(gdoll, "Link_T9")
-	_check(low >= -0.01 and absf(hand_gap - 0.5) < 0.05, "гараж: нога на тросе не под полом (низ %.2f м), кисть на поршне на своих 0.5 м (%.2f)" % [low, hand_gap], [low, hand_gap])
-	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tether_probe_garage.tres"))
-	gd.queue_free()
-	await _frames(2)
+	# (06.10: кукла на ящике в гараже убрана — в гараже висит StandDoll мастерской, её связки проверены выше)

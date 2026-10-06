@@ -1,4 +1,8 @@
 ## Мастерская внутри гаража меню (решение автора 02.10: «не менять даже локацию, всё делать прямо в гараже»).
+## 06.10 (мир людей, гараж от первого лица): спящая мастерская — «витрина»: её стенд и кукла видны в гараже всегда (кукла висит на
+## стенде, как будто её дорабатывают), интерфейс и свет сборки спрятаны, процесс стоит (_showcase). Вход — герой надевает нейрошлем
+## у верстака (GarageHeadset.put_on): в чёрном кадре визора мастерская берёт камеру; выход — снимает шлем (take_off) и кладёт на
+## подставку. Мастерская кампании открывается из эфира одним визором (visor_on), выход из неё — как раньше, сразу.
 ## Сцена мастерской (scenes/workshop/workshop_embed.tscn — тот же workshop_build.gd, но без своей комнаты) грузится в фоне, пока игрок
 ## в меню, и ставится в мир гаража спящей. «МАСТЕРСКАЯ»: кукла встаёт с ящика, камера гаража ныряет к стенду и отдаёт кадр
 ## мастерской (без скачка), поверх ложится интерфейс сборки. Двойной Esc — обратно: камера возвращается к пункту меню, кукла на ящике
@@ -85,8 +89,31 @@ func _instantiate() -> void:
 	ws.exit_requested.connect(close)
 	ws.mode_changed.connect(_on_mode)
 	ws.test_ready_check = hall_is_ready
+	if ws.stand_root != null:
+		ws.stand_root.process_mode = Node.PROCESS_MODE_ALWAYS   # стенд подгоняет муфту и седло под куклу и у спящей мастерской
+	_showcase()
 	inst_ms = Time.get_ticks_msec() - t0
 	instantiated.emit()
+
+
+## Спящая мастерская как витрина гаража: виден только стенд с куклой (и разметка гаража под ним); интерфейс, свет сборки, оружие на
+## верстаке — спрятаны. Процесс мастерской стоит (кукла заморожена).
+func _showcase() -> void:
+	if ws == null or ws.active:
+		return
+	ws.visible = true
+	for n in ["UI", "BuildLights", "TestLights"]:
+		var c := ws.get_node_or_null(n)
+		if c is CanvasLayer:
+			(c as CanvasLayer).visible = false
+		elif c is Node3D:
+			(c as Node3D).visible = false
+	if ws.bench_weapon != null and is_instance_valid(ws.bench_weapon):
+		ws.bench_weapon.visible = false
+	if ws.stand_root != null:
+		ws.stand_root.visible = true
+	if ws.stand != null and is_instance_valid(ws.stand):
+		ws.stand.visible = true
 
 
 func is_open() -> bool:
@@ -153,12 +180,8 @@ func _leave_campaign_mode() -> void:
 func _dive() -> void:
 	prefetch_hall()
 	garage.set("state", "workshop")
-	var cam := garage.get("cam") as Camera3D
 	var ui_root := garage.get("ui") as Control
 	_set_props(false)
-	ws.set_active(true, false)
-	var target := ws.snap_camera_pose()
-	var fov := WorkshopBuild.CAM_FOV
 	var layer_root := _ui_root()
 	if layer_root != null:
 		layer_root.modulate.a = 0.0
@@ -166,10 +189,34 @@ func _dive() -> void:
 		_tw.kill()
 	_tw = create_tween()
 	_tw.tween_property(ui_root, "modulate:a", 0.0, 0.3)
-	garage.call("_move_xf", target, fov, DIVE_S, 0.12)
-	_tw.tween_interval(DIVE_S - 0.3)
-	_tw.tween_callback(_handover)
-	garage.call("_set_zone_mult", "bench", DIVE_S)
+	var hs := garage.get("headset") as GarageHeadset
+	var n0 := garage.get("n0") as GarageN0
+	if n0 != null:   # N0 летит к стенду — подержать свет
+		n0.fly_to(ws.stand_root.global_position + Vector3(0.7, 1.75, 0.45))
+		n0.face_camera = false
+		n0.light(true, ws.stand_root.global_position + Vector3(0, 1.0, 0))
+	garage.call("_set_zone_mult", "bench", 0.8)
+	if hs == null or not hs.has_headset():
+		_link_open()
+	elif campaign != null:
+		hs.visor_on(_link_open, _handover_done)
+	else:
+		hs.put_on(_link_open, _handover_done)
+
+
+## Кадр чёрный (визор закрыт): мастерская просыпается, камера гаража встаёт в кадр сборки и отдаёт его мастерской.
+func _link_open() -> void:
+	var cam := garage.get("cam") as Camera3D
+	ws.set_active(true, false)
+	var target := ws.snap_camera_pose()
+	(garage.get("view") as GarageView).move(target, WorkshopBuild.CAM_FOV, 0.0, true)
+	cam.global_transform = target
+	cam.fov = WorkshopBuild.CAM_FOV
+	_handover()
+
+
+func _handover_done() -> void:
+	pass
 
 
 func _instantiate_blocking() -> void:
@@ -195,47 +242,82 @@ func _ui_root() -> Control:
 	return layer.get_node_or_null("Root") as Control if layer != null else null
 
 
-## Выйти из мастерской в меню гаража (двойной Esc или код): кадр камеры — как был, дальше обычный переезд к пункту.
+## Выйти из мастерской в меню гаража (двойной Esc или код). Свободная мастерская: герой снимает шлем (GarageHeadset.take_off) —
+## в чёрном кадре камера гаража встаёт у верстака, мастерская засыпает витриной; руки кладут шлем на подставку, и герой идёт к пункту меню.
+## Мастерская кампании (или гараж без шлема) — сразу: камера гаража встаёт на кадр сборки.
 func close() -> void:
-	if not is_open():
+	if not is_open() or _closing:
 		return
 	if on_exit.is_valid():      # кампания: она заберёт сборку и сама закроет нас (on_exit очищается перед вторым вызовом)
 		on_exit.call()
 		return
-	var in_campaign := campaign != null
+	var hs := garage.get("headset") as GarageHeadset
+	if campaign == null and hs != null and hs.has_headset():
+		_closing = true
+		ws.set_process_input(false)
+		ws.set_process_unhandled_input(false)
+		hs.take_off(_unlink, _close_done)
+		return
 	var cam := garage.get("cam") as Camera3D
 	cam.global_transform = ws.build_cam.global_transform
 	cam.fov = ws.build_cam.fov
+	(garage.get("view") as GarageView).move(cam.global_transform, cam.fov, 0.0, true)
+	_unlink()
+	if hs != null:
+		hs.reset()
+	if campaign != null:    # возвращает управление кампании (она ведёт камеру к телевизору и показывает сетку)
+		_leave_campaign_mode()
+		closed.emit()
+		return
+	_close_done()
+
+
+var _closing := false
+
+
+## Кадр чёрный (визор снят): камера гаража у верстака (точка Pilot), мастерская засыпает витриной.
+func _unlink() -> void:
+	var cam := garage.get("cam") as Camera3D
+	if _closing:
+		var spots: Dictionary = garage.get("spots")
+		if spots.has(GarageHeadset.PILOT_SPOT):
+			var fovs: Dictionary = garage.get("spot_fov")
+			(garage.get("view") as GarageView).move(spots[GarageHeadset.PILOT_SPOT], float(fovs[GarageHeadset.PILOT_SPOT]), 0.0, true)
 	cam.make_current()
 	ws.set_active(false)
+	_showcase()
 	var layer_root := _ui_root()
 	if layer_root != null:
 		layer_root.modulate.a = 1.0
 	_set_props(true)
-	if in_campaign:         # возвращает управление кампании (она ведёт камеру к телевизору и показывает сетку)
-		_leave_campaign_mode()
-		closed.emit()
-		return
+	var n0 := garage.get("n0") as GarageN0
+	if n0 != null:
+		n0.light(false)
+		n0.face_camera = true
+
+
+## Шлем на подставке: меню гаража, герой идёт к пункту; стена экранов показывает новую сборку.
+func _close_done() -> void:
+	_closing = false
 	var ui_root := garage.get("ui") as Control
 	ui_root.visible = true
 	ui_root.modulate.a = 1.0
-	var pd = garage.get("player_doll")
-	if pd != null:
-		pd.call("rebuild")
 	garage.set("state", "menu")
 	(garage.get("menu_box") as Control).visible = true
 	garage.call("set_focus", int(garage.get("focus")))
+	var sw := garage.get("stats_wall") as GarageStatsWall
+	if sw != null:
+		sw.refresh()
 	closed.emit()
 
 
-## Кукла игрока встала с ящика (она теперь на стенде), стенд гаража заменён приборной стойкой мастерской.
+## Гаражная разметка под стендом остаётся; прятать больше нечего (кукла с ящика и гаражный стенд убраны 06.10 — стенд и кукла теперь
+## мастерской). Оставлено для старых сцен гаража, где эти узлы ещё есть.
 func _set_props(menu_view: bool) -> void:
-	var pd := garage.get("player_doll") as Node3D
-	if pd != null:
-		pd.visible = menu_view
-	var stand := garage.get_node_or_null("Props/Stand") as Node3D
-	if stand != null:
-		stand.visible = menu_view
+	for path in ["Props/PlayerDoll", "Props/Stand"]:
+		var n := garage.get_node_or_null(path) as Node3D
+		if n != null:
+			n.visible = menu_view
 
 
 ## Испытание — весь гараж светится ровно (как комната испытаний), сборка — свет у верстака; на испытании открываются ворота в зал.
@@ -246,6 +328,11 @@ func _on_mode(m: int) -> void:
 	if not is_open():
 		return
 	garage.call("_set_zone_mult", "" if testing else "bench", 0.4)
+	var n0 := garage.get("n0") as GarageN0
+	if n0 != null and ws.stand_root != null:   # на испытании N0 отлетает к задней стене (за плоскость боя), в сборке — снова у стенда
+		var sp := ws.stand_root.global_position
+		n0.fly_to(Vector3(0.6, 2.5, -2.3) if testing else sp + Vector3(0.7, 1.75, 0.45))
+		n0.light(not testing, sp + Vector3(0, 1.0, 0))
 	if testing:
 		_enter_test()
 
