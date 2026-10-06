@@ -11,7 +11,10 @@
 ##   • кисть на поршне выстреливает по клавише канала; на тяге и пружине собирается и стоит;
 ##   • налог: «Человек» — 4 конца, без налога; звезда с пятью кистями — 8 концов (+24) и налог на боковые выходы; все пресеты в бюджете;
 ##   • мастерская: инструмент «На тросе» ставит трос 0.6 м, клик ещё раз — 0.9 м (на 100 энергии «Человеку» не хватает — отказ),
-##     «Ось» возвращает сустав.
+##     «Ось» возвращает сустав;
+##   • края: зеркальная копия ноги на тросе, канал кисти на поршне (и клик инструментом «Поршень» по нему), сохранение и загрузка,
+##     цепочка «предплечье на тросе → кисть на тросе», оружие в кисти на тросе, прирастание детали с порванным тросом (не прирастает,
+##     без ошибок), режим «Прочность суставов» (C), KO, клик по связке детали другим инструментом, стенд после позы, кукла в гараже.
 ## В stdout — «=== TETHER PROBE ===» и JSON.
 extends Node3D
 
@@ -84,6 +87,7 @@ func _ready() -> void:
 	await _piston_bar_spring()
 	_taxes()
 	await _workshop()
+	await _edges()
 	PartHp.set_on(was)
 	print("=== TETHER PROBE ===")
 	print(JSON.stringify({"ok": ok, "checks": checks}))
@@ -284,4 +288,153 @@ func _workshop() -> void:
 	n = ws.blueprint.find_node("A")
 	_check(not n.has("joint") and not n.has(KitJoint.TETHER_KEY) and not ws.stand.links_rt.has("Link_TA") and ws.stand.joints.has("Hip_R"), "«Ось» — снова сустав бедра, троса нет")
 	ws.queue_free()
+	await _frames(2)
+
+
+## Расстояние между концами связки ln куклы d (точки pa / pb в мире); −1 — связки нет.
+func _link_len(d: ModularDoll, ln: String) -> float:
+	if not d.links_rt.has(ln):
+		return -1.0
+	var rec: Dictionary = d.links_rt[ln]
+	return ((rec["a"] as RigidBody3D).global_transform * (rec["pa"] as Vector3)).distance_to((rec["b"] as RigidBody3D).global_transform * (rec["pb"] as Vector3))
+
+
+func _edges() -> void:
+	# зеркальная копия: нога на тросе 0.9 — слева тоже на тросе 0.9
+	var mb := _bp({"A": {"joint": "on_rope", KitJoint.TETHER_KEY: 0.9}})
+	var mr := CraftEdit.mirror_subtree(mb, "A")
+	var mn := mb.find_node(String(mr.get("uid", "")))
+	_check(bool(mr["ok"]) and String(mn.get("joint", "")) == "on_rope" and absf(float(mn.get(KitJoint.TETHER_KEY, 0.0)) - 0.9) < 0.001,
+		"зеркальная копия ноги на тросе — тоже на тросе 0.9 м", mn)
+	# канал поршня: 1 → 2, кукла выдвигает его по второй клавише
+	var pb := _bp({"9": {"joint": "on_piston"}})
+	var ch := CraftEdit.cycle_tether_channel(pb, "9")
+	var pd := _doll(pb)
+	await _frames(32)
+	var l0 := _link_len(pd, "Link_T9")
+	pd.active_rig.held[1] = true
+	await _frames(40)
+	var l1 := _link_len(pd, "Link_T9")
+	pd.active_rig.held[1] = false
+	_check(ch == 2 and int(pd.links_rt["Link_T9"]["channel"]) == 2 and l1 > l0 + 0.15, "кисть на поршне на канале 2 — выдвигается по второй клавише (%.2f → %.2f)" % [l0, l1], [ch, l0, l1])
+	pd.queue_free()
+	# сохранение и загрузка
+	var sb := _bp({"A": {"joint": "on_spring", KitJoint.TETHER_KEY: 0.7}, "9": {"joint": "on_piston", KitLink.CHANNEL_KEY: 3}})
+	var path := CraftEdit.save(sb, "tether_probe_tmp")
+	var lb := CraftEdit.load_saved(path)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	_check(lb != null and String(lb.find_node("A").get("joint", "")) == "on_spring" and absf(float(lb.find_node("A").get(KitJoint.TETHER_KEY, 0.0)) - 0.7) < 0.001
+		and int(lb.find_node("9").get(KitLink.CHANNEL_KEY, 0)) == 3, "сохранение и загрузка: шарнир, длина и канал на месте", lb.find_node("A") if lb != null else null)
+	# цепочка: предплечье на тросе, на нём кисть на тросе
+	var cd := _doll(_bp({"8": {"joint": "on_rope", KitJoint.TETHER_KEY: 0.3}, "9": {"joint": "on_rope", KitJoint.TETHER_KEY: 0.3}}))
+	await _frames(2)
+	var c8 := _link_len(cd, "Link_T8")
+	var c9 := _link_len(cd, "Link_T9")
+	await _frames(120)
+	var calm := true
+	for b in cd.parts.values():
+		calm = calm and (b as RigidBody3D).global_position.is_finite()
+	_check(absf(c8 - 0.3) < 0.03 and absf(c9 - 0.3) < 0.03 and calm and _link_len(cd, "Link_T8") <= 0.32 and _link_len(cd, "Link_T9") <= 0.32,
+		"цепочка: предплечье на тросе, на нём кисть на тросе — обе на своих 0.3 м, 2 с без NaN", [c8, c9])
+	cd.detach_part("UpperArm_R")
+	await _frames(2)
+	_check(not cd.links_rt.has("Link_T8") and not cd.links_rt.has("Link_T9") and not cd.parts.has("Hand_R") and not cd.parts.has("LowerArm_R"),
+		"оторвали плечо — оба троса порвались, предплечье и кисть улетели")
+	cd.queue_free()
+	# прирастание: нога улетела с порванным тросом — назад не прирастает, ошибок нет
+	var rd := _doll(_bp({"A": {"joint": "on_rope"}}))
+	await _frames(2)
+	var thigh := rd.parts.get("UpperLeg_R") as RigidBody3D
+	rd.break_link("Link_TA")
+	await _frames(2)
+	var back := rd.reattach_part(thigh)
+	_check(not back and rd.alive and not rd.parts.has("UpperLeg_R"), "нога с порванным тросом назад не прирастает (связка порвана), кукла жива")
+	# KO: суставы и связки свободны
+	rd.knock_out(null, {"kind": "probe"})
+	await _frames(2)
+	rd.queue_free()
+	var kd := _doll(_bp({"9": {"joint": "on_bar"}}))
+	await _frames(2)
+	kd.knock_out(null, {"kind": "probe"})
+	await _frames(3)
+	var free := true
+	for j in kd.links_rt.get("Link_T9", {}).get("joints", []):
+		if is_instance_valid(j) and (j as Generic6DOFJoint3D).node_a != NodePath():
+			free = false
+	_check(not kd.alive and free, "KO: связка кисти на тяге отпущена, как суставы")
+	kd.queue_free()
+	# режим «Прочность суставов» (C): удары по ноге на тросе и по тросу — без ошибок, нога улетает целиком
+	JointBreak.set_on(true)
+	var jd := _doll(_bp({"A": {"joint": "on_rope"}}))
+	await _frames(2)
+	jd.max_hp = 1000.0
+	jd.hp = 1000.0
+	for i in range(8):
+		jd.take_damage(20.0, null, "UpperLeg_R", (jd.parts["Torso"] as Node3D).global_position, Vector3.UP, "body")
+		jd.take_damage(20.0, null, "Link_TA", Vector3.ZERO, Vector3.UP, "body")
+		await _frames(2)
+	_check(jd.alive and not jd.links_rt.has("Link_TA") and not jd.parts.has("Foot_R"), "«Прочность суставов»: перебили трос — нога улетела целиком, кукла жива")
+	JointBreak.set_on(false)
+	jd.queue_free()
+	await _frames(2)
+	# мастерская: оружие в кисти на тросе, клик по связке детали инструментами связки, стенд после позы
+	WorkshopBuild.prefs_path = "user://workshop_prefs_tether_probe.cfg"
+	var ws := (load("res://scenes/workshop/workshop_build.tscn") as PackedScene).instantiate() as WorkshopBuild
+	ws.load_autosave = false
+	ws.autosave_on_test = false
+	ws.probe_input = true
+	add_child(ws)
+	await _frames(10)
+	ws.set_preset("kit_human")
+	await _frames(2)
+	ws.blueprint.energy_budget = 300
+	ws.set_joint_pick("on_rope")
+	ws.set_joint("9")
+	ws.set_joint_pick("on_piston")
+	ws.set_joint("3")
+	await _frames(2)
+	_check(absf(_link_len(ws.stand, "Link_T9") - 0.6) < 0.02 and absf(_link_len(ws.stand, "Link_T3") - 0.5) < 0.02,
+		"стенд: кисти висят на своих связках и после позы (0.6 и 0.5 м)", [_link_len(ws.stand, "Link_T9"), _link_len(ws.stand, "Link_T3")])
+	var said := [""]
+	ws.toast.connect(func(t: String, _c: Color) -> void: said[0] = t)
+	ws.set_link_pick("rope")
+	ws._link_click({"target": "link", "link": "T9", "pos": Vector3.ZERO})
+	var still := String(ws.blueprint.find_node("9").get("joint", "")) == "on_rope" and String(said[0]).contains("Шарниры")
+	ws.set_link_pick("piston")
+	ws._link_click({"target": "link", "link": "T3", "pos": Vector3.ZERO})
+	await _frames(2)
+	_check(still and int(ws.blueprint.find_node("3").get(KitLink.CHANNEL_KEY, 0)) == 2 and int(ws.stand.links_rt["Link_T3"]["channel"]) == 2,
+		"вкладка «Связки»: клик тросом по тросу кисти ничего не снимает; «Поршень» по поршню кисти — канал 2", [said, ws.blueprint.find_node("3")])
+	ws.set_link_pick("")
+	ws.set_weapon_preset("hammer")
+	var wr := ws.weapon_to_hand()
+	await _frames(2)
+	ws.start_test()
+	await _frames(120)
+	var wp := ws.test_doll.get_node_or_null("WeaponPickup")
+	var held: Variant = wp.call("weapon_in", "Hand_R") if wp != null else null
+	var ok_pos := true
+	for b in ws.test_doll.parts.values():
+		ok_pos = ok_pos and (b as RigidBody3D).global_position.is_finite()
+	_check(held != null and String(wr.get("uid", "")) == "9" and ok_pos and ws.test_doll.alive and ws.test_doll.links_rt.has("Link_T9"), "молот в кисти на тросе: «В руку» — в неё, держит, 2 с испытания без NaN", [held, wr.get("uid"), ok_pos])
+	ws.queue_free()
+	await _frames(2)
+	# кукла в гараже: нога на тросе не уходит под пол, кисть на поршне рядом с предплечьем
+	var gb := _bp({"A": {"joint": "on_rope"}, "9": {"joint": "on_piston"}})
+	ResourceSaver.save(gb, "user://tether_probe_garage.tres")
+	var gd := Node3D.new()
+	gd.set_script(load("res://scenes/menu/garage_doll.gd"))
+	gd.set("blueprint_path", "user://tether_probe_garage.tres")
+	gd.position = Vector3(_x, 0.0, 0.0)   # пол гаража — y = 0 узла (GarageDoll._seat считает высоту в мире)
+	_x += 6.0
+	add_child(gd)
+	await _frames(2)
+	var gdoll := gd.get("doll") as ModularDoll
+	var low := INF
+	for nm in ["UpperLeg_R", "LowerLeg_R", "Foot_R"]:
+		low = minf(low, float(gd.call("_lowest_y", [gdoll.parts[nm]])))
+	var hand_gap := _link_len(gdoll, "Link_T9")
+	_check(low >= -0.01 and absf(hand_gap - 0.5) < 0.05, "гараж: нога на тросе не под полом (низ %.2f м), кисть на поршне на своих 0.5 м (%.2f)" % [low, hand_gap], [low, hand_gap])
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tether_probe_garage.tres"))
+	gd.queue_free()
 	await _frames(2)

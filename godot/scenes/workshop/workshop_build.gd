@@ -536,6 +536,9 @@ func _link_click(h: Dictionary) -> void:
 	if String(h["target"]) == "link":
 		var id := String(h["link"])
 		var l := blueprint.find_link(id)
+		if l.is_empty() and id.begins_with("T") and KitJoint.is_tether(String(CraftEdit.find(blueprint, id.substr(1)).get("joint", ""))):
+			_tether_link_click(id.substr(1))   # связка детали «на связке» — её шарнир, а не связка чертежа
+			return
 		if l.is_empty():
 			return
 		_push_history()
@@ -583,6 +586,21 @@ func _link_click(h: Dictionary) -> void:
 	_rebuild()
 	_play_sfx("snap", null)
 	_say(tr("Связка «%s»: %.2f м · ⚡ %d") % [KitLink.title_of(link_pick), len_m, KitLink.energy_of(link_pick, len_m)], COL_OK)
+
+
+## Клик инструментом связки по связке детали «на связке» uid: поршень — следующий канал, иначе подсказка, где её менять.
+func _tether_link_click(uid: String) -> void:
+	var jt := String(CraftEdit.find(blueprint, uid).get("joint", ""))
+	var d := CraftEdit.def_of(blueprint, uid)
+	var what := d.title if d != null else uid
+	if link_pick == "piston" and KitLink.uses_channel(KitJoint.tether_link(jt)):
+		_push_history()
+		var ch := CraftEdit.cycle_tether_channel(blueprint, uid)
+		_name_custom_body()
+		_rebuild()
+		_say(tr("Поршень → канал %d (%s)") % [ch, ActiveBlocks.key_label("p1", ch)], COL_OK)
+		return
+	_say(tr("%s висит «%s» — длина и снять: вкладка «Шарниры и цепи»") % [what, CraftEdit.joint_title(jt)], COL_INFO)
 
 
 ## Инструмент покраски t (WorkshopPaint.TOOLS; "" — положить). Кладёт «руку мышью», кисть материала, шарнир и протяжку.

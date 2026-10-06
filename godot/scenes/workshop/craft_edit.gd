@@ -409,6 +409,16 @@ static func remove_link(bp: BodyBlueprint, id: String) -> bool:
 
 
 ## Канал поршня по кругу 1 → 2 → 3 → 1; новый канал (0 — не поршень).
+## Деталь «на поршне» uid (KitJoint on_piston): следующий канал её поршня 1 → 2 → 3; 0 — не такая деталь.
+static func cycle_tether_channel(bp: BodyBlueprint, uid: String) -> int:
+	var n := find(bp, uid)
+	if n.is_empty() or not KitLink.uses_channel(KitJoint.tether_link(String(n.get("joint", "")))):
+		return 0
+	var ch := int(n.get(KitLink.CHANNEL_KEY, 1)) % ActiveBlocks.CHANNELS + 1
+	n[KitLink.CHANNEL_KEY] = ch
+	return ch
+
+
 static func cycle_link_channel(bp: BodyBlueprint, id: String) -> int:
 	var l := bp.find_link(id)
 	if l.is_empty() or not KitLink.uses_channel(String(l.get("type", ""))):
