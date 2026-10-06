@@ -49,7 +49,9 @@ const BODY_PRESETS := ["human", "spider", "long_arm", "big_arm", "legless", "jun
 	# наборы 04.10 (tools/build_league.gd): про-лига Земли и живые бойцы Аоэлюн
 	"pro_sprinter", "pro_titan", "aoe_predator", "aoe_ram",
 	# «невозможные конструкции» 04.10: ветвление через тройник / узел и позвонки; open_empty — заготовка с бюджетом 300
-	"pro_centipede", "pro_multitool", "aoe_leviathan", "set_chimera", "open_empty"]
+	"pro_centipede", "pro_multitool", "aoe_leviathan", "set_chimera", "open_empty",
+	# связки 06.10 (KitLink, WORKSHOP_V4.md «Связки»): поршни бедро → кисть на каналах 1 и 2, пружина между голенями
+	"kit_pistons"]
 ## Детали, которых нет на полках: kit_human_* — дубли wood_* под риг v3 (BODY_KIT.md §3.2) для пресета kit_human; на полке
 ## их не отличить от kit_limb_basic_* / kit_core_barrel. Чертежи с ними грузятся как обычно (BodyBlueprint.part_def).
 const SHELF_HIDDEN_PREFIXES := ["kit_human_"]
@@ -352,6 +354,84 @@ static func rest_rel_deg(bp: Resource, uid: String) -> float:
 	return float(a.get("rest_deg", 0.0))
 
 
+# ------------------------------------------------------------------ связки (KitLink, docs/plan-demo/WORKSHOP_V4.md «Связки»)
+
+## Связка вида t между точкой pa тела узла a и pb тела узла b (кадр тела) длиной len_m. dry — только проверить. {ok, code, reason, id,
+## energy_after}; отказ: вид, одна и та же деталь, деталь без своего тела, потолок числа связок, длина, энергия.
+static func add_link(bp: BodyBlueprint, t: String, a: String, pa: Vector3, b: String, pb: Vector3, len_m: float, dry := false) -> Dictionary:
+	var r := {"ok": false, "code": "", "reason": "", "id": "", "energy_after": bp.energy_used()}
+	if not KitLink.is_type(t):
+		r["code"] = "type"
+		return r
+	if a == b:
+		r["code"] = "same"
+		r["reason"] = TranslationServer.translate("Связка — между двумя разными деталями")
+		return r
+	if find(bp, a).is_empty() or find(bp, b).is_empty() or is_fixed(bp, a) or is_fixed(bp, b):
+		r["code"] = "body"
+		r["reason"] = TranslationServer.translate("Связку ставят на деталь со своим телом")
+		return r
+	if bp.links.size() >= KitLink.MAX_LINKS:
+		r["code"] = "max"
+		r["reason"] = TranslationServer.translate("Связок не больше %d") % KitLink.MAX_LINKS
+		return r
+	if len_m < KitLink.MIN_LEN:
+		r["code"] = "short"
+		r["reason"] = TranslationServer.translate("Концы слишком близко")
+		return r
+	if len_m > KitLink.MAX_LEN:
+		r["code"] = "long"
+		r["reason"] = TranslationServer.translate("Слишком длинная: до %.1f м") % KitLink.MAX_LEN
+		return r
+	var after := bp.energy_used() + KitLink.energy_of(t, len_m)
+	r["energy_after"] = after
+	if after > bp.energy_cap():
+		r["code"] = "energy"
+		r["reason"] = energy_reason(TranslationServer.translate("связку"), after, bp.energy_cap())
+		return r
+	r["ok"] = true
+	if dry:
+		return r
+	var l := {"id": bp.next_link_id(), "type": t, "a": a, "pa": pa, "b": b, "pb": pb, "len": snappedf(len_m, 0.001)}
+	if KitLink.uses_channel(t):
+		l[KitLink.CHANNEL_KEY] = 1
+	bp.links.append(l)
+	r["id"] = l["id"]
+	return r
+
+
+static func remove_link(bp: BodyBlueprint, id: String) -> bool:
+	for i in range(bp.links.size()):
+		if String(bp.links[i].get("id", "")) == id:
+			bp.links.remove_at(i)
+			return true
+	return false
+
+
+## Канал поршня по кругу 1 → 2 → 3 → 1; новый канал (0 — не поршень).
+static func cycle_link_channel(bp: BodyBlueprint, id: String) -> int:
+	var l := bp.find_link(id)
+	if l.is_empty() or not KitLink.uses_channel(String(l.get("type", ""))):
+		return 0
+	var ch := int(l.get(KitLink.CHANNEL_KEY, 1)) % ActiveBlocks.CHANNELS + 1
+	l[KitLink.CHANNEL_KEY] = ch
+	return ch
+
+
+## Убрать связки, чей конец пропал или стал деталью без своего тела (сняли, сварили, заменили на декор). Сколько убрано.
+static func prune_links(bp: BodyBlueprint) -> int:
+	var keep: Array[Dictionary] = []
+	for l in bp.links:
+		var a := String(l.get("a", ""))
+		var b := String(l.get("b", ""))
+		if not find(bp, a).is_empty() and not find(bp, b).is_empty() and not is_fixed(bp, a) and not is_fixed(bp, b):
+			keep.append(l)
+	var n := bp.links.size() - keep.size()
+	if n > 0:
+		bp.links = keep
+	return n
+
+
 # ------------------------------------------------------------------ копии, снимки
 
 static func dup_body(bp: BodyBlueprint) -> BodyBlueprint:
@@ -362,6 +442,7 @@ static func dup_body(bp: BodyBlueprint) -> BodyBlueprint:
 	out.nodes = _dup_nodes(bp.nodes)
 	out.control = bp.control.duplicate()
 	out.control_rmb = bp.control_rmb.duplicate()
+	out.links = _dup_nodes(bp.links)
 	out.weapon = dup_weapon(bp.weapon as WeaponBlueprint) if bp.weapon is WeaponBlueprint else null
 	out.weapon_on = bp.weapon_on
 	out.weapon_energy_per_kg = bp.weapon_energy_per_kg
@@ -406,6 +487,10 @@ static func signature(bp: Resource) -> PackedStringArray:
 	for n in nodes_of(bp):
 		out.append("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [n.get("uid", ""), n.get("part", ""), n.get("parent", ""), anchor_name(String(n.get("anchor", ""))) if String(n.get("parent", "")) != "" else "",
 			str(n.get("rest_deg", "")), n.get("name", ""), n.get("mat", ""), n.get("joint", ""), paint_signature(n), str(n.get(ActiveBlocks.NODE_KEY, ""))])
+	if bp is BodyBlueprint:   # связки (KitLink): вид, концы, длина, канал поршня
+		for l in (bp as BodyBlueprint).links:
+			out.append("link|%s|%s|%s|%s|%s|%s|%.3f|%s" % [l.get("id", ""), l.get("type", ""), l.get("a", ""), str(l.get("pa", "")), l.get("b", ""),
+				str(l.get("pb", "")), float(l.get("len", 0.0)), str(l.get(KitLink.CHANNEL_KEY, ""))])
 	out.sort()
 	return out
 

@@ -96,6 +96,11 @@ func build() -> void:
 	for b in doll.parts.values():
 		if not is_child.has(b):
 			_pose(b as Node3D)
+	for ln in doll.links_rt:   # связки (KitLink): суставы не нужны, тела — между концами в позе сидя
+		for lj in doll.links_rt[ln]["joints"]:
+			(lj as Generic6DOFJoint3D).node_a = NodePath()
+			(lj as Generic6DOFJoint3D).node_b = NodePath()
+	doll.refresh_links()
 	_seat()
 	_find_neck()
 

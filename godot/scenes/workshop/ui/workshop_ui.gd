@@ -26,6 +26,7 @@ const PRESET_SHORT := {
 	"flail": "Кистень", "kit_human": "Кукла-кит", "kit_brawler": "Громила", "kit_bot": "Робот", "kit_horned": "Рогатый",
 	"kit_king": "Король", "kit_spider": "Паук", "kit_devil": "Чёртик", "kit_skull": "Скелет", "kit_wheels": "Каталка",
 	"kit_lantern": "Фонарщик", "kit_graffiti": "Граффити", "kit_camo": "Камуфляж", "kit_spinner": "Вертушка", "kit_empty": "Пустой",
+	"kit_pistons": "Поршневой",
 	"league_reaper": "Жнец Аоэлюн", "league_crystal": "Кристаллид", "league_deep": "Глубинный", "league_portal": "Страж портала",
 	"mallet": "Киянка", "hammer": "Молот", "spiked_hammer": "С гвоздями", "heavy_hammer": "Тяжёлый молот",
 	"long_hammer": "Длинный молот", "sword": "Меч", "axe": "Топор", "concept_hammer": "Концепт",
@@ -42,6 +43,8 @@ const CATS := [
 	{"id": "head", "title": "Головы", "icon": "head", "kinds": ["head"]},
 	{"id": "limb", "title": "Конечности", "icon": "limb", "kinds": ["limb"]},
 	{"id": "joint", "title": "Шарниры и цепи", "icon": "joint", "kinds": ["joint", "chain"], "tool": "joint"},
+	# связки (KitLink, WORKSHOP_V4.md «Связки»): инструмент — замкнуть контур между двумя деталями бойца
+	{"id": "link", "title": "Связки", "icon": "link", "kinds": [], "tool": "link"},
 	{"id": "end", "title": "Кисти и стопы", "icon": "hand", "kinds": ["hand", "foot"]},
 	{"id": "weapon", "title": "Оружие", "icon": "weapon", "kinds": ["weapon_head", "mod"]},
 	{"id": "armor", "title": "Броня", "icon": "armor", "kinds": ["plate", "armor"]},
@@ -71,12 +74,13 @@ const GROUPS := {
 }
 const SORTS := ["Энергия", "Масса", "Имя"]
 ## Разъёмы словами (кроме групп мышц CraftEdit.GROUP_TITLES).
-const ANCHOR_WORDS := {"Face": "боёк", "End": "конец", "Side": "бок", "Top": "макушка", "Back": "спина", "Deco": "накладка",
+const ANCHOR_WORDS := {"Face": "боёк", "End": "конец", "Side": "бок", "SideB": "нижний бок", "Top": "макушка", "Back": "спина", "Deco": "накладка",
 	"Plate": "щиток", "Head": "навершие", "Mod": "мод", "Tip": "кончик", "Grip": "хват", "Spike": "шип", "Neck": "шея",
 	"Butt": "хвост рукояти", "Out": "наружу", "Wrist": "запястье", "Ankle": "лодыжка"}
 const TOOL_HINTS := {
 	"material": "Выбери материал и кликай по деталям бойца",
 	"joint": "Выбери шарнир и кликай по детали",
+	"link": "Выбери вид, кликни по точке на одной детали бойца, потом на другой",
 }
 const PULL_TITLES := {"": "—", "lmb": "ЛКМ", "rmb": "ПКМ"}
 ## Раскладка (база 1920×1080).
@@ -1083,6 +1087,14 @@ func _build_shelf() -> void:
 				jc.picked.connect(func(t: String) -> void: ctl.set_joint_pick(t))
 				tools_box.add_child(jc)
 				_tool_cards[String(jt)] = jc
+		elif _tool == "link":
+			tools_box.columns = 2
+			for lt in KitLink.ORDER:
+				var lc := JointCard.new()
+				lc.setup_link(String(lt))
+				lc.picked.connect(func(t: String) -> void: ctl.set_link_pick(t))
+				tools_box.add_child(lc)
+				_tool_cards[String(lt)] = lc
 		elif _tool == "paint":
 			tools_box.columns = 1
 			var pp := PaintPanel.new()
@@ -1254,7 +1266,7 @@ func _group_header(text: String, n: int) -> Control:
 func _update_tool_cards() -> void:
 	if ctl == null or _tool == "paint":
 		return
-	var sel := ctl.paint_mat if _tool == "material" else (ctl.joint_pick if _tool == "joint" else "")
+	var sel := ctl.paint_mat if _tool == "material" else (ctl.joint_pick if _tool == "joint" else (ctl.link_pick if _tool == "link" else ""))
 	for id in _tool_cards:
 		(_tool_cards[id]).set_selected(String(id) == sel)
 
@@ -1759,6 +1771,8 @@ func _refresh_summary(s: Dictionary, pv: Dictionary) -> void:
 		_row(summary_rows, "energy", tr("Энергия"), "%d / %d" % [int(s["energy"]), int(s["budget"])])
 		if PartHp.on:
 			_row(summary_rows, "heart", tr("Запас"), "%d" % int(s["hp"]), WsStyle.TEXT, tr("сумма ❤ деталей; оторванная деталь уносит свои"))
+		if int(s.get("links", 0)) > 0:
+			_row(summary_rows, "link", tr("Связки"), str(int(s["links"])), WsStyle.TEXT, tr("замыкают контур между деталями; связку можно перебить"))
 	else:
 		# «было → станет» — только у того, что меняется; остальное как есть, приглушённо
 		var ok := bool(pv["ok"])

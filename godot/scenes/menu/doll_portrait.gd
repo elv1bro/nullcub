@@ -109,6 +109,7 @@ func _render(bp: BodyBlueprint) -> Texture2D:
 	view_bp.nodes = CraftEdit._dup_nodes(bp.nodes)
 	view_bp.control = bp.control.duplicate()
 	view_bp.control_rmb = bp.control_rmb.duplicate()
+	view_bp.links = CraftEdit._dup_nodes(bp.links)
 	if CraftEdit.structural_errors(view_bp).size() > 0 or view_bp.nodes.is_empty():
 		return null
 	var d := MODULAR_DOLL.instantiate() as ModularDoll

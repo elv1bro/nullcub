@@ -27,7 +27,7 @@ const NAMES := [
 	"energy", "mass", "search", "filter", "physics", "mirror", "duplicate", "delete", "undo", "redo",
 	"star", "star_filled", "clock", "all", "gear", "play", "close", "chevron_left", "chevron_right", "chevron_down",
 	"help", "save", "folder", "pull", "body", "head", "limb", "joint", "hand", "weapon",
-	"armor", "material", "paint", "decor", "check", "warning", "plus", "minus", "socket", "heart",
+	"armor", "material", "paint", "decor", "check", "warning", "plus", "minus", "socket", "heart", "link",
 ]
 ## Выключенная кнопка: значок уходит к цвету тёмного дерева (непрозрачно — см. шапку).
 const DIM_TO := Color(0.3, 0.26, 0.22)
@@ -289,6 +289,10 @@ func _draw() -> void:
 			_dot(Vector2(12, 12), 3.0)
 		"heart":
 			_i_heart()
+		"link":   # связка: два шарика-конца и стержень между ними
+			_path([Vector2(8.0, 16.0), Vector2(16.0, 8.0)])
+			_ring(Vector2(6, 18), 3.0)
+			_ring(Vector2(18, 6), 3.0)
 		_:
 			if not _warned.has(icon):
 				_warned[icon] = true

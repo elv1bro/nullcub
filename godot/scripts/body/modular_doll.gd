@@ -101,6 +101,8 @@ var _stickers: Dictionary = {}         # uid -> Array[MeshInstance3D] накле
 var active_rig: ActiveRig
 ## Модули (PartMods, WORKSHOP_V4.md «Модули»): свойства всей куклы — запас Заряда, раскрутка, починка износа (PartMods.totals).
 var mod_totals: Dictionary = {}
+## Группы суставов, которые доснапываются в позу перед сборкой связок (Doll снапает только SPAWN_POSE_GROUPS).
+const LINK_POSE_GROUPS := ["Neck", "Wrist", "Ankle"]
 
 
 func _ready() -> void:
@@ -114,6 +116,10 @@ func _ready() -> void:
 	set_pose(_bp_pose)
 	if snap:
 		_snap_pose(SPAWN_POSE_GROUPS)
+	if blueprint != null and not blueprint.links.is_empty():
+		if snap:   # связки строятся в позе покоя целиком (и кисти, и стопы, и шея) — иначе мышцы дотягивали бы позу против связок
+			_snap_pose(LINK_POSE_GROUPS)
+		_build_links()
 	child_entered_tree.connect(_on_child_entered)
 	part_reattached.connect(_on_part_reattached)
 	for c in get_children():
@@ -504,15 +510,78 @@ func _build() -> void:
 	knock_spin_mult = float(mod_totals.get("knock_spin_mult", 1.0))
 
 
-## Модуль «Скобы-ремкомплект» (PartMods repair_per_s): износ деталей чинится сам, пока детали изнашиваются (режимы «;» и C). Запас
-## бойца не лечится; уже отлетевшие детали не возвращаются.
+## Модуль «Скобы-ремкомплект» (PartMods repair_per_s): износ деталей чинится сам, пока детали изнашиваются (режимы «;» и C), и износ
+## связок — всегда. Запас бойца не лечится; уже отлетевшие детали и порванные связки не возвращаются.
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 	var rate := float(mod_totals.get("repair_per_s", 0.0))
-	if rate <= 0.0 or not alive or not (JointBreak.on or PartHp.on):
+	if rate <= 0.0 or not alive:
+		return
+	for ln in link_wear:
+		link_wear[ln] = minf(float(link_wear[ln]) + rate * delta, float(link_wear_max.get(ln, link_wear[ln])))
+	if not (JointBreak.on or PartHp.on):
 		return
 	for n in joint_hp:
 		joint_hp[n] = minf(float(joint_hp[n]) + rate * delta, float(joint_hp_max.get(n, joint_hp[n])))
+
+
+# --- связки (KitLink, LinkBuilder, WORKSHOP_V4.md «Связки») ---
+
+## Связки чертежа — телами и суставами (LinkBuilder.build) в текущей позе. Тела связок становятся частями куклы: parts, масса, ❤
+## (PartHp: вся связка — одна деталь, ❤ на первом теле), исключения столкновений со своими телами, дамп. Битые связки (нет узла,
+## узел без своего тела, концы совпали) пропускаются.
+func _build_links() -> void:
+	for l in blueprint.links:
+		var ua := String(l.get("a", ""))
+		var ub := String(l.get("b", ""))
+		if not uid_body.has(ua) or not uid_body.has(ub) or blueprint.is_fixed(ua) or blueprint.is_fixed(ub):
+			continue
+		var ba := parts.get(uid_body[ua]) as RigidBody3D
+		var bb := parts.get(uid_body[ub]) as RigidBody3D
+		var rec := LinkBuilder.build(self, l, ba, bb)
+		if rec.is_empty():
+			continue
+		var bodies: Array = rec["bodies"]
+		rec["hp"] = float(PartHp.hp_of(KitLink.mass_of(String(rec["type"]), float(rec["len"])), 0.5))
+		for i in range(bodies.size()):
+			var b := bodies[i] as RigidBody3D
+			var bn := String(b.name)
+			if _self_exceptions:
+				for p in parts.values():
+					b.add_collision_exception_with(p)
+			parts[bn] = b
+			link_of_body[bn] = String(rec["name"])
+			part_hp[bn] = float(rec["hp"]) if i == 0 else 0.0
+			b.linear_damp = _part_linear_damp(bn, false)
+			b.angular_damp = _part_angular_damp(bn)
+		links_rt[String(rec["name"])] = rec
+	total_mass = 0.0
+	for p in parts.values():
+		total_mass += (p as RigidBody3D).mass
+	_init_link_wear()
+
+
+## Поршень связки ln (KitLink piston): on — мотор телескопа выдвигает шток до верхнего упора (ход extend), иначе втягивает до нижнего.
+## Зовёт ActiveRig по клавише канала.
+func set_piston(ln: String, on: bool) -> void:
+	var rec: Dictionary = links_rt.get(ln, {})
+	if rec.is_empty() or String(rec["type"]) != "piston" or not is_instance_valid(rec["strut"]):
+		return
+	if bool(rec.get("on", false)) == on:
+		return
+	rec["on"] = on
+	var sp := float(KitLink.info("piston")["speed"])
+	(rec["strut"] as Generic6DOFJoint3D).set("linear_motor_x/target_velocity", sp if on else -sp)
+	for b in rec["bodies"]:
+		if is_instance_valid(b):
+			(b as RigidBody3D).sleeping = false
+
+
+## Переставить тела связок между точками концов (стенд, витрина: тела заморожены, позу ставят руками).
+func refresh_links() -> void:
+	for ln in links_rt:
+		var rec: Dictionary = links_rt[ln]
+		LinkBuilder.place(self, rec, blueprint.find_link(String(rec["id"])))
 
 
 ## Сварка (joint "weld", BODY_KIT.md §5.2, §5.4) замораживает деталь в позе покоя её сустава, а не прямо по якорю: поворот вокруг

@@ -2921,6 +2921,40 @@
    "League_Void"
   ]
  },
+ "Kit_Hub_Fork": {
+  "glb": "Kit_Hub_Fork",
+  "builder": "Hub_Fork",
+  "size": "",
+  "kind": "joint",
+  "title": "Развилка",
+  "id": "kit_hub_fork",
+  "mass": 1.8,
+  "energy": 3,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Joint",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2568,
+  "empties": [
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Capsule_Horn_L",
+   "Shape_Capsule_Horn_R",
+   "Shape_Sphere_Hub",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
  "Kit_Hub_ProTee": {
   "glb": "Kit_Hub_ProTee",
   "builder": "Hub_ProTee",
@@ -2939,6 +2973,40 @@
   "tris": 2554,
   "empties": [
    "Anchor_End",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Sphere_Hub",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit"
+  ]
+ },
+ "Kit_Hub_Star": {
+  "glb": "Kit_Hub_Star",
+  "builder": "Hub_Star",
+  "size": "",
+  "kind": "joint",
+  "title": "Звезда",
+  "id": "kit_hub_star",
+  "mass": 2.6,
+  "energy": 5,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "Joint",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2570,
+  "empties": [
+   "Anchor_End",
+   "Anchor_SideB_L",
+   "Anchor_SideB_R",
    "Anchor_Side_L",
    "Anchor_Side_R",
    "Shape_Sphere_Hub",
@@ -3552,6 +3620,80 @@
    "Brass",
    "Gem",
    "Shirt_Kit"
+  ]
+ },
+ "Kit_Limb_Frame_L": {
+  "glb": "Kit_Limb_Frame_L",
+  "builder": "Limb_Frame",
+  "size": "L",
+  "kind": "limb",
+  "title": "Рама (нога)",
+  "id": "kit_limb_frame_l",
+  "mass": 4.0,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperLeg",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2930,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Anchor_SideB_L",
+   "Anchor_SideB_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Frame",
+   "Shape_Box_Stem",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
+  ]
+ },
+ "Kit_Limb_Frame_S": {
+  "glb": "Kit_Limb_Frame_S",
+  "builder": "Limb_Frame",
+  "size": "S",
+  "kind": "limb",
+  "title": "Рама (рука)",
+  "id": "kit_limb_frame_s",
+  "mass": 4.0,
+  "energy": 9,
+  "attach": "joint",
+  "weapon_mult": 1.0,
+  "name_prefix": "UpperArm",
+  "base_mat": "paint_white",
+  "material": "wood",
+  "connector": true,
+  "tris": 2930,
+  "empties": [
+   "Anchor_Deco",
+   "Anchor_End",
+   "Anchor_SideB_L",
+   "Anchor_SideB_R",
+   "Anchor_Side_L",
+   "Anchor_Side_R",
+   "Shape_Box_Frame",
+   "Shape_Box_Stem",
+   "Socket"
+  ],
+  "materials": [
+   "Base_PaintWhite",
+   "Brass",
+   "Iron",
+   "Pro_Carbon",
+   "Pro_Glow",
+   "Shirt_Kit",
+   "Steel"
   ]
  },
  "Kit_Limb_LeagueCrystal_L": {

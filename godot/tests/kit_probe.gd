@@ -570,7 +570,7 @@ static func _anchor_expect(short: String) -> Dictionary:
 			e["group"] = base
 			e["from_pose"] = true
 			e["joint_r"] = true
-		"Side":
+		"Side", "SideB":   # SideB — вторая пара боковых выходов (рама, звезда: tools/blender/kit_frames.py)
 			e["accepts"] = ANY_LIMB
 			e["group"] = "Hip"
 			e["limit_deg"] = SIDE_LIMITS

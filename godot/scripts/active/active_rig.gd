@@ -34,6 +34,8 @@ var doll: ModularDoll
 var blocks: Array = []
 var charge := 0.0
 var charge_max := ActiveBlocks.CHARGE_MAX
+## Поршни-связки: [{name «Link_<id>», channel}] — канал зажат и заряда хватает: выдвинут (ModularDoll.set_piston).
+var pistons: Array = []
 var regen := ActiveBlocks.CHARGE_REGEN
 var dealt_mult := 1.0
 var hp_regen := 0.0
@@ -73,7 +75,7 @@ var _hurt_t := 0.0
 ## Поставить узел на куклу, если в чертеже есть активный блок или пассив (зовёт ModularDoll._ready). Уже есть — вернуть его
 ## (Match.respawn_doll пересоздаёт детей со скриптом: второй экземпляр освобождается в своём _ready).
 static func attach_if_needed(d: ModularDoll) -> ActiveRig:
-	if d == null or not ActiveBlocks.has_any(d.blueprint):
+	if d == null or not (ActiveBlocks.has_any(d.blueprint) or has_pistons(d.blueprint)):
 		return null
 	for c in d.get_children():
 		if c is ActiveRig and not c.is_queued_for_deletion():
@@ -118,8 +120,22 @@ func _exit_tree() -> void:
 	_set_phase(false)
 
 
+## Поршни-связки (KitLink piston) — их канал жмётся теми же клавишами I / O / P, тратят тот же заряд.
+static func has_pistons(bp: BodyBlueprint) -> bool:
+	if bp == null:
+		return false
+	for l in bp.links:
+		if String(l.get("type", "")) == "piston":
+			return true
+	return false
+
+
 func _collect() -> void:
 	blocks.clear()
+	pistons.clear()
+	for l in doll.blueprint.links:
+		if String(l.get("type", "")) == "piston":
+			pistons.append({"name": "Link_" + String(l.get("id", "")), "channel": clampi(int(l.get(KitLink.CHANNEL_KEY, 1)), 1, ActiveBlocks.CHANNELS)})
 	charge_max += float(doll.mod_totals.get("charge_bonus", 0.0))   # модуль «Батарея» (PartMods): и заряд активных блоков
 	for n in doll.blueprint.nodes:
 		var pid := String(n.get("part", ""))
@@ -168,6 +184,14 @@ func _physics_process(dt: float) -> void:
 	mines = mines.filter(func(m: Variant) -> bool: return is_instance_valid(m))
 	if auto and ok:
 		_autopilot()
+	# поршни-связки: канал зажат и заряда хватает — выдвинут, иначе втянут (KitLink piston: cost заряда в секунду)
+	for p in pistons:
+		var need_p := float(KitLink.info("piston")["cost"]) * dt
+		var on_p := ok and _want(int(p["channel"])) and charge >= need_p
+		if on_p:
+			charge -= need_p
+			spent += need_p
+		doll.set_piston(String(p["name"]), on_p)
 	var phase := false
 	for ch in range(1, ActiveBlocks.CHANNELS + 1):
 		var want := ok and _want(ch)
