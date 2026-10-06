@@ -23,6 +23,11 @@ const PICK_EVERY_S := 0.25            # выбор ящика — не чаще
 const NAV_EVERY_S := 0.3              # план пути через метки — не чаще
 const NAV_ARRIVE_M := 1.2             # у метки ближе этого — она пройдена
 const GRUDGE_MIN_HP := 4.0            # удар слабее (и не оружием) — не повод для мести
+## Переход без толку: в «advance» ЦМ не вышел из круга STILL_M за STILL_S — цель (до неё не добраться: за краем коридора зоны или за
+## стеной) бросается на DROP_S, точка патруля — новая (проба 06.10: бот 34 с висел у края коридора напротив цели).
+const STILL_M := 1.5
+const STILL_S := 8.0
+const DROP_S := 10.0
 
 var _pick_next := -1.0
 var _nav_next := -1.0
@@ -32,6 +37,9 @@ var _nav_direct := true
 var _ends: Dictionary = {}            # Vector2i(округлённая цель) → {метка: расстояние}
 var _roam_next := -1.0
 var _roam_y := 0.0
+var _still_at := Vector2(INF, INF)
+var _still_t := 0.0
+var _dropped: Dictionary = {}         # instance id брошенной цели → до какого _time её не видеть
 
 ## Кто ранил последним и до какого _time он виден, где бы ни был.
 var _grudge: Doll = null
@@ -88,8 +96,29 @@ func players() -> Array:
 	var me := my_pos()
 	var lim := see_m()
 	return out.filter(func(p: Variant) -> bool:
+		if p != _grudge and float(_dropped.get((p as Node).get_instance_id(), -1.0)) > _time:
+			return false   # брошена: не добраться
 		var dist := me.distance_to(com2(p as Doll))
 		return dist <= lim or (p == target and dist <= lim * 1.5) or (p == _grudge and _time < _grudge_until))
+
+
+## «advance» без толку STILL_S — бросить цель на DROP_S и взять новую точку патруля.
+func _tick_still(delta: float) -> void:
+	var me := my_pos()
+	if state != "advance" or me.distance_to(_still_at) > STILL_M:
+		_still_at = me
+		_still_t = 0.0
+		return
+	_still_t += delta
+	if _still_t < STILL_S:
+		return
+	_still_t = 0.0
+	if target != null and is_instance_valid(target) and target != _grudge:
+		_dropped[target.get_instance_id()] = _time + DROP_S
+		target = null
+		_hist.clear()
+	_roam_next = -1.0
+	counters["drop_target"] = int(counters.get("drop_target", 0)) + 1
 
 
 ## Дистанция боя — не дальше, чем бот видит после сбора (иначе снайпер отходил бы за край зрения и терял цель).
@@ -201,6 +230,7 @@ func _crate_safe(c: Node3D) -> bool:
 
 
 func _think(delta: float) -> void:
+	_tick_still(delta)
 	var g := gun()
 	var has_target := target != null and is_instance_valid(target) and target.alive
 	var z := zone()
