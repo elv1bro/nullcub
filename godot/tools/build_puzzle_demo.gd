@@ -1,5 +1,5 @@
-## Сборщик демо «Головоломки вдвоём» (docs/plan-demo/PUZZLE.md, MODES_PACK.md §6): пишет res://scenes/playground_puzzle.tscn — шесть
-## закрытых комнат 16 × 9 м в ряд по x (центры через Tuning.PUZZLE_ROOM_PITCH), механизмы из scenes/puzzle/*.tscn, связи NodePath,
+## Сборщик демо «Головоломки вдвоём» (docs/plan-demo/PUZZLE.md, MODES_PACK.md §6): пишет res://scenes/playground_puzzle.tscn — восемь
+## закрытых комнат 16 × 9 м в ряд по x (7 и 8 — с порталами, docs/plan-demo/PORTAL.md) (центры через Tuning.PUZZLE_ROOM_PITCH), механизмы из scenes/puzzle/*.tscn, связи NodePath,
 ## кабели по задней стене, ящики и бочки, свет; плюс игровое: камера (DynamicCamera), PuzzleMatch, PuzzleHud, узел кукол.
 ## Повторный запуск перезаписывает сцену.
 ## Запуск: godot --headless --path godot --import && godot --headless --path godot res://tools/build_puzzle_demo.tscn
@@ -11,7 +11,7 @@
 ## Дерево:
 ##   PlaygroundPuzzle (playground_puzzle.gd)
 ##   ├── Environment, Sun
-##   ├── Rooms/Room1..Room6 (PuzzleRoom): Static (StaticBody3D: формы), Visual (меши), Mech (механизмы, кабели), Props (ящики, бочки,
+##   ├── Rooms/Room1..Room8 (PuzzleRoom): Static (StaticBody3D: формы), Visual (меши), Mech (механизмы, кабели), Props (ящики, бочки,
 ##   │     стена с трещиной), Spawns (Spawn0, Spawn1), Lamp (OmniLight3D)
 ##   ├── Dolls, Camera (DynamicCamera), Match (PuzzleMatch), HUD (PuzzleHud)
 extends Node
@@ -24,6 +24,7 @@ const HUD := "res://scenes/puzzle/puzzle_hud.gd"
 const CAMERA := "res://scenes/camera/dynamic_camera.gd"
 const PZ := "res://scenes/puzzle/%s.tscn"
 const BARREL := "res://scenes/props/scrap/prop_metal_barrel.tscn"
+const PORTALS := "res://scenes/portal/portal_pair.tscn"
 const TEX := {
 	"wall": "res://assets/textures/garage/paint_metal/",
 	"floor": "res://assets/textures/garage/floor/",
@@ -69,6 +70,8 @@ func _build() -> bool:
 	_room4(_room(rooms, 3, 0.0))
 	_room5(_room(rooms, 4, 5.0))
 	_room6(_room(rooms, 5, 5.6))
+	_room7(_room(rooms, 6, 5.8))
+	_room8(_room(rooms, 7, 5.6))
 	var dolls := Node3D.new()
 	dolls.name = "Dolls"
 	root.add_child(dolls)
@@ -172,6 +175,15 @@ func _solid(r: Node3D, n: String, x0: float, x1: float, y0: float, y1: float, ma
 	var st := r.get_node("Static") as StaticBody3D
 	PuzzlePart.box_shape(st, n, Vector3(x1 - x0, y1 - y0, 4.0), Vector3((x0 + x1) * 0.5, (y0 + y1) * 0.5, 0))
 	PuzzlePart.box_mesh(r.get_node("Visual"), n, Vector3(x1 - x0, y1 - y0, 2.4), Vector3((x0 + x1) * 0.5, (y0 + y1) * 0.5, 0), mats[mat])
+
+
+## Убрать твёрдый блок каркаса (форму и меш) — под проём портала или свою геометрию.
+func _cut(r: Node3D, n: String) -> void:
+	for holder in ["Static", "Visual"]:
+		var c := r.get_node_or_null("%s/%s" % [holder, n])
+		if c != null:
+			c.get_parent().remove_child(c)
+			c.free()
 
 
 ## Только вид (без формы): задняя стена, рамки.
@@ -383,6 +395,89 @@ func _room6(r: Node3D) -> void:
 	var disp := _inst(r.get_node("Mech"), "dispenser", "Dispenser", Vector3(-3.0, H - 0.25, 0), {"keep": 1})
 	disp.set("until", disp.get_path_to(wall))
 	disp.set("into", disp.get_path_to(r.get_node("Props")))
+
+
+## 7. «Разгон» (порталы, docs/plan-demo/PORTAL.md): чугунный ящик 90 кг на полке под потолком, его не поднять ни руками, ни тягой.
+## Столкнуть с полки вправо — он падает вдоль правой стены в щель A на полу (≈ 10 м/с) и вылетает из щели B высоко в левой стене
+## с той же скоростью — через комнату на уступ с грузовыми весами 80 кг (бортик справа ловит) → дверь наверху справа. Тот же ящик,
+## задвинутый в A с пола, вылетает медленно и падает у левой стены (R — заново). Полка слева закрыта упором: ящик с неё не столкнуть
+## на уступ напрямую. Вдвоём и один — одинаково.
+func _room7(r: Node3D) -> void:
+	_cut(r, "Floor")
+	_solid(r, "FloorL", -W * 0.5 - 1.0, 5.6, -1.0, 0.0, "floor")
+	_solid(r, "FloorR", 8.0, W * 0.5 + 1.0, -1.0, 0.0, "floor")
+	_cut(r, "WallL")
+	_solid(r, "WallL_Low", -W * 0.5 - 1.0, -W * 0.5, 0.0, 6.3)
+	_solid(r, "WallL_High", -W * 0.5 - 1.0, -W * 0.5, 8.5, H)
+	# полка с ящиком (под потолком, упор слева) и уступ с весами (бортик справа)
+	_solid(r, "Shelf", 1.2, 6.0, 5.6, 6.0, "iron")
+	_solid(r, "ShelfStop", 1.2, 1.5, 6.0, 6.7, "iron")
+	_decor(r, "ShelfBracket", Vector3(0.5, 5.6, 0.3), Vector3(2.0, 2.8, BACK_Z + 0.25), "iron")
+	_solid(r, "Ledge", -1.0, 4.6, 2.6, 3.0, "iron")
+	_solid(r, "LedgeLip", 4.6, 5.0, 2.6, 3.6, "iron")
+	_decor(r, "LedgeEdge", Vector3(0.2, 0.18, 2.44), Vector3(-0.9, 2.91, 0), "hazard")
+	var scale := _inst(r.get_node("Mech"), "plate", "Scale", Vector3(3.2, 3.0, 0), {"threshold_kg": 80.0, "width": 2.4,
+		"count_dolls": false, "pad_colour": Color(0.3, 0.65, 1.0)})
+	var door := r.get_node("Mech/ExitDoor")
+	door.set("input", door.get_path_to(scale))
+	_cable(r, "Cable", scale, [Vector2(3.2, 3.15), Vector2(3.2, 4.7), Vector2(7.4, 4.7), Vector2(7.4, 8.6)])
+	_inst(r.get_node("Mech"), PORTALS, "Portals", Vector3.ZERO, {"a_position": Vector3(6.8, 0.0, 0.0), "a_angle_deg": 0.0,
+		"b_position": Vector3(-W * 0.5, 7.4, 0.0), "b_angle_deg": -90.0, "width": 2.4, "colour_index": 0})
+	_crate(r, "Iron", "iron", 3.4, 6.0)
+	_crate(r, "Light", "light", -3.6, 0.0)
+
+
+## 8. «Стрелочник» (порталы): справа — запертая камера (уровень 5.6 м и выше) за толстой стеной; в ней проход B2, трещина и за ней
+## дверь. Плита на полу (вдвоём — стоит второй) или карманная плита в камере → ЛЮБОЙ → ТАЙМЕР 5 с → ток пары; рычаг выбирает выход
+## щели A на полу: B1 (левая стена, обратно в комнату) или B2 (в камеру, на трещину). Бочка — с полки над входом: бросить в A при
+## рычаге на B2 — вылетает на трещину и рвёт её; потом самому через A → B2 → за трещину на плиту (защёлка) → дверь. Взрыв снаружи
+## камеры трещину не достаёт (до неё ≥ 4 м, радиус взрыва 3.2). Соло — встать на плиту и успеть за 5 с; люк роняет новую бочку.
+func _room8(r: Node3D) -> void:
+	_cut(r, "Floor")
+	_solid(r, "FloorL", -W * 0.5 - 1.0, -0.9, -1.0, 0.0, "floor")
+	_solid(r, "FloorR", 1.3, W * 0.5 + 1.0, -1.0, 0.0, "floor")
+	_cut(r, "WallL")
+	_solid(r, "WallL_Low", -W * 0.5 - 1.0, -W * 0.5, 0.0, 4.9)
+	_solid(r, "WallL_High", -W * 0.5 - 1.0, -W * 0.5, 7.1, H)
+	# камера: основание (до пола двери) и толстая левая стенка с карманом B2
+	_solid(r, "CBase", 1.6, 8.0, 0.0, 5.6, "iron")
+	_solid(r, "CWall_Low", 1.6, 3.2, 5.6, 6.2, "iron")
+	_solid(r, "CWall_High", 1.6, 3.2, 8.4, H, "iron")
+	_solid(r, "CWall_Back", 1.6, 1.9, 6.2, 8.4, "iron")
+	_inst(r.get_node("Props"), "crack_wall", "CrackWall", Vector3(5.9, 5.6, 0), {"size": Vector2(0.6, 3.4)})
+	var pc := _inst(r.get_node("Mech"), "plate", "PlateC1", Vector3(4.4, 5.6, 0), {"threshold_kg": 30.0, "width": 1.6})
+	var latch := _inst(r.get_node("Mech"), "plate", "PlateC2", Vector3(7.1, 5.6, 0), {"threshold_kg": 30.0, "width": 1.6, "latch": true})
+	var door := r.get_node("Mech/ExitDoor")
+	door.set("input", door.get_path_to(latch))
+	# полка с бочкой над входом, люк над ней
+	_solid(r, "BarrelShelf", -W * 0.5, -4.9, 2.6, 3.0, "iron")
+	_inst(r.get_node("Props"), BARREL, "Barrel", Vector3(-7.0, 3.02, 0))
+	var disp := _inst(r.get_node("Mech"), "dispenser", "Dispenser", Vector3(-7.0, H - 0.25, 0), {"keep": 1})
+	disp.set("until", disp.get_path_to(r.get_node("Props/CrackWall")))
+	disp.set("into", disp.get_path_to(r.get_node("Props")))
+	# ток: плита на полу или в камере → ЛЮБОЙ → ТАЙМЕР 5 с → пара; рычаг — выход A
+	# плита — левее рычага: с бочкой от полки к плите рычаг не на пути (бочка от удара о рукоять загорается)
+	var plate := _inst(r.get_node("Mech"), "plate", "Plate", Vector3(-3.8, 0, 0), {"threshold_kg": 30.0, "width": 1.4})
+	var lever := _inst(r.get_node("Mech"), "lever", "Lever", Vector3(-2.2, 0, 0), {"start_on": false})
+	var any := _inst(r.get_node("Mech"), "logic", "Any", Vector3(-2.2, 4.6, CABLE_Z), {"mode": PuzzleLogic.Mode.OR})
+	any.set("inputs", [any.get_path_to(plate), any.get_path_to(pc)] as Array[NodePath])
+	var tm := _inst(r.get_node("Mech"), "logic", "Timer", Vector3(0.2, 4.6, CABLE_Z), {"mode": PuzzleLogic.Mode.TIMER, "hold_s": 5.0})
+	tm.set("inputs", [tm.get_path_to(any)] as Array[NodePath])
+	var pair := _inst(r.get_node("Mech"), PORTALS, "Portals", Vector3.ZERO, {"a_position": Vector3(0.2, 0.0, 0.0), "a_angle_deg": 0.0,
+		"b_position": Vector3(-W * 0.5, 6.0, 0.0), "b_angle_deg": -90.0, "alt_enabled": true, "alt_position": Vector3(3.2, 7.3, 0.0),
+		"alt_angle_deg": -90.0, "colour_index": 1, "label_b": "B1", "label_alt": "B2"})
+	pair.set("input", pair.get_path_to(tm))
+	pair.set("switch_input", pair.get_path_to(lever))
+	var teal: Color = Tuning.PORTAL_COLOURS[1]
+	for k in 2:
+		var l := PuzzlePart.label(r.get_node("Visual"), "LeverB%d" % (k + 1), "B%d" % (k + 1), Vector3(-2.2 + (k * 2 - 1) * 0.62, 1.05, 0.62), 40, teal)
+		l.outline_size = 8
+	_cable(r, "CablePlate", plate, [Vector2(-3.8, 0.15), Vector2(-3.8, 4.6), Vector2(-2.75, 4.6)])
+	_cable(r, "CablePlateC1", pc, [Vector2(4.4, 5.75), Vector2(4.4, 8.7), Vector2(-2.2, 8.7), Vector2(-2.2, 4.95)])
+	_cable(r, "CableAny", any, [Vector2(-1.65, 4.6), Vector2(-0.35, 4.6)])
+	_cable(r, "CableTimer", tm, [Vector2(0.2, 4.25), Vector2(0.2, 1.4)])
+	_cable(r, "CableLever", lever, [Vector2(-2.2, 0.3), Vector2(-2.2, 2.6), Vector2(0.8, 2.6), Vector2(0.8, 1.4)])
+	_cable(r, "CableLatch", latch, [Vector2(7.1, 5.75), Vector2(7.1, 8.3), Vector2(7.4, 8.3), Vector2(7.4, 8.5)])
 
 
 # ---------------------------------------------------------------- игровое

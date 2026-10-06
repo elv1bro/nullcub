@@ -571,6 +571,7 @@ func _rooms_section() -> void:
 	if pg.rooms.size() < 8:
 		return
 	for coop in [true, false]:
+		pg.restart_demo()
 		for i in [6, 7]:
 			if coop:
 				if pg.p2 == null:

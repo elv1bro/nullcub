@@ -49,6 +49,7 @@ signal transferred(what: Node3D, from: Portal, to: Portal)
 
 const HISTORY_MAX := 64
 const QUIET_FRAMES := 12   # звук включения не играет на загрузке
+const BOX_META := &"portal_local_box"
 
 var a: Portal
 var b: Portal
@@ -58,7 +59,6 @@ var transfers := 0
 var history: Array = []
 
 static var _cool: Dictionary = {}       # instance id тела / куклы -> физкадр, до которого не переносить
-static var _boxes: Dictionary = {}      # instance id тела -> локальный AABB коллизий
 static var _purge_at := 0
 var _born_frame := 0
 
@@ -365,11 +365,10 @@ static func _shapes(rb: RigidBody3D) -> Array:
 	return out
 
 
-## Объединённый AABB коллизий тела в его локальных координатах (кэш по телу).
+## Объединённый AABB коллизий тела в его локальных координатах (кэш — meta тела: формы тел не меняются).
 static func local_box(rb: RigidBody3D) -> AABB:
-	var id := rb.get_instance_id()
-	if _boxes.has(id):
-		return _boxes[id]
+	if rb.has_meta(BOX_META):
+		return rb.get_meta(BOX_META)
 	var box := AABB()
 	var first := true
 	var inv := rb.global_transform.affine_inverse()
@@ -380,7 +379,7 @@ static func local_box(rb: RigidBody3D) -> AABB:
 		first = false
 	if first:
 		box = AABB(Vector3(-0.1, -0.1, -0.1), Vector3(0.2, 0.2, 0.2))
-	_boxes[id] = box
+	rb.set_meta(BOX_META, box)
 	return box
 
 

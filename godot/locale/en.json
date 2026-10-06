@@ -2049,5 +2049,10 @@
 	"ВСЕ": "ALL",
 	"ЛЮБОЙ": "ANY",
 	"Z — ПЫЛЬ: ВКЛ": "Z — DUST: ON",
-	"Z — ПЫЛЬ: ВЫКЛ": "Z — DUST: OFF"
+	"Z — ПЫЛЬ: ВЫКЛ": "Z — DUST: OFF",
+	"Разгон с высоты": "Momentum",
+	"Порталы: что ушло в щель A, вылетает из щели B с той же скоростью. Чугунный ящик не поднять — столкни его с полки в A: разгон с высоты донесёт его до весов.": "Portals: whatever goes into slot A flies out of slot B at the same speed. The cast-iron crate can't be lifted — push it off the shelf into A: the speed from the drop carries it to the scale.",
+	"Стрелочник": "Switchman",
+	"Плита включает порталы (таймер 5 с), рычаг выбирает выход A: B1 или B2 в камеру с трещиной. Один стоит на плите, другой ставит рычаг на B2 и бросает бочку в A. Потом — сами через A к двери.": "The plate powers the portals (5 s timer), the lever picks where A leads: B1, or B2 into the cracked chamber. One stands on the plate, the other sets the lever to B2 and throws a barrel into A. Then go through A to the door yourselves.",
+	"Один: встань на плиту — 5 с, чтобы бросить бочку в A; потом снова на плиту и сам в A.": "Solo: step on the plate — you have 5 s to throw the barrel into A; then the plate again and dive into A yourself."
 }
