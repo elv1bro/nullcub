@@ -1,9 +1,10 @@
 ## Цена вида поля NULL в кадре (look-null, docs/plan-demo/look/null.md; ОКОННАЯ проба, запускать через godot_nofocus.sh без --fixed-fps):
 ## купол с боем (куклы несутся друг на друга, как в look_capture), vsync выключен, авто-масштаб Gfx на время пробы выключен (масштаб
 ## 3D не плавает). Блоки по block_s секунд по очереди «новый вид» / «как было» (рубильник Look), первые settle_s секунд блока не
-## считаются; время кадра — по реальным часам. Итог: медиана и p95 мс кадра для обоих состояний и разница; шире — tests/look_shots/look_null_perf.json.
+## считаются; время кадра — по реальным часам, плюс время кадра на GPU (RenderingServer.viewport_get_measured_render_time_gpu —
+## не зависит от потолка частоты окна). Итог: медиана и p95 мс кадра для обоих состояний и разница; шире — tests/look_shots/look_null_perf.json.
 ## Аргументы: scene=<res://…>, block_s=5, blocks=6, warm_s=3, settle_s=0.6, shifts=1 (в начале каждого блока смена поля — волна по кадру
-## в «новом виде»), scale=<0..1> — масштаб 3D вместо выставленного Gfx (1 — полное разрешение окна), max_cost_ms=<n> — exit 1, если
+## в «новом виде»), item=<id> — переключать один пункт «ВИД» вместо рубильника, scale=<0..1> — масштаб 3D вместо выставленного Gfx (1 — полное разрешение окна), max_cost_ms=<n> — exit 1, если
 ## медиана «нового» дороже «как было» больше чем на n мс.
 ## Запуск: GODOT_BIN=… godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/look_null_perf.tscn -- "block_s=5,blocks=6"
 extends Node
@@ -16,8 +17,11 @@ var settle_s := 0.6
 var shifts := false
 var max_cost_ms := INF
 var force_scale := 0.0
+var item := &""
 var _inst: Node
 var _ms := {true: [], false: []}
+var _gpu := {true: [], false: []}
+var _scale_seen := 0.0
 var _last_us := 0
 var _record := false
 var _state := true
@@ -39,7 +43,9 @@ func _ready() -> void:
 				"shifts": shifts = kv[1] == "1"
 				"max_cost_ms": max_cost_ms = float(kv[1])
 				"scale": force_scale = float(kv[1])
+				"item": item = StringName(kv[1])
 	seed(3)
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = 0
 	var gfx := get_node("/root/Gfx")
@@ -55,9 +61,13 @@ func _ready() -> void:
 	add_child(_inst)
 	await _wait(warm_s)
 	var presets := [[0.35, Vector2(0.7, -0.7)], [0.204, Vector2(0.0, -1.0)]]
+	var item0: bool = look.checked(item) if item != &"" else true
 	for b in blocks:
 		_state = b % 2 == 0
-		look.set_master(_state)
+		if item != &"":
+			look.set_on(item, _state)
+		else:
+			look.set_master(_state)
 		if shifts:
 			var p: Array = presets[b % 2]
 			for a in get_tree().get_nodes_in_group("arena"):
@@ -70,11 +80,16 @@ func _ready() -> void:
 		await _wait(block_s - settle_s)
 		_record = false
 	look.set_master(master0)
+	if item != &"":
+		look.set_on(item, item0)
 	var on := _stats(_ms[true])
 	var off := _stats(_ms[false])
 	var cost := float(on["median_ms"]) - float(off["median_ms"])
-	var rep := {"scene": scene_path, "window": str(get_window().size), "render_scale": get_viewport().scaling_3d_scale, "render_size": str(gfx.get("render_size")),
-		"preset": gfx.get("preset"), "load_avg": _load_avg(), "cores": OS.get_processor_count(), "shifts": shifts, "on": on, "off": off,
+	var gon := _stats(_gpu[true])
+	var goff := _stats(_gpu[false])
+	var gcost := float(gon["median_ms"]) - float(goff["median_ms"])
+	var rep := {"scene": scene_path, "window": str(get_window().size), "render_scale": _scale_seen, "gpu_on": gon, "gpu_off": goff, "gpu_cost_median_ms": snappedf(gcost, 0.01), "render_size": str(gfx.get("render_size")),
+		"preset": gfx.get("preset"), "item": String(item), "load_avg": _load_avg(), "cores": OS.get_processor_count(), "shifts": shifts, "on": on, "off": off,
 		"cost_median_ms": snappedf(cost, 0.01)}
 	gfx.set("auto_scale", auto0)
 	gfx.call("_refresh_scale")
@@ -82,18 +97,24 @@ func _ready() -> void:
 	var f := FileAccess.open("res://tests/look_shots/look_null_perf.json", FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(rep, "  "))
-	print("PERF look_null on: median %.2f ms (%.0f fps), p95 %.2f ms; off: median %.2f ms (%.0f fps), p95 %.2f ms; cost %+.2f ms; scale %.2f %s, load %s" % [
-		on["median_ms"], 1000.0 / maxf(float(on["median_ms"]), 0.001), on["p95_ms"], off["median_ms"], 1000.0 / maxf(float(off["median_ms"]), 0.001),
-		off["p95_ms"], cost, get_viewport().scaling_3d_scale, str(get_window().size), str(rep["load_avg"])])
+	print("PERF look_null%s on: median %.2f ms (%.0f fps), p95 %.2f ms; off: median %.2f ms (%.0f fps), p95 %.2f ms; cost %+.2f ms; scale %.2f %s, load %s" % [
+		"" if item == &"" else " [" + String(item) + "]", on["median_ms"], 1000.0 / maxf(float(on["median_ms"]), 0.001), on["p95_ms"], off["median_ms"], 1000.0 / maxf(float(off["median_ms"]), 0.001),
+		off["p95_ms"], cost, _scale_seen, str(get_window().size), str(rep["load_avg"])])
+	print("PERF look_null GPU: on median %.2f ms, p95 %.2f; off median %.2f ms, p95 %.2f; cost %+.2f ms" % [gon["median_ms"], gon["p95_ms"],
+		goff["median_ms"], goff["p95_ms"], gcost])
 	var ok := cost <= max_cost_ms
 	print("=== %s ===" % ("OK" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
 
 
 func _process(_dt: float) -> void:
+	if force_scale > 0.0 and not is_equal_approx(get_viewport().scaling_3d_scale, force_scale):
+		get_viewport().scaling_3d_scale = force_scale   # Gfx пересчитывает масштаб на смену сцены / окна — держим свой
 	var now := Time.get_ticks_usec()
 	if _record and _last_us != 0:
 		(_ms[_state] as Array).append(float(now - _last_us) / 1000.0)
+		(_gpu[_state] as Array).append(RenderingServer.viewport_get_measured_render_time_gpu(get_viewport().get_viewport_rid()))
+		_scale_seen = get_viewport().scaling_3d_scale
 	_last_us = now
 
 

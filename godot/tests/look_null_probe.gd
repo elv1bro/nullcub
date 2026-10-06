@@ -2,10 +2,13 @@
 ##   dome_attached     в куполе есть NullLook (kind dome), пункты «ВИД» группы «Поле NULL» зарегистрированы;
 ##   dust_layers       пыль — 3 слоя GPUParticles3D с шейдером движения, слой перед плоскостью боя и за ней, за ней частиц больше;
 ##   drift_gravity     дрейф пыли — по вектору гравитации поля (cos ≥ 0.99), медленный (0.05…0.6 м/с);
-##   shell_mesh        пузырь — две половины полуэллипсоида (задняя z ≤ 0, передняя z ≥ 0, низ на полу), шейдер null_bubble;
+##   shell_mesh        пузырь — куски полуэллипсоида (задние z ≤ 0, передний z ≥ 0, низ на полу): кромка сзади — с преломлением,
+##                     передняя — только свет (null_bubble_glow), середина задней стенки в покое спрятана; пункт «преломление»
+##                     выкл — задняя половина тоже только свет;
 ##   shift_event       смена поля: волна по кадру включилась, пыль толкает по новому вектору, табло GRAVITY вспыхнуло, плашка поля в HUD
 ##                     толкнулась; через 1.6 с дрейф повернулся к новому полю, волна погасла, табло и плашка — как были;
-##   hit_waves         сильный удар (Match.hit_fx heavy) и удар о мембрану дают волну (в пыли и на пузыре), лёгкий — нет;
+##   hit_waves         сильный удар (Match.hit_fx heavy) и удар о мембрану дают волну (в пыли и на пузыре, середина стенки видна),
+##                     лёгкий — нет;
 ##   wake              быстрый боец оставляет кильватер в пыли, выкл пункта — нет;
 ##   look_off          выкл пунктов: пыль и пузырь спрятаны, лента мембраны видна с ИСХОДНЫМ материалом (тот же ресурс, шейдер
 ##                     null_membrane), смена поля без волны; вкл — снова новый вид; рубильник «как было» — всё сразу;
@@ -24,7 +27,7 @@ func _ready() -> void:
 	var master0: bool = look.master
 	look.set_master(true)
 	var states := {}
-	for id in [&"null_dust", &"null_bubble", &"null_shift", &"null_wake", &"null_dust_plain"]:
+	for id in [&"null_dust", &"null_bubble", &"null_refract", &"null_shift", &"null_wake", &"null_dust_plain"]:
 		states[id] = look.checked(id)
 		look.set_on(id, true)
 	await _dome()
@@ -64,7 +67,7 @@ func _dome() -> void:
 	var nl := hall.get_node_or_null("NullLook") as NullLook
 	var grp := tr("Поле NULL")
 	var reg := true
-	for id in [&"null_dust", &"null_bubble", &"null_shift", &"null_wake"]:
+	for id in [&"null_dust", &"null_bubble", &"null_refract", &"null_shift", &"null_wake"]:
 		reg = reg and id in look.ids() and look.group_of(id) == grp
 	_check("dome_attached", nl != null and nl.kind == NullLook.KIND_DOME and nl.field != null and reg,
 		"NullLook %s, items %s" % ["yes" if nl != null else "no", "ok" if reg else "missing"])
@@ -92,22 +95,43 @@ func _dome() -> void:
 	_check("drift_gravity", cg >= 0.99 and drift.length() > 0.05 and drift.length() < 0.6,
 		"drift %s, field %s, cos %.3f" % [str(drift), str(nl.field.field_dir), cg])
 	# --- пузырь
-	var mesh_ok := nl.bubble.size() == 2
-	if mesh_ok:
-		for i in 2:
-			var vs: PackedVector3Array = (nl.bubble[i].mesh as ArrayMesh).surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-			var zmin := INF
-			var zmax := -INF
-			var ymin := INF
-			for v in vs:
-				zmin = minf(zmin, v.z)
-				zmax = maxf(zmax, v.z)
-				ymin = minf(ymin, v.y)
-			mesh_ok = mesh_ok and absf(ymin) < 0.001 and (zmax <= 0.001 if i == 0 else zmin >= -0.001)
-			var sm := nl.bubble[i].material_override as ShaderMaterial
-			mesh_ok = mesh_ok and sm != null and sm.shader.resource_path.ends_with("null_bubble.gdshader") and nl.bubble[i].visible
-	_check("shell_mesh", mesh_ok and nl.strip != null and not nl.strip.visible, "halves %d, strip hidden %s" % [nl.bubble.size(),
-		str(nl.strip != null and not nl.strip.visible)])
+	var mesh_ok := nl.bubble.size() >= 3 and nl.bubble_centre != null
+	var refr := 0
+	var glow_front := 0
+	var tris := 0
+	var floor_ok := false
+	for mi in nl.bubble + [nl.bubble_centre]:
+		var arr := (mi.mesh as ArrayMesh).surface_get_arrays(0)
+		var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
+		tris += idx.size() / 3
+		var is_back: bool = mi.get_meta(&"back", true)
+		var zmin := INF
+		var zmax := -INF
+		var ymin := INF
+		for v in vs:
+			zmin = minf(zmin, v.z)
+			zmax = maxf(zmax, v.z)
+			ymin = minf(ymin, v.y)
+		mesh_ok = mesh_ok and idx.size() > 0 and ymin > -0.001 and (zmax <= 0.001 if is_back else zmin >= -0.001)
+		floor_ok = floor_ok or absf(ymin) < 0.001
+		var path := ((mi.material_override as ShaderMaterial).shader as Shader).resource_path
+		if is_back and path.ends_with("null_bubble.gdshader"):
+			refr += 1
+		if not is_back and path.ends_with("null_bubble_glow.gdshader"):
+			glow_front += 1
+	var rest_vis := true
+	for mi in nl.bubble:
+		rest_vis = rest_vis and mi.visible
+	var centre_rest := not nl.bubble_centre.visible
+	look.set_on(&"null_refract", false)
+	var refr_off := ((nl.bubble[0].material_override as ShaderMaterial).shader as Shader).resource_path.ends_with("null_bubble_glow.gdshader")
+	look.set_on(&"null_refract", true)
+	var refr_on := ((nl.bubble[0].material_override as ShaderMaterial).shader as Shader).resource_path.ends_with("null_bubble.gdshader")
+	_check("shell_mesh", mesh_ok and floor_ok and refr >= 2 and glow_front == 1 and rest_vis and centre_rest and refr_off and refr_on
+		and nl.strip != null and not nl.strip.visible,
+		"meshes %d (+centre), triangles %d, with refraction %d, front glow-only %d, centre hidden at rest %s, refraction item off/on %s/%s, old strip hidden %s" % [
+		nl.bubble.size(), tris, refr, glow_front, str(centre_rest), str(refr_off), str(refr_on), str(nl.strip != null and not nl.strip.visible)])
 	# --- смена поля
 	var boards: Array = []
 	for lbl in get_tree().get_nodes_in_group("null_hall_gravity"):
@@ -169,8 +193,10 @@ func _dome() -> void:
 		in_dust = in_dust or (Vector3(v.x, v.y, v.z).distance_to(hp) < 0.01 and v.w >= 0.0)
 	for v in bw:
 		in_bubble = in_bubble or (Vector3(v.x, v.y, v.z).distance_to(hp) < 0.01 and v.w >= 0.0)
-	_check("hit_waves", after_light == w0 and nl.waves_total == w0 + 2 and in_dust and in_bubble,
-		"light +%d, heavy+membrane +%d, in dust %s, in bubble %s" % [after_light - w0, nl.waves_total - after_light, str(in_dust), str(in_bubble)])
+	var centre_on := nl.bubble_centre.visible
+	_check("hit_waves", after_light == w0 and nl.waves_total == w0 + 2 and in_dust and in_bubble and centre_on,
+		"light +%d, heavy+membrane +%d, in dust %s, in bubble %s, bubble centre shown %s" % [after_light - w0, nl.waves_total - after_light,
+		str(in_dust), str(in_bubble), str(centre_on)])
 	# --- кильватер
 	for b in p1.parts.values():
 		(b as RigidBody3D).linear_velocity = Vector3(14.0, 0.0, 0.0)
@@ -192,7 +218,7 @@ func _dome() -> void:
 	var mat0 := nl.strip_mat0
 	look.set_on(&"null_bubble", false)
 	look.set_on(&"null_dust", false)
-	var off_ok := not nl.bubble[0].visible and not nl.bubble[1].visible and nl.strip.visible and nl.strip.material_override == mat0 \
+	var off_ok := not nl.bubble[0].visible and not nl.bubble[nl.bubble.size() - 1].visible and not nl.bubble_centre.visible and nl.strip.visible and nl.strip.material_override == mat0 \
 		and mat0 is ShaderMaterial and (mat0 as ShaderMaterial).shader.resource_path.ends_with("null_membrane.gdshader") and not d.visible
 	look.set_on(&"null_shift", false)
 	var s0 := nl.shifts

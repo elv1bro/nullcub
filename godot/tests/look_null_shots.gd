@@ -107,6 +107,9 @@ func _ready() -> void:
 			await get_tree().process_frame
 			_f += 1
 		get_tree().paused = true
+		var nl := _inst.find_child("NullLook", true, false) as NullLook
+		if nl != null:
+			print("  frame %d: time_scale %.3f, shift %.2f, waves %d" % [target, Engine.time_scale, nl.shift_progress(), nl.waves.size()])
 		if not hud:
 			_set_hud(_inst, false)
 		await _frames(3)

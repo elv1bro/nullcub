@@ -4,6 +4,8 @@
 ##   "hall"  — тренировочный зал, спорт-зал (поле NULL без купола): пыль NULL и кильватер, дрейф — по гравитации проекта;
 ##   "plain" — обычные арены (Руины, Полигон): упрощённая пыль.
 ## Пункты панели «ВИД» (Э), группа «Поле NULL»; выключение сразу возвращает прежний вид (узлы прячутся, лента мембраны — прежняя).
+## «Преломление фона через мембрану» — отдельный пункт: копия экрана в кадре, пока кусок кромки купола в кадре или идёт волна
+## (замер — docs/plan-demo/look/null.md); без него пузырь тот же, но фон за плёнкой не сдвигается.
 ## Волны: сильные удары (Match.hit_fx — heavy / crit / ko), удар о статику (env_slam) и удар о мембрану (NullField.membrane_hit) —
 ## кольцо от точки: пыль разлетается, по пузырю бежит кольцо сетки. Смена поля (NullField.field_changed: клавиша G, голосование) —
 ## волна по кадру (null_shift_wave.gdshader), фронт по пузырю, пыль толкает по новому вектору, табло GRAVITY и плашка поля в HUD мигают.
@@ -17,6 +19,14 @@ const KIND_PLAIN := "plain"
 const BUBBLE_SHADER := "res://assets/shaders/null_bubble.gdshader"
 const SHIFT_SHADER := "res://assets/shaders/null_shift_wave.gdshader"
 
+const BUBBLE_GLOW_SHADER := "res://assets/shaders/null_bubble_glow.gdshader"
+const RIM_RHO_MIN := 0.78         # кромка пузыря — треугольники у контура (доля полуосей)
+const RIM_SEGMENTS := 6           # кромка задней половины — кусками по дуге: кусок вне кадра отсекается, и копия экрана не нужна
+## Части полуэллипсоида для half_shell (битовая маска): кромка у контура, нижний ряд (шов по полу), середина.
+const SHELL_RIM := 1
+const SHELL_FLOOR := 2
+const SHELL_CENTRE := 4
+const SHELL_ALL := 7
 const BUBBLE_DEPTH := 4.0          # м: полуглубина пузыря по z (лента прежней мембраны — 2.5, якоря — z = −3)
 const DRIFT_BASE := 0.06           # м/с: дрейф пыли при слабом поле
 const DRIFT_PER_G := 0.9           # м/с на 1 G: при 0.20 G — ≈ 0.24 м/с
@@ -34,7 +44,8 @@ var kind := KIND_DOME
 var arena: Node3D
 var field: NullField
 var dust: NullDust
-var bubble: Array[MeshInstance3D] = []     # [задняя половина, передняя]
+var bubble: Array[MeshInstance3D] = []     # кромка задней половины (куски), шов по полу сзади, кромка передней — видны всегда
+var bubble_centre: MeshInstance3D          # середина задней половины — только пока идут волны или смена поля
 var strip: MeshInstance3D                  # прежняя лента мембраны (выкл — видна она)
 var strip_mat0: Material                   # её исходный материал (не меняется, проба сверяет)
 var shift_layer: CanvasLayer
@@ -46,6 +57,9 @@ var shift_band_m := 1.5
 var waves: Array = []                      # [{"pos": Vector3, "age": float, "power": float}]
 var waves_total := 0                       # для проб
 var _bubble_mats: Array[ShaderMaterial] = []
+var _refr_mat: ShaderMaterial              # задняя половина с преломлением (копия экрана)
+var _glow_back_mat: ShaderMaterial         # та же, только свет (пункт «преломление» выкл)
+var _refr_meshes: Array[MeshInstance3D] = []
 var _shift_mat: ShaderMaterial
 var _matches: Array = []
 var _match_poll := 0.0
@@ -80,6 +94,7 @@ func _ready() -> void:
 			_look.call("add", &"null_wake", tr("Кильватер поля за быстрым бойцом"), grp)
 		if kind == KIND_DOME:
 			_look.call("add", &"null_bubble", tr("Мембрана-пузырь: преломление, радужный край, рябь"), grp)
+			_look.call("add", &"null_refract", tr("Преломление фона через мембрану"), grp)
 			_look.call("add", &"null_shift", tr("Смена гравитации: волна по кадру"), grp)
 		_look.connect("changed", _on_look)
 	if kind == KIND_DOME:
@@ -93,6 +108,7 @@ func _ready() -> void:
 	_apply(&"null_dust_plain" if kind == KIND_PLAIN else &"null_dust")
 	if kind == KIND_DOME:
 		_apply(&"null_bubble")
+		_apply(&"null_refract")
 		_apply(&"null_shift")
 	_poll_matches()
 
@@ -130,28 +146,51 @@ func _build_bubble() -> void:
 	strip = field.get_node_or_null(field.membrane_path) as MeshInstance3D
 	if strip != null:
 		strip_mat0 = strip.material_override
-	var sh: Shader = load(BUBBLE_SHADER)
-	for back in [true, false]:
-		var mi := MeshInstance3D.new()
-		mi.name = "BubbleBack" if back else "BubbleFront"
-		mi.mesh = half_shell(field.axes.x, field.axes.y, BUBBLE_DEPTH, back)
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mi.extra_cull_margin = 4.0
-		# задняя половина рисуется первой из прозрачных (её преломление не стирает то, что прозрачно и дальше), передняя — последней
-		mi.sorting_offset = -200.0 if back else 200.0
-		mi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
-		var m := ShaderMaterial.new()
-		m.shader = sh
-		m.set_shader_parameter("back_half", back)
-		m.set_shader_parameter("axes", Vector3(field.axes.x, field.axes.y, BUBBLE_DEPTH))
-		m.set_shader_parameter("centre", field.centre)
-		m.set_shader_parameter("hits", PackedVector4Array(field.hits) if field.hits.size() == 4 else _no_wakes)
-		m.set_shader_parameter("waves", _no_waves)
-		mi.material_override = m
-		add_child(mi)
-		mi.position = Vector3(field.centre.x, field.centre.y, 0.0)
+	# Меши: кромка задней половины кусками по дуге (преломление), шов по полу сзади и вся кромка передней (только свет) — всегда;
+	# середина задней (преломление) — только пока идут волны ударов или смена поля: её сетка и преломление видны только тогда, а в
+	# обычном кадре она закрывала бы весь кадр впустую. Материал с преломлением требует копию экрана — она делается, только пока такой
+	# меш в кадре (камера у края купола или волна).
+	_refr_mat = _bubble_mat(load(BUBBLE_SHADER), true)
+	_glow_back_mat = _bubble_mat(load(BUBBLE_GLOW_SHADER), true)
+	var glow_front := _bubble_mat(load(BUBBLE_GLOW_SHADER), false)
+	var a := field.axes
+	for i in RIM_SEGMENTS:
+		var mi := _bubble_mesh("BubbleBackRim%d" % i, half_shell(a.x, a.y, BUBBLE_DEPTH, true, 96, 40, RIM_RHO_MIN, SHELL_RIM, i, RIM_SEGMENTS),
+			_refr_mat, true)
 		bubble.append(mi)
-		_bubble_mats.append(m)
+		_refr_meshes.append(mi)
+	bubble.append(_bubble_mesh("BubbleBackFloor", half_shell(a.x, a.y, BUBBLE_DEPTH, true, 96, 40, RIM_RHO_MIN, SHELL_FLOOR), _glow_back_mat, true))
+	bubble.append(_bubble_mesh("BubbleFront", half_shell(a.x, a.y, BUBBLE_DEPTH, false, 96, 40, RIM_RHO_MIN, SHELL_RIM | SHELL_FLOOR), glow_front, false))
+	bubble_centre = _bubble_mesh("BubbleBackCentre", half_shell(a.x, a.y, BUBBLE_DEPTH, true, 96, 40, RIM_RHO_MIN, SHELL_CENTRE), _refr_mat, true)
+	_refr_meshes.append(bubble_centre)
+
+
+func _bubble_mat(sh: Shader, back: bool) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	m.set_shader_parameter("back_half", back)
+	m.set_shader_parameter("axes", Vector3(field.axes.x, field.axes.y, BUBBLE_DEPTH))
+	m.set_shader_parameter("centre", field.centre)
+	m.set_shader_parameter("hits", PackedVector4Array(field.hits) if field.hits.size() == 4 else _no_wakes)
+	m.set_shader_parameter("waves", _no_waves)
+	_bubble_mats.append(m)
+	return m
+
+
+func _bubble_mesh(nm: String, mesh: ArrayMesh, m: ShaderMaterial, back: bool) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.name = nm
+	mi.mesh = mesh
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.extra_cull_margin = 0.8   # прогиб наружу больше — только у кромки, уходящей из кадра; шире запас — кусок чаще «в кадре»
+	# задняя половина рисуется первой из прозрачных (её преломление не стирает то, что прозрачно и дальше), передняя — последней
+	mi.sorting_offset = -200.0 if back else 200.0
+	mi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	mi.set_meta(&"back", back)
+	add_child(mi)
+	mi.position = Vector3(field.centre.x, field.centre.y, 0.0)
+	return mi
 
 
 func _build_shift() -> void:
@@ -170,7 +209,10 @@ func _build_shift() -> void:
 
 
 ## Половина купола-полуэллипсоида (полуоси a — ширина, b — высота, c — глубина; низ на y = 0): back — z ≤ 0, иначе z ≥ 0.
-static func half_shell(a: float, b: float, c: float, back: bool, seg_az := 96, seg_el := 40) -> ArrayMesh:
+## part — маска частей: SHELL_RIM — треугольники у контура (хотя бы одна вершина с ρ = |(x/a, y/b)| ≥ rho_min), кроме нижнего ряда;
+## SHELL_FLOOR — нижний ряд (шов по полу); SHELL_CENTRE — остальное. seg_n > 0 — из кромки только кусок seg_i из seg_n по углу дуги.
+static func half_shell(a: float, b: float, c: float, back: bool, seg_az := 96, seg_el := 40, rho_min := 0.78, part := SHELL_ALL,
+		seg_i := 0, seg_n := 0) -> ArrayMesh:
 	var verts := PackedVector3Array()
 	var norms := PackedVector3Array()
 	var uvs := PackedVector2Array()
@@ -188,12 +230,39 @@ static func half_shell(a: float, b: float, c: float, back: bool, seg_az := 96, s
 	for j in seg_el:
 		for i in seg_az:
 			var v0 := j * row + i
+			if part != SHELL_ALL:
+				var r := 0.0
+				var cen := Vector2.ZERO
+				for v in [v0, v0 + 1, v0 + row, v0 + row + 1]:
+					var e := Vector2(verts[v].x / a, verts[v].y / b)
+					r = maxf(r, e.length())
+					cen += e * 0.25
+				var cls := SHELL_FLOOR if j == 0 else (SHELL_RIM if r >= rho_min else SHELL_CENTRE)
+				if part & cls == 0:
+					continue
+				if cls == SHELL_RIM and seg_n > 0:
+					var th := atan2(maxf(cen.y, 0.0), cen.x)
+					if clampi(int(th / PI * seg_n), 0, seg_n - 1) != seg_i:
+						continue
 			idx.append_array([v0, v0 + row, v0 + 1, v0 + 1, v0 + row, v0 + row + 1])
+	# только вершины, что вошли в треугольники: иначе AABB куска — весь купол, и кусок вне кадра не отсекается
+	var remap := {}
+	var cv := PackedVector3Array()
+	var cn := PackedVector3Array()
+	var cu := PackedVector2Array()
+	for k in idx.size():
+		var v := idx[k]
+		if not remap.has(v):
+			remap[v] = cv.size()
+			cv.append(verts[v])
+			cn.append(norms[v])
+			cu.append(uvs[v])
+		idx[k] = remap[v]
 	var arr := []
 	arr.resize(Mesh.ARRAY_MAX)
-	arr[Mesh.ARRAY_VERTEX] = verts
-	arr[Mesh.ARRAY_NORMAL] = norms
-	arr[Mesh.ARRAY_TEX_UV] = uvs
+	arr[Mesh.ARRAY_VERTEX] = cv
+	arr[Mesh.ARRAY_NORMAL] = cn
+	arr[Mesh.ARRAY_TEX_UV] = cu
 	arr[Mesh.ARRAY_INDEX] = idx
 	var m := ArrayMesh.new()
 	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
@@ -203,7 +272,7 @@ static func half_shell(a: float, b: float, c: float, back: bool, seg_az := 96, s
 # --- пункты «ВИД» ---------------------------------------------------------------------------------------------------------------
 
 func _on_look(id: StringName, _on: bool) -> void:
-	if id in [&"null_dust", &"null_dust_plain", &"null_bubble", &"null_shift", &"null_wake"]:
+	if id in [&"null_dust", &"null_dust_plain", &"null_bubble", &"null_refract", &"null_shift", &"null_wake"]:
 		_apply(id)
 
 
@@ -216,9 +285,16 @@ func _apply(id: StringName) -> void:
 			var on := _is_on(&"null_bubble")
 			for b in bubble:
 				b.visible = on
+			if bubble_centre != null:
+				bubble_centre.visible = on and _centre_needed()
 			if strip != null:
 				strip.visible = not on
 				strip.material_override = strip_mat0
+		&"null_refract":
+			# выкл — задняя половина без чтения экрана (тот же свет, но фон за плёнкой не сдвигается)
+			var m := _refr_mat if _is_on(&"null_refract") else _glow_back_mat
+			for mi in _refr_meshes:
+				mi.material_override = m
 		&"null_shift":
 			if not _is_on(&"null_shift"):
 				_stop_shift()
@@ -246,6 +322,8 @@ func _process(delta: float) -> void:
 		_tick_shift(real)
 	if _flash_t >= 0.0:
 		_tick_flash(real)
+	if bubble_centre != null:
+		bubble_centre.visible = bubble[0].visible and _centre_needed()
 	if not bubble.is_empty() and bubble[0].visible:
 		var hits := PackedVector4Array(field.hits) if field.hits.size() == 4 else _no_wakes
 		var sh := _bubble_shift()
@@ -255,6 +333,11 @@ func _process(delta: float) -> void:
 			m.set_shader_parameter("wave_power", wv[1])
 			m.set_shader_parameter("shift", sh)
 			m.set_shader_parameter("shift_w", shift_band_m)
+
+
+## Середина задней стенки пузыря нужна, пока по ней бегут кольца волн или фронт смены поля.
+func _centre_needed() -> bool:
+	return not waves.is_empty() or shift_age >= 0.0
 
 
 ## Вектор дрейфа пыли: по гравитации поля (купол) или проекта (остальные арены), медленно.
