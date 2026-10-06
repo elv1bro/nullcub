@@ -56,6 +56,8 @@ var holes_log: Array = []
 var penalties: Array = []
 ## Наибольшая смена скорости детали за тик (м/с) при включённой прочности суставов — для проб и подбора GOLF_BREAK_DV.
 var max_impact_dv := 0.0
+## Пробы: сколько раз за матч деталь сменила скорость за тик сильнее порога — по целым м/с (ключ — м/с, значение — раз).
+var impact_hist: Dictionary = {}
 ## Пробы: в журнал удара пишется путь ЦМ и скорость каждые 0.5 с (поле "path").
 var trace_shots := false
 var _hole_end_left := -1.0
@@ -259,7 +261,7 @@ func _start_fight() -> void:
 		if d != null:
 			p["origin"] = d.centre_of_mass()
 			p["aim"] = _default_aim(d)
-			p["think"] = _brain(d).think_s() if is_bot(d) else -1.0
+			p["think"] = _brain(d).think_s() + Tuning.GOLF_BOT_FIRST_S if is_bot(d) else -1.0
 	announce.emit(tr("ЛУНКА %d") % (hole_i + 1), ANNOUNCE_COLORS["fight"], "fight")
 
 
@@ -693,6 +695,8 @@ func _wear(p: Dictionary, d: Doll) -> void:
 		if prev.has(rb):
 			var dv := (v - (prev[rb] as Vector3)).length()
 			max_impact_dv = maxf(max_impact_dv, dv)
+			if dv > 3.0:
+				impact_hist[int(dv)] = int(impact_hist.get(int(dv), 0)) + 1
 			if dv > Tuning.GOLF_BREAK_DV:
 				d._wear_joint(String(n), (dv - Tuning.GOLF_BREAK_DV) * Tuning.GOLF_BREAK_WEAR / maxf(Tuning.JOINT_WEAR_MULT, 0.01), null)
 		prev[rb] = v

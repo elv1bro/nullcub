@@ -561,7 +561,9 @@ func _draw_aim(sc: Vector2, com: Vector3, aim: Vector2, pw: float, c: Color, hum
 		var t := DOTS_T * float(i + 1) / 9.0
 		var q := GolfShot.point_at(p0, v0, g, Tuning.GOLF_DAMP, t)
 		var qs: Vector2 = to_canvas * cam.unproject_position(Vector3(q.x, q.y, 0.0))
-		marks.draw_circle(qs, 3.6 - float(i) * 0.25, Color(1, 1, 1, 0.75 - float(i) * 0.06))
+		var rr := 5.0 - float(i) * 0.3
+		marks.draw_circle(qs, rr + 1.5, Color(0, 0, 0, 0.5))
+		marks.draw_circle(qs, rr, Color(1, 1, 1, 0.9 - float(i) * 0.06))
 	if charging:
 		var bx := sc + Vector2(-60.0, -BAR_H * 0.5)
 		var r := Rect2(bx, Vector2(BAR_W, BAR_H))

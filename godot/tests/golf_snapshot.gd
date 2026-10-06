@@ -80,26 +80,29 @@ func _run() -> void:
 		await _card()
 		get_tree().quit(0)
 		return
+	# лунка 1: прицел и сила, полёт, мембрана ловит
 	await _load(0)
 	await _wait(0.8)
-	await _aim_and_fire(40.0, 0.92, "01_aim", 1.2)
+	await _aim_and_fire(48.0, 0.99, "01_aim", 1.3)
 	await _shot("02_flight")
-	await _wait(1.6)
+	await _wait(1.3)
 	await _shot("03_membrane")
-	# лунка 2: настильно в паровой столб
+	# лунка 2: настильно в паровой столб, столб поднимает к полке
 	await _load(1)
 	await _wait(0.6)
-	await _aim_and_fire(22.0, 0.7, "", 2.6)
+	await _aim_and_fire(20.0, 0.66, "", 3.2)
 	await _shot("04_steam")
-	await _wait(3.0)
-	await _shot("05_steam_top")
-	# лунка 3: поле вбок
+	await _until(func() -> bool: return int(gm.players[0]["state"]) == GolfMatch.S.AIM, 8.0)
+	await _wait(0.3)
+	await _aim_and_fire(36.0, 0.37, "05_steam_aim", 1.6)
+	await _shot("06_to_shelf")
+	# лунка 3: через стенку — поле вбок заворачивает куклу назад
 	await _load(2)
 	await _wait(0.6)
-	await _aim_and_fire(60.0, 0.9, "06_side_aim", 2.0)
-	await _shot("07_side_curve")
-	await _wait(1.6)
-	await _shot("08_side_back")
+	await _aim_and_fire(52.0, 0.93, "07_side_aim", 2.4)
+	await _shot("08_side_curve")
+	await _wait(1.2)
+	await _shot("09_side_back")
 	await _card()
 	get_tree().quit(0)
 
@@ -114,4 +117,4 @@ func _card() -> void:
 	gm._finish("holes")
 	print("card: finished")
 	await _wait(1.4)
-	await _shot("09_card")
+	await _shot("10_card")

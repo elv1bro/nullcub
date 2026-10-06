@@ -21,6 +21,7 @@ const VENT_SCENE := "res://scenes/props/scrap/machine_steam_vent.tscn"
 const GRID_SHADER := "res://assets/shaders/energy_grid.gdshader"
 const IRON := "res://assets/textures/pbr/iron/%s.png"
 const DEPTH_Z := 2.0
+const TEE_GAP_M := 2.6
 const HAZARD_COLOUR := Color(1.0, 0.18, 0.12)
 const ZONE_COLOUR := Color(0.45, 0.55, 1.0)
 
@@ -168,12 +169,15 @@ func clear() -> void:
 			c.queue_free()
 
 
-## Места старта для n кукол: в ряд на старте, через 1.6 м.
+## Места старта для n кукол: P1 — на старте, P2 — на TEE_GAP_M впереди (правее): удар P1 навесом проходит над ним, бот бьёт первый удар
+## позже человека (GOLF_BOT_FIRST_S) и не летит сквозь него.
 func tee_slots(n: int) -> Array:
 	var t: Vector2 = data.get("tee", Vector2.ZERO)
 	var out: Array = []
 	for k in n:
-		out.append(Vector3(t.x + (float(k) - (n - 1) * 0.5) * 1.6, t.y + 0.05, 0.0))
+		var offs := [0.0, TEE_GAP_M, -TEE_GAP_M, TEE_GAP_M * 2.0]
+		var off: float = offs[k % 4]
+		out.append(Vector3(t.x + off, t.y + 0.05, 0.0))
 	return out
 
 

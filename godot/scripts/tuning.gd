@@ -987,8 +987,8 @@ const GOLF_HOLE_PAUSE_S := 4.0
 const GOLF_PARS := [3, 3, 3]
 ## Прочность суставов в гольфе (урона нет — износ от ударов о стены): деталь сменила скорость за тик больше чем на GOLF_BREAK_DV м/с —
 ## её сустав изнашивается на GOLF_BREAK_WEAR HP за каждый м/с сверх порога (JointBreak.wear, как от удара).
-const GOLF_BREAK_DV := 3.5
-const GOLF_BREAK_WEAR := 10.0
+const GOLF_BREAK_DV := 10.0
+const GOLF_BREAK_WEAR := 4.0
 ## Бочка-пушка (лунка 2): деталь куклы ближе GOLF_BARREL_TOUCH_M — бочка взрывается через GOLF_BARREL_FUSE_S; новая через
 ## GOLF_BARREL_RESPAWN_S.
 const GOLF_BARREL_TOUCH_M := 0.9
@@ -999,6 +999,7 @@ const GOLF_SIDE_G := 0.5
 ## Бот (GolfBrain): думает перед ударом (с), разброс угла (град) и силы (доля шкалы) по уровням 1–3; поправку в полёте берёт с
 ## уровня 2 (рывок к лунке, когда падает мимо неё).
 const GOLF_BOT_THINK_S := Vector2(0.7, 1.5)
+const GOLF_BOT_FIRST_S := 1.2               # первый удар лунки — ещё подождать: человек со старта бьёт первым, бот не летит сквозь него
 const GOLF_BOT_LEVELS := {
 	1: {"spread_deg": 6.0, "power": 0.06, "nudge": false},
 	2: {"spread_deg": 3.5, "power": 0.035, "nudge": true},

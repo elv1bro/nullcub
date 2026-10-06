@@ -71,7 +71,7 @@ func _check(id: String, cond: bool, detail: Variant = "") -> void:
 
 
 func _args() -> Dictionary:
-	var out := {"only": "", "level": "2", "trace": "0", "out": "", "seeds": "11+22+33", "hole": "-1", "deg": "15+85+5", "pw": "0.4+1.0+0.1", "at": "", "record": "0"}
+	var out := {"only": "", "level": "2", "trace": "0", "out": "", "seeds": "11+22+33", "hole": "-1", "deg": "15+85+5", "pw": "0.4+1.0+0.1", "at": "", "record": "0", "joints": "0"}
 	for a in OS.get_cmdline_user_args():
 		for part in String(a).split(","):
 			var kv := part.split("=")
@@ -109,7 +109,7 @@ func _ready() -> void:
 		var seeds: Array = []
 		for s in String(a["seeds"]).split("+"):
 			seeds.append(int(s))
-		await _bots(seeds, int(a["level"]))
+		await _bots(seeds, int(a["level"]), String(a["joints"]) == "1")
 	await _unload()
 	JointBreak.set_on(false)
 	_check("errors_script", errs.count == 0, "ошибок скриптов %d; первая: %s" % [errs.count, errs.first])
@@ -554,8 +554,10 @@ func _holes() -> void:
 
 # ------------------------------------------------------------------ боты
 
-func _bots(seeds: Array, level: int) -> void:
-	print("--- bots")
+func _bots(seeds: Array, level: int, joints := false) -> void:
+	print("--- bots%s" % (" (прочность суставов вкл)" if joints else ""))
+	JointBreak.set_on(joints)
+	var lost_total := 0
 	var per_hole := {0: [], 1: [], 2: []}
 	for s in seeds:
 		await _load(true, 0, 3, int(s), level)
@@ -593,9 +595,12 @@ func _bots(seeds: Array, level: int) -> void:
 			if int(e["strokes"]) > int(e["par"]) + 3:
 				all_in_par = false
 		var pens := {}
+		lost_total += int(gm.penalties.filter(func(pe: Dictionary) -> bool: return String(pe["reason"]) == "part").size())
+		if joints:
+			print("    удары деталей по м/с за тик: ", gm.impact_hist)
 		for pe in gm.penalties:
 			pens[String(pe["reason"])] = int(pens.get(String(pe["reason"]), 0)) + 1
-		_check("bots_seed%d" % int(s), gm.play_state == "over" and gm.holes_log.size() == 6 and all_holed and all_in_par and worst_stuck < STUCK_LIMIT_S,
+		_check("bots_seed%d%s" % [int(s), "_joints" if joints else ""], gm.play_state == "over" and gm.holes_log.size() == 6 and (all_holed and all_in_par or joints) and worst_stuck < STUCK_LIMIT_S,
 			"%.0f с, %s; штрафы %s; дольше всего на месте %.1f с" % [t, ", ".join(lines), str(pens), worst_stuck])
 		if trace:
 			for sh in gm.shots:
@@ -608,5 +613,9 @@ func _bots(seeds: Array, level: int) -> void:
 			sum += int(v)
 		avg[h + 1] = snappedf(float(sum) / maxf(arr.size(), 1), 0.01)
 	info["bot_avg_strokes"] = avg
+	if joints:
+		info["bot_part_penalties"] = lost_total
+		print("  прочность суставов: штрафов за деталь за %d матчей — %d" % [seeds.size(), lost_total])
+	JointBreak.set_on(false)
 	info["bot_strokes"] = per_hole
 	print("  среднее ударов ботов по лункам: %s (пар %s)" % [str(avg), str(Tuning.GOLF_PARS)])
