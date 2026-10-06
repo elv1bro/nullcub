@@ -62,14 +62,14 @@ func _ready() -> void:
 	var rep := {}
 	for on in [false, true]:
 		rep[on] = _stats(_samples[on], _gpu[on])
-	print("LOOK SHOW FPS (купол, %s, vsync off, DynRes off, scale %.2f, load %s)" % [str(get_viewport().get_visible_rect().size),
+	print("LOOK SHOW FPS (купол, окно %s, vsync off, DynRes off, 3D scale %.2f, load %s)" % [str(get_window().size),
 		get_viewport().scaling_3d_scale, _load()])
 	for on in [false, true]:
 		var s: Dictionary = rep[on]
-		print("  %-6s кадров %4d  медиана %.2f мс (%.0f fps)  p95 %.2f мс  GPU медиана %.2f мс" % ["эфир" if on else "без", s["n"],
-			s["median"], 1000.0 / maxf(s["median"], 0.001), s["p95"], s["gpu"]])
+		print("  %-6s кадров %4d  медиана %.2f мс (%.0f fps)  p95 %.2f мс  GPU медиана %s" % ["эфир" if on else "без", s["n"],
+			s["median"], 1000.0 / maxf(s["median"], 0.001), s["p95"], "%.2f мс" % s["gpu"] if float(s["gpu"]) > 0.0 else "н/д (Metal отдаёт 0)"])
 	var d := float(rep[true]["median"]) - float(rep[false]["median"])
-	print("  разница медиан: %+.2f мс, GPU %+.2f мс" % [d, float(rep[true]["gpu"]) - float(rep[false]["gpu"])])
+	print("  разница медиан (эфир − без): %+.2f мс" % d)
 	print("=== OK ===")
 	get_tree().quit(0)
 
