@@ -38,6 +38,7 @@
 ##   проверки «частей 14» у KO для сборок с другим числом тел не про них).
 ##   lk=<вид> — связки (KitLink) у сборок d1 / d2: кисть ↔ бедро своей стороны с обеих сторон (rod | bar | spring | rope | piston);
 ##   info.links — сколько связок порвалось за бой.
+##   th=<шарнир> — правая кисть (uid 9, тяга бота) сборок d1 / d2 висит на связке (on_rope | on_bar | on_spring | on_piston), длина по умолчанию.
 ##   retreat=<с> — отход наскока вместо RUSH_RETREAT_S (retreat=1.0 в Void — клинч голова-о-голову, двойной KO → ничья).
 ## Отчёт tests/match_probe_report.json (или out=res://…), exit 0/1.
 extends Node3D
@@ -86,6 +87,7 @@ var parts_lost: Array = []           # parts=1 (PartHp): отлетевшие д
 var parts_start: Dictionary = {}     # parts=1: имя куклы -> max_hp на FIGHT!
 var doll_presets: Dictionary = {}    # d1= / d2=: "P1" / "P2" -> id пресета scenes/body/presets/<id>.tscn
 var link_type := ""                  # lk=: вид связок у сборок d1 / d2
+var tether_type := ""                # th=: правая кисть сборок d1 / d2 на связке
 var env_slams := 0
 var max_s := 120.0
 var sd_mode := false
@@ -316,6 +318,7 @@ func _ready() -> void:
 				"d1": doll_presets["P1"] = p[1]
 				"d2": doll_presets["P2"] = p[1]
 				"lk": link_type = p[1]
+				"th": tether_type = p[1]
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
 	for pn in doll_presets:   # пресет вместо обычной куклы — до add_child: _ready площадки и Match видят уже сборку
 		_swap_doll(pg, String(pn), "res://scenes/body/presets/%s.tscn" % doll_presets[pn])
@@ -434,6 +437,13 @@ func _swap_doll(root: Node, pname: String, path: String) -> void:
 		bp.links = ls
 		bp.energy_budget = 1000
 		d.set("blueprint", bp)
+	if tether_type != "" and d.get("blueprint") is BodyBlueprint:   # th=: правая кисть на связке
+		var tb := (d.get("blueprint") as BodyBlueprint).duplicate(true) as BodyBlueprint
+		var hn := tb.find_node("9")
+		if not hn.is_empty():
+			hn["joint"] = tether_type
+		tb.energy_budget = 1000
+		d.set("blueprint", tb)
 	d.transform = old.transform
 	d.player_index = old.player_index
 	d.input_prefix = old.input_prefix
@@ -924,10 +934,12 @@ func _checks_ko() -> void:
 			lost_joints += 1 + (rec["sub_joints"] as Array).size()
 		_check("ko_joints", float(ko_victim.joints.size()) + float(_joint_nodes(ko_victim)), float(lost_joints), "lte", "victim joints freed (detached limbs keep theirs)")
 		var valid := 0
-		for p in ko_victim.parts.values():
-			if is_instance_valid(p) and (p as Node).is_inside_tree():
+		var lob: Variant = ko_victim.get("link_of_body")   # тела связок (lk= / th=) — не детали куклы, их в 14 не считаем
+		for pn in ko_victim.parts:
+			var p: Variant = ko_victim.parts[pn]
+			if is_instance_valid(p) and (p as Node).is_inside_tree() and not (lob is Dictionary and (lob as Dictionary).has(pn)):
 				valid += 1
-		_check("ko_parts", float(valid), 14.0 - float(lost_bodies), "eq", "14 parts (minus limbs lost before KO) still in the tree after KO")
+		_check("ko_parts", float(valid), 14.0 - float(lost_bodies), "eq", "14 parts (minus limbs lost before KO, links not counted) still in the tree after KO")
 		_check("ko_spread", _part_spread(ko_victim), 1.5, "gte", "parts spread (m) 1 s after KO")
 		_check("ko_card", 1.0 if ko_card_seen else 0.0, 1.0, "eq", "HUD KO card shown on ko signal")
 		_check("announce_ko", 1.0 if _has_announce("ko") else 0.0, 1.0, "eq", "KO! announced")

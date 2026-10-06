@@ -21,6 +21,8 @@ var _hovered := false
 
 
 static func colour(jt: String) -> Color:
+	if KitJoint.is_tether(jt):   # деталь на связке — цвет вида связки (KitLink.COLORS)
+		return KitLink.colour(KitJoint.tether_link(jt))
 	return COLORS.get(jt if jt != "" else KitJoint.DEFAULT, Color.WHITE)
 
 
@@ -131,7 +133,12 @@ func _gui_input(event: InputEvent) -> void:
 static func _tooltip(jt: String) -> String:
 	var info := KitJoint.info(jt)
 	var lines: PackedStringArray = [TranslationServer.translate(String(info.get("title", jt))), TranslationServer.translate(String(info.get("hint", "")))]
-	if KitJoint.is_weld(jt):
+	if KitJoint.is_tether(jt):
+		lines.append(TranslationServer.translate("сустава и мышцы нет: деталь со всем, что на ней, висит на связке «%s»") % KitLink.title_of(KitJoint.tether_link(jt)))
+		lines.append(TranslationServer.translate("клик ещё раз — длиннее: %s м") % " / ".join(KitJoint.tether_lens(jt).map(func(x: Variant) -> String: return "%.1f" % float(x))))
+		lines.append(TranslationServer.translate("энергия — связка по длине и вынос всей ветки дальше от ядра; связку можно перебить"))
+		lines.append(TranslationServer.translate("тяга на ней — мышь крутит её вокруг крепления связки"))
+	elif KitJoint.is_weld(jt):
 		lines.append(TranslationServer.translate("своего тела и сустава нет: масса и формы — у родителя"))
 		lines.append(TranslationServer.translate("нельзя: голова, рука мышью, деталь с суставом на конце"))
 	else:

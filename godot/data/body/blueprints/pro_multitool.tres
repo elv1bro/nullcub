@@ -6,7 +6,7 @@
 script = ExtResource("1_1cu4t")
 id = "pro_multitool"
 title = "Мультитул"
-energy_budget = 160
+energy_budget = 240
 nodes = Array[Dictionary]([{
 "anchor": "",
 "name": "Torso",

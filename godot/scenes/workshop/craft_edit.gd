@@ -486,7 +486,8 @@ static func signature(bp: Resource) -> PackedStringArray:
 	var out: PackedStringArray = []
 	for n in nodes_of(bp):
 		out.append("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [n.get("uid", ""), n.get("part", ""), n.get("parent", ""), anchor_name(String(n.get("anchor", ""))) if String(n.get("parent", "")) != "" else "",
-			str(n.get("rest_deg", "")), n.get("name", ""), n.get("mat", ""), n.get("joint", ""), paint_signature(n), str(n.get(ActiveBlocks.NODE_KEY, ""))])
+			str(n.get("rest_deg", "")), n.get("name", ""), n.get("mat", ""), String(n.get("joint", "")) + ":" + str(n.get(KitJoint.TETHER_KEY, "")), paint_signature(n),
+			str(n.get(ActiveBlocks.NODE_KEY, ""))])
 	if bp is BodyBlueprint:   # связки (KitLink): вид, концы, длина, канал поршня
 		for l in (bp as BodyBlueprint).links:
 			out.append("link|%s|%s|%s|%s|%s|%s|%.3f|%s" % [l.get("id", ""), l.get("type", ""), l.get("a", ""), str(l.get("pa", "")), l.get("b", ""),
@@ -621,6 +622,9 @@ static func warnings(bp: BodyBlueprint) -> PackedStringArray:
 		var m := weapon_mount(bp)
 		if String(m["uid"]) == "":
 			out.append(String(m["reason"]))
+	if bp.ends_energy() > 0:   # налог на концы (06.10, WORKSHOP_V4.md «Деталь на связке и налог на ветвление»)
+		out.append(TranslationServer.translate("Концов %d (кисти, стопы, навершия): каждый сверх %d — ещё ⚡%d, всего ⚡%d") % [bp.ends_count(),
+			BodyBlueprint.FREE_ENDS, BodyBlueprint.END_ENERGY, bp.ends_energy()])
 	return out
 
 
@@ -1287,6 +1291,36 @@ static func _apply_joint(bp: BodyBlueprint, uid: String, jt: String) -> void:
 		n.erase("joint")
 	else:
 		n["joint"] = jt
+	if KitJoint.is_tether(jt):   # деталь на связке: длина — вторая из длин типа, пока не сменят (cycle_tether_len)
+		if not n.has(KitJoint.TETHER_KEY):
+			n[KitJoint.TETHER_KEY] = KitJoint.tether_len_of(n)
+	else:
+		n.erase(KitJoint.TETHER_KEY)
+		if not ActiveBlocks.is_active(String(n.get("part", ""))):   # канал был у детали «на поршне»; у активного блока он свой
+			n.erase(KitLink.CHANNEL_KEY)
+
+
+## Деталь на связке uid: следующая длина связки по кругу (KitJoint lens). {ok, reason, len, energy_after}; отказ — энергия.
+static func cycle_tether_len(bp: BodyBlueprint, uid: String, dry := false) -> Dictionary:
+	var n := find(bp, uid)
+	var jt := String(n.get("joint", ""))
+	if n.is_empty() or not KitJoint.is_tether(jt):
+		return {"ok": false, "reason": "", "len": 0.0, "energy_after": bp.energy_used()}
+	var lens := KitJoint.tether_lens(jt)
+	var cur := KitJoint.tether_len_of(n)
+	var i := 0
+	for k in range(lens.size()):
+		if absf(float(lens[k]) - cur) < 0.001:
+			i = k
+	var nl := float(lens[(i + 1) % lens.size()])
+	var trial := dup_body(bp)
+	find(trial, uid)[KitJoint.TETHER_KEY] = nl
+	var after := trial.energy_used()
+	if after > bp.energy_cap() and after > bp.energy_used():
+		return {"ok": false, "reason": energy_reason(TranslationServer.translate("связку %.1f м") % nl, after, bp.energy_cap()), "len": nl, "energy_after": after}
+	if not dry:
+		n[KitJoint.TETHER_KEY] = nl
+	return {"ok": true, "reason": "", "len": nl, "energy_after": after}
 
 
 # ------------------------------------------------------------------ сохранение
@@ -1417,7 +1451,7 @@ static func mirror_subtree(bp: BodyBlueprint, uid: String) -> Dictionary:
 		var res := _apply_attach(bp, part_id, String(q[1]), String(q[2]))
 		var nu := String(res.get("uid", ""))
 		var dst := find(bp, nu)
-		for k in ["mat", "joint", "rest_deg", ActiveBlocks.NODE_KEY]:
+		for k in ["mat", "joint", "rest_deg", ActiveBlocks.NODE_KEY, KitJoint.TETHER_KEY]:
 			if src.has(k):
 				dst[k] = src[k]
 		if first == "":
