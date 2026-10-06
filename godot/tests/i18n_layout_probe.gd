@@ -123,6 +123,7 @@ func _pass() -> Dictionary:
 			await _wait(SETTLE)
 			shots["look:panel"] = _scan(Look)
 			Look._panel.set_open(false)
+			await _look_cam_pass(shots)
 		if p == SQUAD:   # «Стычка 3 на 3» (SQUAD.md): ещё табличка итогов с таблицей бойцов
 			var sm := inst.get_node("Match") as SquadMatch
 			sm.score = [15, 9]
@@ -160,6 +161,27 @@ func _pass() -> Dictionary:
 		if FileAccess.file_exists(g):
 			DirAccess.remove_absolute(g)
 	return shots
+
+
+## Камера прохода по картинке (docs/plan-demo/look/cam.md): табло нокаута и плашка повтора KO-кино, фоторежим (подсказка, рамка).
+func _look_cam_pass(shots: Dictionary) -> void:
+	var ov := KoCamOverlay.new()
+	add_child(ov)
+	ov.show_ko(tr("KO!"), "P2", Tuning.PLAYER_COLORS[1], TranslationServer.translate("IMPACT %.1fG") % 18.4)
+	ov.settle()
+	await _wait(SETTLE)
+	shots["look:ko_cam"] = _scan(ov)
+	ov.show_replay()
+	ov.settle()
+	await _wait(SETTLE)
+	shots["look:ko_replay"] = _scan(ov)
+	ov.queue_free()
+	var lcam := get_node("/root/LookCam")
+	if lcam.call("toggle_photo"):
+		await _wait(SETTLE)
+		shots["look:photo"] = _scan(lcam.get("photo"))
+		lcam.call("toggle_photo")
+		await _wait(5)
 
 
 func _wait(n: int) -> void:

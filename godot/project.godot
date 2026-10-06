@@ -26,6 +26,7 @@ Gfx="*res://scripts/gfx/gfx.gd"
 Flow="*res://scripts/menu/flow.gd"
 Loading="*res://scripts/menu/loading.gd"
 Look="*res://scripts/look/look.gd"
+LookCam="*res://scripts/look/look_cam.gd"
 
 [display]
 

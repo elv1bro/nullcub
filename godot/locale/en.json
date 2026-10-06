@@ -1862,5 +1862,22 @@
 	"Лица": "Faces",
 	"Нарисованное лицо у деревянного манекена": "Drawn face on the wooden mannequin",
 	"Манекены → кит «Человек» (та же физика)": "Mannequins → kit “Human” (same physics)",
-	"Манекены → бойцы-наборы: Спринтер и Титан (другая масса)": "Mannequins → set fighters: Sprinter and Titan (different mass)"
+	"Манекены → бойцы-наборы: Спринтер и Титан (другая масса)": "Mannequins → set fighters: Sprinter and Titan (different mass)",
+	"Камера": "Camera",
+	"KO-камера: стоп-кадр и облёт": "KO camera: freeze frame and orbit",
+	"Повтор нокаута перед карточкой KO": "Knockout replay before the KO card",
+	"Фоторежим — клавиша /": "Photo mode — / key",
+	"ФОТОРЕЖИМ: игра на паузе": "PHOTO MODE: game paused",
+	"тёплый": "warm",
+	"холодный": "cold",
+	"ч/б плакат": "b/w poster",
+	"как есть": "as is",
+	"ФОТО   мышь — вращение   колесо — зум   WASD / стрелки — сдвиг   R — сброс": "PHOTO   mouse — orbit   wheel — zoom   WASD / arrows — pan   R — reset",
+	"F / 1–4 — фильтр: %s   C — рамка   B — размытие фона   H — подсказка   Enter / пробел — снимок   Esc или / — выход": "F / 1–4 — filter: %s   C — frame   B — background blur   H — hints   Enter / space — shoot   Esc or / — exit",
+	"Размытие фона: %s": "Background blur: %s",
+	"Фильтр: %s": "Filter: %s",
+	"Снимок сохранён: %s": "Photo saved: %s",
+	"Снимок не сохранился": "Photo was not saved",
+	"ПОВТОР": "REPLAY",
+	"Enter / пробел — пропустить": "Enter / space — skip"
 }
