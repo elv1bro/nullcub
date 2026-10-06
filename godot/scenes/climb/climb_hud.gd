@@ -142,8 +142,8 @@ func _build_bottom() -> void:
 		l.anchor_bottom = 1.0
 		l.offset_left = -900.0
 		l.offset_right = 900.0
-		l.offset_top = -92.0 + 28.0 * i
-		l.offset_bottom = -66.0 + 28.0 * i
+		l.offset_top = -128.0 + 28.0 * i   # нижняя строка кончается на −46: ниже — метка «Tab — управление» (ControlFeelPanel)
+		l.offset_bottom = -102.0 + 28.0 * i
 		root.add_child(l)
 	help_p1.text = tr("P1 — WASD полёт (тратит запас) · Shift рывок · ЛКМ / ПКМ держать — левая / правая рука хватается · мышь, пока держишь, — подтянуться")
 	help_common.text = tr("Синее гладкое — не ухватиться · отдых: стоять на уступе или висеть на двух руках · R — заново · G — тяжесть · Esc — пауза")
@@ -154,8 +154,8 @@ func _build_bottom() -> void:
 	toast_label.anchor_bottom = 1.0
 	toast_label.offset_left = -500.0
 	toast_label.offset_right = 500.0
-	toast_label.offset_top = -150.0
-	toast_label.offset_bottom = -110.0
+	toast_label.offset_top = -214.0   # выше тоста сока удара (HitJuice: −170…−130)
+	toast_label.offset_bottom = -174.0
 	toast_label.visible = false
 	root.add_child(toast_label)
 

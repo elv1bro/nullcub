@@ -89,11 +89,12 @@
 ##
 ## Хват за стену (О5, docs/plan-demo/CLIMB.md; только проба «Подъём» — флаг wall_grip, везде иначе false и рука как раньше): кнопка тяги
 ## зажата — рука тянется к цели и, коснувшись «лазаемой» статики (группа или meta CLIMBABLE; гладкое — нет), хватается: сустав
-## Generic6DOFJoint3D кисть → стена (линейно жёстко, поворот свободен), точка хвата — в системе стены. Хватает свежее касание (на
-## нажатии кисть ещё не касалась), кисть у цели (ближе Tuning.CLIMB_GRAB_NEAR_M) или упёршаяся (медленнее CLIMB_GRAB_STALL_SPEED
-## дольше CLIMB_GRAB_STALL_S). Пока держит — помощи к цели нет, поза руки — по IK к точке хвата, а грудь тянется к цели (курсору):
-## сила ≤ CLIMB_PULL_F в торс, реакция в кисть (её держит стена) — подтягивание. Отпустил кнопку — отпустил; стан и «выдохся на
-## одной руке» (ThrustStamina) — срыв, снова схватиться — только после отпускания кнопки.
+## Generic6DOFJoint3D кисть → стена (линейно жёстко, поворот свободен), точка хвата — в системе стены. Хватает кисть у цели (ближе
+## Tuning.CLIMB_GRAB_NEAR_M) или упёршаяся (не подходит к цели дольше CLIMB_GRAB_STALL_S); кисть, что едет по камню к курсору, — нет.
+## Пока держит — помощи к цели нет, рука — «верёвка» (мышцы цепи 0, с этим камнем не сталкивается), а грудь тянется к цели (курсору):
+## сила ≤ CLIMB_PULL_F в грудь, реакция в кисть (её держит стена) — подтягивание; реакция помощи второй, свободной руки уходит в камень.
+## Пока рука тянется или держит, лимит плеча снят (дальняя от стены рука дотягивается через корпус). Отпустил кнопку — отпустил;
+## стан и «выдохся на одной руке» (ThrustStamina) — срыв, снова схватиться — только после отпускания кнопки.
 class_name ArmAssist
 extends Node
 
@@ -242,7 +243,7 @@ var wall_smooth_touch := false
 var _wall_joint: Generic6DOFJoint3D = null
 var _wall_active_t := 0.0
 var _wall_stall_t := 0.0
-var _wall_touch_blocked := false   # кисть касалась камня уже на нажатии: хват — только у цели или упёршись
+var _wall_best_d := INF
 var _wall_need_release := false    # сорвалась (стан, выдохся): снова хватать — после отпускания кнопки
 var _wall_was_active := false
 var _wall_query: PhysicsShapeQueryParameters3D
@@ -309,6 +310,7 @@ func _exit_tree() -> void:
 	_sisters.clear()
 	_set_highlight(null)
 	wall_release("exit")
+	_wall_shoulder(false)
 	if doll != null and is_instance_valid(doll) and doll.alive:
 		_set_flex(false)
 	if held != null:
@@ -753,6 +755,7 @@ func _physics_process(delta: float) -> void:
 		if held != null:
 			release("ko")
 		wall_release("ko")
+		_wall_shoulder(false)
 		_flex_saved.clear()   # суставов больше нет (break_apart)
 		arm_active = false
 		_update_hints()
@@ -1228,6 +1231,7 @@ func _on_part_detached(_detached_name: String, _by: Node) -> void:
 	if held != null:
 		release("detached")
 	wall_release("detached")
+	_wall_shoulder(false)
 	_set_flex(false)
 	arm_active = false
 	candidate = null
@@ -1471,7 +1475,7 @@ func wall_anchor_global() -> Vector3:
 
 
 ## Тик стены: держит — подтягивание к цели tgt, отпустил кнопку / стан — отпустить; не держит и рука тянется — касание лазаемого →
-## хват (свежее касание, кисть у цели или упёрлась). true — рука на стене.
+## хват (кисть у цели или упёрлась). true — рука на стене.
 func _tick_wall(active: bool, tgt: Vector3, delta: float) -> bool:
 	wall_pull_force = Vector3.ZERO
 	wall_smooth_touch = false
@@ -1479,6 +1483,7 @@ func _tick_wall(active: bool, tgt: Vector3, delta: float) -> bool:
 		wall_release("gone")
 	var pressed := active and not _wall_was_active
 	_wall_was_active = active
+	_wall_shoulder(active and not doll.is_stunned())
 	if not active:
 		_wall_need_release = false
 	if is_wall_holding():
@@ -1499,18 +1504,23 @@ func _tick_wall(active: bool, tgt: Vector3, delta: float) -> bool:
 	if pressed:
 		_wall_active_t = 0.0
 		_wall_stall_t = 0.0
-		_wall_touch_blocked = not hit.is_empty()
+		_wall_best_d = INF
 	_wall_active_t += delta
-	if hit.is_empty():
-		_wall_touch_blocked = false
-		_wall_stall_t = 0.0
-		return false
 	var g := grip_global()
-	var near := g.distance_to(clamp_to_reach(tgt)) <= Tuning.CLIMB_GRAB_NEAR_M
-	var speed := Vector2(_point_velocity(part, g).x, _point_velocity(part, g).y).length()
-	_wall_stall_t = _wall_stall_t + delta if speed < Tuning.CLIMB_GRAB_STALL_SPEED else 0.0
+	var dist := g.distance_to(clamp_to_reach(tgt))
+	# «упёрлась»: кисть не подходит к цели (ближе прежнего лучшего на CLIMB_GRAB_STALL_GAIN_M) дольше CLIMB_GRAB_STALL_S; кисть,
+	# которая едет по камню к цели, не упёрлась
+	if dist < _wall_best_d - Tuning.CLIMB_GRAB_STALL_GAIN_M:
+		_wall_best_d = dist
+		_wall_stall_t = 0.0
+	else:
+		_wall_stall_t += delta
+	if hit.is_empty():
+		return false
+	var near := dist <= Tuning.CLIMB_GRAB_NEAR_M
 	var stalled := _wall_active_t >= Tuning.CLIMB_GRAB_STALL_S and _wall_stall_t >= Tuning.CLIMB_GRAB_STALL_S
-	if not _wall_touch_blocked or near or stalled:
+	var catch := doll.com_velocity().length() >= Tuning.CLIMB_GRAB_CATCH_SPEED   # летит / падает мимо камня — ловит сразу
+	if near or stalled or catch:
 		_wall_grab(hit["body"])
 		return true
 	return false
@@ -1616,13 +1626,32 @@ func wall_release(reason: String = "button") -> void:
 
 ## Рука на стене — «верёвка»: мышцы цепи кисть → торс без жёсткости (k = 0), тело ведёт подтягивание, рука идёт следом; иначе
 ## поза по IK и демпфер мышц спорили бы с подтягиванием (кукла поднималась бы на одной руке в разы медленнее, проба grip_mantle).
-## И цепь не сталкивается с камнем, за который держится (предплечье и плечо цеплялись за край уступа — выжим на полку застревал),
-## а плечо без лимита поворота: выжим через кисть уводит руку за ось торса (у левой на экране — внутрь дальше −25°, лимит Shoulder),
-## иначе тело на уступ слева не переваливало. Отпустил — лимит и мышцы обратно.
+## И цепь не сталкивается с камнем, за который держится (предплечье и плечо цеплялись за край уступа — выжим на полку застревал).
+## Отпустил — мышцы и столкновения обратно.
 var _limp_set: Array[String] = []
 var _except_body: PhysicsBody3D = null
 var _except_parts: Array = []
 var _unlimited: Array = []   # суставы цепи с выключенным лимитом поворота (плечо)
+
+
+## Плечо без лимита поворота, пока рука тянется или держит стену: кукла смотрит в камеру, и рука стороны, дальней от стены, иначе не
+## дотягивается до неё через корпус (лимит Shoulder внутрь −25°), а выжим через кисть уводит руку за ось торса — тело на уступ не
+## переваливало. Кнопку отпустил — лимит обратно (если рука за ним, сустав вернёт её сам).
+func _wall_shoulder(on: bool) -> void:
+	if not on:
+		for j in _unlimited:
+			if is_instance_valid(j):
+				(j as Node).set("angular_limit_z/enabled", true)
+		_unlimited.clear()
+		return
+	if not _unlimited.is_empty() or doll == null or not is_instance_valid(doll):
+		return
+	for jn in _chain_joint_names:
+		var j := doll.joints.get(jn) as Node
+		if j != null and Doll.part_base_name(jn) == "Shoulder" and bool(j.get("angular_limit_z/enabled")):
+			j.set("angular_limit_z/enabled", false)
+			_unlimited.append(j)
+
 
 func _wall_limp(on: bool) -> void:
 	if not on:
@@ -1631,10 +1660,6 @@ func _wall_limp(on: bool) -> void:
 				(b as PhysicsBody3D).remove_collision_exception_with(_except_body)
 		_except_parts.clear()
 		_except_body = null
-		for j in _unlimited:
-			if is_instance_valid(j):
-				(j as Node).set("angular_limit_z/enabled", true)
-		_unlimited.clear()
 	if doll == null or not is_instance_valid(doll):
 		_limp_set.clear()
 		return
@@ -1643,10 +1668,6 @@ func _wall_limp(on: bool) -> void:
 			if doll.joints.has(jn) and not _limp_set.has(jn):
 				doll.set_muscle_joint(jn, 0.0, 0.0, 0.0)
 				_limp_set.append(jn)
-			var j := doll.joints.get(jn) as Node
-			if j != null and Doll.part_base_name(jn) == "Shoulder" and bool(j.get("angular_limit_z/enabled")):
-				j.set("angular_limit_z/enabled", false)
-				_unlimited.append(j)
 		_except_body = wall_body as PhysicsBody3D
 		if _except_body != null:
 			for b in _chain_bodies:
@@ -1687,7 +1708,9 @@ func _apply_wall_pull(cursor: Vector3) -> void:
 	var v := torso.linear_velocity
 	v.z = 0.0
 	var f := (e * Tuning.CLIMB_PULL_K - v * Tuning.CLIMB_PULL_C).limit_length(Tuning.CLIMB_PULL_F)
-	torso.apply_central_force(f)
+	# в грудь (верх торса на его оси), а не в центр: тело висит под точкой тяги головой вверх; из центра торс переворачивался
+	# вниз головой за три-четыре перехвата (проба grip_hand_over_hand)
+	torso.apply_force(f, chest_point() - torso.global_position)
 	part.apply_central_force(-f)
 	wall_pull_force = f
 

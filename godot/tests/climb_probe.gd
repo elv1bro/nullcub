@@ -444,6 +444,13 @@ func _grip() -> void:
 	var mantle := await _mantle(d)
 	info["mantle"] = mantle
 	_check("grip_mantle_onto_ledge", bool(mantle["ok"]), str(mantle))
+	# 5. только руками, без тяги: перехват по ровной скале без выступов (лицо x = −3, 24–30) — одной курсор-целью, как мышью.
+	# Замер для автора, порог мягкий: на ровной стене кисти поднимаются не выше груди, перехват даёт ≈ 0.15 м (CLIMB.md, вопросы)
+	var hoh := await _hand_over_hand(d, 8)
+	info["hand_over_hand"] = hoh
+	_check("grip_hand_over_hand", float(hoh["rise_m"]) >= 0.8 and float(hoh["thrust_spent"]) <= 0.01 and int(hoh["grabs"]) >= 7,
+		"руками без тяги: %d перехватов из 8 за %.1f с, подъём %.2f м, тяга потратила %.1f" % [int(hoh["grabs"]), float(hoh["t"]),
+		float(hoh["rise_m"]), float(hoh["thrust_spent"])])
 	# 5. рука без флага (другие режимы) стену не хватает
 	var plain := ArmAssist.new()
 	plain.name = "PlainArm"
@@ -505,6 +512,65 @@ func _mantle(d: Doll) -> Dictionary:
 	var ok2 := on and c2.y > 11.15 and c2.x < -0.9 and st.on_ledge   # ЦМ над верхом полки (11.1) и над ней по x — лежит или стоит на полке
 	return {"ok": ok2, "com_start": [_r2(c0.x), _r2(c0.y)], "com_pulled": [_r2(c1.x), _r2(c1.y)], "com_end": [_r2(c2.x), _r2(c2.y)],
 		"rise_m": _r2(peak - c0.y), "on_ledge": st.on_ledge, "support": st.support}
+
+
+## Перехват: висим на обеих у камня; n раз — отпустить нижнюю руку, курсор на камень на 0.75 м выше груди (держащая тянет грудь туда),
+## та же рука снова хватается там. Без тяги (ввод 0). → {grabs, rise_m, t, thrust_spent}.
+func _hand_over_hand(d: Doll, n: int) -> Dictionary:
+	var st := d.stamina
+	var arms := _arms(d)
+	_teleport(d, Vector3(-2.35, 25.0, 0.0))
+	await _ticks(2)
+	st.refill()
+	d.input_vec = Vector2.ZERO
+	var g := await _reach_both(d, Vector3(-3.0, 25.5, 0.0))
+	if not (g[0] and g[1]):
+		return {"grabs": 0, "rise_m": 0.0, "t": 0.0, "thrust_spent": 0.0}
+	var y0 := d.centre_of_mass().y
+	var spent0 := st.spent_total
+	var grabs := 0
+	var t := 0.0
+	var k := 0
+	var tries := 0
+	while k < n and tries < n * 2:
+		tries += 1
+		var a := arms[k % 2] as ArmAssist        # отпускаем по очереди: левая, правая… (только если другая держит)
+		var other := arms[(k + 1) % 2] as ArmAssist
+		if not other.is_wall_holding():
+			break
+		a.clear_target_override()
+		await _ticks(3)
+		t += 3.0 * TICK
+		var cur := Vector3(-3.0, other.chest_point().y + 0.5, 0.0)
+		other.set_target_override(cur)
+		a.set_target_override(cur)
+		var tt := 0.0
+		while not a.is_wall_holding() and tt < 1.5:
+			await get_tree().physics_frame
+			tt += TICK
+			if tt > 0.6 and not a.is_wall_holding():   # не достаёт — цель ниже (к груди)
+				cur = Vector3(-3.0, other.chest_point().y + 0.15, 0.0)
+				other.set_target_override(cur)
+				a.set_target_override(cur)
+		t += tt
+		if a.is_wall_holding():
+			grabs += 1
+			k += 1
+			# обе держат — курсор выше груди: подтянуться обеими, потом отпускать нижнюю
+			var up := Vector3(-2.7, a.chest_point().y + 0.6, 0.0)
+			a.set_target_override(up)
+			other.set_target_override(up)
+		await _wait(0.5)
+		t += 0.5
+		if trace:
+			var tb := d.torso().global_basis.x
+			print("    hoh %d/%d %s: держит %s, ЦМ %s, запас %.0f, кисть %s плечо %s цель %s торс %.0f°, активна %s" % [k, tries, a.part_name,
+				str(a.is_wall_holding()), str(d.centre_of_mass()), st.value, str(a.grip_global()), str(a.root_point()), str(a.target),
+				rad_to_deg(atan2(tb.y, tb.x)), str(a.arm_active)])
+	var rise := d.centre_of_mass().y - y0
+	for a2 in arms:
+		(a2 as ArmAssist).clear_target_override()
+	return {"grabs": grabs, "rise_m": _r2(rise), "t": _r2(t), "thrust_spent": _r2(st.spent_total - spent0), "stamina_end": _r2(st.value)}
 
 
 func _p2_keys() -> void:
@@ -710,6 +776,12 @@ func _do_rest_wall(d: Doll, cursor: Vector3, full := REST_FULL, hover: Variant =
 		if n >= 2:
 			both = true
 			break
+		if trace and int(t / TICK) % 15 == 0:
+			for a in arms:
+				var arm := a as ArmAssist
+				print("      rest t=%.2f %s grip %s target %s dist %.2f touch %s active %s com %s st %.0f" % [t, arm.part_name, str(arm.grip_global()),
+					str(arm.target), arm.grip_global().distance_to(arm.target), str(arm.wall_touch().get("dist", -1.0)), str(arm.arm_active),
+					str(d.centre_of_mass()), st.value])
 		if n == 0 and not st.locked:   # ещё ни одной руки — держаться тягой на месте
 			var c := d.centre_of_mass()
 			var v := d.com_velocity()

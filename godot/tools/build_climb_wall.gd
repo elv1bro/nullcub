@@ -19,7 +19,7 @@ extends Node
 const OUT := "res://scenes/climb/climb_wall.tscn"
 const SCRIPT := "res://scenes/climb/climb_wall.gd"
 const ENV_RES := "res://assets/environments/ruins_env.tres"
-const STONE := "res://assets/textures/pbr/stone/%s.png"
+const ROCK := "res://assets/textures/pbr/scrap_dirt/%s.png"
 const IRON := "res://assets/textures/pbr/iron/%s.png"
 const DEPTH := 2.0     # толщина кусков по z (плоскость кукол — середина)
 const LEFT := -12.0    # тыльная сторона левой скалы
@@ -120,16 +120,17 @@ func _tex(path: String) -> Texture2D:
 
 
 func _materials() -> void:
+	# камень: зернистая текстура Свалки (scrap_dirt), высветленная в серо-охристый — читается скалой, а не кладкой (pbr/stone — кирпич)
 	_rock_mat = StandardMaterial3D.new()
-	_rock_mat.albedo_texture = _tex(STONE % "albedo")
-	_rock_mat.albedo_color = Color(0.86, 0.8, 0.72)
+	_rock_mat.albedo_texture = _tex(ROCK % "albedo")
+	_rock_mat.albedo_color = Color(1.9, 1.75, 1.55)
 	_rock_mat.normal_enabled = true
-	_rock_mat.normal_texture = _tex(STONE % "normal")
-	_rock_mat.normal_scale = 1.4
-	_rock_mat.roughness_texture = _tex(STONE % "roughness")
+	_rock_mat.normal_texture = _tex(ROCK % "normal")
+	_rock_mat.normal_scale = 2.0
+	_rock_mat.roughness_texture = _tex(ROCK % "roughness")
 	_rock_mat.uv1_triplanar = true
 	_rock_mat.uv1_world_triplanar = true
-	_rock_mat.uv1_scale = Vector3(0.45, 0.45, 0.45)
+	_rock_mat.uv1_scale = Vector3(0.3, 0.3, 0.3)
 	# гладкое: тёмно-синий лёд / полированная плита — блестит, без рельефа камня (читается «не схватиться»)
 	_smooth_mat = StandardMaterial3D.new()
 	_smooth_mat.albedo_texture = _tex(IRON % "albedo")
@@ -142,8 +143,8 @@ func _materials() -> void:
 	_smooth_mat.rim_enabled = true
 	_smooth_mat.rim = 0.4
 	_back_mat = _rock_mat.duplicate() as StandardMaterial3D
-	_back_mat.albedo_color = Color(0.36, 0.34, 0.33)
-	_back_mat.uv1_scale = Vector3(0.18, 0.18, 0.18)
+	_back_mat.albedo_color = Color(0.75, 0.7, 0.66)
+	_back_mat.uv1_scale = Vector3(0.12, 0.12, 0.12)
 
 
 func _environment() -> void:
@@ -276,7 +277,7 @@ func _finish() -> void:
 	g.add_child(flag)
 	var l := Label3D.new()
 	l.name = "Label"
-	l.position = Vector3(0.7, 3.4, 0.2)
+	l.position = Vector3(0.75, 2.5, 0.25)   # на самом флаге: над ним кадр часто под панелью HUD
 	l.font_size = 72
 	l.pixel_size = 0.006
 	l.outline_size = 14

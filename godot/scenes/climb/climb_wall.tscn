@@ -1,9 +1,9 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scenes/climb/climb_wall.gd" id="1_5u447"]
-[ext_resource type="Texture2D" path="res://assets/textures/pbr/stone/albedo.png" id="2_2pn0b"]
-[ext_resource type="Texture2D" path="res://assets/textures/pbr/stone/normal.png" id="3_vxvd4"]
-[ext_resource type="Texture2D" path="res://assets/textures/pbr/stone/roughness.png" id="4_8incx"]
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/scrap_dirt/albedo.png" id="2_2pn0b"]
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/scrap_dirt/normal.png" id="3_vxvd4"]
+[ext_resource type="Texture2D" path="res://assets/textures/pbr/scrap_dirt/roughness.png" id="4_8incx"]
 [ext_resource type="Texture2D" path="res://assets/textures/pbr/iron/albedo.png" id="5_cyqcv"]
 
 [sub_resource type="Gradient" id="WarmGrad"]
@@ -74,13 +74,13 @@ bounce = 0.05
 size = Vector3(24, 1, 2)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mrojt"]
-albedo_color = Color(0.86, 0.8, 0.72, 1)
+albedo_color = Color(1.9, 1.75, 1.55, 1)
 albedo_texture = ExtResource("2_2pn0b")
 roughness_texture = ExtResource("4_8incx")
 normal_enabled = true
-normal_scale = 1.4
+normal_scale = 2.0
 normal_texture = ExtResource("3_vxvd4")
-uv1_scale = Vector3(0.45, 0.45, 0.45)
+uv1_scale = Vector3(0.3, 0.3, 0.3)
 uv1_triplanar = true
 uv1_world_triplanar = true
 
@@ -299,13 +299,13 @@ size = Vector3(9.1, 4, 2)
 size = Vector3(9.1, 4, 2.6)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j2agp"]
-albedo_color = Color(0.36, 0.34, 0.33, 1)
+albedo_color = Color(0.75, 0.7, 0.66, 1)
 albedo_texture = ExtResource("2_2pn0b")
 roughness_texture = ExtResource("4_8incx")
 normal_enabled = true
-normal_scale = 1.4
+normal_scale = 2.0
 normal_texture = ExtResource("3_vxvd4")
-uv1_scale = Vector3(0.18, 0.18, 0.18)
+uv1_scale = Vector3(0.12, 0.12, 0.12)
 uv1_triplanar = true
 uv1_world_triplanar = true
 
@@ -392,307 +392,307 @@ size = Vector3(17, 1, 2)
 [sub_resource type="BoxShape3D" id="BoxShape3D_e7auj"]
 size = Vector3(30, 44, 6)
 
-[node name="ClimbWall" type="Node3D" unique_id=479900596]
+[node name="ClimbWall" type="Node3D" unique_id=321524899]
 script = ExtResource("1_5u447")
 
-[node name="Environment" type="WorldEnvironment" parent="." unique_id=1536081145]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=179551500]
 environment = SubResource("Environment_o5py0")
 camera_attributes = SubResource("CameraAttributesPractical_32661")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1939649915]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=341660546]
 transform = Transform3D(0.70710677, 0.49746835, -0.50251895, 0, 0.7106691, 0.7035265, 0.70710677, -0.49746835, 0.50251895, 0, 0, 0)
 light_color = Color(1, 0.93, 0.82, 1)
 light_energy = 1.15
 shadow_enabled = true
 
-[node name="Rock" type="Node3D" parent="." unique_id=1182780170]
+[node name="Rock" type="Node3D" parent="." unique_id=1034203269]
 
-[node name="Ground" type="StaticBody3D" parent="Rock" unique_id=2140068304 groups=["climbable"]]
+[node name="Ground" type="StaticBody3D" parent="Rock" unique_id=463780188 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 physics_material_override = SubResource("PhysicsMaterial_x0qea")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/Ground" unique_id=674958346]
+[node name="Shape" type="CollisionShape3D" parent="Rock/Ground" unique_id=5026731]
 shape = SubResource("BoxShape3D_oo5d6")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/Ground" unique_id=95917619]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/Ground" unique_id=432903454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_5qtwc")
 
-[node name="L_Rock_0" type="StaticBody3D" parent="Rock" unique_id=1252804619 groups=["climbable"]]
+[node name="L_Rock_0" type="StaticBody3D" parent="Rock" unique_id=506280318 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 3, 0)
 physics_material_override = SubResource("PhysicsMaterial_e6v08")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_0" unique_id=2048120292]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_0" unique_id=984787048]
 shape = SubResource("BoxShape3D_52ax2")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_0" unique_id=103511150]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_0" unique_id=666664919]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_cudlc")
 
-[node name="L_Ledge_2" type="StaticBody3D" parent="Rock" unique_id=523251816 groups=["climbable"]]
+[node name="L_Ledge_2" type="StaticBody3D" parent="Rock" unique_id=1614650768 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 2.675, 0)
 physics_material_override = SubResource("PhysicsMaterial_oa8sp")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Ledge_2" unique_id=1347959903]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Ledge_2" unique_id=1542950878]
 shape = SubResource("BoxShape3D_nwvp7")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Ledge_2" unique_id=1505263295]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Ledge_2" unique_id=1836004951]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_1n3y0")
 
-[node name="L_Shelf_11" type="StaticBody3D" parent="Rock" unique_id=292942582 groups=["climbable"]]
+[node name="L_Shelf_11" type="StaticBody3D" parent="Rock" unique_id=199859648 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 10.85, 0)
 physics_material_override = SubResource("PhysicsMaterial_lu1p5")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Shelf_11" unique_id=1551179656]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Shelf_11" unique_id=1905585508]
 shape = SubResource("BoxShape3D_gjo3l")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Shelf_11" unique_id=1220035182]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Shelf_11" unique_id=406909955]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_gq6rd")
 
-[node name="L_Rock_11" type="StaticBody3D" parent="Rock" unique_id=1799767845 groups=["climbable"]]
+[node name="L_Rock_11" type="StaticBody3D" parent="Rock" unique_id=1731713905 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.6, 13, 0)
 physics_material_override = SubResource("PhysicsMaterial_t4dog")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_11" unique_id=1494419482]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_11" unique_id=1740005859]
 shape = SubResource("BoxShape3D_jaeeh")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_11" unique_id=463902790]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_11" unique_id=222604580]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_11sf6")
 
-[node name="L_Bump_12" type="StaticBody3D" parent="Rock" unique_id=1722478700 groups=["climbable"]]
+[node name="L_Bump_12" type="StaticBody3D" parent="Rock" unique_id=1221951392 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.05, 12.45, 0)
 physics_material_override = SubResource("PhysicsMaterial_evtpa")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Bump_12" unique_id=1001004630]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Bump_12" unique_id=1859494072]
 shape = SubResource("BoxShape3D_a5exw")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Bump_12" unique_id=533768725]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Bump_12" unique_id=1487079224]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_66bow")
 
-[node name="L_Bump_14" type="StaticBody3D" parent="Rock" unique_id=58226315 groups=["climbable"]]
+[node name="L_Bump_14" type="StaticBody3D" parent="Rock" unique_id=248939843 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.075, 13.925, 0)
 physics_material_override = SubResource("PhysicsMaterial_ii2ba")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Bump_14" unique_id=372048515]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Bump_14" unique_id=2027525747]
 shape = SubResource("BoxShape3D_t4o2u")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Bump_14" unique_id=906278882]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Bump_14" unique_id=1266383125]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_svb4o")
 
-[node name="L_Ledge_15" type="StaticBody3D" parent="Rock" unique_id=672375409 groups=["climbable"]]
+[node name="L_Ledge_15" type="StaticBody3D" parent="Rock" unique_id=930242415 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.95, 15.3, 0)
 physics_material_override = SubResource("PhysicsMaterial_d51i2")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Ledge_15" unique_id=1698753393]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Ledge_15" unique_id=1406191956]
 shape = SubResource("BoxShape3D_j1n6g")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Ledge_15" unique_id=906284407]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Ledge_15" unique_id=758254092]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_ulegl")
 
-[node name="L_Rock_15" type="StaticBody3D" parent="Rock" unique_id=2053795640 groups=["climbable"]]
+[node name="L_Rock_15" type="StaticBody3D" parent="Rock" unique_id=866537009 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 17.4, 0)
 physics_material_override = SubResource("PhysicsMaterial_s4uog")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_15" unique_id=329216328]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_15" unique_id=467725406]
 shape = SubResource("BoxShape3D_p2231")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_15" unique_id=18034699]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_15" unique_id=523996638]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_v1kqx")
 
-[node name="L_Bump_17" type="StaticBody3D" parent="Rock" unique_id=43128090 groups=["climbable"]]
+[node name="L_Bump_17" type="StaticBody3D" parent="Rock" unique_id=99087658 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.875, 17.325, 0)
 physics_material_override = SubResource("PhysicsMaterial_2pvpt")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Bump_17" unique_id=147485521]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Bump_17" unique_id=2008352152]
 shape = SubResource("BoxShape3D_j8xv6")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Bump_17" unique_id=1593096017]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Bump_17" unique_id=958531709]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_8nlew")
 
-[node name="L_Rock_19" type="StaticBody3D" parent="Rock" unique_id=1960095952 groups=["climbable"]]
+[node name="L_Rock_19" type="StaticBody3D" parent="Rock" unique_id=246277144 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 19.8, 0)
 physics_material_override = SubResource("PhysicsMaterial_rspc4")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_19" unique_id=1428711719]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_19" unique_id=1864112995]
 shape = SubResource("BoxShape3D_mkh3q")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_19" unique_id=1452351033]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_19" unique_id=876420290]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_l3g3e")
 
-[node name="L_Overhang_20" type="StaticBody3D" parent="Rock" unique_id=1500700731 groups=["climbable"]]
+[node name="L_Overhang_20" type="StaticBody3D" parent="Rock" unique_id=1361360698 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 19.8, 0)
 physics_material_override = SubResource("PhysicsMaterial_fnqiu")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Overhang_20" unique_id=1457944769]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Overhang_20" unique_id=274782870]
 shape = SubResource("BoxShape3D_7td5x")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Overhang_20" unique_id=192135072]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Overhang_20" unique_id=926490342]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_svgs0")
 
-[node name="L_Rock_24" type="StaticBody3D" parent="Rock" unique_id=1055308630 groups=["climbable"]]
+[node name="L_Rock_24" type="StaticBody3D" parent="Rock" unique_id=295852508 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 27, 0)
 physics_material_override = SubResource("PhysicsMaterial_4tcrx")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_24" unique_id=1233277374]
+[node name="Shape" type="CollisionShape3D" parent="Rock/L_Rock_24" unique_id=2143231927]
 shape = SubResource("BoxShape3D_rgaxq")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_24" unique_id=805132858]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/L_Rock_24" unique_id=723188027]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_gh1m2")
 
-[node name="R_Rock_0" type="StaticBody3D" parent="Rock" unique_id=1356285225 groups=["climbable"]]
+[node name="R_Rock_0" type="StaticBody3D" parent="Rock" unique_id=1941885553 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 2.3, 0)
 physics_material_override = SubResource("PhysicsMaterial_gmd68")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/R_Rock_0" unique_id=705523217]
+[node name="Shape" type="CollisionShape3D" parent="Rock/R_Rock_0" unique_id=1378863970]
 shape = SubResource("BoxShape3D_6lkw1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Rock_0" unique_id=743982582]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Rock_0" unique_id=1162478719]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_1f1sc")
 
-[node name="R_Ledge_5" type="StaticBody3D" parent="Rock" unique_id=1672200696 groups=["climbable"]]
+[node name="R_Ledge_5" type="StaticBody3D" parent="Rock" unique_id=376567736 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 4.8, 0)
 physics_material_override = SubResource("PhysicsMaterial_2bdqq")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/R_Ledge_5" unique_id=788274024]
+[node name="Shape" type="CollisionShape3D" parent="Rock/R_Ledge_5" unique_id=557506282]
 shape = SubResource("BoxShape3D_yyb0r")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Ledge_5" unique_id=518123189]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Ledge_5" unique_id=275098609]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_ssar8")
 
-[node name="R_Rock_5" type="StaticBody3D" parent="Rock" unique_id=1378190684 groups=["climbable"]]
+[node name="R_Rock_5" type="StaticBody3D" parent="Rock" unique_id=1762173162 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 8.8, 0)
 physics_material_override = SubResource("PhysicsMaterial_fortd")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/R_Rock_5" unique_id=496313230]
+[node name="Shape" type="CollisionShape3D" parent="Rock/R_Rock_5" unique_id=552285663]
 shape = SubResource("BoxShape3D_re6rl")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Rock_5" unique_id=634402949]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Rock_5" unique_id=1463374239]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_27ml6")
 
-[node name="R_Bump_7" type="StaticBody3D" parent="Rock" unique_id=299097434 groups=["climbable"]]
+[node name="R_Bump_7" type="StaticBody3D" parent="Rock" unique_id=1806051697 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.875, 7.55, 0)
 physics_material_override = SubResource("PhysicsMaterial_deal8")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/R_Bump_7" unique_id=453726657]
+[node name="Shape" type="CollisionShape3D" parent="Rock/R_Bump_7" unique_id=889987261]
 shape = SubResource("BoxShape3D_denq4")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Bump_7" unique_id=875001101]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Bump_7" unique_id=1309553550]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_ag1y6")
 
-[node name="R_Bump_10" type="StaticBody3D" parent="Rock" unique_id=1574035051 groups=["climbable"]]
+[node name="R_Bump_10" type="StaticBody3D" parent="Rock" unique_id=358379302 groups=["climbable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.85, 10.05, 0)
 physics_material_override = SubResource("PhysicsMaterial_2ar6a")
 metadata/kind = "rock"
 
-[node name="Shape" type="CollisionShape3D" parent="Rock/R_Bump_10" unique_id=468486397]
+[node name="Shape" type="CollisionShape3D" parent="Rock/R_Bump_10" unique_id=1537697663]
 shape = SubResource("BoxShape3D_qnw4l")
 
-[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Bump_10" unique_id=79831009]
+[node name="Mesh" type="MeshInstance3D" parent="Rock/R_Bump_10" unique_id=2146108261]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_mrojt")
 mesh = SubResource("BoxMesh_eamfr")
 
-[node name="Smooth" type="Node3D" parent="." unique_id=938876237]
+[node name="Smooth" type="Node3D" parent="." unique_id=140315401]
 
-[node name="L_Smooth_6" type="StaticBody3D" parent="Smooth" unique_id=322802354]
+[node name="L_Smooth_6" type="StaticBody3D" parent="Smooth" unique_id=172413510]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.45, 8.3, 0)
 physics_material_override = SubResource("PhysicsMaterial_r4aa0")
 metadata/kind = "smooth"
 
-[node name="Shape" type="CollisionShape3D" parent="Smooth/L_Smooth_6" unique_id=321409150]
+[node name="Shape" type="CollisionShape3D" parent="Smooth/L_Smooth_6" unique_id=41711308]
 shape = SubResource("BoxShape3D_gsrwg")
 
-[node name="Mesh" type="MeshInstance3D" parent="Smooth/L_Smooth_6" unique_id=1937249429]
+[node name="Mesh" type="MeshInstance3D" parent="Smooth/L_Smooth_6" unique_id=484640365]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_oykd4")
 mesh = SubResource("BoxMesh_25d4v")
 
-[node name="L_Smooth_20" type="StaticBody3D" parent="Smooth" unique_id=1301684526]
+[node name="L_Smooth_20" type="StaticBody3D" parent="Smooth" unique_id=1117067286]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.7, 22.1, 0)
 physics_material_override = SubResource("PhysicsMaterial_t11iy")
 metadata/kind = "smooth"
 
-[node name="Shape" type="CollisionShape3D" parent="Smooth/L_Smooth_20" unique_id=157780825]
+[node name="Shape" type="CollisionShape3D" parent="Smooth/L_Smooth_20" unique_id=1153285051]
 shape = SubResource("BoxShape3D_5jg7i")
 
-[node name="Mesh" type="MeshInstance3D" parent="Smooth/L_Smooth_20" unique_id=1832022631]
+[node name="Mesh" type="MeshInstance3D" parent="Smooth/L_Smooth_20" unique_id=1253285340]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_oykd4")
 mesh = SubResource("BoxMesh_g28jl")
 
-[node name="R_Smooth_13" type="StaticBody3D" parent="Smooth" unique_id=87014867]
+[node name="R_Smooth_13" type="StaticBody3D" parent="Smooth" unique_id=581079848]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.45, 15, 0)
 physics_material_override = SubResource("PhysicsMaterial_gjb7k")
 metadata/kind = "smooth"
 
-[node name="Shape" type="CollisionShape3D" parent="Smooth/R_Smooth_13" unique_id=1433151683]
+[node name="Shape" type="CollisionShape3D" parent="Smooth/R_Smooth_13" unique_id=737887637]
 shape = SubResource("BoxShape3D_iu0qy")
 
-[node name="Mesh" type="MeshInstance3D" parent="Smooth/R_Smooth_13" unique_id=1906025404]
+[node name="Mesh" type="MeshInstance3D" parent="Smooth/R_Smooth_13" unique_id=761645016]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
 material_override = SubResource("StandardMaterial3D_oykd4")
 mesh = SubResource("BoxMesh_i1ce8")
 
-[node name="Backdrop" type="Node3D" parent="." unique_id=1061016793]
+[node name="Backdrop" type="Node3D" parent="." unique_id=1644150769]
 
-[node name="FarWall" type="MeshInstance3D" parent="Backdrop" unique_id=2008929074]
+[node name="FarWall" type="MeshInstance3D" parent="Backdrop" unique_id=1753516900]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, -3.2)
 material_override = SubResource("StandardMaterial3D_j2agp")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_fshpb")
 
-[node name="Marks" type="Node3D" parent="." unique_id=438775054]
+[node name="Marks" type="Node3D" parent="." unique_id=658760809]
 
-[node name="Mark_5" type="Label3D" parent="Marks" unique_id=520164566]
+[node name="Mark_5" type="Label3D" parent="Marks" unique_id=1001392349]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 5, -2.6)
 pixel_size = 0.006
 modulate = Color(1, 0.92, 0.7, 0.85)
@@ -701,12 +701,12 @@ font_size = 64
 horizontal_alignment = 0
 metadata/height = 5
 
-[node name="Tick_5" type="MeshInstance3D" parent="Marks" unique_id=822391561]
+[node name="Tick_5" type="MeshInstance3D" parent="Marks" unique_id=1182234561]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 5, -2.6)
 material_override = SubResource("StandardMaterial3D_fo86h")
 mesh = SubResource("BoxMesh_h3tks")
 
-[node name="Mark_10" type="Label3D" parent="Marks" unique_id=764613387]
+[node name="Mark_10" type="Label3D" parent="Marks" unique_id=728631325]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 10, -2.6)
 pixel_size = 0.006
 modulate = Color(1, 0.92, 0.7, 0.85)
@@ -715,12 +715,12 @@ font_size = 64
 horizontal_alignment = 0
 metadata/height = 10
 
-[node name="Tick_10" type="MeshInstance3D" parent="Marks" unique_id=1458772928]
+[node name="Tick_10" type="MeshInstance3D" parent="Marks" unique_id=1801275167]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 10, -2.6)
 material_override = SubResource("StandardMaterial3D_dipc7")
 mesh = SubResource("BoxMesh_kqx7e")
 
-[node name="Mark_15" type="Label3D" parent="Marks" unique_id=621609466]
+[node name="Mark_15" type="Label3D" parent="Marks" unique_id=1180892692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 15, -2.6)
 pixel_size = 0.006
 modulate = Color(1, 0.92, 0.7, 0.85)
@@ -729,12 +729,12 @@ font_size = 64
 horizontal_alignment = 0
 metadata/height = 15
 
-[node name="Tick_15" type="MeshInstance3D" parent="Marks" unique_id=116243210]
+[node name="Tick_15" type="MeshInstance3D" parent="Marks" unique_id=1053304122]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 15, -2.6)
 material_override = SubResource("StandardMaterial3D_ybcse")
 mesh = SubResource("BoxMesh_50eao")
 
-[node name="Mark_20" type="Label3D" parent="Marks" unique_id=1008612078]
+[node name="Mark_20" type="Label3D" parent="Marks" unique_id=2114924477]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 20, -2.6)
 pixel_size = 0.006
 modulate = Color(1, 0.92, 0.7, 0.85)
@@ -743,12 +743,12 @@ font_size = 64
 horizontal_alignment = 0
 metadata/height = 20
 
-[node name="Tick_20" type="MeshInstance3D" parent="Marks" unique_id=717535638]
+[node name="Tick_20" type="MeshInstance3D" parent="Marks" unique_id=1071123753]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 20, -2.6)
 material_override = SubResource("StandardMaterial3D_dfv4a")
 mesh = SubResource("BoxMesh_mx7mw")
 
-[node name="Mark_25" type="Label3D" parent="Marks" unique_id=1622290637]
+[node name="Mark_25" type="Label3D" parent="Marks" unique_id=24031725]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 25, -2.6)
 pixel_size = 0.006
 modulate = Color(1, 0.92, 0.7, 0.85)
@@ -757,12 +757,12 @@ font_size = 64
 horizontal_alignment = 0
 metadata/height = 25
 
-[node name="Tick_25" type="MeshInstance3D" parent="Marks" unique_id=1253459357]
+[node name="Tick_25" type="MeshInstance3D" parent="Marks" unique_id=1498290392]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 25, -2.6)
 material_override = SubResource("StandardMaterial3D_68rdd")
 mesh = SubResource("BoxMesh_cf2o3")
 
-[node name="Mark_30" type="Label3D" parent="Marks" unique_id=1402379984]
+[node name="Mark_30" type="Label3D" parent="Marks" unique_id=1206075099]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 30, -2.6)
 pixel_size = 0.006
 modulate = Color(1, 0.92, 0.7, 0.85)
@@ -771,61 +771,61 @@ font_size = 64
 horizontal_alignment = 0
 metadata/height = 30
 
-[node name="Tick_30" type="MeshInstance3D" parent="Marks" unique_id=147300393]
+[node name="Tick_30" type="MeshInstance3D" parent="Marks" unique_id=277955594]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 30, -2.6)
 material_override = SubResource("StandardMaterial3D_2mjwi")
 mesh = SubResource("BoxMesh_k0yow")
 
-[node name="Finish" type="Node3D" parent="." unique_id=358738336]
+[node name="Finish" type="Node3D" parent="." unique_id=1730737692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 30, -0.4)
 
-[node name="Pole" type="MeshInstance3D" parent="Finish" unique_id=450407650]
+[node name="Pole" type="MeshInstance3D" parent="Finish" unique_id=2121131908]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 material_override = SubResource("StandardMaterial3D_6dx5v")
 mesh = SubResource("CylinderMesh_r5kvi")
 
-[node name="Flag" type="MeshInstance3D" parent="Finish" unique_id=1227669920]
+[node name="Flag" type="MeshInstance3D" parent="Finish" unique_id=1726354544]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.72, 2.5, 0)
 material_override = SubResource("StandardMaterial3D_o0ivv")
 mesh = SubResource("QuadMesh_cyde3")
 
-[node name="Label" type="Label3D" parent="Finish" unique_id=1564367261]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 3.4, 0.2)
+[node name="Label" type="Label3D" parent="Finish" unique_id=762644511]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 2.5, 0.25)
 pixel_size = 0.006
 modulate = Color(1, 0.85, 0.4, 1)
 outline_modulate = Color(0.05, 0.03, 0, 0.85)
 font_size = 72
 outline_size = 14
 
-[node name="Bounds" type="StaticBody3D" parent="." unique_id=2006710884]
+[node name="Bounds" type="StaticBody3D" parent="." unique_id=1704766659]
 
-[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=875285928]
+[node name="WallL" type="CollisionShape3D" parent="Bounds" unique_id=1649601633]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 17, 0)
 shape = SubResource("BoxShape3D_v64ma")
 
-[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=1198705200]
+[node name="WallR" type="CollisionShape3D" parent="Bounds" unique_id=2002264377]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 17, 0)
 shape = SubResource("BoxShape3D_qm4nu")
 
-[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=1219530585]
+[node name="Ceiling" type="CollisionShape3D" parent="Bounds" unique_id=1352293350]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 34.5, 0)
 shape = SubResource("BoxShape3D_wgifi")
 
-[node name="Gravity" type="Area3D" parent="." unique_id=1211531269]
+[node name="Gravity" type="Area3D" parent="." unique_id=1361000469]
 collision_layer = 0
 collision_mask = 4294967295
 monitorable = false
 gravity_space_override = 3
 gravity = 4.0
 
-[node name="Shape" type="CollisionShape3D" parent="Gravity" unique_id=713455978]
+[node name="Shape" type="CollisionShape3D" parent="Gravity" unique_id=2102651456]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
 shape = SubResource("BoxShape3D_e7auj")
 
-[node name="Spawns" type="Node3D" parent="." unique_id=1972125860]
+[node name="Spawns" type="Node3D" parent="." unique_id=1038700056]
 
-[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=1694881480]
+[node name="Spawn0" type="Marker3D" parent="Spawns" unique_id=1370931150]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0.05, 0)
 
-[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=1613203214]
+[node name="Spawn1" type="Marker3D" parent="Spawns" unique_id=1816069937]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0.05, 0)
