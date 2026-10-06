@@ -206,10 +206,10 @@ func _rules() -> void:
 	_check("holder_start", h != null and h.alive and bm.play_state == "play", "держатель %s, фаза %s" % [BombMatch.doll_name(h), bm.play_state])
 	if h == null:
 		return
-	var fast := h.thrust_mult == Tuning.BOMB_HOLDER_THRUST_MULT and h.speed_mult == Tuning.BOMB_HOLDER_SPEED_MULT
+	var fast := h.thrust_mult == Tuning.BOMB_HOLDER_THRUST_MULT and h.speed_cap_mult == Tuning.BOMB_HOLDER_SPEED_MULT
 	for d in _others([h]):
-		fast = fast and (d as Doll).thrust_mult == 1.0 and (d as Doll).speed_mult == 1.0
-	_check("holder_faster", fast, "тяга ×%.2f, скорость ×%.2f, у остальных 1" % [h.thrust_mult, h.speed_mult])
+		fast = fast and (d as Doll).thrust_mult == 1.0 and (d as Doll).speed_cap_mult == 1.0
+	_check("holder_faster", fast, "тяга ×%.2f, скорость ×%.2f, у остальных 1" % [h.thrust_mult, h.speed_cap_mult])
 	var fuse0 := bm.fuse_s
 	_check("fuse_range", fuse0 >= Tuning.BOMB_FUSE_MIN_S and fuse0 <= Tuning.BOMB_FUSE_MAX_S, "фитиль %.2f с" % fuse0)
 	var lo := INF

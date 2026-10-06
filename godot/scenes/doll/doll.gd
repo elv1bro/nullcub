@@ -88,9 +88,11 @@ const SPAWN_POSE_GROUPS := ["Shoulder", "Elbow", "Hip", "Knee"]   # прокси
 ## Множитель всего входящего урона и стана (team_mult_for — через него идут take_damage и DollCombat): режимы со своей защитой —
 ## броня «Стычки 3 на 3» (SquadMatch: 0.5, пока она есть). 1 — как без режима.
 var incoming_mult := 1.0
-## Множители тяги и предела скорости управления (режимы: держатель бомбы ×1.2 — BombMatch, BOMB.md). 1 — как без режима.
+## Множители тяги и потолка скорости управления (по умолчанию 1; стычка: бонус «форсаж», несущий флаг, полёт громилы — потолок; держатель бомбы ×1.2 — BombMatch, BOMB.md).
 var thrust_mult := 1.0
-var speed_mult := 1.0
+var speed_cap_mult := 1.0
+## Без торможения торса при нулевом вводе (стычка: громилу тянет оружие, клавиши движения можно не жать).
+var brake_off := false
 
 ## Подбор дампа без правки Tuning (tests/feel_probe: ldc/ldl/adl/fdc/fdl/brake): ключи "core", "limb", "limb_ang", "flight_core",
 ## "flight_limb", "brake", "core_ang" перекрывают Tuning.DOLL_LINEAR_DAMP / DOLL_LIMB_LINEAR_DAMP / DOLL_LIMB_ANGULAR_DAMP / FLIGHT_LINEAR_DAMP /
@@ -1759,7 +1761,7 @@ func _physics_process(delta: float) -> void:
 	var locked := _time < thrust_lock_until
 	if locked:
 		v = Vector2.ZERO   # отдача после удара: тяги нет (RM: бьющий не дожимает жертву)
-	_set_idle_brake(v.length_squared() <= 0.0001 and _time >= knockback_until)
+	_set_idle_brake(v.length_squared() <= 0.0001 and _time >= knockback_until and not brake_off)
 	var control := 1.0 - Tuning.STUN_CONTROL_LOSS if is_stunned() else 1.0
 	var share := _head_share()
 	var body := _control_body()
@@ -1779,8 +1781,8 @@ func _physics_process(delta: float) -> void:
 		dashed.emit()                   # звук (DollAudio): ускорение включилось
 	if _spinning and not was_spinning:
 		flipped.emit(signf(v.x))        # звук: раскрутка пошла
-	var thrust_n: float = ControlFeel.thrust() * thrust_mass() * thrust_mult
-	var mult: float = (ControlFeel.dash_mult() if is_dashing() else 1.0) * control
+	var thrust_n: float = ControlFeel.thrust() * thrust_mass()
+	var mult: float = (ControlFeel.dash_mult() if is_dashing() else 1.0) * control * thrust_mult
 	if _spinning:
 		# вправо — по часовой (кувырок вперёд по ходу), как режим rotate; выше SPIN_MAX_W момент не прикладывается
 		var s := -signf(v.x)
@@ -1792,7 +1794,7 @@ func _physics_process(delta: float) -> void:
 			torso().apply_torque(Vector3(0, 0, -v.x * Tuning.ROTATE_TORQUE * mult))
 		if abs(v.y) > 0.01:
 			_push(Vector3(0, v.y, 0) * thrust_n * mult, share)
-	var max_speed: float = ControlFeel.max_speed() * (ControlFeel.dash_mult() if is_dashing() else 1.0) * speed_mult
+	var max_speed: float = ControlFeel.max_speed() * (ControlFeel.dash_mult() if is_dashing() else 1.0) * speed_cap_mult
 	if mode != "rotate" and v.length_squared() > 0.0001:
 		var f := Vector3(v.x, v.y, 0.0).limit_length(1.0) * thrust_n * mult
 		var tb := ControlFeel.turn_boost()

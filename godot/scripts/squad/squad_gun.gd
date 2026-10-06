@@ -1,18 +1,23 @@
-## Оружие бойца «Стычки 3 на 3» (docs/plan-demo/SQUAD.md, автор 05.10: «первое оружие у всех пистолет, потом ветка из 3 развитий;
-## стрелять на активную клавишу, пока зажата; перезарядка и сколько осталось патронов; между выстрелами минимальная пауза;
-## закончились пули — рукопашная»). Узел-ребёнок куклы. Числа — Tuning.SQUAD_WEAPONS × усиления (SquadMatch.loadout).
+## Оружие бойца «Стычки 3 на 3» (docs/plan-demo/SQUAD.md, автор 05.10: «стрелять на активную клавишу, пока зажата; перезарядка и
+## сколько осталось патронов; между выстрелами минимальная пауза; закончились пули — рукопашная»). Узел-ребёнок куклы. Числа —
+## Tuning.SQUAD_WEAPONS × усиления (SquadMatch.kit по классу, ветке и уровню).
 ##   • ствол в руке с оружием (ArmAssist куклы — кисть Tuning.SQUAD_GUN_HAND команды) и смотрит по руке: плечо → кисть. У игрока
-##     рука всегда тянется к курсору (площадка), у бота — к цели;
+##     рука всегда тянется к курсору (площадка), у бота — к цели. Руку оторвало (прочность суставов) — ствола нет, пока ящик не вернёт;
 ##   • trigger — «спуск зажат» на этот тик (P1 — клавиша, бот — мозг): выстрел не чаще interval; магазин mag, запас reserve;
 ##     пустой магазин — перезарядка reload_s сама (или reload()), пока она идёт, ствол молчит; нет ни магазина, ни запаса —
 ##     out_of_ammo(), только рукопашная;
-##   • выстрел — pellets пуль-шариков с разбросом spread_deg из дула (кончик ствола); пуля летит со скоростью speed (автор 05.10:
-##     «снаряды именно как шарики, а не линии») и каждый тик проверяет свой отрезок пути лучом — свои детали не задевает; пробитие
-##     (pierce) — летит дальше сквозь бойцов; в тело — импульс, в бойца — SquadMatch.bullet_hit (урон без тряски камеры), Breakable —
-##     урон (ящик ломается, взрывная бочка загорается); прошла range — гаснет; стрелку — отдача в кисть, вспышка у дула, звук;
+##   • выстрел — pellets пуль с разбросом spread_deg из дула (кончик ствола); пуля — трассер, летит со скоростью speed и каждый тик
+##     проверяет свой отрезок пути лучом — свои детали не задевает; пробитие (pierce) — дальше сквозь бойцов; в тело — импульс, в
+##     бойца — SquadMatch.bullet_hit (урон без тряски камеры), Breakable — урон (ящик ломается, бочка загорается); прошла range — гаснет;
+##     стрелку — отдача в кисть, вспышка у дула, звук;
+##   • гаусс (def.charge_s > 0, автор 06.10: «мощность зависит от того, сколько было зажато; бьёт сквозь всех, но каждое препятствие —
+##     минус процент урона»): пока спуск зажат — копится charge (0..1 за charge_s), отпустил — выстрел с уроном damage_min…damage по
+##     заряду (и толще трассер); пуля летит сквозь бойцов и стены (through_walls): каждая стена или пропс — × (1 − wall_loss), каждый
+##     боец — × (1 − body_loss);
+##   • state(), cooldown_frac(), aim_end() — для прицела HUD (готов / пауза между выстрелами / перезарядка / пусто / заряд; куда долетит);
 ##   • молчит, пока кукла не жива, разбита, без управления (отсчёт, итоги) или в стане.
-## Match.respawn_doll создаёт узел заново (script.new()): оружие и усиления он берёт у матча (SquadMatch.kit по классу и уровню
-## куклы), патроны — полные. У громилы (рукопашный класс) ствола нет: disarm() — узел молчит, модели нет.
+## Match.respawn_doll создаёт узел заново (script.new()): оружие и усиления он берёт у матча, патроны — полные. У громилы ствола нет:
+## disarm() — узел молчит, модели нет. Модель ствола — build_model (простые формы; её же рисует картинка оружия SquadIcons).
 class_name SquadGun
 extends Node
 
@@ -21,7 +26,10 @@ signal reload_started(seconds: float)
 
 const FLASH_LIFE_S := 0.05
 const PIERCE_MAX := 3
-const MODEL_SCALE := 1.5        # модель ствола крупнее руки: на общем плане 64-метровой карты ствол в 0.3 м не читается
+const THROUGH_MAX := 8            # гаусс: сколько стен и бойцов пуля проходит за полёт
+const THROUGH_STEP := 0.04        # м: шаг внутрь стены после попадания (луч из-под поверхности её уже не видит)
+const GAUSS_MIN_FRAC := 0.08      # заряд меньше — выстрел не уходит (случайный щелчок)
+const MODEL_SCALE := 1.5          # модель ствола крупнее руки: на общем плане 64-метровой карты ствол в 0.3 м не читается
 
 var doll: Doll
 var weapon := ""
@@ -35,17 +43,22 @@ var trigger := false
 var cooldown := 0.0
 ## Осталось перезаряжаться (с); 0 — не перезаряжается.
 var reloading := 0.0
+## Заряд гаусса 0..1 (копится, пока спуск зажат; отпустил — выстрел).
+var charge := 0.0
+var _held := false
 ## Для проб и HUD.
 var shots := 0
 var pellets_hit := 0
 var damage_dealt := 0.0
+var walls_pierced := 0
+var last_charge := 0.0
 var _rng := RandomNumberGenerator.new()
 var _model: Node3D = null
 var _flash: MeshInstance3D = null
 var _flash_t := 0.0
 var _arm: ArmAssist = null
 var _match: Node = null
-## Пули в полёте: [{pos, vel, left (м до range), ex (RID, которые не задевать), pierced, node}].
+## Пули в полёте: [{pos, vel, left (м до range), ex (RID, которые не задевать), pierced, through, node, damage…}].
 var balls: Array = []
 static var _glow: Dictionary = {}   # цвет оружия / команда / яркость → материал (не новый на каждую пулю)
 static var _streak_mesh: QuadMesh = null
@@ -105,6 +118,7 @@ func disarm() -> void:
 	mag_max = 0
 	reserve_max = 0
 	reloading = 0.0
+	charge = 0.0
 	trigger = false
 	if _model != null and is_instance_valid(_model):
 		_model.queue_free()
@@ -121,6 +135,7 @@ func equip(id: String, perks: Dictionary = {}) -> void:
 	reserve = reserve_max
 	cooldown = 0.0
 	reloading = 0.0
+	charge = 0.0
 	_build_model()
 
 
@@ -131,7 +146,8 @@ static func stats_of(id: String, perks: Dictionary = {}) -> Dictionary:
 		var pd: Dictionary = Tuning.SQUAD_PERKS.get(p, {})
 		var mult: Dictionary = pd.get("mult", {})
 		for k in mult:
-			d[k] = float(d[k]) * pow(float(mult[k]), int(perks[p]))
+			if d.has(k):
+				d[k] = float(d[k]) * pow(float(mult[k]), int(perks[p]))
 	d["mag"] = maxi(int(round(float(d["mag"]))), 1)
 	d["reserve"] = maxi(int(round(float(d["reserve"]))), 0)
 	return d
@@ -146,6 +162,7 @@ func reload() -> bool:
 	if weapon == "" or reloading > 0.0 or mag >= mag_max or reserve <= 0:
 		return false
 	reloading = float(def["reload_s"])
+	charge = 0.0
 	reload_started.emit(reloading)
 	return true
 
@@ -176,10 +193,10 @@ func arm() -> ArmAssist:
 	return _arm
 
 
-## Дуло и направление ствола: [origin, dir] (dir — плечо → кисть, в плоскости боя) или пусто (руки нет / не готова).
+## Дуло и направление ствола: [origin, dir] (dir — плечо → кисть, в плоскости боя) или пусто (руки нет / не готова / оторвана).
 func aim_ray() -> Array:
 	var a := arm()
-	if a == null or a.part == null or not is_instance_valid(a.part):
+	if a == null or a.part == null or not is_instance_valid(a.part) or not doll.parts.has(a.part_name):
 		return []
 	var root := a.root_point()
 	var grip := a.grip_global()
@@ -195,6 +212,56 @@ func aim_ray() -> Array:
 func can_fire() -> bool:
 	return doll.alive and not doll.is_broken() and doll.control_enabled and not doll.is_stunned() and mag > 0 \
 		and cooldown <= 0.0 and reloading <= 0.0
+
+
+## Оружие копит заряд (гаусс).
+func charges() -> bool:
+	return float(def.get("charge_s", 0.0)) > 0.0
+
+
+## Состояние для прицела: ready | cooldown (пауза между выстрелами) | reload | empty (нет патронов совсем) | charging | none (нет ствола
+## или руки).
+func state() -> String:
+	if weapon == "" or aim_ray().is_empty():
+		return "none"
+	if out_of_ammo():
+		return "empty"
+	if reloading > 0.0 or mag <= 0:
+		return "reload"
+	if charge > 0.0:
+		return "charging"
+	if cooldown > 0.0:
+		return "cooldown"
+	return "ready"
+
+
+## Доля паузы между выстрелами 0..1 (1 — можно стрелять).
+func cooldown_frac() -> float:
+	return 1.0 - clampf(cooldown / maxf(float(def.get("interval", 0.1)), 0.01), 0.0, 1.0)
+
+
+## Куда долетит выстрел сейчас (прицел HUD): по стволу до дальности, у обычной пули — до первой стены или пропса (не бойца).
+## [точка, упёрся ли в препятствие] или пусто.
+func aim_end() -> Array:
+	var ray := aim_ray()
+	if ray.is_empty() or def.is_empty():
+		return []
+	var o := ray[0] as Vector3
+	var dir := ray[1] as Vector3
+	var end := o + dir * float(def["range"])
+	if bool(def.get("through_walls", false)) or not doll.is_inside_tree():
+		return [end, false]
+	var q := PhysicsRayQueryParameters3D.create(o, end)
+	var ex: Array[RID] = []
+	for d in get_tree().get_nodes_in_group("dolls"):
+		for p in (d as Doll).parts.values():
+			if is_instance_valid(p):
+				ex.append((p as RigidBody3D).get_rid())
+	q.exclude = ex
+	var hit := doll.get_world_3d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return [end, false]
+	return [hit["position"] as Vector3, true]
 
 
 func _physics_process(dt: float) -> void:
@@ -213,12 +280,28 @@ func _physics_process(dt: float) -> void:
 			reserve -= take
 	elif mag <= 0 and reserve > 0 and doll.alive:
 		reload()
-	if trigger and can_fire():
-		_fire()
+	if charges():
+		_tick_charge(dt)
+	elif trigger and can_fire():
+		_fire(1.0)
+	_held = trigger
 	_step_balls(dt)
 
 
-func _fire() -> void:
+## Гаусс: спуск зажат и можно стрелять — заряд растёт; отпустил — выстрел с этим зарядом (меньше GAUSS_MIN_FRAC — не уходит).
+func _tick_charge(dt: float) -> void:
+	if trigger and can_fire():
+		charge = minf(charge + dt / maxf(float(def["charge_s"]), 0.05), 1.0)
+	elif not trigger and _held and charge > 0.0:
+		if charge >= GAUSS_MIN_FRAC and can_fire():
+			_fire(charge)
+		charge = 0.0
+	elif not can_fire():
+		charge = 0.0
+
+
+
+func _fire(power: float) -> void:
 	var ray := aim_ray()
 	if ray.is_empty():
 		return
@@ -227,16 +310,20 @@ func _fire() -> void:
 	mag -= 1
 	cooldown = float(def["interval"])
 	shots += 1
+	last_charge = power
 	var ex: Array[RID] = []
 	for p in doll.parts.values():
 		if is_instance_valid(p):
 			ex.append((p as RigidBody3D).get_rid())
+	var dmg := float(def["damage"])
+	if charges():
+		dmg = lerpf(float(def.get("damage_min", dmg * 0.2)), dmg, power)
 	for i in int(def["pellets"]):
 		var d := dir.rotated(Vector3.BACK, deg_to_rad(_rng.randf_range(-1.0, 1.0) * float(def["spread_deg"])))
-		_spawn_ball(o, d, ex.duplicate())
+		_spawn_ball(o, d, ex.duplicate(), dmg, power)
 	var hand := arm().part if arm() != null else null
 	if hand != null and is_instance_valid(hand):
-		hand.apply_impulse(-dir * float(def["recoil"]), o - hand.global_position)
+		hand.apply_impulse(-dir * float(def["recoil"]) * (0.4 + 0.6 * power), o - hand.global_position)
 	_show_flash(o)
 	fired.emit(o, dir)
 	if _match != null and _match.has_method("gun_sound"):
@@ -244,8 +331,8 @@ func _fire() -> void:
 
 
 ## Пуля: светящийся трассер своего цвета (квад вдоль полёта, STREAK_SHADER), летит из o по d со скоростью оружия. Длина хвоста —
-## streak, но не больше пройденного пути (у дула хвост не торчит назад сквозь ствол).
-func _spawn_ball(o: Vector3, d: Vector3, ex: Array[RID]) -> void:
+## streak, но не больше пройденного пути (у дула хвост не торчит назад сквозь ствол). power — заряд (гаусс: толщина трассера).
+func _spawn_ball(o: Vector3, d: Vector3, ex: Array[RID], dmg: float, power := 1.0) -> void:
 	var mi := MeshInstance3D.new()
 	if _streak_mesh == null:
 		_streak_mesh = QuadMesh.new()
@@ -270,9 +357,11 @@ func _spawn_ball(o: Vector3, d: Vector3, ex: Array[RID]) -> void:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.top_level = true
 	add_child(mi)
-	var b := {"pos": o, "vel": d * float(def["speed"]), "left": float(def["range"]), "ex": ex, "pierced": 0, "node": mi,
-		"weapon": weapon, "damage": float(def["damage"]), "impulse": float(def["impulse"]), "pierce": bool(def["pierce"]),
-		"streak": float(def.get("streak", 0.5)) * STREAK_MULT, "width": float(def["ball"]) * WIDTH_MULT, "flown": 0.0}
+	var w := float(def["ball"]) * WIDTH_MULT * (0.45 + 0.55 * power if charges() else 1.0)
+	var b := {"pos": o, "vel": d * float(def["speed"]), "left": float(def["range"]), "ex": ex, "pierced": 0, "through": 0, "node": mi,
+		"weapon": weapon, "damage": dmg, "impulse": float(def["impulse"]) * (power if charges() else 1.0), "pierce": bool(def["pierce"]),
+		"walls": bool(def.get("through_walls", false)), "wall_loss": float(def.get("wall_loss", 0.0)), "body_loss": float(def.get("body_loss", 0.0)),
+		"streak": float(def.get("streak", 0.5)) * STREAK_MULT, "width": w, "flown": 0.0}
 	balls.append(b)
 	_place_streak(b)
 
@@ -291,7 +380,7 @@ func _place_streak(b: Dictionary) -> void:
 
 
 ## Полёт пуль за тик: отрезок пути — луч (свои детали и уже пробитые бойцы — мимо); попала — урон и импульс, пробивающая летит
-## дальше; прошла range — гаснет.
+## дальше (гаусс — и сквозь стены, теряя урон); прошла range — гаснет.
 func _step_balls(dt: float) -> void:
 	if balls.is_empty():
 		return
@@ -303,20 +392,21 @@ func _step_balls(dt: float) -> void:
 		var from := start
 		var step := (b["vel"] as Vector3) * dt
 		var len := minf(step.length(), float(b["left"]))
-		var to := from + step.normalized() * len
+		var d := step.normalized()
+		var to := from + d * len
 		var done := len <= 0.001 or space == null
 		var guard := 0
-		while not done and guard < PIERCE_MAX + 2:
+		while not done and guard < THROUGH_MAX + 2:
 			guard += 1
 			var q := PhysicsRayQueryParameters3D.create(from, to)
 			q.exclude = b["ex"]
+			q.hit_back_faces = false   # гаусс выходит из стены изнутри — выход не считается второй стеной
 			var hit := space.intersect_ray(q)
 			if hit.is_empty():
 				break
 			var at: Vector3 = hit["position"]
 			var body := hit["collider"] as Node
 			var victim := _doll_of(body)
-			var d := (b["vel"] as Vector3).normalized()
 			if body is RigidBody3D and not (body as RigidBody3D).freeze:
 				(body as RigidBody3D).apply_impulse(d * float(b["impulse"]), at - (body as RigidBody3D).global_position)
 			if victim != null and victim != doll:
@@ -326,16 +416,31 @@ func _step_balls(dt: float) -> void:
 						String(b["weapon"])))
 				pellets_hit += 1
 				damage_dealt += dealt
-				if bool(b["pierce"]) and int(b["pierced"]) < PIERCE_MAX:
+				var limit := THROUGH_MAX if bool(b["walls"]) else PIERCE_MAX
+				if bool(b["pierce"]) and int(b["pierced"]) < limit:
 					b["pierced"] = int(b["pierced"]) + 1
+					b["damage"] = float(b["damage"]) * (1.0 - float(b["body_loss"]))
 					var ex: Array[RID] = b["ex"]
 					for p in victim.parts.values():   # дальше — сквозь всего бойца
 						if is_instance_valid(p):
 							ex.append((p as RigidBody3D).get_rid())
 					from = at
 					continue
-			elif body is Breakable:
-				(body as Breakable).take_damage(float(b["damage"]))
+			else:
+				if body is Breakable:
+					(body as Breakable).take_damage(float(b["damage"]))
+				if bool(b["walls"]) and int(b["through"]) < THROUGH_MAX and victim == null:
+					# гаусс: сквозь стену — минус wall_loss урона; луч дальше из-под поверхности (ту же стену он уже не видит)
+					b["through"] = int(b["through"]) + 1
+					walls_pierced += 1
+					b["damage"] = float(b["damage"]) * (1.0 - float(b["wall_loss"]))
+					if body is PhysicsBody3D and not (body is StaticBody3D):
+						(b["ex"] as Array[RID]).append((body as PhysicsBody3D).get_rid())
+					from = at + d * THROUGH_STEP
+					if float(b["damage"]) < 1.0 or from.distance_to(start) >= len:
+						to = at
+						done = true
+					continue
 			to = at
 			done = true
 		b["left"] = float(b["left"]) - start.distance_to(to) if not done else 0.0
@@ -384,55 +489,69 @@ func _process(delta: float) -> void:
 	var x := dir
 	var z := Vector3.BACK
 	var y := z.cross(x).normalized()
-	_model.global_transform = Transform3D(Basis(x, y, z).scaled(Vector3.ONE * MODEL_SCALE), Vector3(grip.x, grip.y, 0.06))
+	var shake := Vector3(0.0, 0.0, 0.0)
+	if charge > 0.0:
+		shake = Vector3(sin(Time.get_ticks_msec() * 0.09), cos(Time.get_ticks_msec() * 0.11), 0.0) * 0.006 * charge   # гаусс гудит
+	_model.global_transform = Transform3D(Basis(x, y, z).scaled(Vector3.ONE * MODEL_SCALE), Vector3(grip.x, grip.y, 0.06) + shake)
 
 
-## Модель ствола из простых форм (проба: своих моделей оружия нет): корпус, ствол, рукоять, магазин / барабан / прицел по виду.
 func _build_model() -> void:
 	if _model != null and is_instance_valid(_model):
 		_model.queue_free()
-	_model = Node3D.new()
+	var team := SquadMatch.team_colour(SquadMatch.team_of(doll)) if doll != null else Color.WHITE
+	_model = build_model(weapon, team)
 	_model.name = "GunModel"
 	_model.top_level = true
 	_model.scale = Vector3.ONE * MODEL_SCALE
 	add_child(_model)
+	if _flash == null:
+		_flash = MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 0.06
+		sm.height = 0.12
+		_flash.mesh = sm
+		_flash.material_override = _mat(Color(1.0, 0.85, 0.45), 0.0, 6.0)
+		_flash.top_level = true
+		_flash.visible = false
+		_flash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(_flash)
+
+
+## Модель ствола id из простых форм (своих моделей оружия нет): корпус, ствол, рукоять, магазин / барабан / прицел / катушки по виду;
+## team — цвет накладок. Ствол — вдоль +X, рукоять у начала координат. Без масштаба (SquadIcons рисует её сам).
+static func build_model(id: String, team: Color) -> Node3D:
+	var root := Node3D.new()
 	var metal := _mat(Color(0.16, 0.17, 0.19), 0.55)
-	var team := SquadMatch.team_colour(SquadMatch.team_of(doll)) if doll != null else Color.WHITE
 	var accent := _mat(team.lightened(0.15), 0.4)
-	var l := float(def.get("len", 0.3))
-	match weapon:
+	var l := float((Tuning.SQUAD_WEAPONS.get(id, {}) as Dictionary).get("len", 0.3))
+	match id:
 		"sawnoff", "shotgun":
 			for k in [-1.0, 1.0]:
-				_part(_model, CylinderMesh.new(), Vector3(l * 0.5, 0.0, k * 0.018), Vector3(0.022, l, 0.022), metal, true)
-			_part(_model, BoxMesh.new(), Vector3(-0.04, -0.03, 0.0), Vector3(0.14, 0.05, 0.06), accent)
-		"rail":
-			_part(_model, BoxMesh.new(), Vector3(l * 0.45, 0.0, 0.0), Vector3(l, 0.05, 0.05), metal)
-			for k in 3:
-				_part(_model, CylinderMesh.new(), Vector3(l * (0.3 + 0.22 * k), 0.0, 0.0), Vector3(0.075, 0.03, 0.075),
+				_part(root, CylinderMesh.new(), Vector3(l * 0.5, 0.0, k * 0.018), Vector3(0.022, l, 0.022), metal, true)
+			_part(root, BoxMesh.new(), Vector3(-0.04, -0.03, 0.0), Vector3(0.14, 0.05, 0.06), accent)
+			if id == "shotgun":
+				_part(root, BoxMesh.new(), Vector3(l * 0.55, -0.035, 0.0), Vector3(l * 0.3, 0.035, 0.05), accent)   # цевьё
+		"gauss":
+			_part(root, BoxMesh.new(), Vector3(l * 0.42, 0.0, 0.0), Vector3(l * 0.95, 0.06, 0.055), metal)
+			for k in 4:
+				_part(root, CylinderMesh.new(), Vector3(l * (0.22 + 0.2 * k), 0.0, 0.0), Vector3(0.085, 0.035, 0.085),
 					_mat(Color(0.35, 0.9, 1.0), 0.2, 3.0), true)
+			_part(root, BoxMesh.new(), Vector3(0.0, -0.05, 0.0), Vector3(0.05, 0.09, 0.045), accent)
 		_:
-			_part(_model, BoxMesh.new(), Vector3(l * 0.32, 0.01, 0.0), Vector3(l * 0.64, 0.06, 0.045), metal)
-			_part(_model, CylinderMesh.new(), Vector3(l * 0.78, 0.015, 0.0), Vector3(0.022, l * 0.44, 0.022), metal, true)
-			_part(_model, BoxMesh.new(), Vector3(0.0, -0.05, 0.0), Vector3(0.045, 0.09, 0.04), accent)
-			if weapon in ["smg", "mg"]:
-				_part(_model, BoxMesh.new(), Vector3(l * 0.3, -0.07, 0.0), Vector3(0.04, 0.1 if weapon == "smg" else 0.14, 0.035), accent)
-			if weapon == "mg":
-				_part(_model, CylinderMesh.new(), Vector3(l * 0.3, -0.06, 0.0), Vector3(0.12, 0.05, 0.12), metal)
-			if weapon == "rifle":
-				_part(_model, CylinderMesh.new(), Vector3(l * 0.35, 0.06, 0.0), Vector3(0.035, 0.2, 0.035), accent, true)
-	_flash = MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.06
-	sm.height = 0.12
-	_flash.mesh = sm
-	_flash.material_override = _mat(Color(1.0, 0.85, 0.45), 0.0, 6.0)
-	_flash.top_level = true
-	_flash.visible = false
-	_flash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_flash)
+			_part(root, BoxMesh.new(), Vector3(l * 0.32, 0.01, 0.0), Vector3(l * 0.64, 0.06, 0.045), metal)
+			_part(root, CylinderMesh.new(), Vector3(l * 0.78, 0.015, 0.0), Vector3(0.022, l * 0.44, 0.022), metal, true)
+			_part(root, BoxMesh.new(), Vector3(0.0, -0.05, 0.0), Vector3(0.045, 0.09, 0.04), accent)
+			if id == "smg":
+				_part(root, BoxMesh.new(), Vector3(l * 0.3, -0.07, 0.0), Vector3(0.04, 0.1, 0.035), accent)
+			if id in ["rifle", "marksman"]:
+				_part(root, CylinderMesh.new(), Vector3(l * 0.35, 0.06, 0.0), Vector3(0.035, 0.2, 0.035), accent, true)   # прицел
+				_part(root, BoxMesh.new(), Vector3(-0.08, -0.01, 0.0), Vector3(0.16, 0.05, 0.04), metal)   # приклад
+			if id == "marksman":
+				_part(root, BoxMesh.new(), Vector3(l * 0.4, -0.06, 0.0), Vector3(0.04, 0.08, 0.03), accent)
+	return root
 
 
-func _part(parent: Node3D, mesh: PrimitiveMesh, pos: Vector3, size: Vector3, mat: Material, along_x := false) -> void:
+static func _part(parent: Node3D, mesh: PrimitiveMesh, pos: Vector3, size: Vector3, mat: Material, along_x := false) -> void:
 	var mi := MeshInstance3D.new()
 	if mesh is BoxMesh:
 		(mesh as BoxMesh).size = size

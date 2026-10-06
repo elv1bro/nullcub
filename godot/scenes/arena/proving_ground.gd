@@ -101,6 +101,15 @@ func base_points(team: int) -> Array[Vector3]:
 	return out
 
 
+## Флаг команды в «Захвате флага» (SquadFlag): над палубой своей базы, у дальнего края (палуба — tools/build_proving_ground.gd:
+## BASE_X 28, верх DECK_Y 2.65), чтобы возрождённые защитники стояли рядом.
+const FLAG_AT := Vector2(30.0, 3.7)
+
+
+func flag_point(team: int) -> Vector3:
+	return Vector3(FLAG_AT.x * (-1.0 if team == 0 else 1.0), FLAG_AT.y, 0.0)
+
+
 ## Точки появления ящиков снабжения (SquadMatch, SupplyCrate): над укрытиями и плитами, у середины и у баз — зеркально. Ящик висит
 ## в воздухе (поле NULL), поэтому точки — над поверхностями (числа — из tools/build_proving_ground.gd: верх укрытий 1.8 / 2.2,
 ## парящих плит 4.8, верхней площадки 6.65, высоких плит 9.0).

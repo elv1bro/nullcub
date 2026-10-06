@@ -1,8 +1,8 @@
-## Снимки «Стычки 3 на 3» (нужно окно): карта целиком, отсчёт, бой глазами P1 (за него играет бот, камера и HUD ведут его как
-## игрока — SquadMatch.focus_index), выбор класса на отсчёте, карточка нового уровня, громила с оружием, ящики снабжения, фраг P1,
-## ожидание возврата, итоги, и клип
-## clip/frame_NNNN.png (10 кадров/с).
-##   godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/squad_snapshot.tscn -- "out_dir=/abs/dir,clip_s=8,level=2,night=1"
+## Снимки «Стычки 3 на 3» (нужно окно): экран настроек, карта целиком, отсчёт с выбором класса, бой глазами P1 (за него играет бот,
+## камера и HUD ведут его как игрока — SquadMatch.focus_index; прицел — у конца луча), древо после нового уровня и выбор ветки, громила
+## с оружием, ящики и бонусы, фраг P1, ожидание возврата, итоги, и клип clip/frame_NNNN.png (10 кадров/с). mode=ctf — захват флага:
+## флаги, несущий, стрелки к флагам.
+##   godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/squad_snapshot.tscn -- "out_dir=/abs/dir,clip_s=8,level=2,night=1,mode=ctf"
 ## (night=1 — ночная карта)
 ## Глазами проверить: карта читается (базы, укрытия, плиты), команды различимы (цвет, обводка, имена), трассы пуль видны, счёт и лента
 ## фрагов на HUD, стрелки к соперникам за кадром, табличка итогов.
@@ -15,6 +15,7 @@ var out_dir := "/tmp"
 var clip_s := 8.0
 var level := 2
 var night := false
+var mode := "dm"
 var pg: SquadPlayground
 var sm: SquadMatch
 
@@ -30,6 +31,7 @@ func _ready() -> void:
 				"clip_s": clip_s = float(kv[1])
 				"level": level = int(kv[1])
 				"night": night = kv[1] == "1"
+				"mode": mode = kv[1]
 	_run.call_deferred()
 
 
@@ -62,12 +64,19 @@ func _p0() -> Doll:
 
 
 func _run() -> void:
+	SquadSettings.reset()
+	SquadSettings.mode = mode
+	SquadSettings.night = night
+	SquadSettings.bot_level = level
+	SquadSettings.ask = true
 	pg = (load(SCENE_NIGHT if night else SCENE) as PackedScene).instantiate() as SquadPlayground
 	pg.p1_bot = true
-	pg.bot_level = level
 	sm = pg.get_node("Match") as SquadMatch
 	sm.focus_index = 0
 	add_child(pg)
+	await _wait(0.8)
+	await _shot("squad_setup")
+	pg._on_setup_started()
 	await _wait(0.6)
 	# карта целиком: своя камера на время кадра
 	var game_cam := get_viewport().get_camera_3d()
@@ -106,13 +115,24 @@ func _run() -> void:
 		await _shot("clip/frame_%04d" % i)
 		await _wait(0.1)
 	await _shot("squad_fight_2")
-	# новый уровень: опыта P1 до следующего уровня — карточка «что ты теперь можешь»
+	# новый уровень: опыта P1 до следующего уровня — древо «что ты теперь можешь»
 	var lo := sm.loadout(0)
 	var lv := int(lo["level"])
-	if lv < Tuning.SQUAD_XP_LEVELS.size():
+	if lv < Tuning.SQUAD_BRANCH_LEVEL - 1:
 		sm.add_xp(0, float(Tuning.SQUAD_XP_LEVELS[lv]) - float(lo["xp"]) + 1.0)
 		await _wait(0.5)
 		await _shot("squad_level")
+	# 5-й уровень: выбор ветки (P1 — бот, выбрал бы сразу: ветку снимаем и даём HUD «ждёт выбора», как у человека)
+	sm.add_xp(0, float(Tuning.SQUAD_XP_LEVELS[Tuning.SQUAD_BRANCH_LEVEL - 1]) - float(lo["xp"]) + 1.0)
+	await _wait(0.4)
+	await _shot("squad_branch_chosen")
+	lo["branch"] = ""
+	sm.branch_wait[0] = 15.0
+	pg.hud._on_branch_pending(0, String(lo["class"]))
+	await _wait(0.6)
+	await _shot("squad_branch_pending")
+	sm.choose_branch(0, String((Tuning.SQUAD_CLASSES[String(lo["class"])]["branch_order"] as Array)[0]))
+	await _wait(1.0)
 	# громила крупно: камера на синем громиле (P5 — красный, P4 — синий)
 	sm.focus_index = 4
 	await _wait(2.5)
@@ -124,11 +144,27 @@ func _run() -> void:
 	if me0 != null and me0.alive:
 		var c := me0.centre_of_mass()
 		var k := 0
-		for kind in ["ammo", "health", "armor"]:
-			sm.spawn_supply(kind, c + Vector3(-3.0 + 3.0 * k, 2.6, 0.0))
+		for kind in Tuning.SQUAD_SUPPLY:
+			sm.spawn_supply(kind, c + Vector3(-5.0 + 2.0 * k, 2.6, 0.0))
 			k += 1
+		sm.take_supply(me0, "rage")
+		sm.take_supply(me0, "zoom")
 		await _wait(0.5)
 		await _shot("squad_supply")
+	if mode == "ctf":   # захват флага: кадр, когда флаг несут
+		var carried := {"t": false}
+		sm.flag_event.connect(func(_t: int, w: String, _d: Doll) -> void:
+			if w == "taken":
+				carried["t"] = true)
+		await _until(func() -> bool: return bool(carried["t"]), 120.0)
+		for d in sm.dolls():
+			if sm.carried_flag(d) != null:
+				sm.focus_index = (d as Doll).player_index
+		await _wait(1.2)
+		await _shot("squad_ctf_carry")
+		sm.focus_index = 0
+		await _wait(1.0)
+		await _shot("squad_ctf")
 	# фраг с участием P1 (он добил или его выбили) — кадр сразу после
 	var got := {"k": false}
 	sm.frag.connect(func(k: Doll, v: Doll, _t: int) -> void:
@@ -147,4 +183,5 @@ func _run() -> void:
 	await _wait(1.6)
 	await _shot("squad_end")
 	print("score ", sm.score, " fight_s ", snappedf(sm.fight_time, 0.1))
+	SquadSettings.reset()
 	get_tree().quit(0)

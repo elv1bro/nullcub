@@ -6,7 +6,7 @@
 ##   • бомба (holder): в начале партии у случайной куклы. Каждый тик — касание любой детали держателя любой детали другой живой куклы
 ##     (опрос get_colliding_bodies, contact_monitor на всех деталях; ловит и долгое касание, когда кончился запрет) → бомба у неё. Тому,
 ##     от кого получил, — не раньше BOMB_RETURN_LOCK_S; дальше по цепочке — не раньше BOMB_PASS_MIN_HOLD_S. Держатель быстрее
-##     (Doll.thrust_mult / speed_mult = BOMB_HOLDER_*), он в группе bomb_holder (стрелка за кадром — BombMarkers);
+##     (Doll.thrust_mult / speed_cap_mult = BOMB_HOLDER_*), он в группе bomb_holder (стрелка за кадром — BombMarkers);
 ##   • фитиль (fuse_s — длина, fuse_t — сгорело): скрытый, случайный BOMB_FUSE_MIN_S…BOMB_FUSE_MAX_S, при передаче не сбрасывается.
 ##     Писк и мигание (сигнал beeped) — весь фитиль, пауза между писками — от доли сгоревшего с разбросом (beep_interval). Конец —
 ##     взрыв у держателя: knock_out (kind "bomb") + Explosion.detonate; через BOMB_NEXT_S — новая бомба у случайного живого;
@@ -306,13 +306,13 @@ func _new_bomb() -> void:
 func _set_holder(d: Doll) -> void:
 	if holder != null and is_instance_valid(holder):
 		holder.thrust_mult = 1.0
-		holder.speed_mult = 1.0
+		holder.speed_cap_mult = 1.0
 		if holder.is_in_group(HOLDER_GROUP):
 			holder.remove_from_group(HOLDER_GROUP)
 	holder = d
 	if d != null:
 		d.thrust_mult = Tuning.BOMB_HOLDER_THRUST_MULT
-		d.speed_mult = Tuning.BOMB_HOLDER_SPEED_MULT
+		d.speed_cap_mult = Tuning.BOMB_HOLDER_SPEED_MULT
 		d.add_to_group(HOLDER_GROUP)
 
 
