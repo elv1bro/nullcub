@@ -43,6 +43,8 @@ func _ready() -> void:
 		await _doll_section()
 	if _want(a, "props"):
 		await _props_section()
+	if _want(a, "boost"):
+		await _boost_section()
 	if _want(a, "rooms"):
 		await _rooms_section()
 	_clear_world()
@@ -204,7 +206,17 @@ func _doll_section() -> void:
 	print("--- doll")
 	for c in CASES:
 		await _doll_case(String(c[0]), c[1], c[2])
+	# доворот «как в Portal» не меняет полёт: та же кукла без доворота — скорость ЦМ через 0.5 с та же (±5 %)
+	for c in CASES:
+		if String(c[0]) in ["floor_wall", "wall_wall_same", "wall_ceiling"]:
+			var on: Dictionary = info["doll_" + String(c[0])]
+			await _doll_case(String(c[0]) + "_noup", c[1], c[2], false)
+			var off: Dictionary = info["doll_" + String(c[0]) + "_noup"]
+			var dv := absf(float(on["v_half"]) - float(off["v_half"])) / maxf(float(off["v_half"]), 0.01)
+			_check("upright_%s_speed" % String(c[0]), dv <= SPEED_TOL, "|v ЦМ| через 0.5 с с доворотом %.2f, без %.2f м/с (%.1f %%); наклон %.0f° против %.0f°" % [
+				float(on["v_half"]), float(off["v_half"]), dv * 100.0, float(on["tilt_half_deg"]), float(off["tilt_half_deg"])])
 	await _doll_off()
+	await _doll_one_way()
 	await _doll_alt()
 	await _doll_held_light()
 	await _doll_held_medium()
@@ -214,8 +226,8 @@ func _doll_section() -> void:
 
 ## Кукла влетает в A пары case: перенос, скорость, направление, суставы, не в стене; в паре лицом друг к другу — пинг-понг.
 ## Подлёт к щели — в невесомости (вход строго по нормали, без провиса от g), сразу после переноса гравитация включается.
-func _doll_case(name: String, pa: Vector3, pb: Vector3) -> void:
-	var pair := _pair_world(pa, pb)
+func _doll_case(name: String, pa: Vector3, pb: Vector3, up := true) -> void:
+	var pair := _pair_world(pa, pb, {"upright": up})
 	var d := await _ready_doll(0, Vector3(30, -30, 0), false)
 	var gap0 := _joint_gap(d)
 	var fall := name.ends_with("_fall")
@@ -242,9 +254,12 @@ func _doll_case(name: String, pa: Vector3, pb: Vector3) -> void:
 	var dev_out := _deg(v1, nb)
 	var dev_map := _deg(v1, rot * v_in)
 	var gap := 0.0
+	var tilt0 := rad_to_deg(absf(PortalUpright.tilt_of(d)))
 	for k in 30:
 		gap = maxf(gap, _joint_gap(d))
 		await get_tree().physics_frame
+	var tilt_half := rad_to_deg(absf(PortalUpright.tilt_of(d)))
+	var v_half := d.com_velocity().length()
 	await _wait(0.5)
 	var stuck := _in_static(pair, d.parts.values())
 	var ahead := pair.b.height_of(d.centre_of_mass())
@@ -256,8 +271,13 @@ func _doll_case(name: String, pa: Vector3, pb: Vector3) -> void:
 	var rec := {"v_in": snappedf(v_in.length(), 0.01), "v_after_tick": snappedf(v1.length(), 0.01), "ratio": snappedf(ratio, 0.001),
 		"dev_in_deg": snappedf(dev_in, 0.1), "dev_out_deg": snappedf(dev_out, 0.1), "dev_map_deg": snappedf(dev_map, 0.1),
 		"joint_gap_m": snappedf(gap, 0.001), "joint_gap0_m": snappedf(gap0, 0.001), "shift_m": snappedf(float(h["shift"]), 0.01),
-		"stuck_parts": stuck, "com_ahead_m": snappedf(ahead, 0.01), "transfers": pair.transfers}
+		"stuck_parts": stuck, "com_ahead_m": snappedf(ahead, 0.01), "transfers": pair.transfers,
+		"tilt_exit_deg": snappedf(tilt0, 1.0), "tilt_half_deg": snappedf(tilt_half, 1.0), "v_half": snappedf(v_half, 0.01)}
 	info["doll_" + name] = rec
+	if not up:
+		d.queue_free()
+		await _ticks(2)
+		return
 	_check("doll_%s_speed" % name, absf(ratio - 1.0) <= SPEED_TOL, "|v| через тик / до: %.3f (%.2f → %.2f м/с)" % [ratio, v_in.length(), v1.length()])
 	_check("doll_%s_dir" % name, dev_out <= dev_in + DIR_TOL_DEG and dev_map <= DIR_TOL_DEG,
 		"к нормали выхода %.1f° (вход %.1f° к нормали), к повёрнутой скорости %.1f°" % [dev_out, dev_in, dev_map])
@@ -265,6 +285,32 @@ func _doll_case(name: String, pa: Vector3, pb: Vector3) -> void:
 	_check("doll_%s_not_stuck" % name, stuck == 0 and ahead > 0.3, "деталей в статике %d, ЦМ перед выходом %.2f м" % [stuck, ahead])
 	if name == "wall_wall_facing":
 		_check("doll_pingpong", extra <= 1 and pair.transfers <= 2, "переносов за 3 с: %d (после первого ещё %d)" % [pair.transfers, extra])
+	_check("doll_%s_upright" % name, tilt_half <= 20.0, "наклон к «верху» на выходе %.0f°, через 0.5 с %.0f°" % [tilt0, tilt_half])
+	d.queue_free()
+	await _ticks(2)
+
+
+## Односторонняя пара: влетевший в B не переносится (упирается в карман), A → B — как обычно; B — «выход» (стрелки, без плёнки).
+func _doll_one_way() -> void:
+	var pair := _pair_world(Vector3(0, 0, 0), Vector3(-10, 5, -90), {"one_way": true})
+	await _ticks(2)
+	var d := await _ready_doll(0, Vector3(30, -30, 0), false)
+	_aim(d, pair.b, SPEED, START_M)
+	await _wait(0.6)
+	_zero_g(d, false)
+	await _wait(1.4)
+	var none := pair.transfers == 0
+	var in_pocket := pair.b.height_of(d.centre_of_mass()) < 0.6
+	_zero_g(d, true)
+	await _wait(0.2)
+	_aim(d, pair.a, SPEED, START_M)
+	var moved := await _until(func() -> bool: return pair.transfers > 0, 2.0)
+	_zero_g(d, false)
+	var to := String(pair.history[0]["to"]) if moved else "-"
+	info["one_way"] = {"b_transfers": 0 if none else pair.transfers, "doll_at_b_pocket": in_pocket, "a_to": to, "b_exit_only": pair.b.exit_only,
+		"a_exit_only": pair.a.exit_only}
+	_check("portal_one_way", none and moved and to == "B" and pair.b.exit_only and not pair.a.exit_only,
+		"влёт в B: переносов %d (кукла у кармана B %s); A → %s; B «только выход» %s" % [0 if none else pair.transfers, str(in_pocket), to, str(pair.b.exit_only)])
 	d.queue_free()
 	await _ticks(2)
 
@@ -433,6 +479,77 @@ func _doll_held_duo() -> void:
 	await _ticks(2)
 
 
+# ------------------------------------------------------------------ boost
+
+## Разгон по направлению выхода (PortalPair.boost): вход A — стена (нормаль +x), ящик 10 кг влетает со скоростью v (подлёт без
+## гравитации); выход — пол (вверх), стена (вбок), потолок (вниз). Ждём max(v × MULT, MIN) по направлению; кукла — так же вверх,
+## и потолок скорости управления снят (Doll.set_flight_cap), если разгон его превысил.
+func _boost_section() -> void:
+	print("--- boost")
+	var outs := [["up", Vector3(-10, 0, 0), Tuning.PORTAL_BOOST_UP_MULT, Tuning.PORTAL_BOOST_UP_MIN],
+		["side", Vector3(-10, 5, -90), Tuning.PORTAL_BOOST_SIDE_MULT, Tuning.PORTAL_BOOST_SIDE_MIN],
+		["down", Vector3(-10, 10, 180), Tuning.PORTAL_BOOST_DOWN_MULT, Tuning.PORTAL_BOOST_DOWN_MIN]]
+	var rec := {}
+	for o in outs:
+		for v in [3.0, 10.0]:
+			var pair := _pair_world(Vector3(0, 4, -90), o[1], {"boost": true})
+			var b := _crate("light", Vector3(30, -30, 0))
+			await _ticks(2)
+			var g0 := b.gravity_scale
+			b.gravity_scale = 0.0
+			var n := pair.a.normal()
+			b.global_position += pair.a.global_position + n * START_M - PortalPair.body_centre(b)
+			b.linear_velocity = -n * float(v)
+			var moved := await _until(func() -> bool: return pair.transfers > 0, 3.0)
+			b.gravity_scale = g0
+			var key := "%s_%d" % [String(o[0]), int(v)]
+			if not moved:
+				_check("boost_" + key, false, "перенос не случился")
+				continue
+			var h: Dictionary = pair.history[0]
+			var vin := (h["v_in"] as Vector3).length()
+			var vout := (h["v_out"] as Vector3).length()
+			var want := maxf(vin * float(o[2]), float(o[3]))
+			var dev := _deg(h["v_out"], pair.b.normal())
+			rec[key] = {"v_in": snappedf(vin, 0.01), "v_out": snappedf(vout, 0.01), "want": snappedf(want, 0.01), "dir_dev_deg": snappedf(dev, 0.1)}
+			_check("boost_" + key, absf(vout - want) <= 0.03 * want + 0.02 and dev <= 5.0,
+				"выход %s: %.2f → %.2f м/с (ждём max(×%.2f, %.1f) = %.2f), к нормали выхода %.1f°" % [String(o[0]), vin, vout, float(o[2]), float(o[3]), want, dev])
+			b.queue_free()
+			await _ticks(2)
+	# кукла: медленно вверх → минимум; быстро вверх → выше потолка управления (9 м/с), и он снят на время вылета
+	for v in [2.0, 11.0]:
+		var pair := _pair_world(Vector3(0, 4, -90), Vector3(-10, 0, 0), {"boost": true})
+		var d := await _ready_doll(0, Vector3(30, -30, 0), false)
+		_aim(d, pair.a, float(v), START_M * 0.6 if v < 5.0 else 0.45)
+		var moved := await _until(func() -> bool: return pair.transfers > 0, 3.0)
+		_zero_g(d, false)
+		var key := "doll_up_%d" % int(v * 10.0)
+		if not moved:
+			_check("boost_" + key, false, "перенос не случился")
+			d.queue_free()
+			continue
+		var h: Dictionary = pair.history[0]
+		var vin := (h["v_in"] as Vector3).length()
+		var vout := (h["v_out"] as Vector3).length()
+		var v1 := d.com_velocity().length()
+		var capped := d.flight_cap_active()
+		var want := maxf(vin * Tuning.PORTAL_BOOST_UP_MULT, Tuning.PORTAL_BOOST_UP_MIN)
+		var rise0 := d.centre_of_mass().y
+		var top := rise0
+		for k in int(2.0 / TICK):
+			top = maxf(top, d.centre_of_mass().y)
+			await get_tree().physics_frame
+		rec[key] = {"v_in": snappedf(vin, 0.01), "v_out": snappedf(vout, 0.01), "v_after_tick": snappedf(v1, 0.01), "fling": capped,
+			"rise_m": snappedf(top - rise0, 0.01)}
+		var over := want > ControlFeel.max_speed()
+		_check("boost_" + key, absf(vout - want) <= 0.03 * want + 0.02 and v1 >= 0.94 * want and (capped if over else true),
+			"кукла вверх: %.2f → %.2f м/с (ждём %.2f), через тик %.2f, потолок снят %s, подъём %.2f м за 2 с" % [vin, vout, want, v1, str(capped), top - rise0])
+		d.queue_free()
+		await _ticks(2)
+	info["boost"] = rec
+	_clear_world()
+
+
 # ------------------------------------------------------------------ props
 
 func _props_section() -> void:
@@ -564,12 +681,50 @@ func _prop_held_in_pocket() -> void:
 
 # ------------------------------------------------------------------ rooms
 
+## Шахта комнаты 7 (тяжёлое поле над A, включают весы): кукла с высоты 5 м падает в A — без поля и с полем, сама и с тягой вниз;
+## скорость входа в A (из истории пары) с полем больше.
+func _shaft_check() -> void:
+	var r := pg.rooms[6]
+	pg.goto_room(6)
+	pg.reset_room()
+	await _wait(0.5)
+	_script_players()
+	var pair := r.find("Portals") as PortalPair
+	var shaft := r.find("Shaft") as PuzzleGravity
+	var iron := r.find("Iron") as RigidBody3D
+	var res := {}
+	for mode in ["off_fall", "off_thrust", "on_fall", "on_thrust"]:
+		if mode == "on_fall":
+			_place(iron, _at(r, 3.0, 3.6))   # груз на весах — шахта тяжелеет
+			await _until(func() -> bool: return shaft.is_on(), 3.0)
+		var d := pg.p1
+		_teleport(d, _at(r, 7.0, 5.0))
+		await _wait(0.1)
+		var t0 := pair.transfers
+		for i in int(6.0 / TICK):
+			if pair.transfers > t0 and pair.history.back()["what"] == d:
+				break
+			d.input_vec = Vector2(0, -1) if mode.ends_with("thrust") else Vector2.ZERO
+			await get_tree().physics_frame
+		d.input_vec = Vector2.ZERO
+		var hit: bool = pair.transfers > t0 and pair.history.back()["what"] == d
+		res[mode] = snappedf((pair.history.back()["v_in"] as Vector3).length(), 0.01) if hit else -1.0
+		await _wait(1.5)
+	res["shaft_g"] = snappedf(shaft.field.field_g, 0.01)
+	info["shaft"] = res
+	_check("shaft_speeds_up", float(res["on_fall"]) >= 1.3 * float(res["off_fall"]) and float(res["on_thrust"]) >= float(res["off_thrust"]),
+		"вход в A с 5 м: падая сам %.2f → %.2f м/с (поле ×3), с тягой вниз %.2f → %.2f м/с" % [float(res["off_fall"]), float(res["on_fall"]),
+		float(res["off_thrust"]), float(res["on_thrust"])])
+	pg.reset_room()
+	await _wait(0.3)
+
 func _rooms_section() -> void:
 	print("--- rooms")
 	await _load_pg(6, true)
 	_check("rooms_count", pg.rooms.size() == 8, "комнат %d" % pg.rooms.size())
 	if pg.rooms.size() < 8:
 		return
+	await _shaft_check()
 	for coop in [true, false]:
 		pg.restart_demo()
 		for i in [6, 7]:

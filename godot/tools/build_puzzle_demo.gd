@@ -399,9 +399,10 @@ func _room6(r: Node3D) -> void:
 
 ## 7. «Разгон» (порталы, docs/plan-demo/PORTAL.md): чугунный ящик 90 кг на полке под потолком, его не поднять ни руками, ни тягой.
 ## Столкнуть с полки вправо — он падает вдоль правой стены в щель A на полу (≈ 10 м/с) и вылетает из щели B высоко в левой стене
-## с той же скоростью — через комнату на уступ с грузовыми весами 80 кг (бортик справа ловит) → дверь наверху справа. Тот же ящик,
-## задвинутый в A с пола, вылетает медленно и падает у левой стены (R — заново). Полка слева закрыта упором: ящик с неё не столкнуть
-## на уступ напрямую. Вдвоём и один — одинаково.
+## с той же скоростью (пара с разгоном: вбок ×1.08) — через комнату на уступ с грузовыми весами 80 кг (бортик справа ловит). Весы
+## включают шахту над A: тяжёлое поле ×3 (до весов его нет — ящику оно не мешает). Дверь — ВСЕ (груз на весах, кукла на уступе) →
+## ТАЙМЕР 5 с: второй сам «выстреливает» себя — шахта → A → B → на уступ, первый уходит в дверь. Один — так же после ящика,
+## потом 5 с до двери. Полка слева закрыта упором: ящик с неё не столкнуть на уступ напрямую.
 func _room7(r: Node3D) -> void:
 	_cut(r, "Floor")
 	# щель A (5.7…8.3) заходит под правую стену на 0.3 м: ящик падает вплотную к стене (грань 8.0), и если край щели совпадал с гранью
@@ -425,11 +426,26 @@ func _room7(r: Node3D) -> void:
 	# вниз; шов вровень (уступ и плита) Jolt ловил углом — ящик вставал намертво у края весов (как стык лифта в комнате 5)
 	var scale := _inst(r.get_node("Mech"), "plate", "Scale", Vector3(1.75, 2.98, 0), {"threshold_kg": 80.0, "width": 5.3,
 		"count_dolls": false, "pad_colour": Color(0.3, 0.65, 1.0)})
+	# кукла на уступе (зона без плиты: по уступу едет ящик) и ВСЕ → ТАЙМЕР 5 с → дверь
+	var zone := _inst(r.get_node("Mech"), "doll_zone", "DollZone", Vector3(1.75, 3.0, 0), {"size": Vector2(5.3, 2.2)})
+	var all := _inst(r.get_node("Mech"), "logic", "All", Vector3(3.0, 7.4, CABLE_Z), {"mode": PuzzleLogic.Mode.AND})
+	all.set("inputs", [all.get_path_to(scale), all.get_path_to(zone)] as Array[NodePath])
+	var tm := _inst(r.get_node("Mech"), "logic", "Timer", Vector3(5.2, 7.4, CABLE_Z), {"mode": PuzzleLogic.Mode.TIMER, "hold_s": 5.0})
+	tm.set("inputs", [tm.get_path_to(all)] as Array[NodePath])
 	var door := r.get_node("Mech/ExitDoor")
-	door.set("input", door.get_path_to(scale))
-	_cable(r, "Cable", scale, [Vector2(3.2, 3.13), Vector2(3.2, 4.7), Vector2(7.4, 4.7), Vector2(7.4, 8.6)])
+	door.set("input", door.get_path_to(tm))
+	# шахта над A: тяжёлое поле, пока на весах груз
+	var g0: float = Tuning.GRAVITY / Tuning.G_EARTH
+	var shaft := _inst(r.get_node("Mech"), "gravity_zone", "Shaft", Vector3(7.0, 2.8, 0), {"size": Vector2(2.6, 5.2),
+		"on_dir": Vector2(0, -1), "off_dir": Vector2(0, -1), "g_units": g0, "on_g": g0 * 3.0, "sign_offset": Vector3(0.0, 1.6, BACK_Z + 0.25)})
+	shaft.set("input", shaft.get_path_to(scale))
+	_cable(r, "CableScale", scale, [Vector2(2.6, 3.13), Vector2(2.6, 7.4), Vector2(2.45, 7.4)])
+	_cable(r, "CableZone", zone, [Vector2(-0.6, 3.13), Vector2(-0.6, 6.8), Vector2(3.0, 6.8), Vector2(3.0, 7.05)])
+	_cable(r, "CableAll", all, [Vector2(3.55, 7.4), Vector2(4.65, 7.4)])
+	_cable(r, "CableTimer", tm, [Vector2(5.75, 7.4), Vector2(7.4, 7.4), Vector2(7.4, 8.6)])
+	_cable(r, "CableShaft", scale, [Vector2(3.8, 3.13), Vector2(3.8, 4.4), Vector2(6.25, 4.4)])
 	_inst(r.get_node("Mech"), PORTALS, "Portals", Vector3.ZERO, {"a_position": Vector3(7.0, 0.0, 0.0), "a_angle_deg": 0.0,
-		"b_position": Vector3(-W * 0.5, 7.4, 0.0), "b_angle_deg": -90.0, "width": 2.6, "colour_index": 0})
+		"b_position": Vector3(-W * 0.5, 7.4, 0.0), "b_angle_deg": -90.0, "width": 2.6, "colour_index": 0, "boost": true})
 	_crate(r, "Iron", "iron", 3.4, 6.0)
 	_crate(r, "Light", "light", -3.6, 0.0)
 

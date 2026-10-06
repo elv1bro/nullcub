@@ -1355,3 +1355,20 @@ const PORTAL_COLOURS := [Color(0.72, 0.38, 1.0), Color(0.2, 0.95, 0.82), Color(1
 ## Вид: яркость рамки неактивного выхода (рычаг выбрал другой) — доля от включённой; вспышка на переходе — секунды.
 const PORTAL_IDLE_GLOW := 0.22
 const PORTAL_FLASH_S := 0.35
+## Выход «как в Portal» (автор 06.10: «чтобы как в Portal было примерно»): после переноса кукла сама встаёт головой вверх относительно
+## местной гравитации (с полями NullField) — вращение всей куклы вокруг ЦМ со скоростью ошибка / UPRIGHT_TAU (не больше UPRIGHT_W_MAX
+## рад/с), не дольше UPRIGHT_S; скорость ЦМ не меняется (поворот вокруг ЦМ). PortalPair.upright — флаг пары (по умолчанию да).
+const PORTAL_UPRIGHT_S := 0.45
+const PORTAL_UPRIGHT_TAU := 0.09
+const PORTAL_UPRIGHT_W_MAX := 8.0
+## Разгон на выходе (автор 06.10: «разгонять чуть-чуть, но зависит от направления»; PortalPair.boost — флаг пары): скорость выхода =
+## max(скорость входа × MULT, MIN) по нормали выхода относительно местной гравитации: вверх (нормаль ближе 45° к «верху») — заметно,
+## чтобы вылет вверх подбрасывал; вбок — чуть; вниз — без разгона. Кукле на время FLING_S снимается потолок скорости управления
+## (Doll.set_flight_cap), если разгон его превышает.
+const PORTAL_BOOST_UP_MULT := 1.15
+const PORTAL_BOOST_UP_MIN := 8.0
+const PORTAL_BOOST_SIDE_MULT := 1.08
+const PORTAL_BOOST_SIDE_MIN := 6.0
+const PORTAL_BOOST_DOWN_MULT := 1.0
+const PORTAL_BOOST_DOWN_MIN := 0.0
+const PORTAL_FLING_S := 0.8

@@ -25,10 +25,11 @@ render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabl
 uniform vec3 colour = vec3(1.0);
 uniform float power = 1.0;
 uniform float flash = 0.0;
+uniform float flow = 1.0;
 void fragment() {
 	float d = UV.y;
 	float fall = pow(1.0 - d, 1.6);
-	float bands = 0.5 + 0.5 * sin((d * 7.0 - TIME * 1.8) * 6.2831);
+	float bands = 0.5 + 0.5 * sin((d * 7.0 - TIME * 1.8 * flow) * 6.2831);
 	float side = smoothstep(0.0, 0.06, UV.x) * smoothstep(0.0, 0.06, 1.0 - UV.x);
 	float a = (0.28 * fall + 0.22 * fall * bands) * side * power + flash * (1.0 - 0.6 * d);
 	ALBEDO = colour * a;
@@ -40,6 +41,8 @@ var depth := 1.3
 var colour := Color(0.72, 0.38, 1.0)
 var label_text := "A"
 var pocket := true
+## Только выход (PortalPair.one_way): не переносит сам, вид — стрелки наружу, полосы бегут к щели, без плёнки, кромка тусклее.
+var exit_only := false
 
 var sensor: Area3D
 var lit := Lit.ACTIVE
@@ -49,6 +52,7 @@ var _film_mat: StandardMaterial3D
 var _rim_mat: StandardMaterial3D
 var _label: Label3D
 var _light: OmniLight3D
+var _arrows: Array[Label3D] = []
 var _flash := 0.0
 var _built := false
 
@@ -117,6 +121,12 @@ func _build() -> void:
 	# буква прохода — на лицевой грани рядом со щелью, всегда прямо (не поворачивается со щелью)
 	_label = PuzzlePart.label(self, "Letter", label_text, Vector3(hw + 0.5, -0.5, FRONT_Z + 0.04), 72, colour)
 	_label.outline_size = 10
+	if exit_only:
+		# стрелки «выход»: ▲ в системе щели смотрит по нормали наружу
+		for i in 3:
+			var ar := PuzzlePart.label(self, "Arrow%d" % i, "▲", Vector3((float(i) - 1.0) * width * 0.28, -depth * 0.45, FRONT_Z + 0.03), 72, colour)
+			ar.outline_size = 8
+			_arrows.append(ar)
 	_light = OmniLight3D.new()
 	_light.name = "Light"
 	_light.position = Vector3(0, 0.5, 0.9)
@@ -188,11 +198,16 @@ func set_lit(l: Lit, force := false) -> void:
 			k = Tuning.PORTAL_IDLE_GLOW
 		Lit.OFF:
 			k = 0.0
+	if exit_only and k > 0.0:
+		k = maxf(Tuning.PORTAL_IDLE_GLOW, k * 0.45)   # выход: кромка тусклее входа
 	var rim := colour * k if k > 0.0 else PuzzlePart.COLOUR_IDLE
 	_rim_mat.albedo_color = rim
 	_rim_mat.emission = rim
 	_rim_mat.emission_energy_multiplier = 2.0 if k > 0.0 else 0.0
-	_film.visible = l == Lit.ACTIVE
+	_film.visible = l == Lit.ACTIVE and not exit_only
+	_glow_mat.set_shader_parameter("flow", -1.0 if exit_only else 1.0)
+	for ar in _arrows:
+		ar.modulate = colour if l == Lit.ACTIVE else (colour.darkened(0.6) if l == Lit.IDLE else Color(0.4, 0.42, 0.45))
 	_glow_mat.set_shader_parameter("colour", Vector3(colour.r, colour.g, colour.b))
 	_glow_mat.set_shader_parameter("power", 1.0 if l == Lit.ACTIVE else 0.0)
 	_label.modulate = colour if l != Lit.OFF else Color(0.45, 0.47, 0.5)

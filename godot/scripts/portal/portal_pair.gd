@@ -22,6 +22,8 @@
 ##     ещё вперёд шагами PORTAL_UNSTICK_STEP; дальше тело (кукла — целиком) PORTAL_COOLDOWN_S не переносится ни одной парой (пинг-понг);
 ##   • вспышка на обоих проходах, звук (слои SfxDirector: whoosh на входе, sub на выходе), сигнал transferred, запись в history (пробы).
 ## Выключенная пара не переносит и гаснет (Portal.Lit.OFF); невыбранный выход «стрелочника» горит тускло (IDLE) и не переносит.
+## Флаги (06.10, вторая волна): upright — кукла после выхода встаёт головой вверх (PortalUpright); boost — разгон на выходе по
+## направлению (_boost, Tuning.PORTAL_BOOST_*); one_way — B / B2 только выход (Portal.exit_only: стрелки, без плёнки).
 class_name PortalPair
 extends PuzzlePart
 
@@ -46,6 +48,12 @@ signal transferred(what: Node3D, from: Portal, to: Portal)
 @export var switch_input: NodePath
 @export var pocket := true
 @export var sound := true
+## Односторонняя пара: B (и B2) — только выход; влетевший в B не переносится (упирается в карман), вид B — стрелки «выход».
+@export var one_way := false
+## Разгон на выходе по направлению (Tuning.PORTAL_BOOST_*): вверх — заметно и с минимумом, вбок — чуть, вниз — без разгона.
+@export var boost := false
+## Выход «как в Portal»: кукла встаёт головой вверх относительно местной гравитации (PortalUpright, Tuning.PORTAL_UPRIGHT_*).
+@export var upright := true
 
 const HISTORY_MAX := 64
 const QUIET_FRAMES := 12   # звук включения не играет на загрузке
@@ -87,6 +95,7 @@ func _make(n: String, pos: Vector3, angle_deg: float, letter: String, w: float, 
 	p.colour = col
 	p.label_text = letter
 	p.pocket = pocket
+	p.exit_only = one_way and n != "A"
 	p.position = pos
 	p.rotation = Vector3(0.0, 0.0, deg_to_rad(angle_deg))
 	add_child(p)
@@ -151,7 +160,8 @@ func _physics_process(_delta: float) -> void:
 	if not powered:
 		return
 	_scan(a, ex, frame)
-	_scan(ex, a, frame)
+	if not one_way:
+		_scan(ex, a, frame)
 
 
 ## Кандидаты в датчике входа from: куклы — по ЦМ (вся кукла раз), пропсы — по центру масс.
@@ -245,6 +255,12 @@ func transfer_doll(d: Doll, from: Portal, to: Portal) -> void:
 	_cool[d.get_instance_id()] = until
 	for rb in list:
 		_cool[rb.get_instance_id()] = until
+	if boost:
+		var v_out := _boost(list, d.com_velocity(), to)
+		if v_out > ControlFeel.max_speed() * d.speed_cap_mult:
+			d.set_flight_cap(v_out + 0.5, Tuning.PORTAL_FLING_S)   # потолок скорости управления не режет вылет
+	if upright:
+		PortalUpright.start(d)
 	_after(d, "doll", from, to, c_in, v_in, d.com_velocity(), shift, list.size() - d.parts.size())
 
 
@@ -255,7 +271,42 @@ func transfer_body(rb: RigidBody3D, from: Portal, to: Portal) -> void:
 	var one: Array[RigidBody3D] = [rb]
 	var shift := _move(one, from, to)
 	_cool[rb.get_instance_id()] = _cool_until()
+	if boost:
+		_boost(one, rb.linear_velocity, to)
 	_after(rb, "body", from, to, c_in, v_in, rb.linear_velocity, shift, 0)
+
+
+## Разгон по направлению выхода: скорость ЦМ группы (v — её скорость после переноса) → max(|v| × MULT, MIN) вдоль v (почти стоит —
+## вдоль нормали выхода); MULT / MIN — по нормали выхода относительно местной гравитации (вверх / вбок / вниз). Всем телам — одна
+## прибавка (внутреннее движение куклы то же). Возвращает новую скорость (м/с).
+func _boost(list: Array[RigidBody3D], v: Vector3, to: Portal) -> float:
+	var n := to.normal()
+	var up := PortalUpright.up_at(list[0]) if not list.is_empty() else Vector3.UP
+	var kind := boost_kind(n, up)
+	var k: float = [Tuning.PORTAL_BOOST_UP_MULT, Tuning.PORTAL_BOOST_SIDE_MULT, Tuning.PORTAL_BOOST_DOWN_MULT][kind]
+	var vmin: float = [Tuning.PORTAL_BOOST_UP_MIN, Tuning.PORTAL_BOOST_SIDE_MIN, Tuning.PORTAL_BOOST_DOWN_MIN][kind]
+	var sp := v.length()
+	var dir := v / sp if sp > 0.3 else n
+	var target := maxf(sp * k, vmin)
+	if target <= sp:
+		return sp
+	var dv := dir * (target - sp)
+	dv.z = 0.0
+	for rb in list:
+		rb.linear_velocity += dv
+		if DollCombat.prev_vel.has(rb):
+			DollCombat.prev_vel[rb] = [rb.linear_velocity, rb.angular_velocity]
+	return target
+
+
+## Направление выхода для разгона: 0 — вверх (нормаль ближе 45° к «верху»), 1 — вбок, 2 — вниз.
+static func boost_kind(n: Vector3, up: Vector3) -> int:
+	var d := n.dot(up)
+	if d >= 0.707:
+		return 0
+	if d <= -0.707:
+		return 2
+	return 1
 
 
 ## Можно ли везти предмет в руке куклы d через портал: не деталь чужой куклы и не держится рукой другой куклы.

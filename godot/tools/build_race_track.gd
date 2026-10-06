@@ -754,6 +754,9 @@ func _portal_slots() -> void:
 		pair.set("b_angle_deg", -90.0)
 		pair.set("width", PORTAL_WIDTH)
 		pair.set("colour_index", PORTAL_COLOUR)
+		# односторонняя (решение 06.10, PORTAL.md): B — только выход, влетевший в B упирается в карман. Разгона нет: короткий путь
+		# через пару и так в разы быстрее лёгкой ветки
+		pair.set("one_way", true)
 		g.add_child(pair)
 	else:
 		push_error("нет " + PORTAL_SCENE)
