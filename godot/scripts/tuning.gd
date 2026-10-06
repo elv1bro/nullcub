@@ -809,9 +809,10 @@ const LINK_BREAK_HP := 30.0
 ## BOMB_FUSE_MIN_S…BOMB_FUSE_MAX_S, при передаче не сбрасывается. Конец фитиля — взрыв у держателя: он выбывает, соседей раскидывает без
 ## урона; через BOMB_NEXT_S бомба у случайного живого. Последний живой берёт партию, матч — до BOMB_WINS_TO_WIN побед.
 const BOMB_DOLLS := 5
-const BOMB_WINS_TO_WIN := 3
-const BOMB_FUSE_MIN_S := 20.0
-const BOMB_FUSE_MAX_S := 30.0
+## Автор 06.10 после первого прогона ботов («давай чуть короче»): было 20–30 с и до 3 побед — матч 11–20 минут.
+const BOMB_WINS_TO_WIN := 2
+const BOMB_FUSE_MIN_S := 14.0
+const BOMB_FUSE_MAX_S := 20.0
 const BOMB_RETURN_LOCK_S := 1.0
 ## Бомбу только что передали — держатель отдаст её дальше не раньше этого (касание в куче не прыгает по трём куклам за один тик).
 const BOMB_PASS_MIN_HOLD_S := 0.15

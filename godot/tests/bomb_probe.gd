@@ -5,7 +5,7 @@
 ##     1 с нельзя (касание было — запрет держал), после — можно; фитиль при передаче не сбрасывается; удар куклы о куклу — без урона, с
 ##     отбросом; писк весь фитиль, темп растёт к концу (средняя пауза по пятым долям фитиля не растёт, конец быстрее начала втрое);
 ##     взрыв ровно по фитилю выбивает только держателя, соседей рядом раскидывает без урона; через BOMB_NEXT_S новая бомба у живого;
-##     партия кончается одним живым (победа ему); следующая партия — все снова живы; матч до 3 побед → итоги (победитель, места, табличка
+##     партия кончается одним живым (победа ему); следующая партия — все снова живы; матч до BOMB_WINS_TO_WIN побед → итоги (победитель, места, табличка
 ##     HUD); R (restart) — всё заново;
 ##   bots (все пятеро — боты): матч до wins побед доигрывается; в каждой партии бомба передавалась ≥ 3 раз, взрывов ровно n − 1 (каждый
 ##     выбил одного), каждый взрыв — ровно по фитилю 20–30 с, возврата раньше 1 с не было, новая бомба — у живого; ударов много, урона 0;
@@ -68,7 +68,7 @@ func _check(id: String, cond: bool, detail: Variant = "") -> void:
 
 
 func _args() -> Dictionary:
-	var out := {"only": "", "max_s": "1500", "level": "2", "trace": "0", "out": "", "wins": "3", "seed": "0"}
+	var out := {"only": "", "max_s": "1500", "level": "2", "trace": "0", "out": "", "wins": str(Tuning.BOMB_WINS_TO_WIN), "seed": "0"}
 	for a in OS.get_cmdline_user_args():
 		for part in String(a).split(","):
 			var kv := part.split("=")
@@ -218,7 +218,7 @@ func _rules() -> void:
 		var f := bm.roll_fuse()
 		lo = minf(lo, f)
 		hi = maxf(hi, f)
-	_check("fuse_roll", lo >= Tuning.BOMB_FUSE_MIN_S and hi <= Tuning.BOMB_FUSE_MAX_S and hi - lo > 8.0, "300 бросков: %.2f…%.2f с" % [lo, hi])
+	_check("fuse_roll", lo >= Tuning.BOMB_FUSE_MIN_S and hi <= Tuning.BOMB_FUSE_MAX_S and hi - lo > (Tuning.BOMB_FUSE_MAX_S - Tuning.BOMB_FUSE_MIN_S) * 0.8, "300 бросков: %.2f…%.2f с" % [lo, hi])
 	_check("bomb_visual", bm.carry != null and bm.carry.visible and bm.carry.holder == h, "бомба видна на держателе")
 	var beeps_seen := {"list": []}
 	var grab_beeps := func(_v: Doll, _p: Vector3) -> void:
@@ -371,7 +371,7 @@ func _rules() -> void:
 	_check("next_round", next_ok and bm.alive_dolls().size() == Tuning.BOMB_DOLLS and bm.holder != null and bm.win_count(w_now) == 1,
 		"партия %d, живых %d, побед у %s: %d" % [bm.round_i, bm.alive_dolls().size(), BombMatch.doll_name(w_now), bm.win_count(w_now)])
 
-	# --- матч до 3 побед: тот же победитель (пробе так быстрее), бомба ему не достаётся
+	# --- матч до BOMB_WINS_TO_WIN побед: тот же победитель (пробе так быстрее), бомба ему не достаётся
 	_brains_off()
 	var champ_i := w_i
 	var rig := func() -> bool:
@@ -386,7 +386,7 @@ func _rules() -> void:
 	await _until(rig, 90.0)
 	var champ := _doll(champ_i)
 	var places: Array = over_results.get("places", [])
-	_check("match_to_3", over_count == 1 and over_results.get("winner") == champ and bm.win_count(champ) == Tuning.BOMB_WINS_TO_WIN
+	_check("match_to_wins", over_count == 1 and over_results.get("winner") == champ and bm.win_count(champ) == Tuning.BOMB_WINS_TO_WIN
 		and bm.rounds.size() == Tuning.BOMB_WINS_TO_WIN and bm.phase == Match.Phase.OVER and not places.is_empty() and places[0] == champ,
 		"итогов %d, победил %s (%d побед), партий %d" % [over_count, BombMatch.doll_name(over_results.get("winner")), bm.win_count(champ), bm.rounds.size()])
 	var others_lt := true

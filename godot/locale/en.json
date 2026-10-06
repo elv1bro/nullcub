@@ -1739,7 +1739,7 @@
 	"МОЛОТ": "HAMMER",
 	"РУКИ": "FISTS",
 	"Бомба: передай касанием": "Bomb: pass it by touch",
-	"Пятеро в куполе, у одного бомба с тайным фитилём: коснись другого — бомба у него. Взрыв выбивает держателя, последний живой берёт партию, матч до 3. WASD + Shift; U — P2 на стрелках, K — уровень ботов": "Five in the dome, one carries a bomb with a hidden fuse: touch someone and the bomb is theirs. The blast knocks the carrier out, the last one standing takes the round, first to 3. WASD + Shift; U — P2 on the arrows, K — bot level",
+	"Пятеро в куполе, у одного бомба с тайным фитилём: коснись другого — бомба у него. Взрыв выбивает держателя, последний живой берёт партию, матч до 2. WASD + Shift; U — P2 на стрелках, K — уровень ботов": "Five in the dome, one carries a bomb with a hidden fuse: touch someone and the bomb is theirs. The blast knocks the carrier out, the last one standing takes the round, first to 2. WASD + Shift; U — P2 on the arrows, K — bot level",
 	"U — P2 на стрелках": "U — P2 on the arrows",
 	"P1: WASD + Shift — коснись другого, и бомба у него": "P1: WASD + Shift — touch someone and the bomb is theirs",
 	"K: уровень ботов    R: заново    Esc: пауза": "K: bot level    R: restart    Esc: pause",
