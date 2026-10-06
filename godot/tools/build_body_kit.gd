@@ -133,7 +133,7 @@ const OTHER_ACCEPTS := ["weapon_head", "chain", "mod"]   # прочие якор
 const OTHER_GROUP := "Ankle"
 const SIDE_LIMITS := Vector2(-60, 80)                     # = build_body_parts.gd SIDE_LIMITS
 ## Радиус шара коннектора по имени якоря (JOINT_R kit_common.py, кадр стиля) → meta joint_r; 0 — у якоря декора шара нет.
-const JOINT_R := {"Neck": 0.05, "Shoulder": 0.064, "Hip": 0.076, "Side": 0.062, "End": 0.052}
+const JOINT_R := {"Neck": 0.05, "Shoulder": 0.064, "Hip": 0.076, "Side": 0.062, "SideB": 0.062, "End": 0.052}
 ## Тонкие коллизии не должны проваливаться сквозь куклу (= build_craft_parts.gd MIN_THICK).
 const MIN_THICK := 0.03
 ## Fixed-виды (PartDef.FIXED_KINDS + детали оружия): форм может не быть — масса всё равно слита с хозяином (предупреждение).
@@ -639,7 +639,7 @@ func _anchor_meta(mk: Marker3D, short: String) -> void:
 			accepts = ANY_LIMB
 			group = base
 			from_pose = true
-		"Side":
+		"Side", "SideB":   # SideB — вторая пара боковых выходов (рама, звезда: tools/blender/kit_frames.py)
 			accepts = ANY_LIMB
 			group = "Hip"
 			mk.set_meta("limit_deg", SIDE_LIMITS)

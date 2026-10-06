@@ -1,0 +1,68 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/body/kit/Kit_Hub_Fork.glb" id="1_dnsjc"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_etbik"]
+friction = 0.5
+bounce = 0.05
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_yqu6n"]
+radius = 0.058
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_s4m56"]
+radius = 0.03
+height = 0.1575
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6r67t"]
+radius = 0.03
+height = 0.1575
+
+[node name="KitHubFork" type="RigidBody3D" unique_id=898883550]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.8
+physics_material_override = SubResource("PhysicsMaterial_etbik")
+can_sleep = false
+continuous_cd = true
+linear_damp = 1.5
+angular_damp = 0.6
+metadata/kind = "joint"
+metadata/part_id = "kit_hub_fork"
+
+[node name="Socket" type="Marker3D" parent="." unique_id=1803551958]
+
+[node name="Shape_Hub" type="CollisionShape3D" parent="." unique_id=1256041620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("SphereShape3D_yqu6n")
+
+[node name="Anchor_Side_L" type="Marker3D" parent="." unique_id=276509365]
+transform = Transform3D(0.8660253, -0.5000001, 0, 0.5000001, 0.8660253, 0, 0, 0, 1, 0.105, -0.28186533, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = false
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Shape_Horn_L" type="CollisionShape3D" parent="." unique_id=1262130447]
+transform = Transform3D(0.8660253, -0.5000001, 0, 0.5000001, 0.8660253, 0, 0, 0, 1, 0.05775, -0.20002595, 0)
+shape = SubResource("CapsuleShape3D_s4m56")
+
+[node name="Anchor_Side_R" type="Marker3D" parent="." unique_id=1791016752]
+transform = Transform3D(0.8660253, 0.5000001, 0, -0.5000001, 0.8660253, 0, 0, 0, 1, -0.105, -0.28186533, 0)
+metadata/limit_deg = Vector2(-60, 80)
+metadata/accepts = PackedStringArray("limb", "hand", "foot", "joint", "chain", "weapon_head", "handle", "mod", "plate")
+metadata/joint_group = "Hip"
+metadata/rest_deg = 0.0
+metadata/mirror = true
+metadata/rest_from_pose = false
+metadata/joint_r = 0.062
+
+[node name="Shape_Horn_R" type="CollisionShape3D" parent="." unique_id=562958423]
+transform = Transform3D(0.8660253, 0.5000001, 0, -0.5000001, 0.8660253, 0, 0, 0, 1, -0.05775, -0.20002595, 0)
+shape = SubResource("CapsuleShape3D_6r67t")
+
+[node name="Mesh" type="Node3D" parent="." unique_id=1863880509 instance=ExtResource("1_dnsjc")]
+metadata/rig_mesh = true

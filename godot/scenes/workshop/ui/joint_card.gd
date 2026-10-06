@@ -24,9 +24,21 @@ static func colour(jt: String) -> Color:
 	return COLORS.get(jt if jt != "" else KitJoint.DEFAULT, Color.WHITE)
 
 
+## Плашка вида связки (KitLink, WORKSHOP_V4.md «Связки») на вкладке «Связки»: тот же вид, что у шарнира; picked — вид связки.
+func setup_link(t: String) -> void:
+	var em := int(float(KitLink.info(t)["energy_m"]))
+	_setup_any(t, KitLink.title_of(t), KitLink.hint_of(t), tr("⚡%d/м") % em, KitLink.colour(t), true,
+		"\n".join([KitLink.title_of(t), KitLink.hint_of(t), TranslationServer.translate("энергия %d за метр, не меньше %d") % [em, KitLink.ENERGY_MIN],
+			TranslationServer.translate("связку можно перебить: урон в неё копится, и она рвётся")]))
+
+
 func setup(jt: String) -> void:
+	var e0 := KitJoint.energy_of(jt)
+	_setup_any(jt, tr(String(KitJoint.info(jt).get("title", jt))), tr(String(KitJoint.info(jt).get("hint", ""))), "⚡%d" % e0, colour(jt), e0 > 0, _tooltip(jt))
+
+
+func _setup_any(jt: String, title_text: String, hint_text: String, energy_text: String, col: Color, energy_lit: bool, tip: String) -> void:
 	joint_type = jt
-	var info := KitJoint.info(jt)
 	custom_minimum_size = Vector2(0, 66)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -55,7 +67,7 @@ func setup(jt: String) -> void:
 	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var ds := StyleBoxFlat.new()
-	ds.bg_color = colour(jt)
+	ds.bg_color = col
 	ds.set_corner_radius_all(13)
 	ds.set_border_width_all(3)
 	ds.border_color = Color(0.05, 0.04, 0.03)
@@ -70,28 +82,27 @@ func setup(jt: String) -> void:
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(top)
 	var title := Label.new()
-	title.text = tr(String(info.get("title", jt)))
+	title.text = title_text
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 21)
 	title.add_theme_color_override("font_color", Color(0.96, 0.92, 0.84))
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(title)
-	var e := KitJoint.energy_of(jt)
 	var energy := Label.new()
-	energy.text = "⚡%d" % e
+	energy.text = energy_text
 	energy.add_theme_font_size_override("font_size", 18)
-	energy.add_theme_color_override("font_color", Color(1.0, 0.86, 0.35) if e > 0 else Color(0.7, 0.66, 0.6))
+	energy.add_theme_color_override("font_color", Color(1.0, 0.86, 0.35) if energy_lit else Color(0.7, 0.66, 0.6))
 	energy.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(energy)
 	var hint := Label.new()
-	hint.text = tr(String(info.get("hint", "")))
+	hint.text = hint_text
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 15)
 	hint.add_theme_color_override("font_color", Color(0.8, 0.76, 0.7))
 	hint.add_theme_constant_override("line_spacing", -3)
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(hint)
-	tooltip_text = _tooltip(jt)
+	tooltip_text = tip
 	mouse_entered.connect(func() -> void:
 		_hovered = true
 		_restyle())

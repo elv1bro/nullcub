@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/body/kit/kit_hub_fork.tscn" id="1_kj266"]
+[ext_resource type="Script" path="res://scripts/body/part_def.gd" id="2_617p0"]
+
+[resource]
+script = ExtResource("2_617p0")
+id = "kit_hub_fork"
+title = "Развилка"
+kind = "joint"
+scene = ExtResource("1_kj266")
+mass = 1.8
+energy = 3
+name_prefix = "Joint"
+base_mat = "paint_white"
+connector = true

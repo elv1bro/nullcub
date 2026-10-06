@@ -36,6 +36,8 @@
 ##   что и когда отлетело (part_detached: деталь, t, hp до и после, потерянные ❤), остаток.
 ##   d1=<id> / d2=<id> — вместо обычной куклы P1 / P2 пресет scenes/body/presets/<id>.tscn (калибровка сборок друг против друга;
 ##   проверки «частей 14» у KO для сборок с другим числом тел не про них).
+##   lk=<вид> — связки (KitLink) у сборок d1 / d2: кисть ↔ бедро своей стороны с обеих сторон (rod | bar | spring | rope | piston);
+##   info.links — сколько связок порвалось за бой.
 ##   retreat=<с> — отход наскока вместо RUSH_RETREAT_S (retreat=1.0 в Void — клинч голова-о-голову, двойной KO → ничья).
 ## Отчёт tests/match_probe_report.json (или out=res://…), exit 0/1.
 extends Node3D
@@ -83,6 +85,7 @@ var joints_broken: Array = []        # joints=1 (JointBreak): отлетевши
 var parts_lost: Array = []           # parts=1 (PartHp): отлетевшие детали боя до KO — {doll, part, t, hp, max_hp, lost}
 var parts_start: Dictionary = {}     # parts=1: имя куклы -> max_hp на FIGHT!
 var doll_presets: Dictionary = {}    # d1= / d2=: "P1" / "P2" -> id пресета scenes/body/presets/<id>.tscn
+var link_type := ""                  # lk=: вид связок у сборок d1 / d2
 var env_slams := 0
 var max_s := 120.0
 var sd_mode := false
@@ -312,6 +315,7 @@ func _ready() -> void:
 				"parts": PartHp.set_on(p[1] != "0")        # пробный режим «Запас из деталей»: info.parts
 				"d1": doll_presets["P1"] = p[1]
 				"d2": doll_presets["P2"] = p[1]
+				"lk": link_type = p[1]
 	pg = load(SCENES.get(scene_id, SCENES["ruins"])).instantiate()
 	for pn in doll_presets:   # пресет вместо обычной куклы — до add_child: _ready площадки и Match видят уже сборку
 		_swap_doll(pg, String(pn), "res://scenes/body/presets/%s.tscn" % doll_presets[pn])
@@ -420,6 +424,16 @@ func _swap_doll(root: Node, pname: String, path: String) -> void:
 		push_error("match_probe: нет %s или %s" % [pname, path])
 		return
 	var d := (load(path) as PackedScene).instantiate() as Doll
+	if link_type != "" and d.get("blueprint") is BodyBlueprint:   # lk=: связки кисть ↔ бедро своей стороны (kit_human: кисти 3 / 9, бёдра 4 / A)
+		var bp := (d.get("blueprint") as BodyBlueprint).duplicate(true) as BodyBlueprint
+		var ls: Array[Dictionary] = []
+		for pair in [["3", "4"], ["9", "A"]]:
+			if not bp.find_node(pair[0]).is_empty() and not bp.find_node(pair[1]).is_empty():
+				ls.append({"id": str(ls.size() + 1), "type": link_type, "a": pair[0], "pa": Vector3(0.0, 0.08, 0.0), "b": pair[1],
+					"pb": Vector3(0.05, 0.2, 0.0), "len": 0.8, KitLink.CHANNEL_KEY: 1})
+		bp.links = ls
+		bp.energy_budget = 1000
+		d.set("blueprint", bp)
 	d.transform = old.transform
 	d.player_index = old.player_index
 	d.input_prefix = old.input_prefix
@@ -931,6 +945,8 @@ func _checks_ko() -> void:
 		report["info"]["joints_left"] = joints_left
 	if PartHp.on:
 		report["info"]["parts"] = {"start": parts_start, "lost": parts_lost, "end": {"P1": [snappedf(p1.hp, 0.1), p1.max_hp], "P2": [snappedf(p2.hp, 0.1), p2.max_hp]}}
+	if link_type != "":
+		report["info"]["links"] = {"type": link_type, "broken": [int(p1.stats.get("links_broken", 0)), int(p2.stats.get("links_broken", 0))]}
 	report["info"]["hit_list"] = hit_list
 	report["info"]["hp"] = {"p1": p1.hp, "p2": p2.hp}
 	report["info"]["stats_p1"] = p1.stats.duplicate()

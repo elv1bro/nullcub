@@ -133,6 +133,9 @@ var control_pick := false
 const PULL_COLOURS := {"lmb": Color(1.0, 0.78, 0.2), "rmb": Color(0.35, 0.8, 1.0)}
 var paint_mat := ""                      # кисть материала: id MaterialDef ("" — выключена)
 var joint_pick := ""                     # инструмент шарнира: тип KitJoint ("" — выключен)
+var link_pick := ""                      # инструмент связки: вид KitLink ("" — выключен; WORKSHOP_V4.md «Связки»)
+var link_from: Dictionary = {}           # первый конец связки: {uid, pa (кадр тела), world}; {} — ещё не выбран
+var _link_marker: MeshInstance3D         # шарик на первом конце
 var paint: WorkshopPaint                 # покраска (BODY_PAINT.md §6): инструмент, кисть, наклейки, поворот стенда
 ## Инструмент покраски в руке ("" — нет): WorkshopPaint.tool.
 var paint_tool: String:
@@ -432,6 +435,7 @@ func toggle_control_pick() -> void:
 	if control_pick:
 		paint_mat = ""
 		joint_pick = ""
+		_clear_link_tool()
 		set_paint_tool("")
 		cancel_drag()
 		set_view(View.BODY)
@@ -450,6 +454,7 @@ func set_paint_mat(mat_id: String) -> void:
 	if paint_mat != "":
 		control_pick = false
 		joint_pick = ""
+		_clear_link_tool()
 		set_paint_tool("")
 		cancel_drag()
 		set_view(View.BODY)
@@ -465,6 +470,7 @@ func set_joint_pick(jt: String) -> void:
 		jt = ""
 	joint_pick = jt
 	if joint_pick != "":
+		_clear_link_tool()
 		control_pick = false
 		paint_mat = ""
 		set_paint_tool("")
@@ -473,6 +479,110 @@ func set_joint_pick(jt: String) -> void:
 		_say(tr("Шарнир «%s» — кликни по детали куклы") % CraftEdit.joint_title(joint_pick), JointCard.colour(joint_pick))
 	_apply_highlights()
 	changed.emit()
+
+
+## Взять инструмент связки вида t (тот же ещё раз или "" — положить; WORKSHOP_V4.md «Связки»): клик по точке одной детали, потом
+## другой — связка; клик по связке — снять (у поршня тем же инструментом — сменить канал).
+func set_link_pick(t: String) -> void:
+	cancel_mirror()
+	if t != "" and (t == link_pick or not KitLink.is_type(t)):
+		t = ""
+	_clear_link_tool()
+	link_pick = t
+	if link_pick != "":
+		control_pick = false
+		paint_mat = ""
+		joint_pick = ""
+		set_paint_tool("")
+		cancel_drag()
+		set_view(View.BODY)
+		_say(tr("Связка «%s» — кликни по первой детали (клик по связке — снять)") % KitLink.title_of(link_pick), KitLink.colour(link_pick))
+	_apply_highlights()
+	changed.emit()
+
+
+func _clear_link_tool() -> void:
+	link_pick = ""
+	_set_link_from({})
+
+
+func _set_link_from(f: Dictionary) -> void:
+	link_from = f
+	if f.is_empty():
+		if _link_marker != null and is_instance_valid(_link_marker):
+			_link_marker.queue_free()
+		_link_marker = null
+		return
+	if _link_marker == null or not is_instance_valid(_link_marker):
+		_link_marker = MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 0.035
+		sm.height = 0.07
+		_link_marker.mesh = sm
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.no_depth_test = true
+		m.albedo_color = KitLink.colour(link_pick)
+		_link_marker.material_override = m
+		add_child(_link_marker)
+	_link_marker.global_position = f["world"]
+
+
+## Клик инструментом связки: по связке — снять (поршень своим инструментом — сменить канал), по детали — первый / второй конец.
+func _link_click(h: Dictionary) -> void:
+	if h.is_empty():
+		_say(tr("Связка: кликни по детали бойца (Esc / ПКМ — отмена)"), COL_WARN)
+		return
+	if String(h["target"]) == "link":
+		var id := String(h["link"])
+		var l := blueprint.find_link(id)
+		if l.is_empty():
+			return
+		_push_history()
+		if link_pick == "piston" and KitLink.uses_channel(String(l.get("type", ""))):
+			var ch := CraftEdit.cycle_link_channel(blueprint, id)
+			_name_custom_body()
+			_rebuild()
+			_say(tr("Поршень → канал %d (%s)") % [ch, ActiveBlocks.key_label("p1", ch)], COL_OK)
+			return
+		CraftEdit.remove_link(blueprint, id)
+		_set_link_from({})
+		_name_custom_body()
+		_rebuild()
+		_play_sfx("unscrew", null)
+		_say(tr("Связка «%s» снята") % KitLink.title_of(String(l.get("type", ""))), COL_INFO)
+		return
+	if String(h["target"]) != "body" or stand == null:
+		return
+	var uid := String(h["uid"])
+	if CraftEdit.is_fixed(blueprint, uid):   # декор, броня, сварка: конец — на детали-хозяине
+		uid = String(_own_uid.get(String(stand.uid_body.get(uid, "")), ""))
+	var body := stand.parts.get(String(stand.uid_body.get(uid, ""))) as RigidBody3D
+	if uid == "" or body == null:
+		return
+	var world: Vector3 = h.get("pos", body.global_position)
+	var local := body.global_transform.affine_inverse() * world
+	if link_from.is_empty():
+		_set_link_from({"uid": uid, "pa": local, "world": world})
+		_play_sfx("button", null)
+		_say(tr("Первый конец — %s. Теперь вторая деталь") % uid_title("body", uid), KitLink.colour(link_pick))
+		changed.emit()
+		return
+	var len_m := (world - (link_from["world"] as Vector3)).length()
+	var r := CraftEdit.add_link(blueprint, link_pick, String(link_from["uid"]), link_from["pa"], uid, local, len_m, true)
+	last_result = r
+	if not bool(r["ok"]):
+		_say(String(r["reason"]), COL_BAD)
+		_play_sfx("invalid", null)
+		return
+	_push_history()
+	r = CraftEdit.add_link(blueprint, link_pick, String(link_from["uid"]), link_from["pa"], uid, local, len_m)
+	last_result = r
+	_set_link_from({})
+	_name_custom_body()
+	_rebuild()
+	_play_sfx("snap", null)
+	_say(tr("Связка «%s»: %.2f м · ⚡ %d") % [KitLink.title_of(link_pick), len_m, KitLink.energy_of(link_pick, len_m)], COL_OK)
 
 
 ## Инструмент покраски t (WorkshopPaint.TOOLS; "" — положить). Кладёт «руку мышью», кисть материала, шарнир и протяжку.
@@ -489,6 +599,8 @@ func active_tool() -> String:
 		return "material"
 	if joint_pick != "":
 		return "joint"
+	if link_pick != "":
+		return "link"
 	if paint_tool != "":
 		return "paint"
 	return ""
@@ -500,6 +612,7 @@ func clear_tools() -> bool:
 	control_pick = false
 	paint_mat = ""
 	joint_pick = ""
+	_clear_link_tool()
 	if paint_tool != "":
 		paint.set_tool("")
 	if had:
@@ -1018,6 +1131,8 @@ func toggle_parts_hp() -> void:
 
 func _rebuild() -> void:
 	_clear_ghost()
+	if CraftEdit.prune_links(blueprint) > 0:   # сняли / сварили деталь на конце связки — связка уходит вместе с ней
+		_say(tr("Связка снята вместе с деталью"), COL_INFO)
 	if String(selected.get("source", "")) == "stand":   # выбранную деталь открутили / отменили — выбор снимается
 		var sbp: Resource = weapon_bp if String(selected["target"]) == "weapon" else blueprint
 		var sn := CraftEdit.find(sbp, String(selected["uid"]))
@@ -1051,6 +1166,7 @@ func _rebuild_stand() -> void:
 	view_bp.nodes = CraftEdit._dup_nodes(sbp.nodes)
 	view_bp.control = sbp.control.duplicate()
 	view_bp.control_rmb = sbp.control_rmb.duplicate()
+	view_bp.links = CraftEdit._dup_nodes(sbp.links) if sbp is BodyBlueprint else view_bp.links
 	var d := MODULAR_DOLL.instantiate() as ModularDoll
 	d.name = "StandDoll"
 	d.blueprint = view_bp
@@ -1073,6 +1189,11 @@ func _rebuild_stand() -> void:
 	for j in stand.joints.values():   # суставы между замороженными телами не нужны (и Jolt не должен их решать)
 		(j as Generic6DOFJoint3D).node_a = NodePath()
 		(j as Generic6DOFJoint3D).node_b = NodePath()
+	for ln in stand.links_rt:   # суставы связок — тоже; тела связок — между концами в позе стенда
+		for lj in stand.links_rt[ln]["joints"]:
+			(lj as Generic6DOFJoint3D).node_a = NodePath()
+			(lj as Generic6DOFJoint3D).node_b = NodePath()
+	stand.refresh_links()
 	for n in sbp.nodes:
 		var uid := String(n.get("uid", ""))
 		var def := CraftEdit.part(String(n.get("part", "")))
@@ -1321,6 +1442,7 @@ func begin_drag(part_id: String, screen_pos: Vector2, opts := {}) -> void:
 	control_pick = false
 	paint_mat = ""
 	joint_pick = ""
+	_clear_link_tool()
 	set_paint_tool("")
 	var d := CraftEdit.part(part_id)
 	if d == null:
@@ -1976,9 +2098,11 @@ func pick(screen_pos: Vector2) -> Dictionary:
 		var uid := String(shape_node.name).get_slice("_", 0) if shape_node != null else ""
 		return {"target": "weapon", "uid": uid} if not CraftEdit.find(weapon_bp, uid).is_empty() else {}
 	if stand != null and col.get_parent() == stand:
+		if link_pick != "" and stand.link_of_body.has(String(col.name)):   # связка под курсором — только инструменту связки
+			return {"target": "link", "link": String(stand.link_of_body[String(col.name)]).trim_prefix("Link_"), "pos": hit.get("position", Vector3.ZERO)}
 		var key := "%s/%s" % [col.name, shape_node.name if shape_node != null else ""]
 		var uid2 := String(_shape_uid.get(key, _own_uid.get(String(col.name), "")))
-		return {"target": "body", "uid": uid2} if uid2 != "" else {}
+		return {"target": "body", "uid": uid2, "pos": hit.get("position", Vector3.ZERO)} if uid2 != "" else {}
 	return {}
 
 
@@ -2315,6 +2439,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					set_material(String(h["uid"]))
 				else:
 					_say(tr("Кисть: кликни по детали бойца (Esc / ПКМ — убрать кисть)"), COL_WARN)
+			elif link_pick != "":
+				_link_click(h)
 			elif joint_pick != "":
 				if on_body:
 					set_joint(String(h["uid"]))
@@ -2458,6 +2584,7 @@ func set_view(v: int) -> void:
 		control_pick = false
 		paint_mat = ""
 		joint_pick = ""
+		_clear_link_tool()
 		set_paint_tool("")
 		if paint != null:
 			paint.reset_turn()
@@ -2586,6 +2713,7 @@ func start_test() -> bool:
 	control_pick = false
 	paint_mat = ""
 	joint_pick = ""
+	_clear_link_tool()
 	set_paint_tool("")
 	if paint != null:
 		paint.reset_turn()
@@ -2749,6 +2877,7 @@ func body_stats() -> Dictionary:
 			uid_title("body", String(m["uid"])) if String(m["uid"]) != "" else tr("некуда")]
 	var accel := ref / maxf(mass + wmass, 0.1)
 	return {"title": blueprint.title, "energy": blueprint.energy_used(), "budget": blueprint.energy_cap(), "mass": mass, "hp": blueprint.parts_hp_total(),
+		"links": blueprint.links.size(),
 		"weapon_mass": wmass, "bodies": bodies, "parts": blueprint.nodes.size(), "accel": accel, "ref": ref,
 		"control": ctrl, "weapon": weapon_line, "errors": CraftEdit.friendly_errors(blueprint),
 		"warnings": CraftEdit.warnings(blueprint)}
@@ -2924,6 +3053,11 @@ func context_help() -> String:
 	if joint_pick != "":
 		return _tool_help(CraftEdit.check_joint(blueprint, String(hover.get("uid", "")), joint_pick) if _hover_body() else {},
 			"joint", CraftEdit.joint_title(joint_pick))
+	if link_pick != "":
+		var tail := tr("  ·  клик по поршню — канал") if link_pick == "piston" else ""
+		if link_from.is_empty():
+			return tr("Клик — первый конец связки  ·  клик по связке — снять%s  ·  Esc — готово") % tail
+		return tr("Клик по второй детали — поставить связку  ·  Esc — отмена")
 	if not pending_mirror.is_empty():
 		return tr("Enter или клик по копии — поставить  ·  Esc — отмена")
 	if not drag.is_empty():
