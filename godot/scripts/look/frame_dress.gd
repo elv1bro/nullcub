@@ -1,6 +1,6 @@
 ## «Правило кадра» и «дорогой пластик» на самой кукле (docs/plan-demo/look/frame.md, автозагрузка LookFrame): без замены моделей,
 ## без новых узлов в дереве куклы — только бит слоя на мешах и материалы. Три части, каждая включается и снимается отдельно:
-##   • rim  — бит RIM_BIT мешам куклы: контровой свет LookFrame (DirectionalLight3D сзади-сверху) светит ТОЛЬКО на этот слой
+##   • rim  — бит RIM_BIT мешам куклы (и PROBE_BIT — отражения ReflectionProbe только на куклах): контровой свет LookFrame (DirectionalLight3D сзади-сверху) светит ТОЛЬКО на этот слой
 ##            (light_cull_mask), арену не трогает. Материалы кукол не меняются — работает для манекена, кита, лиги, врагов;
 ##   • glow — свечение цвета игрока: обмотки, краска цвета игрока и шары суставов кита (поверхности Shirt*, они уже свои у каждой
 ##            куклы — Doll._recolor / ModularDoll._recolor) получают эмиссию своего цвета ПРЯМО В МАТЕРИАЛЕ (исходные значения —
@@ -17,6 +17,9 @@ extends RefCounted
 
 ## Слой «бойцы» для контрового света (бит видимого слоя; занятые: BodyPaint.PAINT_LAYER_BIT 1 << 11, CritCinematic 1 << 19).
 const RIM_BIT := 1 << 16
+## Слой «бойцы» для отражений: ReflectionProbe арены (reflection_mask) ложится только на кукол — пол и стены как были, цена — только
+## пиксели кукол.
+const PROBE_BIT := 1 << 17
 const SKIP_PREFIXES := ["Outline", "Sticker", "Face"]
 const META_GLOW := "lf_glow0"     # на материале: исходные emission_* до свечения
 const META_COAT := "lf_coat0"     # на материале: исходные clearcoat_* до лака (Shirt_Kit — прямо в материале)
@@ -43,40 +46,49 @@ static func meshes(doll: Node) -> Array:
 	if doll == null or not is_instance_valid(doll):
 		return out
 	for n in doll.find_children("*", "MeshInstance3D", true, false):
-		var mi := n as MeshInstance3D
-		if mi.mesh == null:
-			continue
-		var skip := false
-		for pre in SKIP_PREFIXES:
-			skip = skip or String(mi.name).begins_with(pre)
-		if not skip:
-			out.append(mi)
+		if eligible(n):
+			out.append(n)
 	return out
 
 
-# --- rim: бит слоя ---
+static func eligible(n: Node) -> bool:
+	var mi := n as MeshInstance3D
+	if mi == null or mi.mesh == null:
+		return false
+	for pre in SKIP_PREFIXES:
+		if String(mi.name).begins_with(pre):
+			return false
+	return true
 
-static func set_rim(doll: Node, on: bool) -> int:
+
+# --- rim и отражения: биты слоя ---
+
+static func set_rim(doll: Node, on: bool, list: Array = []) -> int:
+	return set_layer(doll, RIM_BIT, on, list)
+
+
+## list — только эти меши (новый меш в одетой кукле), пусто — все меши куклы.
+static func set_layer(doll: Node, bit: int, on: bool, list: Array = []) -> int:
 	var n := 0
-	for mi in meshes(doll):
+	for mi in (list if not list.is_empty() else meshes(doll)):
 		var m := mi as MeshInstance3D
 		if on:
-			m.layers |= RIM_BIT
+			m.layers |= bit
 		else:
-			m.layers &= ~RIM_BIT
+			m.layers &= ~bit
 		n += 1
 	return n
 
 
 # --- glow: свечение цвета игрока ---
 
-static func set_glow(doll: Node, on: bool, colour: Color) -> int:
+static func set_glow(doll: Node, on: bool, colour: Color, list: Array = []) -> int:
 	if doll == null or not is_instance_valid(doll):
 		return 0
 	var enemy := doll.get_node_or_null("EnemyLook") != null
 	var kit := doll is ModularDoll
 	var n := 0
-	for mi in meshes(doll):
+	for mi in (list if not list.is_empty() else meshes(doll)):
 		var m := mi as MeshInstance3D
 		for s in m.mesh.get_surface_count():
 			var mat := m.get_active_material(s) as BaseMaterial3D
@@ -117,11 +129,11 @@ static func _glow_copy(src: BaseMaterial3D, colour: Color) -> BaseMaterial3D:
 
 # --- coat: лак ---
 
-static func set_coat(doll: Node, on: bool) -> int:
+static func set_coat(doll: Node, on: bool, list: Array = []) -> int:
 	if not doll is ModularDoll:
 		return 0   # манекен — лакированное дерево уже в его материале; лак — краске и пластику кита
 	var n := 0
-	for mi in meshes(doll):
+	for mi in (list if not list.is_empty() else meshes(doll)):
 		var m := mi as MeshInstance3D
 		for s in m.mesh.get_surface_count():
 			var mat := m.get_active_material(s) as BaseMaterial3D

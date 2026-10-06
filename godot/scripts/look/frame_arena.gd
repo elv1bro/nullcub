@@ -5,7 +5,8 @@
 ##                экспоненциальный туман купола клал 25 % дымки и на них); цветокоррекция (контраст, насыщенность); слои
 ##                фона-параллакса (у них fog_disabled) — множитель цвета: темнее и холоднее. Толпу не трогаем (её ведёт look-show);
 ##   • lamps    — полосы ламп купола (общие ресурсы кита купола Hall_LightWarm / Hall_LightCool) — эмиссия × lamps, пока арена живёт;
-##   • probe    — ReflectionProbe интерьера по габариту мешей арены (обновление один раз): глянцу кукол есть что отражать.
+##   • probe    — ReflectionProbe интерьера по габариту мешей арены (обновление один раз, reflection_mask — только куклы, бит
+##                FrameDress.PROBE_BIT): глянцу кукол есть что отражать, пол и трибуны не меняются.
 ## rim — множитель контрового света LookFrame на этой арене (на светлом дне он должен быть сильнее).
 class_name FrameArena
 extends RefCounted
@@ -13,17 +14,20 @@ extends RefCounted
 const META_ENV := "lf_env0"
 const META_LAMP := "lf_lamp0"
 const META_PAR := "lf_par0"
-const ENV_PROPS := ["fog_enabled", "fog_mode", "fog_light_color", "fog_light_energy", "fog_density", "fog_depth_begin", "fog_depth_end",
+## Свойства окружения, которые трогает «фон отступает». ambient_light_energy и fog_light_energy НЕ трогаем: их множителем гасит эфир
+## на финал раунда (look-show, HallShow._set_final) — свет финала ложится поверх нашего тумана, выключение любого из двух не затирает
+## другое. Цвет тумана — наш, его яркость (fog_light_energy) — их.
+const ENV_PROPS := ["fog_enabled", "fog_mode", "fog_light_color", "fog_density", "fog_depth_begin", "fog_depth_end",
 	"fog_depth_curve", "adjustment_enabled", "adjustment_brightness", "adjustment_contrast", "adjustment_saturation"]
 const PAR_LAYERS := ["Layer4Sky", "Layer3Far", "Layer2Mid"]
 
 const HALL_LAMPS := ["Hall_LightWarm", "Hall_LightCool"]
-const _DOME_FOG := {"colour": Color(0.018, 0.022, 0.045), "max": 0.7, "begin": 3.0, "end": 26.0, "curve": 1.0}
+const _DOME_FOG := {"colour": Color(0.016, 0.02, 0.042), "max": 0.78, "begin": 2.5, "end": 24.0, "curve": 0.9}
 const PROFILES := {
 	"null_hall.tscn": {"fog": _DOME_FOG, "contrast": 1.06, "saturation": 0.9, "lamps": 0.62, "lamp_names": HALL_LAMPS,
-		"probe": true, "rim": 1.0},
+		"probe": true, "rim": 1.15},
 	"sport_hall.tscn": {"fog": _DOME_FOG, "contrast": 1.06, "saturation": 0.9, "lamps": 0.62, "lamp_names": HALL_LAMPS,
-		"probe": true, "rim": 1.0},
+		"probe": true, "rim": 1.15},
 	"ruins.tscn": {"fog": {"colour": Color(0.36, 0.39, 0.47), "max": 0.42, "begin": 1.2, "end": 16.0, "curve": 0.8},
 		"contrast": 1.05, "saturation": 0.96, "parallax": Color(0.74, 0.77, 0.86), "probe": false, "rim": 1.5},
 	"proving_ground.tscn": {"fog": {"colour": Color(0.36, 0.39, 0.47), "max": 0.42, "begin": 1.2, "end": 16.0, "curve": 0.8},
@@ -86,7 +90,6 @@ func set_backdrop(on: bool) -> void:
 		env.fog_enabled = true
 		env.fog_mode = Environment.FOG_MODE_DEPTH
 		env.fog_light_color = f["colour"]
-		env.fog_light_energy = 1.0
 		env.fog_density = float(f["max"])
 		env.fog_depth_curve = float(f["curve"])
 		_cam_d = -1.0
@@ -196,9 +199,9 @@ func set_probe(on: bool, parent: Node) -> void:
 		probe.interior = true
 		probe.box_projection = true
 		probe.ambient_mode = ReflectionProbe.AMBIENT_DISABLED
+		probe.reflection_mask = FrameDress.PROBE_BIT   # отражения — только на куклах (пол и трибуны как были, дёшево)
 		probe.size = box.size
 		probe.max_distance = box.size.length()
-		probe.cull_mask = ~FrameDress.RIM_BIT & 0xFFFFF   # куклы всё равно на слое 1 — отражаются как были в момент снимка
 		parent.add_child(probe)
 		probe.global_position = box.get_center()
 	if probe != null:

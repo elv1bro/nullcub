@@ -2,8 +2,10 @@
 ## vsync выключен, авто-масштаб Gfx выключен (без записи в user://gfx.cfg), после прогрева — блоки по block_s секунд попеременно
 ## «новый вид» (рубильник Look вкл) и «как было» (выкл); первые кадры после переключения не считаются. Время кадра — по реальным
 ## часам, медиана и 90-й перцентиль по каждому состоянию за все его блоки (чередование гасит дрейф чужой нагрузки).
-## Аргументы: scene=<res://…tscn> (купол), warm=3, block_s=2.5, blocks=8, skip=12, max_ratio=1.1 (медиана «вкл» / «выкл» выше — exit 1),
-## item=<id пункта Look> — переключать только этот пункт (остальные пункты LookFrame выключены): цена одного пункта.
+## Аргументы: scene=<res://…tscn> (купол), warm=3, block_s=2.5, blocks=8 (под чужой нагрузкой — block_s=1, blocks=40), skip=12, max_ratio=1.1 (медиана «вкл» / «выкл» выше — exit 1),
+## item=<id пункта Look> — переключать только этот пункт (остальные пункты LookFrame выключены): цена одного пункта;
+## bare=1 — в «как было» ещё и прятать кикеры LookFrame (они видимы всегда, чтобы галочка не пересобирала пайплайны): цена против
+## игры совсем без прохода.
 ## Запуск: godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/look_frame_fps.tscn -- "blocks=8"
 extends Node
 
@@ -14,8 +16,10 @@ var blocks := 8
 var skip := 12
 var max_ratio := 1.1
 var item := &""
+var bare := false
 var _inst: Node
 var _times := {true: [], false: []}
+var _rcpu := {true: [], false: []}   # время рендера на CPU (viewport_get_measured_render_time_cpu); GPU-время на Metal не читается (0)
 var _state := true
 var _t_block := 0.0
 var _block := -1
@@ -39,12 +43,15 @@ func _ready() -> void:
 				"skip": skip = int(kv[1])
 				"max_ratio": max_ratio = float(kv[1])
 				"item": item = StringName(kv[1])
+				"bare": bare = kv[1] == "1"
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	Engine.max_fps = 0
 	var gfx := get_node_or_null("/root/Gfx")
 	if gfx != null:
 		gfx.auto_scale = false
 		gfx.set_preset(String(gfx.preset), false)
+	get_window().scaling_3d_scale = 1.0   # 3D в полный размер окна на любом экране (Gfx на 1×-мониторе дал бы половину)
 	seed(3)
 	_look().set_master(true)
 	if item != &"":
@@ -53,8 +60,9 @@ func _ready() -> void:
 	_inst = (load(scene_path) as PackedScene).instantiate()
 	add_child(_inst)
 	_t0 = Time.get_ticks_msec() / 1000.0
-	print("=== LOOK FRAME FPS: %s, %s, render %s ===" % [scene_path.get_file(), RenderingServer.get_current_rendering_method(),
-		str(gfx.call("info")["render_size"]) if gfx != null else "?"])
+	var win := get_window()
+	print("=== LOOK FRAME FPS: %s, %s, 3D %dx%d ===" % [scene_path.get_file(), RenderingServer.get_current_rendering_method(),
+		int(win.size.x * win.scaling_3d_scale), int(win.size.y * win.scaling_3d_scale)])
 
 
 func _look() -> Node:
@@ -84,6 +92,9 @@ func _process(_dt: float) -> void:
 			_look().set_on(item, _state)
 		else:
 			_look().set_master(_state)
+		if bare:
+			for l in get_node("/root/LookFrame").get("rim_lights"):
+				(l as Node3D).visible = _state
 		_t_block = t
 		_skip_left = skip
 		return
@@ -91,6 +102,7 @@ func _process(_dt: float) -> void:
 		_skip_left -= 1
 		return
 	(_times[_state] as Array).append(ms)
+	(_rcpu[_state] as Array).append(RenderingServer.viewport_get_measured_render_time_cpu(get_viewport().get_viewport_rid()))
 
 
 func _physics_process(_dt: float) -> void:
@@ -125,6 +137,9 @@ static func _stats(a: Array) -> Dictionary:
 func _finish() -> void:
 	_done = true
 	_look().set_master(true)
+	if bare:
+		for l in get_node("/root/LookFrame").get("rim_lights"):
+			(l as Node3D).visible = true
 	if item != &"":
 		for it in _ids():
 			_look().set_on(it, true)
@@ -133,7 +148,10 @@ func _finish() -> void:
 	var ratio := float(on["med"]) / maxf(float(off["med"]), 0.001)
 	print("  new look (on):  n=%d  median %.2f ms (%.1f fps)  p90 %.2f ms" % [on["n"], on["med"], 1000.0 / maxf(on["med"], 0.001), on["p90"]])
 	print("  as before (off): n=%d  median %.2f ms (%.1f fps)  p90 %.2f ms" % [off["n"], off["med"], 1000.0 / maxf(off["med"], 0.001), off["p90"]])
-	print("  ratio on/off %.3f (limit %.2f)  item %s  load %s" % [ratio, max_ratio, item if item != &"" else "all", _load()])
+	var r_on := _stats(_rcpu[true])
+	var r_off := _stats(_rcpu[false])
+	print("  render CPU: on %.2f ms, off %.2f ms (медианы)" % [r_on["med"], r_off["med"]])
+	print("  ratio on/off %.3f (limit %.2f)  item %s%s  load %s" % [ratio, max_ratio, item if item != &"" else "all", " bare" if bare else "", _load()])
 	var ok: bool = ratio <= max_ratio and int(on["n"]) > 30 and int(off["n"]) > 30
 	print("=== %s ===" % ("OK" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)

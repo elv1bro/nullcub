@@ -3,8 +3,10 @@
 ## поверхности (части кукол и подвижные тела пропускаются), квадрат пятна ложится в плоскость попадания; сила и размер — по
 ## расстоянию (у пола стоящая кукла — полное пятно, выше — бледнее и шире; у стены — только вплотную). Пятно — экранная декаль
 ## contact_shadow.gdshader (множит итоговый цвет по глубине сцены; Decal меняет только альбедо — на тёмном блестящем полу купола
-## его не видно, проверено 06.10). Лучи и расстановка — в физическом тике (квадрат сглаживается интерполяцией физики, телепорт —
-## reset_physics_interpolation). Четвёртое пятно — «за спиной»: квадрат в слое z ∈ BACK_Z ± BACK_H позади плоскости боя, без луча
+## его не видно, проверено 06.10). Лучи — раз в RAY_EVERY физических тиков на куклу (со сдвигом по куклам; исключены только свои части,
+## чужая кукла или летящий пропс — повтором), между ними квадрат едет за центром масс по найденной плоскости; расстановка — в
+## физическом тике (сглаживается интерполяцией физики, телепорт — reset_physics_interpolation). Было 0,9 мс на тик в стычке 3 на 3
+## (лучи каждый тик с исключением всех частей всех кукол) — стало ~0,1 мс. Четвёртое пятно — «за спиной»: квадрат в слое z ∈ BACK_Z ± BACK_H позади плоскости боя, без луча
 ## (стены Руин и Полигона — декор без коллизий, вплотную за куклой): мягкий тёмный ореол на стене за силуэтом — светлая кукла не
 ## сливается со светлым кирпичом; где за спиной пусто (купол), пятну не на что лечь. Узлы живут здесь (ребёнок LookFrame), в кукле
 ## ничего не добавляется; нокаут — пятна гаснут.
@@ -16,6 +18,8 @@ const DIRS := [Vector3.DOWN, Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD]   # F
 const REACH := [5.5, 1.5, 1.5, 0.0]      # м: дальше луч не ищет поверхность
 const ALPHA := [0.62, 0.38, 0.38, 0.42]  # сила пятна в центре у самой поверхности (доля затемнения)
 const BACK := 3                     # индекс пятна за спиной
+const RAYS := 3                     # пятна по лучам (вниз, влево, вправо)
+const RAY_EVERY := 3                # лучи куклы — раз в 3 физических тика (куклы со сдвигом); между ними — та же плоскость
 const BACK_Z := -0.55               # центр слоя за спиной (кукла — z ∈ ±0.2)
 const BACK_H := 0.33                # полутолщина слоя: от −0.22 до −0.88
 const BACK_R := 1.05                # радиус ореола, м (полроста куклы с запасом)
@@ -31,12 +35,14 @@ var enabled := true:
 		enabled = v
 		if not v:
 			for id in _by_doll:
-				for dc in _by_doll[id]:
+				for dc in _by_doll[id]["q"]:
 					(dc as MeshInstance3D).visible = false
 					(dc as MeshInstance3D).set_meta("a", 0.0)
+					(dc as MeshInstance3D).set_instance_shader_parameter("strength", 0.0)
 var _mesh: PlaneMesh
 var _mat: ShaderMaterial
-var _by_doll := {}   # instance_id куклы → [MeshInstance3D × 4]
+var _by_doll := {}   # instance_id куклы → {"q": [MeshInstance3D × 4], "rids": RID своих частей, "nparts", "planes": [[точка, нормаль] | null × 3], "cast"}
+var _query: PhysicsRayQueryParameters3D
 
 
 func _ready() -> void:
@@ -53,33 +59,46 @@ func _physics_process(_dt: float) -> void:
 	if not enabled or not is_inside_tree():
 		return
 	var dolls := get_tree().get_nodes_in_group("dolls")
-	var exclude: Array[RID] = []
-	for d in dolls:
-		if d is Doll:
-			for b in (d as Doll).parts.values():
-				if b is CollisionObject3D and is_instance_valid(b):
-					exclude.append((b as CollisionObject3D).get_rid())
 	var space := get_world_3d().direct_space_state
+	var tick := Engine.get_physics_frames()
 	var seen := {}
+	var k := 0
 	for d in dolls:
 		if not d is Doll or not (d as Node).is_inside_tree():
 			continue
 		var doll := d as Doll
 		var id := doll.get_instance_id()
 		seen[id] = true
-		var decs: Array = _ensure(id)
+		var st: Dictionary = _ensure(id)
 		var live := doll.alive and doll.visible and doll.parts.has("Torso")
 		var com := doll.centre_of_mass() if live else Vector3.ZERO
-		for i in DIRS.size():
-			_place(decs[i] as MeshInstance3D, i, space, com, exclude, live)
+		if live and int(st["nparts"]) != doll.parts.size():
+			var rids: Array[RID] = []
+			for b in doll.parts.values():
+				if b is CollisionObject3D and is_instance_valid(b):
+					rids.append((b as CollisionObject3D).get_rid())
+			st["rids"] = rids
+			st["nparts"] = doll.parts.size()
+		var fresh := live and ((tick + k) % RAY_EVERY == 0 or not bool(st["cast"]))
+		var planes: Array = st["planes"]
+		var qs: Array = st["q"]
+		for i in RAYS:
+			if fresh:
+				var hit := _cast(space, com, DIRS[i] * REACH[i], st["rids"])
+				var ok: bool = not hit.is_empty() and (hit["normal"] as Vector3).dot(-DIRS[i]) > 0.6   # поверхность смотрит на куклу
+				planes[i] = [hit["position"], hit["normal"]] if ok else null
+			_place(qs[i] as MeshInstance3D, i, com, planes[i] if live else null)
+		_place_back(qs[BACK] as MeshInstance3D, com, live)
+		st["cast"] = st["cast"] or fresh
+		k += 1
 	for id in _by_doll.keys():
 		if not seen.has(id):
-			for dc in _by_doll[id]:
+			for dc in _by_doll[id]["q"]:
 				(dc as Node).queue_free()
 			_by_doll.erase(id)
 
 
-func _ensure(id: int) -> Array:
+func _ensure(id: int) -> Dictionary:
 	if _by_doll.has(id):
 		return _by_doll[id]
 	var arr: Array = []
@@ -95,53 +114,76 @@ func _ensure(id: int) -> Array:
 		dc.visible = false
 		add_child(dc)
 		arr.append(dc)
-	_by_doll[id] = arr
-	return arr
+	var empty_rids: Array[RID] = []
+	var st := {"q": arr, "rids": empty_rids, "nparts": -1, "planes": [null, null, null], "cast": false}
+	_by_doll[id] = st
+	return st
 
 
-func _place(dc: MeshInstance3D, i: int, space: PhysicsDirectSpaceState3D, com: Vector3, exclude: Array[RID], live: bool) -> void:
+## Пятно по плоскости, найденной лучом (раз в RAY_EVERY тиков): между лучами квадрат едет за центром масс по той же плоскости.
+func _place(dc: MeshInstance3D, i: int, com: Vector3, plane: Variant) -> void:
 	var target := 0.0
-	var hit := {}
-	if live and i == BACK:
-		target = ALPHA[i]
-		var d := BACK_R * 2.0
-		dc.global_transform = Transform3D(Basis(Vector3.RIGHT * d, Vector3.BACK, Vector3.DOWN * d), Vector3(com.x, com.y, BACK_Z))
-		if not dc.visible:
-			dc.reset_physics_interpolation()
-	elif live:
-		hit = _cast(space, com, DIRS[i] * REACH[i], exclude)
-	if not hit.is_empty():
-		var n: Vector3 = hit["normal"]
-		var dist := com.distance_to(hit["position"])
-		if n.dot(-DIRS[i]) > 0.6:   # поверхность смотрит на куклу (пол — вверх, стена — к ней)
+	if plane != null:
+		var p0: Vector3 = plane[0]
+		var n: Vector3 = plane[1]
+		var dist := (com - p0).dot(n)   # по нормали до плоскости
+		if dist > -0.2 and dist < REACH[i] + 0.3:
+			dist = maxf(dist, 0.0)
 			var t := clampf((dist - STAND_D) / (REACH[i] - STAND_D), 0.0, 1.0) if i == 0 else clampf(dist / REACH[i], 0.0, 1.0)
 			target = ALPHA[i] * pow(1.0 - t, 1.5)
 			var r := R0 + R_PER_M * dist
 			var x := n.cross(Vector3.BACK) if absf(n.z) < 0.9 else n.cross(Vector3.RIGHT)
 			x = x.normalized()
-			dc.global_transform = Transform3D(Basis(x * r * 2.0, n, x.cross(n) * r * 2.0), hit["position"] + n * 0.01)
+			dc.transform = Transform3D(Basis(x * r * 2.0, n, x.cross(n) * r * 2.0), com - n * dist + n * 0.01)
 			if not dc.visible:
 				dc.reset_physics_interpolation()
-	var a := lerpf(float(dc.get_meta("a")), target, SMOOTH) if dc.visible else target
+	_fade(dc, target)
+
+
+func _place_back(dc: MeshInstance3D, com: Vector3, live: bool) -> void:
+	var target := 0.0
+	if live:
+		target = ALPHA[BACK]
+		var d := BACK_R * 2.0
+		dc.transform = Transform3D(Basis(Vector3.RIGHT * d, Vector3.BACK, Vector3.DOWN * d), Vector3(com.x, com.y, BACK_Z))
+		if not dc.visible:
+			dc.reset_physics_interpolation()
+	_fade(dc, target)
+
+
+func _fade(dc: MeshInstance3D, target: float) -> void:
+	var a0 := float(dc.get_meta("a"))
+	var a := lerpf(a0, target, SMOOTH) if dc.visible else target
 	if a < 0.01:
 		a = 0.0
-	dc.set_meta("a", a)
-	dc.set_instance_shader_parameter("strength", a)
-	dc.visible = a > 0.0
+	if absf(a - a0) > 0.002:
+		dc.set_meta("a", a)
+		dc.set_instance_shader_parameter("strength", a)
+	var v := a > 0.0
+	if dc.visible != v:
+		dc.visible = v
 
 
-## Луч до статичной поверхности: подвижные тела (оружие, пропсы в полёте) пропускаются — до двух повторов.
-static func _cast(space: PhysicsDirectSpaceState3D, from: Vector3, ray: Vector3, exclude: Array[RID]) -> Dictionary:
-	var ex := exclude.duplicate()
+## Луч до статичной поверхности: свои части куклы исключены сразу, подвижные тела (чужая кукла, оружие, пропсы в полёте) — повтором
+## (до двух).
+func _cast(space: PhysicsDirectSpaceState3D, from: Vector3, ray: Vector3, rids: Array[RID]) -> Dictionary:
+	if _query == null:
+		_query = PhysicsRayQueryParameters3D.new()
+		_query.collide_with_areas = false
+	_query.from = from
+	_query.to = from + ray
+	_query.exclude = rids
+	var ex: Array[RID] = rids
 	for k in 3:
-		var q := PhysicsRayQueryParameters3D.create(from, from + ray, 0xFFFFFFFF, ex)
-		q.collide_with_areas = false
-		var hit := space.intersect_ray(q)
+		var hit := space.intersect_ray(_query)
 		if hit.is_empty():
 			return {}
 		var col: Object = hit.get("collider")
 		if col is RigidBody3D and not (col as RigidBody3D).freeze:
+			if ex == rids:
+				ex = rids.duplicate()
 			ex.append((col as RigidBody3D).get_rid())
+			_query.exclude = ex
 			continue
 		return hit
 	return {}
@@ -151,7 +193,7 @@ static func _cast(space: PhysicsDirectSpaceState3D, from: Vector3, ray: Vector3,
 func visible_count() -> int:
 	var n := 0
 	for id in _by_doll:
-		for dc in _by_doll[id]:
+		for dc in _by_doll[id]["q"]:
 			n += int((dc as MeshInstance3D).visible)
 	return n
 
@@ -159,5 +201,5 @@ func visible_count() -> int:
 func decal_count() -> int:
 	var n := 0
 	for id in _by_doll:
-		n += (_by_doll[id] as Array).size()
+		n += (_by_doll[id]["q"] as Array).size()
 	return n

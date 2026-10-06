@@ -8,7 +8,7 @@
 ##            frame_backdrop — фон отступает: туман глубины за плоскостью боя, цветокоррекция, фон-параллакс темнее — FrameArena;
 ##            frame_lamps    — полосы ламп купола и спорт-зала на 38 % тише — FrameArena;
 ##   Пластик: plastic_coat   — лак (clearcoat) на краске и пластике кита — FrameDress;
-##            plastic_probe  — ReflectionProbe интерьера купола и спорт-зала (один снимок) — FrameArena.
+##            plastic_probe  — ReflectionProbe интерьера купола и спорт-зала (один снимок, отражения только на куклах) — FrameArena.
 ## Применяется и снимается СРАЗУ в обработчике Look.changed (снимки «до / после» снимаются на паузе дерева). Куклы — группа "dolls":
 ## новая кукла одевается в ближайший кадр (по одной за кадр), раз в RESCAN_S — пересмотр подписи мешей и материалов (SquadLook меняет
 ## меши по классу, _recolor — цвет команды, возрождение — новая кукла). Арены — WorldEnvironment сцен из FrameArena.PROFILES.
@@ -24,7 +24,7 @@ const ITEMS := [
 	[&"plastic_coat", "Лак на краске и пластике", "Пластик"],
 	[&"plastic_probe", "Отражения арены", "Пластик"],
 ]
-const RESCAN_S := 1.0
+const RESCAN_S := 1.0                # новые куклы и уход кукол; подпись материалов — по одной кукле за кадр
 const RIM_COLOUR := Color(0.8, 0.88, 1.0)
 const RIM_ENERGY := 0.9
 const RIM_SPECULAR := 0.9
@@ -39,6 +39,8 @@ var rim_lights: Array[DirectionalLight3D] = []
 var arenas: Array = []              # FrameArena
 var _dressed := {}                  # instance id куклы → {"sig": int, "rim": bool, "glow": bool, "coat": bool}
 var _queue: Array = []              # куклы, которые надо (пере)одеть, по одной за кадр
+var _scan_list: Array = []          # куклы на проверку подписи, по одной за кадр
+var _new_meshes: Array = []         # [кукла, меш] — новые меши одетых кукол, одеваются в следующем кадре
 var _rescan_t := 0.0
 var _look: Node
 var _items_added := false
@@ -64,6 +66,7 @@ func _ready() -> void:
 		add_child(l)
 		rim_lights.append(l)
 	shadows.enabled = active() and on(&"frame_shadow")
+	_update_rim_light()
 	get_tree().node_added.connect(_on_node_added)
 	for n in get_tree().root.find_children("*", "WorldEnvironment", true, false):
 		_add_we.call_deferred(n)
@@ -105,6 +108,50 @@ func _on_node_added(n: Node) -> void:
 		_add_we.call_deferred(n)   # environment ставится уже после add_child (как у Gfx)
 	elif n is Doll and not _items_added:
 		_doll_added.call_deferred(n)   # группу "dolls" площадки дают и после add_child
+	elif n is MeshInstance3D and not _dressed.is_empty():
+		_mesh_added(n)
+
+
+## Новый меш внутри одетой куклы (SquadLook сменил класс, деталь прикрутили, оружие в руке): одеть только его — в следующем кадре
+## (материал ему ставят уже после add_child), без обхода всей куклы.
+func _mesh_added(n: Node) -> void:
+	if not FrameDress.eligible(n) and not (n is MeshInstance3D and (n as MeshInstance3D).mesh == null):
+		return
+	var p := n.get_parent()
+	for i in 10:
+		if p == null:
+			return
+		if p is Doll:
+			if _dressed.has(p.get_instance_id()):
+				_new_meshes.append([p, n])
+			return
+		p = p.get_parent()
+
+
+func _dress_new_meshes() -> void:
+	var by_doll := {}
+	for pair in _new_meshes:
+		var d: Variant = pair[0]
+		var m: Variant = pair[1]
+		if is_instance_valid(d) and is_instance_valid(m) and (m as Node).is_inside_tree() and FrameDress.eligible(m):
+			var id := (d as Node).get_instance_id()
+			if not by_doll.has(id):
+				by_doll[id] = [d, []]
+			(by_doll[id][1] as Array).append(m)
+	_new_meshes.clear()
+	for id in by_doll:
+		var d: Node = by_doll[id][0]
+		var list: Array = by_doll[id][1]
+		var st: Dictionary = _dressed.get(id, {})
+		if st.is_empty():
+			continue
+		FrameDress.set_rim(d, on(&"frame_rim"), list)
+		FrameDress.set_glow(d, on(&"frame_glow"), st.get("colour", colour_of(d)), list)
+		FrameDress.set_coat(d, on(&"plastic_coat"), list)
+		FrameDress.set_layer(d, FrameDress.PROBE_BIT, on(&"plastic_probe"), list)
+		var meshes: Array = st.get("meshes", [])
+		meshes.append_array(list)
+		st["sig"] = _signature(d, meshes)
 
 
 ## Первая кукла боя — пункты в панели (и в headless: проба вёрстки открывает панель над куполом).
@@ -147,6 +194,7 @@ func _on_look(id: StringName, v: bool) -> void:
 			for d in _dolls():
 				_dress(d, id, v)
 			_update_rim_light()
+			return
 		&"frame_shadow":
 			shadows.enabled = v
 		&"frame_backdrop":
@@ -158,6 +206,8 @@ func _on_look(id: StringName, v: bool) -> void:
 		&"plastic_probe":
 			for a in arenas:
 				(a as FrameArena).set_probe(v, self)
+			for d in _dolls():
+				_dress(d, id, v)
 
 
 func _process(delta: float) -> void:
@@ -167,11 +217,20 @@ func _process(delta: float) -> void:
 	if _rescan_t <= 0.0:
 		_rescan_t = RESCAN_S
 		_rescan()
-	while not _queue.is_empty():
+	if not _new_meshes.is_empty():
+		_dress_new_meshes()
+	var done := false
+	while not _queue.is_empty() and not done:   # одеть — одну куклу за кадр
 		var d: Variant = _queue.pop_front()
 		if d is Doll and is_instance_valid(d) and (d as Node).is_inside_tree():
 			_dress_all(d)
-			break
+			done = true
+	while not done and not _scan_list.is_empty():   # проверить подпись — тоже одну за кадр (без всплеска раз в секунду)
+		var d: Variant = _scan_list.pop_back()
+		if d is Doll and is_instance_valid(d) and (d as Node).is_inside_tree():
+			if _stale(d) and not _queue.has(d):
+				_queue.append(d)
+			done = true
 	var cam := get_viewport().get_camera_3d()
 	for a in arenas:
 		if (a as FrameArena).valid():
@@ -188,30 +247,41 @@ func _dolls() -> Array:
 	return out
 
 
-## Пересмотр: новые куклы и куклы, у которых сменились меши или материалы, — в очередь; ушедшие — из учёта.
+## Пересмотр раз в RESCAN_S: новые куклы — сразу в очередь, остальные — в список проверки подписи (по одной за кадр); ушедшие — из учёта.
 func _rescan() -> void:
 	var seen := {}
 	var dolls := _dolls()
 	if not dolls.is_empty():
 		_ensure_items()
+	_scan_list.clear()
 	for d in dolls:
 		var id := (d as Node).get_instance_id()
 		seen[id] = true
-		var st: Dictionary = _dressed.get(id, {})
-		if st.is_empty() or int(st["sig"]) != _signature(d) or bool(st["rim"]) != on(&"frame_rim") \
-				or bool(st["glow"]) != on(&"frame_glow") or bool(st["coat"]) != on(&"plastic_coat"):
+		if not _dressed.has(id):
 			if not _queue.has(d):
 				_queue.append(d)
+		else:
+			_scan_list.append(d)
 	for id in _dressed.keys():
 		if not seen.has(id):
 			_dressed.erase(id)
 	_update_rim_light()
 
 
-## Подпись куклы: число мешей и их override-материалы (смена класса, цвета команды, новая деталь).
-func _signature(d: Node) -> int:
+## Одета не так: сменились материалы (цвет команды) или галочки. Новые меши ловит _mesh_added; подпись — по мешам с прошлого
+## одевания, без обхода дерева куклы.
+func _stale(d: Node) -> bool:
+	var st: Dictionary = _dressed.get(d.get_instance_id(), {})
+	return st.is_empty() or int(st["sig"]) != _signature(d, st.get("meshes", [])) or bool(st["rim"]) != on(&"frame_rim") \
+		or bool(st["glow"]) != on(&"frame_glow") or bool(st["coat"]) != on(&"plastic_coat") or bool(st["probe"]) != on(&"plastic_probe")
+
+
+## Подпись куклы: меши и их override-материалы (meshes — готовый список, иначе обход дерева).
+func _signature(d: Node, meshes: Array = []) -> int:
 	var h := 0
-	for mi in FrameDress.meshes(d):
+	for mi in (meshes if not meshes.is_empty() else FrameDress.meshes(d)):
+		if not is_instance_valid(mi):
+			continue
 		var m := mi as MeshInstance3D
 		h = (h * 31 + m.get_instance_id()) & 0x7FFFFFFF
 		for s in m.mesh.get_surface_count():
@@ -221,13 +291,16 @@ func _signature(d: Node) -> int:
 
 
 func _dress_all(d: Node) -> void:
-	_dress(d, &"frame_rim", on(&"frame_rim"))
-	_dress(d, &"frame_glow", on(&"frame_glow"))
-	_dress(d, &"plastic_coat", on(&"plastic_coat"))
-	_dressed[d.get_instance_id()] = {"sig": _signature(d), "rim": on(&"frame_rim"), "glow": on(&"frame_glow"), "coat": on(&"plastic_coat")}
+	_dress(d, &"frame_rim", on(&"frame_rim"), false)
+	_dress(d, &"frame_glow", on(&"frame_glow"), false)
+	_dress(d, &"plastic_coat", on(&"plastic_coat"), false)
+	_dress(d, &"plastic_probe", on(&"plastic_probe"), false)
+	var meshes := FrameDress.meshes(d)
+	_dressed[d.get_instance_id()] = {"sig": _signature(d, meshes), "meshes": meshes, "colour": colour_of(d), "rim": on(&"frame_rim"),
+		"glow": on(&"frame_glow"), "coat": on(&"plastic_coat"), "probe": on(&"plastic_probe")}
 
 
-func _dress(d: Node, id: StringName, v: bool) -> void:
+func _dress(d: Node, id: StringName, v: bool, record := true) -> void:
 	match id:
 		&"frame_rim":
 			FrameDress.set_rim(d, v)
@@ -235,10 +308,12 @@ func _dress(d: Node, id: StringName, v: bool) -> void:
 			FrameDress.set_glow(d, v, colour_of(d))
 		&"plastic_coat":
 			FrameDress.set_coat(d, v)
+		&"plastic_probe":
+			FrameDress.set_layer(d, FrameDress.PROBE_BIT, v)
 	var st: Dictionary = _dressed.get(d.get_instance_id(), {})
-	if not st.is_empty():
-		st[{&"frame_rim": "rim", &"frame_glow": "glow", &"plastic_coat": "coat"}[id]] = v
-		st["sig"] = _signature(d)
+	if record and not st.is_empty():
+		st[{&"frame_rim": "rim", &"frame_glow": "glow", &"plastic_coat": "coat", &"plastic_probe": "probe"}[id]] = v
+		st["sig"] = _signature(d, st.get("meshes", []))
 
 
 ## Цвет куклы для свечения ядра: краска цвета игрока / команды (Shirt*), иначе — цвет игрока по номеру.
@@ -252,21 +327,29 @@ static func colour_of(d: Node) -> Color:
 	return HitJuice.paint_colour(d)
 
 
+## Кикеры видимы всегда, пока проход работает (и в меню): число направленных источников в кадре не меняется — галочка «контровой
+## свет» не пересобирает пайплайны всех материалов сцены; выключение — снятый бит RIM_BIT у кукол (кикерам светить не на что).
 func _update_rim_light() -> void:
 	if rim_lights.is_empty():
 		return
-	var show := active() and on(&"frame_rim") and not _dolls().is_empty()
 	var mult := 1.0
 	for a in arenas:
 		if (a as FrameArena).valid():
 			mult = (a as FrameArena).rim_mult()
 	for l in rim_lights:
 		l.light_energy = RIM_ENERGY * mult
-		l.visible = show
+		l.visible = active()
 
 
+## Контровой свет сейчас ложится на кукол: кикеры видимы и у кукол есть бит слоя.
 func rim_visible() -> bool:
-	return not rim_lights.is_empty() and rim_lights[0].visible
+	if rim_lights.is_empty() or not rim_lights[0].visible:
+		return false
+	for d in _dolls():
+		for mi in FrameDress.meshes(d):
+			if (mi as MeshInstance3D).layers & FrameDress.RIM_BIT:
+				return true
+	return false
 
 
 ## Для проб: сколько кукол одето и в каком состоянии.
