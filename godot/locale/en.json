@@ -2124,5 +2124,7 @@
 	"АРЕНА": "ARENA",
 	"ГРАФИКА: %s  ▸": "GRAPHICS: %s  ▸",
 	"ИГРАТЬ  ▸": "PLAY  ▸",
-	"↑↓ · W S — выбор     ENTER — играть     ESC — в гараж     L — памятка клавиш": "↑↓ · W S — select     ENTER — play     ESC — garage     L — key reference"
+	"↑↓ · W S — выбор     ENTER — играть     ESC — в гараж     L — памятка клавиш": "↑↓ · W S — select     ENTER — play     ESC — garage     L — key reference",
+	"Z — ПЫЛЬ: ВКЛ": "Z — DUST: ON",
+	"Z — ПЫЛЬ: ВЫКЛ": "Z — DUST: OFF"
 }

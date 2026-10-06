@@ -32,7 +32,10 @@ const DRIFT_BASE := 0.06           # м/с: дрейф пыли при слаб�
 const DRIFT_PER_G := 0.9           # м/с на 1 G: при 0.20 G — ≈ 0.24 м/с
 const PLAIN_BREEZE := Vector3(0.1, 0.0, 0.0)
 const WAVE_LIFE_S := 1.9
-const WAVE_POWER := {"light": 0.0, "heavy": 0.55, "crit": 1.0, "ko": 0.85, "ko_crit": 1.0}
+## Сила волны (кольца сетки на пузыре + толчок пыли) — по урону удара (автор 06.10: «зависит от урона»): слабее WAVE_DMG.x HP — без
+## кольца, к WAVE_DMG.y — полная; крит / KO не слабее WAVE_FLOOR своего уровня.
+const WAVE_DMG := Vector2(7.0, 26.0)
+const WAVE_FLOOR := {"crit": 0.85, "ko": 0.7, "ko_crit": 1.0}
 const SLAM_POWER_SPEED := Vector2(7.0, 16.0)   # м/с: удар о статику — от слабой волны до 0.6
 const SHIFT_S := 1.0               # с: проход волны по кадру
 const SHIFT_PUSH := 2.4            # м/с²: толчок пыли по новому полю, пока идёт волна
@@ -120,6 +123,23 @@ func _is_on(id: StringName) -> bool:
 
 func dust_id() -> StringName:
 	return &"null_dust_plain" if kind == KIND_PLAIN else &"null_dust"
+
+
+## Z («Я») — пыль этой арены вкл / выкл (автор 06.10: «давай попробуем отключаемой»; P занята третьим каналом поршней I/O/P).
+## Ctrl/Cmd+Z не трогаем — это отмена в мастерской. Галочка пишется в user://look.cfg, как из панели «ВИД».
+const KEY_DUST := KEY_Z
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	var k := event as InputEventKey
+	if k == null or not k.pressed or k.echo or k.physical_keycode != KEY_DUST or k.ctrl_pressed or k.meta_pressed or k.alt_pressed:
+		return
+	if _look == null:
+		return
+	var id := dust_id()
+	_look.call("toggle", id)
+	_look.call("toast", tr("Z — ПЫЛЬ: ВКЛ") if bool(_look.call("checked", id)) else tr("Z — ПЫЛЬ: ВЫКЛ"))
+	get_viewport().set_input_as_handled()
 
 
 # --- сборка ---------------------------------------------------------------------------------------------------------------------
@@ -421,9 +441,14 @@ func _poll_matches() -> void:
 
 
 func _on_hit_fx(ctx: Dictionary) -> void:
-	var p := float(WAVE_POWER.get(String(ctx.get("tier", "")), 0.0))
+	var p := wave_power(float(ctx.get("damage", 0.0)), String(ctx.get("tier", "")))
 	if p > 0.0 and ctx.get("position") is Vector3:
 		add_wave(ctx["position"], p)
+
+
+static func wave_power(damage: float, tier: String) -> float:
+	var p := smoothstep(WAVE_DMG.x, WAVE_DMG.y, damage)
+	return maxf(p, float(WAVE_FLOOR.get(tier, 0.0)))
 
 
 func _on_env_slam(ctx: Dictionary) -> void:
