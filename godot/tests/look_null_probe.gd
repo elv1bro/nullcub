@@ -63,6 +63,10 @@ func _dome() -> void:
 	var pg: Node = (load("res://scenes/playground_null_hall.tscn") as PackedScene).instantiate()
 	add_child(pg)
 	await _frames(5)
+	# ожидания ниже — в кадрах по 1/60 с (волна смены поля 1.0–1.3 с); без --fixed-fps headless-кадр короче или длиннее → ложный FAIL.
+	# Флаг движок забирает себе (в get_cmdline_args его нет) — узнаём по delta
+	_check("fixed_fps", absf(get_process_delta_time() - 1.0 / 60.0) < 1e-6,
+		"запуск с --fixed-fps 60 (иначе тайминги волны плывут), delta %.4f" % get_process_delta_time())
 	var hall := pg.get_node("NullHall") as NullHallArena
 	var nl := hall.get_node_or_null("NullLook") as NullLook
 	var grp := tr("Поле NULL")
