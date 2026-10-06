@@ -5,6 +5,7 @@
 ##   • справа — таблица мест сейчас (место, имя, пройденная доля трассы или время финиша);
 ##   • над гонщиками — имя и полоска HP; контрольная точка — диктор «КОНТРОЛЬНАЯ ТОЧКА · N», кольцо — «+ЗАРЯД», финиш — «ФИНИШ! МЕСТО N»;
 ##   • выбыл — «ВОЗВРАТ ЧЕРЕЗ N» и причина (KO, яма, застрял, Q); подсказка клавиш первые HINT_S секунд; тосты клавиш — снизу;
+##   • «я» в поле гравитации (TrackZone) — строка снизу, что это поле делает и что жать (ZONE_HINTS по ключу силы поля);
 ##   • конец — табличка: кто победил, время, таблица мест (время финиша или пройденная доля, нокауты, возвраты), лучшее время.
 ## bind(match, playground) — подписка на TrackMatch по именам сигналов.
 class_name TrackHud
@@ -15,6 +16,13 @@ const SECTION_NAMES := ["РАЗГОН И КОЛЬЦА", "ПРЕССЫ И МАГ�
 ## Цвета участков на полоске (как материалы карты).
 const SECTION_COLOURS := [Color(0.9, 0.75, 0.5), Color(0.75, 0.6, 0.5), Color(0.55, 0.78, 0.9), Color(0.5, 0.62, 1.0),
 	Color(0.95, 0.45, 0.38), Color(0.75, 0.72, 0.66)]
+## Подсказка, пока «я» в поле (ключ — g_key поля TrackZone; ключи перевода — tr() в месте показа).
+const ZONE_HINTS := {
+	"TRACK_SIDE_G": "ВСТРЕЧНОЕ ПОЛЕ — сносит назад",
+	"TRACK_UP_G": "ПОЛЕ ВВЕРХ — в потолке сетка, держись ниже",
+	"TRACK_HEAVY_G": "ТЯЖЁЛАЯ ЗОНА — вверх только с ускорением (Shift, Заряд)",
+	"TRACK_PIT_G": "ЯМА ТЯНЕТ ВНИЗ — мосты рвутся, бочки взрываются",
+}
 const STRIP_W := 1100.0
 const STRIP_TOP := 12.0
 const STRIP_H := 10.0
@@ -43,6 +51,8 @@ var marks: Control
 var hint: Label
 var respawn_label: Label
 var respawn_why: Label
+var zone_label: Label
+var _zones: Array = []           # TrackZone карты
 var toast_label: Label
 var end_panel: PanelContainer
 var end_title: Label
@@ -203,6 +213,17 @@ func _build_bottom() -> void:
 	respawn_label.offset_bottom = 120.0
 	respawn_label.visible = false
 	root.add_child(respawn_label)
+	zone_label = _label("ZoneHint", 26, Color(1.0, 0.86, 0.62))
+	zone_label.anchor_left = 0.5
+	zone_label.anchor_right = 0.5
+	zone_label.anchor_top = 1.0
+	zone_label.anchor_bottom = 1.0
+	zone_label.offset_left = -700.0
+	zone_label.offset_right = 700.0
+	zone_label.offset_top = -176.0
+	zone_label.offset_bottom = -136.0
+	zone_label.visible = false
+	root.add_child(zone_label)
 	respawn_why = _label("RespawnWhy", 26, Color(1.0, 0.85, 0.6))
 	respawn_why.set_anchors_preset(Control.PRESET_CENTER)
 	respawn_why.offset_left = -500.0
@@ -282,6 +303,10 @@ func bind(m: TrackMatch, pg: Node = null) -> void:
 	hint.text = tr("До финиша первым · WASD — лететь · Shift — ускорение (Заряд) · Q — к контрольной точке · U — второй игрок · K — боты · R — заново")
 	refresh_names()
 	show_best(_best(), false)
+	_zones.clear()
+	var ar: Node = m.arena_node if m.arena_node != null else m.get_tree().get_first_node_in_group("arena")
+	if ar != null:
+		_zones = ar.find_children("*", "TrackZone", true, false)
 
 
 func _best() -> float:
@@ -433,6 +458,15 @@ func _process(delta: float) -> void:
 			l.add_theme_color_override("font_color", _colour(d.player_index).lightened(0.45 if d == me else 0.25))
 		respawn_label.visible = false
 		respawn_why.visible = false
+		zone_label.visible = false
+		if me != null and me.alive and match_node.play_state == "play":
+			var c := me.centre_of_mass()
+			for z in _zones:
+				var tz := z as TrackZone
+				if is_instance_valid(tz) and ZONE_HINTS.has(tz.g_key) and tz.rect().has_point(Vector2(c.x, c.y)):
+					zone_label.text = tr(ZONE_HINTS[tz.g_key])
+					zone_label.visible = true
+					break
 		if me != null and not me.alive and match_node.play_state == "play":
 			var left := match_node.respawn_left(me)
 			if left >= 0.0:

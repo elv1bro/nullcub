@@ -12,7 +12,8 @@
 ##   bots     — гонка четырёх ботов (зёрна seeds, уровень level): доезжают до финиша (все, за ≤ max_s), никто не стоит на месте (в круге
 ##              1.5 м) дольше stuck_s, никто не вылетает за границы карты, места на финише по времени финиша; числа — в info.
 ## Headless:
-##   godot --headless --path godot --fixed-fps 60 res://tests/track_probe.tscn -- "only=build|sections|checks|hazards|bots|grid,level=2,seeds=1+2+3,max_s=240,stuck_s=10,trace=1,out=<json>"
+##   godot --headless --path godot --fixed-fps 60 res://tests/track_probe.tscn -- "only=build|sections|checks|hazards|bots|grid,level=2,levels=1+2+3,seeds=1+2+3,max_s=240,stuck_s=10,trace=1,out=<json>"
+##   (по умолчанию — все разделы, бот-гонка: зерно 1, уровень 2; only=dump,dump=<json> — геометрия для схемы tools/race_track_map.py)
 ## → JSON между === TRACK PROBE === и === OK / FAIL ===, exit 0/1. errors_script — SCRIPT ERROR за прогон (Logger).
 extends Node
 
@@ -55,7 +56,8 @@ func _check(id: String, cond: bool, detail: Variant = "") -> void:
 
 
 func _args() -> Dictionary:
-	var out := {"only": "", "max_s": "240", "stuck_s": "10", "level": "2", "seeds": "1", "trace": "0", "out": "", "sec": "", "branch": ""}
+	var out := {"only": "", "max_s": "240", "stuck_s": "10", "level": "2", "seeds": "1", "trace": "0", "out": "", "sec": "", "branch": "",
+		"dump": "", "levels": ""}
 	for a in OS.get_cmdline_user_args():
 		for part in String(a).split(","):
 			var kv := part.split("=")
@@ -75,6 +77,8 @@ func _ready() -> void:
 	var a := _args()
 	if "grid" in String(a["only"]).split("+"):
 		await _grid()
+	if "dump" in String(a["only"]).split("+"):   # только по запросу: геометрия карты в JSON (схема трассы для документа)
+		await _dump(String(a["dump"]))
 	if _want(a, "build"):
 		await _build()
 	if _want(a, "sections"):
@@ -84,8 +88,11 @@ func _ready() -> void:
 	if _want(a, "hazards"):
 		await _hazards()
 	if _want(a, "bots"):
-		for s in String(a["seeds"]).split("+"):
-			await _bots(int(s), int(a["level"]), float(a["max_s"]), float(a["stuck_s"]), String(a["trace"]) == "1")
+		var lvls: Array = Array(String(a["levels"]).split("+")) if String(a["levels"]) != "" else [a["level"]]
+		for lv in lvls:
+			for s in String(a["seeds"]).split("+"):
+				await _bots(int(s), int(lv), float(a["max_s"]), float(a["stuck_s"]), String(a["trace"]) == "1")
+		_bots_summary()
 	await _unload()
 	var g := ProjectSettings.globalize_path(TrackPlayground.best_path)
 	if FileAccess.file_exists(g):
@@ -292,6 +299,58 @@ func _build() -> void:
 	await _unload()
 
 
+## Геометрия карты в JSON (path): твёрдое (прямоугольники коллизии, sky — невидимое под небом), линия ботов по отрезкам, контрольные
+## точки, поля, сетки KO, прессы, магниты, мосты, бочки, кольца, метки порталов, финиш — для схемы трассы (tools: рисует Python).
+func _dump(path: String) -> void:
+	print("--- dump")
+	await _load(true, 2, 60.0)
+	var ar := pg.arena
+	var out := {"solid": [], "route": [], "cps": [], "zones": [], "grids": [], "presses": [], "magnets": [], "bridges": [], "barrels": [],
+		"rings": [], "portals": [], "finish_x": ar.finish_x(), "sections": ar.sections()}
+	for body in ar.get_node("Solid").get_children():
+		if not (body is StaticBody3D):
+			continue
+		for cs in body.get_children():
+			var sh := (cs as CollisionShape3D).shape as BoxShape3D
+			var c := (cs as Node3D).global_position
+			out["solid"].append([c.x - sh.size.x * 0.5, c.y - sh.size.y * 0.5, sh.size.x, sh.size.y])
+	var rt := ar.route()
+	for sg in rt.segs:
+		var pts: Array = []
+		for p in sg.pts:
+			pts.append([p.x, p.y])
+		out["route"].append({"name": sg.name, "kind": sg.kind, "fork": sg.fork, "pts": pts})
+	for c in ar.checkpoints():
+		out["cps"].append([(c as Node3D).global_position.x, (c as TrackCheckpoint).gate_h, (c as TrackCheckpoint).index])
+	for z in ar.find_children("*", "TrackZone", true, false):
+		var tz := z as TrackZone
+		var r := tz.rect()
+		out["zones"].append([r.position.x, r.position.y, r.size.x, r.size.y, tz.dir.x, tz.dir.y, TrackZone.tuning_g(tz.g_key, tz.g_units)])
+	for g in ar.find_children("*", "TrackGrid", true, false):
+		var r2 := (g as TrackGrid).rect()
+		out["grids"].append([r2.position.x, r2.position.y, r2.size.x, r2.size.y, (g as TrackGrid).kind])
+	for p in ar.presses():
+		out["presses"].append((p as Node3D).global_position.x)
+	for m in ar.magnets():
+		var pole := (m as MagnetMachine).pole_global()
+		out["magnets"].append([pole.x, pole.y])
+	for b in ar.bridges():
+		out["bridges"].append((b as Node3D).global_position.x)
+	for b in ar.barrels():
+		out["barrels"].append((b as Node3D).global_position.x)
+	for r3 in ar.rings():
+		out["rings"].append([(r3 as Node3D).global_position.x, (r3 as Node3D).global_position.y])
+	for s in ar.portal_slots():
+		var n: Vector3 = (s as Node3D).get_meta("normal", Vector3.ZERO)
+		out["portals"].append([(s as Node3D).global_position.x, (s as Node3D).global_position.y, n.x, String((s as Node).name)])
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(out))
+		f.close()
+	print("dump → ", path)
+	await _unload()
+
+
 ## ASCII-карта слоя кукол (|z| ≤ 0.2), шаг 1 м по x и 0.5 м по y: # — статика, ~ — зона KO, R — линия ботов, C — контрольная точка.
 func _grid() -> void:
 	print("--- grid")
@@ -494,6 +553,25 @@ func _checks() -> void:
 	var c2 := p2b.charge
 	_check("ring_charge_once", c1 >= 10.0 + Tuning.TRACK_RING_CHARGE - 1.0 and c2 <= c1 + 1.5,
 		"Заряд 10 → %.1f после кольца, повторно → %.1f" % [c1, c2])
+	# 7) финиш: P3 за линией — место 1; через TRACK_FINISH_WAIT_S — итоги, остальные — по пройденному пути
+	var p3f := _doll(2)
+	tm.state_of(p3f)["cp"] = 5
+	tm.state_of(p3f)["prog"] = tm.total_m() - 10.0
+	_teleport(p3f, Vector3(ar.finish_x() + 2.0, 2.5, 0.0))
+	await _until(func() -> bool: return bool(tm.state_of(_doll(2))["finished"]), 1.0)
+	var t_fin := tm.fight_time
+	var placed := tm.place_of(_doll(2))
+	await _until(func() -> bool: return over_count > 0, Tuning.TRACK_FINISH_WAIT_S + 2.0)
+	var waited := tm.fight_time - t_fin
+	var pl: Array = over_results.get("places", [])
+	var rest_ok := true
+	for i in range(2, pl.size()):
+		rest_ok = rest_ok and tm.progress_of(pl[i - 1] as Doll) >= tm.progress_of(pl[i] as Doll)
+	_check("finish_wait_places", placed == 1 and over_count == 1 and String(over_results.get("end_reason", "")) == "wait"
+		and absf(waited - Tuning.TRACK_FINISH_WAIT_S) < 0.3 and not pl.is_empty() and (pl[0] as Doll) == _doll(2) and rest_ok
+		and int(over_results.get("winner_index", -1)) == 2,
+		"P3 за финишем — место %d; итоги через %.1f с (%s), первый — P%d, остальные по пути: %s" % [placed, waited,
+		String(over_results.get("end_reason", "")), int(over_results.get("winner_index", -1)) + 1, str(rest_ok)])
 	await _unload()
 
 
@@ -605,6 +683,29 @@ func _hazards() -> void:
 	await _unload()
 
 
+## Сводка бот-гонок по уровням: время победителя и последнего (мин–макс), возвраты по причинам, дольше всего на месте.
+func _bots_summary() -> void:
+	var by := {}
+	for k in info.keys():
+		if not String(k).begins_with("bots_s"):
+			continue
+		var lv := String(k).get_slice("_l", 1)
+		var r: Dictionary = info[k]
+		if not by.has(lv):
+			by[lv] = {"races": 0, "winner_s": [INF, -INF], "last_s": [INF, -INF], "stuck_max_s": 0.0, "drops": {"ko": 0, "fall": 0, "stuck": 0}}
+		var b: Dictionary = by[lv]
+		b["races"] = int(b["races"]) + 1
+		var w := float(r["winner_s"])
+		var l := float(r["race_s"])
+		b["winner_s"] = [minf(b["winner_s"][0], w), maxf(b["winner_s"][1], w)]
+		b["last_s"] = [minf(b["last_s"][0], l), maxf(b["last_s"][1], l)]
+		b["stuck_max_s"] = maxf(float(b["stuck_max_s"]), float(r["stuck_max_s"]))
+		for why in ["ko", "fall", "stuck"]:
+			b["drops"][why] = int(b["drops"][why]) + int((r["drops"] as Dictionary).get(why, 0))
+	info["bots_summary"] = by
+	print("  bots summary: " + JSON.stringify(by))
+
+
 ## Разморозить куклу-зрителя и поставить ЦМ в at (управление есть, ввод — у пробы).
 func _unfreeze(d: Doll, at: Vector3) -> Doll:
 	for p in d.parts.values():
@@ -624,6 +725,7 @@ func _bots(seed_v: int, level: int, max_s: float, stuck_s: float, trace: bool) -
 	print("--- bots seed %d level %d" % [seed_v, level])
 	TrackBrain.force_choices = {}
 	await _load(true, level, 3.0, seed_v)
+	tm.finish_wait_s = max_s   # проба ждёт всех (правило «30 с после первого» проверяет checks)
 	var b: AABB = pg.arena.bounds()
 	var anchor: Dictionary = {}
 	var stuck_max := 0.0
@@ -673,9 +775,11 @@ func _bots(seed_v: int, level: int, max_s: float, stuck_s: float, trace: bool) -
 	var per := {}
 	var all_done := true
 	var drops := {"ko": 0, "fall": 0, "stuck": 0, "reset": 0}
+	var where: Array = []
 	for e in tm.journal:
 		if drops.has(String(e["what"])):
 			drops[String(e["what"])] = int(drops[String(e["what"])]) + 1
+			where.append("P%d %s@%.0f с %s" % [int(e["pi"]) + 1, e["what"], float(e["t"]), str(e.get("at", ""))])
 	var res: Dictionary = over_results.get("racers", {})
 	for d in tm.dolls():
 		var pi := (d as Doll).player_index
@@ -699,7 +803,7 @@ func _bots(seed_v: int, level: int, max_s: float, stuck_s: float, trace: bool) -
 		order_ok = order_ok and (places[i] as Doll).player_index == int(fo[i])
 	var key := "bots_s%d_l%d" % [seed_v, level]
 	info[key] = {"race_s": snappedf(tm.fight_time, 0.1), "winner_s": snappedf(float(over_results.get("winner_time", -1.0)), 0.1),
-		"racers": per, "drops": drops, "hits": int(hits["n"]), "stuck_max_s": snappedf(stuck_max, 0.1), "end": String(over_results.get("end_reason", "")),
+		"racers": per, "drops": drops, "drops_at": where, "hits": int(hits["n"]), "stuck_max_s": snappedf(stuck_max, 0.1), "end": String(over_results.get("end_reason", "")),
 		"ms_per_physics_frame": snappedf(wall_ms / maxf(frames, 1), 0.01)}
 	print("  " + JSON.stringify(info[key]))
 	_check(key + "_finish", over_count == 1 and all_done and String(over_results.get("end_reason", "")) == "all",
