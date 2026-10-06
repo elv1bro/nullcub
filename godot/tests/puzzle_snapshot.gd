@@ -1,7 +1,8 @@
 ## Снимки демо «Головоломки вдвоём» (docs/plan-demo/PUZZLE.md; нужно окно):
 ##   godot/tools/godot_nofocus.sh --path godot --resolution 1600x900 res://tests/puzzle_snapshot.tscn -- "out_dir=/abs/dir,rooms=1+2+3+4+5+6,action=1"
-## rooms — общий вид комнат (куклы у входа); action — три кадра в деле: двое несут ящик 60 кг (комната 3), «низ» повёрнут вправо и
-## чугунный ящик на плите на стене (комната 4), взрыв бочки у трещины (комната 6).
+## rooms — общий вид комнат (куклы у входа; 7–8 — с порталами); action — три кадра в деле: двое несут ящик 60 кг (комната 3), «низ»
+## повёрнут вправо и чугунный ящик на плите на стене (комната 4), взрыв бочки у трещины (комната 6); portal=1 — кадры порталов
+## (docs/plan-demo/PORTAL.md): чугунный ящик вылетает из B с разгона (комната 7), пара под током, выход B2, бочка у трещины (комната 8).
 ## Глазами проверить: комната целиком в кадре, плиты с подписью кг, кабели, двери и лампы, знак гравитации, HUD слева сверху.
 extends Node
 
@@ -11,10 +12,12 @@ const TICK := 1.0 / 60.0
 var out_dir := "/tmp"
 var rooms := "1+2+3+4+5+6"
 var action := true
+var portal := false
 var pg: PuzzlePlayground
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS   # снимок на паузе дерева
 	for arg in OS.get_cmdline_user_args():
 		for part in String(arg).split(","):
 			var kv := part.split("=")
@@ -24,12 +27,18 @@ func _ready() -> void:
 				"out_dir": out_dir = kv[1]
 				"rooms": rooms = kv[1]
 				"action": action = kv[1] == "1"
+				"portal": portal = kv[1] == "1"
 	_run.call_deferred()
 
 
 func _shot(name_: String) -> void:
+	# физика на паузе, пока кадр не нарисован: окно за другими окнами macOS притормаживает, и без паузы между «пора снимать» и
+	# отрисовкой проходят десятки физических тиков (летящий ящик успевал долететь)
+	get_tree().paused = true
+	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
+	get_tree().paused = false
 	var path := "%s/%s.png" % [out_dir, name_]
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	img.save_png(path)
@@ -76,7 +85,7 @@ func _run() -> void:
 	await _wait(0.3)
 	for d in pg.players():
 		(d as Doll).external_input = true
-	for i in 6:
+	for i in pg.rooms.size():
 		if not str(i + 1) in rooms.split("+"):
 			continue
 		pg.goto_room(i)
@@ -86,7 +95,58 @@ func _run() -> void:
 		await _carry()
 		await _gravity()
 		await _boom()
+	if portal:
+		await _fling()
+		await _switch()
 	get_tree().quit(0)
+
+
+## Комната 7: чугунный ящик столкнули с полки — через щель A на полу он вылетает из B в левой стене (кадр — в полёте).
+func _fling() -> void:
+	pg.goto_room(6)
+	pg.reset_room()
+	await _wait(2.4)
+	var r := pg.rooms[6]
+	var pair := r.find("Portals") as PortalPair
+	var iron := r.find("Iron") as RigidBody3D
+	_teleport(pg.p1, _at(r, 5.2, 7.0))
+	_teleport(pg.p2, _at(r, -4.0, 1.0))
+	iron.global_position = _at(r, 6.7, 6.6)   # уже за краем полки: падает вдоль правой стены в A
+	iron.linear_velocity = Vector3(0.5, 0, 0)
+	var t0 := pair.transfers
+	for i in int(4.0 / TICK):
+		await get_tree().physics_frame
+		if pair.transfers > t0:
+			break
+	await _wait(0.42)
+	await _shot("portal_fling")
+
+
+## Комната 8: рычаг на B2, P2 на плите (пара под током: A и B2 горят, B1 тускло), бочку роняют в A — кадр, когда она вылетела из B2.
+func _switch() -> void:
+	pg.goto_room(7)
+	pg.reset_room()
+	await _wait(2.4)
+	var r := pg.rooms[7]
+	await _shot("portal_off")
+	var pair := r.find("Portals") as PortalPair
+	(r.find("Lever") as PuzzleLever).set_state(true)
+	_teleport(pg.p2, _at(r, -3.8, 1.0))
+	_teleport(pg.p1, _at(r, 1.0, 3.2))
+	var barrel: RigidBody3D = null
+	for c in r.get_node("Props").get_children():
+		if c is ExplosiveBarrel:
+			barrel = c
+	await _wait(0.8)
+	barrel.global_position = _at(r, 0.2, 1.8)
+	barrel.linear_velocity = Vector3(0, -4.0, 0)
+	var t0 := pair.transfers
+	for i in int(3.0 / TICK):
+		await get_tree().physics_frame
+		if pair.transfers > t0:
+			break
+	await _wait(0.25)
+	await _shot("portal_switch")
 
 
 ## Комната 3: двое несут ящик 60 кг.
