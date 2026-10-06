@@ -222,12 +222,12 @@ func _process(delta: float) -> void:
 	var done := false
 	while not _queue.is_empty() and not done:   # одеть — одну куклу за кадр
 		var d: Variant = _queue.pop_front()
-		if d is Doll and is_instance_valid(d) and (d as Node).is_inside_tree():
+		if is_instance_valid(d) and d is Doll and (d as Node).is_inside_tree():
 			_dress_all(d)
 			done = true
 	while not done and not _scan_list.is_empty():   # проверить подпись — тоже одну за кадр (без всплеска раз в секунду)
 		var d: Variant = _scan_list.pop_back()
-		if d is Doll and is_instance_valid(d) and (d as Node).is_inside_tree():
+		if is_instance_valid(d) and d is Doll and (d as Node).is_inside_tree():
 			if _stale(d) and not _queue.has(d):
 				_queue.append(d)
 			done = true
