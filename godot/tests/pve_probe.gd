@@ -280,6 +280,8 @@ func _r_sweep(i: int, lane := false) -> Dictionary:
 	var x0 := p1.centre_of_mass().x
 	var sw := director.spawn_enemy("sweeper", Vector3(x0 + 4.0, 0.05, 0.0), Vector3.ZERO, 0.3)
 	var br := WaveDirector.brain_of(sw) as SweeperBrain
+	sw.knocked_out.connect(func(_a: Node, rec: Dictionary) -> void: print("    sweeper KO at %.1f s: %s" % [t, rec]))
+	sw.part_detached.connect(func(pn: String, _by: Node) -> void: print("    sweeper lost %s at %.1f s" % [pn, t]))
 	var hp0 := sw.hp
 	var mhp := sw.max_hp
 	var pit_x := -6.0   # «у края»: полметра до провала (x −6.5); на самом краю над ним висит балка PitBeam — голова в неё упирается
@@ -292,6 +294,9 @@ func _r_sweep(i: int, lane := false) -> Dictionary:
 	var t_end := SWEEP_MAX_S if lane else SWEEP_S + 0.05   # с ящиками — только 15 с (за край за 30 с выходило 0–1 из 3)
 	while t < t_end and fell_t < 0.0:
 		await _step()
+		if not is_instance_valid(sw):
+			print("    sweeper gone at %.1f s" % t)   # Уборщика нет (выбыл и убран WaveDirector) — дальше толкать некому
+			break
 		if i == 0:
 			_trace(trace_, sw, br)
 		if p1.alive:
@@ -307,6 +312,11 @@ func _r_sweep(i: int, lane := false) -> Dictionary:
 	var in_pit := not p1.alive and String(p1.last_ko_record.get("kind", "")) == "self"
 	if disp_at_15 < 0.0:
 		disp_at_15 = 99.0 if in_pit else x0 - min_x   # упал в провал раньше 15 с
+	if not is_instance_valid(sw):
+		print("  sweep%s #%d: Уборщик выбыл до конца прогона" % [" lane" if lane else "", i + 1])
+		await _unload()
+		return {"sweeper_hp": hp0, "sweeper_max_hp": mhp, "sweeper_gone": true, "displacement_15s_m": snappedf(x0 - min_x, 0.01),
+			"displacement_max_m": snappedf(x0 - min_x, 0.01), "edge_t": snappedf(edge_t, 0.01), "fell_in_pit": false, "reached_pit": edge_t >= 0.0}
 	var r := {
 		"sweeper_hp": hp0, "sweeper_max_hp": mhp, "displacement_10s_m": snappedf(disp_at_10, 0.01), "displacement_15s_m": snappedf(disp_at_15, 0.01),
 		"displacement_max_m": snappedf(x0 - min_x, 0.01), "edge_t": snappedf(edge_t, 0.01), "fell_in_pit": in_pit, "fell_t": snappedf(fell_t, 0.01),

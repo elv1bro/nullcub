@@ -331,17 +331,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_JOINTS:
-			JointBreak.toggle()
-			if JointBreak.on and PartHp.on:   # один механизм отрыва — два режима сразу не ведём
-				PartHp.set_on(false)
+			JointBreak.toggle()   # включили — «Запас из деталей» гаснет (JointBreak.set_on): один механизм отрыва
+			if not JointBreak.on and Tuning.PARTHP_DEFAULT:
+				PartHp.set_on(true)   # выключили — снова стандартный «Запас из деталей»
 			_refresh_parts_hp()
 			show_toast(tr("Прочность суставов: %s   (C — переключить)") % (tr("вкл — конечности отлетают, дальние суставы слабее") if JointBreak.on else tr("выкл")), 2.4)
 			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_PARTS:
-			PartHp.toggle()
-			if PartHp.on and JointBreak.on:
-				JointBreak.set_on(false)
+			PartHp.toggle()   # включили — «Прочность суставов» гаснет (PartHp.set_on)
 			_refresh_parts_hp()
 			show_toast(tr("Запас из деталей: %s   (; — переключить)") % (tr("вкл — запас из суммы деталей, деталь отлетает и уносит свой") if PartHp.on else tr("выкл")), 2.4)
 			keys_panel.refresh()
