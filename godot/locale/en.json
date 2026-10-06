@@ -1857,5 +1857,15 @@
 	"ВИД — проба картинки": "LOOK — visual test",
 	"Э — закрыть · Shift+Э — всё до / после": "' — close · Shift+' — all before / after",
 	"НОВЫЙ ВИД (общий рубильник)": "NEW LOOK (master switch)",
-	"пока нет проб в этой сцене": "no visual tests in this scene yet"
+	"пока нет проб в этой сцене": "no visual tests in this scene yet",
+	"Эфир": "Broadcast",
+	"Заставка Лиги между сценами": "League sting between scenes",
+	"Плашки бойцов в начале боя": "Fighter lower thirds at fight start",
+	"Толпа приглушена": "Crowd toned down",
+	"Толпа: вспышки камер, волна, покачивание": "Crowd: camera flashes, wave, sway",
+	"Прожекторы ведут бойцов": "Follow spots on fighters",
+	"Последние 10 с: свет купола гаснет": "Last 10 s: dome lights dim",
+	"Единый HUD (шрифты и плашки режимов)": "Unified HUD (fonts and mode panels)",
+	"СЕРИЯ %d – %d": "SERIES %d – %d",
+	"● ЭФИР ЛИГИ": "● LEAGUE LIVE"
 }
