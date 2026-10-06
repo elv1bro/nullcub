@@ -499,6 +499,8 @@ func _apply_hit(c: Dictionary) -> void:
 	var dmg := _raw_damage(c, cm) * float(c.get("trade_mult", 1.0))
 	if double_blow:
 		dmg *= Tuning.DOUBLE_BLOW_MULT   # второе тело в том же клинче: у рэгдолла из 10 частей это норма, а не редкость
+	if match_ref != null and is_instance_valid(match_ref) and match_ref.has_method("adjust_hit_damage"):
+		dmg = float(match_ref.call("adjust_hit_damage", doll, attacker, dmg, c))   # режим правит урон (стычка: потолок удара в полёте, ярость)
 	if dmg <= 0.0:
 		return
 	_deliver(c, dmg, cm, double_blow, ac, n_prev + 1)

@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/squad_look_snapshot.gd" id="1_sqlk"]
+
+[node name="SquadLookSnapshot" type="Node3D"]
+script = ExtResource("1_sqlk")

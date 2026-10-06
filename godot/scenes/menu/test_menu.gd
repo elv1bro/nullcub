@@ -22,10 +22,8 @@ const ITEMS := [
 		"Сборка тела и оружия, покраска, активные блоки, испытание на манекене (T)"],
 	["PvE: волны на Свалке", "res://scenes/playground_pve.tscn",
 		"Уборщик и Разборщик, три волны. F2 — кооп"],
-	["Стычка 3 на 3: перестрелка на Полигоне", "res://scenes/playground_squad.tscn",
-		"Две команды по три бойца, до 100 очков. Классы 1–4: штурмовик, снайпер, налётчик, громила-рукопашник; оружие открывается само по опыту. Мышь — прицел, ЛКМ — огонь или выпад, Q — перезарядка. Ящики: патроны, жизни, броня"],
-	["Стычка 3 на 3: Полигон ночью", "res://scenes/playground_squad_night.tscn",
-		"Та же стычка ночью: луна, фонари цвета команд у баз, факелы, светящиеся пули"],
+	["Стычка 3 на 3: перестрелка и захват флага", "res://scenes/playground_squad.tscn",
+		"Две команды по три бойца на Полигоне. Перед боем — настройки: режим (перестрелка или захват флага), день или ночь, до скольких очков, время, боты. Классы 1–3: громила, снайпер, налётчик; на 5 уровне — подкласс"],
 	["СТАЗИС: время идёт, только когда ты двигаешься", "res://scenes/playground_stasis.tscn",
 		"Волны PvE на Свалке: отпусти клавиши — мир почти замрёт. Метка на HUD справа снизу; X — обычное время, F2 — кооп"],
 	["Арена «Руины»", "res://scenes/playground.tscn", "Бой двоих, оружие, Sudden Death"],
@@ -56,7 +54,10 @@ func _ready() -> void:
 		b.add_theme_font_size_override("font_size", 26)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		var path := String(it[1])
-		b.pressed.connect(func() -> void: Loading.change_scene(path, "ПОДКЛЮЧЕНИЕ", path.get_file().get_basename()))
+		b.pressed.connect(func() -> void:
+			if path.contains("playground_squad"):
+				SquadSettings.ask = true   # стычка: сначала экран настроек
+			Loading.change_scene(path, "ПОДКЛЮЧЕНИЕ", path.get_file().get_basename()))
 		b.focus_entered.connect(func() -> void: %Hint.text = tr(String(it[2])))
 		b.mouse_entered.connect(func() -> void: %Hint.text = tr(String(it[2])))
 		list.add_child(b)

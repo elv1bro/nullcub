@@ -123,6 +123,16 @@ func _pass() -> Dictionary:
 			shots["squad:end"] = _scan(inst)
 		inst.queue_free()
 		await _wait(5)
+		if p == SQUAD:   # экран настроек стычки перед боем (SquadSetup): строки, пояснение, кнопки
+			SquadSettings.reset()
+			SquadSettings.ask = true
+			var su := (load(p) as PackedScene).instantiate()
+			add_child(su)
+			await _wait(SETTLE * 2)
+			shots["squad:setup"] = _scan(su)
+			su.queue_free()
+			SquadSettings.reset()
+			await _wait(5)
 	Stasis.set_on(false)
 	for f in ["user://_probe_layout.tres", CraftEdit.save_path("_probe_layout"), "user://_probe_layout_prefs.cfg"]:
 		var g := ProjectSettings.globalize_path(f)
