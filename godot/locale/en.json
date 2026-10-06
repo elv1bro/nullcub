@@ -1857,5 +1857,10 @@
 	"ВИД — проба картинки": "LOOK — visual test",
 	"Э — закрыть · Shift+Э — всё до / после": "' — close · Shift+' — all before / after",
 	"НОВЫЙ ВИД (общий рубильник)": "NEW LOOK (master switch)",
-	"пока нет проб в этой сцене": "no visual tests in this scene yet"
+	"пока нет проб в этой сцене": "no visual tests in this scene yet",
+	"Выражения на лицах бойцов (головы кита)": "Fighter face expressions (kit heads)",
+	"Лица": "Faces",
+	"Нарисованное лицо у деревянного манекена": "Drawn face on the wooden mannequin",
+	"Манекены → кит «Человек» (та же физика)": "Mannequins → kit “Human” (same physics)",
+	"Манекены → бойцы-наборы: Спринтер и Титан (другая масса)": "Mannequins → set fighters: Sprinter and Titan (different mass)"
 }

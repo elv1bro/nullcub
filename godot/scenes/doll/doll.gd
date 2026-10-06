@@ -310,6 +310,8 @@ func _ready() -> void:
 		if skin.apply(self, skin_scene, skin_mode, skin_bone_map):
 			_set_rig_visible(false)
 
+	FaceExpr.attach(self)   # лица с выражениями (LOOK_PASS.md, look-faces): узел-ребёнок, настройка отложенно; пункты «ВИД» — «Лица»
+
 
 ## Убрать до сборки тела missing_parts (кроме торса и головы), всё, что висит на них по суставам (node_a — родитель, node_b — ребёнок),
 ## и суставы, которые к ним шли.
