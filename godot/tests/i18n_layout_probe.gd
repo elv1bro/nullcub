@@ -118,6 +118,11 @@ func _pass() -> Dictionary:
 		add_child(inst)
 		await _wait(SETTLE * 2)
 		shots[p.get_file()] = _scan(inst)
+		if p == HALL:   # панель «ВИД» (Look, LOOK_PASS.md): галочки проб картинки, зарегистрированные куполом
+			Look._panel.set_open(true)
+			await _wait(SETTLE)
+			shots["look:panel"] = _scan(Look)
+			Look._panel.set_open(false)
 		if p == SQUAD:   # «Стычка 3 на 3» (SQUAD.md): ещё табличка итогов с таблицей бойцов
 			var sm := inst.get_node("Match") as SquadMatch
 			sm.score = [15, 9]

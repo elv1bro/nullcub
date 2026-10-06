@@ -1851,5 +1851,11 @@
 	"ЯРОСТЬ": "RAGE",
 	"ФОРСАЖ": "BOOST",
 	"R — заново · Esc — пауза и выход в гараж": "R — restart · Esc — pause and back to the garage",
-	"ВОЗВРАТ ЧЕРЕЗ %d": "BACK IN %d"
+	"ВОЗВРАТ ЧЕРЕЗ %d": "BACK IN %d",
+	"ВИД: НОВЫЙ": "LOOK: NEW",
+	"ВИД: КАК БЫЛО": "LOOK: AS BEFORE",
+	"ВИД — проба картинки": "LOOK — visual test",
+	"Э — закрыть · Shift+Э — всё до / после": "' — close · Shift+' — all before / after",
+	"НОВЫЙ ВИД (общий рубильник)": "NEW LOOK (master switch)",
+	"пока нет проб в этой сцене": "no visual tests in this scene yet"
 }
