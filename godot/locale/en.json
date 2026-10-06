@@ -1857,5 +1857,15 @@
 	"ВИД — проба картинки": "LOOK — visual test",
 	"Э — закрыть · Shift+Э — всё до / после": "' — close · Shift+' — all before / after",
 	"НОВЫЙ ВИД (общий рубильник)": "NEW LOOK (master switch)",
-	"пока нет проб в этой сцене": "no visual tests in this scene yet"
+	"пока нет проб в этой сцене": "no visual tests in this scene yet",
+	"Контровой свет на бойцов": "Rim light on fighters",
+	"Свечение цвета игрока": "Player colour glow",
+	"Тень-пятно у пола и стен": "Contact shadow on floor and walls",
+	"Фон отступает: туман глубины, цвет": "Background recedes: depth fog, grading",
+	"Лампы купола тише": "Dimmer dome lamps",
+	"Лак на краске и пластике": "Clear coat on paint and plastic",
+	"Отражения арены": "Arena reflections",
+	"Кадр": "Frame",
+	"Пластик": "Plastic",
+	" · рендерер — после перезапуска": " · renderer — after restart"
 }

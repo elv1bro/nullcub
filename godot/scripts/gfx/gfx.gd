@@ -8,6 +8,8 @@
 ##    Лишнее для рендерера (SSAO / SSIL в Forward+) пресеты не трогают. Выбор хранится в user://gfx.cfg.
 ## 3) Авто-масштаб (DynRes, Shift+F9 — вкл / выкл): множитель 0.6…1.0 поверх масштаба пресета, снижается, когда игра не держит ~60 fps.
 ## 4) Первый запуск без user://gfx.cfg: пресет по видеокарте (suggested_preset) — Intel-интегрированная → medium / low, остальные — high.
+## 5) «ultra» = Forward+ (SSAO / SSIL / объёмный туман арен): выбор с сохранением пишет user://renderer.cfg (RendererPin), рендерер
+##    сменится после перезапуска — тост и label() говорят об этом.
 ## Пересчёт — на смену размера окна, экрана и пресета (не каждый кадр); проба, выставляющая scaling_3d_scale сама, не перебивается.
 extends Node
 
@@ -102,6 +104,8 @@ func set_preset(name: String, save := true) -> String:
 	_apply_all()
 	if save:
 		_save_preset()
+		if not _headless and RendererPin.write(preset) and RendererPin.restart_needed():
+			show_toast(label())   # ультра = Forward+ после перезапуска (RendererPin, docs/plan-demo/look/frame.md)
 	changed.emit()
 	return preset
 
@@ -115,7 +119,8 @@ func cycle() -> String:
 
 func label() -> String:
 	var info := "%s · %d×%d" % [preset.to_upper(), render_size.x, render_size.y] if render_size != Vector2i.ZERO else preset.to_upper()
-	return tr("Графика: ") + info + (tr(" · авто") if auto_scale else "")
+	var restart := tr(" · рендерер — после перезапуска") if not _headless and RendererPin.restart_needed() else ""
+	return tr("Графика: ") + info + (tr(" · авто") if auto_scale else "") + restart
 
 
 ## Что сейчас: для проб и отчётов.

@@ -34,6 +34,7 @@ func _ready() -> void:
 				"only": only_after = kv[1] == "after"
 				"hud": hud = kv[1] != "0"
 				"fight": fight = kv[1] == "1"
+				"champ": _lf_champion.call_deferred(float(kv[1]))
 				"t":
 					times.clear()
 					for s in kv[1].split(";"):
@@ -109,3 +110,12 @@ func _set_hud(n: Node, v: bool) -> void:
 		if ch is CanvasLayer:
 			(ch as CanvasLayer).visible = v
 		_set_hud(ch, v)
+
+
+## look-frame (docs/plan-demo/look/frame.md): champ=<с> — через столько секунд вызвать чемпиона лиги (купол, как клавиша K): кукла
+## кита в кадре (лак, свечение ядра и суставов).
+func _lf_champion(at: float) -> void:
+	await get_tree().create_timer(maxf(at, 0.1)).timeout
+	var arena := get_tree().get_first_node_in_group("arena")
+	if arena != null and arena.has_method("call_champion"):
+		arena.call("call_champion")
