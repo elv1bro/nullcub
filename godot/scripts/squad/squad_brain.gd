@@ -446,11 +446,16 @@ func _can_hit(g: SquadGun, tp: Vector2, d: float) -> bool:
 	var hit := doll.get_world_3d().direct_space_state.intersect_ray(q)
 	if not hit.is_empty():
 		var who := SquadGun._doll_of(hit["collider"] as Node)
-		if who != null and who != doll and SquadMatch.team_of(who) == team:
+		if who != null and who != doll and _is_friend(who):
 			shots_blocked += 1
 			return false
 	counters["fire_ok"] = int(counters.get("fire_ok", 0)) + 1
 	return true
+
+
+## Свой на линии огня — не стрелять. Крючок наследнику: в королевской битве своих нет (RoyaleBrain).
+func _is_friend(who: Doll) -> bool:
+	return SquadMatch.team_of(who) == team
 
 
 func _stuck_allowed() -> bool:

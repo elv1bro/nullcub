@@ -340,9 +340,9 @@ func _spawn_ball(o: Vector3, d: Vector3, ex: Array[RID], dmg: float, power := 1.
 		_streak_mesh.center_offset = Vector3(-0.5, 0.0, 0.0)   # голова — в начале координат узла, хвост — назад по −X
 	mi.mesh = _streak_mesh
 	var col: Color = def["tracer"]
-	var team := SquadMatch.team_of(doll)
+	var own := _owner_colour()
 	var energy := ENERGY_NIGHT if ProvingGround.night_now else ENERGY_DAY
-	var key := "%s/%d/%.1f" % [col.to_html(), team, energy]
+	var key := "%s/%s/%.1f" % [col.to_html(), own.to_html(false), energy]
 	if not _glow.has(key):
 		if _streak_shader == null:
 			_streak_shader = Shader.new()
@@ -350,7 +350,7 @@ func _spawn_ball(o: Vector3, d: Vector3, ex: Array[RID], dmg: float, power := 1.
 		var sm := ShaderMaterial.new()
 		sm.shader = _streak_shader
 		sm.set_shader_parameter("tint", col)
-		sm.set_shader_parameter("rim", SquadMatch.team_colour(team).lightened(0.15) if team >= 0 else col)
+		sm.set_shader_parameter("rim", own.lightened(0.15))
 		sm.set_shader_parameter("energy", energy)
 		_glow[key] = sm
 	mi.material_override = _glow[key]
@@ -495,11 +495,20 @@ func _process(delta: float) -> void:
 	_model.global_transform = Transform3D(Basis(x, y, z).scaled(Vector3.ONE * MODEL_SCALE), Vector3(grip.x, grip.y, 0.06) + shake)
 
 
+## «Чей» цвет — накладки ствола и ореол трассера: у матча с colour_of(doll) (королевская битва, docs/plan-demo/ROYALE.md — цвет бойца)
+## — его, иначе цвет команды.
+func _owner_colour() -> Color:
+	if doll == null or not is_instance_valid(doll):
+		return Color.WHITE
+	if _match != null and is_instance_valid(_match) and _match.has_method("colour_of"):
+		return _match.call("colour_of", doll)
+	return SquadMatch.team_colour(SquadMatch.team_of(doll))
+
+
 func _build_model() -> void:
 	if _model != null and is_instance_valid(_model):
 		_model.queue_free()
-	var team := SquadMatch.team_colour(SquadMatch.team_of(doll)) if doll != null else Color.WHITE
-	_model = build_model(weapon, team)
+	_model = build_model(weapon, _owner_colour())
 	_model.name = "GunModel"
 	_model.top_level = true
 	_model.scale = Vector3.ONE * MODEL_SCALE
