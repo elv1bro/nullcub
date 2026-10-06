@@ -958,9 +958,6 @@ const PUZZLE_CRATES := {
 	"duo": {"mass": 60.0, "size": 1.0, "g_scale": 1.75, "heft": 1, "no_spin": true},
 	"iron": {"mass": 90.0, "size": 1.1, "g_scale": 4.9, "heft": 2, "no_spin": true},
 }
-## Плита: масса на ней = Σ свободных тел в датчике (кукла — вся, total_mass ≈ 40 кг, если её деталь в датчике и count_dolls). Тело
-## быстрее PUZZLE_PLATE_REST_SPEED не давит (пролетело насквозь). Порог держится PUZZLE_PLATE_ON_S, чтобы включить, и пропадает на
-## PUZZLE_PLATE_OFF_S, чтобы выключить (дребезг ящика на плите). Датчик — над плитой на PUZZLE_PLATE_SENSOR_H м (ящики стопкой).
 ## Тяжёлое в руке (средний / тяжёлый класс на пружине, PuzzleCarry): тяга куклы × CARRY_THRUST_MULT. Иначе куклы улетают от ящика
 ## быстрее, чем пружины хвата (150 Н) его разгоняют (6.2 против 1.5 м/с² вдвоём с ящиком 60 кг), и он срывается; при 0.55 куклы
 ## медленнее ящика (0.85 м/с²). Предел срыва у тяжёлых ящиков головоломок — CRATE_SLIP_M (у ArmAssist 0.45 м): пружина неявная, на
@@ -972,6 +969,9 @@ const PUZZLE_CRATE_SLIP_M := 0.8
 const PUZZLE_CARRY_LEASH_FROM_M := 0.35
 const PUZZLE_CARRY_LEASH_TO_M := 0.6
 const PUZZLE_CARRY_AWAY_MAX := 1.2
+## Плита: масса на ней = Σ свободных тел в датчике (кукла — вся, total_mass ≈ 40 кг, если её деталь в датчике и count_dolls). Тело
+## быстрее PUZZLE_PLATE_REST_SPEED не давит (пролетело насквозь). Порог держится PUZZLE_PLATE_ON_S, чтобы включить, и пропадает на
+## PUZZLE_PLATE_OFF_S, чтобы выключить (дребезг ящика на плите). Датчик — над плитой на PUZZLE_PLATE_SENSOR_H м (ящики стопкой).
 const PUZZLE_PLATE_ON_S := 0.1
 const PUZZLE_PLATE_OFF_S := 0.25
 const PUZZLE_PLATE_REST_SPEED := 3.0

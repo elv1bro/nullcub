@@ -27,7 +27,6 @@ const BARREL := "res://scenes/props/scrap/prop_metal_barrel.tscn"
 const TEX := {
 	"wall": "res://assets/textures/garage/paint_metal/",
 	"floor": "res://assets/textures/garage/floor/",
-	"back": "res://assets/textures/pbr/rust_metal/",
 	"iron": "res://assets/textures/pbr/iron/",
 	"hazard": "res://assets/textures/garage/hazard/",
 }
@@ -156,9 +155,9 @@ func _mat(kind: String, tint: Color, scale: float = 0.35, metal: float = 0.4) ->
 
 
 func _materials() -> void:
-	mats["wall"] = _mat("wall", Color(0.62, 0.66, 0.7), 0.3, 0.5)
-	mats["floor"] = _mat("floor", Color(0.75, 0.74, 0.72), 0.3, 0.2)
-	mats["back"] = _mat("back", Color(0.42, 0.44, 0.48), 0.22, 0.4)
+	mats["wall"] = _mat("wall", Color(0.5, 0.53, 0.57), 0.3, 0.5)
+	mats["floor"] = _mat("floor", Color(0.85, 0.84, 0.82), 0.3, 0.2)
+	mats["back"] = _mat("wall", Color(0.36, 0.44, 0.52), 0.18, 0.3)
 	mats["iron"] = _mat("iron", Color(0.7, 0.72, 0.75), 0.4, 0.6)
 	mats["hazard"] = _mat("hazard", Color(1, 1, 1), 0.5, 0.2)
 	var trim := StandardMaterial3D.new()
@@ -223,6 +222,10 @@ func _room(holder: Node, i: int, door_y: float) -> Node3D:
 	# полосы-плинтусы на задней стене (масштаб и «цех»)
 	_decor(r, "TrimLow", Vector3(W, 0.3, 0.1), Vector3(0, 0.15, BACK_Z + 0.2), "trim")
 	_decor(r, "TrimHigh", Vector3(W, 0.3, 0.1), Vector3(0, H - 0.15, BACK_Z + 0.2), "trim")
+	# швы панелей задней стены: каждые 2 м по x и полоса на высоте 3 м
+	for k in 7:
+		_decor(r, "Seam%d" % k, Vector3(0.06, H, 0.06), Vector3(-6.0 + 2.0 * k, H * 0.5, BACK_Z + 0.17), "trim")
+	_decor(r, "SeamH", Vector3(W, 0.06, 0.06), Vector3(0, 3.0, BACK_Z + 0.17), "trim")
 	# номер комнаты — крупно на задней стене
 	var num := PuzzlePart.label(r.get_node("Visual"), "Number", "%d" % (i + 1), Vector3(-hw + 1.6, H - 1.6, BACK_Z + 0.2), 420, Color(1, 1, 1, 0.08))
 	num.outline_size = 0
@@ -235,11 +238,11 @@ func _room(holder: Node, i: int, door_y: float) -> Node3D:
 	_decor(r, "DoorFrame", Vector3(1.04, 0.2, 2.42), Vector3(hw + 0.5, door_y + DOOR_H + 0.1, 0), "hazard")
 	var lamp := OmniLight3D.new()
 	lamp.name = "Lamp"
-	lamp.position = Vector3(0, H - 1.2, 3.0)
-	lamp.light_color = Color(1.0, 0.92, 0.8)
-	lamp.light_energy = 1.6
-	lamp.omni_range = 16.0
-	lamp.omni_attenuation = 0.8
+	lamp.position = Vector3(0, H - 0.9, 3.5)
+	lamp.light_color = Color(1.0, 0.94, 0.84)
+	lamp.light_energy = 2.6
+	lamp.omni_range = 18.0
+	lamp.omni_attenuation = 0.6
 	lamp.shadow_enabled = false
 	r.add_child(lamp)
 	for k in 2:
@@ -255,19 +258,11 @@ func _crate(r: Node3D, n: String, kind: String, x: float, y_bottom: float) -> No
 	return _inst(r.get_node("Props"), "crate", n, Vector3(x, y_bottom + size * 0.5 + 0.01, 0), {"kind": kind})
 
 
-func _texts(r: Node3D, title: String, hint: String, solo: String) -> void:
-	r.set("title", title)
-	r.set("hint", hint)
-	r.set("solo", solo)
-
-
 # ---------------------------------------------------------------- комнаты
 
 ## 1. Ящик на плиту → дверь (учит хватать и носить). Ящик 10 кг — на полке справа под потолком, плита — посередине пола: встать
 ## самому мало (сошёл — дверь захлопнулась раньше, чем долетишь), груз должен остаться на плите.
 func _room1(r: Node3D) -> void:
-	_texts(r, "Ящик на плиту",
-		"Дверь открыта, пока на плите груз. Слетай за ящиком на полку, возьми его (E, у P2 — «/»), положи на плиту — и к выходу.", "")
 	_solid(r, "Shelf", 4.4, 8.0, 4.2, 4.5, "iron")
 	_crate(r, "Crate", "light", 6.4, 4.5)
 	var plate := _inst(r.get_node("Mech"), "plate", "Plate", Vector3(-1.5, 0, 0), {"threshold_kg": 8.0, "width": 2.0})
@@ -279,9 +274,6 @@ func _room1(r: Node3D) -> void:
 ## 2. Две плиты сразу: встать обоим или кукла + ящик 35 кг (его только волоком). И → ТАЙМЕР 4 с → дверь: обе плиты нажаты —
 ## дверь открыта и держится 4 с после того, как с плит ушли.
 func _room2(r: Node3D) -> void:
-	_texts(r, "Две плиты сразу",
-		"Обе плиты по 30 кг сразу — и таймер держит дверь 4 с. Вдвоём: встаньте каждый на свою плиту и летите к выходу.",
-		"Один: ящик 35 кг не поднять — дотащи его волоком на одну плиту, сам встань на другую.")
 	var a := _inst(r.get_node("Mech"), "plate", "PlateA", Vector3(-3.6, 0, 0), {"threshold_kg": 30.0, "width": 2.0})
 	var b := _inst(r.get_node("Mech"), "plate", "PlateB", Vector3(3.6, 0, 0), {"threshold_kg": 30.0, "width": 2.0})
 	var and_ := _inst(r.get_node("Mech"), "logic", "And", Vector3(0.0, 4.6, CABLE_Z), {"mode": PuzzleLogic.Mode.AND})
@@ -302,9 +294,6 @@ func _room2(r: Node3D) -> void:
 ## 3. Тяжёлый ящик вдвоём на весы: уступ справа (верх 3 м), на нём грузовые весы 55 кг (куклы не в счёт), дверь — над уступом.
 ## Ящик 60 кг одной рукой не поднять (210 Н > 150), двумя — да. Соло: четыре ящика по 15 кг.
 func _room3(r: Node3D) -> void:
-	_texts(r, "Тяжёлый ящик вдвоём",
-		"Весы на уступе ждут 55 кг груза — куклы не в счёт. Ящик 60 кг одной рукой не поднять: возьмитесь вдвоём и несите наверх.",
-		"Один: отнеси на весы четыре ящика по 15 кг, по одному.")
 	_solid(r, "Ledge", 2.6, 8.0, 0.0, 3.0, "iron")
 	_decor(r, "LedgeEdge", Vector3(0.2, 0.18, 2.44), Vector3(2.7, 2.91, 0), "hazard")
 	var scale := _inst(r.get_node("Mech"), "plate", "Scale", Vector3(5.0, 3.0, 0), {"threshold_kg": 55.0, "width": 2.6,
@@ -322,8 +311,6 @@ func _room3(r: Node3D) -> void:
 ## 4. Рычаг гравитации: рычаг поворачивает «низ» комнаты вправо; чугунный ящик 90 кг на полке посередине съезжает и падает на
 ## грузовую плиту на правой стене (50 кг) → дверь внизу той же стены. Руками и телом ящик к плите не поднять.
 func _room4(r: Node3D) -> void:
-	_texts(r, "Рычаг гравитации",
-		"Рычаг поворачивает «низ» комнаты. Чугунный ящик 90 кг не поднять — пусть упадёт на плиту на стене сам. Рычаг: схвати рукоять и перекинь или толкни телом.", "")
 	var g := _inst(r.get_node("Mech"), "gravity_zone", "Gravity", Vector3(0, H * 0.5, 0), {"size": Vector2(W, H),
 		"on_dir": Vector2(1, 0), "off_dir": Vector2(0, -1), "sign_offset": Vector3(-3.4, 2.2, BACK_Z + 0.25)})
 	var lever := _inst(r.get_node("Mech"), "lever", "Lever", Vector3(-3.6, 0, 0), {"start_on": false})
@@ -345,9 +332,6 @@ func _room4(r: Node3D) -> void:
 ## 5. Лифт: чугунный ящик закатить на лифт (в яме у пола), лифт едет вверх, пока горит ТАЙМЕР 8 с от плиты; наверху — балкон с
 ## грузовыми весами 50 кг → дверь над балконом. Соло: ящик 35 кг с полки слева — на плиту (лифт ждёт) или успеть за 8 с.
 func _room5(r: Node3D) -> void:
-	_texts(r, "Лифт",
-		"Лифт едет вверх, пока горит таймер от плиты. Закатите чугунный ящик на лифт; один держит плиту, другой наверху сталкивает ящик на весы.",
-		"Один: положи на плиту ящик 35 кг с полки — лифт будет ждать. Или встань на плиту и успей наверх за 8 с.")
 	# яма лифта: пол x 0…3 ниже на 0.35 (платформа вровень с полом)
 	var fl := r.get_node("Static/Floor")
 	r.get_node("Static").remove_child(fl)
@@ -380,8 +364,6 @@ func _room5(r: Node3D) -> void:
 ## 6. Финал: бочку — в трещину стены (Breakable рвётся только от взрыва), за стеной в нише — плита → ТАЙМЕР 6 с → дверь наверху
 ## справа: успеть. Раздатчик под потолком роняет новую бочку, если бочек не осталось, а стена цела.
 func _room6(r: Node3D) -> void:
-	_texts(r, "Финал: трещина",
-		"Брось взрывную бочку в трещину (P1: ЛКМ + E, P2: стрелка + «/»). За стеной плита: дверь наверху откроется на 6 с — успейте.", "")
 	_solid(r, "NicheRoof", 4.9, 8.0, 3.0, 3.4, "iron")
 	_solid(r, "DoorLedge", 6.4, 8.0, 5.2, 5.6, "iron")
 	var wall := _inst(r.get_node("Props"), "crack_wall", "CrackWall", Vector3(5.2, 0, 0), {"size": Vector2(0.6, 3.0)})
@@ -412,8 +394,8 @@ func _camera() -> void:
 	cam.set("arena_path", NodePath(".."))
 	cam.set("floor_inset", 0.0)
 	cam.set("target_group", "dolls")
-	cam.set("min_half_height", 5.25)
-	cam.set("max_half_height", 5.25)
+	cam.set("min_half_height", 5.6)
+	cam.set("max_half_height", 5.6)
 	cam.set("padding", 2.0)
 	cam.set("follow_tau", 0.25)
 
@@ -425,8 +407,8 @@ func _environment() -> void:
 	e.background_mode = Environment.BG_COLOR
 	e.background_color = Color(0.03, 0.035, 0.045)
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.55, 0.6, 0.7)
-	e.ambient_light_energy = 0.55
+	e.ambient_light_color = Color(0.6, 0.65, 0.75)
+	e.ambient_light_energy = 0.85
 	e.tonemap_mode = Environment.TONE_MAPPER_ACES
 	e.tonemap_exposure = 1.05
 	e.glow_enabled = true

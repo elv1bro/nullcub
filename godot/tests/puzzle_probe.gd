@@ -928,8 +928,9 @@ func _solve_5(r: PuzzleRoom, coop: bool) -> bool:
 	await _until(func() -> bool: return r.door().is_on(), 2.0)
 	var stays := true
 	if not coop:
-		await _wait(Tuning.PUZZLE_TIMER_S + 3.0)
-		stays = lift.height_now() > 4.9   # ящик на плите держит ток: таймер не кончается
+		var hold := float((r.find("Timer") as PuzzleLogic).hold_s)
+		await _wait(hold + 2.0)
+		stays = lift.height_now() > 4.9   # ящик на плите держит ток: таймер (8 с) не кончается
 	info["room5_%s" % ("coop" if coop else "solo")] = {"lift_up": up, "iron_rode": rode, "on_scale": on_scale, "lift_stays": stays}
 	return up and rode and on_scale and stays
 
@@ -977,37 +978,45 @@ func _bounds() -> void:
 	var worst := {}
 	for i in 6:
 		pg.goto_room(i)
-		pg.reset_room()
-		await _wait(0.4)
-		_script_players()
 		var r := pg.rooms[i]
 		var inner := r.inner_global().grow(BOUNDS_MARGIN_M)
 		var p1 := pg.p1
 		var escaped := ""
+		var legit := 0
 		var max_out := 0.0
 		for k in 8:
 			var ang := TAU * float(k) / 8.0
 			var dir := Vector2(cos(ang), sin(ang))
+			if pg.current != i:
+				pg.goto_room(i)
+			pg.reset_room()   # механизмы и ящики на места: кукла могла задеть рычаг (комната 4) — это не побег
+			await _wait(0.3)
+			_script_players()
+			p1 = pg.p1
 			_teleport(p1, _at(r, -4.0, 6.5))
 			p1.reset_charge()
 			await _ticks(2)
+			var door_prev := 0.0
 			for t in int(3.0 / TICK):
 				p1.input_vec = dir
 				p1.request_dash()
+				door_prev = r.door().open_frac()
 				await get_tree().physics_frame
 				var c := p1.centre_of_mass()
 				var c2 := Vector2(c.x, c.y)
+				if pg.current != i:
+					if door_prev > 0.3:
+						legit += 1   # дверь была открыта (задел рычаг / плиту) — честный выход
+					else:
+						escaped = "комната сменилась при закрытой двери (направление %d°)" % roundi(rad_to_deg(ang))
+					break
 				if not inner.has_point(c2):
 					var out := maxf(maxf(inner.position.x - c2.x, c2.x - inner.end.x), maxf(inner.position.y - c2.y, c2.y - inner.end.y))
 					max_out = maxf(max_out, out)
-					if escaped == "":
+					if escaped == "" and r.door().open_frac() < 0.3:
 						escaped = "направление %d°: ЦМ (%.2f, %.2f)" % [roundi(rad_to_deg(ang)), c.x - r.global_position.x, c.y]
-				if pg.current != i:
-					escaped = "комната сменилась при закрытой двери (направление %d°)" % roundi(rad_to_deg(ang))
-					break
 			p1.input_vec = Vector2.ZERO
-			if pg.current != i:
-				break
-		worst["room%d" % (i + 1)] = snappedf(max_out, 0.01)
-		_check("bounds_room%d" % (i + 1), escaped == "" and _door_closed(r), "не вылетела (дверь закрыта %s)%s" % [str(_door_closed(r)), "" if escaped == "" else ": " + escaped])
-	info["bounds_out_m"] = worst
+		worst["room%d" % (i + 1)] = {"out_m": snappedf(max_out, 0.01), "legit_exits": legit}
+		_check("bounds_room%d" % (i + 1), escaped == "", "не вылетела в обход (8 направлений × 3 с с ускорением)%s%s" % [
+			"" if legit == 0 else "; честных выходов через открытую дверь %d" % legit, "" if escaped == "" else ": " + escaped])
+	info["bounds"] = worst

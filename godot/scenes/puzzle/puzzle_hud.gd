@@ -2,7 +2,7 @@
 ##   • слева сверху — плашка комнаты: «КОМНАТА 2 / 6», название, подсказка «вдвоём» и строка «один: …» (как решить соло);
 ##   • справа сверху — общее время и время этой комнаты;
 ##   • по центру при входе в комнату — заставка «КОМНАТА N» с названием (гаснет за BANNER_S);
-##   • снизу — памятка клавиш P1 и P2 (P2 — пока не вошёл: «нажми стрелку»), над ней — тосты клавиш;
+##   • снизу — памятка клавиш P1 и P2 (P2 — пока не вошёл: «нажми стрелку») первые HELP_S секунд каждой комнаты, над ней — тосты клавиш;
 ##   • финиш — табличка «ДЕМО ПРОЙДЕНО»: общее время и время каждой комнаты.
 ## bind(playground) — подписка на сигналы PuzzlePlayground.
 class_name PuzzleHud
@@ -12,6 +12,7 @@ const TOP := 14.0
 const PANEL_W := 560.0
 const BANNER_S := 2.2
 const TOAST_S := 1.6
+const HELP_S := 14.0
 
 var playground: PuzzlePlayground
 var root: Control
@@ -35,6 +36,7 @@ var end_time: Label
 var end_table: GridContainer
 var _banner_left := 0.0
 var _toast_left := 0.0
+var _help_left := HELP_S
 
 
 func _init() -> void:
@@ -79,12 +81,12 @@ func _build_room() -> void:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_theme_constant_override("separation", 2)
 	room_panel.add_child(v)
-	room_no = _label("No", 20, Color(1.0, 0.8, 0.35), HORIZONTAL_ALIGNMENT_LEFT)
-	room_title = _label("Title", 34, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT)
-	room_hint = _label("Hint", 20, Color(0.92, 0.95, 1.0), HORIZONTAL_ALIGNMENT_LEFT)
+	room_no = _label("No", 17, Color(1.0, 0.8, 0.35), HORIZONTAL_ALIGNMENT_LEFT)
+	room_title = _label("Title", 28, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT)
+	room_hint = _label("Hint", 17, Color(0.92, 0.95, 1.0), HORIZONTAL_ALIGNMENT_LEFT)
 	room_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	room_hint.custom_minimum_size = Vector2(PANEL_W - 36.0, 0)
-	room_solo = _label("Solo", 18, Color(0.7, 0.85, 1.0, 0.85), HORIZONTAL_ALIGNMENT_LEFT)
+	room_solo = _label("Solo", 16, Color(0.7, 0.85, 1.0, 0.85), HORIZONTAL_ALIGNMENT_LEFT)
 	room_solo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	room_solo.custom_minimum_size = Vector2(PANEL_W - 36.0, 0)
 	for l in [room_no, room_title, room_hint, room_solo]:
@@ -133,16 +135,16 @@ func _build_banner() -> void:
 
 
 func _build_bottom() -> void:
-	help_p1 = _label("HelpP1", 19, Color(0.75, 0.85, 1.0, 0.85))
-	help_p2 = _label("HelpP2", 19, Color(1.0, 0.75, 0.72, 0.85))
+	help_p1 = _label("HelpP1", 18, Color(0.75, 0.85, 1.0, 0.9))
+	help_p2 = _label("HelpP2", 18, Color(1.0, 0.75, 0.72, 0.9))
 	for i in 2:
 		var l: Label = [help_p1, help_p2][i]
 		l.anchor_left = 0.5
 		l.anchor_right = 0.5
 		l.anchor_top = 1.0
 		l.anchor_bottom = 1.0
-		l.offset_left = -900.0
-		l.offset_right = 900.0
+		l.offset_left = -760.0
+		l.offset_right = 760.0
 		l.offset_top = -64.0 + 28.0 * i
 		l.offset_bottom = -38.0 + 28.0 * i
 		root.add_child(l)
@@ -229,6 +231,7 @@ func bind(pg: PuzzlePlayground) -> void:
 
 
 func _refresh_help() -> void:
+	_help_left = HELP_S
 	var joined := playground != null and playground.p2 != null and is_instance_valid(playground.p2)
 	if joined:
 		help_p2.text = tr("P2 — стрелки летать · «/» или Num 0 — взять / положить · со стрелкой — бросок · U — играть одному")
@@ -240,15 +243,16 @@ func _on_room(i: int) -> void:
 	var r := playground.rooms[i]
 	var n := playground.rooms.size()
 	room_no.text = tr("КОМНАТА %d / %d") % [i + 1, n]
-	room_title.text = tr(r.title)
-	room_hint.text = tr(r.hint)
-	room_solo.text = tr(r.solo)
-	room_solo.visible = r.solo != ""
+	room_title.text = tr(r.title_key())
+	room_hint.text = tr(r.hint_key())
+	room_solo.text = tr(r.solo_key())
+	room_solo.visible = r.solo_key() != ""
 	banner_no.text = tr("КОМНАТА %d") % (i + 1)
-	banner_title.text = tr(r.title)
+	banner_title.text = tr(r.title_key())
 	banner.visible = true
 	banner.modulate.a = 1.0
 	_banner_left = BANNER_S
+	_help_left = HELP_S
 
 
 func _on_finished(total: float) -> void:
@@ -261,7 +265,7 @@ func _on_finished(total: float) -> void:
 		var a := _label("N", 22, Color(1.0, 0.8, 0.35))
 		a.text = "%d" % (i + 1)
 		var b := _label("T", 22, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT)
-		b.text = tr(r.title)
+		b.text = tr(r.title_key())
 		var c := _label("S", 22, Color(0.8, 0.95, 1.0), HORIZONTAL_ALIGNMENT_RIGHT)
 		c.text = fmt_time(float(playground.room_times[i]))
 		for l in [a, b, c]:
@@ -297,6 +301,13 @@ func _process(delta: float) -> void:
 		banner.modulate.a = clampf(_banner_left / 0.5, 0.0, 1.0)
 		if _banner_left <= 0.0:
 			banner.visible = false
+	var help_a := clampf(_help_left / 1.0, 0.0, 1.0)
+	if _help_left > 0.0:
+		_help_left -= delta
+	help_p1.modulate.a = help_a
+	help_p2.modulate.a = help_a
+	help_p1.visible = help_a > 0.0
+	help_p2.visible = help_a > 0.0
 	if _toast_left > 0.0:
 		_toast_left -= delta
 		toast_label.modulate.a = clampf(_toast_left / 0.4, 0.0, 1.0)

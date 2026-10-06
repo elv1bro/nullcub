@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, HUD купола с меткой СТАЗИСА, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек» и их итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, HUD купола с меткой СТАЗИСА, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек» и их итоги, «Головоломки вдвоём» с P2 и итогами) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -18,6 +18,7 @@ const SPORT := "res://scenes/playground_sport.tscn"
 const SQUAD := "res://scenes/playground_squad.tscn"
 const BOMB := "res://scenes/playground_bomb.tscn"
 const RACE := "res://scenes/playground_race.tscn"
+const PUZZLE := "res://scenes/playground_puzzle.tscn"
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -112,7 +113,7 @@ func _pass() -> Dictionary:
 	menu.queue_free()
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, PUZZLE]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
@@ -137,6 +138,16 @@ func _pass() -> Dictionary:
 			rmm._finish("points")
 			await _wait(SETTLE * 3)
 			shots["race:end"] = _scan(inst)
+		if p == PUZZLE:   # «Головоломки вдвоём» (PUZZLE.md): P2 вошёл (памятка P2 длиннее) и табличка итогов со временем комнат
+			var pz := inst as PuzzlePlayground
+			pz.join_p2()
+			await _wait(SETTLE)
+			shots["puzzle:p2"] = _scan(inst)
+			pz.room_times = [42.0, 31.5, 77.0, 25.0, 64.0, 58.0]
+			pz.done = true
+			pz.demo_finished.emit(297.5)
+			await _wait(SETTLE * 2)
+			shots["puzzle:end"] = _scan(inst)
 		inst.queue_free()
 		await _wait(5)
 		if p == SQUAD:   # экран настроек стычки перед боем (SquadSetup): строки, пояснение, кнопки
