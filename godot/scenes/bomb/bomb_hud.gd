@@ -424,7 +424,8 @@ func _draw_marks() -> void:
 		var head: Node3D = d.parts.get("Head", d.torso()) as Node3D
 		if head == null:
 			continue
-		var top := head.global_position + Vector3(0.0, NAME_LIFT, 0.0)
+		# над куклой, даже если она вниз головой: выше головы и торса
+		var top := Vector3(head.global_position.x, maxf(head.global_position.y, d.torso().global_position.y + 0.35) + NAME_LIFT, 0.0)
 		if cam.is_position_behind(top):
 			continue
 		var sp: Vector2 = to_canvas * cam.unproject_position(top)
@@ -437,7 +438,8 @@ func _draw_marks() -> void:
 		marks.draw_string(font, sp + Vector2(-tw.x * 0.5, 0.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, col)
 		if d != match_node.holder:
 			continue
-		var bc: Vector2 = to_canvas * cam.unproject_position(d.torso().global_position)
+		var bp3: Vector3 = match_node.carry.global_position if match_node.carry != null and match_node.carry.visible else d.torso().global_position
+		var bc: Vector2 = to_canvas * cam.unproject_position(bp3)
 		var red := BombMatch.COLOUR_BOMB
 		var r := RING_R * (1.0 + 0.18 * _pulse)
 		marks.draw_arc(bc, r, 0.0, TAU, 40, Color(red, 0.35 + 0.55 * _pulse), 3.0 + 3.0 * _pulse, true)
