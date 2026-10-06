@@ -404,14 +404,16 @@ func _room6(r: Node3D) -> void:
 ## на уступ напрямую. Вдвоём и один — одинаково.
 func _room7(r: Node3D) -> void:
 	_cut(r, "Floor")
-	_solid(r, "FloorL", -W * 0.5 - 1.0, 5.6, -1.0, 0.0, "floor")
-	_solid(r, "FloorR", 8.0, W * 0.5 + 1.0, -1.0, 0.0, "floor")
+	# щель A (5.7…8.3) заходит под правую стену на 0.3 м: ящик падает вплотную к стене (грань 8.0), и если край щели совпадал с гранью
+	# стены, на шве стены и щеки кармана Jolt цеплял угол — ящик отбрасывало влево (−2 м/с), из B он выходил вниз и не долетал до весов
+	_solid(r, "FloorL", -W * 0.5 - 1.0, 5.7, -1.0, 0.0, "floor")
+	_solid(r, "FloorR", 8.3, W * 0.5 + 1.0, -1.0, 0.0, "floor")
 	_cut(r, "WallL")
-	_solid(r, "WallL_Low", -W * 0.5 - 1.0, -W * 0.5, 0.0, 6.3)
-	_solid(r, "WallL_High", -W * 0.5 - 1.0, -W * 0.5, 8.5, H)
+	_solid(r, "WallL_Low", -W * 0.5 - 1.0, -W * 0.5, 0.0, 6.1)
+	_solid(r, "WallL_High", -W * 0.5 - 1.0, -W * 0.5, 8.7, H)
 	# карманы порталов глубже стены и пола (1.3 м) — снаружи их закрывают утолщения, а не висящие коробки
-	_solid(r, "WallL_Bump", -W * 0.5 - 1.6, -W * 0.5 - 1.0, 6.0, 8.8)
-	_solid(r, "FloorDeep", 5.3, 8.3, -1.6, -1.0, "floor")
+	_solid(r, "WallL_Bump", -W * 0.5 - 1.6, -W * 0.5 - 1.0, 5.8, 9.0)
+	_solid(r, "FloorDeep", 5.4, 8.6, -1.6, -1.0, "floor")
 	# полка с ящиком (под потолком, упор слева) и уступ с весами (бортик справа)
 	_solid(r, "Shelf", 1.2, 6.0, 5.6, 6.0, "iron")
 	_solid(r, "ShelfStop", 1.2, 1.5, 6.0, 6.7, "iron")
@@ -419,13 +421,15 @@ func _room7(r: Node3D) -> void:
 	_solid(r, "Ledge", -1.0, 4.6, 2.6, 3.0, "iron")
 	_solid(r, "LedgeLip", 4.6, 5.0, 2.6, 3.6, "iron")
 	_decor(r, "LedgeEdge", Vector3(0.2, 0.18, 2.44), Vector3(-0.9, 2.91, 0), "hazard")
-	var scale := _inst(r.get_node("Mech"), "plate", "Scale", Vector3(3.2, 3.0, 0), {"threshold_kg": 80.0, "width": 2.4,
+	# весы — почти во весь уступ и на 2 см ниже его верха: ящик садится сразу на весы, а если левее — съезжает на них со ступеньки
+	# вниз; шов вровень (уступ и плита) Jolt ловил углом — ящик вставал намертво у края весов (как стык лифта в комнате 5)
+	var scale := _inst(r.get_node("Mech"), "plate", "Scale", Vector3(1.75, 2.98, 0), {"threshold_kg": 80.0, "width": 5.3,
 		"count_dolls": false, "pad_colour": Color(0.3, 0.65, 1.0)})
 	var door := r.get_node("Mech/ExitDoor")
 	door.set("input", door.get_path_to(scale))
-	_cable(r, "Cable", scale, [Vector2(3.2, 3.15), Vector2(3.2, 4.7), Vector2(7.4, 4.7), Vector2(7.4, 8.6)])
-	_inst(r.get_node("Mech"), PORTALS, "Portals", Vector3.ZERO, {"a_position": Vector3(6.8, 0.0, 0.0), "a_angle_deg": 0.0,
-		"b_position": Vector3(-W * 0.5, 7.4, 0.0), "b_angle_deg": -90.0, "width": 2.4, "colour_index": 0})
+	_cable(r, "Cable", scale, [Vector2(3.2, 3.13), Vector2(3.2, 4.7), Vector2(7.4, 4.7), Vector2(7.4, 8.6)])
+	_inst(r.get_node("Mech"), PORTALS, "Portals", Vector3.ZERO, {"a_position": Vector3(7.0, 0.0, 0.0), "a_angle_deg": 0.0,
+		"b_position": Vector3(-W * 0.5, 7.4, 0.0), "b_angle_deg": -90.0, "width": 2.6, "colour_index": 0})
 	_crate(r, "Iron", "iron", 3.4, 6.0)
 	_crate(r, "Light", "light", -3.6, 0.0)
 
@@ -437,18 +441,19 @@ func _room7(r: Node3D) -> void:
 ## камеры трещину не достаёт (до неё ≥ 4 м, радиус взрыва 3.2). Соло — встать на плиту и успеть за 5 с; люк роняет новую бочку.
 func _room8(r: Node3D) -> void:
 	_cut(r, "Floor")
-	_solid(r, "FloorL", -W * 0.5 - 1.0, -0.9, -1.0, 0.0, "floor")
-	_solid(r, "FloorR", 1.3, W * 0.5 + 1.0, -1.0, 0.0, "floor")
+	# щели 2.6 м (как в комнате 7): брошенная вниз бочка крутится и в щели 2.2 м изредка рвалась у входа, не пройдя её (кромка A)
+	_solid(r, "FloorL", -W * 0.5 - 1.0, -1.1, -1.0, 0.0, "floor")
+	_solid(r, "FloorR", 1.5, W * 0.5 + 1.0, -1.0, 0.0, "floor")
 	_cut(r, "WallL")
-	_solid(r, "WallL_Low", -W * 0.5 - 1.0, -W * 0.5, 0.0, 4.9)
-	_solid(r, "WallL_High", -W * 0.5 - 1.0, -W * 0.5, 7.1, H)
-	_solid(r, "WallL_Bump", -W * 0.5 - 1.6, -W * 0.5 - 1.0, 4.6, 7.4)
-	_solid(r, "FloorDeep", -1.2, 1.6, -1.6, -1.0, "floor")
+	_solid(r, "WallL_Low", -W * 0.5 - 1.0, -W * 0.5, 0.0, 4.7)
+	_solid(r, "WallL_High", -W * 0.5 - 1.0, -W * 0.5, 7.3, H)
+	_solid(r, "WallL_Bump", -W * 0.5 - 1.6, -W * 0.5 - 1.0, 4.4, 7.6)
+	_solid(r, "FloorDeep", -1.4, 1.8, -1.6, -1.0, "floor")
 	# камера: основание (до пола двери) и толстая левая стенка с карманом B2
 	_solid(r, "CBase", 1.6, 8.0, 0.0, 5.6, "iron")
-	_solid(r, "CWall_Low", 1.6, 3.2, 5.6, 6.2, "iron")
-	_solid(r, "CWall_High", 1.6, 3.2, 8.4, H, "iron")
-	_solid(r, "CWall_Back", 1.6, 1.9, 6.2, 8.4, "iron")
+	_solid(r, "CWall_Low", 1.6, 3.2, 5.6, 6.0, "iron")
+	_solid(r, "CWall_High", 1.6, 3.2, 8.6, H, "iron")
+	_solid(r, "CWall_Back", 1.6, 1.9, 6.0, 8.6, "iron")
 	_inst(r.get_node("Props"), "crack_wall", "CrackWall", Vector3(5.9, 5.6, 0), {"size": Vector2(0.6, 3.4)})
 	var pc := _inst(r.get_node("Mech"), "plate", "PlateC1", Vector3(4.4, 5.6, 0), {"threshold_kg": 30.0, "width": 1.6})
 	var latch := _inst(r.get_node("Mech"), "plate", "PlateC2", Vector3(7.1, 5.6, 0), {"threshold_kg": 30.0, "width": 1.6, "latch": true})
@@ -462,26 +467,26 @@ func _room8(r: Node3D) -> void:
 	disp.set("into", disp.get_path_to(r.get_node("Props")))
 	# ток: плита на полу или в камере → ЛЮБОЙ → ТАЙМЕР 5 с → пара; рычаг — выход A
 	# плита — левее рычага: с бочкой от полки к плите рычаг не на пути (бочка от удара о рукоять загорается)
-	var plate := _inst(r.get_node("Mech"), "plate", "Plate", Vector3(-3.8, 0, 0), {"threshold_kg": 30.0, "width": 1.4})
-	var lever := _inst(r.get_node("Mech"), "lever", "Lever", Vector3(-2.2, 0, 0), {"start_on": false})
+	var plate := _inst(r.get_node("Mech"), "plate", "Plate", Vector3(-3.4, 0, 0), {"threshold_kg": 30.0, "width": 1.4})   # дальше от входа: раскинувшая руки кукла на входе её не давит
+	var lever := _inst(r.get_node("Mech"), "lever", "Lever", Vector3(-1.9, 0, 0), {"start_on": false})
 	var any := _inst(r.get_node("Mech"), "logic", "Any", Vector3(-2.2, 4.6, CABLE_Z), {"mode": PuzzleLogic.Mode.OR})
 	any.set("inputs", [any.get_path_to(plate), any.get_path_to(pc)] as Array[NodePath])
 	var tm := _inst(r.get_node("Mech"), "logic", "Timer", Vector3(0.2, 4.6, CABLE_Z), {"mode": PuzzleLogic.Mode.TIMER, "hold_s": 5.0})
 	tm.set("inputs", [tm.get_path_to(any)] as Array[NodePath])
 	var pair := _inst(r.get_node("Mech"), PORTALS, "Portals", Vector3.ZERO, {"a_position": Vector3(0.2, 0.0, 0.0), "a_angle_deg": 0.0,
 		"b_position": Vector3(-W * 0.5, 6.0, 0.0), "b_angle_deg": -90.0, "alt_enabled": true, "alt_position": Vector3(3.2, 7.3, 0.0),
-		"alt_angle_deg": -90.0, "colour_index": 1, "label_b": "B1", "label_alt": "B2"})
+		"alt_angle_deg": -90.0, "width": 2.6, "colour_index": 1, "label_b": "B1", "label_alt": "B2"})
 	pair.set("input", pair.get_path_to(tm))
 	pair.set("switch_input", pair.get_path_to(lever))
 	var teal: Color = Tuning.PORTAL_COLOURS[1]
 	for k in 2:
-		var l := PuzzlePart.label(r.get_node("Visual"), "LeverB%d" % (k + 1), "B%d" % (k + 1), Vector3(-2.2 + (k * 2 - 1) * 0.62, 1.05, 0.62), 40, teal)
+		var l := PuzzlePart.label(r.get_node("Visual"), "LeverB%d" % (k + 1), "B%d" % (k + 1), Vector3(-1.9 + (k * 2 - 1) * 0.62, 1.05, 0.62), 40, teal)
 		l.outline_size = 8
-	_cable(r, "CablePlate", plate, [Vector2(-3.8, 0.15), Vector2(-3.8, 4.6), Vector2(-2.75, 4.6)])
+	_cable(r, "CablePlate", plate, [Vector2(-3.4, 0.15), Vector2(-3.4, 4.6), Vector2(-2.75, 4.6)])
 	_cable(r, "CablePlateC1", pc, [Vector2(4.4, 5.75), Vector2(4.4, 8.7), Vector2(-2.2, 8.7), Vector2(-2.2, 4.95)])
 	_cable(r, "CableAny", any, [Vector2(-1.65, 4.6), Vector2(-0.35, 4.6)])
 	_cable(r, "CableTimer", tm, [Vector2(0.2, 4.25), Vector2(0.2, 1.4)])
-	_cable(r, "CableLever", lever, [Vector2(-2.2, 0.3), Vector2(-2.2, 2.6), Vector2(0.8, 2.6), Vector2(0.8, 1.4)])
+	_cable(r, "CableLever", lever, [Vector2(-1.9, 0.3), Vector2(-1.9, 2.6), Vector2(0.8, 2.6), Vector2(0.8, 1.4)])
 	_cable(r, "CableLatch", latch, [Vector2(7.1, 5.75), Vector2(7.1, 8.3), Vector2(7.4, 8.3), Vector2(7.4, 8.5)])
 
 
