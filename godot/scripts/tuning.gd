@@ -941,3 +941,70 @@ const RACE_BOT_LEVELS := {
 	2: {"max_in": 0.92, "dash": true, "yield": 0.65, "shove": 0.4},
 	3: {"max_in": 1.0, "dash": true, "yield": 0.7, "shove": 0.8},
 }
+
+# --- ГОЛОВОЛОМКИ ВДВОЁМ: демо (docs/plan-demo/PUZZLE.md, MODES_PACK.md §6, 06.10) ---
+## Автор 06.10: «физические головоломки: рычаги, двери, ящики на кнопки, вдвоём — посмотреть демо интересно». Куклы летают, поэтому
+## головоломки — про вес, двери, гравитацию и переноску. Механизмы — scripts/puzzle/, площадка scenes/playground_puzzle.tscn
+## (собирает tools/build_puzzle_demo.gd), проба tests/puzzle_probe.gd.
+## Ящики (PuzzleCrate.kind): масса, ребро куба (м), множитель гравитации (вес = масса × g поля × g_scale) и класс веса для руки
+## (PropHeft.Heft: 0 LIGHT — приваривается и бросается, 1 MEDIUM — тащится на пружине, 2 HEAVY — не бросается). Рука держит не больше
+## ArmAssist.HOLD_F_MAX (150 Н): «вдвоём» весит 60 × 2 × 1.75 = 210 Н — одной рукой не поднять, двумя (300 Н) — да; «чугунный»
+## 90 × 9.8 = 882 Н не поднимают ни руки, ни тяга двух кукол (2 × (480 − 80) = 800 Н) — только лифт или гравитация вбок.
+## no_spin — ящик не поворачивается (axis_lock_angular_z): тяжёлые несут вдвоём за два угла ровно и не кувыркаются с полки.
+const PUZZLE_CRATES := {
+	"light": {"mass": 10.0, "size": 0.6, "g_scale": 1.0, "heft": 0},
+	"box15": {"mass": 15.0, "size": 0.62, "g_scale": 1.0, "heft": 0},
+	"medium": {"mass": 35.0, "size": 0.8, "g_scale": 2.5, "heft": 1},
+	"duo": {"mass": 60.0, "size": 1.0, "g_scale": 1.75, "heft": 1, "no_spin": true},
+	"iron": {"mass": 90.0, "size": 1.1, "g_scale": 4.9, "heft": 2, "no_spin": true},
+}
+## Плита: масса на ней = Σ свободных тел в датчике (кукла — вся, total_mass ≈ 40 кг, если её деталь в датчике и count_dolls). Тело
+## быстрее PUZZLE_PLATE_REST_SPEED не давит (пролетело насквозь). Порог держится PUZZLE_PLATE_ON_S, чтобы включить, и пропадает на
+## PUZZLE_PLATE_OFF_S, чтобы выключить (дребезг ящика на плите). Датчик — над плитой на PUZZLE_PLATE_SENSOR_H м (ящики стопкой).
+## Тяжёлое в руке (средний / тяжёлый класс на пружине, PuzzleCarry): тяга куклы × CARRY_THRUST_MULT. Иначе куклы улетают от ящика
+## быстрее, чем пружины хвата (150 Н) его разгоняют (6.2 против 1.5 м/с² вдвоём с ящиком 60 кг), и он срывается; при 0.55 куклы
+## медленнее ящика (0.85 м/с²). Предел срыва у тяжёлых ящиков головоломок — CRATE_SLIP_M (у ArmAssist 0.45 м): пружина неявная, на
+## 60 Гц её жёсткость ≈ 385 Н/м, 150 Н она даёт только при растяжении ≈ 0.39 м, а вдвоём одна из рук тянет сильнее.
+const PUZZLE_CARRY_THRUST_MULT := 0.55
+const PUZZLE_CRATE_SLIP_M := 0.8
+## Поводок (PuzzleCarry): растяжение пружины хвата дальше LEASH_FROM_M — ЦМ куклы уходит от груза не быстрее AWAY_MAX м/с × доля,
+## доля падает до 0 к LEASH_TO_M (меньше предела срыва CRATE_SLIP_M): кто тянет сильнее, ждёт второго.
+const PUZZLE_CARRY_LEASH_FROM_M := 0.35
+const PUZZLE_CARRY_LEASH_TO_M := 0.6
+const PUZZLE_CARRY_AWAY_MAX := 1.2
+const PUZZLE_PLATE_ON_S := 0.1
+const PUZZLE_PLATE_OFF_S := 0.25
+const PUZZLE_PLATE_REST_SPEED := 3.0
+const PUZZLE_PLATE_SENSOR_H := 1.3
+const PUZZLE_PLATE_SINK_M := 0.06
+## Рычаг: рукоять ±PUZZLE_LEVER_MAX_DEG, включён за +PUZZLE_LEVER_ON_DEG (выключен за −), между — прежнее (щелчок с гистерезисом).
+## Фиксатор тянет рукоять к ближнему краю моментом до PUZZLE_LEVER_TORQUE Н·м (у конца рукояти ≈ 13 Н — рука 80 Н перекидывает легко).
+const PUZZLE_LEVER_MAX_DEG := 40.0
+const PUZZLE_LEVER_ON_DEG := 15.0
+const PUZZLE_LEVER_TORQUE := 12.0
+const PUZZLE_LEVER_MASS := 4.0
+const PUZZLE_LEVER_LEN := 1.0
+## Дверь: сдвижная вверх (AnimatableBody3D), скорость открытия / закрытия м/с; закрывается, только если проём пуст (не давит кукол).
+const PUZZLE_DOOR_OPEN_SPEED := 4.0
+const PUZZLE_DOOR_CLOSE_SPEED := 3.0
+## Лифт: м/с вверх, пока есть ток, и вниз без тока (вниз не едет, если под платформой тело).
+const PUZZLE_LIFT_SPEED := 1.3
+## Зона гравитации: переход направления «низа» за столько секунд (NullField.set_field).
+const PUZZLE_GRAVITY_BLEND_S := 1.2
+## Логика ТАЙМЕР по умолчанию держит выход столько секунд после того, как входы погасли.
+const PUZZLE_TIMER_S := 6.0
+## Финал (комната 6): бочка заново, если в комнате нет ни одной, а трещина цела, — через столько секунд.
+const PUZZLE_BARREL_RESPAWN_S := 3.0
+## Комнаты: внутренность ROOM_W × ROOM_H м, шаг между центрами по x (сборщик); проём двери — PUZZLE_DOOR_H м.
+const PUZZLE_ROOM_W := 16.0
+const PUZZLE_ROOM_H := 9.0
+const PUZZLE_ROOM_PITCH := 26.0
+const PUZZLE_DOOR_H := 2.8
+## Рука P2 с клавиатуры (PuzzleKeyArm): нажал «/» или Num 0 — рука тянется к ближнему хватаемому в сторону стрелок (в круге
+## досягаемости + запас) и хватает, как только достала, но не дольше PUZZLE_KEY_REACH_S; с предметом — стрелки держат его на
+## PUZZLE_KEY_HOLD_FRAC досягаемости в их сторону, клавиша со стрелкой — бросок, без стрелки — положить. Выбор по направлению:
+## счёт = расстояние − PUZZLE_KEY_DIR_BIAS × косинус к стрелкам (м).
+const PUZZLE_KEY_REACH_S := 0.8
+const PUZZLE_KEY_REACH_EXTRA_M := 0.6
+const PUZZLE_KEY_HOLD_FRAC := 0.75
+const PUZZLE_KEY_DIR_BIAS := 0.8
