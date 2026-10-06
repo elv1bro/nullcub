@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -21,6 +21,7 @@ const RACE := "res://scenes/playground_race.tscn"
 const ROYALE := "res://scenes/playground_royale.tscn"
 const GOLF := "res://scenes/playground_golf.tscn"
 const PUZZLE := "res://scenes/playground_puzzle.tscn"
+const TRACK := "res://scenes/playground_race_track.tscn"
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -121,7 +122,8 @@ func _pass() -> Dictionary:
 	menu.queue_free()
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, ROYALE, GOLF, PUZZLE]:
+	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
@@ -155,6 +157,23 @@ func _pass() -> Dictionary:
 			rmm._finish("points")
 			await _wait(SETTLE * 3)
 			shots["race:end"] = _scan(inst)
+		if p == TRACK:   # «Гонка: трасса» (RACE_TRACK.md): ещё табличка итогов (время финиша, доля пути, возвраты)
+			var trm := inst.get_node("Match") as TrackMatch
+			var times := [72.3, 75.8, -1.0, -1.0]
+			for d in trm.dolls():
+				var st := trm.state_of(d as Doll)
+				var t: float = times[(d as Doll).player_index % times.size()]
+				st["finished"] = t > 0.0
+				st["finish_t"] = t
+				st["prog"] = 300.0 + 20.0 * float((d as Doll).player_index)
+				if t > 0.0:
+					trm.finish_order.append((d as Doll).player_index)
+					st["place"] = trm.finish_order.size()
+			trm.winner_index = 0
+			trm.first_finish_t = 72.3
+			trm._finish("wait")
+			await _wait(SETTLE * 3)
+			shots["track:end"] = _scan(inst)
 		if p == ROYALE:   # «Королевская битва» (ROYALE.md): ещё табличка итогов с местами
 			var ro := inst.get_node("Match") as RoyaleMatch
 			ro._finish("ko")
@@ -191,7 +210,8 @@ func _pass() -> Dictionary:
 			SquadSettings.reset()
 			await _wait(5)
 	Stasis.set_on(false)
-	for f in ["user://_probe_layout.tres", CraftEdit.save_path("_probe_layout"), "user://_probe_layout_prefs.cfg", RacePlayground.best_path]:
+	for f in ["user://_probe_layout.tres", CraftEdit.save_path("_probe_layout"), "user://_probe_layout_prefs.cfg", RacePlayground.best_path,
+			TrackPlayground.best_path]:
 		var g := ProjectSettings.globalize_path(f)
 		if FileAccess.file_exists(g):
 			DirAccess.remove_absolute(g)

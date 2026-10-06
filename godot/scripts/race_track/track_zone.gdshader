@@ -15,14 +15,14 @@ void fragment() {
 	vec2 s = vec2(-d.y, d.x);
 	float along = dot(p, d) - TIME * speed;
 	float side = dot(p, s);
-	// шеврон: «галочка» остриём по полю, шаг 1.6 м вдоль, 2.4 м поперёк
-	float cell = fract(side / 2.4) - 0.5;
-	float v = fract((along + abs(cell) * 1.4) / 1.6);
-	float chev = smoothstep(0.0, 0.08, v) * (1.0 - smoothstep(0.18, 0.3, v));
+	// шеврон: «галочка» остриём по полю, шаг 2.2 м вдоль, 1.6 м поперёк
+	float cell = fract(side / 1.6) - 0.5;
+	float v = fract((along + abs(cell) * 0.9) / 2.2);
+	float chev = smoothstep(0.0, 0.05, v) * (1.0 - smoothstep(0.09, 0.15, v));
 	vec2 g = abs(fract(p / 1.0) - 0.5);
 	float grid = 1.0 - smoothstep(0.0, 0.03, min(g.x, g.y));
 	vec2 e = min(UV, 1.0 - UV) * size_m;
-	float edge = 1.0 - smoothstep(0.0, 0.25, min(e.x, e.y));
-	float a = (0.05 * grid + 0.28 * chev) * strength + 0.45 * edge;
+	float edge = 1.0 - smoothstep(0.0, 0.2, min(e.x, e.y));
+	float a = (0.025 * grid + 0.11 * chev) * strength + 0.3 * edge;
 	ALBEDO = colour.rgb * a;
 }

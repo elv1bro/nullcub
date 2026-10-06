@@ -11,7 +11,7 @@ class_name TrackHud
 extends CanvasLayer
 
 ## Имена участков (ключи перевода — tr() в месте показа).
-const SECTION_NAMES := ["РАЗГОН", "ПРЕССЫ И МАГНИТЫ", "ТРУБЫ", "ГРАВИТАЦИЯ", "ТЯЖЁЛАЯ ЗОНА", "ЯМА"]
+const SECTION_NAMES := ["РАЗГОН И КОЛЬЦА", "ПРЕССЫ И МАГНИТЫ", "ТРУБЫ", "ГРАВИТАЦИЯ", "ТЯЖЁЛАЯ ЗОНА", "ЯМА"]
 ## Цвета участков на полоске (как материалы карты).
 const SECTION_COLOURS := [Color(0.9, 0.75, 0.5), Color(0.75, 0.6, 0.5), Color(0.55, 0.78, 0.9), Color(0.5, 0.62, 1.0),
 	Color(0.95, 0.45, 0.38), Color(0.75, 0.72, 0.66)]
@@ -279,7 +279,7 @@ func bind(m: TrackMatch, pg: Node = null) -> void:
 	for p in pairs:
 		if m.has_signal(p[0]) and not m.is_connected(p[0], p[1]):
 			m.connect(p[0], p[1])
-	hint.text = tr("Долети до финиша первым · WASD — лететь · Shift — ускорение (Заряд) · Q — к контрольной точке · U — второй игрок · K — уровень ботов · R — заново")
+	hint.text = tr("До финиша первым · WASD — лететь · Shift — ускорение (Заряд) · Q — к контрольной точке · U — второй игрок · K — боты · R — заново")
 	refresh_names()
 	show_best(_best(), false)
 

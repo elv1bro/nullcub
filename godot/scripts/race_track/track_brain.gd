@@ -225,20 +225,38 @@ func _drive(target: Vector2, v_max: float, shove := false, arrive := false) -> V
 		speed = minf(v_max, dist * 1.8)
 	var v_des := to / dist * speed if dist > 0.05 else Vector2.ZERO
 	var g := gravity_vec()
-	var a_des := (v_des - v) * KV + v_des * DAMP_FF - g
-	var a_thr := _thrust_acc(false)
-	var inp := a_des / maxf(a_thr, 0.1)
+	var a_steer := (v_des - v) * KV + v_des * DAMP_FF
+	var a_thr := maxf(_thrust_acc(false), 0.1)
+	var full := (a_steer - g) / a_thr
 	var heavy := g.length() > a_thr * HEAVY_FRAC
-	var need_dash := inp.length() > max_in and (shove or _force_dash or heavy or (dash_straight and not saving and speed >= cruise - 0.1 and not arrive))
+	var need_dash := full.length() > max_in and (shove or _force_dash or heavy or (dash_straight and not saving and speed >= cruise - 0.1 and not arrive))
+	var a_use := a_thr
+	var cap := max_in
 	if need_dash and doll.can_spend_charge():
-		var a_dash := _thrust_acc(true)
-		inp = a_des / maxf(a_dash, 0.1)
+		a_use = maxf(_thrust_acc(true), 0.1)
+		cap = 1.0
 		if _force_dash or heavy:
 			doll.request_dash()   # держать, пока есть Заряд (без порогов EnemyBrain.dash: подъём в тяжёлом поле не ждёт)
 			forced_dash_ticks += 1
 		else:
 			dash()
-	return inp.limit_length(max_in if not need_dash else 1.0)
+	return fit_input(-g / a_use, a_steer / a_use, cap)
+
+
+## Ввод не длиннее cap: сначала — держать вес (base, против поля), остаток — на руление (steer), насколько влезает. Иначе при упоре
+## в предел ввода руление «съедало» долю против поля и бот тонул (яма, тяжёлое поле).
+static func fit_input(base: Vector2, steer: Vector2, cap: float) -> Vector2:
+	if base.length() >= cap:
+		return base.limit_length(cap)
+	var both := base + steer
+	if both.length() <= cap:
+		return both
+	var ss := steer.length_squared()
+	if ss < 1e-8:
+		return base
+	var gs := base.dot(steer)
+	var k := (-gs + sqrt(maxf(gs * gs - ss * (base.length_squared() - cap * cap), 0.0))) / ss
+	return base + steer * clampf(k, 0.0, 1.0)
 
 
 ## Ускорение тяги куклы, м/с² (с ускорением — × dash_mult).

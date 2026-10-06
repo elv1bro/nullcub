@@ -15,6 +15,8 @@ const SHADER := preload("res://scripts/race_track/track_zone.gdshader")
 @export var g_units := 0.2
 ## Глубина задника с шевронами (z).
 @export var panel_z := -1.9
+## Где подпись силы поля (от центра зоны, м); по умолчанию — у верхнего края посередине.
+@export var label_offset := Vector2(INF, INF)
 
 var field: NullField
 
@@ -65,7 +67,8 @@ func _ready() -> void:
 	l.outline_modulate = Color(0.0, 0.0, 0.05, 0.9)
 	l.shaded = false
 	l.double_sided = true
-	l.position = Vector3(-size.x * 0.5 + 1.4, size.y * 0.5 - 0.8, panel_z + 0.05)
+	var lo := label_offset if label_offset.x != INF else Vector2(0.0, size.y * 0.5 - 0.8)
+	l.position = Vector3(lo.x, lo.y, panel_z + 0.05)
 	add_child(l)
 
 

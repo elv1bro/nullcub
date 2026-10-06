@@ -7,8 +7,10 @@
 ##   P3, P4 — боты. Уровень ботов bot_level, K — 1 → 2 → 3.
 ## Клавиши: Q — к своей контрольной точке (P1, через 2 с), R — заново, Esc — пауза (Flow), 1–9 — площадки хаба, M / N — музыка / толпа,
 ## H — скин HUD.
-## Камера (DynamicCamera, follow_mode = "humans", группа фокуса track_focus): P1; P2-человек — пока ближе Tuning.TRACK_CAM_PAIR_M к P1
-## (иначе кадр разъехался бы на сотню метров — дальше стрелка у края). Людей нет (пробы) — гонщик focus_index матча.
+## Камера (DynamicCamera, группа фокуса track_focus) — за людьми: P1; P2-человек — пока ближе Tuning.TRACK_CAM_PAIR_M к P1 (иначе кадр
+## разъехался бы на сотню метров — дальше стрелка у края); боты в кадр не тянут (как follow_mode = "humans", но группу собирает
+## площадка: людей нет — гонщик focus_index матча, пробы). Плюс точка линии трассы на CAM_LOOK_M впереди главного гонщика (CamAnchor):
+## кадр смотрит, куда лететь (в трубах — вдоль трубы, у пропасти — на мосты), а не держит куклу в центре над полом.
 ## Яма и сетка (body_fell карты) — TrackMatch.drop(«fall»): возврат к контрольной точке.
 class_name TrackPlayground
 extends Node3D
@@ -25,8 +27,20 @@ static var best_path := BEST_PATH
 @export var p1_bot := false
 @export var p2_human := false
 
+const CAM_LOOK_M := 6.0
+
 var arena: TrackArena
 var _zoom_before := 1.0
+var _anchor: CamAnchor
+
+
+## Точка «куда лететь» для камеры: не кукла (external_input = true — для камеры и стрелок не человек), только centre_of_mass().
+class CamAnchor extends Node3D:
+	var pos := Vector3.ZERO
+	var external_input := true
+
+	func centre_of_mass(_interpolated := false) -> Vector3:
+		return pos
 
 @onready var match_node: TrackMatch = $Match
 @onready var hud: TrackHud = $HUD
@@ -52,6 +66,9 @@ func _ready() -> void:
 	if arena != null:
 		arena.body_fell.connect(_on_body_fell)
 		match_node.bind_arena(arena)
+	_anchor = CamAnchor.new()
+	_anchor.name = "CamAnchor"
+	add_child(_anchor)
 	_spawn_racers()
 	hud.bind(match_node, self)
 	match_node.phase_changed.connect(func(p: int) -> void:
@@ -122,6 +139,8 @@ func _tick_focus() -> void:
 	var main := match_node.me()
 	if main != null:
 		want[main] = true
+		if _tick_anchor(main):
+			want[_anchor] = true
 		var c := main.centre_of_mass()
 		for d in match_node.dolls():
 			var dd := d as Doll
@@ -136,6 +155,22 @@ func _tick_focus() -> void:
 	for n in want.keys():
 		if is_instance_valid(n) and not (n as Node).is_in_group(FOCUS_GROUP):
 			(n as Node).add_to_group(FOCUS_GROUP)
+
+
+## Точка линии на CAM_LOOK_M впереди главного гонщика (сглажена; живой — иначе кадр ждёт возврата на контрольную точку).
+func _tick_anchor(main: Doll) -> bool:
+	var rt := match_node.route
+	if rt == null or not rt.ready() or not main.alive:
+		return false
+	var st := match_node.state_of(main)
+	var c := main.centre_of_mass()
+	var pr := rt.project(Vector2(c.x, c.y), float(st.get("prog", 0.0)), 30.0, int(st.get("seg", -1)))
+	if pr.is_empty():
+		return false
+	var p := rt.point_ahead(int(pr["seg"]), float(pr["s"]), CAM_LOOK_M)
+	var t := Vector3(p.x, p.y, 0.0)
+	_anchor.pos = t if _anchor.pos.distance_to(t) > 15.0 else _anchor.pos.lerp(t, 0.08)
+	return true
 
 
 func _unhandled_input(event: InputEvent) -> void:

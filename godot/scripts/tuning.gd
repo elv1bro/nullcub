@@ -1203,7 +1203,7 @@ const TRACK_HEAVY_G := 1.3
 const TRACK_PIT_G := 0.6
 const TRACK_BRIDGE_BREAK_S := 0.8
 const TRACK_BRIDGE_RESPAWN_S := 7.0
-const TRACK_BARREL_FUSE_M := 1.9
+const TRACK_BARREL_FUSE_M := 2.6
 const TRACK_BARREL_FUSE_S := 0.9
 const TRACK_BARREL_RESPAWN_S := 8.0
 ## Камера: второй человек (P2) в кадре вместе с P1, только пока ближе TRACK_CAM_PAIR_M (дальше — стрелка у края).
