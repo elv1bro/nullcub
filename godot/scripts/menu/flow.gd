@@ -16,6 +16,8 @@ const ACCENT := Color(1.0, 0.55, 0.2)
 var returning := false
 ## Гараж перезагружается после смены языка: после возврата сразу открыть настройки (см. GarageMenu._ready).
 var reopen_settings := false
+## После возврата в гараж сразу открыть мастерскую (кукла со стенда ходила в режим реестра: WorkshopBuild.open_mode_picker).
+var reopen_workshop := false
 var last_item := 0
 var settings := {}
 var _pause: CanvasLayer = null

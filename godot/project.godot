@@ -25,6 +25,7 @@ GameAudio="*res://scripts/audio/game_audio.gd"
 Gfx="*res://scripts/gfx/gfx.gd"
 Flow="*res://scripts/menu/flow.gd"
 Loading="*res://scripts/menu/loading.gd"
+ModeRun="*res://scripts/modes/mode_run.gd"
 
 [display]
 

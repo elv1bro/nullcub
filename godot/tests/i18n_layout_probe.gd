@@ -18,6 +18,7 @@ const SPORT := "res://scenes/playground_sport.tscn"
 const SQUAD := "res://scenes/playground_squad.tscn"
 const BOMB := "res://scenes/playground_bomb.tscn"
 const RACE := "res://scenes/playground_race.tscn"
+const MODES := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» (MODES_100.md)
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -118,7 +119,7 @@ func _pass() -> Dictionary:
 	menu.queue_free()
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, MODES]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)

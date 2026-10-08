@@ -8,6 +8,8 @@ extends Control
 const MENU_SCENE := "res://scenes/menu/test_menu.tscn"
 ## [подпись, сцена, пояснение]
 const ITEMS := [
+	["РЕЖИМЫ: 100+ вариантов", "res://scenes/menu/modes_menu.tscn",
+		"Реестр режимов: любая площадка плюс модификаторы — невесомость, один удар, бочки, вампиры, боты. Поиск, теги, случайный, избранное"],
 	["Кампания «История»", "res://scenes/campaign/campaign.tscn",
 		"Местная лига: 4 боя в куполе, выход бойца, голосование зрителей, трофей после победы, мастерская между боями"],
 	["Быстрый бой — купол Old NULL Hall", "res://scenes/playground_null_hall.tscn",

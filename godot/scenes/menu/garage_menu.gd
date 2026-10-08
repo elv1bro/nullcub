@@ -177,6 +177,13 @@ func _ready() -> void:
 		if bool(flow.reopen_settings):   # перезагрузка после смены языка — снова в настройки, на строку «ЯЗЫК»
 			flow.reopen_settings = false
 			_open_settings()
+		elif bool(flow.get("reopen_workshop")):   # кукла со стенда вернулась из режима реестра (MODES_100.md §B) — снова в мастерскую
+			flow.set("reopen_workshop", false)
+			for i in ITEMS.size():
+				if String(ITEMS[i]["id"]) == "workshop":
+					set_focus(i, true)
+					flow.last_item = i
+			workshop.open()
 
 
 # ---------------------------------------------------------------- состояние и ввод

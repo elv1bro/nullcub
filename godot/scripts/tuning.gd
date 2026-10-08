@@ -941,3 +941,10 @@ const RACE_BOT_LEVELS := {
 	2: {"max_in": 0.92, "dash": true, "yield": 0.65, "shove": 0.4},
 	3: {"max_in": 1.0, "dash": true, "yield": 0.7, "shove": 0.8},
 }
+
+# --- РЕЖИМЫ: реестр 100+ (docs/plan-demo/MODES_100.md, 08.10) ---
+## Автор 08.10: «хочу сделать более 100+ режимов игр разных». Карточки — scripts/modes/mode_catalog.gd, модификаторы — mutators.gd,
+## раннер — autoload ModeRun. Числа модификаторов (множители, периоды) — в Mutators.CATALOG и args карточек; здесь — общее.
+const MODES_FIELD_BLEND_S := 0.8            # плавная смена поля у «качелей» и «рулетки» (с)
+const MODES_RAIN_FUSE_S := 3.0              # «дождь из бочек»: фитиль упавшей бочки (с)
+const MODES_HARD_TIMEOUT_EXTRA_S := 90.0    # блиц / марафон: hard_timeout = лимит + столько (Sudden Death успевает решить)
