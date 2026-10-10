@@ -2382,5 +2382,15 @@
 	"ГОЛОВА · %d м": "HEAD · %d m",
 	"КОРЗИНА · %d м": "BASKET · %d m",
 	"Охота за головами 3 на 3": "Headhunt 3 vs 3",
-	"Две команды по три на Полигоне: выбитый оставляет голову. Коснись чужой головы, неси на спине до трёх и коснись своей корзины — очко за каждую. До 10 очков или 6 минут. Ты в синих (WASD + Shift); U — P2 в красных на стрелках, K — уровень ботов": "Two teams of three on the Proving Ground: a knocked-out fighter leaves his head. Touch an enemy head, carry up to three on your back and touch your basket — a point for each. First to 10 or 6 minutes. You are blue (WASD + Shift); U — P2 as red on the arrows, K — bot level"
+	"Две команды по три на Полигоне: выбитый оставляет голову. Коснись чужой головы, неси на спине до трёх и коснись своей корзины — очко за каждую. До 10 очков или 6 минут. Ты в синих (WASD + Shift); U — P2 в красных на стрелках, K — уровень ботов": "Two teams of three on the Proving Ground: a knocked-out fighter leaves his head. Touch an enemy head, carry up to three on your back and touch your basket — a point for each. First to 10 or 6 minutes. You are blue (WASD + Shift); U — P2 as red on the arrows, K — bot level",
+	"ПЕРЕТЯГИВАНИЕ КАНАТА · ДО %d": "TUG OF WAR · FIRST TO %d",
+	"P2: стрелки, / — схватить канат (U — бот)": "P2: arrows, / — grab the rope (U — bot)",
+	"P1: ЛКМ — рука к канату, E — схватить / отпустить, A — тяни к синей стене": "P1: LMB — hand to the rope, E — grab / let go, A — pull to the blue wall",
+	"ДЕРЖАЛ, С": "HELD, S",
+	"ДЕРЖИ!": "HOLD ON!",
+	"ПЕРЕТЯГИВАНИЕ КАНАТА": "TUG OF WAR",
+	"Перетягивание каната 2 на 2": "Tug of War 2 vs 2",
+	"Спорт-зал, канат на полу: схвати звено своей половины рукой (ЛКМ к канату, E — схватить) и тяни к своей стене. Метка за чертой соперника 1 с — очко. До 3 очков или 4 минут, бить можно. U — P2 на стрелках («/» — схватить), K — уровень ботов": "Sports hall, a rope on the floor: grab a link of your half by hand (LMB to the rope, E — grab) and pull to your wall. Marker past the rival's line for 1 s — a point. First to 3 or 4 minutes, hitting allowed. U — P2 on the arrows (\"/\" — grab), K — bot level",
+	"ТЯНИ!": "PULL!",
+	"ОЧКО: %s": "POINT: %s"
 }

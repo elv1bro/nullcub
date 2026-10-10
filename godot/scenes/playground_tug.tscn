@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/tug/playground_tug.gd" id="1_pg"]
+[ext_resource type="PackedScene" path="res://scenes/arena/sport_hall.tscn" id="2_hall"]
+[ext_resource type="Script" path="res://scenes/arena/sport_hall.gd" id="3_hall"]
+[ext_resource type="Script" path="res://scenes/tug/tug_rope.gd" id="4_rope"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="5_cam"]
+[ext_resource type="Script" path="res://scripts/tug/tug_match.gd" id="6_match"]
+[ext_resource type="Script" path="res://scenes/tug/tug_hud.gd" id="7_hud"]
+
+[node name="PlaygroundTug" type="Node3D"]
+script = ExtResource("1_pg")
+
+[node name="SportHall" type="Node3D" parent="." groups=["arena"] instance=ExtResource("2_hall")]
+script = ExtResource("3_hall")
+
+[node name="Rope" type="Node3D" parent="." groups=["tug_rope"]]
+script = ExtResource("4_rope")
+
+[node name="Dolls" type="Node3D" parent="."]
+
+[node name="Camera" type="Camera3D" parent="." groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 26)
+fov = 30.0
+far = 300.0
+script = ExtResource("5_cam")
+arena_path = NodePath("../SportHall")
+floor_inset = 0.0
+target_group = "tug_cam"
+padding = 3.2
+padding_y = 2.4
+min_half_height = 4.6
+fit_bounds = true
+zoom_out_tau = 0.25
+zoom_in_tau = 1.1
+follow_tau = 0.3
+
+[node name="Match" type="Node" parent="."]
+script = ExtResource("6_match")
+rope_path = NodePath("../Rope")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../SportHall")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("7_hud")
