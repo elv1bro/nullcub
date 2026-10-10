@@ -29,6 +29,10 @@ func apply_sport(id: String) -> void:
 	if not Tuning.SPORTS.has(id):
 		return
 	sport = id
+	# ХОККЕЙ (HOCKEY.md): низкие ворота собираются кодом при первом выборе вида, лёд — материал пола только при хоккее
+	if id == "hockey":
+		HockeyRink.ensure(self)
+	HockeyRink.apply_ice(self, id == "hockey")
 	var fx := get_node_or_null("Fixtures")
 	if fx != null:
 		for f in fx.get_children():

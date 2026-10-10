@@ -1,7 +1,8 @@
 ## Матч спорт-зала (docs/plan-demo/SPORT.md; автор 04.10: «режим ФУТБОЛ, где куклам нужно пинать мяч в чужие ворота, до 3 голов»).
 ## Наследник Match: от него — регистрация кукол, удары и их эффекты, надписи табло, HUD, итоги. Своё — счёт и розыгрыши:
 ##   • виды спорта (Tuning.SPORTS, set_sport): football — мяч за линию ворот под перекладиной; basketball — мяч прошёл кольцо
-##     сверху вниз; volleyball — мяч коснулся пола на чужой половине. Команда 0 (P1, P3) играет слева и атакует вправо, команда 1 —
+##     сверху вниз; volleyball — мяч коснулся пола на чужой половине; hockey (HOCKEY.md) — шайба (Puck вместо мяча) пересекла линию
+##     низких ворот, клюшки (HockeySticks), свои часы и срок возврата после нокаута (_apply_hockey). Команда 0 (P1, P3) играет слева и атакует вправо, команда 1 —
 ##     наоборот; гол в свои ворота идёт сопернику;
 ##   • розыгрыш: ввод мяча (фаза COUNTDOWN: куклы на своих точках, мяч заморожен на точке ввода арены) → игра (FIGHT) → гол: надпись,
 ##     замедление, пауза SPORT_GOAL_PAUSE_S (мяч в сетке) → новый ввод. Часы матча идут только в игре;
@@ -49,6 +50,10 @@ var _respawns: Array = []          # [[Doll, осталось с]]
 var _ball_prev := Vector2.ZERO
 var _banked: Dictionary = {}       # player_index → накопленная статистика прошлых розыгрышей
 var _corner_s := 0.0
+## ХОККЕЙ (HOCKEY.md): все снаряды сцены (мяч, шайба) — активен один по виду (_pick_ball); клюшки — узел HockeySticks.
+var _balls: Array = []
+var _hockey_on := false
+var sticks: HockeySticks
 
 
 func _ready() -> void:
@@ -62,6 +67,12 @@ func _late_ready() -> void:
 	ball = get_node_or_null(ball_path) as SportBall if ball_path != NodePath() else null
 	if ball == null:
 		ball = get_tree().get_first_node_in_group(SportBall.GROUP) as SportBall
+	# ХОККЕЙ (HOCKEY.md): запомнить все снаряды сцены — шайба и мяч меняются по виду
+	if ball != null:
+		_balls.append(ball)
+	for n in get_tree().get_nodes_in_group(SportBall.GROUP):
+		if not _balls.has(n):
+			_balls.append(n)
 	_apply_sport()
 	super._late_ready()
 
@@ -110,12 +121,70 @@ func _apply_sport() -> void:
 	var a := _arena()
 	if a != null and a.has_method("apply_sport"):
 		a.call("apply_sport", sport)
+	_apply_hockey()   # ХОККЕЙ (HOCKEY.md)
 	if ball != null:
 		ball.apply_sport(sport)
 		if a != null and a.has_method("ball_passthrough"):
 			for b in a.call("ball_passthrough"):
 				if b is PhysicsBody3D:
 					ball.add_collision_exception_with(b)
+
+
+## ХОККЕЙ (HOCKEY.md): снаряд по виду (шайба / мяч), клюшки, свои часы и возврат после нокаута. Другие виды не меняются:
+## числа трогаются только на переходе в хоккей и обратно.
+func _apply_hockey() -> void:
+	var hk := sport == "hockey"
+	_pick_ball(hk)
+	if hk != _hockey_on:
+		_hockey_on = hk
+		time_limit_s = Tuning.HOCKEY_TIME_S if hk else Tuning.SPORT_TIME_LIMIT_S
+		hard_timeout_s = time_limit_s + (Tuning.HOCKEY_GOLDEN_S if hk else Tuning.SPORT_GOLDEN_S)
+		goals_to_win = Tuning.HOCKEY_GOALS_TO_WIN if hk else Tuning.SPORT_GOALS_TO_WIN
+	if hk and sticks == null:
+		sticks = HockeySticks.new()
+		sticks.name = "HockeySticks"
+		add_child(sticks)
+	elif not hk and sticks != null:
+		remove_child(sticks)
+		sticks.queue_free()
+		sticks = null
+
+
+## ХОККЕЙ: активный снаряд — шайба (Puck) при хоккее, иначе мяч; второй выключен — невидим, вне физики и вне всех своих групп
+## (sport_ball, камера площадки: боты и камера его не видят), группы возвращаются при включении.
+func _pick_ball(hk: bool) -> void:
+	var want: SportBall = null
+	for b in _balls:
+		if is_instance_valid(b) and ((b is Puck) == hk):
+			want = b
+			break
+	if want == null:
+		return
+	ball = want
+	for b in _balls:
+		if not is_instance_valid(b):
+			continue
+		var on: bool = b == want
+		var sb := b as SportBall
+		sb.visible = on
+		sb.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
+		if on and sb.has_meta(&"sport_groups"):
+			for g in sb.get_meta(&"sport_groups"):
+				sb.add_to_group(g)
+			sb.remove_meta(&"sport_groups")
+		elif not on and not sb.has_meta(&"sport_groups"):
+			sb.freeze = true
+			var gs: Array = []
+			for g in sb.get_groups():
+				if not String(g).begins_with("_"):
+					gs.append(g)
+			sb.set_meta(&"sport_groups", gs)
+			for g in gs:
+				sb.remove_from_group(g)
+
+
+func ko_respawn_s() -> float:
+	return Tuning.HOCKEY_KO_RESPAWN_S if sport == "hockey" else Tuning.SPORT_KO_RESPAWN_S
 
 
 # --- фазы ---
@@ -281,6 +350,11 @@ func scoring_team() -> int:
 		"volleyball":
 			if p.y <= Tuning.SPORT_BALL_RADIUS + 0.07 and absf(p.x) > 0.2:
 				side = signf(p.x)
+		"hockey":
+			# ХОККЕЙ (HOCKEY.md): шайба целиком пересекла линию ворот в этом тике ниже перекладины
+			var line := float(r["goal_x"]) + Tuning.HOCKEY_PUCK_R
+			if absf(p.x) > line and absf(_ball_prev.x) <= line and p.y < float(r["goal_h"]):
+				side = signf(p.x)
 	if side == 0.0:
 		return -1
 	return 0 if side > 0.0 else 1
@@ -339,7 +413,7 @@ func _tick_idle_ball() -> void:
 	if ball == null:
 		return
 	var p := ball.pos2()
-	var cornered := absf(p.x) > Tuning.SPORT_FIELD_HALF_W - 1.3 and p.y < 1.3 and sport != "football"
+	var cornered := absf(p.x) > Tuning.SPORT_FIELD_HALF_W - 1.3 and p.y < 1.3 and sport != "football" and sport != "hockey"
 	_corner_s = _corner_s + get_physics_process_delta_time() if cornered else 0.0
 	if _corner_s >= Tuning.SPORT_BALL_CORNER_S:
 		_corner_s = 0.0
@@ -372,7 +446,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	if feel:
 		_camera_fx(25.0, record.get("position", victim.centre_of_mass()))
 		_time_effect(Tuning.KO_SLOWMO_SCALE, KO_SLOWMO_S)
-	_respawns.append([victim, Tuning.SPORT_KO_RESPAWN_S])
+	_respawns.append([victim, ko_respawn_s()])   # ХОККЕЙ: свой срок (ko_respawn_s)
 
 
 func _tick_respawns(delta: float) -> void:

@@ -23,6 +23,7 @@ const INFECTION := "res://scenes/playground_infection.tscn"
 const HEADHUNT := "res://scenes/playground_headhunt.tscn"
 const TUG := "res://scenes/playground_tug.tscn"
 const KING := "res://scenes/playground_king.tscn"
+const HOCKEY := "res://scenes/playground_sport_hockey.tscn"   # спорт-зал, хоккей (HOCKEY.md): своя подсказка и подпись HUD
 const MODES := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» (MODES_100.md)
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
@@ -124,7 +125,7 @@ func _pass() -> Dictionary:
 	menu.queue_free()
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, BRAWL, INFECTION, HEADHUNT, TUG, KING, MODES]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, BRAWL, INFECTION, HEADHUNT, TUG, KING, HOCKEY, MODES]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)

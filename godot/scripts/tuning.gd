@@ -311,6 +311,7 @@ const WEAPON := {
 	"sword": {"mass": 1.5, "damage_mult": 1.6, "length": 0.93},
 	"axe": {"mass": 3.0, "damage_mult": 1.3, "length": 0.90},
 	"pan": {"mass": 2.0, "damage_mult": 1.5, "length": 0.80},
+	"stick": {"mass": 1.0, "damage_mult": 0.5, "length": 1.45},   # ХОККЕЙ (HOCKEY.md): клюшка — лёгкая, длинная, урон вполовину
 }
 
 # --- удар-презентация и крит (docs/plan-demo/HIT_FX.md, 29.09): уровни light / heavy / crit / ko / ko_crit ---
@@ -542,8 +543,11 @@ const SPORTS := {
 		"hoop_x": 9.5, "hoop_y": 5.4, "hoop_r": 1.0, "ball_y": 4.0, "floor_kick": 5.0},
 	"volleyball": {"title": "ВОЛЕЙБОЛ", "mass": 1.6, "gravity_scale": 0.85, "bounce": 0.7, "friction": 0.4, "lin_damp": 0.18, "ang_damp": 0.6,
 		"net_h": 3.4, "ball_y": 6.0, "serve_x": 4.5},
+	# ХОККЕЙ (HOCKEY.md, 08.10): шайба (Puck), не мяч; ворота 1.2 м у стен; вбрасывание — падает с 2 м. Числа шайбы — HOCKEY_PUCK_* ниже.
+	"hockey": {"title": "ХОККЕЙ", "mass": 0.5, "gravity_scale": 2.0, "bounce": 0.55, "friction": 0.02, "lin_damp": 0.1, "ang_damp": 6.0,
+		"goal_x": 9.2, "goal_h": 1.2, "ball_y": 2.0},
 }
-const SPORT_ORDER := ["football", "basketball", "volleyball"]
+const SPORT_ORDER := ["football", "basketball", "volleyball", "hockey"]   # hockey — ХОККЕЙ (HOCKEY.md)
 ## Бот спорт-зала (SportBrain): доля полной тяги, ошибка прицела (м), упреждение мяча (с), пользуется ли ускорением.
 const SPORT_BOT_LEVELS := {
 	1: {"max_in": 0.72, "aim_error_m": 0.55, "lead_s": 0.12, "dash": false},
@@ -1129,3 +1133,39 @@ const KING_BOT_LEVELS := {
 const KING_BOT_GUARD_M := 3.0               # бот один в зоне: чужой ближе этого — наскок на него, потом обратно к центру
 const KING_BOT_DASH_M := Vector2(1.5, 7.0)  # наскок: ускорение, когда цель в этом коридоре (м)
 const KING_BOT_LURK_M := 1.8               # lurk: на столько дальше кромки зоны ждать, пока в ней дерутся
+
+# --- ХОККЕЙ: четвёртый вид спорт-зала (docs/plan-demo/HOCKEY.md, 08.10) ---
+## Шайба (scenes/sport/puck.gd, Puck extends SportBall) — плоский диск, лежит на льду плашмя, вращение заперто (ещё и ang_damp 6):
+## не катится и не встаёт на ребро — скользит. Трение 0.02, пол зала при хоккее — HOCKEY_ICE_FRICTION (HockeyRink.apply_ice), дамп
+## 0.1 → после удара 6 м/с проходит ≈ 16 м за 3.5 с (проба: ≥ 8 м) (отскок от борта 0.55). Не подпрыгивает: вверх от пола медленнее
+## HOCKEY_PUCK_HOP_KILL — гасится. Физика снаряда (масса, тяжесть, отскок, трение, дамп) — Tuning.SPORTS["hockey"], как у мячей.
+const HOCKEY_PUCK_R := 0.32               # м: радиус диска (настоящая шайба 0.038 — куклой 1.8 м не попасть)
+const HOCKEY_PUCK_THICK := 0.16           # м: толщина диска (= высота сцены puck.tscn)
+const HOCKEY_PUCK_HOP_KILL := 2.6         # м/с: подскок от пола медленнее этого гасится (вбрасывание с 2 м: отскок ≈ 2.1 — ляжет сразу)
+const HOCKEY_ICE_FRICTION := 0.05         # трение пола зала при хоккее (куклы скользят; обычный пол — без материала, 1.0)
+const HOCKEY_GOALS_TO_WIN := 3            # матч до стольких голов
+const HOCKEY_TIME_S := 240.0              # основное время 4:00; равный счёт — золотой гол ещё HOCKEY_GOLDEN_S
+const HOCKEY_GOLDEN_S := 60.0             # золотой гол: матч целиком не дольше 5:00 игрового времени, дальше ничья
+const HOCKEY_KO_RESPAWN_S := 3.0          # нокаут — «удаление», возврат у своих ворот через столько
+const HOCKEY_GOAL_H := 1.2                # м: ворота низкие (SPORTS["hockey"].goal_h — то же число для SportMatch / SportBrain)
+const HOCKEY_GOAL_BACK_H := 1.45          # м: крыша ворот поднимается от перекладины к стене до этой высоты (HockeyRink)
+## Клюшка — оружие "stick" (scenes/weapons/weapon_stick.tscn, Tuning.WEAPON["stick"]) в кисти каждой куклы (HockeySticks.preferred_hand): даёт HockeySticks
+## (scripts/sport/hockey_sticks.gd) на старте, после расстановки, после нокаута — новая (старая убирается), без клюшки дольше
+## HOCKEY_STICK_REGIVE_S (кисть оторвана вместе с клюшкой) — новая в свободную кисть. Ничья клюшка на льду дольше ORPHAN_S — убирается.
+const HOCKEY_STICK_HAND := "Hand_R"           # у человека с рукой мышью (ArmAssist водит Hand_R); боты и P2 — кисть со стороны атаки
+const HOCKEY_STICK_HOLD_DEG := 15.0       # угол хвата (WeaponPickup.hold_angle_deg): почти продолжение руки — крюк достаёт до льда
+const HOCKEY_STICK_CHECK_S := 0.5         # как часто HockeySticks сверяет, у всех ли клюшка
+const HOCKEY_STICK_REGIVE_S := 2.0        # без клюшки столько — новая
+const HOCKEY_STICK_ORPHAN_S := 4.0        # ничья клюшка лежит столько — убирается
+## Бот (HockeyBrain extends SportBrain): гонится за шайбой с упреждением и бьёт сквозь неё к чужим воротам (SportBrain), у
+## шайбы в ударе — раскрутка (request_spin, замах клюшкой); шайба на своей половине и соперник к ней ближе (или шайба летит в свои
+## ворота, а бот дальше от них) — вратарь:
+## держится на луче «середина ворот → шайба» в HOCKEY_GOALIE_OUT_M от линии. Уровни 1..3: тяга, прицел, упреждение, ускорение, раскрутка, вратарь.
+const HOCKEY_GOALIE_OUT_M := 1.3
+const HOCKEY_THREAT_SPEED := 2.0          # м/с: шайба летит к своим воротам быстрее, а бот дальше от них — вратарь (уровни 2–3)
+const HOCKEY_SPIN_NEAR_M := 1.7           # раскрутка, когда до шайбы ближе этого в ударе
+const HOCKEY_BOT_LEVELS := {
+	1: {"max_in": 0.7, "aim_error_m": 0.6, "lead_s": 0.1, "dash": false, "spin": false, "goalie": false},
+	2: {"max_in": 0.88, "aim_error_m": 0.3, "lead_s": 0.2, "dash": true, "spin": true, "goalie": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.12, "lead_s": 0.3, "dash": true, "spin": true, "goalie": true},
+}
