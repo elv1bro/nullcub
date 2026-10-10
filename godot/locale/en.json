@@ -2348,5 +2348,13 @@
 	"Спарринг: бот уровня %d   (B — следующий)": "Sparring: level %d bot   (B — next)",
 	"Гравитация зала: %s   (G — следующая)": "Hall gravity: %s   (G — next)",
 	"Испытание! Esc / Tab — к сборке   ·   R — заново   ·   B — бот   ·   G — гравитация   ·   C — суставы   ·   ; — запас   ·   Y — в режиме…": "Test! Esc / Tab — back to build   ·   R — restart   ·   B — bot   ·   G — gravity   ·   C — joints   ·   ; — health   ·   Y — in a mode…",
-	"Режим для куклы со стенда…": "A mode for the fighter from the stand…"
+	"Режим для куклы со стенда…": "A mode for the fighter from the stand…",
+	"Стенка на стенку 5×5": "Wall vs Wall 5×5",
+	"Две команды по пять на Полигоне, только тело: последняя живая команда берёт раунд, матч до 2 побед. Ты в синих (WASD + Shift); U — P2 в красных на стрелках, K — уровень ботов": "Two teams of five on the Proving Ground, bodies only: the last team standing takes the round, first to 2 wins. You're on blue (WASD + Shift); U — P2 on red with the arrows, K — bot level",
+	"P1: WASD + Shift — ты в синих, выбей красных": "P1: WASD + Shift — you're blue, knock out the reds",
+	"РАУНД %d · ДО %d ПОБЕД": "ROUND %d · FIRST TO %d",
+	"раундов: %d · счёт %d : %d": "rounds: %d · score %d : %d",
+	"НОКАУТОВ": "KOS",
+	"МЕДАЛИ: ": "MEDALS: ",
+	"%s БЕРУТ РАУНД": "%s TAKE THE ROUND"
 }

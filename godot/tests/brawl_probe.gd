@@ -28,7 +28,16 @@ class ScriptErrors extends Logger:
 	var first := ""
 	var engine := 0
 	var engine_first := ""
+	## Загрузка ресурса с диска не удалась (нет исходника звука в репозитории, битый кэш импорта) — к режиму не относится; считаем
+	## отдельно и пишем в info, пробу не валит (10.10: шесть .ogg из sfx_director.tscn в git только как .import — красная и на main).
+	var assets := 0
+	var assets_first := ""
 	var _mx := Mutex.new()
+
+	static func _is_asset_load(file: String, code: String, rationale: String) -> bool:
+		var msg := code + " " + rationale
+		return file.begins_with("core/io/resource") or file.begins_with("scene/resources/resource_format_text") \
+			or msg.contains("Failed loading resource") or msg.contains("res://.godot/imported/")
 
 	func _log_error(function: String, file: String, line: int, code: String, rationale: String, _editor_notify: bool,
 			error_type: int, script_backtraces: Array[ScriptBacktrace]) -> void:
@@ -37,6 +46,10 @@ class ScriptErrors extends Logger:
 			count += 1
 			if first == "":
 				first = "%s %s (%s:%d %s)" % [code, rationale, file, line, function]
+		elif error_type == ERROR_TYPE_ERROR and _is_asset_load(file, code, rationale):
+			assets += 1
+			if assets_first == "":
+				assets_first = "%s %s (%s:%d)" % [code, rationale, file, line]
 		elif error_type == ERROR_TYPE_ERROR:
 			engine += 1
 			if engine_first == "":
@@ -54,6 +67,7 @@ var pg: BrawlPlayground
 var bm: BrawlMatch
 var over_results: Dictionary = {}
 var over_count := 0
+var round_end_ft := 0.0   # fight_time на последнем round_over
 var errs := ScriptErrors.new()
 
 
@@ -89,6 +103,9 @@ func _ready() -> void:
 	await _unload()
 	_check("errors_script", errs.count == 0, "ошибок скриптов %d; первая: %s" % [errs.count, errs.first])
 	_check("errors_engine", errs.engine == 0, "ошибок движка %d; первая: %s" % [errs.engine, errs.engine_first])
+	info["errors_assets"] = {"count": errs.assets, "first": errs.assets_first}
+	if errs.assets > 0:
+		print("  (не загрузились ресурсы с диска: %d, первая: %s — не режим, см. info.errors_assets)" % [errs.assets, errs.assets_first])
 	var report := {"ok": ok, "checks": checks, "info": info}
 	print(JSON.stringify(report, " "))
 	if String(a["out"]) != "":
@@ -118,6 +135,7 @@ func _load(level := 2, countdown := 0.3) -> void:
 	bm.match_over.connect(func(_w: Doll, r: Dictionary) -> void:
 		over_results = r
 		over_count += 1)
+	bm.round_over.connect(func(_t: int, _r: int, _why: String) -> void: round_end_ft = bm.fight_time)
 	add_child(pg)
 	await _until(func() -> bool: return bm.play_state == "play" and bm.dolls().size() == Tuning.BRAWL_PER_TEAM * 2, 10.0)
 
@@ -237,6 +255,7 @@ func _rules() -> void:
 	var p1 := _doll(0)
 	var p3 := _doll(2)
 	var p2 := _doll(1)
+	var p5 := _doll(4)   # чужого бьёт свежий синий: P1 после удара по своему ещё не разогнался заново
 	_park([p1, p3, p2])
 	_place(p2, Vector2(20.0, 9.0))
 	# --- свой своего не ранит
@@ -244,10 +263,11 @@ func _rules() -> void:
 	_check("no_friendly_damage", int(own["hits"]) > 0 and float(own["dmg"]) == 0.0 and p3.hp == p3.max_hp and p3.alive and float(own["peak"]) > 1.5,
 		"ударов %d, урон %.1f, HP %.0f / %.0f, отброс до %.1f м/с" % [int(own["hits"]), float(own["dmg"]), p3.hp, p3.max_hp, float(own["peak"])])
 	_place(p3, Vector2(-29.0, 9.0))
+	_place(p1, Vector2(-26.0, 9.0))
 	await _wait(0.3)
 	# --- чужого ранит
 	var hp0 := p2.hp
-	var foe: Dictionary = await _collide(p1, p2)
+	var foe: Dictionary = await _collide(p5, p2)
 	_check("enemy_damage", int(foe["hits"]) > 0 and float(foe["dmg"]) > 0.0 and p2.hp < hp0,
 		"ударов %d, урон %.1f, HP %.0f → %.0f" % [int(foe["hits"]), float(foe["dmg"]), hp0, p2.hp])
 	_park([])
@@ -271,9 +291,8 @@ func _rules() -> void:
 	_check("no_self_ko_count", bm.kos.size() == Tuning.BRAWL_PER_TEAM and bm.kos.all(func(k: Dictionary) -> bool: return int(k["team"]) == 1),
 		"нокаутов %d, все у красных" % bm.kos.size())
 	# --- пауза и новая расстановка
-	var t_end := bm.fight_time
 	var next_ok := await _until(func() -> bool: return bm.round_i == 2 and bm.play_state == "play", Tuning.BRAWL_ROUND_PAUSE_S + Tuning.BRAWL_COUNTDOWN_S + 1.5)
-	var paused := bm.fight_time - t_end
+	var paused := bm.fight_time - bm.round_time - round_end_ft   # от конца раунда 1 до FIGHT! раунда 2 (без отсчёта: часы матча в нём стоят)
 	var placed := true
 	for d in bm.dolls():
 		var dd := d as Doll
