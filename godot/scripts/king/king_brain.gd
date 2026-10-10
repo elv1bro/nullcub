@@ -7,6 +7,8 @@
 ##   • hold — я в зоне один: держаться центра (мягкая тяга);
 ##   • guard — я в зоне один, чужой подлетает ближе KING_BOT_GUARD_M: наскок на него, но из зоны не выходить (вылетел за 0.9 R —
 ##     обратно к центру);
+##   • lurk (уровни 2–3) — я не в зоне, а в ней дерутся двое и больше: ждать у кромки (KING_BOT_LURK_M снаружи) со своей стороны —
+##     пусть выбьют друг друга; остался один — attack;
 ##   • ahead (уровень 3, foresee) — зона мигает (скоро переедет): лететь к новой заранее.
 ## Уровень 1..3 — Tuning.KING_BOT_LEVELS; Match.respawn_doll создаёт мозг заново без настроек — уровень из default_level.
 class_name KingBrain
@@ -25,6 +27,7 @@ var km: KingMatch
 var max_in := 0.92
 var use_dash := true
 var foresee := false
+var lurk := false
 var attack_target: Doll = null
 var _eval_t := 0.0
 
@@ -50,6 +53,7 @@ func _brain_ready() -> void:
 	lead_s = float(p["lead_s"])
 	use_dash = bool(p["dash"])
 	foresee = bool(p["foresee"])
+	lurk = bool(p.get("lurk", false))
 	go("seek")
 
 
@@ -121,6 +125,12 @@ func _think(delta: float) -> void:
 		if use_dash and me.distance_to(nz) > SEEK_DASH_M:
 			dash()
 		return
+	if lurk and not me_in and others.size() >= 2:
+		go("lurk")
+		var away := me - zc
+		var side := away / away.length() if away.length() > 0.1 else Vector2.UP
+		want = steer(zc + side * (r + Tuning.KING_BOT_LURK_M), max_in * 0.8)
+		return
 	if target != null and is_instance_valid(target) and target.alive:
 		var guarding := me_in and others.is_empty()
 		if state != "attack" and state != "guard":
@@ -148,4 +158,4 @@ func _think(delta: float) -> void:
 
 
 func _stuck_allowed() -> bool:
-	return state != "hold"
+	return state != "hold" and state != "lurk"

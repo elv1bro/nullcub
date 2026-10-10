@@ -2392,5 +2392,20 @@
 	"Перетягивание каната 2 на 2": "Tug of War 2 vs 2",
 	"Спорт-зал, канат на полу: схвати звено своей половины рукой (ЛКМ к канату, E — схватить) и тяни к своей стене. Метка за чертой соперника 1 с — очко. До 3 очков или 4 минут, бить можно. U — P2 на стрелках («/» — схватить), K — уровень ботов": "Sports hall, a rope on the floor: grab a link of your half by hand (LMB to the rope, E — grab) and pull to your wall. Marker past the rival's line for 1 s — a point. First to 3 or 4 minutes, hitting allowed. U — P2 on the arrows (\"/\" — grab), K — bot level",
 	"ТЯНИ!": "PULL!",
-	"ОЧКО: %s": "POINT: %s"
+	"ОЧКО: %s": "POINT: %s",
+	"ЗОНА · %d м": "ZONE · %d m",
+	"P1: WASD + Shift — будь в светящемся круге один: очко в секунду": "P1: WASD + Shift — be alone in the glowing ring: a point per second",
+	"ЦАРЬ: %s": "KING: %s",
+	"ЗОНА: %s": "ZONE: %s",
+	"ЗОНА СПОРНАЯ": "ZONE CONTESTED",
+	"ЗОНА СВОБОДНА": "ZONE FREE",
+	"ЗОНА ПЕРЕЕХАЛА": "ZONE MOVED",
+	"до %d очков · время матча %s · переездов зоны: %d": "to %d points · match time %s · zone moves: %d",
+	"КОРОН": "CROWNS",
+	"ЗОНА ПЕРЕЕДЕТ: %s": "ZONE MOVES: %s",
+	"ВОЗВРАТ %d": "BACK IN %d",
+	"ЦАРЬ %s": "KING %s",
+	"Царь горы": "King of the Hill",
+	"Пятеро в куполе, все против всех: светящийся круг переезжает каждые 30 с. Ты в нём один — очко в секунду, вдвоём — никому. 10 с подряд один — ЦАРЬ, очки ×2. До 60 очков или 5 минут. WASD + Shift; U — P2 на стрелках, K — уровень ботов": "Five in the dome, free-for-all: a glowing ring moves every 30 s. Alone in it — a point per second, two inside — nobody scores. Alone 10 s in a row — KING, points ×2. First to 60 or 5 minutes. WASD + Shift; U — P2 on the arrows, K — bot level",
+	"ЦАРЬ!": "KING!"
 }

@@ -1119,11 +1119,13 @@ const KING_SPAWN_CLEAR_M := 1.0
 ## Камера: зона в кадре, если ближе этого (м) к человеку.
 const KING_FOCUS_M := 14.0
 ## Бот (KingBrain) по уровням 1–3: max_in — доля тяги; aim_error_m / reaction_s / lead_s — прицел, задержка восприятия, упреждение
-## (EnemyBrain); dash — ускорение в наскоке и на перелёте к зоне; foresee — зона мигает (скоро переедет) → летит к новой заранее.
+## (EnemyBrain); dash — ускорение в наскоке и на перелёте к зоне; foresee — зона мигает (скоро переедет) → летит к новой заранее;
+## lurk — в зоне уже дерутся двое и больше → ждать у края (KING_BOT_LURK_M от кромки), пока не останется один, и тогда наскок.
 const KING_BOT_LEVELS := {
-	1: {"max_in": 0.8, "aim_error_m": 0.6, "reaction_s": 0.4, "lead_s": 0.15, "dash": false, "foresee": false},
-	2: {"max_in": 0.92, "aim_error_m": 0.35, "reaction_s": 0.25, "lead_s": 0.3, "dash": true, "foresee": false},
-	3: {"max_in": 1.0, "aim_error_m": 0.2, "reaction_s": 0.15, "lead_s": 0.4, "dash": true, "foresee": true},
+	1: {"max_in": 0.8, "aim_error_m": 0.6, "reaction_s": 0.4, "lead_s": 0.15, "dash": false, "foresee": false, "lurk": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.35, "reaction_s": 0.25, "lead_s": 0.3, "dash": true, "foresee": false, "lurk": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.2, "reaction_s": 0.15, "lead_s": 0.4, "dash": true, "foresee": true, "lurk": true},
 }
 const KING_BOT_GUARD_M := 3.0               # бот один в зоне: чужой ближе этого — наскок на него, потом обратно к центру
 const KING_BOT_DASH_M := Vector2(1.5, 7.0)  # наскок: ускорение, когда цель в этом коридоре (м)
+const KING_BOT_LURK_M := 1.8               # lurk: на столько дальше кромки зоны ждать, пока в ней дерутся

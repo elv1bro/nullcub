@@ -171,7 +171,8 @@ func in_zone(p: Vector3) -> bool:
 	return Vector2(p.x, p.y).distance_to(zone_pos) <= Tuning.KING_ZONE_R
 
 
-## Следующая точка зоны: случайная из KING_ZONE_SPOTS не ближе KING_ZONE_MIN_MOVE_M к текущей (таких нет — самая дальняя).
+## Следующая точка зоны: случайная из KING_ZONE_SPOTS не ближе KING_ZONE_MIN_MOVE_M к текущей, из тех, где зона стояла реже всего
+## (visited) — за матч зона обходит купол, а не прыгает между двумя точками; подходящих нет — самая дальняя.
 func pick_next(from_i: int) -> int:
 	var spots: Array = Tuning.KING_ZONE_SPOTS
 	var from: Vector2 = spots[from_i] if from_i >= 0 and from_i < spots.size() else zone_pos
@@ -189,7 +190,11 @@ func pick_next(from_i: int) -> int:
 			far_i = i
 	if cand.is_empty():
 		return far_i
-	return cand[_rng.randi() % cand.size()]
+	var least := INF
+	for i in cand:
+		least = minf(least, float(visited.get(i, 0)))
+	var rare: Array = cand.filter(func(i: int) -> bool: return float(visited.get(i, 0)) <= least)
+	return rare[_rng.randi() % rare.size()]
 
 
 func _set_zone(i: int) -> void:
