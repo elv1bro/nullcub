@@ -44,7 +44,10 @@ git clone https://github.com/elv1bro/nullcub.git && cd nullcub     # или: git
 - `python3 godot/tools/i18n.py check` — 0 ошибок; `i18n_probe`, `i18n_scenes_probe`, `i18n_layout_probe` — зелёные (новые HUD и
   таблички итогов в пробе вёрстки).
 - Пробы новых режимов и реестра — все зелёные (таблица выше), `sport_probe` до и после хоккея — зелёная.
-- Гейт-пробы на слитом дереве — раздел «Гейт» ниже.
+- Гейт-пробы на слитом дереве: `garage_menu_probe`, `menu_probe`, `stasis_probe` (30), `workshop_modes_probe` (25), `race_probe only=rules`
+  (22), `squad_probe only=rules` (62) — зелёные. `flow_probe` — первый прогон красный (`enter_quick_to_dome`: смена сцены не уложилась в 8 с
+  под нагрузкой соседних проб), два повтора по одной — зелёные; на чистом main `c2c21ea` — зелёная. `bomb_probe only=rules` — красная
+  `errors_engine` (21 ошибка загрузки отсутствующих звуков), **красная и на чистом main `c2c21ea`** — не из этой сборки.
 - Руками и в окне ничего не запускалось (облако без экрана). Перф 10 кукол (5×5) — 11–13 мс на тик физики в облачном headless; на машине
   автора не мерен.
 
