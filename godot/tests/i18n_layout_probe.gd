@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, HUD купола с меткой СТАЗИСА, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек» и их итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, HUD купола с меткой СТАЗИСА, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Стенка на стенку 5×5» и их итоги) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -18,6 +18,8 @@ const SPORT := "res://scenes/playground_sport.tscn"
 const SQUAD := "res://scenes/playground_squad.tscn"
 const BOMB := "res://scenes/playground_bomb.tscn"
 const RACE := "res://scenes/playground_race.tscn"
+const BRAWL := "res://scenes/playground_brawl.tscn"
+const INFECTION := "res://scenes/playground_infection.tscn"
 const MODES := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» (MODES_100.md)
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
@@ -119,7 +121,7 @@ func _pass() -> Dictionary:
 	menu.queue_free()
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, MODES]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, BRAWL, INFECTION, MODES]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
@@ -137,6 +139,18 @@ func _pass() -> Dictionary:
 			bm._finish("wins")
 			await _wait(SETTLE * 3)
 			shots["bomb:end"] = _scan(inst)
+		if p == BRAWL:   # «Стенка на стенку 5×5» (BRAWL.md): ещё табличка итогов с таблицей бойцов и медалями
+			var brm := inst.get_node("Match") as BrawlMatch
+			brm.wins = [2, 1]
+			brm._finish("wins")
+			await _wait(SETTLE * 3)
+			shots["brawl:end"] = _scan(inst)
+		if p == INFECTION:   # «Заражение» (INFECTION.md): ещё табличка итогов с таблицей бойцов
+			var ifm := inst.get_node("Match") as InfectionMatch
+			ifm.scores = {0: 2, 1: 1, 3: 2, 5: 1}
+			ifm._finish("rounds")
+			await _wait(SETTLE * 3)
+			shots["infection:end"] = _scan(inst)
 		if p == RACE:   # «Гонка: 10 точек» (RACE.md): ещё табличка итогов с таблицей мест
 			var rmm := inst.get_node("Match") as RaceMatch
 			rmm.scores = {0: 10, 1: 7, 2: 4, 3: 9}
