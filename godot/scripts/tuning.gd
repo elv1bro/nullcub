@@ -980,3 +980,40 @@ const BRAWL_BOT_LEVELS := {
 ## Держится своих: дальше BRAWL_BOT_COHESION_M от центра живых своих — тяга к ним примешивается (до полной на
 ## BRAWL_BOT_COHESION_M × 2); один в поле не улетает к краю.
 const BRAWL_BOT_COHESION_M := 9.0
+
+# --- ЗАРАЖЕНИЕ: коснулся — заразил (docs/plan-demo/INFECTION.md, MODES_IDEAS.md Б5, 08.10) ---
+## Семеро в куполе Old NULL Hall (P1 + боты, P2 на стрелках — клавиша U). Один случайный — заражённый (зелёный): коснулся любой
+## деталью любой детали здорового — тот заражён сразу (перекраска, вспышка, тост). Урона нет (Doll.incoming_mult = 0), только толчки.
+## Заражённые быстрее (INFECTION_ZOMBIE_*), но без руки мышью и без рывка (Заряд заперт). Партия INFECTION_ROUND_S: все заражены
+## раньше — очко первому заражённому; кто-то дожил — очко каждому дожившему. Матч — INFECTION_ROUNDS партий, места по очкам.
+const INFECTION_DOLLS := 7
+const INFECTION_ROUNDS := 3
+const INFECTION_ROUND_S := 90.0
+## Только что заражённый сам заражает не раньше этого (в куче заражение не прыгает по трём куклам за один тик).
+const INFECTION_TOUCH_GAP_S := 0.5
+const INFECTION_ZOMBIE_THRUST_MULT := 1.15
+const INFECTION_ZOMBIE_SPEED_MULT := 1.15
+const INFECTION_ROUND_PAUSE_S := 3.0            # партия кончилась — столько до следующей (или итогов матча)
+const INFECTION_COUNTDOWN_S := 2.0              # отсчёт перед каждой партией, кроме первой (первая — обычный COUNTDOWN_S)
+## Последние INFECTION_PULSE_S партии — пульс мембраны и писк (как темп бомбы): пауза между ударами PULSE_SLOW_S → PULSE_FAST_S.
+const INFECTION_PULSE_S := 15.0
+const INFECTION_PULSE_SLOW_S := 1.0
+const INFECTION_PULSE_FAST_S := 0.25
+## Цвет заражённых (рубашки, метки, HUD) и цвета семерых здоровых: как BOMB_COLORS без зелёного (зелёный — заражение) плюс
+## бирюзовый, оранжевый и розовый.
+const INFECTION_COLOR := Color("3fdc4a")
+const INFECTION_COLORS := [Color("2f6fde"), Color("d9342b"), Color("e8b820"), Color("9b4dde"), Color("2ab8c8"), Color("f07a1e"), Color("e86aa8")]
+## Точки появления семерых (x, y) внутри мембраны купола 16 × 19 м — друг от друга не ближе 6 м (заражённый не берёт соседа на старте).
+const INFECTION_SPAWN := [Vector2(-12.0, 2.5), Vector2(12.0, 2.5), Vector2(-6.0, 2.5), Vector2(6.0, 2.5), Vector2(0.0, 7.0),
+	Vector2(-8.0, 9.0), Vector2(8.0, 9.0)]
+## Камера: человек + ближайший заражённый (здоровому) или здоровый (заражённому), если он ближе этого, м.
+const INFECTION_FOCUS_M := 14.0
+## Боты (InfectionBrain): доля тяги, ошибка прицела (м), задержка восприятия (с), упреждение (с), рывок за Заряд (только здоровым).
+const INFECTION_BOT_LEVELS := {
+	1: {"max_in": 0.8, "aim_error_m": 0.6, "reaction_s": 0.35, "lead_s": 0.2, "dash": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.35, "reaction_s": 0.25, "lead_s": 0.3, "dash": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.2, "reaction_s": 0.15, "lead_s": 0.4, "dash": true},
+}
+const INFECTION_BOT_PANIC_M := 4.0              # заражённый ближе — здоровый бот удирает напрямую, с рывком
+const INFECTION_BOT_CORNER_M := 2.5             # здоровый у мембраны ближе этого и заражённый между ним и серединой — рывок сквозь
+const INFECTION_BOT_FLEE_MARGIN_M := Vector2(3.0, 3.5)   # кольцо бегства — эллипс мембраны, ужатый на столько (по x, по y)
