@@ -949,6 +949,148 @@ const MODES_FIELD_BLEND_S := 0.8            # плавная смена поля
 const MODES_RAIN_FUSE_S := 3.0              # «дождь из бочек»: фитиль упавшей бочки (с)
 const MODES_HARD_TIMEOUT_EXTRA_S := 90.0    # блиц / марафон: hard_timeout = лимит + столько (Sudden Death успевает решить)
 
+# --- СТЕНКА НА СТЕНКУ 5×5 (docs/plan-demo/BRAWL.md, 08.10) ---
+## Автор 08.10: «5×5 это другой режим». Две команды по пять на Полигоне, без оружия, классов и ящиков — только тело. Раунд берёт
+## последняя живая команда (возрождения внутри раунда нет), матч — до BRAWL_WINS_TO_WIN побед. BrawlMatch (scripts/brawl/brawl_match.gd),
+## бот BrawlBrain, площадка scenes/brawl/.
+const BRAWL_PER_TEAM := 5
+const BRAWL_WINS_TO_WIN := 2
+## Раунд не дольше BRAWL_ROUND_LIMIT_S: дальше Sudden Death как в Match (отброс растёт шагами SUDDEN_DEATH_STEP_S); на
+## BRAWL_ROUND_HARD_S раунд — команде, у которой больше суммарный запас живых (равно — ничья, раунд никому).
+const BRAWL_ROUND_LIMIT_S := 120.0
+const BRAWL_ROUND_HARD_S := 180.0
+const BRAWL_ROUND_PAUSE_S := 3.0            # раунд кончился — столько до следующего (или итогов)
+const BRAWL_COUNTDOWN_S := 2.0              # отсчёт перед каждым раундом, кроме первого (первый — обычный COUNTDOWN_S)
+const BRAWL_TEAM_DAMAGE_MULT := 0.0         # свои не ранят и не оглушают (толчки полные), как в стычке
+const BRAWL_KO_SLOWMO_S := 0.4              # замедление на KO с участием человека (обычное 1.2 с: за матч нокаутов десятки)
+## Точки появления пятерых синих (x, y) — две линии у левого края Полигона (палуба базы x −28, укрытие x −21); красные — зеркально
+## по x. Слот команды k = player_index / 2.
+const BRAWL_SPAWN := [Vector2(-28.5, 2.8), Vector2(-24.5, 0.5), Vector2(-28.5, 5.2), Vector2(-24.5, 3.4), Vector2(-28.5, 7.6)]
+const BRAWL_COLORS := [Color("2f6fde"), Color("d9342b")]   # синие, красные — рубашки, обводка, HUD
+## Камера: человек + до BRAWL_FOCUS_N ближайших к нему живых врагов не дальше BRAWL_FOCUS_M (м); людей нет — все живые.
+const BRAWL_FOCUS_M := 12.0
+const BRAWL_FOCUS_N := 2
+## Бот (BrawlBrain): наскок — отход — наскок на ближайшего живого врага. max_in — доля тяги; reaction_s — задержка восприятия;
+## aim_error_m — ошибка прицела; lead_s — упреждение; retreat_s — отход после наскока; dash — ускорение с разбега.
+const BRAWL_BOT_LEVELS := {
+	1: {"max_in": 0.8, "reaction_s": 0.36, "aim_error_m": 0.55, "lead_s": 0.15, "retreat_s": 1.5, "dash": false},
+	2: {"max_in": 0.92, "reaction_s": 0.30, "aim_error_m": 0.45, "lead_s": 0.2, "retreat_s": 1.3, "dash": true},
+	3: {"max_in": 1.0, "reaction_s": 0.24, "aim_error_m": 0.35, "lead_s": 0.25, "retreat_s": 1.1, "dash": true},
+}
+## Держится своих: дальше BRAWL_BOT_COHESION_M от центра живых своих — тяга к ним примешивается (до полной на
+## BRAWL_BOT_COHESION_M × 2); один в поле не улетает к краю.
+const BRAWL_BOT_COHESION_M := 9.0
+
+# --- ЗАРАЖЕНИЕ: коснулся — заразил (docs/plan-demo/INFECTION.md, MODES_IDEAS.md Б5, 08.10) ---
+## Семеро в куполе Old NULL Hall (P1 + боты, P2 на стрелках — клавиша U). Один случайный — заражённый (зелёный): коснулся любой
+## деталью любой детали здорового — тот заражён сразу (перекраска, вспышка, тост). Урона нет (Doll.incoming_mult = 0), только толчки.
+## Заражённые быстрее (INFECTION_ZOMBIE_*), но без руки мышью и без рывка (Заряд заперт). Партия INFECTION_ROUND_S: все заражены
+## раньше — очко первому заражённому; кто-то дожил — очко каждому дожившему. Матч — INFECTION_ROUNDS партий, места по очкам.
+const INFECTION_DOLLS := 7
+const INFECTION_ROUNDS := 3
+const INFECTION_ROUND_S := 90.0
+## Только что заражённый сам заражает не раньше этого (в куче заражение не прыгает по трём куклам за один тик).
+const INFECTION_TOUCH_GAP_S := 0.5
+const INFECTION_ZOMBIE_THRUST_MULT := 1.15
+const INFECTION_ZOMBIE_SPEED_MULT := 1.15
+const INFECTION_ROUND_PAUSE_S := 3.0            # партия кончилась — столько до следующей (или итогов матча)
+const INFECTION_COUNTDOWN_S := 2.0              # отсчёт перед каждой партией, кроме первой (первая — обычный COUNTDOWN_S)
+## Последние INFECTION_PULSE_S партии — пульс мембраны и писк (как темп бомбы): пауза между ударами PULSE_SLOW_S → PULSE_FAST_S.
+const INFECTION_PULSE_S := 15.0
+const INFECTION_PULSE_SLOW_S := 1.0
+const INFECTION_PULSE_FAST_S := 0.25
+## Цвет заражённых (рубашки, метки, HUD) и цвета семерых здоровых: как BOMB_COLORS без зелёного (зелёный — заражение) плюс
+## бирюзовый, оранжевый и розовый.
+const INFECTION_COLOR := Color("3fdc4a")
+const INFECTION_COLORS := [Color("2f6fde"), Color("d9342b"), Color("e8b820"), Color("9b4dde"), Color("2ab8c8"), Color("f07a1e"), Color("e86aa8")]
+## Точки появления семерых (x, y) внутри мембраны купола 16 × 19 м — друг от друга не ближе 6 м (заражённый не берёт соседа на старте).
+const INFECTION_SPAWN := [Vector2(-12.0, 2.5), Vector2(12.0, 2.5), Vector2(-6.0, 2.5), Vector2(6.0, 2.5), Vector2(0.0, 7.0),
+	Vector2(-8.0, 9.0), Vector2(8.0, 9.0)]
+## Камера: человек + ближайший заражённый (здоровому) или здоровый (заражённому), если он ближе этого, м.
+const INFECTION_FOCUS_M := 14.0
+## Боты (InfectionBrain): доля тяги, ошибка прицела (м), задержка восприятия (с), упреждение (с), рывок за Заряд (только здоровым).
+const INFECTION_BOT_LEVELS := {
+	1: {"max_in": 0.8, "aim_error_m": 0.6, "reaction_s": 0.35, "lead_s": 0.2, "dash": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.35, "reaction_s": 0.25, "lead_s": 0.3, "dash": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.2, "reaction_s": 0.15, "lead_s": 0.4, "dash": true},
+}
+const INFECTION_BOT_PANIC_M := 4.0              # заражённый ближе — здоровый бот удирает напрямую, с рывком
+const INFECTION_BOT_CORNER_M := 2.5             # здоровый у мембраны ближе этого и заражённый между ним и серединой — рывок сквозь
+const INFECTION_BOT_FLEE_MARGIN_M := Vector2(3.0, 3.5)   # кольцо бегства — эллипс мембраны, ужатый на столько (по x, по y)
+
+# --- ОХОТА ЗА ГОЛОВАМИ: 3 на 3 (docs/plan-demo/HEADHUNT.md, MODES_IDEAS.md Б4, 08.10) ---
+## Две команды по HEADHUNT_TEAM на Полигоне (синие слева, красные справа). Удары с уроном; выбитый оставляет голову (RigidBody3D в
+## группе heads, meta owner_team) и возвращается через HEADHUNT_RESPAWN_S на своей стороне. Голову берёт касание любой деталью
+## (ближе HEADHUNT_PICK_M), носитель несёт до HEADHUNT_CARRY_MAX голов на спине, тяга × HEADHUNT_CARRY_THRUST за каждую; выбили —
+## все его головы и своя рассыпаются (HEADHUNT_DROP_LOCK_S их нельзя взять — разлетаются). Коснулся своей корзины (ближе
+## HEADHUNT_BASKET_M) — чужие головы +1 каждая, свои — возвращены без очка. До HEADHUNT_SCORE_TO_WIN или HEADHUNT_TIME_S (больше очков).
+const HEADHUNT_TEAM := 3
+const HEADHUNT_SCORE_TO_WIN := 10
+const HEADHUNT_TIME_S := 360.0
+const HEADHUNT_RESPAWN_S := 4.0
+const HEADHUNT_SPAWN_SHIELD_S := 1.5         # после возрождения урон не проходит столько с
+const HEADHUNT_PICK_M := 0.9
+const HEADHUNT_BASKET_M := 1.4
+const HEADHUNT_CARRY_MAX := 3
+const HEADHUNT_CARRY_THRUST := 0.9
+const HEADHUNT_DROP_LOCK_S := 0.6
+const HEADHUNT_DROP_SPEED := Vector2(2.0, 4.5)   # м/с разлёта голов с выбитого носителя
+const HEADHUNT_KO_SLOWMO_S := 0.35
+## Корзины (x, y) — на палубах баз Полигона (tools/build_proving_ground.gd: палуба 26…30 м, верх 2.65); знак x — команда.
+const HEADHUNT_BASKET_AT := Vector2(29.4, 3.1)
+## Голова упала в страховочный низ Полигона — возвращается сверху над серединой (случайный x в пределах ±, высота y).
+const HEADHUNT_RESCUE := Vector2(6.0, 9.0)
+const HEADHUNT_COLORS := [Color("2f6fde"), Color("d9342b")]   # синие, красные — рубашки, метки, HUD
+## Боты (HeadhuntBrain): доля тяги, ошибка прицела (м), задержка восприятия (с), упреждение (с), отход после наскока (с), рывок за Заряд.
+const HEADHUNT_BOT_LEVELS := {
+	1: {"max_in": 0.8, "aim_error_m": 0.55, "reaction_s": 0.36, "lead_s": 0.15, "retreat_s": 1.5, "dash": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.42, "reaction_s": 0.28, "lead_s": 0.22, "retreat_s": 1.3, "dash": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.3, "reaction_s": 0.2, "lead_s": 0.3, "retreat_s": 1.1, "dash": true},
+}
+const HEADHUNT_BOT_HEAD_M := 8.0             # чужая голова лежит ближе — охотник летит за ней, а не за врагом
+const HEADHUNT_BOT_DEFEND_M := 10.0          # защитник: враг ближе этого к корзине — бой, дальше — у корзины
+const HEADHUNT_BOT_CRUISE_Y := 5.6           # высота перелёта через укрытия Полигона (верх укрытий 2.2, плит 4.8)
+## Камера: человек + до HEADHUNT_FOCUS_N ближайших к нему живых врагов не дальше HEADHUNT_FOCUS_M (м); людей нет — все живые.
+const HEADHUNT_FOCUS_M := 12.0
+const HEADHUNT_FOCUS_N := 2
+
+# --- ПЕРЕТЯГИВАНИЕ КАНАТА: 2 на 2 (docs/plan-demo/TUG.md, MODES_IDEAS.md A4, 08.10) ---
+## Спорт-зал, канат-цепь на полу, синие слева (P1, P3), красные справа (P2, P4). Рука (ArmAssist) хватает звено своей половины —
+## звенья чужой не хватаются (meta grab_team); держишь — тяга «от центра» × TUG_PULL_MULT. Метка середины за чертой ±TUG_LINE_M
+## TUG_HOLD_S подряд — очко той стороне, канат и куклы заново. До TUG_SCORE_TO_WIN или TUG_TIME_S (ведущий; равно — ничья).
+## Удар — урон обычный; KO — возврат у своей стены через TUG_RESPAWN_S.
+const TUG_TEAM := 2                         # кукол в команде
+const TUG_ROPE_M := 10.0                    # длина каната
+const TUG_ROPE_LINKS := 20                  # звеньев (чётное: метка — на стыке половин)
+const TUG_ROPE_MASS_KG := 40.0              # масса каната целиком (звено 2 кг — PropHeft LIGHT: рука приваривает)
+const TUG_LINK_FRICTION := 0.8              # трение звена о пол (материал звена; пол зала 0.8)
+const TUG_LINK_RADIUS := 0.07
+const TUG_LINE_M := 3.0                     # черты на полу: ±столько от центра
+const TUG_HOLD_S := 1.0                     # метка за чертой столько подряд — очко
+const TUG_SCORE_TO_WIN := 3
+const TUG_TIME_S := 240.0                   # 4 мин; вышло — побеждает ведущий, равно — ничья
+const TUG_PULL_MULT := 1.3                  # тяга держащего звено, когда ввод смотрит от центра (Doll.thrust_mult)
+const TUG_RESPAWN_S := 3.0                  # KO → возврат у своей стены
+const TUG_POINT_PAUSE_S := 2.0              # после очка — пауза, потом расстановка
+const TUG_RESET_COUNTDOWN_S := 2.0          # отсчёт перед розыгрышем после очка (первый — обычный COUNTDOWN_S)
+## Точки появления (x, y) по player_index: 0 / 2 — синие у левой стены, 1 / 3 — красные у правой (половина зала 11 м).
+const TUG_SPAWN := [Vector2(-5.0, 0.05), Vector2(5.0, 0.05), Vector2(-7.5, 0.05), Vector2(7.5, 0.05)]
+const TUG_COLORS := [Color("2f6fde"), Color("d9342b")]
+## Боты (TugBrain) по уровням: pull — доля тяги в рывке; rest — доля тяги между рывками; heave — рывок (с, случайно в диапазоне),
+## rest_s — пауза между рывками; regrip_s — задержка перехвата (звено ушло за центр или выпало из руки); dash — ускорение в рывке;
+## strike — отпустить канат и ударить соперника ближе TUG_BOT_STRIKE_M, когда метка на нашей стороне.
+const TUG_BOT_LEVELS := {
+	1: {"pull": 0.62, "rest": 0.15, "heave": Vector2(0.6, 1.0), "rest_s": Vector2(0.5, 1.0), "regrip_s": 2.5, "dash": false, "strike": false},
+	2: {"pull": 0.85, "rest": 0.0, "heave": Vector2(1.2, 2.2), "rest_s": Vector2(0.4, 1.0), "regrip_s": 1.4, "dash": true, "strike": false},
+	3: {"pull": 1.0, "rest": 0.3, "heave": Vector2(1.2, 1.8), "rest_s": Vector2(0.2, 0.45), "regrip_s": 0.7, "dash": true, "strike": true},
+}
+const TUG_BOT_STRIKE_M := 5.0               # соперник ближе — бот ур. 3 иногда отпускает канат и бьёт (метка на нашей стороне, свой держит)
+const TUG_BOT_WAIT_S := 3.0                 # начало розыгрыша: бот не рвёт канат, пока все боты не взялись (не дольше)
+const TUG_BOT_PRESS_M := 2.0                # метка на нашей стороне дальше — бот тянет без передышек (дожимает)
+const TUG_BOT_DOWN := 0.15                  # доля тяги вниз при держании (упор в пол)
+const TUG_BOT_GRIP_LINKS := [2, 6]          # звено бота: от метки столько звеньев (передний, задний в команде)
+const TUG_BOT_HOVER_Y := 0.1               # ЦМ бота над звеном при подлёте (кисть достаёт до пола, только когда кукла низко)
+
 # --- ЦАРЬ ГОРЫ: зона переезжает, очко в секунду тому, кто в ней один (docs/plan-demo/KING.md, MODES_IDEAS.md Б10, 08.10) ---
 ## Пятеро в куполе Old NULL Hall, все против всех. Зона («гора») — круг радиуса KING_ZONE_R вокруг одной из точек KING_ZONE_SPOTS;
 ## раз в KING_ZONE_S переезжает на другую точку не ближе KING_ZONE_MIN_MOVE_M (за KING_ZONE_WARN_S до переезда кольцо мигает, новая зона
