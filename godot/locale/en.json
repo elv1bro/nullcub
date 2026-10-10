@@ -2407,5 +2407,10 @@
 	"ЦАРЬ %s": "KING %s",
 	"Царь горы": "King of the Hill",
 	"Пятеро в куполе, все против всех: светящийся круг переезжает каждые 30 с. Ты в нём один — очко в секунду, вдвоём — никому. 10 с подряд один — ЦАРЬ, очки ×2. До 60 очков или 5 минут. WASD + Shift; U — P2 на стрелках, K — уровень ботов": "Five in the dome, free-for-all: a glowing ring moves every 30 s. Alone in it — a point per second, two inside — nobody scores. Alone 10 s in a row — KING, points ×2. First to 60 or 5 minutes. WASD + Shift; U — P2 on the arrows, K — bot level",
-	"ЦАРЬ!": "KING!"
+	"ЦАРЬ!": "KING!",
+	"ХОККЕЙ": "HOCKEY",
+	"Спорт-зал: хоккей": "Sports hall: hockey",
+	"Лёд, шайба и клюшка в руке: шайбу в низкие чужие ворота, до 3 голов или 4 минут. Мышь — клюшка, Space — раскрутка. U — P2 на стрелках, K — уровень бота": "Ice, puck, stick in hand: puck into the low enemy goal, first to 3 or 4 minutes. Mouse — stick, Space — spin. U — P2 on arrows, K — bot level",
+	"P1: WASD + Shift, мышь — клюшка, Space — раскрутка": "P1: WASD + Shift, mouse — stick, Space — spin",
+	"K: уровень бота": "K: bot level"
 }

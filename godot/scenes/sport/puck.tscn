@@ -3,47 +3,50 @@
 [ext_resource type="Script" path="res://scenes/sport/puck.gd" id="1_puck"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_puck"]
-height = 0.12
-radius = 0.28
+height = 0.16
+radius = 0.32
 
 [sub_resource type="StandardMaterial3D" id="Mat_puck"]
 albedo_color = Color(0.08, 0.08, 0.09, 1)
 roughness = 0.55
 
-[sub_resource type="StandardMaterial3D" id="Mat_ring"]
+[sub_resource type="StandardMaterial3D" id="Mat_band"]
 albedo_color = Color(0.95, 0.9, 0.5, 1)
 emission_enabled = true
 emission = Color(0.95, 0.85, 0.35, 1)
-emission_energy_multiplier = 0.8
+emission_energy_multiplier = 0.9
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_puck"]
 material = SubResource("Mat_puck")
-top_radius = 0.28
-bottom_radius = 0.28
-height = 0.12
+top_radius = 0.32
+bottom_radius = 0.32
+height = 0.16
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_band"]
+material = SubResource("Mat_band")
+top_radius = 0.325
+bottom_radius = 0.325
+height = 0.04
 
 [sub_resource type="TorusMesh" id="TorusMesh_ring"]
-material = SubResource("Mat_ring")
-inner_radius = 0.17
-outer_radius = 0.21
+material = SubResource("Mat_band")
+inner_radius = 0.18
+outer_radius = 0.22
 
 [node name="Puck" type="RigidBody3D" unique_id=1708100901 groups=["puck", "sport_ball"]]
 script = ExtResource("1_puck")
 
 [node name="Shape" type="CollisionShape3D" parent="." unique_id=1708100902]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 shape = SubResource("CylinderShape3D_puck")
 
 [node name="Model_hockey" type="Node3D" parent="." unique_id=1708100903]
 
 [node name="Disc" type="MeshInstance3D" parent="Model_hockey" unique_id=1708100904]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("CylinderMesh_puck")
 
-[node name="RingF" type="MeshInstance3D" parent="Model_hockey" unique_id=1708100905]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.061)
-mesh = SubResource("TorusMesh_ring")
+[node name="Band" type="MeshInstance3D" parent="Model_hockey" unique_id=1708100905]
+mesh = SubResource("CylinderMesh_band")
 
-[node name="RingB" type="MeshInstance3D" parent="Model_hockey" unique_id=1708100906]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, -0.061)
+[node name="RingTop" type="MeshInstance3D" parent="Model_hockey" unique_id=1708100906]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.081, 0)
 mesh = SubResource("TorusMesh_ring")

@@ -1,0 +1,89 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/sport/playground_sport.gd" id="1_acmcm"]
+[ext_resource type="PackedScene" path="res://scenes/arena/sport_hall.tscn" id="2_b4l3a"]
+[ext_resource type="Script" path="res://scenes/arena/sport_hall.gd" id="3_wswik"]
+[ext_resource type="PackedScene" path="res://scenes/doll/doll.tscn" id="4_u5wd0"]
+[ext_resource type="Script" path="res://scenes/doll/doll.gd" id="5_2avk2"]
+[ext_resource type="PackedScene" path="res://scenes/doll/doll_dark.tscn" id="6_cjimj"]
+[ext_resource type="PackedScene" path="res://scenes/sport/sport_ball.tscn" id="7_cp514"]
+[ext_resource type="Script" path="res://scripts/sport/sport_ball.gd" id="8_mpeqc"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="9_x74se"]
+[ext_resource type="Script" path="res://scripts/sport/sport_match.gd" id="10_8xsfr"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="11_t4lce"]
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="12_jojlm"]
+[ext_resource type="Script" path="res://scenes/sport/sport_hud.gd" id="13_hy3yb"]
+[ext_resource type="PackedScene" path="res://scenes/sport/puck.tscn" id="14_puck"]
+
+[node name="Playground" type="Node3D" unique_id=1582892591]
+script = ExtResource("1_acmcm")
+sport = "hockey"
+arena_id = "sport"
+
+[node name="SportHall" type="Node3D" parent="." unique_id=1118896602 groups=["arena"] instance=ExtResource("2_b4l3a")]
+script = ExtResource("3_wswik")
+
+[node name="P1" type="Node3D" parent="." unique_id=1965540815 groups=["dolls", "sport_cam"] instance=ExtResource("4_u5wd0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.05, 0)
+script = ExtResource("5_2avk2")
+
+[node name="P2" type="Node3D" parent="." unique_id=1219066531 groups=["dolls", "sport_cam"] instance=ExtResource("6_cjimj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.05, 0)
+script = ExtResource("5_2avk2")
+player_index = 1
+input_prefix = "p2"
+
+[node name="Ball" type="RigidBody3D" parent="." unique_id=2106693029 groups=["sport_cam"] instance=ExtResource("7_cp514")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+script = ExtResource("8_mpeqc")
+
+[node name="Puck" type="RigidBody3D" parent="." unique_id=1708100910 groups=["sport_cam"] instance=ExtResource("14_puck")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="Weapons" type="Node3D" parent="." unique_id=2067903149]
+
+[node name="Camera" type="Camera3D" parent="." unique_id=1198791417 groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 26)
+fov = 30.0
+far = 300.0
+script = ExtResource("9_x74se")
+arena_path = NodePath("../SportHall")
+floor_inset = 0.0
+target_group = "sport_cam"
+padding = 3.2
+padding_y = 2.4
+min_half_height = 4.6
+fit_bounds = true
+zoom_out_tau = 0.25
+zoom_in_tau = 1.1
+follow_tau = 0.3
+
+[node name="Match" type="Node" parent="." unique_id=1660868495]
+script = ExtResource("10_8xsfr")
+sport = "hockey"
+ball_path = NodePath("../Ball")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../SportHall")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=639834654 instance=ExtResource("11_t4lce")]
+layer = 10
+script = ExtResource("12_jojlm")
+
+[node name="SportHud" type="CanvasLayer" parent="." unique_id=1627340923]
+layer = 11
+script = ExtResource("13_hy3yb")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=551085882]
+
+[node name="Hint" type="Label" parent="UI" unique_id=1405551290]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -46.0
+offset_right = 1900.0
+offset_bottom = -12.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 7

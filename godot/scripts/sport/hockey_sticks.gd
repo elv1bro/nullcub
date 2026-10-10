@@ -1,8 +1,8 @@
 ## Клюшки хоккея (docs/plan-demo/HOCKEY.md): узел-ребёнок SportMatch, живёт только при виде "hockey" (SportMatch._apply_sport).
-## Каждой кукле — клюшка (оружие "stick", scenes/weapons/weapon_stick.tscn) в кисть Tuning.HOCKEY_STICK_HAND через WeaponPickup
+## Каждой кукле — клюшка (оружие "stick", scenes/weapons/weapon_stick.tscn) в кисть preferred_hand через WeaponPickup
 ## (attach_to + attach; угол хвата HOCKEY_STICK_HOLD_DEG — крюк достаёт до льда). Раз в HOCKEY_STICK_CHECK_S сверяет:
 ##   • у живой куклы нет клюшки (старт, расстановка после гола — Match.respawn_doll создаёт куклу заново, нокаут — то же,
-##     кисть оторвана вместе с клюшкой) дольше HOCKEY_STICK_REGIVE_S — новая в свободную кисть (HOCKEY_STICK_HAND, иначе любую);
+##     кисть оторвана вместе с клюшкой) дольше HOCKEY_STICK_REGIVE_S — новая в свободную кисть (preferred_hand, иначе любую);
 ##   • ничья клюшка (хозяин пересоздан или её выронили) лежит дольше HOCKEY_STICK_ORPHAN_S — убирается: на льду не копятся.
 ## Клюшка — обычное оружие: бьёт шайбу и соперника (урон × 0.5, Tuning.WEAPON["stick"]), DollCombat считает удары как оружием.
 ## given — счётчик выданных клюшек (пробы).
@@ -53,7 +53,7 @@ static func pickup_of(d: Doll) -> WeaponPickup:
 
 
 func _physics_process(delta: float) -> void:
-	if sm == null or not sm.is_started():
+	if sm == null or not sm._started:
 		return
 	_t += delta
 	if _t < Tuning.HOCKEY_STICK_CHECK_S:
@@ -97,6 +97,14 @@ func _physics_process(delta: float) -> void:
 			_orphan.erase(k)
 
 
+## Кисть для клюшки: у куклы с рукой мышью (ArmAssist, человек P1) — управляемая HOCKEY_STICK_HAND, клюшкой водит мышь; у
+## остальных — кисть со стороны атаки (кукла смотрит в камеру: левая — +X), иначе клюшка волочится за спиной и бьёт не туда.
+static func preferred_hand(d: Doll) -> String:
+	if d.get_node_or_null("ArmAssist") != null:
+		return Tuning.HOCKEY_STICK_HAND
+	return "Hand_L" if SportMatch.team_of(d) == 0 else "Hand_R"
+
+
 ## Новая клюшка в кисть куклы. false — кисти нет (оторваны обе) или кукла держит что-то в обеих.
 func give(d: Doll) -> bool:
 	if d == null or not is_instance_valid(d) or not d.alive:
@@ -107,8 +115,9 @@ func give(d: Doll) -> bool:
 	wp.hold_angle_deg = Tuning.HOCKEY_STICK_HOLD_DEG
 	var hand := ""
 	var names: Array = wp.hand_names()
-	if names.has(Tuning.HOCKEY_STICK_HAND) and not wp.is_holding(Tuning.HOCKEY_STICK_HAND):
-		hand = Tuning.HOCKEY_STICK_HAND
+	var pref := preferred_hand(d)
+	if names.has(pref) and not wp.is_holding(pref):
+		hand = pref
 	else:
 		for hn in names:
 			if not wp.is_holding(String(hn)):
