@@ -9,7 +9,7 @@ extends RigidBody3D
 
 const GROUP := "weapons"
 const SCENE_DIR := "res://scenes/weapons/"
-const IDS := ["hammer", "mace", "sword", "axe", "pan"]
+const IDS := ["hammer", "mace", "sword", "axe", "pan", "stick"]   # stick — клюшка (ХОККЕЙ, HOCKEY.md)
 
 @export var weapon_id := "hammer"
 ## Точка хвата в локальных координатах (по конвенции моделей — начало координат).

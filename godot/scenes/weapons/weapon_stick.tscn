@@ -1,0 +1,67 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/weapons/weapon.gd" id="1_stick"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_stick"]
+friction = 0.4
+bounce = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_shaft"]
+size = Vector3(1.15, 0.05, 0.05)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_blade"]
+size = Vector3(0.38, 0.08, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="Mat_shaft"]
+albedo_color = Color(0.82, 0.66, 0.42, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Mat_tape"]
+albedo_color = Color(0.12, 0.12, 0.13, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_shaft"]
+material = SubResource("Mat_shaft")
+size = Vector3(1.15, 0.05, 0.05)
+
+[sub_resource type="BoxMesh" id="BoxMesh_grip"]
+material = SubResource("Mat_tape")
+size = Vector3(0.3, 0.056, 0.056)
+
+[sub_resource type="BoxMesh" id="BoxMesh_blade"]
+material = SubResource("Mat_tape")
+size = Vector3(0.38, 0.08, 0.05)
+
+[node name="WeaponStick" type="RigidBody3D" unique_id=1708100801]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+mass = 1.0
+physics_material_override = SubResource("PhysicsMaterial_stick")
+continuous_cd = true
+linear_damp = 0.25
+angular_damp = 0.6
+script = ExtResource("1_stick")
+weapon_id = "stick"
+
+[node name="Col_Handle" type="CollisionShape3D" parent="." unique_id=1708100802]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.575, 0, 0)
+shape = SubResource("BoxShape3D_shaft")
+
+[node name="Col_Head" type="CollisionShape3D" parent="." unique_id=1708100803]
+transform = Transform3D(0.5, -0.8660254, 0, 0.8660254, 0.5, 0, 0, 0, 1, 1.235, 0.147, 0)
+shape = SubResource("BoxShape3D_blade")
+
+[node name="Model" type="Node3D" parent="." unique_id=1708100804]
+
+[node name="Shaft" type="MeshInstance3D" parent="Model" unique_id=1708100805]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.575, 0, 0)
+mesh = SubResource("BoxMesh_shaft")
+
+[node name="Grip" type="MeshInstance3D" parent="Model" unique_id=1708100806]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0, 0)
+mesh = SubResource("BoxMesh_grip")
+
+[node name="Blade" type="MeshInstance3D" parent="Model" unique_id=1708100807]
+transform = Transform3D(0.5, -0.8660254, 0, 0.8660254, 0.5, 0, 0, 0, 1, 1.235, 0.147, 0)
+mesh = SubResource("BoxMesh_blade")
