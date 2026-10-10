@@ -1090,3 +1090,42 @@ const TUG_BOT_PRESS_M := 2.0                # метка на нашей сто�
 const TUG_BOT_DOWN := 0.15                  # доля тяги вниз при держании (упор в пол)
 const TUG_BOT_GRIP_LINKS := [2, 6]          # звено бота: от метки столько звеньев (передний, задний в команде)
 const TUG_BOT_HOVER_Y := 0.1               # ЦМ бота над звеном при подлёте (кисть достаёт до пола, только когда кукла низко)
+
+# --- ЦАРЬ ГОРЫ: зона переезжает, очко в секунду тому, кто в ней один (docs/plan-demo/KING.md, MODES_IDEAS.md Б10, 08.10) ---
+## Пятеро в куполе Old NULL Hall, все против всех. Зона («гора») — круг радиуса KING_ZONE_R вокруг одной из точек KING_ZONE_SPOTS;
+## раз в KING_ZONE_S переезжает на другую точку не ближе KING_ZONE_MIN_MOVE_M (за KING_ZONE_WARN_S до переезда кольцо мигает, новая зона
+## подсвечена призраком). Очки — KING_POINT_PER_S в секунду тому, чей центр масс в зоне один; двое и больше — никому. Один и тот же в
+## зоне один KING_STREAK_S подряд — «ЦАРЬ!», очки ×KING_STREAK_MULT, пока его не выбили. KO → возврат через KING_RESPAWN_S на случайной
+## точке KING_SPAWN вне зоны. До KING_SCORE_TO_WIN очков или KING_TIME_S (больше очков).
+const KING_DOLLS := 5
+const KING_ZONE_R := 2.5
+const KING_ZONE_S := 30.0
+const KING_ZONE_WARN_S := 3.0
+const KING_ZONE_MIN_MOVE_M := 6.0
+## Точки зоны внутри мембраны купола (эллипс 16 × 19 м от (0, 0), пол y ≈ 0): пол слева / по центру / справа, воздух на 4–5 м,
+## повыше по бокам и под потолком. У каждой — не меньше четырёх других не ближе KING_ZONE_MIN_MOVE_M.
+const KING_ZONE_SPOTS := [Vector2(-9.0, 2.2), Vector2(0.0, 2.2), Vector2(9.0, 2.2), Vector2(-6.0, 4.5), Vector2(6.0, 4.5),
+	Vector2(-3.0, 9.0), Vector2(3.0, 9.0), Vector2(0.0, 13.0)]
+const KING_POINT_PER_S := 1.0
+const KING_SCORE_TO_WIN := 60
+const KING_TIME_S := 300.0
+const KING_RESPAWN_S := 3.0
+const KING_STREAK_S := 10.0
+const KING_STREAK_MULT := 2.0
+## Точки появления: по player_index в начале матча, после KO — случайная из них вне зоны (не ближе KING_ZONE_R + KING_SPAWN_CLEAR_M).
+const KING_SPAWN := [Vector2(-10.0, 2.5), Vector2(10.0, 2.5), Vector2(-5.0, 2.5), Vector2(5.0, 2.5), Vector2(0.0, 5.5),
+	Vector2(-12.0, 5.0), Vector2(12.0, 5.0)]
+const KING_SPAWN_CLEAR_M := 1.0
+## Камера: зона в кадре, если ближе этого (м) к человеку.
+const KING_FOCUS_M := 14.0
+## Бот (KingBrain) по уровням 1–3: max_in — доля тяги; aim_error_m / reaction_s / lead_s — прицел, задержка восприятия, упреждение
+## (EnemyBrain); dash — ускорение в наскоке и на перелёте к зоне; foresee — зона мигает (скоро переедет) → летит к новой заранее;
+## lurk — в зоне уже дерутся двое и больше → ждать у края (KING_BOT_LURK_M от кромки), пока не останется один, и тогда наскок.
+const KING_BOT_LEVELS := {
+	1: {"max_in": 0.8, "aim_error_m": 0.6, "reaction_s": 0.4, "lead_s": 0.15, "dash": false, "foresee": false, "lurk": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.35, "reaction_s": 0.25, "lead_s": 0.3, "dash": true, "foresee": false, "lurk": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.2, "reaction_s": 0.15, "lead_s": 0.4, "dash": true, "foresee": true, "lurk": true},
+}
+const KING_BOT_GUARD_M := 3.0               # бот один в зоне: чужой ближе этого — наскок на него, потом обратно к центру
+const KING_BOT_DASH_M := Vector2(1.5, 7.0)  # наскок: ускорение, когда цель в этом коридоре (м)
+const KING_BOT_LURK_M := 1.8               # lurk: на столько дальше кромки зоны ждать, пока в ней дерутся

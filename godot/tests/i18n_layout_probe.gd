@@ -22,6 +22,7 @@ const BRAWL := "res://scenes/playground_brawl.tscn"
 const INFECTION := "res://scenes/playground_infection.tscn"
 const HEADHUNT := "res://scenes/playground_headhunt.tscn"
 const TUG := "res://scenes/playground_tug.tscn"
+const KING := "res://scenes/playground_king.tscn"
 const MODES := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» (MODES_100.md)
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
@@ -123,7 +124,7 @@ func _pass() -> Dictionary:
 	menu.queue_free()
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, BRAWL, INFECTION, HEADHUNT, TUG, MODES]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, BRAWL, INFECTION, HEADHUNT, TUG, KING, MODES]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		var inst := (load(p) as PackedScene).instantiate()
 		add_child(inst)
@@ -165,6 +166,13 @@ func _pass() -> Dictionary:
 			tgm._finish("score")
 			await _wait(SETTLE * 3)
 			shots["tug:end"] = _scan(inst)
+		if p == KING:   # «Царь горы» (KING.md): ещё табличка итогов с таблицей бойцов
+			var kgm := inst.get_node("Match") as KingMatch
+			kgm.scores = {0: 60.0, 1: 41.5, 2: 12.0, 3: 33.0, 4: 7.0}
+			kgm.winner_index = 0
+			kgm._finish("score")
+			await _wait(SETTLE * 3)
+			shots["king:end"] = _scan(inst)
 		if p == RACE:   # «Гонка: 10 точек» (RACE.md): ещё табличка итогов с таблицей мест
 			var rmm := inst.get_node("Match") as RaceMatch
 			rmm.scores = {0: 10, 1: 7, 2: 4, 3: 9}
