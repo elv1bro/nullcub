@@ -1050,3 +1050,6 @@ const HEADHUNT_BOT_LEVELS := {
 const HEADHUNT_BOT_HEAD_M := 8.0             # чужая голова лежит ближе — охотник летит за ней, а не за врагом
 const HEADHUNT_BOT_DEFEND_M := 10.0          # защитник: враг ближе этого к корзине — бой, дальше — у корзины
 const HEADHUNT_BOT_CRUISE_Y := 5.6           # высота перелёта через укрытия Полигона (верх укрытий 2.2, плит 4.8)
+## Камера: человек + до HEADHUNT_FOCUS_N ближайших к нему живых врагов не дальше HEADHUNT_FOCUS_M (м); людей нет — все живые.
+const HEADHUNT_FOCUS_M := 12.0
+const HEADHUNT_FOCUS_N := 2
