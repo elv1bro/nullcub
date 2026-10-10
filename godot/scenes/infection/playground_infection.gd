@@ -69,7 +69,7 @@ func _ready() -> void:
 			cam.snap())
 	match_node.doll_replaced.connect(_on_doll_replaced)
 	match_node.pulsed.connect(_on_pulse)
-	match_node.infected.connect(_on_infected)
+	match_node.doll_infected.connect(_on_infected)
 	_beep = AudioStreamPlayer.new()
 	_beep.name = "Beep"
 	_beep.stream = BombCarry.beep_stream()

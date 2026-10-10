@@ -6,7 +6,7 @@
 ##     касание любой детали заражённого любой детали живого здорового (опрос get_colliding_bodies, contact_monitor на всех деталях)
 ##     → тот заражён сразу: infect() — перекраска в INFECTION_COLOR, тяга и предел скорости × INFECTION_ZOMBIE_*, рука мышью
 ##     (ArmAssist) снимается, Заряд заперт (рывка и раскрутки нет — doll.gd не правится: charge = 0 + charge_locked каждый тик),
-##     группа ZOMBIE_GROUP (стрелка за кадром), сигнал infected, диктор «ЗАРАЖЁН: P3». Свежезаражённый сам заражает не раньше
+##     группа ZOMBIE_GROUP (стрелка за кадром), сигнал doll_infected, диктор «ЗАРАЖЁН: P3». Свежезаражённый сам заражает не раньше
 ##     INFECTION_TOUCH_GAP_S;
 ##   • партия INFECTION_ROUND_S: все заражены раньше — партия заражённым, очко первому заражённому; время вышло — партия здоровым,
 ##     очко каждому живому здоровому. Пауза INFECTION_ROUND_PAUSE_S; до rounds_n партий — следующая (все куклы заново на точках,
@@ -17,7 +17,7 @@
 class_name InfectionMatch
 extends Match
 
-signal infected(victim: Doll, by: Doll)          # by null — первый заражённый партии
+signal doll_infected(victim: Doll, by: Doll)          # by null — первый заражённый партии
 signal pulsed(urgency: float)
 signal round_started(round_i: int)
 signal round_over(side: String, round_i: int)    # side: "zombies" | "healthy"
@@ -137,7 +137,7 @@ func healthy() -> Array:
 
 
 ## Осталось партии, с (в отсчёте — вся партия).
-func time_left() -> float:
+func round_left() -> float:
 	return maxf(round_s - round_time, 0.0) if play_state == "play" else (round_s if play_state == "countdown" else 0.0)
 
 
@@ -322,7 +322,7 @@ func infect(d: Doll, by: Doll) -> void:
 	else:
 		infections.append({"t": snappedf(round_time, 0.001), "round": round_i, "from": -1, "to": d.player_index})
 		announce.emit(tr("ЗАРАЖЁН: %s") % doll_name(d), Tuning.INFECTION_COLOR, "infect")
-	infected.emit(d, by)
+	doll_infected.emit(d, by)
 	if by != null and play_state == "play" and healthy().is_empty():
 		_round_won("zombies")
 

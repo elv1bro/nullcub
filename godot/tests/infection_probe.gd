@@ -23,12 +23,22 @@ const ZOMBIE_IDLE_LIMIT_S := 8.0    # заражённый не сдвинулс
 const PRESS_LIMIT_S := 4.0          # жмёт тягу, а торс стоит
 
 
+## Счётчик SCRIPT ERROR за прогон (как bomb_probe, brawl_probe): ошибка скрипта обрывает только свою функцию — проба могла бы молча потерять проверки.
 class ScriptErrors extends Logger:
 	var count := 0
 	var first := ""
 	var engine := 0
 	var engine_first := ""
+	## Загрузка ресурса с диска не удалась (нет исходника звука в репозитории, битый кэш импорта) — к режиму не относится; считаем
+	## отдельно и пишем в info, пробу не валит (10.10: шесть .ogg из sfx_director.tscn в git только как .import — красная и на main).
+	var assets := 0
+	var assets_first := ""
 	var _mx := Mutex.new()
+
+	static func _is_asset_load(file: String, code: String, rationale: String) -> bool:
+		var msg := code + " " + rationale
+		return file.begins_with("core/io/resource") or file.begins_with("scene/resources/resource_format_text") \
+			or msg.contains("Failed loading resource") or msg.contains("res://.godot/imported/")
 
 	func _log_error(function: String, file: String, line: int, code: String, rationale: String, _editor_notify: bool,
 			error_type: int, script_backtraces: Array[ScriptBacktrace]) -> void:
@@ -37,6 +47,10 @@ class ScriptErrors extends Logger:
 			count += 1
 			if first == "":
 				first = "%s %s (%s:%d %s)" % [code, rationale, file, line, function]
+		elif error_type == ERROR_TYPE_ERROR and _is_asset_load(file, code, rationale):
+			assets += 1
+			if assets_first == "":
+				assets_first = "%s %s (%s:%d)" % [code, rationale, file, line]
 		elif error_type == ERROR_TYPE_ERROR:
 			engine += 1
 			if engine_first == "":
@@ -89,6 +103,9 @@ func _ready() -> void:
 	await _unload()
 	_check("errors_script", errs.count == 0, "ошибок скриптов %d; первая: %s" % [errs.count, errs.first])
 	_check("errors_engine", errs.engine == 0, "ошибок движка %d; первая: %s" % [errs.engine, errs.engine_first])
+	info["errors_assets"] = {"count": errs.assets, "first": errs.assets_first}
+	if errs.assets > 0:
+		print("  (не загрузились ресурсы с диска: %d, первая: %s — не режим, см. info.errors_assets)" % [errs.assets, errs.assets_first])
 	var report := {"ok": ok, "checks": checks, "info": info}
 	print(JSON.stringify(report, " "))
 	if String(a["out"]) != "":
@@ -242,7 +259,7 @@ func _rules() -> void:
 	await get_tree().physics_frame
 	var had_arm := a.get_node_or_null("ArmAssist") != null
 	var got := {"victim": null, "by": null, "n": 0}
-	im.infected.connect(func(v: Doll, by: Doll) -> void:
+	im.doll_infected.connect(func(v: Doll, by: Doll) -> void:
 		got["victim"] = v
 		got["by"] = by
 		got["n"] = int(got["n"]) + 1)
@@ -354,7 +371,7 @@ func _rules() -> void:
 	for i in range(1, places.size()):
 		top_ok = top_ok and im.score_of(places[i]) <= im.score_of(places[i - 1])
 	var winner: Doll = over_results.get("winner")
-	var win_ok := (winner == null and bool(over_results.get("draw", false))) or (winner != null and winner == places[0] and places.size() > 1 and im.score_of(places[0]) > im.score_of(places[1]))
+	var win_ok: bool = (winner == null and bool(over_results.get("draw", false))) or (winner != null and winner == places[0] and places.size() > 1 and im.score_of(places[0]) > im.score_of(places[1]))
 	_check("match_to_rounds", done and over_count == 1 and im.rounds.size() == Tuning.INFECTION_ROUNDS and im.phase == Match.Phase.OVER and top_ok and win_ok
 		and int(im.scores.get(first3, 0)) >= 1,
 		"итогов %d, партий %d, победил %s, места %s, очки %s" % [over_count, im.rounds.size(), InfectionMatch.doll_name(winner), _names(places), str(im.scores)])

@@ -120,7 +120,7 @@ func _pick_target() -> void:
 	for z in im.zombies():
 		if z == doll:
 			continue
-		var b := (z as Node).get_node_or_null(name) as InfectionBrain
+		var b := (z as Node).get_node_or_null(NodePath(name)) as InfectionBrain
 		if b != null and b.target != null and is_instance_valid(b.target):
 			taken[b.target] = true
 	var best: Doll = null

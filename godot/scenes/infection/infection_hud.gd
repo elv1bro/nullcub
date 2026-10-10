@@ -222,7 +222,7 @@ func bind(m: InfectionMatch, pg: Node = null) -> void:
 	match_node = m
 	playground = pg
 	var pairs := [["announce", _on_announce], ["phase_changed", _on_phase], ["match_over", _on_over], ["pulsed", _on_pulse],
-		["round_started", _on_round], ["infected", _on_infected]]
+		["round_started", _on_round], ["doll_infected", _on_infected]]
 	for p in pairs:
 		if m.has_signal(p[0]) and not m.is_connected(p[0], p[1]):
 			m.connect(p[0], p[1])
@@ -418,7 +418,7 @@ func _update_chips() -> void:
 		(c["panel"] as Control).modulate.a = 1.0 if dd.alive or match_node.play_state == "countdown" else 0.45
 		(c["pips"] as Control).queue_redraw()
 	count_label.text = tr("ЗДОРОВЫХ: %d · ЗАРАЖЁННЫХ: %d") % [healthy_n, zombie_n]
-	var left := match_node.time_left()
+	var left := match_node.round_left()
 	clock.text = clock_text(left)
 	var last := match_node.play_state == "play" and left <= Tuning.INFECTION_PULSE_S
 	clock.set_meta("colour", Tuning.INFECTION_COLOR.lerp(Color.WHITE, 0.6 * _pulse) if last else Color.WHITE)
