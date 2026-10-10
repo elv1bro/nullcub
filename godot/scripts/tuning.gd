@@ -949,6 +949,38 @@ const MODES_FIELD_BLEND_S := 0.8            # плавная смена поля
 const MODES_RAIN_FUSE_S := 3.0              # «дождь из бочек»: фитиль упавшей бочки (с)
 const MODES_HARD_TIMEOUT_EXTRA_S := 90.0    # блиц / марафон: hard_timeout = лимит + столько (Sudden Death успевает решить)
 
+# --- СТЕНКА НА СТЕНКУ 5×5 (docs/plan-demo/BRAWL.md, 08.10) ---
+## Автор 08.10: «5×5 это другой режим». Две команды по пять на Полигоне, без оружия, классов и ящиков — только тело. Раунд берёт
+## последняя живая команда (возрождения внутри раунда нет), матч — до BRAWL_WINS_TO_WIN побед. BrawlMatch (scripts/brawl/brawl_match.gd),
+## бот BrawlBrain, площадка scenes/brawl/.
+const BRAWL_PER_TEAM := 5
+const BRAWL_WINS_TO_WIN := 2
+## Раунд не дольше BRAWL_ROUND_LIMIT_S: дальше Sudden Death как в Match (отброс растёт шагами SUDDEN_DEATH_STEP_S); на
+## BRAWL_ROUND_HARD_S раунд — команде, у которой больше суммарный запас живых (равно — ничья, раунд никому).
+const BRAWL_ROUND_LIMIT_S := 120.0
+const BRAWL_ROUND_HARD_S := 180.0
+const BRAWL_ROUND_PAUSE_S := 3.0            # раунд кончился — столько до следующего (или итогов)
+const BRAWL_COUNTDOWN_S := 2.0              # отсчёт перед каждым раундом, кроме первого (первый — обычный COUNTDOWN_S)
+const BRAWL_TEAM_DAMAGE_MULT := 0.0         # свои не ранят и не оглушают (толчки полные), как в стычке
+const BRAWL_KO_SLOWMO_S := 0.4              # замедление на KO с участием человека (обычное 1.2 с: за матч нокаутов десятки)
+## Точки появления пятерых синих (x, y) — две линии у левого края Полигона (палуба базы x −28, укрытие x −21); красные — зеркально
+## по x. Слот команды k = player_index / 2.
+const BRAWL_SPAWN := [Vector2(-28.5, 2.8), Vector2(-24.5, 0.5), Vector2(-28.5, 5.2), Vector2(-24.5, 3.4), Vector2(-28.5, 7.6)]
+const BRAWL_COLORS := [Color("2f6fde"), Color("d9342b")]   # синие, красные — рубашки, обводка, HUD
+## Камера: человек + до BRAWL_FOCUS_N ближайших к нему живых врагов не дальше BRAWL_FOCUS_M (м); людей нет — все живые.
+const BRAWL_FOCUS_M := 12.0
+const BRAWL_FOCUS_N := 2
+## Бот (BrawlBrain): наскок — отход — наскок на ближайшего живого врага. max_in — доля тяги; reaction_s — задержка восприятия;
+## aim_error_m — ошибка прицела; lead_s — упреждение; retreat_s — отход после наскока; dash — ускорение с разбега.
+const BRAWL_BOT_LEVELS := {
+	1: {"max_in": 0.8, "reaction_s": 0.36, "aim_error_m": 0.55, "lead_s": 0.15, "retreat_s": 1.5, "dash": false},
+	2: {"max_in": 0.92, "reaction_s": 0.30, "aim_error_m": 0.45, "lead_s": 0.2, "retreat_s": 1.3, "dash": true},
+	3: {"max_in": 1.0, "reaction_s": 0.24, "aim_error_m": 0.35, "lead_s": 0.25, "retreat_s": 1.1, "dash": true},
+}
+## Держится своих: дальше BRAWL_BOT_COHESION_M от центра живых своих — тяга к ним примешивается (до полной на
+## BRAWL_BOT_COHESION_M × 2); один в поле не улетает к краю.
+const BRAWL_BOT_COHESION_M := 9.0
+
 # --- ЗАРАЖЕНИЕ: коснулся — заразил (docs/plan-demo/INFECTION.md, MODES_IDEAS.md Б5, 08.10) ---
 ## Семеро в куполе Old NULL Hall (P1 + боты, P2 на стрелках — клавиша U). Один случайный — заражённый (зелёный): коснулся любой
 ## деталью любой детали здорового — тот заражён сразу (перекраска, вспышка, тост). Урона нет (Doll.incoming_mult = 0), только толчки.
