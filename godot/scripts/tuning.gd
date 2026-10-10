@@ -948,3 +948,33 @@ const RACE_BOT_LEVELS := {
 const MODES_FIELD_BLEND_S := 0.8            # плавная смена поля у «качелей» и «рулетки» (с)
 const MODES_RAIN_FUSE_S := 3.0              # «дождь из бочек»: фитиль упавшей бочки (с)
 const MODES_HARD_TIMEOUT_EXTRA_S := 90.0    # блиц / марафон: hard_timeout = лимит + столько (Sudden Death успевает решить)
+
+# --- СОБЕРИ СЕБЯ: торс против торса (docs/plan-demo/SCAVENGER.md, 08.10) ---
+## Пятеро на Свалке, все против всех, модульные куклы «Человек» (ScavMatch, scripts/scavenger/). Старт — только ядро и голова: обрубок
+## летает тягой ядра и головы и бьёт телом. Конечности кита разбросаны по карте лежащими деталями (SCAV_PARTS_N, PartPickup). Касание
+## любой своей деталью ближе SCAV_PICK_M — деталь прикручивается на первый свободный подходящий якорь (плечо → плечо, предплечье →
+## локоть, если плечо уже есть, иначе лежит дальше); запас из деталей растёт. KO (голова оторвана или запас 0) — детали выбитого
+## рассыпаются по месту, их берёт любой. Последний живой или по SCAV_TIME_S — у кого больше деталей (равно — запас). Партия одна, R — заново.
+const SCAV_DOLLS := 5
+const SCAV_PARTS_N := 20
+const SCAV_PICK_M := 0.9
+const SCAV_TIME_S := 300.0
+const SCAV_MAX_PARTS := 12
+## Россыпь на старте — виды деталей по кругу (первые SCAV_PARTS_N): плеч и бёдер больше, чем кистей и стоп — без плеча предплечье не прикрутить.
+const SCAV_SCATTER_KINDS := ["upper_arm", "upper_leg", "lower_arm", "hand", "upper_arm", "lower_leg", "upper_leg", "lower_arm", "foot", "upper_arm",
+	"lower_arm", "upper_leg", "hand", "upper_arm", "lower_leg", "upper_leg", "lower_arm", "foot", "upper_arm", "hand"]
+## Детали падают с меток ScavMarks площадки (случайная метка ± SCAV_SCATTER_JITTER_M по x); упала в пропасть — на новую метку.
+const SCAV_SCATTER_JITTER_M := 1.2
+## Точки появления пятерых на Свалке (x, y корня куклы): пол центра, правый ярус, левый уступ, островок, скат.
+const SCAV_SPAWN := [Vector2(0.6, 0.6), Vector2(14.4, 4.6), Vector2(-16.0, 7.0), Vector2(2.5, 5.8), Vector2(-12.0, 3.8)]
+const SCAV_COLORS := BOMB_COLORS
+## Боты (ScavBrain): деталей меньше want — к ближней детали, которую есть куда прикрутить; дальше — к ближнему врагу, у кого деталей
+## меньше; fear (уровни 2–3) — от врага ближе SCAV_BOT_FEAR_M, у которого деталей больше на SCAV_BOT_FEAR_GAP, держаться подальше.
+const SCAV_BOT_LEVELS := {
+	1: {"max_in": 0.8, "want": 6, "fear": false, "dash": false, "reaction_s": 0.35, "lead_s": 0.2, "aim_error_m": 0.6},
+	2: {"max_in": 0.92, "want": 6, "fear": true, "dash": true, "reaction_s": 0.25, "lead_s": 0.3, "aim_error_m": 0.35},
+	3: {"max_in": 1.0, "want": 6, "fear": true, "dash": true, "reaction_s": 0.15, "lead_s": 0.4, "aim_error_m": 0.2},
+}
+const SCAV_BOT_FEAR_M := 6.0
+const SCAV_BOT_FEAR_GAP := 2
+const SCAV_BOT_DASH_M := Vector2(1.2, 6.0)   # бот-охотник жмёт ускорение, когда цель в этом коридоре (м)
