@@ -1063,7 +1063,7 @@ const TUG_TEAM := 2                         # кукол в команде
 const TUG_ROPE_M := 10.0                    # длина каната
 const TUG_ROPE_LINKS := 20                  # звеньев (чётное: метка — на стыке половин)
 const TUG_ROPE_MASS_KG := 40.0              # масса каната целиком (звено 2 кг — PropHeft LIGHT: рука приваривает)
-const TUG_LINK_FRICTION := 1.2              # трение звена о пол (материал звена; пол зала 0.8)
+const TUG_LINK_FRICTION := 0.8              # трение звена о пол (материал звена; пол зала 0.8)
 const TUG_LINK_RADIUS := 0.07
 const TUG_LINE_M := 3.0                     # черты на полу: ±столько от центра
 const TUG_HOLD_S := 1.0                     # метка за чертой столько подряд — очко
@@ -1080,10 +1080,13 @@ const TUG_COLORS := [Color("2f6fde"), Color("d9342b")]
 ## rest_s — пауза между рывками; regrip_s — задержка перехвата (звено ушло за центр или выпало из руки); dash — ускорение в рывке;
 ## strike — отпустить канат и ударить соперника ближе TUG_BOT_STRIKE_M, когда метка на нашей стороне.
 const TUG_BOT_LEVELS := {
-	1: {"pull": 0.62, "rest": 0.35, "heave": Vector2(0.6, 1.0), "rest_s": Vector2(0.5, 1.0), "regrip_s": 2.5, "dash": false, "strike": false},
-	2: {"pull": 0.85, "rest": 0.45, "heave": Vector2(0.9, 1.4), "rest_s": Vector2(0.3, 0.7), "regrip_s": 1.4, "dash": true, "strike": false},
-	3: {"pull": 1.0, "rest": 0.55, "heave": Vector2(1.2, 1.8), "rest_s": Vector2(0.2, 0.45), "regrip_s": 0.7, "dash": true, "strike": true},
+	1: {"pull": 0.62, "rest": 0.15, "heave": Vector2(0.6, 1.0), "rest_s": Vector2(0.5, 1.0), "regrip_s": 2.5, "dash": false, "strike": false},
+	2: {"pull": 0.85, "rest": 0.0, "heave": Vector2(1.2, 2.2), "rest_s": Vector2(0.4, 1.0), "regrip_s": 1.4, "dash": true, "strike": false},
+	3: {"pull": 1.0, "rest": 0.3, "heave": Vector2(1.2, 1.8), "rest_s": Vector2(0.2, 0.45), "regrip_s": 0.7, "dash": true, "strike": true},
 }
-const TUG_BOT_STRIKE_M := 1.5               # соперник ближе — бот ур. 3 отпускает канат и бьёт (если метка на нашей стороне)
-const TUG_BOT_DOWN := 0.35                  # доля тяги вниз при держании (упор в пол)
-const TUG_BOT_HOVER_Y := 0.45               # ЦМ бота над звеном при подлёте (кисть достаёт до пола, только когда кукла низко)
+const TUG_BOT_STRIKE_M := 5.0               # соперник ближе — бот ур. 3 иногда отпускает канат и бьёт (метка на нашей стороне, свой держит)
+const TUG_BOT_WAIT_S := 3.0                 # начало розыгрыша: бот не рвёт канат, пока все боты не взялись (не дольше)
+const TUG_BOT_PRESS_M := 2.0                # метка на нашей стороне дальше — бот тянет без передышек (дожимает)
+const TUG_BOT_DOWN := 0.15                  # доля тяги вниз при держании (упор в пол)
+const TUG_BOT_GRIP_LINKS := [2, 6]          # звено бота: от метки столько звеньев (передний, задний в команде)
+const TUG_BOT_HOVER_Y := 0.1               # ЦМ бота над звеном при подлёте (кисть достаёт до пола, только когда кукла низко)

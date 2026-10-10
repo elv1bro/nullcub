@@ -3,7 +3,7 @@
 ##   • команды: player_index % 2 — 0 синие (слева, тянут к левой стене), 1 красные (справа); Doll.team = "tug_<команда>"; свои бьют
 ##     друг друга слабее (Tuning.TEAM_DAMAGE_MULT);
 ##   • канат TugRope (rope_path): звено своей половины хватает рука ArmAssist (meta grab_team); держащий звено и тянущий «от центра»
-##     (ввод x одного знака с его x) получает тягу × TUG_PULL_MULT (Doll.thrust_mult) — тянуть свой край выгоднее, чем висеть за центром;
+##     (ввод x к своей стене) получает тягу × TUG_PULL_MULT (Doll.thrust_mult);
 ##   • очко: метка середины каната за чертой (|x| ≥ TUG_LINE_M) на стороне команды TUG_HOLD_S подряд → счёт команде (point_scored),
 ##     пауза TUG_POINT_PAUSE_S, куклы и канат заново, отсчёт TUG_RESET_COUNTDOWN_S; до score_to_win (TUG_SCORE_TO_WIN) или TUG_TIME_S —
 ##     побеждает ведущий, равный счёт — ничья;
@@ -23,6 +23,10 @@ const TEAM_PREFIX := "tug_"
 @export var rope_path: NodePath
 @export var score_to_win: int = Tuning.TUG_SCORE_TO_WIN
 @export var time_s: float = Tuning.TUG_TIME_S
+## Пробы: false — метка за чертой очков не даёт (проверка каната под рывком).
+var scoring := true
+## Секунд с начала текущего розыгрыша (после отсчёта).
+var round_time := 0.0
 
 var rope: TugRope
 var score := [0, 0]
@@ -82,14 +86,23 @@ static func home_dir(team: int) -> float:
 
 
 func register(d: Doll) -> void:
+	var fresh := not _order.has(d)
 	super.register(d)
-	var t := team_of(d)
-	d.team = TEAM_PREFIX + str(t)
-	var c := colour_of(t)
-	if c != Tuning.PLAYER_COLORS[clampi(d.player_index, 0, 3)]:
-		d._recolor(d, Doll.SHIRT_MATERIAL, c)   # P3 / P4 — цвета своей команды, а не зелёный / жёлтый
+	if not fresh:
+		return
+	d.team = TEAM_PREFIX + str(team_of(d))
+	if d.is_node_ready():
+		_dress(d)
+	else:
+		d.ready.connect(_dress.bind(d), CONNECT_ONE_SHOT)
 	if not hold_s.has(d.player_index):
 		hold_s[d.player_index] = 0.0
+
+
+## Рубашка — цвет команды (P3 / P4 — синий / красный, а не зелёный / жёлтый).
+func _dress(d: Doll) -> void:
+	if is_instance_valid(d):
+		d._recolor(d, Doll.SHIRT_MATERIAL, colour_of(team_of(d)))
 
 
 func spawn_point_for(d: Doll) -> Vector3:
@@ -183,6 +196,7 @@ func _start_fight() -> void:
 	for d in dolls():
 		hp_changed.emit(d, (d as Doll).hp, (d as Doll).max_hp)
 	play_state = "play"
+	round_time = 0.0
 	announce.emit(tr("ТЯНИ!"), ANNOUNCE_COLORS["fight"], "fight" if first else "countdown")
 
 
@@ -227,6 +241,7 @@ func _physics_process(delta: float) -> void:
 		Phase.FIGHT, Phase.SUDDEN_DEATH:
 			if play_state == "play":
 				fight_time += delta
+				round_time += delta
 				time_left.emit(time_left_s())
 				_tick_pull(delta)
 				_tick_mark(delta)
@@ -260,8 +275,7 @@ func _tick_pull(delta: float) -> void:
 			dd.thrust_mult = 1.0
 			continue
 		hold_s[dd.player_index] = float(hold_s.get(dd.player_index, 0.0)) + delta
-		var cx := dd.centre_of_mass().x
-		var away := dd.input_vec.x * signf(cx) > 0.2 and absf(cx) > 0.3
+		var away := dd.input_vec.x * home_dir(team_of(dd)) > 0.2
 		dd.thrust_mult = Tuning.TUG_PULL_MULT if away else 1.0
 
 
@@ -270,6 +284,8 @@ func _tick_mark(delta: float) -> void:
 		return
 	var mx := rope.mark_x()
 	max_mark_abs = maxf(max_mark_abs, absf(mx))
+	if not scoring:
+		return
 	var side := -1
 	if mx <= -Tuning.TUG_LINE_M:
 		side = 0
