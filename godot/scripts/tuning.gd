@@ -948,3 +948,37 @@ const RACE_BOT_LEVELS := {
 const MODES_FIELD_BLEND_S := 0.8            # плавная смена поля у «качелей» и «рулетки» (с)
 const MODES_RAIN_FUSE_S := 3.0              # «дождь из бочек»: фитиль упавшей бочки (с)
 const MODES_HARD_TIMEOUT_EXTRA_S := 90.0    # блиц / марафон: hard_timeout = лимит + столько (Sudden Death успевает решить)
+
+# --- ПЕРЕТЯГИВАНИЕ КАНАТА: 2 на 2 (docs/plan-demo/TUG.md, MODES_IDEAS.md A4, 08.10) ---
+## Спорт-зал, канат-цепь на полу, синие слева (P1, P3), красные справа (P2, P4). Рука (ArmAssist) хватает звено своей половины —
+## звенья чужой не хватаются (meta grab_team); держишь — тяга «от центра» × TUG_PULL_MULT. Метка середины за чертой ±TUG_LINE_M
+## TUG_HOLD_S подряд — очко той стороне, канат и куклы заново. До TUG_SCORE_TO_WIN или TUG_TIME_S (ведущий; равно — ничья).
+## Удар — урон обычный; KO — возврат у своей стены через TUG_RESPAWN_S.
+const TUG_TEAM := 2                         # кукол в команде
+const TUG_ROPE_M := 10.0                    # длина каната
+const TUG_ROPE_LINKS := 20                  # звеньев (чётное: метка — на стыке половин)
+const TUG_ROPE_MASS_KG := 40.0              # масса каната целиком (звено 2 кг — PropHeft LIGHT: рука приваривает)
+const TUG_LINK_FRICTION := 1.2              # трение звена о пол (материал звена; пол зала 0.8)
+const TUG_LINK_RADIUS := 0.07
+const TUG_LINE_M := 3.0                     # черты на полу: ±столько от центра
+const TUG_HOLD_S := 1.0                     # метка за чертой столько подряд — очко
+const TUG_SCORE_TO_WIN := 3
+const TUG_TIME_S := 240.0                   # 4 мин; вышло — побеждает ведущий, равно — ничья
+const TUG_PULL_MULT := 1.3                  # тяга держащего звено, когда ввод смотрит от центра (Doll.thrust_mult)
+const TUG_RESPAWN_S := 3.0                  # KO → возврат у своей стены
+const TUG_POINT_PAUSE_S := 2.0              # после очка — пауза, потом расстановка
+const TUG_RESET_COUNTDOWN_S := 2.0          # отсчёт перед розыгрышем после очка (первый — обычный COUNTDOWN_S)
+## Точки появления (x, y) по player_index: 0 / 2 — синие у левой стены, 1 / 3 — красные у правой (половина зала 11 м).
+const TUG_SPAWN := [Vector2(-5.0, 0.05), Vector2(5.0, 0.05), Vector2(-7.5, 0.05), Vector2(7.5, 0.05)]
+const TUG_COLORS := [Color("2f6fde"), Color("d9342b")]
+## Боты (TugBrain) по уровням: pull — доля тяги в рывке; rest — доля тяги между рывками; heave — рывок (с, случайно в диапазоне),
+## rest_s — пауза между рывками; regrip_s — задержка перехвата (звено ушло за центр или выпало из руки); dash — ускорение в рывке;
+## strike — отпустить канат и ударить соперника ближе TUG_BOT_STRIKE_M, когда метка на нашей стороне.
+const TUG_BOT_LEVELS := {
+	1: {"pull": 0.62, "rest": 0.35, "heave": Vector2(0.6, 1.0), "rest_s": Vector2(0.5, 1.0), "regrip_s": 2.5, "dash": false, "strike": false},
+	2: {"pull": 0.85, "rest": 0.45, "heave": Vector2(0.9, 1.4), "rest_s": Vector2(0.3, 0.7), "regrip_s": 1.4, "dash": true, "strike": false},
+	3: {"pull": 1.0, "rest": 0.55, "heave": Vector2(1.2, 1.8), "rest_s": Vector2(0.2, 0.45), "regrip_s": 0.7, "dash": true, "strike": true},
+}
+const TUG_BOT_STRIKE_M := 1.5               # соперник ближе — бот ур. 3 отпускает канат и бьёт (если метка на нашей стороне)
+const TUG_BOT_DOWN := 0.35                  # доля тяги вниз при держании (упор в пол)
+const TUG_BOT_HOVER_Y := 0.45               # ЦМ бота над звеном при подлёте (кисть достаёт до пола, только когда кукла низко)
