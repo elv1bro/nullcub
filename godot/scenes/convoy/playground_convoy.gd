@@ -91,6 +91,7 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	ensure_actions()
 	PuzzleKeyArm.ensure_action()
+	add_to_group(PhotoMode.KEY_TAKEN_GROUP)   # «/» — рука P2 и вход P2, не фоторежим
 	car = get_node_or_null("Car") as ConvoyCar
 	if car == null:
 		car = ConvoyCar.new()

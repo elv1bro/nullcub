@@ -10,6 +10,9 @@ class_name PhotoMode
 extends Node
 
 const KEY_PHOTO := KEY_SLASH       # вход и выход (LookCam)
+## Режим, где «/» — клавиша игрока (рука P2: головоломки, Перегон, перетягивание с P2-человеком), ставит в эту группу узел — LookCam
+## тогда клавишу не трогает: фоторежима по «/» в таком режиме нет, клавиша остаётся игре (проба tests/photo_key_probe.tscn).
+const KEY_TAKEN_GROUP := &"photo_key_taken"
 const LAYER_FILTER := 70
 const LAYER_FRAME := 71
 const LAYER_UI := 72

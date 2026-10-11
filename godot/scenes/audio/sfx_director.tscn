@@ -145,8 +145,6 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/sub/sub_02.ogg" id="143_3fi5i"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/sub/sub_03.ogg" id="144_idsuu"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/sub/sub_04.ogg" id="145_bb50g"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/hit_19_low.ogg" id="146_1jrfg"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/hit_35_low.ogg" id="147_m0v2o"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/thud_01.ogg" id="148_l83ku"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/thud_02.ogg" id="149_j7dkr"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/thud/thud_03.ogg" id="150_v5uat"]
@@ -160,16 +158,12 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/inhale/inhale_01.ogg" id="158_1prql"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/inhale/inhale_02.ogg" id="159_uggnq"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/inhale/inhale_03.ogg" id="160_14orp"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/inhale/inhale_rev_01.ogg" id="161_h73kb"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/inhale/inhale_rev_02.ogg" id="162_os8gd"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/creak_01.ogg" id="163_0xblp"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/creak_02.ogg" id="164_p66w4"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/creak_03.ogg" id="165_81tb5"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/creak_04.ogg" id="166_biwpi"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/creak_05.ogg" id="167_p3p2f"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/creak_06.ogg" id="168_8hq1n"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/fiber_creak_01.ogg" id="169_5ddy0"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/creak/fiber_creak_02.ogg" id="170_0brte"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/crash/crash_01.ogg" id="171_xht86"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/crash/crash_02.ogg" id="172_342lc"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/crash/crash_03.ogg" id="173_x2rjl"]
@@ -520,16 +514,14 @@ stream_3/stream = ExtResource("145_bb50g")
 resource_name = "thud"
 random_pitch = 1.06
 random_volume_offset_db = 1.5
-streams_count = 9
-stream_0/stream = ExtResource("146_1jrfg")
-stream_1/stream = ExtResource("147_m0v2o")
-stream_2/stream = ExtResource("148_l83ku")
-stream_3/stream = ExtResource("149_j7dkr")
-stream_4/stream = ExtResource("150_v5uat")
-stream_5/stream = ExtResource("151_mricf")
-stream_6/stream = ExtResource("152_u7ge0")
-stream_7/stream = ExtResource("153_mg030")
-stream_8/stream = ExtResource("154_r85ww")
+streams_count = 7
+stream_0/stream = ExtResource("148_l83ku")
+stream_1/stream = ExtResource("149_j7dkr")
+stream_2/stream = ExtResource("150_v5uat")
+stream_3/stream = ExtResource("151_mricf")
+stream_4/stream = ExtResource("152_u7ge0")
+stream_5/stream = ExtResource("153_mg030")
+stream_6/stream = ExtResource("154_r85ww")
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_kgd0s"]
 resource_name = "boom"
@@ -544,26 +536,22 @@ stream_2/stream = ExtResource("157_k1855")
 resource_name = "inhale"
 random_pitch = 1.06
 random_volume_offset_db = 1.5
-streams_count = 5
+streams_count = 3
 stream_0/stream = ExtResource("158_1prql")
 stream_1/stream = ExtResource("159_uggnq")
 stream_2/stream = ExtResource("160_14orp")
-stream_3/stream = ExtResource("161_h73kb")
-stream_4/stream = ExtResource("162_os8gd")
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_djdw0"]
 resource_name = "creak"
 random_pitch = 1.06
 random_volume_offset_db = 1.5
-streams_count = 8
+streams_count = 6
 stream_0/stream = ExtResource("163_0xblp")
 stream_1/stream = ExtResource("164_p66w4")
 stream_2/stream = ExtResource("165_81tb5")
 stream_3/stream = ExtResource("166_biwpi")
 stream_4/stream = ExtResource("167_p3p2f")
 stream_5/stream = ExtResource("168_8hq1n")
-stream_6/stream = ExtResource("169_5ddy0")
-stream_7/stream = ExtResource("170_0brte")
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_2mp5b"]
 resource_name = "crash"

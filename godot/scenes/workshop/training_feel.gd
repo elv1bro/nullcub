@@ -41,7 +41,10 @@ func _ready() -> void:
 	for e in [[HIT_FX_DIRECTOR_SCENE, "HitFxDirector"], [SFX_DIRECTOR_SCENE, "SfxDirector"]]:
 		if not ResourceLoader.exists(String(e[0])):
 			continue
-		var n := (load(String(e[0])) as PackedScene).instantiate()
+		var ps := load(String(e[0])) as PackedScene
+		if ps == null:   # сцена не грузится (в чекауте нет сгенерированных звуков tools/audio) — испытание без этого слоя
+			continue
+		var n := ps.instantiate()
 		n.name = String(e[1])
 		add_child(n)
 		if n.is_in_group(FxPreset.DIRECTOR_GROUP):

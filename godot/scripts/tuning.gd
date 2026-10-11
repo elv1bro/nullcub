@@ -311,6 +311,7 @@ const WEAPON := {
 	"sword": {"mass": 1.5, "damage_mult": 1.6, "length": 0.93},
 	"axe": {"mass": 3.0, "damage_mult": 1.3, "length": 0.90},
 	"pan": {"mass": 2.0, "damage_mult": 1.5, "length": 0.80},
+	"stick": {"mass": 1.0, "damage_mult": 0.5, "length": 1.45},   # ХОККЕЙ (HOCKEY.md): клюшка — лёгкая, длинная, урон вполовину
 }
 
 # --- удар-презентация и крит (docs/plan-demo/HIT_FX.md, 29.09): уровни light / heavy / crit / ko / ko_crit ---
@@ -542,8 +543,11 @@ const SPORTS := {
 		"hoop_x": 9.5, "hoop_y": 5.4, "hoop_r": 1.0, "ball_y": 4.0, "floor_kick": 5.0},
 	"volleyball": {"title": "ВОЛЕЙБОЛ", "mass": 1.6, "gravity_scale": 0.85, "bounce": 0.7, "friction": 0.4, "lin_damp": 0.18, "ang_damp": 0.6,
 		"net_h": 3.4, "ball_y": 6.0, "serve_x": 4.5},
+	# ХОККЕЙ (HOCKEY.md, 08.10): шайба (Puck), не мяч; ворота 1.2 м у стен; вбрасывание — падает с 2 м. Числа шайбы — HOCKEY_PUCK_* ниже.
+	"hockey": {"title": "ХОККЕЙ", "mass": 0.5, "gravity_scale": 2.0, "bounce": 0.55, "friction": 0.02, "lin_damp": 0.1, "ang_damp": 6.0,
+		"goal_x": 9.2, "goal_h": 1.2, "ball_y": 2.0},
 }
-const SPORT_ORDER := ["football", "basketball", "volleyball"]
+const SPORT_ORDER := ["football", "basketball", "volleyball", "hockey"]   # hockey — ХОККЕЙ (HOCKEY.md)
 ## Бот спорт-зала (SportBrain): доля полной тяги, ошибка прицела (м), упреждение мяча (с), пользуется ли ускорением.
 const SPORT_BOT_LEVELS := {
 	1: {"max_in": 0.72, "aim_error_m": 0.55, "lead_s": 0.12, "dash": false},
@@ -1372,3 +1376,227 @@ const PORTAL_BOOST_SIDE_MIN := 6.0
 const PORTAL_BOOST_DOWN_MULT := 1.0
 const PORTAL_BOOST_DOWN_MIN := 0.0
 const PORTAL_FLING_S := 0.8
+
+# --- РЕЖИМЫ: реестр 100+ (docs/plan-demo/MODES_100.md, 08.10) ---
+## Автор 08.10: «хочу сделать более 100+ режимов игр разных». Карточки — scripts/modes/mode_catalog.gd, модификаторы — mutators.gd,
+## раннер — autoload ModeRun. Числа модификаторов (множители, периоды) — в Mutators.CATALOG и args карточек; здесь — общее.
+const MODES_FIELD_BLEND_S := 0.8            # плавная смена поля у «качелей» и «рулетки» (с)
+const MODES_RAIN_FUSE_S := 3.0              # «дождь из бочек»: фитиль упавшей бочки (с)
+const MODES_HARD_TIMEOUT_EXTRA_S := 90.0    # блиц / марафон: hard_timeout = лимит + столько (Sudden Death успевает решить)
+
+# --- СТЕНКА НА СТЕНКУ 5×5 (docs/plan-demo/BRAWL.md, 08.10) ---
+## Автор 08.10: «5×5 это другой режим». Две команды по пять на Полигоне, без оружия, классов и ящиков — только тело. Раунд берёт
+## последняя живая команда (возрождения внутри раунда нет), матч — до BRAWL_WINS_TO_WIN побед. BrawlMatch (scripts/brawl/brawl_match.gd),
+## бот BrawlBrain, площадка scenes/brawl/.
+const BRAWL_PER_TEAM := 5
+const BRAWL_WINS_TO_WIN := 2
+## Раунд не дольше BRAWL_ROUND_LIMIT_S: дальше Sudden Death как в Match (отброс растёт шагами SUDDEN_DEATH_STEP_S); на
+## BRAWL_ROUND_HARD_S раунд — команде, у которой больше суммарный запас живых (равно — ничья, раунд никому).
+const BRAWL_ROUND_LIMIT_S := 120.0
+const BRAWL_ROUND_HARD_S := 180.0
+const BRAWL_ROUND_PAUSE_S := 3.0            # раунд кончился — столько до следующего (или итогов)
+const BRAWL_COUNTDOWN_S := 2.0              # отсчёт перед каждым раундом, кроме первого (первый — обычный COUNTDOWN_S)
+const BRAWL_TEAM_DAMAGE_MULT := 0.0         # свои не ранят и не оглушают (толчки полные), как в стычке
+const BRAWL_KO_SLOWMO_S := 0.4              # замедление на KO с участием человека (обычное 1.2 с: за матч нокаутов десятки)
+## Точки появления пятерых синих (x, y) — две линии у левого края Полигона (палуба базы x −28, укрытие x −21); красные — зеркально
+## по x. Слот команды k = player_index / 2.
+const BRAWL_SPAWN := [Vector2(-28.5, 2.8), Vector2(-24.5, 0.5), Vector2(-28.5, 5.2), Vector2(-24.5, 3.4), Vector2(-28.5, 7.6)]
+const BRAWL_COLORS := [Color("2f6fde"), Color("d9342b")]   # синие, красные — рубашки, обводка, HUD
+## Камера: человек + до BRAWL_FOCUS_N ближайших к нему живых врагов не дальше BRAWL_FOCUS_M (м); людей нет — все живые.
+const BRAWL_FOCUS_M := 12.0
+const BRAWL_FOCUS_N := 2
+## Бот (BrawlBrain): наскок — отход — наскок на ближайшего живого врага. max_in — доля тяги; reaction_s — задержка восприятия;
+## aim_error_m — ошибка прицела; lead_s — упреждение; retreat_s — отход после наскока; dash — ускорение с разбега.
+const BRAWL_BOT_LEVELS := {
+	1: {"max_in": 0.8, "reaction_s": 0.36, "aim_error_m": 0.55, "lead_s": 0.15, "retreat_s": 1.5, "dash": false},
+	2: {"max_in": 0.92, "reaction_s": 0.30, "aim_error_m": 0.45, "lead_s": 0.2, "retreat_s": 1.3, "dash": true},
+	3: {"max_in": 1.0, "reaction_s": 0.24, "aim_error_m": 0.35, "lead_s": 0.25, "retreat_s": 1.1, "dash": true},
+}
+## Держится своих: дальше BRAWL_BOT_COHESION_M от центра живых своих — тяга к ним примешивается (до полной на
+## BRAWL_BOT_COHESION_M × 2); один в поле не улетает к краю.
+const BRAWL_BOT_COHESION_M := 9.0
+
+# --- ЗАРАЖЕНИЕ: коснулся — заразил (docs/plan-demo/INFECTION.md, MODES_IDEAS.md Б5, 08.10) ---
+## Семеро в куполе Old NULL Hall (P1 + боты, P2 на стрелках — клавиша U). Один случайный — заражённый (зелёный): коснулся любой
+## деталью любой детали здорового — тот заражён сразу (перекраска, вспышка, тост). Урона нет (Doll.incoming_mult = 0), только толчки.
+## Заражённые быстрее (INFECTION_ZOMBIE_*), но без руки мышью и без рывка (Заряд заперт). Партия INFECTION_ROUND_S: все заражены
+## раньше — очко первому заражённому; кто-то дожил — очко каждому дожившему. Матч — INFECTION_ROUNDS партий, места по очкам.
+const INFECTION_DOLLS := 7
+const INFECTION_ROUNDS := 3
+const INFECTION_ROUND_S := 90.0
+## Только что заражённый сам заражает не раньше этого (в куче заражение не прыгает по трём куклам за один тик).
+const INFECTION_TOUCH_GAP_S := 0.5
+const INFECTION_ZOMBIE_THRUST_MULT := 1.15
+const INFECTION_ZOMBIE_SPEED_MULT := 1.15
+const INFECTION_ROUND_PAUSE_S := 3.0            # партия кончилась — столько до следующей (или итогов матча)
+const INFECTION_COUNTDOWN_S := 2.0              # отсчёт перед каждой партией, кроме первой (первая — обычный COUNTDOWN_S)
+## Последние INFECTION_PULSE_S партии — пульс мембраны и писк (как темп бомбы): пауза между ударами PULSE_SLOW_S → PULSE_FAST_S.
+const INFECTION_PULSE_S := 15.0
+const INFECTION_PULSE_SLOW_S := 1.0
+const INFECTION_PULSE_FAST_S := 0.25
+## Цвет заражённых (рубашки, метки, HUD) и цвета семерых здоровых: как BOMB_COLORS без зелёного (зелёный — заражение) плюс
+## бирюзовый, оранжевый и розовый.
+const INFECTION_COLOR := Color("3fdc4a")
+const INFECTION_COLORS := [Color("2f6fde"), Color("d9342b"), Color("e8b820"), Color("9b4dde"), Color("2ab8c8"), Color("f07a1e"), Color("e86aa8")]
+## Точки появления семерых (x, y) внутри мембраны купола 16 × 19 м — друг от друга не ближе 6 м (заражённый не берёт соседа на старте).
+const INFECTION_SPAWN := [Vector2(-12.0, 2.5), Vector2(12.0, 2.5), Vector2(-6.0, 2.5), Vector2(6.0, 2.5), Vector2(0.0, 7.0),
+	Vector2(-8.0, 9.0), Vector2(8.0, 9.0)]
+## Камера: человек + ближайший заражённый (здоровому) или здоровый (заражённому), если он ближе этого, м.
+const INFECTION_FOCUS_M := 14.0
+## Боты (InfectionBrain): доля тяги, ошибка прицела (м), задержка восприятия (с), упреждение (с), рывок за Заряд (только здоровым).
+const INFECTION_BOT_LEVELS := {
+	1: {"max_in": 0.8, "aim_error_m": 0.6, "reaction_s": 0.35, "lead_s": 0.2, "dash": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.35, "reaction_s": 0.25, "lead_s": 0.3, "dash": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.2, "reaction_s": 0.15, "lead_s": 0.4, "dash": true},
+}
+const INFECTION_BOT_PANIC_M := 4.0              # заражённый ближе — здоровый бот удирает напрямую, с рывком
+const INFECTION_BOT_CORNER_M := 2.5             # здоровый у мембраны ближе этого и заражённый между ним и серединой — рывок сквозь
+const INFECTION_BOT_FLEE_MARGIN_M := Vector2(3.0, 3.5)   # кольцо бегства — эллипс мембраны, ужатый на столько (по x, по y)
+
+# --- ОХОТА ЗА ГОЛОВАМИ: 3 на 3 (docs/plan-demo/HEADHUNT.md, MODES_IDEAS.md Б4, 08.10) ---
+## Две команды по HEADHUNT_TEAM на Полигоне (синие слева, красные справа). Удары с уроном; выбитый оставляет голову (RigidBody3D в
+## группе heads, meta owner_team) и возвращается через HEADHUNT_RESPAWN_S на своей стороне. Голову берёт касание любой деталью
+## (ближе HEADHUNT_PICK_M), носитель несёт до HEADHUNT_CARRY_MAX голов на спине, тяга × HEADHUNT_CARRY_THRUST за каждую; выбили —
+## все его головы и своя рассыпаются (HEADHUNT_DROP_LOCK_S их нельзя взять — разлетаются). Коснулся своей корзины (ближе
+## HEADHUNT_BASKET_M) — чужие головы +1 каждая, свои — возвращены без очка. До HEADHUNT_SCORE_TO_WIN или HEADHUNT_TIME_S (больше очков).
+const HEADHUNT_TEAM := 3
+const HEADHUNT_SCORE_TO_WIN := 10
+const HEADHUNT_TIME_S := 360.0
+const HEADHUNT_RESPAWN_S := 4.0
+const HEADHUNT_SPAWN_SHIELD_S := 1.5         # после возрождения урон не проходит столько с
+const HEADHUNT_PICK_M := 0.9
+const HEADHUNT_BASKET_M := 1.4
+const HEADHUNT_CARRY_MAX := 3
+const HEADHUNT_CARRY_THRUST := 0.9
+const HEADHUNT_DROP_LOCK_S := 0.6
+const HEADHUNT_DROP_SPEED := Vector2(2.0, 4.5)   # м/с разлёта голов с выбитого носителя
+const HEADHUNT_KO_SLOWMO_S := 0.35
+## Корзины (x, y) — на палубах баз Полигона (tools/build_proving_ground.gd: палуба 26…30 м, верх 2.65); знак x — команда.
+const HEADHUNT_BASKET_AT := Vector2(29.4, 3.1)
+## Голова упала в страховочный низ Полигона — возвращается сверху над серединой (случайный x в пределах ±, высота y).
+const HEADHUNT_RESCUE := Vector2(6.0, 9.0)
+const HEADHUNT_COLORS := [Color("2f6fde"), Color("d9342b")]   # синие, красные — рубашки, метки, HUD
+## Боты (HeadhuntBrain): доля тяги, ошибка прицела (м), задержка восприятия (с), упреждение (с), отход после наскока (с), рывок за Заряд.
+const HEADHUNT_BOT_LEVELS := {
+	1: {"max_in": 0.8, "aim_error_m": 0.55, "reaction_s": 0.36, "lead_s": 0.15, "retreat_s": 1.5, "dash": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.42, "reaction_s": 0.28, "lead_s": 0.22, "retreat_s": 1.3, "dash": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.3, "reaction_s": 0.2, "lead_s": 0.3, "retreat_s": 1.1, "dash": true},
+}
+const HEADHUNT_BOT_HEAD_M := 8.0             # чужая голова лежит ближе — охотник летит за ней, а не за врагом
+const HEADHUNT_BOT_DEFEND_M := 10.0          # защитник: враг ближе этого к корзине — бой, дальше — у корзины
+const HEADHUNT_BOT_CRUISE_Y := 5.6           # высота перелёта через укрытия Полигона (верх укрытий 2.2, плит 4.8)
+## Камера: человек + до HEADHUNT_FOCUS_N ближайших к нему живых врагов не дальше HEADHUNT_FOCUS_M (м); людей нет — все живые.
+const HEADHUNT_FOCUS_M := 12.0
+const HEADHUNT_FOCUS_N := 2
+
+# --- ПЕРЕТЯГИВАНИЕ КАНАТА: 2 на 2 (docs/plan-demo/TUG.md, MODES_IDEAS.md A4, 08.10) ---
+## Спорт-зал, канат-цепь на полу, синие слева (P1, P3), красные справа (P2, P4). Рука (ArmAssist) хватает звено своей половины —
+## звенья чужой не хватаются (meta grab_team); держишь — тяга «от центра» × TUG_PULL_MULT. Метка середины за чертой ±TUG_LINE_M
+## TUG_HOLD_S подряд — очко той стороне, канат и куклы заново. До TUG_SCORE_TO_WIN или TUG_TIME_S (ведущий; равно — ничья).
+## Удар — урон обычный; KO — возврат у своей стены через TUG_RESPAWN_S.
+const TUG_TEAM := 2                         # кукол в команде
+const TUG_ROPE_M := 10.0                    # длина каната
+const TUG_ROPE_LINKS := 20                  # звеньев (чётное: метка — на стыке половин)
+const TUG_ROPE_MASS_KG := 40.0              # масса каната целиком (звено 2 кг — PropHeft LIGHT: рука приваривает)
+const TUG_LINK_FRICTION := 0.8              # трение звена о пол (материал звена; пол зала 0.8)
+const TUG_LINK_RADIUS := 0.07
+const TUG_LINE_M := 3.0                     # черты на полу: ±столько от центра
+const TUG_HOLD_S := 1.0                     # метка за чертой столько подряд — очко
+const TUG_SCORE_TO_WIN := 3
+const TUG_TIME_S := 240.0                   # 4 мин; вышло — побеждает ведущий, равно — ничья
+const TUG_PULL_MULT := 1.3                  # тяга держащего звено, когда ввод смотрит от центра (Doll.thrust_mult)
+const TUG_RESPAWN_S := 3.0                  # KO → возврат у своей стены
+const TUG_POINT_PAUSE_S := 2.0              # после очка — пауза, потом расстановка
+const TUG_RESET_COUNTDOWN_S := 2.0          # отсчёт перед розыгрышем после очка (первый — обычный COUNTDOWN_S)
+## Точки появления (x, y) по player_index: 0 / 2 — синие у левой стены, 1 / 3 — красные у правой (половина зала 11 м).
+const TUG_SPAWN := [Vector2(-5.0, 0.05), Vector2(5.0, 0.05), Vector2(-7.5, 0.05), Vector2(7.5, 0.05)]
+const TUG_COLORS := [Color("2f6fde"), Color("d9342b")]
+## Боты (TugBrain) по уровням: pull — доля тяги в рывке; rest — доля тяги между рывками; heave — рывок (с, случайно в диапазоне),
+## rest_s — пауза между рывками; regrip_s — задержка перехвата (звено ушло за центр или выпало из руки); dash — ускорение в рывке;
+## strike — отпустить канат и ударить соперника ближе TUG_BOT_STRIKE_M, когда метка на нашей стороне.
+const TUG_BOT_LEVELS := {
+	1: {"pull": 0.62, "rest": 0.15, "heave": Vector2(0.6, 1.0), "rest_s": Vector2(0.5, 1.0), "regrip_s": 2.5, "dash": false, "strike": false},
+	2: {"pull": 0.85, "rest": 0.0, "heave": Vector2(1.2, 2.2), "rest_s": Vector2(0.4, 1.0), "regrip_s": 1.4, "dash": true, "strike": false},
+	3: {"pull": 1.0, "rest": 0.3, "heave": Vector2(1.2, 1.8), "rest_s": Vector2(0.2, 0.45), "regrip_s": 0.7, "dash": true, "strike": true},
+}
+const TUG_BOT_STRIKE_M := 5.0               # соперник ближе — бот ур. 3 иногда отпускает канат и бьёт (метка на нашей стороне, свой держит)
+const TUG_BOT_WAIT_S := 3.0                 # начало розыгрыша: бот не рвёт канат, пока все боты не взялись (не дольше)
+const TUG_BOT_PRESS_M := 2.0                # метка на нашей стороне дальше — бот тянет без передышек (дожимает)
+const TUG_BOT_DOWN := 0.15                  # доля тяги вниз при держании (упор в пол)
+const TUG_BOT_GRIP_LINKS := [2, 6]          # звено бота: от метки столько звеньев (передний, задний в команде)
+const TUG_BOT_HOVER_Y := 0.1               # ЦМ бота над звеном при подлёте (кисть достаёт до пола, только когда кукла низко)
+
+# --- ЦАРЬ ГОРЫ: зона переезжает, очко в секунду тому, кто в ней один (docs/plan-demo/KING.md, MODES_IDEAS.md Б10, 08.10) ---
+## Пятеро в куполе Old NULL Hall, все против всех. Зона («гора») — круг радиуса KING_ZONE_R вокруг одной из точек KING_ZONE_SPOTS;
+## раз в KING_ZONE_S переезжает на другую точку не ближе KING_ZONE_MIN_MOVE_M (за KING_ZONE_WARN_S до переезда кольцо мигает, новая зона
+## подсвечена призраком). Очки — KING_POINT_PER_S в секунду тому, чей центр масс в зоне один; двое и больше — никому. Один и тот же в
+## зоне один KING_STREAK_S подряд — «ЦАРЬ!», очки ×KING_STREAK_MULT, пока его не выбили. KO → возврат через KING_RESPAWN_S на случайной
+## точке KING_SPAWN вне зоны. До KING_SCORE_TO_WIN очков или KING_TIME_S (больше очков).
+const KING_DOLLS := 5
+const KING_ZONE_R := 2.5
+const KING_ZONE_S := 30.0
+const KING_ZONE_WARN_S := 3.0
+const KING_ZONE_MIN_MOVE_M := 6.0
+## Точки зоны внутри мембраны купола (эллипс 16 × 19 м от (0, 0), пол y ≈ 0): пол слева / по центру / справа, воздух на 4–5 м,
+## повыше по бокам и под потолком. У каждой — не меньше четырёх других не ближе KING_ZONE_MIN_MOVE_M.
+const KING_ZONE_SPOTS := [Vector2(-9.0, 2.2), Vector2(0.0, 2.2), Vector2(9.0, 2.2), Vector2(-6.0, 4.5), Vector2(6.0, 4.5),
+	Vector2(-3.0, 9.0), Vector2(3.0, 9.0), Vector2(0.0, 13.0)]
+const KING_POINT_PER_S := 1.0
+const KING_SCORE_TO_WIN := 60
+const KING_TIME_S := 300.0
+const KING_RESPAWN_S := 3.0
+const KING_STREAK_S := 10.0
+const KING_STREAK_MULT := 2.0
+## Точки появления: по player_index в начале матча, после KO — случайная из них вне зоны (не ближе KING_ZONE_R + KING_SPAWN_CLEAR_M).
+const KING_SPAWN := [Vector2(-10.0, 2.5), Vector2(10.0, 2.5), Vector2(-5.0, 2.5), Vector2(5.0, 2.5), Vector2(0.0, 5.5),
+	Vector2(-12.0, 5.0), Vector2(12.0, 5.0)]
+const KING_SPAWN_CLEAR_M := 1.0
+## Камера: зона в кадре, если ближе этого (м) к человеку.
+const KING_FOCUS_M := 14.0
+## Бот (KingBrain) по уровням 1–3: max_in — доля тяги; aim_error_m / reaction_s / lead_s — прицел, задержка восприятия, упреждение
+## (EnemyBrain); dash — ускорение в наскоке и на перелёте к зоне; foresee — зона мигает (скоро переедет) → летит к новой заранее;
+## lurk — в зоне уже дерутся двое и больше → ждать у края (KING_BOT_LURK_M от кромки), пока не останется один, и тогда наскок.
+const KING_BOT_LEVELS := {
+	1: {"max_in": 0.8, "aim_error_m": 0.6, "reaction_s": 0.4, "lead_s": 0.15, "dash": false, "foresee": false, "lurk": false},
+	2: {"max_in": 0.92, "aim_error_m": 0.35, "reaction_s": 0.25, "lead_s": 0.3, "dash": true, "foresee": false, "lurk": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.2, "reaction_s": 0.15, "lead_s": 0.4, "dash": true, "foresee": true, "lurk": true},
+}
+const KING_BOT_GUARD_M := 3.0               # бот один в зоне: чужой ближе этого — наскок на него, потом обратно к центру
+const KING_BOT_DASH_M := Vector2(1.5, 7.0)  # наскок: ускорение, когда цель в этом коридоре (м)
+const KING_BOT_LURK_M := 1.8               # lurk: на столько дальше кромки зоны ждать, пока в ней дерутся
+
+# --- ХОККЕЙ: четвёртый вид спорт-зала (docs/plan-demo/HOCKEY.md, 08.10) ---
+## Шайба (scenes/sport/puck.gd, Puck extends SportBall) — плоский диск, лежит на льду плашмя, вращение заперто (ещё и ang_damp 6):
+## не катится и не встаёт на ребро — скользит. Трение 0.02, пол зала при хоккее — HOCKEY_ICE_FRICTION (HockeyRink.apply_ice), дамп
+## 0.1 → после удара 6 м/с проходит ≈ 16 м за 3.5 с (проба: ≥ 8 м) (отскок от борта 0.55). Не подпрыгивает: вверх от пола медленнее
+## HOCKEY_PUCK_HOP_KILL — гасится. Физика снаряда (масса, тяжесть, отскок, трение, дамп) — Tuning.SPORTS["hockey"], как у мячей.
+const HOCKEY_PUCK_R := 0.32               # м: радиус диска (настоящая шайба 0.038 — куклой 1.8 м не попасть)
+const HOCKEY_PUCK_THICK := 0.16           # м: толщина диска (= высота сцены puck.tscn)
+const HOCKEY_PUCK_HOP_KILL := 2.6         # м/с: подскок от пола медленнее этого гасится (вбрасывание с 2 м: отскок ≈ 2.1 — ляжет сразу)
+const HOCKEY_ICE_FRICTION := 0.05         # трение пола зала при хоккее (куклы скользят; обычный пол — без материала, 1.0)
+const HOCKEY_GOALS_TO_WIN := 3            # матч до стольких голов
+const HOCKEY_TIME_S := 240.0              # основное время 4:00; равный счёт — золотой гол ещё HOCKEY_GOLDEN_S
+const HOCKEY_GOLDEN_S := 60.0             # золотой гол: матч целиком не дольше 5:00 игрового времени, дальше ничья
+const HOCKEY_KO_RESPAWN_S := 3.0          # нокаут — «удаление», возврат у своих ворот через столько
+const HOCKEY_GOAL_H := 1.2                # м: ворота низкие (SPORTS["hockey"].goal_h — то же число для SportMatch / SportBrain)
+const HOCKEY_GOAL_BACK_H := 1.45          # м: крыша ворот поднимается от перекладины к стене до этой высоты (HockeyRink)
+## Клюшка — оружие "stick" (scenes/weapons/weapon_stick.tscn, Tuning.WEAPON["stick"]) в кисти каждой куклы (HockeySticks.preferred_hand): даёт HockeySticks
+## (scripts/sport/hockey_sticks.gd) на старте, после расстановки, после нокаута — новая (старая убирается), без клюшки дольше
+## HOCKEY_STICK_REGIVE_S (кисть оторвана вместе с клюшкой) — новая в свободную кисть. Ничья клюшка на льду дольше ORPHAN_S — убирается.
+const HOCKEY_STICK_HAND := "Hand_R"           # у человека с рукой мышью (ArmAssist водит Hand_R); боты и P2 — кисть со стороны атаки
+const HOCKEY_STICK_HOLD_DEG := 15.0       # угол хвата (WeaponPickup.hold_angle_deg): почти продолжение руки — крюк достаёт до льда
+const HOCKEY_STICK_CHECK_S := 0.5         # как часто HockeySticks сверяет, у всех ли клюшка
+const HOCKEY_STICK_REGIVE_S := 2.0        # без клюшки столько — новая
+const HOCKEY_STICK_ORPHAN_S := 4.0        # ничья клюшка лежит столько — убирается
+## Бот (HockeyBrain extends SportBrain): гонится за шайбой с упреждением и бьёт сквозь неё к чужим воротам (SportBrain), у
+## шайбы в ударе — раскрутка (request_spin, замах клюшкой); шайба на своей половине и соперник к ней ближе (или шайба летит в свои
+## ворота, а бот дальше от них) — вратарь:
+## держится на луче «середина ворот → шайба» в HOCKEY_GOALIE_OUT_M от линии. Уровни 1..3: тяга, прицел, упреждение, ускорение, раскрутка, вратарь.
+const HOCKEY_GOALIE_OUT_M := 1.3
+const HOCKEY_THREAT_SPEED := 2.0          # м/с: шайба летит к своим воротам быстрее, а бот дальше от них — вратарь (уровни 2–3)
+const HOCKEY_SPIN_NEAR_M := 1.7           # раскрутка, когда до шайбы ближе этого в ударе
+const HOCKEY_BOT_LEVELS := {
+	1: {"max_in": 0.7, "aim_error_m": 0.6, "lead_s": 0.1, "dash": false, "spin": false, "goalie": false},
+	2: {"max_in": 0.88, "aim_error_m": 0.3, "lead_s": 0.2, "dash": true, "spin": true, "goalie": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.12, "lead_s": 0.3, "dash": true, "spin": true, "goalie": true},
+}

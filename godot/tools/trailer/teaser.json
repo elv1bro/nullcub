@@ -1,0 +1,50 @@
+{
+  "name": "teaser",
+  "about": "Тизер для страницы «Скоро выйдет» в Steam (~24 с). Порядок склеек — edit (сверху вниз), что снимать — shots, надписи — texts на языках. Описание полей — README.md рядом.",
+  "lang": "ru",
+  "render": {"width": 1920, "height": 1080, "fps": 60, "ssaa": 1.5},
+  "defaults": {
+    "hud": true, "hud_skin": "neon", "bots": {"p1": 3, "p2": 3}, "gfx": "ultra",
+    "crowd": true, "music": false, "countdown": 0, "max_s": 40,
+    "camera": {"max_half_height": 6.5}, "brain": {"retreat_s": 0.7}
+  },
+  "audio": {
+    "music": "godot/assets/audio/music/battle_02.ogg",
+    "music_start": 0.0,
+    "music_db": -5,
+    "game_db": 0,
+    "fade_out": 1.2,
+    "loudness_lufs": -14
+  },
+
+  "shots": {
+    "crit_open":   {"scene": "null_hall", "seed": [29, 7, 13, 5, 41], "hud": false, "camera": {"min_half_height": 2.8},
+                    "force": [{"at": 2.0, "tier": "crit"}], "until": "crit", "tail": 3.0, "require": ["crit"]},
+    "dome_fight":  {"scene": "null_hall", "seed": [7, 29], "length": 9, "require": ["hit"]},
+    "scrap_limbs": {"scene": "scrap", "seed": [13, 29, 41, 5], "modes": {"joint_break": true}, "camera": {"max_half_height": 5.5},
+                    "force": [{"at": 2.0, "tier": "crit"}, {"at": 7.0, "tier": "crit"}],
+                    "until": "break", "tail": 3.0, "max_s": 35, "require": ["break"]},
+    "ruins_ko":    {"scene": "ruins", "seed": [5, 29, 7], "hp": {"p2": 25}, "force": [{"at": 2.5, "tier": "crit"}],
+                    "until": "ko", "tail": 2.5, "max_s": 30, "require": ["ko"]}
+  },
+
+  "edit": [
+    {"shot": "crit_open",   "at": "crit",  "from": -0.5, "len": 3.0},
+    {"shot": "dome_fight",  "at": "fight", "from": 1.5,  "len": 4.0, "text": "slogan_a"},
+    {"shot": "scrap_limbs", "at": "break", "from": -1.6, "len": 3.6, "text": "limbs"},
+    {"shot": "dome_fight",  "at": "fight", "from": 5.5,  "len": 3.0, "text": "physics"},
+    {"shot": "ruins_ko",    "at": "ko",    "from": -1.4, "len": 3.4, "text": "slogan_b"},
+    {"card": "end", "len": 5.0}
+  ],
+
+  "texts": {
+    "slogan_a": {"ru": "GRAVITY IS OPTIONAL.", "en": "GRAVITY IS OPTIONAL."},
+    "slogan_b": {"ru": "WINNING IS NOT.", "en": "WINNING IS NOT."},
+    "limbs":    {"ru": "ДЕТАЛИ ОТЛЕТАЮТ. ЭТО НОРМАЛЬНО", "en": "PARTS FLY OFF. THAT'S NORMAL"},
+    "physics":  {"ru": "ФИЗИКА — ТВОЁ ОРУЖИЕ", "en": "PHYSICS IS YOUR WEAPON"},
+    "end_line": {"ru": "СКОРО В STEAM", "en": "COMING SOON TO STEAM"},
+    "end_cta":  {"ru": "ДОБАВЬ В ЖЕЛАЕМОЕ", "en": "WISHLIST NOW"}
+  },
+
+  "end_card": {"badge": "godot/assets/ui/brand/null_gravity_badge_512.png", "line": "end_line", "cta": "end_cta"}
+}

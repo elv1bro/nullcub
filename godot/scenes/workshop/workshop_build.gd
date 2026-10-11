@@ -2352,6 +2352,22 @@ func _input(event: InputEvent) -> void:
 			elif k == KEY_R:
 				restart_test()
 				get_viewport().set_input_as_handled()
+			elif k == KEY_B:   # инструменты испытания (WsTestTools, MODES_100.md §B): бот-спарринг, гравитация, суставы, запас, режим
+				_say(WsTestTools.cycle_sparring(self), COL_OK)
+				get_viewport().set_input_as_handled()
+			elif k == KEY_G:
+				_say(WsTestTools.cycle_gravity(self), COL_INFO)
+				get_viewport().set_input_as_handled()
+			elif k == KEY_C:
+				JointBreak.toggle()
+				_say(tr("Прочность суставов: %s   (C — переключить)") % (tr("вкл") if JointBreak.on else tr("выкл")), COL_INFO)
+				get_viewport().set_input_as_handled()
+			elif k == KEY_SEMICOLON:
+				toggle_parts_hp()
+				get_viewport().set_input_as_handled()
+			elif k == KEY_Y:
+				open_mode_picker()
+				get_viewport().set_input_as_handled()
 		return
 	if not _rmb.is_empty():
 		if event is InputEventMouseMotion:
@@ -2507,7 +2523,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				if k.ctrl_pressed or k.meta_pressed:
 					redo()
 				else:
-					return
+					open_mode_picker()   # «Испытать в режиме…» (MODES_100.md §B)
 			KEY_D:
 				if sel_stand:
 					duplicate_to_hand(String(selected["uid"]), String(selected["target"]), bool(selected.get("branch", false)))
@@ -2825,9 +2841,12 @@ func start_test() -> bool:
 	test_cam.snap()
 	feel.camera = test_cam
 	_set_test_lights(true)
+	WsTestTools.apply_gravity(self)   # гравитация зала (G) и бот-спарринг (B) — как в прошлом испытании (статики WsTestTools)
+	if WsTestTools.sparring_level > 0:
+		WsTestTools.spawn_sparring(self, WsTestTools.sparring_level)
 	mode_changed.emit(mode)
 	changed.emit()
-	_say(tr("Испытание! Esc / Tab — назад к сборке"), COL_OK)
+	_say(WsTestTools.hint(), COL_OK)
 	return true
 
 
@@ -2839,6 +2858,33 @@ func restart_test() -> void:
 	stop_test()
 	probe_input = probe
 	start_test()
+
+
+## «Испытать в режиме…» (Y; docs/plan-demo/MODES_100.md §B): чертёж со стенда — за P1 в любой карточке реестра. Пишет автосейв,
+## отдаёт копию чертежа экрану РЕЖИМЫ (ModesMenu.player_blueprint) и просит гараж после возврата открыть мастерскую
+## (Flow.reopen_workshop). mode_pick_dry_run (проба) — всё то же, кроме смены сцены. false — чертёж с ошибками.
+var mode_pick_dry_run := false
+
+func open_mode_picker() -> bool:
+	var errs := CraftEdit.friendly_errors(blueprint)
+	if not errs.is_empty():
+		_say(errs[0], COL_BAD)
+		return false
+	if mode == Mode.TEST:
+		stop_test()
+	if autosave_on_test:
+		CraftEdit.save(blueprint, autosave_name)
+		_autosave_dirty = false
+	ModesMenu.player_blueprint = CraftEdit.dup_body(blueprint)
+	ModesMenu.back_scene = ""
+	var flow := get_tree().root.get_node_or_null("Flow") if is_inside_tree() else null
+	if flow != null:
+		flow.set("reopen_workshop", true)
+	_say(tr("Режим для куклы со стенда…"), COL_OK)
+	if mode_pick_dry_run:
+		return true
+	Loading.change_scene(ModesMenu.MENU_SCENE, "ПОДКЛЮЧЕНИЕ", "modes_menu")
+	return true
 
 
 ## Кисть или конец детали для оружия у куклы испытания (uid должен быть в кукле).
@@ -2862,6 +2908,7 @@ func stop_test() -> void:
 	test_weapon = null
 	dummy = null
 	feel = null
+	WsTestTools.restore_gravity(self)
 	Engine.time_scale = 1.0   # стоп-кадр heavy мог остаться (TrainingFeel уже в очереди на удаление)
 	if test_cam != null:
 		_free_node(test_cam)

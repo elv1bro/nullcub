@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, «Подъём: проба стены» вдвоём и её финиш, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, «Подъём: проба стены» вдвоём и её финиш, «Стенка на стенку 5×5» и её итоги, «Заражение», «Охота за головами», «Перетягивание», «Царь горы», хоккей, экран «РЕЖИМЫ» реестра, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -25,6 +25,13 @@ const PUZZLE := "res://scenes/playground_puzzle.tscn"
 const TRACK := "res://scenes/playground_race_track.tscn"
 const CLIMB := "res://scenes/playground_climb.tscn"
 const CONVOY := "res://scenes/playground_convoy.tscn"
+const BRAWL := "res://scenes/playground_brawl.tscn"
+const INFECTION := "res://scenes/playground_infection.tscn"
+const HEADHUNT := "res://scenes/playground_headhunt.tscn"
+const TUG := "res://scenes/playground_tug.tscn"
+const KING := "res://scenes/playground_king.tscn"
+const HOCKEY := "res://scenes/playground_sport_hockey.tscn"   # спорт-зал, хоккей (HOCKEY.md): своя подсказка и подпись HUD
+const MODES_100 := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» реестра (MODES_100.md)
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
 const MARGIN := 2.0
@@ -142,7 +149,7 @@ func _pass() -> Dictionary:
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, KING, HOCKEY, MODES_100]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		if p == CLIMB:
 			ClimbMatch.best_time = -1.0   # лучшее время сессии — static: на каждом языке экран тот же («—»)
@@ -171,6 +178,37 @@ func _pass() -> Dictionary:
 			bm._finish("wins")
 			await _wait(SETTLE * 3)
 			shots["bomb:end"] = _scan(inst)
+		if p == BRAWL:   # «Стенка на стенку 5×5» (BRAWL.md): ещё табличка итогов с таблицей бойцов и медалями
+			var brm := inst.get_node("Match") as BrawlMatch
+			brm.wins = [2, 1]
+			brm._finish("wins")
+			await _wait(SETTLE * 3)
+			shots["brawl:end"] = _scan(inst)
+		if p == INFECTION:   # «Заражение» (INFECTION.md): ещё табличка итогов с таблицей бойцов
+			var ifm := inst.get_node("Match") as InfectionMatch
+			ifm.scores = {0: 2, 1: 1, 3: 2, 5: 1}
+			ifm._finish("rounds")
+			await _wait(SETTLE * 3)
+			shots["infection:end"] = _scan(inst)
+		if p == HEADHUNT:   # «Охота за головами» (HEADHUNT.md): ещё табличка итогов с таблицей бойцов и медалями
+			var hhm := inst.get_node("Match") as HeadhuntMatch
+			hhm.score = [10, 7]
+			hhm._finish("score")
+			await _wait(SETTLE * 3)
+			shots["headhunt:end"] = _scan(inst)
+		if p == TUG:   # «Перетягивание каната» (TUG.md): ещё табличка итогов с таблицей бойцов
+			var tgm := inst.get_node("Match") as TugMatch
+			tgm.score = [3, 1]
+			tgm._finish("score")
+			await _wait(SETTLE * 3)
+			shots["tug:end"] = _scan(inst)
+		if p == KING:   # «Царь горы» (KING.md): ещё табличка итогов с таблицей бойцов
+			var kgm := inst.get_node("Match") as KingMatch
+			kgm.scores = {0: 60.0, 1: 41.5, 2: 12.0, 3: 33.0, 4: 7.0}
+			kgm.winner_index = 0
+			kgm._finish("score")
+			await _wait(SETTLE * 3)
+			shots["king:end"] = _scan(inst)
 		if p == RACE:   # «Гонка: 10 точек» (RACE.md): ещё табличка итогов с таблицей мест
 			var rmm := inst.get_node("Match") as RaceMatch
 			rmm.scores = {0: 10, 1: 7, 2: 4, 3: 9}

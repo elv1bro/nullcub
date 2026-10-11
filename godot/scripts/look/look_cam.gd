@@ -94,6 +94,8 @@ func _input(event: InputEvent) -> void:
 		return
 	if photo != null and is_instance_valid(photo) and photo.active:
 		return   # выход по той же клавише ловит сам PhotoMode
+	if get_tree().get_first_node_in_group(PhotoMode.KEY_TAKEN_GROUP) != null:
+		return   # «/» в этом режиме — рука P2 (PhotoMode.KEY_TAKEN_GROUP)
 	register_items()
 	if not look_on(ID_PHOTO):
 		return

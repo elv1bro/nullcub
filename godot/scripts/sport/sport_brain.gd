@@ -23,6 +23,8 @@ const LOW_BALL_M := 1.1
 const GIVE_SPACE_M := 2.2
 
 @export var level := 2
+## ХОККЕЙ (HOCKEY.md): уровень новых мозгов (клавиша K площадки) — Match.respawn_doll пересоздаёт мозг без настроек.
+static var default_level := 2
 
 var ball: SportBall
 var sm: SportMatch
@@ -30,6 +32,10 @@ var team := 1
 var dir := -1.0
 var max_in := 0.88
 var use_dash := true
+
+
+func _init() -> void:
+	level = default_level   # ХОККЕЙ (HOCKEY.md): см. default_level
 
 
 func _setup() -> void:
@@ -58,7 +64,9 @@ func _brain_ready() -> void:
 func _find_refs() -> void:
 	if sm == null or not is_instance_valid(sm):
 		sm = get_tree().get_first_node_in_group(Match.GROUP) as SportMatch
-	if ball == null or not is_instance_valid(ball):
+	if sm != null and is_instance_valid(sm.ball):
+		ball = sm.ball   # ХОККЕЙ (HOCKEY.md): снаряд меняется с видом (шайба / мяч) — берём активный у матча
+	elif ball == null or not is_instance_valid(ball):
 		ball = get_tree().get_first_node_in_group(SportBall.GROUP) as SportBall
 
 

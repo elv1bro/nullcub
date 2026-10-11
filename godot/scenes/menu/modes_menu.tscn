@@ -1,0 +1,169 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/menu/modes_menu.gd" id="1_menu"]
+
+[node name="ModesMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.05, 0.06, 0.09, 1)
+
+[node name="Root" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 32
+
+[node name="V" type="VBoxContainer" parent="Root"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Head" type="HBoxContainer" parent="Root/V"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="Root/V/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.93, 0.8, 1)
+theme_override_font_sizes/font_size = 56
+text = "РЕЖИМЫ"
+
+[node name="Count" type="Label" parent="Root/V/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/font_color = Color(0.45, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = ""
+
+[node name="Spacer" type="Control" parent="Root/V/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Search" type="LineEdit" parent="Root/V/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(520, 48)
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 22
+placeholder_text = "поиск"
+
+[node name="Stand" type="Label" parent="Root/V"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = ""
+visible = false
+
+[node name="Body" type="HBoxContainer" parent="Root/V"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="TagsScroll" type="ScrollContainer" parent="Root/V/Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(260, 0)
+horizontal_scroll_mode = 0
+
+[node name="Tags" type="VBoxContainer" parent="Root/V/Body/TagsScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="ListScroll" type="ScrollContainer" parent="Root/V/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Root/V/Body/ListScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="Side" type="VBoxContainer" parent="Root/V/Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(520, 0)
+theme_override_constants/separation = 12
+
+[node name="SelTitle" type="Label" parent="Root/V/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.93, 0.8, 1)
+theme_override_font_sizes/font_size = 36
+text = ""
+autowrap_mode = 3
+
+[node name="SelBase" type="Label" parent="Root/V/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = ""
+
+[node name="SelMutators" type="Label" parent="Root/V/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.95, 1)
+theme_override_font_sizes/font_size = 20
+text = ""
+autowrap_mode = 3
+
+[node name="SelDesc" type="Label" parent="Root/V/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 20
+text = ""
+autowrap_mode = 3
+
+[node name="Play" type="Button" parent="Root/V/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+theme_override_font_sizes/font_size = 28
+text = "ИГРАТЬ"
+
+[node name="Fav" type="Button" parent="Root/V/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+theme_override_font_sizes/font_size = 22
+text = "В ИЗБРАННОЕ"
+
+[node name="Random" type="Button" parent="Root/V/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+theme_override_font_sizes/font_size = 22
+text = "СЛУЧАЙНЫЙ"
+
+[node name="Back" type="Button" parent="Root/V/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+theme_override_font_sizes/font_size = 22
+text = "НАЗАД"

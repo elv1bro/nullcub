@@ -60,6 +60,7 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	PuzzleKeyArm.ensure_action()
+	add_to_group(PhotoMode.KEY_TAKEN_GROUP)   # «/» — рука P2 и вход P2, не фоторежим
 	var holder := get_node_or_null("Rooms")
 	if holder != null:
 		for c in holder.get_children():

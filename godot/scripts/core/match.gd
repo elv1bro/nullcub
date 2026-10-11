@@ -96,6 +96,11 @@ var hit_fx_count := 0
 var env_slam_count := 0
 var _camera_owner := ""
 var _captured_from: Camera3D = null
+## Множители режима (ModeRun / Mutators, docs/plan-demo/MODES_100.md): отброс и урон удара (читает DollCombat), масштаб времени
+## поверх замедлений и СТАЗИСА (slowmo / hyper). 1 — как без режима.
+var mode_knockback_mult := 1.0
+var mode_damage_mult := 1.0
+var mode_time_scale := 1.0
 
 
 func _ready() -> void:
@@ -415,6 +420,16 @@ func stability_mult() -> float:
 	return Damage.sd_stability_mult(sd_step) if phase == Phase.SUDDEN_DEATH else 1.0
 
 
+## Ящик снабжения (SupplyCrate) вне стычки: только «жизни» (+SQUAD_SUPPLY health); остальное — ящик висит, пока не истечёт.
+## SquadMatch переопределяет полностью.
+func take_supply(d: Doll, kind: String) -> bool:
+	if kind != "health" or d == null or not d.alive or d.hp >= d.max_hp:
+		return false
+	d.hp = minf(d.max_hp, d.hp + float((Tuning.SQUAD_SUPPLY.get("health", {}) as Dictionary).get("amount", 40.0)))
+	hp_changed.emit(d, d.hp, d.max_hp)
+	return true
+
+
 func time_left_s() -> float:
 	match phase:
 		Phase.COUNTDOWN:
@@ -462,7 +477,7 @@ func _process(delta: float) -> void:
 	_real_clock += real
 	var stasis_was := _stasis_scale
 	_stasis_tick(real)
-	if _time_effects.is_empty() and _stasis_scale >= 1.0 and stasis_was >= 1.0:
+	if _time_effects.is_empty() and _stasis_scale >= 1.0 and stasis_was >= 1.0 and is_equal_approx(Engine.time_scale, mode_time_scale):
 		return   # ни замедлений, ни СТАЗИСА — масштаб не трогаем (как до режима)
 	var i := 0
 	while i < _time_effects.size():
@@ -482,14 +497,14 @@ func _apply_time_scale() -> void:
 	var scale := _stasis_scale
 	for e in _time_effects:
 		scale = minf(scale, _effect_scale(e))
-	Engine.time_scale = scale
+	Engine.time_scale = scale * mode_time_scale
 
 
 ## Масштаб 1, замедлений нет, СТАЗИС с полного хода (begin, restart; WaveDirector.start_run / restart).
 func _reset_time() -> void:
 	_time_effects.clear()
 	_stasis_scale = 1.0
-	Engine.time_scale = 1.0
+	Engine.time_scale = mode_time_scale
 
 
 ## Масштаб СТАЗИСА сейчас (1 — режим выключен или молчит).

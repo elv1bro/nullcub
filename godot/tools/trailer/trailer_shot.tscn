@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://trailershot01"]
+
+[ext_resource type="Script" path="res://tools/trailer/trailer_shot.gd" id="1_shot"]
+
+[node name="TrailerShot" type="Node"]
+script = ExtResource("1_shot")
