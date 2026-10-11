@@ -1248,6 +1248,27 @@ func _on_part_reattached(_name: String) -> void:
 		_rebind()
 
 
+## Сменить управляемую деталь на ходу (бот каната берёт кисть со стороны каната — TugBrain.rope_hand): отпустить предмет и стену,
+## вернуть позу старой цепи, собрать цепь и IK заново. Сёстры не заводятся (деталь задана явно).
+func set_control_part(body_name: String) -> void:
+	if body_name == "" or body_name == part_name:
+		return
+	if not _ready_done:
+		control_part = body_name   # _setup ещё впереди — возьмёт её
+		return
+	if not doll.parts.has(body_name):
+		return
+	if held != null:
+		release("rebind")
+	wall_release("rebind")
+	_wall_shoulder(false)
+	_set_flex(false)
+	arm_active = false
+	candidate = null
+	control_part = body_name
+	_rebind()
+
+
 func _rebind() -> void:
 	_ready_done = false
 	_mid_joints.clear()

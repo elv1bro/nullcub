@@ -262,7 +262,7 @@ func _pass() -> Dictionary:
 		if p == CLIMB:   # «Подъём: проба стены» (CLIMB.md): P2 вошёл (две строки игроков, памятка P2), тост и табличка «ВЕРХ!»
 			var cp := inst as ClimbPlayground
 			cp.join_p2()
-			cp.hud.toast(tr("P2 сорвался: %.1f м вниз") % [2, 12.5])
+			cp.hud.toast(tr("P%d сорвался: %.1f м вниз") % [2, 12.5])
 			await _wait(SETTLE)
 			shots["climb:p2"] = _scan(inst)
 			cp.match_node.players[0]["falls"] = 3

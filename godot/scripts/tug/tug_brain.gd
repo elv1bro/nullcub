@@ -87,6 +87,27 @@ func _find_refs() -> void:
 		arm = TugPlayground.arm_of(doll)
 		if arm != null:
 			arm.show_hints = false
+			arm.set_control_part(rope_hand(doll, home()))
+
+
+## Кисть со стороны каната (плечо ближе к центру, −home). У kit_human рука одна (Hand_R), и её плечо у обеих команд с одной стороны
+## (кукла смотрит в камеру, не разворачивается): левый бот тянулся к канату дальней рукой через корпус, плечо упиралось в лимит, кисть
+## не подходила к звену на GRAB_CLOSE_M, и он не брался вовсе (tug_probe rope_holds_10s). "" — пары рук нет, рука как была.
+static func rope_hand(d: Doll, home_: float) -> String:
+	var torso := d.parts.get("Torso") as Node3D
+	if torso == null:
+		return ""
+	var best := ""
+	var best_x := -INF
+	for side in ["L", "R"]:
+		var sh := d.parts.get("UpperArm_" + side) as Node3D
+		if sh == null or not d.parts.has("Hand_" + side):
+			continue
+		var x := (sh.global_position.x - torso.global_position.x) * -home_   # мозг заводится на спавне — кукла стоит
+		if x > best_x:
+			best_x = x
+			best = "Hand_" + side
+	return best
 
 
 func my_team() -> int:

@@ -65,6 +65,8 @@ extends Node
 const SCENE := "res://scenes/workshop/workshop_build.tscn"
 const REPORT := "res://tests/workshop_probe_report.json"
 const HUMAN_ENERGY := 82       # энергия human с ценой выноса (BodyBlueprint.reach_mult, WORKSHOP_V3.md §2); без выноса было 58
+const HUMAN_ENERGY_PARTHP := 72  # то же в режиме «запас из деталей» (PartHp.on, стандарт с 06.10): ядро и голова бесплатны (WORKSHOP_V4.md)
+const WEAK_REACH_M := 0.9       # м по x между торсами: с этого рука дотянется до манекена медленно
 const STABLE_S := 3.0
 const MAX_SPEED := 8.0          # м/с: покой после оживления (g = 2) — быстрее = «взрыв»
 const MAX_REACH := 2.6          # м от торса до любой части (самая длинная цепь сборки ≈ 1.6 м)
@@ -79,6 +81,11 @@ const MIN_CHECKS := 222
 var ws: WorkshopBuild
 var report := {"ok": true, "checks": []}
 var shots_dir := ""
+
+
+## Энергия human по текущему режиму: с запасом из деталей ядро и голова не стоят энергии.
+func _human_energy() -> int:
+	return HUMAN_ENERGY_PARTHP if PartHp.on else HUMAN_ENERGY
 
 
 func _ready() -> void:
@@ -766,7 +773,7 @@ func _presets() -> void:
 		layer_ok = layer_ok and (b as RigidBody3D).collision_layer == WorkshopBuild.PICK_LAYER
 	_check("preset_stand_frozen", frozen and layer_ok, "тела заморожены, только слой выбора")
 	# энергия по расстоянию (WORKSHOP_V3.md §2): 58 без выноса → 82 (кисти и стопы дальше от ядра — дороже)
-	_check("preset_energy", bp.energy_used() == HUMAN_ENERGY and bp.energy_used() == _sum_node_energy(bp), "энергия human = %d" % HUMAN_ENERGY,
+	_check("preset_energy", bp.energy_used() == _human_energy() and bp.energy_used() == _sum_node_energy(bp), "энергия human = %d" % _human_energy(),
 		bp.energy_used())
 	for id in CraftEdit.BODY_PRESETS:
 		var p := CraftEdit.load_body_preset(String(id))
@@ -849,7 +856,8 @@ func _targets_attach() -> void:
 		ws.undo()
 	await _frames(1)
 	ws.blueprint.energy_budget = 100
-	_check("attach_undo", ws.blueprint.nodes.size() == 14 and ws.blueprint.energy_used() == HUMAN_ENERGY, "Ctrl+Z ×4 → снова human", ws.blueprint.nodes.size())
+	_check("attach_undo", ws.blueprint.nodes.size() == 14 and ws.blueprint.energy_used() == _human_energy(), "Ctrl+Z ×4 → снова human",
+		[ws.blueprint.nodes.size(), ws.blueprint.energy_used()])
 
 
 func _detach() -> void:
@@ -1199,10 +1207,25 @@ func _test_hit() -> void:
 	_check("test_feel", feel != null and feel.get_node_or_null("HitFxDirector") != null and feel.get_node_or_null("SfxDirector") != null
 		and feel.hit_fx_count > 0 and d.get_node("DollCombat").get("match_ref") == feel,
 		"испытание: TrainingFeel (эффекты, звук), удары идут в hit_fx", [feel.hit_fx_count if feel else -1])
-	# медленное касание манекена рукой (ниже MIN_IMPACT_SPEED): урона 0, но сигнал weak_contact — у манекена «0 · 1.2 м/с»
+	# медленное касание манекена рукой (ниже MIN_IMPACT_SPEED): урона 0, но сигнал weak_contact — у манекена «0 · 1.2 м/с».
+	# Сначала подойти на длину руки: после серии ударов куклу бывает отбрасывает от манекена на 2+ м, оттуда рука не достаёт.
+	dummy_doll = ws.dummy.get("doll")
+	var gap0 := -1.0
+	if dummy_doll != null and is_instance_valid(dummy_doll) and is_instance_valid(d):
+		for i in range(240):
+			if not dummy_doll.alive or not d.alive:
+				break
+			var dx := dummy_doll.torso().global_position.x - d.torso().global_position.x
+			var dy := dummy_doll.torso().global_position.y - d.torso().global_position.y
+			gap0 = absf(dx)
+			if gap0 < WEAK_REACH_M:
+				break
+			d.input_vec = Vector2(signf(dx), clampf(dy, -0.5, 0.6)).limit_length(1.0)
+			await get_tree().physics_frame
+		d.input_vec = Vector2.ZERO
+		await _frames(20)   # погасить разбег: касание должно быть рукой, не корпусом
 	var weak0 := feel.weak_count if feel else 0
 	var hp0 := float(ws.dummy.call("hp"))
-	dummy_doll = ws.dummy.get("doll")
 	if arm != null and dummy_doll != null and is_instance_valid(dummy_doll) and feel != null:
 		for i in range(150):
 			if feel.weak_count > weak0:
@@ -1212,7 +1235,7 @@ func _test_hit() -> void:
 			await get_tree().physics_frame
 		arm.clear_target_override()
 	_check("test_weak_contact", feel != null and feel.weak_count > weak0, "медленное касание — weak_contact (урона нет, видно скорость)",
-		[weak0, feel.weak_count if feel else -1, snappedf(hp0 - float(ws.dummy.call("hp")), 0.1)])
+		[weak0, feel.weak_count if feel else -1, snappedf(hp0 - float(ws.dummy.call("hp")), 0.1), snappedf(gap0, 0.01)])
 	ws.stop_test()
 	await _frames(1)
 	_check("test_time_scale_back", is_equal_approx(Engine.time_scale, 1.0), "после испытания время снова 1×", Engine.time_scale)
