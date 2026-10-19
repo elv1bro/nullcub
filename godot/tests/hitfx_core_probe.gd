@@ -29,6 +29,10 @@
 ##              ≤ CRIT_FLIGHT_MAX_SPEED × sd. В отчёте info.freq.hits — все удары [площадка@сид, матч, t, урон, score, eligible, tier,
 ##              kind, атакующий, double_blow, is_ko, part, dash, combo, weapon_id, crit_block] для перекалибровки порогов; info.freq.power —
 ##              мощные удары по уровням и причинам, damage_dist — урон crit и heavy по корзинам; crit=0 — те же бои без крита.
+##              Удары разбираются в том же тике, до рестарта матча (Match.restart освобождает кукол — атакующий ctx уже мёртв);
+##              «сокрушительный» (crush, последний столбец hits) — HitTier.crushing на сырых числах ctx, не на округлённых для отчёта;
+##   probe_*  — сама проба: все разделы дошли до конца (probe_sections) и ни одной SCRIPT ERROR за прогон (probe_script_errors).
+##              Ошибка скрипта обрывает только свою функцию: раньше раздел freq молча терял 13 проверок, а проба выходила с exit 0.
 ## Запуск (≈ 100 с): godot --headless --path . --fixed-fps 60 res://tests/hitfx_core_probe.tscn -- "freq=void+ruins+workshop,matches=6,seeds=29+7+13"
 ##   (06.10: три сида вместо двух — в «Запасе из деталей», стандарте с 06.10, бои короче, период крита ≈ 30 с вместо ≈ 34 с и с большим
 ##   разбросом; на 36 матчах 1 прогон из 7 уходил ниже 25 с, на 54 разброс меньше. Коридор 25–45 с прежний.)
@@ -57,11 +61,35 @@ const DASH_FROM_M := 2.0
 const STUCK_S := 6.0
 const UNSTICK_S := 1.2
 
+## Счётчик SCRIPT ERROR за прогон (Logger, как ws_sfx_probe). Ошибки движка не в счёт: headless-рендер сыплет «Parameter "material"
+## is null» и т. п. Logger зовут из любого потока — под мьютексом.
+class ScriptErrors extends Logger:
+	var count := 0
+	var first := ""
+	var _mx := Mutex.new()
+
+	func _log_error(function: String, file: String, line: int, code: String, rationale: String, _editor_notify: bool,
+			error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		if error_type != ERROR_TYPE_SCRIPT:
+			return
+		_mx.lock()
+		count += 1
+		if first == "":
+			first = "%s %s (%s:%d %s)" % [code, rationale, file, line, function]
+		_mx.unlock()
+
+	func _log_message(_message: String, _error: bool) -> void:
+		pass
+
+
 ## Режим по умолчанию (tests/hit_tier_probe.tscn ставит "tier"); аргумент only= перекрывает.
 @export var default_only := ""
 
 var cfg := {"only": "", "freq": "void+ruins+workshop", "freq_s": 60.0, "matches": 6, "crit": true, "seed": 29, "seeds": "29+7+13", "out": "res://tests/hitfx_core_probe_report.json"}
 var report := {"ok": true, "checks": [], "info": {}}
+var script_errors := ScriptErrors.new()
+var sections_begun: Array = []         # разделы пробы: начатые (_section) и дошедшие до последней строки — probe_sections
+var sections_done: Array = []
 var t := 0.0
 var pg: Node3D = null
 var match_node: Match = null
@@ -70,6 +98,7 @@ var slam_ctxs: Array = []
 var hit_kinds: Dictionary = {}
 # монитор полёта (_physics_process идёт ПОСЛЕ кукол: process_physics_priority) — ЦМ после их клэмпа
 var fly_max_normal := 0.0
+var fly_max_normal_raw := 0.0          # одиночный замер, без «двух подряд» — только в отчёт (info.freq.fly_max_normal_raw)
 var fly_max_crit := 0.0
 var fly_normal_samples := 0
 var fly_prev: Dictionary = {}          # doll id -> [режим полёта, |v_ЦМ|] прошлого тика
@@ -104,6 +133,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("=== HITFX CORE PROBE ===")
+	OS.add_logger(script_errors)
 	_tier_checks()
 	_mass_checks()
 	if cfg["only"] != "tier":
@@ -133,6 +163,12 @@ func _js(v: Variant) -> Variant:
 	return v
 
 
+## Начало раздела: заголовок в лог и учёт для probe_sections; последняя строка раздела — sections_done.append(id).
+func _section(id: String, title: String) -> void:
+	sections_begun.append(id)
+	print("--- %s ---" % title)
+
+
 func _ticks(n: int) -> void:
 	for i in range(n):
 		await get_tree().physics_frame
@@ -157,8 +193,10 @@ func _physics_process(delta: float) -> void:
 	t += delta
 	if match_node == null or not is_instance_valid(match_node):
 		return
-	# отдача атакующего (apply_recoil) и удар, разобранный DollCombat после тика куклы, могут на один тик вынести ЦМ за клэмп —
-	# кукла режет его в следующем своём тике. Поэтому в зачёт идёт min двух подряд замеров одной куклы в одном режиме полёта.
+	# В зачёт идёт min двух подряд замеров одной куклы в одном режиме полёта: запас на запись скорости после тика куклы, которую
+	# она режет только в следующем своём тике. До 05.10 так выходила отдача (apply_recoil): P1 получал её от DollCombat P2 уже после
+	# своего тика и шаг физики летел на √(4.5² + отдача²) — 4.66 / 4.87 м/с, в клинче два тика подряд (freq_normal_flight 4.664).
+	# Теперь отдача в полёте режется сразу; одиночный замер — в info.freq.fly_max_normal_raw.
 	for d in match_node.dolls():
 		var dd := d as Doll
 		var key := dd.get_instance_id()
@@ -169,6 +207,8 @@ func _physics_process(delta: float) -> void:
 		var mode := 1 if dd.flight_cap_active() else 0
 		var prev: Array = fly_prev.get(key, [])
 		fly_prev[key] = [mode, sp]
+		if mode == 0:
+			fly_max_normal_raw = maxf(fly_max_normal_raw, sp)
 		if prev.is_empty() or int(prev[0]) != mode:
 			continue
 		var held := minf(sp, float(prev[1]))
@@ -195,7 +235,7 @@ func _tier(id: String, ht: HitTier, ctx: Dictionary, ft: float, want: String, cr
 
 
 func _tier_checks() -> void:
-	print("--- HitTier ---")
+	_section("tier", "HitTier")
 	var a := Doll.new()
 	a.name = "A"
 	var b := Doll.new()
@@ -304,6 +344,7 @@ func _tier_checks() -> void:
 	a.free()
 	b.free()
 	c.free()
+	sections_done.append("tier")
 
 
 ## v3 (HIT_FX.md §12.4): «сокрушительный» удар (score ≥ CRIT_BYPASS_SCORE или урон ≥ CRIT_BYPASS_DAMAGE) — крит сквозь кулдауны
@@ -372,7 +413,7 @@ func _bypass_checks(a: Doll, b: Doll, c: Doll) -> void:
 # ------------------------------------------------------------------ потолок массы
 
 func _mass_checks() -> void:
-	print("--- mass cap ---")
+	_section("mass", "mass cap")
 	var worst := 0.0
 	var rows: Array = []
 	for id in Tuning.WEAPON.keys():
@@ -418,11 +459,12 @@ func _mass_checks() -> void:
 			"%.2f vs %.2f kg at %.0f m/s (before 29.09 both capped to 4 kg)" % [masses["heavy_hammer"], masses["hammer"], FLING_SPEED])
 	else:
 		_check("mass_craft_heavy_formula", false, masses.keys(), ["hammer", "heavy_hammer"], "craft presets missing")
+	sections_done.append("mass")
 
 
 ## Оба крафтовых молота (одна скорость, одна геометрия) летят в голову стоящего манекена: урон тяжёлого больше.
 func _fling_checks() -> void:
-	print("--- fling: craft hammer vs heavy hammer ---")
+	_section("fling", "fling: craft hammer vs heavy hammer")
 	var res := {}
 	for id in ["hammer", "heavy_hammer"]:
 		res[id] = await _fling(id)
@@ -441,6 +483,7 @@ func _fling_checks() -> void:
 			"hit %s %.2f HP at %.2f m/s / %s %.2f HP at %.2f m/s" % [h1["part"], h1["damage"], h1["speed"], h0["part"], h0["damage"], h0["speed"]])
 		_check("mass_fling_matches_formula", absf(k1 / k0 - float(h1["mass"]) / float(h0["mass"])) < 0.02, k1 / k0, snappedf(float(h1["mass"]) / float(h0["mass"]), 0.001),
 			"ratio = mass ratio (no MASS_CAP on weapons)")
+	sections_done.append("fling")
 
 
 func _fling(id: String) -> Dictionary:
@@ -554,7 +597,7 @@ func _ctx_complete(ctx: Dictionary) -> Array:
 
 
 func _match_checks() -> void:
-	print("--- Match hooks (Void) ---")
+	_section("match", "Match hooks (Void)")
 	await _load_scene("void")
 	await _await_fight()
 	var ds := _pair()
@@ -702,6 +745,7 @@ func _match_checks() -> void:
 	# --- удар о стену без урона ---
 	await _await_fight()
 	await _slam_run()
+	sections_done.append("match")
 
 
 ## Крит через настоящий on_hit: tier crit, ЦМ в [5.5, 7.5] × sd, клэмп 7.5 в окне, после окна — FLIGHT_MAX_SPEED. Возвращает |v_ЦМ| после.
@@ -910,18 +954,19 @@ func _rush(d: Doll, other: Doll) -> void:
 
 
 func _freq_checks() -> void:
-	print("--- crit frequency (bots) ---")
+	_section("freq", "crit frequency (bots)")
 	var scenes: Array = String(cfg["freq"]).split("+", false)
 	var total_fight := 0.0
 	var tiers: Dictionary = {}
 	for k in TIERS:
 		tiers[k] = 0
 	var crit_events: Array = []   # {scene, match, t, tier, attacker, score, damage}
-	var all_hits: Array = []      # [scene, match, t, damage, score, eligible, tier, kind, attacker, double_blow, is_ko, part, dash, combo, weapon_id, crit_block]
+	var all_hits: Array = []      # [scene, match, t, damage, score, eligible, tier, kind, attacker, double_blow, is_ko, part, dash, combo, weapon_id, crit_block, crush]
 	var slams := 0
 	var env_hits := 0
 	var per_scene: Dictionary = {}
 	fly_max_normal = 0.0
+	fly_max_normal_raw = 0.0
 	fly_max_crit = 0.0
 	var runs: Array = []
 	for sd in String(cfg["seeds"]).split("+", false):
@@ -947,6 +992,23 @@ func _freq_checks() -> void:
 		while match_i < int(cfg["matches"]) and ticks < max_ticks:
 			await _ticks(1)
 			ticks += 1
+			# удары этого тика — сразу, до рестарта ниже: Match.restart освобождает кукол, и атакующий из ctx к следующему тику уже
+			# мёртв (до 05.10 удар в тике отсечки freq_s разбирался после рестарта: SCRIPT ERROR в HitTier.eligible и −13 проверок)
+			for i in range(fx_seen, fx_ctxs.size()):
+				var c: Dictionary = fx_ctxs[i]
+				var att: Variant = c["attacker"]
+				var att_i := (att as Doll).player_index if is_instance_valid(att) and att is Doll else -1
+				tiers[c["tier"]] = int(tiers.get(c["tier"], 0)) + 1
+				all_hits.append(["%s@%d" % [sid, int(run[0])], match_i, snappedf(float(c["fight_time"]), 0.01), snappedf(float(c["damage"]), 0.01), snappedf(float(c["score"]), 0.01),
+					1 if HitTier.eligible(c) else 0, c["tier"], c["kind"], att_i,
+					1 if bool(c["double_blow"]) else 0, 1 if bool(c["is_ko"]) else 0, String(c["part"]), 1 if bool(c["dash"]) else 0, int(c["combo"]),
+					String(c.get("weapon_id", "")), String(c.get("crit_block", "")), 1 if HitTier.crushing(c, float(c["score"])) else 0])
+				if c["tier"] == "crit" or c["tier"] == "ko_crit":
+					crit_events.append({"scene": "%s@%d" % [sid, int(run[0])], "match": match_i, "t": float(c["fight_time"]), "tier": c["tier"],
+						"attacker": att_i,
+						"score": snappedf(float(c["score"]), 0.01), "damage": snappedf(float(c["damage"]), 0.01), "kind": c["kind"], "part": c["part"],
+						"drought": float(c["score"]) < Tuning.CRIT_SCORE, "stylish": HitTier.stylish(c), "bypass": bool(c.get("crit_bypass", false))})
+			fx_seen = fx_ctxs.size()
 			# матч до KO, как match_probe и калибровка 29.09; без KO за freq_s боя — следующий матч
 			if match_node.combat_active() and match_node.fight_time >= float(cfg["freq_s"]):
 				capped += 1
@@ -959,20 +1021,6 @@ func _freq_checks() -> void:
 			var ds := _pair()
 			if ds.size() < 2:
 				continue
-			for i in range(fx_seen, fx_ctxs.size()):
-				var c: Dictionary = fx_ctxs[i]
-				tiers[c["tier"]] = int(tiers.get(c["tier"], 0)) + 1
-				all_hits.append(["%s@%d" % [sid, int(run[0])], match_i, snappedf(float(c["fight_time"]), 0.01), snappedf(float(c["damage"]), 0.01), snappedf(float(c["score"]), 0.01),
-					1 if HitTier.eligible(c) else 0, c["tier"], c["kind"], (c["attacker"] as Doll).player_index if is_instance_valid(c["attacker"]) and c["attacker"] is Doll else -1,
-					1 if bool(c["double_blow"]) else 0, 1 if bool(c["is_ko"]) else 0, String(c["part"]), 1 if bool(c["dash"]) else 0, int(c["combo"]),
-					String(c.get("weapon_id", "")), String(c.get("crit_block", ""))])
-				if c["tier"] == "crit" or c["tier"] == "ko_crit":
-					var att: Variant = c["attacker"]
-					crit_events.append({"scene": "%s@%d" % [sid, int(run[0])], "match": match_i, "t": float(c["fight_time"]), "tier": c["tier"],
-						"attacker": (att as Doll).player_index if att is Doll and is_instance_valid(att) else -1,
-						"score": snappedf(float(c["score"]), 0.01), "damage": snappedf(float(c["damage"]), 0.01), "kind": c["kind"], "part": c["part"],
-						"drought": float(c["score"]) < Tuning.CRIT_SCORE, "stylish": HitTier.stylish(c), "bypass": bool(c.get("crit_bypass", false))})
-			fx_seen = fx_ctxs.size()
 			if match_node.combat_active():
 				_rush(ds[0], ds[1])
 				_rush(ds[1], ds[0])
@@ -1004,7 +1052,8 @@ func _freq_checks() -> void:
 		n_crit += 1
 	var per_crit := total_fight / float(n_crit) if n_crit > 0 else INF
 	report["info"]["freq"] = {"scenes": per_scene, "fight_s": snappedf(total_fight, 0.01), "tiers": tiers, "crits": crit_events,
-		"hits": all_hits, "fly_max_normal": fly_max_normal, "fly_max_crit": fly_max_crit, "fly_samples": [fly_normal_samples, fly_crit_samples]}
+		"hits": all_hits, "fly_max_normal": fly_max_normal, "fly_max_normal_raw": fly_max_normal_raw, "fly_max_crit": fly_max_crit,
+		"fly_samples": [fly_normal_samples, fly_crit_samples]}
 	_check("freq_crit_period", per_crit >= 25.0 and per_crit <= 45.0, per_crit if n_crit > 0 else -1.0, "25–45 s per crit",
 		"%d crit+ko_crit in %.1f s fight" % [n_crit, total_fight])
 	# v2 (HIT_FX.md §11.1): крит честный — ни одного слабее CRIT_MIN_DAMAGE, выданных засухой (score < CRIT_SCORE) не больше 20 %
@@ -1052,7 +1101,6 @@ func _freq_checks() -> void:
 	var bins := [[9.0, "9-14"], [14.0, "14-18"], [18.0, "18-25"], [25.0, "25-30"], [30.0, "30+"]]
 	for hrow in all_hits:
 		var dmg := float(hrow[3])
-		var sc := float(hrow[4])
 		var tr := String(hrow[6])
 		var blk := String(hrow[15])
 		var key := ""
@@ -1062,7 +1110,9 @@ func _freq_checks() -> void:
 		var dk := "crit" if tr == "crit" or tr == "ko_crit" else tr
 		if dist.has(dk) and key != "":
 			(dist[dk] as Dictionary)[key] = int((dist[dk] as Dictionary).get(key, 0)) + 1
-		if dmg < Tuning.CRIT_BYPASS_DAMAGE and sc < Tuning.CRIT_BYPASS_SCORE:
+		# мощный ли удар — по сырым числам (crush): округлённые до 0.01 врут на пороге. 05.10 молот в голову, в отчёте «урон 21.6,
+		# score 27.0» (×1.25 за голову): настоящий score чуть ниже 27, HitTier справедливо оставил heavy, а проба считала его потерянным
+		if int(hrow[16]) == 0:
 			continue
 		power["hits"] = int(power["hits"]) + 1
 		(power["tiers"] as Dictionary)[tr] = int((power["tiers"] as Dictionary).get(tr, 0)) + 1
@@ -1089,12 +1139,17 @@ func _freq_checks() -> void:
 		"COM speed of flying dolls outside crit flight, held 2 ticks (after Doll._cap_flight_speed)")
 	_check("freq_crit_flight", fly_max_crit <= Tuning.CRIT_FLIGHT_MAX_SPEED * Damage.sd_knockback_mult(maxi(match_node.sd_step, 0)) + 0.01, fly_max_crit,
 		"<= %.1f × sd" % Tuning.CRIT_FLIGHT_MAX_SPEED)
+	sections_done.append("freq")
 
 
 # ------------------------------------------------------------------ итог
 
 func _finish() -> void:
 	Engine.time_scale = 1.0
+	var cut := sections_begun.filter(func(id: String) -> bool: return not sections_done.has(id))
+	_check("probe_sections", cut.is_empty(), cut, [], "sections that stopped before their last check (%s ran)" % "+".join(PackedStringArray(sections_done)))
+	OS.remove_logger(script_errors)
+	_check("probe_script_errors", script_errors.count == 0, script_errors.count, 0, script_errors.first)
 	var fails := 0
 	for c in report["checks"]:
 		if not bool(c["ok"]):

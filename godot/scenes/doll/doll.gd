@@ -1447,6 +1447,7 @@ func _soft_factor() -> float:
 ## Отдача атакующего после засчитанного удара (DollCombat._deliver): dir — направление удара (от атакующего к жертве, XY).
 ## Сближающая компонента скорости ЦМ вдоль dir гасится до −recoil_speed (только уменьшается: отходящий не ускоряется) одинаково
 ## во всех частях — мах конечностей не трогается; тяга выключена lock_s (не «дожимает» жертву телом, RM: бьющий зависает поодаль).
+## В полёте (после удара по себе) ЦМ сразу режется потолком полёта, как в apply_knockback.
 func apply_recoil(dir: Vector3, recoil_speed: float, lock_s: float) -> void:
 	if _broken or parts.is_empty():
 		return
@@ -1465,6 +1466,11 @@ func apply_recoil(dir: Vector3, recoil_speed: float, lock_s: float) -> void:
 		var dv := n * (target - along)
 		for b in parts.values():
 			(b as RigidBody3D).linear_velocity += dv
+		# Отдача поперёк полёта на потолке складывается до √(4.5² + отдача²) — 4.66 м/с при KNOCKBACK_MIN, 4.87 при KNOCKBACK_MAX.
+		# Свой тик кукла уже могла пройти (P1: отдачу ей даёт DollCombat P2, он идёт после), тогда шаг физики летел бы сверх потолка
+		# (hitfx_core_probe freq_normal_flight 4.664, 05.10) — режем сразу, как отброс
+		if _time < knockback_until:
+			_cap_flight_speed()
 	if lock_s > 0.0:
 		thrust_lock_until = maxf(thrust_lock_until, _time + lock_s)
 
