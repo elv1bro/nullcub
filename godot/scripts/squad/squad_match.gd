@@ -368,7 +368,7 @@ func bullet_hit(victim: Doll, shooter: Doll, amount: float, part: String, pos: V
 ## SQUAD_MELEE_HIT_MAX, в полёте — не больше SQUAD_DASH_HIT_MAX и по одному бойцу не чаще SQUAD_DASH_HIT_GAP_S (автор 06.10: «проверь,
 ## чтобы импульс был нормальный и не ваншотил сразу всех»); топор — сквозь броню стычки (Doll.incoming_mult её снимет обратно).
 func adjust_hit_damage(victim: Doll, attacker: Node, dmg: float, c: Dictionary) -> float:
-	if not (attacker is Doll) or not is_instance_valid(attacker) or attacker == victim:
+	if not is_instance_valid(attacker) or not (attacker is Doll) or attacker == victim:
 		return dmg
 	var a := attacker as Doll
 	dmg *= boost_mult(a, "rage")
@@ -400,7 +400,7 @@ func on_hit(victim: Doll, attacker: Node, damage: float, kind: String, position:
 		return
 	melee_hits += 1
 	Charge.apply_hit(make_hit_ctx(victim, attacker, damage, kind, position, combo_n, double_blow, weapon_id, speed))
-	if attacker is Doll and is_instance_valid(attacker):
+	if is_instance_valid(attacker) and attacker is Doll:
 		melee_landed.emit(victim, attacker as Doll, damage, position)
 		var ml := melee_of(attacker)
 		if ml != null and ml.in_dash() and not ml.wave_done and float(ml.prop("wave_m", 0.0)) > 0.0 and kind == "weapon":
@@ -1047,7 +1047,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	feel_enabled = feel
 	var vt := team_of(victim)
 	var other := 1 - vt
-	var killer: Doll = attacker as Doll if attacker is Doll and is_instance_valid(attacker) and attacker != victim \
+	var killer: Doll = attacker as Doll if is_instance_valid(attacker) and attacker is Doll and attacker != victim \
 		and team_of(attacker) == other else null
 	if not is_ctf():
 		score[other] = int(score[other]) + 1   # в захвате флага очки — только за доставку
@@ -1094,7 +1094,7 @@ func _tally(pi: int, key: String, v: float) -> void:
 
 ## Урон по соперникам: в таблицу итогов и в опыт.
 func _on_hit_tally(victim: Doll, attacker: Node, damage: float, _kind: String, _pos: Vector3) -> void:
-	if not (attacker is Doll) or not is_instance_valid(attacker) or attacker == victim or team_of(attacker) == team_of(victim):
+	if not is_instance_valid(attacker) or not (attacker is Doll) or attacker == victim or team_of(attacker) == team_of(victim):
 		return
 	var pi := (attacker as Doll).player_index
 	_tally(pi, "damage", damage)

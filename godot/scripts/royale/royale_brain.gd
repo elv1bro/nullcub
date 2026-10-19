@@ -61,7 +61,7 @@ func _brain_ready() -> void:
 func _on_damaged(amount: float, attacker: Node, _part: String, _pos: Vector3, kind: String) -> void:
 	if kind != "weapon" and amount < GRUDGE_MIN_HP:
 		return
-	if attacker is Doll and attacker != doll and is_instance_valid(attacker):
+	if is_instance_valid(attacker) and attacker is Doll and attacker != doll:
 		_grudge = attacker as Doll
 		_grudge_until = _time + Tuning.ROYALE_BOT_GRUDGE_S
 

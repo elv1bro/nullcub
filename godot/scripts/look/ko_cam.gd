@@ -666,7 +666,7 @@ func _doll_centre(d: Doll) -> Variant:
 	var sum := Vector3.ZERO
 	var n := 0
 	for b in d.parts.values():
-		if not (b is RigidBody3D) or not is_instance_valid(b):
+		if not is_instance_valid(b) or not (b is RigidBody3D):
 			continue
 		var xf: Variant = _body_xf((b as Node).get_instance_id(), int(fw[0]), float(fw[1]))
 		if xf != null:

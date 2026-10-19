@@ -170,7 +170,7 @@ func bullet_hit(victim: Doll, shooter: Doll, amount: float, part: String, pos: V
 
 ## Урон по любому другому бойцу — в таблицу итогов.
 func _on_hit_tally(victim: Doll, attacker: Node, damage: float, _kind: String, _pos: Vector3) -> void:
-	if not (attacker is Doll) or not is_instance_valid(attacker) or attacker == victim:
+	if not is_instance_valid(attacker) or not (attacker is Doll) or attacker == victim:
 		return
 	_tally((attacker as Doll).player_index, "damage", damage)
 
@@ -536,7 +536,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	feel_enabled = false
 	_match_on_doll_ko(attacker, record, victim)   # Match: запись, KO, сигнал ko, проверка конца (_check_over — ниже)
 	feel_enabled = feel
-	var killer: Doll = attacker as Doll if attacker is Doll and is_instance_valid(attacker) and attacker != victim else null
+	var killer: Doll = attacker as Doll if is_instance_valid(attacker) and attacker is Doll and attacker != victim else null
 	var cause := "zone" if bool(record.get("zone", false)) else ("kill" if killer != null else String(record.get("kind", "self")))
 	boosts_active.erase(victim.player_index)
 	_tally(victim.player_index, "deaths", 1)

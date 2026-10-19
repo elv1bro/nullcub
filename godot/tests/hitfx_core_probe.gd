@@ -183,7 +183,7 @@ static func _com_velocity(d: Doll) -> Vector3:
 	var p := Vector3.ZERO
 	var m := 0.0
 	for b in d.parts.values():
-		if b is RigidBody3D and is_instance_valid(b):
+		if is_instance_valid(b) and b is RigidBody3D:
 			p += (b as RigidBody3D).linear_velocity * (b as RigidBody3D).mass
 			m += (b as RigidBody3D).mass
 	return p / m if m > 0.0 else Vector3.ZERO

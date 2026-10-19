@@ -306,7 +306,7 @@ func _on_over(_winner: Doll, results: Dictionary) -> void:
 	var parts: Array = []
 	for k in medals.keys():
 		var md: Object = medals[k]
-		if md is Doll and is_instance_valid(md):
+		if is_instance_valid(md) and md is Doll:
 			parts.append("%s — %s" % [ResultsPanel.medal_title(String(k)), name_of(md as Doll)])
 	end_medals.text = (tr("МЕДАЛИ: ") + " · ".join(parts)) if not parts.is_empty() else ""
 	end_medals.visible = not parts.is_empty()

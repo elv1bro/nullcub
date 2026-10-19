@@ -170,7 +170,7 @@ func _build() -> void:
 	m.hit_fx.connect(func(ctx: Dictionary) -> void:
 		var tier := String(ctx.get("tier", ""))
 		var v: Variant = ctx.get("victim")
-		var who := String((v as Node).name) if v is Node and is_instance_valid(v) else ""
+		var who := String((v as Node).name) if is_instance_valid(v) and v is Node else ""
 		_event("hit", {"tier": tier, "damage": snappedf(float(ctx.get("damage", 0.0)), 0.1), "victim": who})
 		if tier != "":
 			_event(tier, {"victim": who}))

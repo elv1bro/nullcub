@@ -294,7 +294,7 @@ func _finish(reason: String) -> void:
 ## Удар телом (зовёт DollCombat): с человеком — как в бою (тряска, стоп-кадр, надписи); боты между собой — только сигнал hit,
 ## Заряд за удар и тихий звук.
 func on_hit(victim: Doll, attacker: Node, damage: float, kind: String, position: Vector3, combo_n: int, double_blow: bool, weapon_id: String, speed: float) -> void:
-	if attacker is Doll and is_instance_valid(attacker) and damage > 0.0 and tally.has((attacker as Doll).player_index) and attacker != victim:
+	if is_instance_valid(attacker) and attacker is Doll and damage > 0.0 and tally.has((attacker as Doll).player_index) and attacker != victim:
 		(tally[(attacker as Doll).player_index] as Dictionary)["damage"] = float(tally[(attacker as Doll).player_index]["damage"]) + damage
 	if _is_human(victim) or _is_human(attacker):
 		super.on_hit(victim, attacker, damage, kind, position, combo_n, double_blow, weapon_id, speed)
@@ -348,7 +348,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	ko.emit(victim, attacker, rec)
 	(tally[victim.player_index] as Dictionary)["kos_taken"] = int(tally[victim.player_index]["kos_taken"]) + 1
 	var ai := -1
-	if attacker is Doll and is_instance_valid(attacker) and attacker != victim and tally.has((attacker as Doll).player_index):
+	if is_instance_valid(attacker) and attacker is Doll and attacker != victim and tally.has((attacker as Doll).player_index):
 		ai = (attacker as Doll).player_index
 		(tally[ai] as Dictionary)["kos"] = int(tally[ai]["kos"]) + 1
 	kos.append({"t": snappedf(round_time, 0.01), "round": round_i, "victim": victim.player_index, "attacker": ai, "team": team_of(victim)})

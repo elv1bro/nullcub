@@ -403,7 +403,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	feel_enabled = feel
 	(tally[victim.player_index] as Dictionary)["kos_taken"] = int(tally[victim.player_index]["kos_taken"]) + 1
 	var att_i := -1
-	if attacker is Doll and is_instance_valid(attacker) and attacker != victim and tally.has((attacker as Doll).player_index):
+	if is_instance_valid(attacker) and attacker is Doll and attacker != victim and tally.has((attacker as Doll).player_index):
 		att_i = (attacker as Doll).player_index
 		(tally[att_i] as Dictionary)["kos"] = int(tally[att_i]["kos"]) + 1
 	ko_log.append({"t": snappedf(fight_time, 0.01), "victim": victim.player_index, "attacker": att_i})

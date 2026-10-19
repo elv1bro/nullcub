@@ -382,7 +382,7 @@ func _on_taken(d: Doll, _mark: int, _pos: Vector3, score: int) -> void:
 
 ## KO! на табло — только если в нокауте участвует человек (KO ботов между собой на другом краю карты — шум).
 func _on_ko(victim: Doll, attacker: Node, _rec: Dictionary) -> void:
-	var human := (is_instance_valid(victim) and not victim.external_input) or (attacker is Doll and is_instance_valid(attacker) and not (attacker as Doll).external_input)
+	var human := (is_instance_valid(victim) and not victim.external_input) or (is_instance_valid(attacker) and attacker is Doll and not (attacker as Doll).external_input)
 	if human:
 		announcer.announce(tr("KO!"), Color(1.0, 0.85, 0.3), "ko")
 

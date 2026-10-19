@@ -444,7 +444,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 			st["resets"] = int(st["resets"]) + 1
 		_:
 			st["kos_taken"] = int(st["kos_taken"]) + 1
-			if attacker is Doll and is_instance_valid(attacker) and attacker != victim:
+			if is_instance_valid(attacker) and attacker is Doll and attacker != victim:
 				var sa := state_of(attacker as Doll)
 				sa["kos"] = int(sa["kos"]) + 1
 	journal.append({"t": snappedf(fight_time, 0.01), "pi": victim.player_index, "what": why, "cp": int(st["cp"]),
