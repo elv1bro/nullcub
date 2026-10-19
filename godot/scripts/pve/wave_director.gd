@@ -137,7 +137,7 @@ func _late_ready() -> void:
 func players() -> Array:
 	var out: Array = []
 	for n in get_tree().get_nodes_in_group(players_group):
-		if n is Doll and is_instance_valid(n) and n.is_inside_tree() and not n.is_queued_for_deletion():
+		if is_instance_valid(n) and n is Doll and n.is_inside_tree() and not n.is_queued_for_deletion():
 			out.append(n)
 	return out
 

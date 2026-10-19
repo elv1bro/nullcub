@@ -492,7 +492,7 @@ static func _root_body(doll: Node) -> RigidBody3D:
 		for e: Array in pairs:
 			kids[e[1]] = true
 	for b in (p as Dictionary).values():
-		if b is RigidBody3D and is_instance_valid(b) and not kids.has(b):
+		if is_instance_valid(b) and b is RigidBody3D and not kids.has(b):
 			return b
 	return null
 

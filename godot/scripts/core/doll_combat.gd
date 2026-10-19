@@ -436,7 +436,7 @@ func _drive_trades(q: Array) -> void:
 	var best: Dictionary = {}   # Doll -> сырой урон по мне
 	for c in q:
 		var a: Variant = c["attacker"]
-		if not (a is Doll) or not is_instance_valid(a) or a == doll or c["kind"] == "environment" or float(c["est"]) <= 0.0:
+		if not is_instance_valid(a) or not (a is Doll) or a == doll or c["kind"] == "environment" or float(c["est"]) <= 0.0:
 			continue
 		best[a] = maxf(float(best.get(a, 0.0)), float(c["est"]))
 	for a in best:

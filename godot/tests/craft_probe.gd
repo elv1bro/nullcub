@@ -616,7 +616,7 @@ func _on_dummy_hit(amount: float, attacker: Node, part: String, _position: Vecto
 	var rec := {"amount": amount, "kind": kind, "part": part, "attacker": attacker.name if attacker != null else "",
 		"by_holder": attacker == sw["a"], "speed": float(lh.get("speed", 0.0)), "combo": float(lh.get("combo_mult", 1.0)),
 		"double": bool(lh.get("double_blow", false)), "t": t - float(sw["t0"]), "striker": "", "mass": 0.0, "mult": 1.0, "ke": 0.0}
-	if striker is Weapon and is_instance_valid(striker):
+	if is_instance_valid(striker) and striker is Weapon:
 		var ws := striker as Weapon
 		rec["striker"] = String(ws.name)
 		rec["mass"] = ws.mass

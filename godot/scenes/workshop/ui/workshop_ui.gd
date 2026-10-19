@@ -2301,7 +2301,7 @@ func _update_test_stats() -> void:
 ## Удар по манекену (TrainingFeel.hit_fx): скорость под числом урона и строка «последний» в сводке.
 func _on_feel_hit(ctx: Dictionary) -> void:
 	var v: Variant = ctx.get("victim")
-	if not (v is Doll) or not is_instance_valid(v) or (v as Doll) != ctl.dummy.get("doll"):
+	if not is_instance_valid(v) or not (v is Doll) or (v as Doll) != ctl.dummy.get("doll"):
 		return
 	var sp := float(ctx.get("speed", 0.0))
 	var part := String(ctx.get("part_base", ""))
@@ -2374,7 +2374,7 @@ func _dummy_max_hp() -> float:
 	if d.has_method("max_hp"):
 		return float(d.call("max_hp"))
 	var doll: Variant = d.get("doll")
-	if doll is Object and is_instance_valid(doll):
+	if is_instance_valid(doll):
 		var mh: Variant = (doll as Object).get("max_hp")
 		if mh != null and float(mh) > 0.0:
 			return float(mh)

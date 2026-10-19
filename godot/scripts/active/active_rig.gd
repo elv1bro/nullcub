@@ -719,7 +719,7 @@ func _autopilot() -> void:
 func _auto_target() -> Doll:
 	if _brain != null and is_instance_valid(_brain):
 		var bt: Variant = _brain.get("target")
-		if bt is Doll and is_instance_valid(bt) and (bt as Doll).alive:
+		if is_instance_valid(bt) and bt is Doll and (bt as Doll).alive:
 			return bt
 	var best: Doll = null
 	var bd := INF

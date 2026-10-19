@@ -455,7 +455,7 @@ func target_rect(n: Node3D, only: Array = []) -> Rect2:
 	if parts is Dictionary:
 		for k in (parts as Dictionary).keys():
 			var b: Variant = (parts as Dictionary)[k]
-			if not (b is Node3D) or not is_instance_valid(b):
+			if not is_instance_valid(b) or not (b is Node3D):
 				continue
 			if not only.is_empty() and not only.has(Doll.part_base_name(String(k))):
 				continue
@@ -617,7 +617,7 @@ static func _target_velocity(n: Node3D) -> Vector3:
 		var p := Vector3.ZERO
 		var m := 0.0
 		for b in (parts as Dictionary).values():
-			if b is RigidBody3D and is_instance_valid(b):
+			if is_instance_valid(b) and b is RigidBody3D:
 				p += (b as RigidBody3D).linear_velocity * (b as RigidBody3D).mass
 				m += (b as RigidBody3D).mass
 		return p / m if m > 0.0 else Vector3.ZERO

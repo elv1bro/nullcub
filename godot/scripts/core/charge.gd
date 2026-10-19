@@ -36,7 +36,7 @@ static func apply_hit(ctx: Dictionary) -> Array:
 	var none := [0.0, 0.0]
 	var a: Variant = ctx.get("attacker", null)
 	var v: Variant = ctx.get("victim", null)
-	if not (a is Doll) or not (v is Doll) or not is_instance_valid(a) or not is_instance_valid(v) or a == v:
+	if not is_instance_valid(a) or not is_instance_valid(v) or not (a is Doll) or not (v is Doll) or a == v:
 		return none
 	if bool(ctx.get("double_blow", false)):
 		return none

@@ -28,7 +28,7 @@ static func apply(ctx: Dictionary, sd_mult: float = 1.0) -> Vector3:
 	var kb_dir := Damage.knockback_dir(dir)
 	var bodies: Array = []
 	for b in victim.parts.values():
-		if b is RigidBody3D and is_instance_valid(b):
+		if is_instance_valid(b) and b is RigidBody3D:
 			bodies.append(b)
 	if bodies.is_empty():
 		return Vector3.ZERO
@@ -69,7 +69,7 @@ static func apply(ctx: Dictionary, sd_mult: float = 1.0) -> Vector3:
 ## части атакующего и жертвы не сталкиваются (collision exception; иначе в упоре сцепившиеся конечности тащили атакующего следом
 ## до 4 м/с и гасили отлёт жертвы 6 → 2.5 м/с), клэмп повторяется каждый тик. Возвращает снятую скорость (м/с, ≥ 0) — для проб.
 static func stop_attacker(attacker: Variant, victim: Doll, kb_dir: Vector3) -> float:
-	if not (attacker is Doll) or not is_instance_valid(attacker) or attacker == victim:
+	if not is_instance_valid(attacker) or not (attacker is Doll) or attacker == victim:
 		return 0.0
 	var a := attacker as Doll
 	var bodies := _bodies(a)
@@ -113,7 +113,7 @@ static func _bodies(d: Doll) -> Array:
 	if d == null or not is_instance_valid(d):
 		return out
 	for b in d.parts.values():
-		if b is RigidBody3D and is_instance_valid(b):
+		if is_instance_valid(b) and b is RigidBody3D:
 			out.append(b)
 	return out
 
@@ -182,7 +182,7 @@ static func brake_attacker(ctx: Dictionary, speed: float, seconds: float) -> flo
 		return 0.0
 	var attacker: Variant = ctx.get("attacker", null)
 	var victim: Variant = ctx.get("victim", null)
-	if not (attacker is Doll) or not is_instance_valid(attacker) or attacker == victim or (attacker as Doll).is_broken():
+	if not is_instance_valid(attacker) or not (attacker is Doll) or attacker == victim or (attacker as Doll).is_broken():
 		return 0.0
 	var a := attacker as Doll
 	if a.get_node_or_null(AttackerHold.NODE_NAME) != null:
