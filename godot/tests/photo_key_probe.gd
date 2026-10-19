@@ -147,7 +147,7 @@ func _case_puzzle(tag: String, path: String) -> void:
 	check(tag + "_key_taken", get_tree().get_first_node_in_group(PhotoMode.KEY_TAKEN_GROUP) != null, "режим занял клавишу «/»")
 	await _tap(KEY_SLASH)
 	var p2: Variant = pg.get("p2")
-	check(tag + "_join", p2 is Doll and is_instance_valid(p2), "«/» — P2 вошёл в игру")
+	check(tag + "_join", is_instance_valid(p2) and p2 is Doll, "«/» — P2 вошёл в игру")
 	check(tag + "_join_no_photo", not _photo() and not get_tree().paused, "фоторежим %s, пауза %s" % [_photo(), get_tree().paused])
 	await _ticks(90)
 	var key := _key_arm()

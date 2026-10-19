@@ -75,7 +75,7 @@ func _physics_process(_dt: float) -> void:
 		if live and int(st["nparts"]) != doll.parts.size():
 			var rids: Array[RID] = []
 			for b in doll.parts.values():
-				if b is CollisionObject3D and is_instance_valid(b):
+				if is_instance_valid(b) and b is CollisionObject3D:
 					rids.append((b as CollisionObject3D).get_rid())
 			st["rids"] = rids
 			st["nparts"] = doll.parts.size()

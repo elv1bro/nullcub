@@ -917,7 +917,7 @@ func abort_all() -> void:
 
 static func _victim(ctx: Dictionary) -> Doll:
 	var v = ctx.get("victim")
-	if v is Doll and is_instance_valid(v) and (v as Doll).is_inside_tree():
+	if is_instance_valid(v) and v is Doll and (v as Doll).is_inside_tree():
 		return v
 	return null
 
@@ -942,7 +942,7 @@ static func _colour(ctx: Dictionary) -> Color:
 ## Цвет атакующего (цвет игрока, Tuning.PLAYER_COLORS) — кольцо и искра heavy; нет атакующего-куклы — fallback.
 static func _attacker_colour(ctx: Dictionary, fallback: Color) -> Color:
 	var a: Variant = ctx.get("attacker")
-	if a is Node and is_instance_valid(a):
+	if is_instance_valid(a) and a is Node:
 		var pi: Variant = (a as Node).get("player_index")
 		if pi != null and int(pi) >= 0:
 			var c: Color = Tuning.PLAYER_COLORS[int(pi) % Tuning.PLAYER_COLORS.size()]

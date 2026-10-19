@@ -330,7 +330,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	super._on_doll_ko(attacker, record, victim)
 	feel_enabled = feel
 	var vt := team_of(victim)
-	var killer: Doll = attacker as Doll if attacker is Doll and is_instance_valid(attacker) and attacker != victim \
+	var killer: Doll = attacker as Doll if is_instance_valid(attacker) and attacker is Doll and attacker != victim \
 		and team_of(attacker) != vt else null
 	(tally[victim.player_index] as Dictionary)["kos_taken"] = int(tally[victim.player_index]["kos_taken"]) + 1
 	if killer != null and tally.has(killer.player_index):

@@ -35,7 +35,7 @@ func count_in_area() -> int:
 	if parent == null:
 		return 0
 	for c in parent.get_children():
-		if c is ExplosiveBarrel and is_instance_valid(c) and not (c as ExplosiveBarrel)._exploded and not c.is_queued_for_deletion():
+		if is_instance_valid(c) and c is ExplosiveBarrel and not (c as ExplosiveBarrel)._exploded and not c.is_queued_for_deletion():
 			n += 1
 	return n
 

@@ -2162,7 +2162,7 @@ func part_meshes(target: String, uid: String) -> Array:
 		if bench_weapon == null or not bench_weapon.parts_info.has(uid):
 			return out
 		var m: Variant = bench_weapon.parts_info[uid].get("mesh")
-		if m is Node3D and is_instance_valid(m):
+		if is_instance_valid(m) and m is Node3D:
 			out.append(m)
 		return out
 	if stand == null or not stand.uid_body.has(uid):

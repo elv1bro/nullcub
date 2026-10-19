@@ -880,8 +880,8 @@ func _sd_tick() -> void:
 		_check("sd_announce", 1.0 if _has_announce("sudden_death") else 0.0, 1.0, "eq", "SUDDEN DEATH announced")
 		_check("hud_sd_label", 1.0 if hud.sudden_death_label.visible else 0.0, 1.0, "eq", "HUD SUDDEN DEATH label visible")
 		var hammer: Variant = pg.get("sd_hammer")
-		_check("sd_hammer", 1.0 if hammer is Weapon and is_instance_valid(hammer) and (hammer as Weapon).weapon_id == "hammer" else 0.0, 1.0, "eq", "playground dropped the Sudden Death hammer")
-		if hammer is Weapon and is_instance_valid(hammer):
+		_check("sd_hammer", 1.0 if is_instance_valid(hammer) and hammer is Weapon and (hammer as Weapon).weapon_id == "hammer" else 0.0, 1.0, "eq", "playground dropped the Sudden Death hammer")
+		if is_instance_valid(hammer) and hammer is Weapon:
 			var b: AABB = pg.arena.call("bounds")
 			var hp_: Vector3 = (hammer as Node3D).global_position
 			_check("sd_hammer_in_arena", 1.0 if b.grow(0.5).has_point(hp_) else 0.0, 1.0, "eq", "hammer inside arena bounds (%s)" % hp_)

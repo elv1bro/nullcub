@@ -471,7 +471,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	super._on_doll_ko(attacker, record, victim)
 	feel_enabled = feel
 	(tally[victim.player_index] as Dictionary)["kos_taken"] = int(tally[victim.player_index]["kos_taken"]) + 1
-	if attacker is Doll and is_instance_valid(attacker) and attacker != victim and tally.has((attacker as Doll).player_index):
+	if is_instance_valid(attacker) and attacker is Doll and attacker != victim and tally.has((attacker as Doll).player_index):
 		(tally[(attacker as Doll).player_index] as Dictionary)["kos"] = int(tally[(attacker as Doll).player_index]["kos"]) + 1
 	_respawns.append([victim, respawn_s])
 	respawn_queued.emit(victim, respawn_s)

@@ -44,7 +44,7 @@ func _on_body_entered(body: Node) -> void:
 	var w := body as Weapon
 	if w != null and w.is_held() and is_instance_valid(w.holder):
 		var d: Variant = w.holder.get("doll")
-		if d is Doll and is_instance_valid(d) and (d as Doll).torso() != null:
+		if is_instance_valid(d) and d is Doll and (d as Doll).torso() != null:
 			body = (d as Doll).torso()
 	super._on_body_entered(body)
 

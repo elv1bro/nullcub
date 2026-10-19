@@ -359,7 +359,7 @@ func _on_finished(d: Doll, place: int, seconds: float) -> void:
 func _on_ko(victim: Doll, attacker: Node, rec: Dictionary) -> void:
 	if String(rec.get("kind", "")) in ["fall", "stuck", "reset"]:
 		return
-	var human := (is_instance_valid(victim) and not victim.external_input) or (attacker is Doll and is_instance_valid(attacker) and not (attacker as Doll).external_input)
+	var human := (is_instance_valid(victim) and not victim.external_input) or (is_instance_valid(attacker) and attacker is Doll and not (attacker as Doll).external_input)
 	if human:
 		announcer.announce(tr("KO!"), Color(1.0, 0.85, 0.3), "ko")
 

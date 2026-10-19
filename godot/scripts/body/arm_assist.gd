@@ -1475,7 +1475,7 @@ static func _shape_aabb(sh: Shape3D) -> AABB:
 
 ## «Лазаемая» поверхность: группа или meta CLIMBABLE (камень пробы «Подъём»); гладкое — без них.
 static func is_climbable(n: Object) -> bool:
-	return n is Node and is_instance_valid(n) and ((n as Node).is_in_group(CLIMBABLE) or (n as Node).has_meta(CLIMBABLE))
+	return is_instance_valid(n) and n is Node and ((n as Node).is_in_group(CLIMBABLE) or (n as Node).has_meta(CLIMBABLE))
 
 
 func is_wall_holding() -> bool:

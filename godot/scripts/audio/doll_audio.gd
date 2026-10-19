@@ -215,7 +215,7 @@ func _tick_swings(now: float) -> void:
 		_was_fast_weapon[id] = fast
 	for hn in ["Hand_L", "Hand_R"]:
 		var h: Variant = doll.parts.get(hn, null)
-		if not h is RigidBody3D or not is_instance_valid(h):
+		if not is_instance_valid(h) or not h is RigidBody3D:
 			continue
 		var holding := false
 		for wp in _held:

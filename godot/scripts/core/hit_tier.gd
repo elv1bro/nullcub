@@ -74,9 +74,10 @@ static func eligible(ctx: Dictionary, allow_double_blow: bool = false) -> bool:
 		return false
 	var attacker: Variant = ctx.get("attacker", null)
 	var victim: Variant = ctx.get("victim", null)
-	if not (attacker is Doll) or not is_instance_valid(attacker):
+	# сначала живость: `is` на освобождённом экземпляре — SCRIPT ERROR (ctx, разобранный после рестарта матча, — пробы)
+	if not is_instance_valid(attacker) or not (attacker is Doll):
 		return false
-	if victim is Object and is_instance_valid(victim) and attacker == victim:
+	if is_instance_valid(victim) and attacker == victim:
 		return false
 	return float(ctx.get("damage", 0.0)) >= Tuning.CRIT_MIN_DAMAGE
 
@@ -102,7 +103,7 @@ func classify(ctx: Dictionary, fight_time: float, crit_enabled: bool = true) -> 
 	if force_next != "":
 		var f := force_next
 		force_next = ""
-		if f == CRIT and crit_enabled and ctx.get("attacker", null) is Doll and is_instance_valid(ctx["attacker"]):
+		if f == CRIT and crit_enabled and is_instance_valid(ctx.get("attacker", null)) and ctx["attacker"] is Doll:
 			_record(ctx, fight_time, KO_CRIT if is_ko else CRIT, sc)
 			return KO_CRIT if is_ko else CRIT
 		if f == HEAVY or f == CRIT:

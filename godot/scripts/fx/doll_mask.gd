@@ -163,7 +163,7 @@ func _mark() -> void:
 		if not (parts is Dictionary):
 			continue
 		for b in (parts as Dictionary).values():
-			if b is Node and is_instance_valid(b):
+			if is_instance_valid(b) and b is Node:
 				_mark_meshes(b as Node)
 
 

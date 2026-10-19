@@ -1220,7 +1220,7 @@ func _solve_7(r: PuzzleRoom, coop: bool) -> bool:
 ## Бочка комнаты, которую ещё можно бросить (целая взрывная в Props), или null.
 func _barrel_of(r: PuzzleRoom) -> ExplosiveBarrel:
 	for c in r.get_node("Props").get_children():
-		if c is ExplosiveBarrel and is_instance_valid(c) and not (c as ExplosiveBarrel)._exploded and not c.is_queued_for_deletion():
+		if is_instance_valid(c) and c is ExplosiveBarrel and not (c as ExplosiveBarrel)._exploded and not c.is_queued_for_deletion():
 			return c
 	return null
 

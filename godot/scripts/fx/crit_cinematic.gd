@@ -258,7 +258,7 @@ func _ensure_mask() -> DollMask:
 	var d := _find_director() if is_inside_tree() else null
 	if d != null:
 		var m: Variant = d.get("doll_mask")
-		if m is DollMask and is_instance_valid(m):
+		if is_instance_valid(m) and m is DollMask:
 			_mask = m
 	if _mask == null and is_inside_tree():
 		_mask = DollMask.find(self)
@@ -299,7 +299,7 @@ func play(ctx: Dictionary) -> bool:
 	if _playing or not enabled or not _flag("crit_cinematic", Tuning.HITFX_CRIT_CINEMATIC):
 		return false
 	var v: Variant = ctx.get("victim")
-	if not (v is Node3D) or not is_instance_valid(v) or not (v as Node3D).is_inside_tree():
+	if not is_instance_valid(v) or not (v is Node3D) or not (v as Node3D).is_inside_tree():
 		return false
 	var parts: Variant = (v as Node3D).get("parts")
 	if not (parts is Dictionary) or (parts as Dictionary).is_empty():
@@ -310,7 +310,7 @@ func play(ctx: Dictionary) -> bool:
 	_ctx = ctx
 	_victim = v
 	var att: Variant = ctx.get("attacker")
-	_attacker = att if att is Node3D and is_instance_valid(att) and att != v and (att as Node3D).get("parts") is Dictionary else null
+	_attacker = att if is_instance_valid(att) and att is Node3D and att != v and (att as Node3D).get("parts") is Dictionary else null
 	marker_frames = 0
 	bg_dim_frames = 0
 	caption_overlap = -1.0
@@ -394,13 +394,13 @@ func _find_hud() -> Node:
 
 
 func _pick_part(parts: Dictionary, name: String, ctx: Dictionary) -> RigidBody3D:
-	if parts.has(name) and parts[name] is RigidBody3D and is_instance_valid(parts[name]):
+	if parts.has(name) and is_instance_valid(parts[name]) and parts[name] is RigidBody3D:
 		return parts[name]
 	var pos: Variant = ctx.get("position")
 	var best: RigidBody3D = null
 	var best_d := INF
 	for b in parts.values():
-		if not (b is RigidBody3D) or not is_instance_valid(b):
+		if not is_instance_valid(b) or not (b is RigidBody3D):
 			continue
 		var dd := 0.0 if not (pos is Vector3) else (b as RigidBody3D).global_position.distance_to(pos)
 		if dd < best_d:
@@ -499,7 +499,7 @@ func _victim_meshes() -> Array:
 	var parts: Variant = _victim.get("parts")
 	if parts is Dictionary:
 		for b in (parts as Dictionary).values():
-			if b is Node and is_instance_valid(b):
+			if is_instance_valid(b) and b is Node:
 				out += _meshes_of(b)
 	return out
 
@@ -831,7 +831,7 @@ func _apply_overlays() -> void:
 	_wood_mat.set_shader_parameter("reveal", 0.0)
 	var parts: Dictionary = _victim.get("parts")
 	for b in parts.values():
-		if not (b is Node) or not is_instance_valid(b):
+		if not is_instance_valid(b) or not (b is Node):
 			continue
 		for mi in _meshes_of(b):
 			var m := mi as MeshInstance3D
@@ -845,7 +845,7 @@ func _apply_overlays() -> void:
 		var ap: Variant = _attacker.get("parts")
 		if ap is Dictionary:
 			for b in (ap as Dictionary).values():
-				if not (b is Node) or not is_instance_valid(b):
+				if not is_instance_valid(b) or not (b is Node):
 					continue
 				for mi in _meshes_of(b):
 					var m := mi as MeshInstance3D
@@ -1023,7 +1023,7 @@ func _screen_rect(cam: Camera3D, doll: Node3D) -> Rect2:
 	var lo := Vector2(INF, INF)
 	var hi := Vector2(-INF, -INF)
 	for b in (parts as Dictionary).values():
-		if not (b is Node3D) or not is_instance_valid(b):
+		if not is_instance_valid(b) or not (b is Node3D):
 			continue
 		var boxes: Array = []
 		for mi in _meshes_of(b):

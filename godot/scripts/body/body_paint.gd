@@ -87,7 +87,7 @@ static func body_of(doll: ModularDoll, uid: String) -> Node3D:
 		return null
 	var bn := String(doll.uid_body[uid])
 	var b: Variant = doll.parts.get(bn)
-	if b is Node3D and is_instance_valid(b):
+	if is_instance_valid(b) and b is Node3D:
 		return b
 	return doll.get_node_or_null(NodePath(bn)) as Node3D
 

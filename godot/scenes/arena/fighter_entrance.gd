@@ -222,7 +222,7 @@ func _release(d: Doll, side: float) -> void:
 func _bodies(d: Doll) -> Array:
 	var out: Array = []
 	for rb in d.parts.values():
-		if rb is RigidBody3D and is_instance_valid(rb):
+		if is_instance_valid(rb) and rb is RigidBody3D:
 			out.append(rb)
 	var wp := d.get_node_or_null("WeaponPickup")
 	if wp != null:

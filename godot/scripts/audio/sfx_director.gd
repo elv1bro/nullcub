@@ -603,7 +603,7 @@ func _sync_doll_audio() -> void:
 	if not doll_audio or _match == null or not is_instance_valid(_match) or not _match.has_method("dolls"):
 		return
 	for d in _match.call("dolls"):
-		if d is Doll and is_instance_valid(d) and (d as Node).get_node_or_null("DollAudio") == null:
+		if is_instance_valid(d) and d is Doll and (d as Node).get_node_or_null("DollAudio") == null:
 			var da := DollAudio.new()
 			da.name = "DollAudio"
 			da.sfx = self
