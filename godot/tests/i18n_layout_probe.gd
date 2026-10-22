@@ -17,6 +17,7 @@ const WORKSHOP := "res://scenes/workshop/workshop_build.tscn"
 const HALL := "res://scenes/playground_null_hall.tscn"
 const SPORT := "res://scenes/playground_sport.tscn"
 const SQUAD := "res://scenes/playground_squad.tscn"
+const DOMINATION := "res://scenes/playground_domination.tscn"   # «Захват точек» (DOMINATION.md): табличка итогов с колонкой ТОЧКИ
 const BOMB := "res://scenes/playground_bomb.tscn"
 const RACE := "res://scenes/playground_race.tscn"
 const ROYALE := "res://scenes/playground_royale.tscn"
@@ -149,7 +150,7 @@ func _pass() -> Dictionary:
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, KING, HOCKEY, MODES_100]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, DOMINATION, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, KING, HOCKEY, MODES_100]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		if p == CLIMB:
 			ClimbMatch.best_time = -1.0   # лучшее время сессии — static: на каждом языке экран тот же («—»)
@@ -172,6 +173,12 @@ func _pass() -> Dictionary:
 			sm._finish("score")
 			await _wait(SETTLE * 3)
 			shots["squad:end"] = _scan(inst)
+		if p == DOMINATION:   # «Захват точек» (DOMINATION.md): табличка итогов (последняя колонка — ТОЧКИ)
+			var dmm := inst.get_node("Match") as DominationMatch
+			dmm.score = [100, 64]
+			dmm._finish("score")
+			await _wait(SETTLE * 3)
+			shots["domination:end"] = _scan(inst)
 		if p == BOMB:   # «Бомба касанием» (BOMB.md): ещё табличка итогов с таблицей бойцов
 			var bm := inst.get_node("Match") as BombMatch
 			bm.wins = {0: 3, 1: 1, 3: 2}
@@ -296,6 +303,17 @@ func _pass() -> Dictionary:
 			await _wait(SETTLE * 2)
 			shots["squad:setup"] = _scan(su)
 			su.queue_free()
+			SquadSettings.reset()
+			await _wait(5)
+		if p == DOMINATION:   # экран настроек в режиме «Захват точек»: своё пояснение режима, цель и время
+			SquadSettings.reset()
+			SquadSettings.mode = "dom"
+			SquadSettings.ask = true
+			var sd := (load(p) as PackedScene).instantiate()
+			add_child(sd)
+			await _wait(SETTLE * 2)
+			shots["domination:setup"] = _scan(sd)
+			sd.queue_free()
 			SquadSettings.reset()
 			await _wait(5)
 	Stasis.set_on(false)

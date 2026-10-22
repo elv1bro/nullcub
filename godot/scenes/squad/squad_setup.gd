@@ -172,9 +172,12 @@ func _values(key: String) -> Array:
 		"night", "joints", "supplies", "boosts":
 			return [false, true]
 		"goal":
-			return Tuning.SQUAD_CAPTURE_CHOICES if SquadSettings.mode == "ctf" else Tuning.SQUAD_SCORE_CHOICES
+			match SquadSettings.mode:
+				"ctf": return Tuning.SQUAD_CAPTURE_CHOICES
+				"dom": return Tuning.DOM_SCORE_CHOICES
+			return Tuning.SQUAD_SCORE_CHOICES
 		"time":
-			return Tuning.SQUAD_TIME_CHOICES
+			return Tuning.DOM_TIME_CHOICES if SquadSettings.mode == "dom" else Tuning.SQUAD_TIME_CHOICES
 		"bots":
 			return [1, 2, 3]
 		"class":
@@ -187,7 +190,7 @@ func value_of(key: String) -> Variant:
 		"mode": return SquadSettings.mode
 		"night": return SquadSettings.night
 		"goal": return SquadSettings.goal()
-		"time": return SquadSettings.time_min
+		"time": return SquadSettings.minutes()
 		"bots": return SquadSettings.bot_level
 		"class": return SquadSettings.player_class
 		"joints": return SquadSettings.joints
@@ -201,11 +204,15 @@ func _set_value(key: String, v: Variant) -> void:
 		"mode": SquadSettings.mode = String(v)
 		"night": SquadSettings.night = bool(v)
 		"goal":
-			if SquadSettings.mode == "ctf":
-				SquadSettings.captures_to_win = int(v)
+			match SquadSettings.mode:
+				"ctf": SquadSettings.captures_to_win = int(v)
+				"dom": SquadSettings.dom_score_to_win = int(v)
+				_: SquadSettings.score_to_win = int(v)
+		"time":
+			if SquadSettings.mode == "dom":
+				SquadSettings.dom_time_min = int(v)
 			else:
-				SquadSettings.score_to_win = int(v)
-		"time": SquadSettings.time_min = int(v)
+				SquadSettings.time_min = int(v)
 		"bots": SquadSettings.bot_level = int(v)
 		"class": SquadSettings.player_class = String(v)
 		"joints": SquadSettings.joints = bool(v)
@@ -217,7 +224,10 @@ func _set_value(key: String, v: Variant) -> void:
 func _value_text(key: String, v: Variant) -> String:
 	match key:
 		"mode":
-			return tr("ЗАХВАТ ФЛАГА") if String(v) == "ctf" else tr("ПЕРЕСТРЕЛКА")
+			match String(v):
+				"ctf": return tr("ЗАХВАТ ФЛАГА")
+				"dom": return tr("ЗАХВАТ ТОЧЕК")
+			return tr("ПЕРЕСТРЕЛКА")
 		"night":
 			return tr("НОЧЬ") if bool(v) else tr("ДЕНЬ")
 		"goal":
@@ -236,8 +246,10 @@ func _value_text(key: String, v: Variant) -> String:
 func _desc_of(key: String) -> String:
 	match key:
 		"mode":
-			return tr("Захват флага: принеси чужой флаг к своему, пока свой — дома. Выбывания очков не дают") if SquadSettings.mode == "ctf" \
-				else tr("Перестрелка: каждый выбывший соперник — очко команде")
+			match SquadSettings.mode:
+				"ctf": return tr("Захват флага: принеси чужой флаг к своему, пока свой — дома. Выбывания очков не дают")
+				"dom": return tr("Захват точек: стой в зоне, пока там нет соперника. Очко в секунду за каждую свою зону")
+			return tr("Перестрелка: каждый выбывший соперник — очко команде")
 		"night":
 			return tr("Полигон днём или ночью: луна, фонари цвета команд, светящиеся трассеры")
 		"goal":

@@ -2772,5 +2772,21 @@
 	"играть": "play",
 	"в избранное": "to favorites",
 	"случайный": "random",
-	"назад": "back"
+	"назад": "back",
+	"ЗАХВАТ ТОЧЕК": "DOMINATION",
+	"Захват точек: стой в зоне, пока там нет соперника. Очко в секунду за каждую свою зону": "Domination: stand in a zone while no enemy is there. A point per second for every zone you hold",
+	"Захват точек": "Domination",
+	"3 на 3 · три зоны": "3 vs 3 · three zones",
+	"Три зоны на Полигоне — A, B и C. Стой в зоне, пока там нет соперника, и она станет вашей. Каждая своя зона даёт очко в секунду: кто первым набрал 100, тот и победил.": "Three zones on the Proving Ground — A, B and C. Stand in a zone while no enemy is there and it becomes yours. Every zone you hold scores a point per second: first to 100 wins.",
+	"WASD — лететь · мышь — прицел · ЛКМ — огонь · Q — перезарядка · 1–3 — класс · стой в зоне — захват · O — настройки": "WASD — fly · mouse — aim · LMB — fire · Q — reload · 1–3 — class · stand in a zone — capture · O — settings",
+	"ТОЧКА %s НАША": "POINT %s IS OURS",
+	"СОПЕРНИК ВЗЯЛ ТОЧКУ %s": "ENEMY TOOK POINT %s",
+	"ВЗЯЛИ ТОЧКУ %s": "TOOK POINT %s",
+	"ТОЧКА %s НЕЙТРАЛЬНА": "POINT %s IS NEUTRAL",
+	"ТОЧКА %s ПОТЕРЯНА": "POINT %s LOST",
+	"СБИЛИ ТОЧКУ %s": "KNOCKED DOWN POINT %s",
+	"ТОЧКА %s: СПОРНАЯ": "POINT %s: CONTESTED",
+	"ТОЧКА %s: НАША": "POINT %s: OURS",
+	"ТОЧКА %s: СБИВАЕМ %d %%": "POINT %s: NEUTRALIZING %d %%",
+	"ТОЧКА %s: ЗАХВАТ %d %%": "POINT %s: CAPTURING %d %%"
 }

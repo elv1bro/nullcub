@@ -880,6 +880,11 @@ func is_ctf() -> bool:
 	return mode == "ctf"
 
 
+## Очки команде за выбывание соперника — только в перестрелке («dm»); в захвате флага и захвате точек (DominationMatch) счёт свой.
+func frags_score() -> bool:
+	return mode == "dm"
+
+
 ## Флаги у баз (захват флага) — на begin: старые убираются, новые ставятся домой; в перестрелке флагов нет.
 func _setup_flags() -> void:
 	for f in flags:
@@ -1049,8 +1054,8 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	var other := 1 - vt
 	var killer: Doll = attacker as Doll if is_instance_valid(attacker) and attacker is Doll and attacker != victim \
 		and team_of(attacker) == other else null
-	if not is_ctf():
-		score[other] = int(score[other]) + 1   # в захвате флага очки — только за доставку
+	if frags_score():
+		score[other] = int(score[other]) + 1   # в захвате флага очки — только за доставку, в захвате точек — за удержание
 	var cf := carried_flag(victim)
 	if cf != null:
 		cf.drop(victim.centre_of_mass())
@@ -1068,7 +1073,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 		_camera_fx(25.0, record.get("position", victim.centre_of_mass()))
 		if FxPreset.time_fx():
 			_time_effect(Tuning.KO_SLOWMO_SCALE, Tuning.SQUAD_KO_SLOWMO_S)
-	if not is_ctf() and int(score[other]) >= score_to_win:
+	if frags_score() and int(score[other]) >= score_to_win:
 		call_deferred("_finish", "score")
 		return
 	_respawns.append([victim, respawn_s])

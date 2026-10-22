@@ -22,6 +22,9 @@ const DOLL_SCENE := preload("res://scenes/body/modular_doll.tscn")
 const BLUEPRINT := "res://data/body/blueprints/kit_human.tres"
 const SCENE_DAY := "res://scenes/playground_squad.tscn"
 const SCENE_NIGHT := "res://scenes/playground_squad_night.tscn"
+## Захват точек (DominationPlayground, docs/plan-demo/DOMINATION.md) — своя сцена: другой матч, HUD и мозги ботов.
+const SCENE_DOM_DAY := "res://scenes/playground_domination.tscn"
+const SCENE_DOM_NIGHT := "res://scenes/playground_domination_night.tscn"
 const FOCUS_GROUP := "squad_focus"
 const PLAYERS_GROUP := "players"
 ## Камера: игрок и ближайший соперник ближе этого (м, × зум) — в кадре вместе; дальше — только игрок (стрелка у края экрана).
@@ -89,14 +92,31 @@ func _ready() -> void:
 
 ## Настройки → матч: режим, до скольких очков, время, ящики и бонусы, уровень ботов.
 func _apply_settings() -> void:
-	match_node.mode = SquadSettings.mode
+	match_node.mode = _mode_from_settings()
 	match_node.score_to_win = SquadSettings.goal()
-	match_node.time_limit_s = float(SquadSettings.time_min) * 60.0
+	match_node.time_limit_s = float(SquadSettings.minutes()) * 60.0
 	match_node.hard_timeout_s = match_node.time_limit_s
 	match_node.supplies = SquadSettings.supplies
 	match_node.boosts = SquadSettings.boosts
 	bot_level = SquadSettings.bot_level
 	JointBreak.set_on(SquadSettings.joints)
+
+
+## Режим матча из настроек: в этой сцене — перестрелка или захват флага (захват точек живёт в своей сцене, см. _scene_for).
+func _mode_from_settings() -> String:
+	return "dm" if SquadSettings.mode == "dom" else SquadSettings.mode
+
+
+## Сцена под текущие настройки: режим (захват точек — отдельная) и карта день / ночь.
+static func _scene_for() -> String:
+	if SquadSettings.mode == "dom":
+		return SCENE_DOM_NIGHT if SquadSettings.night else SCENE_DOM_DAY
+	return SCENE_NIGHT if SquadSettings.night else SCENE_DAY
+
+
+## Мозг ботов этой площадки (null — SquadBrain).
+func _brain_script() -> Script:
+	return null
 
 
 ## Экран настроек поверх площадки (O, пункт меню).
@@ -111,9 +131,9 @@ func open_setup() -> void:
 	hud.visible = false
 
 
-## «В БОЙ»: другая карта (день / ночь) — сцена заново, сразу в бой; та же — настройки в матч и отсчёт.
+## «В БОЙ»: другая карта (день / ночь) или режим со своей сценой — сцена заново, сразу в бой; та же — настройки в матч и отсчёт.
 func _on_setup_started() -> void:
-	var want := SCENE_NIGHT if SquadSettings.night else SCENE_DAY
+	var want := _scene_for()
 	if scene_file_path != "" and want != scene_file_path:
 		Loading.change_scene(want, "ПОДКЛЮЧЕНИЕ", want.get_file().get_basename())
 		return
@@ -139,7 +159,7 @@ func _spawn_squads() -> void:
 		var d := make_fighter(i, human_)
 		d.position = pts[i] if i < pts.size() else Vector3(-20.0 + 8.0 * i, 1.0, 0.0)
 		dolls_root.add_child(d)
-		attach_children(d, human_)
+		attach_children(d, human_, _brain_script())
 	if use_settings and not p1_bot:
 		match_node.loadout(0)["class"] = SquadSettings.player_class
 		match_node.loadout(0)["next_class"] = SquadSettings.player_class
@@ -166,7 +186,7 @@ static func make_fighter(i: int, human_: bool) -> ModularDoll:
 
 ## Рука, ствол, рукопашное оружие, мозг — в этом порядке: Match.respawn_doll пересоздаёт детей со скриптом в том же порядке, а
 ## настройки у них — в _init и из матча (класс и уровень), не из экспортов. Ствол и рукопашное есть у всех — работает то, что даёт класс.
-static func attach_children(d: Doll, human_: bool) -> void:
+static func attach_children(d: Doll, human_: bool, brain: Script = null) -> void:
 	var r := SquadArm.new()
 	r.name = "ArmAssist"
 	d.add_child(r)
@@ -177,7 +197,7 @@ static func attach_children(d: Doll, human_: bool) -> void:
 	m.name = "SquadMelee"
 	d.add_child(m)
 	if not human_:
-		var b := SquadBrain.new()
+		var b: Node = brain.new() if brain != null else SquadBrain.new()
 		b.name = "SquadBrain"
 		d.add_child(b)
 
