@@ -13,6 +13,7 @@
 | banner — знамя Лиги NULL | `godot/assets/textures/garage/banner.png` (роль `BannerCloth`) | 512×832 |
 | keyart_wide — два бойца сталкиваются в куполе, N0 снимает | фон лоадера `godot/assets/ui/brand/keyart.jpg` (`scripts/menu/loading.gd`, константа `KEYART`) | 1920×1080 |
 | keyart_wide, capsule_tall, эмблема Лиги, три плаката в полном размере | `docs/steam/` — для страницы магазина и пресс-кита | исходный |
+| экраны ТВ гаража: эфир (tv_live_a–d), «быстрый бой», «ПОВТОР» | `godot/assets/textures/garage/tv/` — не codex, а снимки карточек режимов (`assets/ui/modes/*.jpg`), `tools/gen_garage_textures.py` → `tv_from_modes()` | 768×432 |
 
 Размеры и имена — как у прежних заглушек `tools/gen_garage_textures.py` (UV моделей гаража рассчитаны на эти пропорции).
 Генератор заглушек их больше не перезаписывает (старые — только с `--old-art`).
@@ -37,5 +38,8 @@ gtimeout 900 /usr/bin/arch -arm64 /usr/local/bin/godot --headless --path godot -
 
 ## Открыто
 
-- Арт для арен (рекламные щиты Лиги в куполе) и экраны телевизора гаража (`textures/garage/tv/`) — пока прежние.
-- Страница магазина: размеры капсул Steam (460×215, 616×353, 231×87, 600×900, 3840×1240) нарезать из `docs/steam/` при подаче.
+- Арт для арен (рекламные щиты Лиги в куполе) — пока нет: в моделях арен нет места под щит, это работа в Blender.
+- Экраны ТВ `tv_build` / `tv_opponent` — прежние (рисуются генератором, кадров веб-прототипа в них нет).
+- Капсулы Steam нарезаны: `docs/steam/capsules/` (header 920×430, small 462×174, main 1232×706, vertical 748×896, library 600×900,
+  hero 3840×1240, logo 1280×720 на прозрачности) — `python3 godot/tools/codex_art/steam_capsules.py`. Hero растянут из 1672×941 —
+  перед подачей нужен рендер крупнее. Название юридически не проверено (`BRAND.md`).
