@@ -20,6 +20,8 @@ const MIN_SHOW_S := 0.45
 const FADE_S := 0.28
 const LAYER := 100
 const OVERLAY := preload("res://scenes/menu/tv_overlay.gdshader")
+## Ключевой арт под эфиром (docs/plan-demo/CODEX_ART.md): приглушён и затемнён слева, чтобы текст читался. Нет файла — один градиент.
+const KEYART := "res://assets/ui/brand/keyart.jpg"
 const TIPS := [
 	"Shift — ускорение. Держи: тратит Заряд, а удары его копят.",
 	"Space + A/D — раскрутка: тело закручивается, а удар получается тяжёлым.",
@@ -87,6 +89,29 @@ func _build() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(bg)
+	if ResourceLoader.exists(KEYART):
+		var art := TextureRect.new()
+		art.name = "KeyArt"
+		art.texture = load(KEYART)
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		art.set_anchors_preset(Control.PRESET_FULL_RECT)
+		art.modulate = Color(0.75, 0.62, 0.68, 0.6)
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_root.add_child(art)
+		var sg := Gradient.new()                       # шторка: слева почти сплошная (текст), справа арт виден
+		sg.set_color(0, Color(0.08, 0.02, 0.05, 0.92))
+		sg.set_color(1, Color(0.08, 0.02, 0.05, 0.25))
+		var st := GradientTexture2D.new()
+		st.gradient = sg
+		st.fill_from = Vector2(0.35, 0)
+		st.fill_to = Vector2(1, 0)
+		var shade := TextureRect.new()
+		shade.texture = st
+		shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_root.add_child(shade)
 	var wm := _label("NULL", Vector2(1920 - 780, 150), 520, Color(1, 1, 1, 0.04), _f_head)
 	wm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# красная плашка и строка заголовка

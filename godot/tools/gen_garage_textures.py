@@ -14,6 +14,7 @@
 """
 import math
 import os
+import sys
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
@@ -388,7 +389,10 @@ def tv_images():
 def main():
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(os.path.join(OUT, "tv"), exist_ok=True)
-    banner()
+    # с 23.10 знамя, фото и плакаты — арт codex (tools/codex_art/apply_art.py); прежние заглушки — только с ключом --old-art
+    old_art = "--old-art" in sys.argv
+    if old_art:
+        banner()
     tv_images()
     paint_metal()
     hazard()
@@ -398,8 +402,9 @@ def main():
     rug()
     leaves()
     blueprint()
-    photos()
-    posters()
+    if old_art:
+        photos()
+        posters()
     for root, _, files in os.walk(OUT):
         for f in sorted(files):
             if f.endswith(".png"):

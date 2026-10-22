@@ -1,0 +1,102 @@
+[
+ {
+  "id": "poster_a",
+  "aspect": "portrait 2:3",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_fighters.jpg"
+  ],
+  "prompt": "Retro-futuristic fight league poster hung on a garage wall. A single modular robot puppet fighter (like the references) flies mid-punch toward the viewer inside a glowing dome arena, crowd lights behind. Big bold title at the top: NULL LEAGUE. Small line at the bottom: FIGHT NIGHT. Slightly worn printed paper look, halftone, bold 3-4 colour print palette (navy, amber, cream, red)."
+ },
+ {
+  "id": "poster_b",
+  "aspect": "portrait 2:3",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_n0.jpg"
+  ],
+  "prompt": "Retro TV broadcast promo poster. The mascot drone N0 (white round hovering robot with rabbit-ear antennae, screen face with happy cyan eyes, holding a microphone) floats in front of an old CRT TV showing a glowing dome arena. Big bold title: LIVE FROM THE DOME. Printed paper, halftone, navy/amber/cream/cyan palette."
+ },
+ {
+  "id": "poster_c",
+  "aspect": "portrait 2:3",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_fighters.jpg"
+  ],
+  "prompt": "Vintage boxing-style event poster: two modular robot puppet fighters clash mid-air in zero gravity, one fighter's arm part flying off with sparks. Title at top: ZERO-G. Below: ONE ARENA. NO GRAVITY. Printed paper with folds and slight wear, bold red/navy/amber/cream print palette."
+ },
+ {
+  "id": "photo_a",
+  "aspect": "landscape 7:6",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_kit.jpg"
+  ],
+  "prompt": "Polaroid-style photograph (no border needed): a cluttered garage workbench at night with disassembled robot puppet parts (limbs, joints, a round head), tools, a desk lamp casting warm light. Real photo feel, film grain."
+ },
+ {
+  "id": "photo_b",
+  "aspect": "landscape 7:6",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_fighters.jpg"
+  ],
+  "prompt": "Photograph taken from the stands: two modular robot puppet fighters fighting in the air inside a huge glowing translucent dome arena, stadium crowd silhouettes in the foreground, spotlights. Film grain, slightly blurred motion, real sports photo feel."
+ },
+ {
+  "id": "photo_c",
+  "aspect": "landscape 7:6",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_n0.jpg"
+  ],
+  "prompt": "Candid photograph in a garage workshop: the small white mascot drone N0 (rabbit-ear antennae, screen face with cyan smiling eyes) hovering next to a half-built robot puppet on a stand, warm lamp light, tools on the wall. Film grain, real photo feel."
+ },
+ {
+  "id": "photo_d",
+  "aspect": "landscape 7:6",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_fighters.jpg"
+  ],
+  "prompt": "Photograph of a trophy ceremony: a battered modular robot puppet fighter holds up a shiny gold trophy shaped like a dome, confetti, spotlights, crowd. Film grain, real photo feel."
+ },
+ {
+  "id": "photo_e",
+  "aspect": "landscape 7:6",
+  "prompt": "Photograph at dusk of a junkyard arena: towering piles of scrap metal, a hydraulic press, a magnet crane, rusty platforms, orange sunset sky and a faint glowing dome membrane above. Film grain, real photo feel. No characters.",
+  "refs": []
+ },
+ {
+  "id": "photo_f",
+  "aspect": "landscape 7:6",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_fighters.jpg"
+  ],
+  "prompt": "Team group photograph: five different colourful modular robot puppet fighters posing together in a garage like a sports team photo, one sitting on a toolbox, the white drone N0 hovering above them. Warm light, film grain, real photo feel."
+ },
+ {
+  "id": "banner",
+  "aspect": "portrait 8:13",
+  "prompt": "Vertical hanging fabric banner of the NULL League: deep navy cloth with amber trim, a big circular emblem in the middle (stylized dome arc over a floating figure, minimal geometric), the word NULL in bold letters under it, slight cloth folds and stitching. Flat front view filling the frame, no background outside the banner.",
+  "refs": []
+ },
+ {
+  "id": "emblem",
+  "aspect": "square",
+  "prompt": "Flat emblem / logo badge for the NULL League: circular badge, stylized dome arc over a small floating robot figure, stars, ribbon with the word NULL. Navy, amber, cream colours, bold vector-like shapes on a plain dark navy background, centered, no other text.",
+  "refs": []
+ },
+ {
+  "id": "keyart_wide",
+  "aspect": "landscape 16:9",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_fighters.jpg",
+   "godot/tools/codex_art/refs/ref_n0.jpg"
+  ],
+  "prompt": "Main key art for the game NULL GRAVITY. Two modular robot puppet fighters collide mid-air in zero gravity inside a huge glowing translucent dome membrane arena, parts and sparks flying, a packed stadium crowd far below, spotlights, the mascot drone N0 filming with a camera in the corner. Leave calm empty space in the upper-left third for a logo. No text."
+ },
+ {
+  "id": "capsule_tall",
+  "aspect": "portrait 2:3",
+  "refs": [
+   "godot/tools/codex_art/refs/ref_fighters.jpg",
+   "godot/tools/codex_art/refs/ref_n0.jpg"
+  ],
+  "prompt": "Vertical game library capsule art for NULL GRAVITY: one heroic modular robot puppet fighter floating in zero gravity inside a glowing dome arena, limbs spread dynamically, the mascot drone N0 beside it, dramatic rim light. Leave the bottom quarter darker and calm for a logo. No text."
+ }
+]
