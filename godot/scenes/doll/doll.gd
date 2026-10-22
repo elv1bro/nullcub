@@ -187,6 +187,9 @@ var charge_cap_bonus := 0.0
 var spin_torque_mult := 1.0
 var spin_cost_mult := 1.0
 var knock_spin_mult := 1.0
+## Множитель момента осанки (выпрямление корпуса): крупная кукла (ModularDoll.body_scale, босс BOSS.md) — инерция корпуса растёт
+## как масса × размер², тяга — нет; без множителя великан валится набок. 1 — как было.
+var posture_mult := 1.0
 ## Выдохся (дошёл до 0): ускорение и раскрутка заперты, пока charge не вернётся до CHARGE_RESTART.
 var charge_locked := false
 var _boosting := false                ## ускорение включено в этот тик (Shift держится, Заряд есть)
@@ -1723,7 +1726,7 @@ func _tick_posture(v: Vector2, control: float) -> void:
 		target = -clampf(v.x, -1.0, 1.0) * lean * ControlFeel.LEAN_MAX_RAD
 	var angle := atan2(t.global_basis.x.y, t.global_basis.x.x)   # 0 — вертикально, + против часовой (взгляд с +Z)
 	var err := clampf(wrapf(angle - target, -PI, PI), -1.5, 1.5)
-	var tau := -gain * (ControlFeel.UPRIGHT_K * err + ControlFeel.UPRIGHT_D * t.angular_velocity.z) * thrust_mass() * control
+	var tau := -gain * (ControlFeel.UPRIGHT_K * err + ControlFeel.UPRIGHT_D * t.angular_velocity.z) * thrust_mass() * control * posture_mult
 	t.apply_torque(Vector3(0, 0, tau))
 
 
@@ -1806,7 +1809,7 @@ func _physics_process(delta: float) -> void:
 	if _spinning:
 		# вправо — по часовой (кувырок вперёд по ходу), как режим rotate; выше SPIN_MAX_W момент не прикладывается
 		var s := -signf(v.x)
-		if torso().angular_velocity.z * s < Tuning.SPIN_MAX_W * sqrt(spin_torque_mult):   # маховик поднимает и потолок раскрутки
+		if torso().angular_velocity.z * s < Tuning.SPIN_MAX_W * sqrt(spin_torque_mult / posture_mult):   # маховик поднимает потолок; великан (posture_mult) — нет
 			torso().apply_torque(Vector3(0, 0, s * minf(absf(v.x), 1.0) * Tuning.SPIN_TORQUE_PER_KG * thrust_mass() * spin_torque_mult))
 	_tick_charge(delta, _boosting, _spinning)
 	if mode == "rotate":

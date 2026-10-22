@@ -1600,3 +1600,48 @@ const HOCKEY_BOT_LEVELS := {
 	2: {"max_in": 0.88, "aim_error_m": 0.3, "lead_s": 0.2, "dash": true, "spin": true, "goalie": true},
 	3: {"max_in": 1.0, "aim_error_m": 0.12, "lead_s": 0.3, "dash": true, "spin": true, "goalie": true},
 }
+
+## --- Босс (docs/plan-demo/BOSS.md; MODES_IDEAS.md В1) ---
+## Один громадный чемпион лиги (scenes/boss/boss_doll.tscn: ModularDoll по чертежу boss_titan — набор про-лиги «Титан» с щитками и
+## короной, body_scale 2, mass_scale 3, thrust_scale 2.6) против одного-двух игроков в куполе Old NULL Hall. BossMatch:
+##   • запас босса — Σ ❤ его деталей, приведённая к BOSS_HP (❤ каждой детали × BOSS_HP / Σ); порог отрыва детали — её ❤ × BOSS_BREAK_MULT
+##     (голова — × BOSS_HEAD_BREAK_MULT): отлетела — запас теряет её ❤ (как «Запас из деталей», PartHp);
+##   • уязвимая деталь светится BOSS_WEAK_S, потом другая (торс никогда, голова — только в фазе 3): удар в неё × BOSS_WEAK_MULT;
+##   • фазы по запасу (доля от BOSS_HP): ниже BOSS_PHASE_AT[0] — фаза 2 (рывки), ниже BOSS_PHASE_AT[1] — фаза 3 (ярость: тяга ×
+##     BOSS_RAGE_THRUST, потолок скорости × BOSS_RAGE_SPEED, поле купола BOSS_RAGE_FIELD, волна-толчок раз в BOSS_WAVE_S);
+##   • удар босса по игроку × BOSS_HIT_MULT[фаза − 1], не больше BOSS_HIT_CAP; урон игрока по боссу × BOSS_PLAYER_DMG_MULT; стан босса от
+##     удара × BOSS_STUN_MULT (мета PartMods stun_mult на его телах); игроки друг друга не бьют;
+##   • у игрока BOSS_LIVES возрождений (через BOSS_RESPAWN_S, на дальней от босса точке); все выбиты без жизней — поражение;
+##     лимит BOSS_TIME_S — тоже поражение («босс выстоял»).
+const BOSS_HP := 1000.0
+const BOSS_BREAK_MULT := 1.5
+const BOSS_HEAD_BREAK_MULT := 2.5
+const BOSS_WEAK_MULT := 2.0
+const BOSS_HEAD_GUARD := 0.5               # фазы 1–2: шлем — износ сустава головы не ниже этой доли порога (ниже нельзя), в фазе 3 снят
+const BOSS_WEAK_S := 7.0
+const BOSS_PHASE_AT := [0.66, 0.33]
+const BOSS_LIVES := 2
+const BOSS_RESPAWN_S := 3.0
+const BOSS_TIME_S := 360.0                 # 6:00: не успели — босс выстоял (поражение)
+const BOSS_HIT_MULT := [0.8, 0.9, 1.05]   # урон босса по игроку по фазам
+const BOSS_HIT_CAP := 25.0
+const BOSS_PLAYER_DMG_MULT := 1.5
+const BOSS_STUN_MULT := 0.25
+const BOSS_CHARGE_FLOOR := [45.0, 70.0, 100.0]   # Заряд босса не ниже этого по фазам (рывки и раскрутка — за Заряд, как у всех)
+const BOSS_RAGE_THRUST := 1.35
+const BOSS_RAGE_SPEED := 1.3
+const BOSS_RAGE_FIELD_G := 0.32            # фаза 3: поле купола тяжелеет (0.20 → 0.32 G вниз) — висеть над боссом труднее
+const BOSS_WAVE_S := 9.0                   # фаза 3: волна-толчок раз в столько
+const BOSS_WAVE_WARN_S := 1.0              # телеграф волны («ВОЛНА!», кольцо над боссом)
+const BOSS_WAVE_R := 7.0                   # м: радиус волны от ЦМ босса
+const BOSS_WAVE_DV := 9.0                  # м/с: толчок у самого босса (к краю радиуса — вдвое слабее)
+const BOSS_WAVE_DMG := 5.0
+const BOSS_SPAWN := [Vector2(-9.0, 6.0), Vector2(9.0, 6.0), Vector2(0.0, 9.0)]   # P1, P2, босс
+const BOSS_RESPAWN_POINTS := [Vector2(-12.0, 12.0), Vector2(12.0, 12.0), Vector2(-9.0, 6.0), Vector2(9.0, 6.0), Vector2(0.0, 16.0)]
+const BOSS_FOCUS_M := 18.0                 # камера держит людей и босса, если он ближе этого к человеку
+## Бот-напарник (BossAllyBrain): уровни 1..3 — прицел, реакция, упреждение, ускорение, уклон от рывков и волны.
+const BOSS_BOT_LEVELS := {
+	1: {"max_in": 0.75, "aim_error_m": 0.6, "reaction_s": 0.3, "lead_s": 0.1, "dash": false, "dodge": false},
+	2: {"max_in": 0.9, "aim_error_m": 0.35, "reaction_s": 0.22, "lead_s": 0.2, "dash": true, "dodge": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.15, "reaction_s": 0.15, "lead_s": 0.3, "dash": true, "dodge": true},
+}

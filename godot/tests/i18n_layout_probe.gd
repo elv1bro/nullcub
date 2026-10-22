@@ -30,6 +30,7 @@ const INFECTION := "res://scenes/playground_infection.tscn"
 const HEADHUNT := "res://scenes/playground_headhunt.tscn"
 const TUG := "res://scenes/playground_tug.tscn"
 const KING := "res://scenes/playground_king.tscn"
+const BOSS := "res://scenes/playground_boss.tscn"   # «Босс» (BOSS.md): полоса Титана, слабое место, итоги
 const HOCKEY := "res://scenes/playground_sport_hockey.tscn"   # спорт-зал, хоккей (HOCKEY.md): своя подсказка и подпись HUD
 const MODES_100 := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» реестра (MODES_100.md)
 const VIEW := Rect2(0, 0, 1920, 1080)
@@ -149,7 +150,7 @@ func _pass() -> Dictionary:
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, KING, HOCKEY, MODES_100]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, KING, BOSS, HOCKEY, MODES_100]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		if p == CLIMB:
 			ClimbMatch.best_time = -1.0   # лучшее время сессии — static: на каждом языке экран тот же («—»)
@@ -209,6 +210,14 @@ func _pass() -> Dictionary:
 			kgm._finish("score")
 			await _wait(SETTLE * 3)
 			shots["king:end"] = _scan(inst)
+		if p == BOSS:   # «Босс» (BOSS.md): ещё табличка итогов с таблицей игроков
+			var bsm := inst.get_node("Match") as BossMatch
+			bsm.tally = {0: {"dmg": 512.0, "weak_hits": 23, "kos_taken": 1, "parts": 4},
+				1: {"dmg": 488.5, "weak_hits": 19, "kos_taken": 2, "parts": 3}}
+			bsm.boss_phase = 3
+			bsm._finish("boss")
+			await _wait(SETTLE * 3)
+			shots["boss:end"] = _scan(inst)
 		if p == RACE:   # «Гонка: 10 точек» (RACE.md): ещё табличка итогов с таблицей мест
 			var rmm := inst.get_node("Match") as RaceMatch
 			rmm.scores = {0: 10, 1: 7, 2: 4, 3: 9}
