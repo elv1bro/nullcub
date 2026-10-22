@@ -372,6 +372,19 @@ TV = [("tv_live_a.png", "body-paint-arena.png", None), ("tv_live_b.png", "00-voi
       ("tv_opponent.png", "body-kit-v1.png", (1095, 245, 1335, 560)), ("tv_build.png", "body-kit-v1.png", (470, 245, 710, 560))]
 
 
+MODES_IMG = os.path.join(GODOT, "assets", "ui", "modes")
+# с 23.10 кадры 16:9 на ТВ — снимки текущей игры (карточки «ВСЕ РЕЖИМЫ», tests/modes_shots.tscn), а не листы веб-прототипа
+TV_MODES = [("tv_live_a.png", "quick.jpg"), ("tv_live_b.png", "royale.jpg"), ("tv_live_c.png", "void.jpg"),
+            ("tv_live_d.png", "brawl.jpg"), ("tv_replay.png", "ruins.jpg"), ("tv_quick.png", "squad.jpg")]
+
+
+def tv_from_modes():
+    for out, fn in TV_MODES:
+        p = os.path.join(MODES_IMG, fn)
+        if os.path.exists(p):
+            ImageOps.fit(Image.open(p).convert("RGB"), (768, 432), Image.LANCZOS).save(os.path.join(OUT, "tv", out), optimize=True)
+
+
 def tv_images():
     """Кадры для эфира на телевизоре (TV-канал меню): 768 px по ширине, вырезки бойцов из листа кита — 240×315."""
     for out, fn, box in TV:
@@ -393,7 +406,8 @@ def main():
     old_art = "--old-art" in sys.argv
     if old_art:
         banner()
-    tv_images()
+        tv_images()
+    tv_from_modes()
     paint_metal()
     hazard()
     tread()
