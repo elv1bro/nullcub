@@ -343,9 +343,14 @@ func _on_over(_winner: Doll, results: Dictionary) -> void:
 	for c in end_table.get_children():
 		end_table.remove_child(c)
 		c.queue_free()
-	var ctf := String(results.get("mode", "dm")) == "ctf"
+	var mode_ := String(results.get("mode", "dm"))
+	var ctf := mode_ in ["ctf", "dom"]   # последняя колонка — захваты: флаги или точки
 	var white := Color(1, 1, 1, 0.7)
-	var heads := [tr("БОЕЦ"), tr("КЛАСС"), tr("ФРАГИ"), tr("ВЫБЫЛ"), tr("УРОН"), tr("ФЛАГИ") if ctf else tr("УР.")]
+	var last_h := tr("УР.")
+	match mode_:
+		"ctf": last_h = tr("ФЛАГИ")
+		"dom": last_h = tr("ТОЧКИ")
+	var heads := [tr("БОЕЦ"), tr("КЛАСС"), tr("ФРАГИ"), tr("ВЫБЫЛ"), tr("УРОН"), last_h]
 	for h in heads:
 		_cell(h, white, end_table.get_child_count() == 0, 20)
 	var tally: Dictionary = results.get("tally", {})
@@ -601,7 +606,10 @@ func _draw_scoreboard(vp: Vector2) -> void:
 	var low := match_node.play_state == "play" and s <= 30
 	_text(Vector2(cx, y + ph * 0.5 + 16.0), "%d:%02d" % [s / 60, s % 60], 46, Color(1.0, 0.45, 0.35) if low else Color.WHITE,
 		HORIZONTAL_ALIGNMENT_CENTER)
-	var mode_t := tr("ЗАХВАТ ФЛАГА") if match_node.is_ctf() else tr("ПЕРЕСТРЕЛКА")
+	var mode_t := tr("ПЕРЕСТРЕЛКА")
+	match match_node.mode:
+		"ctf": mode_t = tr("ЗАХВАТ ФЛАГА")
+		"dom": mode_t = tr("ЗАХВАТ ТОЧЕК")
 	var cap := tr("%s · ДО %d") % [mode_t, match_node.score_to_win]
 	var cw := _font.get_string_size(cap, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x + 36.0
 	_round(Rect2(cx - cw * 0.5, y + ph + 6.0, cw, 30.0), Color(0, 0, 0, 0.55), Color(0, 0, 0, 0), 0, 15, false)
