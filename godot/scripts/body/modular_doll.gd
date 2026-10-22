@@ -76,6 +76,11 @@ const MIRROR_X := Basis(Vector3(-1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1))
 @export var fixed_thrust := true
 ## Масса, при которой тяга совпадает с обычной куклой; ≤ 0 — масса куклы v3 по Tuning.MASS (40 кг).
 @export var thrust_ref_mass := -1.0
+## Великан (босс, BOSS.md): все детали — формы, меши, якоря — × body_scale; масса узлов × mass_scale; тяга × thrust_scale. Мышцы
+## (k, tmax × масса × размер², c × корень), раскрутка и осанка (Doll.posture_mult) растут вместе с инерцией. 1 — обычная кукла.
+@export var body_scale := 1.0
+@export var mass_scale := 1.0
+@export var thrust_scale := 1.0
 
 ## uid детали -> имя тела (fixed-деталь — имя тела-хозяина).
 var uid_body: Dictionary = {}
@@ -179,6 +184,10 @@ func reset_pose(blend_s: float = 0.0) -> void:
 
 ## Масса, для которой считается фиксированная тяга (Н = MOVE_FORCE_PER_KG × эта масса).
 func thrust_mass() -> float:
+	return _thrust_mass_base() * thrust_scale
+
+
+func _thrust_mass_base() -> float:
 	if not fixed_thrust:
 		return total_mass   # обычная тяга Doll (Doll зовёт thrust_mass() в обеих строках тяги, и в окне полёта тоже)
 	if thrust_ref_mass > 0.0:
@@ -306,13 +315,20 @@ static func _distal(b: RigidBody3D, pairs: Array) -> Array:
 ## pin (все суставы human) не трогается — числа как у doll.tscn.
 func _update_pair_gains() -> void:
 	super._update_pair_gains()
-	if _joint_type.is_empty():
-		return
 	var pairs: Variant = get("_muscle_pairs")
 	if not pairs is Array:
 		return
 	var uc: Variant = get("_uniform_c")
 	var uniform_c := uc != null and float(uc) >= 0.0
+	var big := mass_scale * body_scale * body_scale   # великан: инерция цепей × масса × размер²
+	if not is_equal_approx(big, 1.0):
+		for e in pairs:
+			e[MP_K] = float(e[MP_K]) * big
+			e[MP_TMAX] = float(e[MP_TMAX]) * big
+			if not uniform_c:
+				e[MP_C] = float(e[MP_C]) * sqrt(big)
+	if _joint_type.is_empty():
+		return
 	for e in pairs:
 		var jt := String(_joint_type.get(String(e[MP_NAME]), KitJoint.DEFAULT))
 		var ti := KitJoint.info(jt) if jt != KitJoint.DEFAULT else {}
@@ -360,6 +376,8 @@ func _build() -> void:
 			dropped[uid] = true   # оторвано в прошлом розыгрыше (спорт-зал): ни тела, ни сустава, ни слитого с ним, ни связок к нему
 			continue
 		var inst := def.scene.instantiate() as RigidBody3D
+		if not is_equal_approx(body_scale, 1.0):
+			_scale_part(inst, body_scale)
 		var mirror := false
 		var a: Dictionary = {}
 		var a_xf := Transform3D.IDENTITY
@@ -381,7 +399,7 @@ func _build() -> void:
 		var repaint := mdef != null and mat_id != def.base_mat
 		if repaint and mdef.surface != null:
 			_swap_base_surfaces(inst, mdef.surface)
-		var node_mass := blueprint.node_mass(uid)
+		var node_mass := blueprint.node_mass(uid) * mass_scale
 		var node_iron := blueprint.node_iron(uid)
 		var sock := inst.get_node_or_null("Socket") as Node3D
 		var xf := Transform3D.IDENTITY
@@ -536,6 +554,48 @@ func _build() -> void:
 	spin_torque_mult = float(mod_totals.get("spin_mult", 1.0))
 	spin_cost_mult = float(mod_totals.get("spin_cost_mult", 1.0))
 	knock_spin_mult = float(mod_totals.get("knock_spin_mult", 1.0))
+	if not is_equal_approx(body_scale, 1.0) or not is_equal_approx(mass_scale, 1.0):
+		var inertia := mass_scale * body_scale * body_scale
+		spin_torque_mult *= inertia / maxf(thrust_scale, 0.01)
+		posture_mult = inertia / maxf(thrust_scale, 0.01)
+
+
+## Великан (body_scale): формы — копии ресурсов в масштабе, маркеры (якоря, Socket) — только точка, меши — кадр целиком.
+## Центр масс CUSTOM — тоже в масштабе. Вызывается сразу после instantiate, до зеркала и чтения якорей.
+static func _scale_part(inst: RigidBody3D, s: float) -> void:
+	if inst.center_of_mass_mode == RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM:
+		inst.center_of_mass *= s
+	for c in inst.get_children():
+		if c is CollisionShape3D:
+			var cs := c as CollisionShape3D
+			cs.position *= s
+			if cs.shape != null:
+				cs.shape = _scaled_shape(cs.shape, s)
+		elif c is Marker3D:
+			(c as Marker3D).position *= s
+		elif c is Node3D:
+			var n := c as Node3D
+			n.transform = Transform3D(n.transform.basis * s, n.transform.origin * s)
+
+
+static func _scaled_shape(src: Shape3D, s: float) -> Shape3D:
+	var sh := src.duplicate() as Shape3D
+	if sh is BoxShape3D:
+		(sh as BoxShape3D).size *= s
+	elif sh is CapsuleShape3D:
+		(sh as CapsuleShape3D).radius *= s
+		(sh as CapsuleShape3D).height *= s
+	elif sh is SphereShape3D:
+		(sh as SphereShape3D).radius *= s
+	elif sh is CylinderShape3D:
+		(sh as CylinderShape3D).radius *= s
+		(sh as CylinderShape3D).height *= s
+	elif sh is ConvexPolygonShape3D:
+		var pts := (sh as ConvexPolygonShape3D).points
+		for i in pts.size():
+			pts[i] *= s
+		(sh as ConvexPolygonShape3D).points = pts
+	return sh
 
 
 ## Модуль «Скобы-ремкомплект» (PartMods repair_per_s): износ деталей чинится сам, пока детали изнашиваются (режимы «;» и C), и износ
@@ -821,6 +881,7 @@ func _add_connector(body: RigidBody3D, uid: String, jt: String, local: Transform
 	var r := float(a.get("joint_r", 0.0))
 	if r <= 0.0:
 		r = KitJoint.radius_for(group)
+	r *= body_scale
 	c.name = "Connector_" + uid
 	(c as Node3D).transform = Transform3D(local.basis.orthonormalized().scaled(Vector3.ONE * r), local.origin)
 	c.set_meta("rig_mesh", true)
