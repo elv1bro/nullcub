@@ -75,24 +75,26 @@ const MATS := {
 	# краски — не цвета игроков (29.09, QA на Свалке; BODY_KIT.md §4): бордовая / бирюзовая / горчичная / оливковая, ΔE2000 ≥ 23
 	# от каждого из Tuning.PLAYER_COLORS (прежние красная / синяя / жёлтая / зелёная совпадали с ними: ΔE 3–6). Карта worn_paint —
 	# светлая (≈0.65 линейно) со сколами. Тона приглушены до заводских (23.10, «взрослый вид»): сигнальный красный с оксидом,
-	# стальной синий, охра, оливковый — ΔE76 до цветов игроков 43–58. Белая — тёплая серая керамика.
+	# стальной синий, охра, оливковый — ΔE76 до цветов игроков 43–58. Проход 2: охра → хаки-охра (голова-телевизор
+	# читалась оранжевой игрушкой), ΔE76 54. Белая — тёплая серая керамика.
 	"Base_PaintRed": {"pbr": "worn_paint", "tint": [0.15, 0.022, 0.03], "rough": 1.0, "swatch": [0.098, 0.014, 0.018]},
 	"Base_PaintBlue": {"pbr": "worn_paint", "tint": [0.03, 0.09, 0.13], "rough": 1.0, "swatch": [0.020, 0.057, 0.077]},
-	"Base_PaintYellow": {"pbr": "worn_paint", "tint": [0.26, 0.145, 0.028], "rough": 1.0, "swatch": [0.170, 0.092, 0.017]},
+	"Base_PaintYellow": {"pbr": "worn_paint", "tint": [0.18, 0.12, 0.04], "rough": 1.0, "swatch": [0.117, 0.078, 0.026]},
 	"Base_PaintWhite": {"pbr": "worn_paint", "tint": [0.66, 0.64, 0.60], "rough": 1.0, "swatch": [0.431, 0.406, 0.355]},
 	"Base_PaintGreen": {"pbr": "worn_paint", "tint": [0.075, 0.085, 0.035], "rough": 1.0, "swatch": [0.049, 0.054, 0.021]},
 	"Base_RustRed": {"pbr": "oxide_paint", "metal": 1.0, "swatch": [0.127, 0.018, 0.011]},
 	"Base_Iron": {"pbr": "gunmetal", "metal": 0.7, "swatch": [0.117, 0.124, 0.140]},
 	"Base_Rust": {"pbr": "oxide", "metal": 1.0, "swatch": [0.064, 0.036, 0.027]},
 	"Base_Brass": {"pbr": "aged_brass", "metal": 0.85, "swatch": [0.299, 0.176, 0.047]},
-	"Base_Bone": {"pbr": "worn_paint", "tint": [0.72, 0.64, 0.50], "swatch": [0.470, 0.406, 0.296]},
+	# кость → тёплая серая керамика (проход 2, «взрослый вид»: Аоэлюн в стиле C LEAGUE PRO — керамика, графит, латунь); была кремовой
+	"Base_Bone": {"pbr": "worn_paint", "tint": [0.60, 0.57, 0.52], "rough": 0.85, "swatch": [0.392, 0.361, 0.308]},
 	# «Резина» (id rubber): была розовой краской — теперь резина цвета запёкшегося кирпича
 	"Base_Pink": {"pbr": "rubber", "tint": [1.1, 0.34, 0.34], "swatch": [0.23, 0.071, 0.071]},
 	# фурнитура: не перекрашивается (KIT_MATS, MAT_DEFS craft_parts, FLAT, KIT_FLAT)
 	"Iron": {"pbr": "gunmetal", "metal": 0.7},
 	"Steel": {"pbr": "gunmetal", "tint": [1.35, 1.35, 1.35], "metal": 0.75, "rough": 0.9},
 	"Brass": {"pbr": "aged_brass", "metal": 0.85},
-	"Bone": {"pbr": "worn_paint", "tint": [0.72, 0.64, 0.50]},
+	"Bone": {"pbr": "worn_paint", "tint": [0.60, 0.57, 0.52], "rough": 0.85},
 	"Wood": {"pbr": "aged_wood", "tint": [1.3, 1.25, 1.15]},
 	"WoodDark": {"pbr": "aged_wood_dark"},
 	"Rust": {"pbr": "oxide", "metal": 1.0},

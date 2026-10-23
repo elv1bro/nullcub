@@ -7,10 +7,11 @@
 
 [resource]
 resource_name = "Base_Bone"
-albedo_color = Color(0.86504203, 0.8209799, 0.735357, 1)
+albedo_color = Color(0.7977378, 0.77970624, 0.7483791, 1)
 albedo_texture = ExtResource("1_41115")
 metallic = 1.0
 metallic_texture = ExtResource("2_iv120")
+roughness = 0.85
 roughness_texture = ExtResource("4_dn2co")
 normal_enabled = true
 normal_texture = ExtResource("3_7jo1i")

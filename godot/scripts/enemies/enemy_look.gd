@@ -61,6 +61,7 @@ func clock() -> float:
 ## Внешность куклы: тон, глаза, Ядро, свет, звук. Зовётся после сборки куклы (Doll._ready уже прошёл).
 func setup(d: Doll) -> void:
 	doll = d
+	SponsorMarks.clear(doll)   # враг — без спонсоров эфира
 	tint_node(doll)
 	_eye_mat = StandardMaterial3D.new()
 	_eye_mat.albedo_color = Color(0.05, 0.02, 0.02)
