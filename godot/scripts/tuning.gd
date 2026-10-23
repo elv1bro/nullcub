@@ -1721,3 +1721,46 @@ const SCAV_BOT_FEAR_M := 6.0                 # fear: соперник ближе
 const SCAV_BOT_FEAR_GAP := 2
 const SCAV_BOT_GIVEUP_S := 6.0               # не достал деталь за столько — бросить её на SCAV_BOT_BAN_S
 const SCAV_BOT_BAN_S := 8.0
+# --- ВЫШИБАЛЫ: 3 на 3 в спорт-зале, мячами выбить всю чужую команду (docs/plan-demo/DODGEBALL.md, MODES_IDEAS.md A3, 22.10) ---
+## Зал делит черта x = 0 — стенка для кукол от пола до потолка (мячи её не замечают). Четыре мяча (SportBall с видом волейбольного,
+## но лёгкие — бросок руки ArmAssist доходит до потолка THROW_SPEED_MAX 12 м/с). Мяч, ушедший из руки быстрее DODGEBALL_THROW_MIN, —
+## «живой»: попал в чужую куклу не медленнее DODGEBALL_HIT_SPEED и не касался пола — она выбита (уходит с поля); чужой поймал рукой —
+## выбит бросивший, а к ловцу возвращается выбитый свой. Касание пола, своей куклы, мяча в чьей-то руке или DODGEBALL_LIVE_MAX_S — мяч
+## «мёртвый». Команда без кукол на поле проиграла раунд; до DODGEBALL_ROUNDS_TO_WIN побед.
+const DODGEBALL_TEAM := 3                       # кукол в команде
+const DODGEBALL_BALLS := 4
+const DODGEBALL_ROUNDS_TO_WIN := 2
+const DODGEBALL_ROUND_S := 75.0                 # раунд: вышло — побеждает команда, у которой больше на поле; поровну — «до первого»
+const DODGEBALL_SUDDEN_S := 30.0                # «до первого выбитого» не дольше — потом раунд ничей (очков нет)
+const DODGEBALL_TIME_S := 330.0                 # матч целиком не дольше 5:30 игровых: ведущий по раундам, равно — ничья
+const DODGEBALL_ROUND_PAUSE_S := 2.0            # после раунда — пауза, потом все на поле и отсчёт
+const DODGEBALL_RESET_COUNTDOWN_S := 2.0
+const DODGEBALL_BALL_MASS := 0.9                # кг: бросок sqrt(2·110/0.9) = 15.6 → потолок руки 12 м/с
+const DODGEBALL_BALL_GRAVITY := 1.0             # × поля 2.0 м/с²: за 0.7 с полёта через зал мяч проседает на ~0.5 м
+const DODGEBALL_BALL_BOUNCE := 0.5
+const DODGEBALL_BALL_DAMP := 0.15
+const DODGEBALL_THROW_MIN := 4.0                # м/с: мяч ушёл из руки быстрее — бросок (медленнее — просто выронил)
+const DODGEBALL_HIT_SPEED := 5.0                # м/с: живой мяч выбивает не медленнее этого
+const DODGEBALL_LIVE_MAX_S := 3.0               # живой мяч дольше этого в полёте (рикошеты под потолком) — мёртвый
+const DODGEBALL_FLOOR_Y := 0.62                 # центр мяча (r 0.4) ниже этого в касании статики — касание пола
+const DODGEBALL_CATCH_R := 0.35                 # м: кисть с активной рукой ближе этого к поверхности живого чужого мяча — поймал
+const DODGEBALL_OUT_FADE_S := 0.7               # выбитый ещё столько виден (летит от удара), потом уходит с поля
+const DODGEBALL_LINE_HALF := 0.15               # полутолщина стенки по черте, м
+## Точки появления (x, y) по player_index: чётные — синие слева, нечётные — красные справа (P1 ближе к черте).
+const DODGEBALL_SPAWN := [Vector2(-4.0, 0.05), Vector2(4.0, 0.05), Vector2(-6.5, 0.05), Vector2(6.5, 0.05), Vector2(-9.0, 0.05),
+	Vector2(9.0, 0.05)]
+## Мячи на вводе — по два на половину (лежат на полу, замороженные до «ВЫШИБАЙ!»).
+const DODGEBALL_BALL_SPOTS := [Vector2(-2.0, 0.42), Vector2(-5.2, 0.42), Vector2(2.0, 0.42), Vector2(5.2, 0.42)]
+const DODGEBALL_COLORS := [Color("2f6fde"), Color("d9342b")]
+## Боты (DodgeballBrain) по уровням: max_in — доля тяги; aim_error_m — разброс прицела у цели; aim_s — замах (с) перед броском;
+## reaction_s — заметить летящий мяч; dodge — шанс увернуться от мяча, идущего ближе DODGEBALL_BOT_DODGE_M; catch — шанс ловить
+## (на мяч); dash — ускорение в уклоне; throw — скорость броска бота, м/с (рука ArmAssist бросает 12 — бот слабее, иначе раунд
+## у ботов проходит за секунды: увернуться от 12 м/с с 6 м почти нельзя; человек бросает в полную силу).
+const DODGEBALL_BOT_LEVELS := {
+	1: {"max_in": 0.7, "aim_error_m": 1.6, "aim_s": Vector2(2.8, 4.2), "reaction_s": 0.45, "dodge": 0.45, "catch": 0.0, "dash": false, "throw": 8.0},
+	2: {"max_in": 0.88, "aim_error_m": 1.25, "aim_s": Vector2(2.4, 3.6), "reaction_s": 0.25, "dodge": 0.75, "catch": 0.3, "dash": true, "throw": 9.0},
+	3: {"max_in": 1.0, "aim_error_m": 0.8, "aim_s": Vector2(1.8, 2.8), "reaction_s": 0.15, "dodge": 0.85, "catch": 0.45, "dash": true, "throw": 10.5},
+}
+const DODGEBALL_BOT_DODGE_M := 1.4              # мяч пройдёт ближе этого к ЦМ в ближайшую секунду — уворачиваться
+const DODGEBALL_BOT_THROW_X := 3.0              # бот бросает, подойдя к черте на столько (по x)
+const DODGEBALL_BOT_GRAB_M := 0.25              # кисть ближе этого к мячу — хватать
