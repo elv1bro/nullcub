@@ -47,6 +47,7 @@ func _ready() -> void:
 		field.membrane_hit.connect(func(_p: Vector2, speed: float) -> void: excite(clampf(speed / 10.0, 0.35, 1.0)))
 	_connect_match.call_deferred()
 	NullLook.attach(self, NullLook.KIND_DOME)   # вид поля NULL: пыль, пузырь, смена поля (docs/plan-demo/look/null.md)
+	LeagueBoards.attach(self, LeagueBoards.LAYOUT_DOME)   # реклама Лиги: ленты на бортах, баннеры (league_boards.gd)
 
 
 ## Толпа болеет: азарт поднимается до amount (0..1) и спадает сам (crowd_cool_per_s).
