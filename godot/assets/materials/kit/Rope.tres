@@ -6,6 +6,7 @@
 
 [resource]
 resource_name = "Rope"
+albedo_color = Color(0.80946815, 0.785777, 0.7483791, 1)
 albedo_texture = ExtResource("1_31q6k")
 roughness_texture = ExtResource("3_5nn3h")
 normal_enabled = true

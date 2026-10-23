@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Пакетная генерация картинок через codex exec. jobs.json: [{"id", "prompt", "refs": [paths], "aspect": "portrait|landscape|square"}]
+"""Пакетная генерация картинок через codex exec. jobs.json: [{"id", "prompt", "refs": [paths], "aspect": "portrait|landscape|square",
+"style" (необязательно: своё направление вместо STYLE)}]
 Запуск: python3 codex_gen.py jobs.json out_dir [parallel]"""
 import json, os, subprocess, sys, shutil
 from concurrent.futures import ThreadPoolExecutor
@@ -26,7 +27,7 @@ def run(job, out_dir):
         shutil.copy(r, dst)
         refs += ["-i", dst]
     prompt = (f"Use your image generation tool to create exactly ONE image. Aspect: {job.get('aspect', 'landscape')}. "
-              f"{STYLE}\n\nImage: {job['prompt']}\n\n"
+              f"{job.get('style', STYLE)}\n\nImage: {job['prompt']}\n\n"
               + ("The attached images are style/character references from the game — match their look. " if refs else "")
               + f"Save the generated PNG into the current directory as {jid}.png (copy it from wherever the tool stored it). "
               "Do not create any other files. Reply with just the path.")

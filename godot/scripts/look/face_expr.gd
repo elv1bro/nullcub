@@ -5,10 +5,10 @@
 ##
 ## Где лицо:
 ##   • голова кита (Kit_Head_*: плашка FacePlate, материал «Face» с картинкой kit/face_default.png, UV 0..1) — копия материала с
-##     атласом выражений (assets/textures/faces/face_expr_atlas.png, 4 × 3 ячейки, tools/gen_face_atlas.py), ячейка = uv1_offset, как у N0;
+##     атласом выражений (assets/textures/faces/face_expr_atlas.png, 4 × 3 ячейки, tools/gen_face_visor.py: LED-глаза на тёмном визоре), ячейка = uv1_offset, как у N0;
 ##     голова с фото игрока (у плашки другая картинка: BodyPaint.set_face, визор лиги LeagueLook) — не трогается;
 ##   • деревянный манекен (doll.tscn / doll_dark.tscn, wood_head; плашка Face.* утоплена в «яйцо» головы — её не видно) — своя наклейка
-##     «Face_Expr»: треугольники яйца спереди, обрезанные по квадрату лица, рисунок «маркером» (face_expr_ink.png, без бумаги);
+##     «Face_Expr»: треугольники яйца спереди, обрезанные по квадрату лица, трафаретная краска с меткой краш-теста (face_expr_ink.png, без бумаги);
 ##     только когда фото игрока на голове нет (наклейки BodyPaint «Sticker» на теле головы).
 ## Пункты «ВИД» (группа «Лица»): faces_expr — выражения на головах кита (выкл — исходный материал плашки), faces_wood — лицо манекена
 ## (выкл — наклейка убрана). Переключение применяется сразу в обработчике Look.changed (снимки «до / после» — на паузе дерева).
@@ -151,13 +151,15 @@ static func make_kit_material(src: BaseMaterial3D, name: String) -> StandardMate
 		m.resource_name = "Face"
 		m.roughness = 0.55
 	m.albedo_texture = atlas()
+	if m.emission_enabled and m.emission_texture != null:
+		m.emission_texture = m.albedo_texture   # визор светится той же картинкой (Face.tres, build_body_kit.gd face_glow)
 	m.uv1_scale = cell_scale()
 	m.uv1_offset = cell_offset(name)
 	m.texture_repeat = false
 	return m
 
 
-## Материал наклейки манекена: рисунок «маркером» поверх дерева, альфа вершин — спад к краю «яйца».
+## Материал наклейки манекена: трафарет краш-теста поверх дерева, альфа вершин — спад к краю «яйца».
 static func make_wood_material(name: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.resource_name = "Face_Expr"

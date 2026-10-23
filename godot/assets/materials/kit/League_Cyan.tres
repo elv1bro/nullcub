@@ -2,8 +2,8 @@
 
 [resource]
 resource_name = "League_Cyan"
-albedo_color = Color(0.18974829, 0.48452926, 0.5657284, 1)
-roughness = 0.3
+albedo_color = Color(0.17184411, 0.38109186, 0.43662706, 1)
+roughness = 0.35
 emission_enabled = true
-emission = Color(0.42358288, 0.9063318, 1, 1)
-emission_energy_multiplier = 1.2
+emission = Color(0.38109186, 0.7977378, 0.9063318, 1)
+emission_energy_multiplier = 0.75

@@ -8,5 +8,5 @@ script = ExtResource("1_148op")
 id = "paint_yellow"
 title = "Горчичная краска"
 surface = ExtResource("2_yyygs")
-swatch = Color(0.58383155, 0.4565437, 0.1428257, 1)
+swatch = Color(0.4492039, 0.33538884, 0.13816993, 1)
 friction = 0.5

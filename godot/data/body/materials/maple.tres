@@ -8,4 +8,4 @@ script = ExtResource("1_k3vqg")
 id = "maple"
 title = "Клён"
 surface = ExtResource("2_saij3")
-swatch = Color(0.7977378, 0.6799757, 0.5271128, 1)
+swatch = Color(0.5021107, 0.41822335, 0.33183005, 1)

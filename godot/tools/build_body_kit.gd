@@ -1,5 +1,7 @@
 ## Builder кита тела v2 (docs/plan-demo/BODY_KIT.md §2–§4, §3.5; ASSET_PIPELINE.md правило 2). Запуск из корня репозитория:
-##   python3 godot/tools/gen_kit_face.py                        (один раз / при смене PBR: лицо и копии текстур 512²)
+##   python3 godot/tools/gen_kit_face.py                        (один раз / при смене PBR: копии текстур 512² из pbr/)
+##   python3 godot/tools/gen_kit_grownup_tex.py                 (процедурные «взрослые» папки: worn_paint, gunmetal, carbon…)
+##   python3 godot/tools/gen_face_visor.py                      (лицо-визор: face_default.png + атлас выражений)
 ##   <GL> --headless --path godot --import                      (glb кита: Blender body_kit.py -- --export)
 ##   <GL> --headless --path godot -s res://tools/build_body_kit.gd
 ##   <GL> --headless --path godot --import                      (пост-импорт tools/kit_import.gd ставит материалы кита в glb)
@@ -63,48 +65,56 @@ const BODY_PAINT_SCRIPT := "res://scripts/body/body_paint.gd"
 ## Металл (29.09, визуальная проверка): на тёмном фоне без неба (tests/body_probe, Свалка ночью) металличность 1.0 отражает пустоту —
 ## железо выходило чёрным. Железо и ржавчина — тёмный крашеный / кованый металл: metal 0.55, albedo поднят, читается диффузом.
 const MATS := {
-	"Base_Wood": {"pbr": "wood", "tint": [1.0, 0.92, 0.82], "swatch": [0.62, 0.40, 0.20]},
-	"Base_Maple": {"pbr": "maple_light", "swatch": [0.60, 0.42, 0.24]},
-	"Base_WoodDark": {"pbr": "wood_dark", "swatch": [0.25, 0.14, 0.07]},
-	"Base_Planks": {"pbr": "wood_plank", "swatch": [0.45, 0.28, 0.14]},
+	# 23.10 «взрослый вид» (docs/plan-demo/grownup_art/): карты — процедурные tools/gen_kit_grownup_tex.py (выветренное дерево, краска со
+	# сколами до грунта, воронёный металл, окись, латунь с патиной, резина); прежние мультяшные папки (wood, paint_marks, iron…) больше
+	# не используются, но лежат — их пишет gen_kit_face.py из assets/textures/pbr. swatch = средний линейный albedo карты × tint.
+	"Base_Wood": {"pbr": "aged_wood", "swatch": [0.149, 0.106, 0.072]},
+	"Base_Maple": {"pbr": "aged_wood", "tint": [1.45, 1.38, 1.25], "swatch": [0.216, 0.146, 0.090]},
+	"Base_WoodDark": {"pbr": "aged_wood_dark", "swatch": [0.052, 0.034, 0.024]},
+	"Base_Planks": {"pbr": "aged_planks", "swatch": [0.132, 0.095, 0.067]},
 	# краски — не цвета игроков (29.09, QA на Свалке; BODY_KIT.md §4): бордовая / бирюзовая / горчичная / оливковая, ΔE2000 ≥ 23
-	# от каждого из Tuning.PLAYER_COLORS (прежние красная / синяя / жёлтая / зелёная совпадали с ними: ΔE 3–6)
-	"Base_PaintRed": {"pbr": "paint_marks", "tint": [0.19, 0.014, 0.057], "rough": 0.75, "swatch": [0.19, 0.014, 0.057]},
-	"Base_PaintBlue": {"pbr": "paint_marks", "tint": [0.016, 0.19, 0.206], "rough": 0.75, "swatch": [0.016, 0.19, 0.206]},
-	"Base_PaintYellow": {"pbr": "paint_marks", "tint": [0.30, 0.176, 0.018], "rough": 0.75, "swatch": [0.30, 0.176, 0.018]},
-	"Base_PaintWhite": {"pbr": "paint_marks", "tint": [0.80, 0.78, 0.72], "rough": 0.75, "swatch": [0.80, 0.78, 0.72]},
-	"Base_PaintGreen": {"pbr": "paint_marks", "tint": [0.121, 0.125, 0.025], "rough": 0.75, "swatch": [0.121, 0.125, 0.025]},
-	"Base_RustRed": {"pbr": "rust_painted_red", "metal": 0.6, "swatch": [0.30, 0.05, 0.03]},
-	"Base_Iron": {"pbr": "iron", "tint": [3.4, 4.3, 4.3], "metal": 0.6, "swatch": [0.20, 0.20, 0.21]},
-	"Base_Rust": {"pbr": "rust_metal", "tint": [1.35, 1.5, 1.6], "metal": 0.55, "swatch": [0.20, 0.11, 0.06]},
-	"Base_Brass": {"pbr": "brass_worn", "metal": 0.7, "swatch": [0.50, 0.36, 0.14]},
-	"Base_Bone": {"pbr": "paint_marks", "tint": [0.86, 0.76, 0.56], "swatch": [0.86, 0.76, 0.56]},
-	"Base_Pink": {"pbr": "paint_marks", "tint": [0.85, 0.30, 0.42], "rough": 0.6, "swatch": [0.85, 0.30, 0.42]},
+	# от каждого из Tuning.PLAYER_COLORS (прежние красная / синяя / жёлтая / зелёная совпадали с ними: ΔE 3–6). Карта worn_paint —
+	# светлая (≈0.65 линейно) со сколами. Тона приглушены до заводских (23.10, «взрослый вид»): сигнальный красный с оксидом,
+	# стальной синий, охра, оливковый — ΔE76 до цветов игроков 43–58. Белая — тёплая серая керамика.
+	"Base_PaintRed": {"pbr": "worn_paint", "tint": [0.15, 0.022, 0.03], "rough": 1.0, "swatch": [0.098, 0.014, 0.018]},
+	"Base_PaintBlue": {"pbr": "worn_paint", "tint": [0.03, 0.09, 0.13], "rough": 1.0, "swatch": [0.020, 0.057, 0.077]},
+	"Base_PaintYellow": {"pbr": "worn_paint", "tint": [0.26, 0.145, 0.028], "rough": 1.0, "swatch": [0.170, 0.092, 0.017]},
+	"Base_PaintWhite": {"pbr": "worn_paint", "tint": [0.66, 0.64, 0.60], "rough": 1.0, "swatch": [0.431, 0.406, 0.355]},
+	"Base_PaintGreen": {"pbr": "worn_paint", "tint": [0.075, 0.085, 0.035], "rough": 1.0, "swatch": [0.049, 0.054, 0.021]},
+	"Base_RustRed": {"pbr": "oxide_paint", "metal": 1.0, "swatch": [0.127, 0.018, 0.011]},
+	"Base_Iron": {"pbr": "gunmetal", "metal": 0.7, "swatch": [0.117, 0.124, 0.140]},
+	"Base_Rust": {"pbr": "oxide", "metal": 1.0, "swatch": [0.064, 0.036, 0.027]},
+	"Base_Brass": {"pbr": "aged_brass", "metal": 0.85, "swatch": [0.299, 0.176, 0.047]},
+	"Base_Bone": {"pbr": "worn_paint", "tint": [0.72, 0.64, 0.50], "swatch": [0.470, 0.406, 0.296]},
+	# «Резина» (id rubber): была розовой краской — теперь резина цвета запёкшегося кирпича
+	"Base_Pink": {"pbr": "rubber", "tint": [1.1, 0.34, 0.34], "swatch": [0.23, 0.071, 0.071]},
 	# фурнитура: не перекрашивается (KIT_MATS, MAT_DEFS craft_parts, FLAT, KIT_FLAT)
-	"Iron": {"pbr": "iron", "tint": [3.4, 4.3, 4.3], "metal": 0.6},
-	"Steel": {"pbr": "iron", "tint": [4.8, 6.2, 6.2], "metal": 0.65, "rough": 0.9},
-	"Brass": {"pbr": "brass_worn", "metal": 0.7},
-	"Bone": {"pbr": "paint_marks", "tint": [0.86, 0.76, 0.56]},
-	"Wood": {"pbr": "maple_light", "tint": [1.0, 0.97, 0.92]},
-	"WoodDark": {"pbr": "walnut_dark", "tint": [1.0, 0.98, 0.96]},
-	"Rust": {"pbr": "rust_metal", "tint": [1.35, 1.5, 1.6], "metal": 0.55},
-	"RustDark": {"pbr": "rust_metal", "tint": [0.8, 0.8, 0.85], "metal": 0.55},
-	"RustRed": {"pbr": "rust_painted_red", "metal": 0.6},
-	"Rope": {"pbr": "rope"},
-	"Rubber": {"flat": [0.03, 0.028, 0.027], "rough": 0.85},
+	"Iron": {"pbr": "gunmetal", "metal": 0.7},
+	"Steel": {"pbr": "gunmetal", "tint": [1.35, 1.35, 1.35], "metal": 0.75, "rough": 0.9},
+	"Brass": {"pbr": "aged_brass", "metal": 0.85},
+	"Bone": {"pbr": "worn_paint", "tint": [0.72, 0.64, 0.50]},
+	"Wood": {"pbr": "aged_wood", "tint": [1.3, 1.25, 1.15]},
+	"WoodDark": {"pbr": "aged_wood_dark"},
+	"Rust": {"pbr": "oxide", "metal": 1.0},
+	"RustDark": {"pbr": "oxide", "tint": [0.6, 0.6, 0.62], "metal": 1.0},
+	"RustRed": {"pbr": "oxide_paint", "metal": 1.0},
+	"Rope": {"pbr": "rope", "tint": [0.62, 0.58, 0.52]},
+	"Rubber": {"pbr": "rubber", "tint": [0.14, 0.135, 0.13]},
 	"Screen": {"flat": [0.01, 0.012, 0.014], "rough": 0.2},
 	# закопчённое стекло (фонарь): янтарное, полупрозрачное — сквозь него виден огарок (KIT_FLAT Glass + GLASS_ALPHA kit_common.py)
 	"Glass": {"flat": [0.50, 0.30, 0.10], "rough": 0.08, "alpha": 0.38, "glow": [1.0, 0.55, 0.2], "energy": 0.2},
-	"Gem": {"flat": [0.55, 0.02, 0.03], "rough": 0.12},
-	"Joint": {"flat": [0.25, 0.24, 0.25], "rough": 0.5, "metal": 0.5},
-	"Pin": {"flat": [0.62, 0.62, 0.64], "rough": 0.45, "metal": 0.6},
+	"Gem": {"flat": [0.30, 0.02, 0.025], "rough": 0.12},
+	# шар сустава — воронёная сталь потемнее (была гладкая серая пластмасса)
+	"Joint": {"pbr": "gunmetal", "tint": [0.6, 0.6, 0.64], "metal": 0.8},
+	"Pin": {"pbr": "gunmetal", "tint": [1.5, 1.5, 1.5], "metal": 0.8},
 	# окошко Ядра: тёплый оранжевый с горячей серединой (блик и ACES); при energy 3 купол выгорал в белый диск (клетка, дымоход).
-	# В Blender — CORE_GLOW_STRENGTH kit_common.py (AgX)
-	"CoreGlow": {"flat": [0.30, 0.10, 0.02], "rough": 0.3, "glow": [1.0, 0.25, 0.03], "energy": 0.9},
-	# плашка лица: нарисованное лицо «фотокарточка» (gen_kit_face.py), потом — фото игрока (этап 10)
-	"Face": {"face": true, "rough": 0.55},
-	# цвет игрока: светлая краска, Doll._recolor("Shirt") заменяет albedo_color цветом игрока; по умолчанию — P1 (2f6fde)
-	"Shirt_Kit": {"pbr": "paint_marks", "tint": [0.028, 0.16, 0.73], "rough": 0.7},
+	# В Blender — CORE_GLOW_STRENGTH kit_common.py (AgX). 23.10: тусклее и янтарнее — индикатор реактора, не «солнышко» (0.9 → 0.5)
+	"CoreGlow": {"flat": [0.16, 0.06, 0.015], "rough": 0.3, "glow": [1.0, 0.36, 0.08], "energy": 0.5},
+	# плашка лица: тёмный визор с LED-глазами (gen_face_visor.py), потом — фото игрока (этап 10). Светится сам (эмиссия = та же
+	# картинка): глаза читаются в тёмном зале; BodyPaint.set_face для фото эмиссию выключает
+	"Face": {"face": true, "rough": 0.35, "face_glow": 0.9},
+	# цвет игрока: светлая краска со сколами, Doll._recolor("Shirt") заменяет albedo_color цветом игрока; по умолчанию — P1 (2f6fde)
+	"Shirt_Kit": {"pbr": "worn_paint", "tint": [0.028, 0.16, 0.73], "rough": 1.0},
 }
 
 ## MaterialDef (BODY_KIT.md §4), порядок = MaterialDef.ORDER: [id, Base_, title, density, friction, bounce, body_mult, iron].
@@ -268,10 +278,15 @@ func _build_materials() -> void:
 				m.normal_texture = nrm
 		elif d.has("face"):
 			if not ResourceLoader.exists(FACE_TEX):
-				_err("нет %s — python3 godot/tools/gen_kit_face.py, затем --import" % FACE_TEX)
+				_err("нет %s — python3 godot/tools/gen_face_visor.py, затем --import" % FACE_TEX)
 				continue
 			m.albedo_texture = load(FACE_TEX)
 			m.roughness = float(d["rough"])
+			if d.has("face_glow"):
+				m.emission_enabled = true
+				m.emission = Color.BLACK   # оператор ADD: (emission + карта) × энергия — белый залил бы весь визор
+				m.emission_texture = m.albedo_texture
+				m.emission_energy_multiplier = float(d["face_glow"])
 		else:
 			m.albedo_color = _srgb(d["flat"])
 			m.roughness = float(d.get("rough", 0.7))

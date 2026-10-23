@@ -3,14 +3,15 @@
 затем godot --headless --path godot --import и tools/build_body_kit.gd (builder ссылается на эти файлы из Face.tres и Base_*.tres).
 
 Пишет в godot/assets/materials/kit/:
-  face_default.png — 256² мультяшное лицо на «фотокарточке» (как face_material() в tools/blender/kit_common.py: тёплая
-      фотобумага, белая кайма, глаза с бликом, румянец, улыбка-дуга). В игре сюда потом ляжет фото игрока (этап 10).
+  face_default.png — с прохода «взрослого вида» 23.10 НЕ пишется: лицо-визор рисует tools/gen_face_visor.py. Старая мультяшная
+      «фотокарточка» (face() ниже, как face_material() в tools/blender/kit_common.py) — только по флагу --old-face.
   tex/<папка>/<карта>.webp — копии assets/textures/pbr/<папка>/{albedo,roughness,normal,metallic}.png, уменьшенные до 512²
       (как CRAFT_TEX_SIZE деталей крафта в glb), с мип-мапами (.import-заготовка ниже). Исходники 2048² импортированы без мип-мапов
       и без сжатия: ~16 МБ видеопамяти на карту, ~0.5 ГБ на кит — и мерцание мелких деталей. albedo/roughness/metallic — WebP
       с потерями (q 92), normal — WebP без потерь (подвыборка цвета портит X/Y нормали).
 Идемпотентно: копия пересоздаётся, если исходник новее; .import-заготовка пишется, только если файла ещё нет (Godot дописывает его сам).
-Список папок = папки таблицы MATS в tools/build_body_kit.gd (там же запасной путь на исходник, если копии нет)."""
+Папки «взрослого вида» (worn_paint, gunmetal, oxide, carbon…) — процедурные, их пишет tools/gen_kit_grownup_tex.py; здесь — старые
+копии из pbr/ (часть ролей MATS в tools/build_body_kit.gd на них ещё ссылается) (там же запасной путь на исходник, если копии нет)."""
 import math
 import os
 import sys
@@ -103,11 +104,13 @@ def textures():
 def main():
     os.makedirs(OUT, exist_ok=True)
     face_path = os.path.join(OUT, "face_default.png")
-    face(face_path)
-    stub(face_path)
+    if "--old-face" in sys.argv:
+        face(face_path)
+        stub(face_path)
     made, kept, missing = textures()
     print("gen_kit_face: face %s, textures %d new / %d up to date%s" % (
-        os.path.relpath(face_path, ROOT), made, kept, (", MISSING " + ", ".join(missing)) if missing else ""))
+        os.path.relpath(face_path, ROOT) if "--old-face" in sys.argv else "kept (gen_face_visor.py)", made, kept,
+        (", MISSING " + ", ".join(missing)) if missing else ""))
     return 1 if missing else 0
 
 

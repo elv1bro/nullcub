@@ -684,6 +684,7 @@ static func set_face(mesh_root: Node3D, tex: Texture2D) -> bool:
 				var c := Color.WHITE
 				c.a = bm.albedo_color.a
 				bm.albedo_color = c
+				bm.emission_enabled = false   # визор кита светится своей картинкой (Face.tres) — фото игрока не светит
 				_face_projection(bm, _surface_aabb(m.mesh, s), tex)
 			elif dup is ShaderMaterial:
 				(dup as ShaderMaterial).set_shader_parameter("albedo_texture", tex)

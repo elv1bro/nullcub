@@ -1,6 +1,13 @@
 [gd_resource type="StandardMaterial3D" format=3]
 
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rubber/albedo.webp" id="1_xo1mj"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rubber/normal.webp" id="2_ndclb"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/rubber/roughness.webp" id="3_iogpn"]
+
 [resource]
 resource_name = "Rubber"
-albedo_color = Color(0.18974829, 0.18281268, 0.17923622, 1)
-roughness = 0.85
+albedo_color = Color(0.4100209, 0.4030275, 0.39588127, 1)
+albedo_texture = ExtResource("1_xo1mj")
+roughness_texture = ExtResource("3_iogpn")
+normal_enabled = true
+normal_texture = ExtResource("2_ndclb")

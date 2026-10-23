@@ -8,6 +8,6 @@ script = ExtResource("1_jcqwc")
 id = "wood_dark"
 title = "Орех"
 surface = ExtResource("2_fe1gn")
-swatch = Color(0.5370987, 0.4100209, 0.29337206, 1)
+swatch = Color(0.25278953, 0.20285092, 0.1680183, 1)
 density = 1.15
 body_mult = 1.05
