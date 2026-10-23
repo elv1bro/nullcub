@@ -1600,3 +1600,54 @@ const HOCKEY_BOT_LEVELS := {
 	2: {"max_in": 0.88, "aim_error_m": 0.3, "lead_s": 0.2, "dash": true, "spin": true, "goalie": true},
 	3: {"max_in": 1.0, "aim_error_m": 0.12, "lead_s": 0.3, "dash": true, "spin": true, "goalie": true},
 }
+
+# --- Испытание (Gauntlet, docs/plan-demo/GAUNTLET.md; MODES_IDEAS В3) ---
+# 10 боёв один на один подряд против бойцов лиги; детали игрока между боями не чинятся (запас из деталей включён весь забег),
+# между боями — одна бесплатная починка. Поражение (и ничья) — конец забега, рекорд «пройдено N из 10» — user://gauntlet.cfg.
+const GAUNTLET_FIGHTS := 10
+## Арены по кругу (как в Быстром бою): бой i — GAUNTLET_ARENAS[i % size]. Ключ → сцена арены, подпись (ключ tr()), камера
+## (поля DynamicCamera; pos — позиция), места P1 / P2 (spawn), оружие на арене ([id, позиция, поворот по z]). Числа — из сцен Быстрого боя (playground_*.tscn).
+const GAUNTLET_ARENAS := ["null_hall", "ruins", "scrap", "void", "workshop"]
+const GAUNTLET_ARENA := {
+	"null_hall": {"scene": "res://scenes/arena/null_hall.tscn", "title": "Купол", "spawn": [Vector3(-5, 0.05, 0), Vector3(5, 0.05, 0)],
+		"cam": {"fov": 40.0, "pos": Vector3(0, 8, 24), "floor_inset": 0.0, "padding": 3.0, "padding_y": 2.0, "follow_mode": "humans",
+			"min_half_height": 3.6, "max_half_height": 11.0, "zoom_out_tau": 0.25, "zoom_in_tau": 1.0, "follow_tau": 0.3},
+		"weapons": []},
+	"ruins": {"scene": "res://scenes/arena/ruins.tscn", "title": "Руины", "spawn": [Vector3(-1.5, 4.05, 0), Vector3(1, 0.45, 0)],
+		"cam": {"fov": 45.0, "pos": Vector3(0, 3, 12)},
+		"weapons": [["hammer", Vector3(-7.7, 0.63, 0), 0.0], ["mace", Vector3(-2.6, 6.85, 0), 0.0], ["axe", Vector3(10.4, 2.74, 0), 180.0],
+			["sword", Vector3(6.2, 0.55, 0), 0.0], ["pan", Vector3(-2.6, 0.55, 0), 180.0]]},
+	"scrap": {"scene": "res://scenes/arena/scrap.tscn", "title": "Свалка", "spawn": [Vector3(0.6, 0.05, 0), Vector3(4.4, 0.05, 0)],
+		"cam": {"fov": 45.0, "pos": Vector3(0, 3, 12)},
+		"weapons": [["hammer", Vector3(-15.1, 5.2, 0), 0.0], ["mace", Vector3(15.2, 4.2, 0), 0.0], ["axe", Vector3(1.5, 5.4, 0), 180.0],
+			["sword", Vector3(2.9, 0.2, 0), 0.0], ["pan", Vector3(-16.4, 1.9, 0), 180.0]]},
+	"void": {"scene": "res://scenes/arena/void.tscn", "title": "Void", "spawn": [Vector3(-3, 0.05, 0), Vector3(3, 0.05, 0)],
+		"cam": {"fov": 24.0, "pos": Vector3(0, 1.9, 13.8), "floor_inset": 0.0, "padding": 2.2, "padding_y": 1.5, "min_half_height": 2.8,
+			"fit_bounds": true, "zoom_out_tau": 0.3, "zoom_in_tau": 0.9, "follow_tau": 0.25},
+		"weapons": []},
+	"workshop": {"scene": "res://scenes/arena/workshop.tscn", "title": "Мастерская", "spawn": [Vector3(-5.6, 0.05, 0), Vector3(5.6, 0.05, 0)],
+		"cam": {"fov": 45.0, "pos": Vector3(0, 3, 12), "floor_inset": 0.0},
+		"weapons": [["hammer", Vector3(-8.7, 1.05, 0), 0.0], ["mace", Vector3(-5.2, 4.6, 0), 0.0], ["axe", Vector3(5.2, 4.4, 0), 180.0],
+			["sword", Vector3(6.9, 0.2, 0), 0.0], ["pan", Vector3(-4.7, 0.2, 0), 180.0]]},
+}
+## Лестница соперников: пресет тела (data/body/blueprints/<preset>.tres), уровень бота (1..4 — RIVAL_LEVELS, 5 — GAUNTLET_LEVEL5),
+## тяга (Doll.thrust_mult) и запас (× ❤ деталей). Растёт всё сразу: «сила» соперника (GauntletRun.power) строго растёт по ступеням.
+const GAUNTLET_LADDER := [
+	{"preset": "kit_horned", "level": 1, "thrust": 1.0, "hp": 1.0},
+	{"preset": "kit_devil", "level": 1, "thrust": 1.03, "hp": 1.0},
+	{"preset": "kit_brawler", "level": 2, "thrust": 1.05, "hp": 1.05},
+	{"preset": "kit_skull", "level": 2, "thrust": 1.08, "hp": 1.08},
+	{"preset": "kit_king", "level": 3, "thrust": 1.1, "hp": 1.1},
+	{"preset": "pro_sprinter", "level": 3, "thrust": 1.12, "hp": 1.14},
+	{"preset": "pro_titan", "level": 4, "thrust": 1.14, "hp": 1.18},
+	{"preset": "league_crystal", "level": 4, "thrust": 1.16, "hp": 1.22},
+	{"preset": "aoe_predator", "level": 5, "thrust": 1.18, "hp": 1.26},
+	{"preset": "league_reaper", "level": 5, "thrust": 1.2, "hp": 1.3},
+]
+## Уровень 5 — чемпионы Испытания (сверх финала местной лиги RIVAL_LEVELS[4]).
+const GAUNTLET_LEVEL5 := {"reaction_s": 0.16, "aim_error_m": 0.18, "lead_s": 0.34, "retreat_s": 1.0, "dash": true}
+const GAUNTLET_REPAIR_POOL_FRAC := 0.3    # «Подлатать корпус»: −30 % запаса бойца от накопленного урона, износ суставов снят
+const GAUNTLET_REPAIR_OPTIONS := 5        # оторванных веток в списке починки не больше этого (крупные ❤ сначала)
+const GAUNTLET_MIN_HP_FRAC := 0.15        # запас на старте боя не ниже этой доли (иначе следующий бой проигран до FIGHT!)
+const GAUNTLET_RESULT_DELAY_S := 3.0      # с реального времени: итоги HUD после конца боя, потом антракт
+const GAUNTLET_BOT_PLAYER_LEVEL := 4      # автопилот игрока (проба bots): уровень RivalBrain за игрока
