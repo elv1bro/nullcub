@@ -772,7 +772,7 @@ func _show_detail(bp: BodyBlueprint, key: String, title: String, group: String, 
 		_stat(tr("ДЕТАЛЕЙ"), str(bp.nodes.size()))
 		if PartHp.on:
 			_stat(tr("ЗАПАС ❤"), str(bp.parts_hp_total()))
-		_stat(tr("ЛКМ"), _part_title(bp, String(bp.control[0]) if bp.control.size() > 0 else ""))
+		_stat(tr("ЛКМ"), _part_title(bp, _lmb_part(bp)))
 		if not dry_run:
 			var tex := portraits.request(key, bp)
 			if tex != null:
@@ -797,6 +797,22 @@ func _stat(caption: String, value: String) -> void:
 	v.clip_text = true
 	row.add_child(v)
 	_d_stats.add_child(row)
+
+
+## Что игрок держит на ЛКМ: control[0] — рука-хозяин, но назвать надо то, чем бьют, — навершие (иначе рукоять, цепь, кисть) в её ветке.
+func _lmb_part(bp: BodyBlueprint) -> String:
+	if bp.control.size() == 0:
+		return ""
+	var host := String(bp.control[0])
+	var best := ""
+	var best_rank := 99
+	for uid in CraftEdit.subtree(bp, host):
+		var d := CraftEdit.def_of(bp, uid)
+		var rank := ["weapon_head", "handle", "chain", "hand"].find(d.kind if d != null else "")
+		if rank >= 0 and rank < best_rank:
+			best = uid
+			best_rank = rank
+	return best if best != "" else host
 
 
 func _part_title(bp: BodyBlueprint, uid: String) -> String:
@@ -950,7 +966,7 @@ func _build() -> void:
 	var bg := ColorRect.new()
 	bg.name = "Bg"
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(ShowTokens.PLATE, 0.97)
+	bg.color = Color(ShowTokens.PLATE, 1.0)   # непрозрачный: сквозь 0.97 просвечивали табло и субтитр N0 гаража
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 	# шапка
@@ -1136,7 +1152,12 @@ func _build_sketch() -> void:
 		l.position = Vector2(rx + 20, y)
 		l.size = Vector2(rw - 20, 50)
 		_sketch.add_child(l)
-		y += 56.0
+		# шаг по настоящему числу строк (на любом языке): одна строка — 34, две — 56
+		var font := l.get_theme_font("font")
+		var lines := 1 if font == null else clampi(roundi(font.get_multiline_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, rw - 20,
+			18).y / maxf(1.0, font.get_height(18))), 1, 2)
+		l.size.y = 26.0 * lines
+		y += 34.0 if lines == 1 else 56.0
 	var sym := _label(tr("Симметрия: штрих с одной стороны повторяется на другой."), ShowTokens.text(500), 16, ShowTokens.MUTED)
 	sym.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sym.clip_text = true
