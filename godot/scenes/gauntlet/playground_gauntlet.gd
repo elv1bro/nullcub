@@ -37,6 +37,8 @@ var screen := Screen.START
 var fight: Node = null
 var use_workshop := true
 var player_bp: BodyBlueprint
+var picked_bp: BodyBlueprint = null   # боец с экрана «ВЫБОР БОЙЦА» (важнее мастерской / кита)
+var _pick: FighterSelect = null
 var record: Dictionary = {}
 var fights_started := 0
 var portraits: DollPortrait
@@ -97,6 +99,8 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _pick != null:   # экран выбора бойца ловит ввод сам (Esc — назад к старту)
+		return
 	if screen == Screen.FIGHT or not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	if (event as InputEventKey).physical_keycode == KEY_ESCAPE:
@@ -128,15 +132,47 @@ static func player_blueprint(workshop: bool) -> BodyBlueprint:
 
 
 func _pick_build() -> void:
+	if picked_bp != null:   # выбран на экране «ВЫБОР БОЙЦА»
+		player_bp = picked_bp
+		return
 	if use_workshop and workshop_blueprint() == null:
 		use_workshop = false   # автосейва нет или он сломан
 	player_bp = player_blueprint(use_workshop)
 
 
 func toggle_build() -> void:
-	use_workshop = not use_workshop
+	if picked_bp != null:
+		picked_bp = null     # из выбранного бойца — снова мастерская / кит
+	else:
+		use_workshop = not use_workshop
 	_pick_build()
 	show_start()
+
+
+## «ВЫБРАТЬ БОЙЦА»: экран выбора (docs/plan-demo/FIGHTER_SELECT.md) без «Обычного» — в испытании всегда сборка.
+func open_fighter_select() -> FighterSelect:
+	if _pick != null:
+		return _pick
+	_pick = FighterSelect.open_over(self, {"title": tr("ИСПЫТАНИЕ"), "allow_default": false})
+	_pick.chosen.connect(func(bp: BodyBlueprint) -> void:
+		_close_pick()
+		if bp != null:
+			picked_bp = CraftEdit.dup_body(bp)
+		_pick_build()
+		show_start())
+	_pick.cancelled.connect(func() -> void:
+		_close_pick()
+		show_start())
+	_pick.workshop_requested.connect(func(bp: BodyBlueprint) -> void:
+		_close_pick()
+		FighterPick.open_workshop(get_tree(), bp))
+	return _pick
+
+
+func _close_pick() -> void:
+	if _pick != null:
+		_pick.close()
+	_pick = null
 
 
 # ------------------------------------------------------------------ поток
@@ -155,7 +191,7 @@ func show_start() -> void:
 		int(record.get("runs", 0)), int(record.get("wins", 0))]
 	var title := player_bp.title if player_bp != null else "?"
 	_start_build.text = tr("Твоя сборка: %s · запас %d ❤") % [title, player_bp.parts_hp_total() if player_bp != null else 0]
-	_build_button.text = tr("СБОРКА: МАСТЕРСКАЯ") if use_workshop else tr("СБОРКА: КИТ")
+	_build_button.text = tr("СБОРКА: ВЫБРАННАЯ") if picked_bp != null else (tr("СБОРКА: МАСТЕРСКАЯ") if use_workshop else tr("СБОРКА: КИТ"))
 	_start_button.grab_focus()
 
 
@@ -370,6 +406,7 @@ func _build_ui() -> void:
 	_start_button.pressed.connect(start_run)
 	_build_button = _button(row, tr("СБОРКА: МАСТЕРСКАЯ"), 330)
 	_build_button.pressed.connect(toggle_build)
+	_button(row, tr("ВЫБРАТЬ БОЙЦА"), 300).pressed.connect(open_fighter_select)
 	_button(row, tr("ВЫХОД"), 180).pressed.connect(exit_to_garage)
 
 	# антракт

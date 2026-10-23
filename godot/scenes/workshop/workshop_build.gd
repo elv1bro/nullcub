@@ -1147,6 +1147,20 @@ func load_path(path: String) -> bool:
 	return true
 
 
+## Положить на стенд готовый чертёж (экран «ВЫБОР БОЙЦА» → «В мастерскую»): копия, с историей — Ctrl+Z вернёт прежнюю сборку.
+func load_blueprint(src: BodyBlueprint) -> bool:
+	if src == null or not CraftEdit.structural_errors(src).is_empty():
+		return false
+	var bp := CraftEdit.dup_body(src)
+	_push_history()
+	_adopt(bp)
+	clear_selection()
+	_rebuild()
+	_frame_h = 0.0
+	_say(tr("Загружено: %s") % bp.title.trim_suffix(" *"), COL_OK)
+	return true
+
+
 # =================================================================== стенд и верстак
 
 ## «Запас из деталей» (PartHp, docs/plan-demo/WORKSHOP_V4.md; стандарт с 06.10, клавиша «;» выключает) — та же клавиша, что в бою: ❤ деталей

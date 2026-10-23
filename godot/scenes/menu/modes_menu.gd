@@ -24,6 +24,7 @@ var _query := ""
 var _selected: ModeDef = null
 var _cards: Array = []
 var _sel_i := 0
+var _pick: FighterSelect = null
 
 @onready var list: VBoxContainer = %List
 @onready var tags_box: VBoxContainer = %Tags
@@ -171,14 +172,31 @@ func _select(i: int) -> void:
 
 
 func _play() -> void:
-	if _selected == null:
+	if _selected == null or _pick != null:
 		return
 	var opts := {}
 	if player_blueprint != null:
 		opts["player_blueprint"] = player_blueprint
 		opts["return_to"] = "workshop"
-	player_blueprint = null
-	ModeRun.launch(_selected, opts)
+		player_blueprint = null
+		ModeRun.launch(_selected, opts)
+		return
+	# своей сборки со стенда нет — сначала «ВЫБОР БОЙЦА» (docs/plan-demo/FIGHTER_SELECT.md); «Обычный» — кукла режима
+	_pick = FighterSelect.open_over(self, {"title": tr(_selected.name)})
+	var def := _selected
+	_pick.chosen.connect(func(bp: BodyBlueprint) -> void:
+		_close_pick()
+		ModeRun.launch(def, {"player_blueprint": bp} if bp != null else {}))
+	_pick.cancelled.connect(_close_pick)
+	_pick.workshop_requested.connect(func(bp: BodyBlueprint) -> void:
+		_close_pick()
+		FighterPick.open_workshop(get_tree(), bp))
+
+
+func _close_pick() -> void:
+	if _pick != null:
+		_pick.close()
+	_pick = null
 
 
 func _toggle_fav() -> void:
@@ -218,6 +236,8 @@ func _back() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _pick != null:   # экран выбора бойца ловит ввод сам
+		return
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	match event.physical_keycode:
