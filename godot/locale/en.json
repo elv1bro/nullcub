@@ -2904,5 +2904,10 @@
 	"Связка": "Link",
 	"Подлатать корпус": "Patch up the body",
 	"СЕЙВ!": "SAVE!",
-	"ШАЙБА ВНЕ ИГРЫ": "PUCK OUT OF PLAY"
+	"ШАЙБА ВНЕ ИГРЫ": "PUCK OUT OF PLAY",
+	"Удар по массе": "Mass impact",
+	"удар по массе: тяжёлый держит, лёгкий отлетает": "mass impact: heavy holds, light flies",
+	"Удар по массе: %s   (` — переключить)": "Mass impact: %s   (` — toggle)",
+	"вкл — масса бойцов решает: тяжёлый держит удар, лёгкий отлетает": "on — fighter mass matters: heavy takes the hit, light flies off",
+	"выкл — урон только от скорости и детали": "off — damage from speed and part only"
 }

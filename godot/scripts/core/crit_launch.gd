@@ -38,10 +38,16 @@ static func apply(ctx: Dictionary, sd_mult: float = 1.0) -> Vector3:
 			(b as RigidBody3D).linear_velocity += add
 		stop_attacker(ctx.get("attacker", null), victim, kb_dir)
 		return add
-	var cap := Drive.crit_flight_max_speed() * maxf(sd_mult, 0.0)
+	# удар по массе (ImpactModel): минимум и потолок крит-отлёта × (40 / M)^0.5 — 70-кг боец улетает медленнее 25-кг.
+	# Потолок только снижается: CRIT_FLIGHT_MAX_SPEED × sd — жёсткий предел полёта (hitfx_core_probe freq_crit_flight),
+	# лёгкий упирается в него раньше, но не пробивает
+	var mr := ImpactModel.mass_resist(victim.total_mass) if ImpactModel.on else 1.0
+	var cap := Drive.crit_flight_max_speed() * maxf(sd_mult, 0.0) * minf(mr, 1.0)
 	var v0 := _com_velocity(bodies)
 	var along := v0.dot(kb_dir)
-	var lmin := Drive.crit_launch_min_speed()
+	var lmin := Drive.crit_launch_min_speed() * mr
+	if mr > 1.0:
+		lmin = minf(lmin, cap)
 	var target := clampf(along * Tuning.CRIT_KNOCKBACK_MULT, lmin, maxf(cap, lmin))
 	var dv := kb_dir * maxf(target - along, 0.0)
 	for b in bodies:

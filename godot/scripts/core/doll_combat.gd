@@ -388,7 +388,32 @@ func _raw_damage(c: Dictionary, combo_mult: float) -> float:
 		return 0.0
 	if c["kind"] == "environment" and not (c["striker"] is Weapon):
 		return Damage.compute_env(float(c["mass"]), float(c["speed"]), target)
+	if ImpactModel.on and c["kind"] != "environment":
+		# удар по массе (ImpactModel): скорость с убывающей отдачей, урон × B по массам обоих бойцов (1.0 у равных по 40 кг)
+		var d := Damage.compute(float(c["mass"]), ImpactModel.speed_eff(float(c["speed"])), float(c["body_mult"]), float(c["weapon_mult"]),
+			combo_mult, 1.0, target, c["striker"] is Weapon)
+		return clampf(d * float(_impact(c)["dmg"]), 0.0, Tuning.DAMAGE_MAX)
 	return Damage.compute(float(c["mass"]), float(c["speed"]), float(c["body_mult"]), float(c["weapon_mult"]), combo_mult, 1.0, target, c["striker"] is Weapon)
+
+
+## Множители удара по массе для кандидата c (ImpactModel.factors), считаются один раз: {"dmg", "kb", "rev"}. Бьющий — деталь куклы
+## (масса детали, вся кукла, κ детали) или оружие / пропс (масса c["mass"] без тела); жертва — ударенная деталь моей куклы.
+func _impact(c: Dictionary) -> Dictionary:
+	if c.has("imp"):
+		return c["imp"]
+	var st: Object = c["striker"]
+	var vp: RigidBody3D = c["victim_part"]
+	var s_doll: Doll = _part_doll(st as Node) if is_instance_valid(st) and st is RigidBody3D and not (st is Weapon) else null
+	var f: Dictionary
+	if s_doll != null and is_instance_valid(vp):
+		f = ImpactModel.factors((st as RigidBody3D).mass, s_doll.total_mass, ImpactModel.coupling(st as Node),
+			vp.mass, doll.total_mass, ImpactModel.coupling(vp))
+	elif is_instance_valid(vp):
+		f = ImpactModel.factors(float(c["mass"]), 0.0, 0.0, vp.mass, doll.total_mass, ImpactModel.coupling(vp))
+	else:
+		f = {"dmg": 1.0, "kb": 1.0, "rev": 1.0}
+	c["imp"] = f
+	return f
 
 
 func _resolve_queue() -> void:
@@ -509,6 +534,32 @@ func _apply_hit(c: Dictionary) -> void:
 	if dmg <= 0.0:
 		return
 	_deliver(c, dmg, cm, double_blow, ac, n_prev + 1)
+	if ImpactModel.on:
+		_headbutt_react(c, dmg)
+
+
+## Удар по массе, 3-й закон Ньютона: бил ГОЛОВОЙ не в голову — своя голова получает отдачу (ImpactModel, IMPACT_HEADBUTT_REACT):
+## нанесённый урон × доля × (B обратного удара / B). Голова о голову не здесь — её бьёт обоих _contact_doll.
+## Засчитывается жертве (kind self: Заряд не копит, stats self_damage, KO от отдачи — очко ударенному); стан и отброс не даёт.
+func _headbutt_react(c: Dictionary, dmg: float) -> void:
+	var st: Object = c["striker"]
+	var vp: RigidBody3D = c["victim_part"]
+	if c["kind"] == "environment" or not is_instance_valid(st) or not (st is RigidBody3D) or st is Weapon or not is_instance_valid(vp):
+		return
+	if Doll.part_base_name(String((st as Node).name)) != "Head" or vp.name.begins_with("Head"):
+		return
+	var a := _part_doll(st as Node)
+	if a == null or a == doll or not a.alive or not a.can_take_damage():
+		return
+	var imp: Dictionary = c.get("imp", {})
+	if imp.is_empty():
+		return
+	var self_dmg := minf(dmg * Tuning.IMPACT_HEADBUTT_REACT * float(imp["rev"]) / maxf(float(imp["dmg"]), 0.001), Tuning.IMPACT_HEADBUTT_REACT_MAX)
+	if self_dmg < 0.5:
+		return
+	a.hit_meta = {"speed": float(c["speed"]), "weapon_id": "", "striker": vp, "striker_name": String(vp.name), "combo_mult": 1.0,
+		"double_blow": false, "knockback_mult": 1.0, "stun_s": 0.0, "dir": -(c["dir"] as Vector3), "headbutt_react": true}
+	a.take_damage(self_dmg, doll, String((st as Node).name), c["pos"], -(c["nrm"] as Vector3), "self")
 
 
 ## Удар о статику/пропс: одна запись на тело в PAIR_HIT_COOLDOWN_S; более сильный контакт другой частью в DOUBLE_BLOW_WINDOW_S
@@ -545,7 +596,9 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 	var pos: Vector3 = c["pos"]
 	var nrm: Vector3 = c["nrm"]
 	var speed: float = c["speed"]
-	var stun_s := Damage.stun_seconds(dmg)
+	var imp: Dictionary = c.get("imp", {}) if ImpactModel.on else {}
+	# удар по массе: тяжёлого труднее «выключить» тем же уроном (ImpactModel.mass_resist)
+	var stun_s := Damage.stun_seconds(dmg * (ImpactModel.mass_resist(doll.total_mass) if not imp.is_empty() else 1.0))
 	# своя команда (Doll.team, PvE-волны): стан и учтённый урон × TEAM_DAMAGE_MULT, как HP в Doll.take_damage; толчки полные
 	var team_mult := doll.team_mult_for(attacker)   # своя команда: как HP в Doll.take_damage (Doll.team_damage_mult)
 	stun_s *= team_mult * PartMods.of(vp, "stun_mult")   # модуль «Амортизатор сустава» на ударенной ветке: стан меньше
@@ -583,7 +636,10 @@ func _deliver(c: Dictionary, dmg: float, combo_mult: float, double_blow: bool, a
 	# knockback: направление от бьющего к жертве + апбиас; SD множит. Блок кистью (TargetMult < 1, Tuning.HAND_HIT_MULT) режет урон и
 	# стан, но не отброс: удар в подставленную руку толкает тело как обычный (метла Метельщика сталкивает и через «блок»)
 	var tm := float(c.get("target_mult", Damage.target_mult_of_body(vp)))
-	var j := Drive.knockback_impulse(dmg / tm if tm > 0.0 and tm < 1.0 else dmg, _knockback_mult())
+	var kb_dmg := dmg / tm if tm > 0.0 and tm < 1.0 else dmg
+	if not imp.is_empty():
+		kb_dmg *= float(imp["kb"]) / maxf(float(imp["dmg"]), 0.001)   # отброс — по импульсу (μ), а не по урону с ускорением детали
+	var j := Drive.knockback_impulse(kb_dmg, _knockback_mult())
 	var dir_v: Vector3 = c["dir"]
 	var env := kind == "environment" and not (c["striker"] is Weapon)
 	if env:

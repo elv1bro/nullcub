@@ -38,6 +38,7 @@ const KEY_ZOOM_IN := KEY_PERIOD
 const KEY_JOINTS := KEY_C        # пробный режим «Прочность суставов» (JointBreak): «С» в русской раскладке — «суставы»
 const KEY_STASIS := KEY_X        # пробный режим «СТАЗИС» (Stasis): «Ч» в русской раскладке — «часы»
 const KEY_PARTS := KEY_SEMICOLON  # пробный режим «Запас из деталей» (PartHp): «Ж» в русской раскладке — «жизнь»
+const KEY_IMPACT := KEY_QUOTELEFT  # «Удар по массе» (ImpactModel, IMPACT_MODEL.md): «`» / «Ё» — слева от 1, свободна во всех режимах
 const ZOOM_STEP := 1.12          # шаг масштаба (колесо, «,» «.»)
 const ZOOM_RANGE := Vector2(0.45, 2.2)   # DynamicCamera.user_zoom: меньше — ближе
 const OUTLINE_SCAN_S := 0.15     # обводка ставится по одной кукле за проход — без всплеска узлов в один кадр (perf gate 250/кадр)
@@ -261,6 +262,7 @@ func keys_lines() -> Array:
 		["J", tr("ДРАЙВ: импульс живёт"), tr("вкл") if Drive.on else tr("выкл")],
 		["C", tr("прочность суставов: конечности отлетают"), on.call(JointBreak.on)],
 		[";", tr("запас из деталей: у каждой детали свой"), on.call(PartHp.on)],
+		["`", tr("удар по массе: тяжёлый держит, лёгкий отлетает"), on.call(ImpactModel.on)],
 		["X", tr("СТАЗИС: время идёт, только пока двигаешься"), on.call(Stasis.on)],
 		[tr("ЛКМ / ПКМ"), tr("тяги рук"), ""],
 		["I  O  P", tr("активные блоки"), ""],
@@ -342,6 +344,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			PartHp.toggle()   # включили — «Прочность суставов» гаснет (PartHp.set_on)
 			_refresh_parts_hp()
 			show_toast(tr("Запас из деталей: %s   (; — переключить)") % (tr("вкл — запас из суммы деталей, деталь отлетает и уносит свой") if PartHp.on else tr("выкл")), 2.4)
+			keys_panel.refresh()
+			get_viewport().set_input_as_handled()
+		KEY_IMPACT:
+			ImpactModel.toggle()
+			show_toast(tr("Удар по массе: %s   (` — переключить)") % (tr("вкл — масса бойцов решает: тяжёлый держит удар, лёгкий отлетает") if ImpactModel.on else tr("выкл — урон только от скорости и детали")), 2.4)
 			keys_panel.refresh()
 			get_viewport().set_input_as_handled()
 		KEY_STASIS:
