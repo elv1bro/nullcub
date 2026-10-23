@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, «Подъём: проба стены» вдвоём и её финиш, «Стенка на стенку 5×5» и её итоги, «Заражение», «Охота за головами», «Перетягивание», «Царь горы», «Собери себя» и его итоги, хоккей, экран «РЕЖИМЫ» реестра, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, «Подъём: проба стены» вдвоём и её финиш, «Стенка на стенку 5×5» и её итоги, «Заражение», «Охота за головами», «Перетягивание», «Царь горы», хоккей, «Испытание» (старт, бой, антракт, итог забега), экран «РЕЖИМЫ» реестра, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -35,6 +35,7 @@ const KING := "res://scenes/playground_king.tscn"
 const BOSS := "res://scenes/playground_boss.tscn"   # «Босс» (BOSS.md): полоса Титана, слабое место, итоги
 const SCAVENGER := "res://scenes/playground_scavenger.tscn"   # «Собери себя» (SCAVENGER.md): плашки деталей, итоги
 const HOCKEY := "res://scenes/playground_sport_hockey.tscn"   # спорт-зал, хоккей (HOCKEY.md): своя подсказка и подпись HUD
+const GAUNTLET := "res://scenes/playground_gauntlet.tscn"   # «Испытание» (GAUNTLET.md): старт с лестницей, бой, антракт, итог забега
 const MODES_100 := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» реестра (MODES_100.md)
 const VIEW := Rect2(0, 0, 1920, 1080)
 const OVERLAP := 0.04
@@ -153,11 +154,14 @@ func _pass() -> Dictionary:
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, DOMINATION, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, DODGEBALL, KING, BOSS, SCAVENGER, HOCKEY, MODES_100]:
+	GauntletRun.save_path = "user://_probe_layout_gauntlet.cfg"   # «Испытание» (GAUNTLET.md): рекорд забега — не в рекорды игрока
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, DOMINATION, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, DODGEBALL, KING, BOSS, SCAVENGER, HOCKEY, GAUNTLET, MODES_100]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		if p == CLIMB:
 			ClimbMatch.best_time = -1.0   # лучшее время сессии — static: на каждом языке экран тот же («—»)
 		var inst := (load(p) as PackedScene).instantiate()
+		if p == GAUNTLET:   # кит «Человек», не автосейв мастерской этой машины: имя сборки на старте и тело в бою — одни и те же
+			(inst as GauntletPlayground).use_workshop = false
 		add_child(inst)
 		await _wait(SETTLE * 2)
 		if p == HALL:
@@ -243,6 +247,27 @@ func _pass() -> Dictionary:
 			svm._finish("timeout")
 			await _wait(SETTLE * 3)
 			shots["scavenger:end"] = _scan(inst)
+		if p == GAUNTLET:   # «Испытание» (GAUNTLET.md): бой 1, антракт с оторванным и починкой, итог забега
+			var gp := inst as GauntletPlayground
+			GauntletRun.erase_record()
+			gp.record = GauntletRun.load_record()
+			gp.start_run()
+			await _wait(SETTLE * 2)
+			shots["gauntlet:fight"] = _scan(inst)
+			var gd := gp.fight.get_node("P1") as Doll
+			gp.run.body_map(gd)
+			var lost: Array = []
+			for n in gd.part_hp:
+				if String(n).begins_with("Upper") and lost.size() < 2:
+					lost.append(String(n))
+			await get_tree().process_frame
+			gp.finish_fight(true, {"duration_s": 47.0, "snapshot": {"lost": lost, "deficit": 30.0, "hp": 70.0, "max_hp": gd.max_hp, "wear": {}}})
+			await _wait(SETTLE)
+			shots["gauntlet:break"] = _scan(inst)
+			gp.give_up_to_result()
+			await _wait(SETTLE)
+			shots["gauntlet:result"] = _scan(inst)
+			GauntletRun.erase_record()
 		if p == RACE:   # «Гонка: 10 точек» (RACE.md): ещё табличка итогов с таблицей мест
 			var rmm := inst.get_node("Match") as RaceMatch
 			rmm.scores = {0: 10, 1: 7, 2: 4, 3: 9}
@@ -345,7 +370,7 @@ func _pass() -> Dictionary:
 			await _wait(5)
 	Stasis.set_on(false)
 	for f in ["user://_probe_layout.tres", CraftEdit.save_path("_probe_layout"), "user://_probe_layout_prefs.cfg", RacePlayground.best_path,
-			TrackPlayground.best_path]:
+			TrackPlayground.best_path, GauntletRun.save_path]:
 		var g := ProjectSettings.globalize_path(f)
 		if FileAccess.file_exists(g):
 			DirAccess.remove_absolute(g)
