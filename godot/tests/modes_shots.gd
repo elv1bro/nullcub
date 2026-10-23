@@ -27,6 +27,8 @@ const RECIPES := {
 	"puzzle": ["puzzle", 5.0, 1.0],
 	"pve": ["pve", 9.0, 0.75], "stasis": ["pve", 9.0, 0.75],
 	"workshop": ["workshop", 2.5, 1.0],
+	"domination": ["p1_bot", 10.0, 0.6, 5], "boss": ["p1_bot", 8.0, 0.8, 3], "scavenger": ["p1_bot", 7.0, 0.7, 11],
+	"dodgeball": ["p1_bot", 9.0, 0.8],
 }
 const LETTERS := "[A-Za-zА-Яа-яЁё]"
 
