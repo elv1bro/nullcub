@@ -29,6 +29,7 @@ const RECIPES := {
 	"workshop": ["workshop", 2.5, 1.0],
 	"domination": ["p1_bot", 10.0, 0.6, 5], "boss": ["p1_bot", 8.0, 0.8, 3], "scavenger": ["p1_bot", 7.0, 0.7, 11],
 	"dodgeball": ["p1_bot", 9.0, 0.8],
+	"gauntlet": ["gauntlet", 6.0, 0.9],
 }
 const LETTERS := "[A-Za-zА-Яа-яЁё]"
 
@@ -117,6 +118,9 @@ func _stage(path: String, kind: String, fight_s: float) -> Node:
 		"puzzle":
 			root.set("p2_on_start", true)
 			root.set("auto_join", false)
+		"gauntlet":   # «Испытание»: кит «Человек» (не автосейв этой машины), рекорд — не в рекорды игрока
+			GauntletRun.save_path = "user://_modes_shots_gauntlet.cfg"
+			root.set("use_workshop", false)
 		"workshop":
 			WorkshopBuild.prefs_path = "user://_modes_shots_prefs.cfg"
 			root.set("load_autosave", false)
@@ -133,6 +137,15 @@ func _stage(path: String, kind: String, fight_s: float) -> Node:
 			var fight: Node = root.get("fight")
 			if fight != null:
 				_duel(fight.get_node_or_null("P1") as Doll, fight.get_node_or_null("P2") as Doll, false)
+			await _sec(Tuning.COUNTDOWN_S)
+			await _close_fight(root, fight_s)
+		"gauntlet":   # бой 1 забега: как «История» — P1 против соперника лестницы
+			root.call("start_run")
+			await _frames(3)
+			_no_crits(root)
+			var gf: Node = root.get("fight")
+			if gf != null:
+				_duel(gf.find_child("P1", true, false) as Doll, gf.find_child("P2", true, false) as Doll, false)
 			await _sec(Tuning.COUNTDOWN_S)
 			await _close_fight(root, fight_s)
 		"duel", "generic":
