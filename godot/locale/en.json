@@ -2965,5 +2965,10 @@
 	"удар выстреливает по клавише канала": "the strike fires on the channel key",
 	"маховик: раскрутка сильнее": "flywheel: stronger spin",
 	"ещё пара рук на боках": "another pair of arms on the sides",
-	"щитки и наручи на конечностях": "guards and bracers on the limbs"
+	"щитки и наручи на конечностях": "guards and bracers on the limbs",
+	"Удар по массе": "Mass impact",
+	"удар по массе: тяжёлый держит, лёгкий отлетает": "mass impact: heavy holds, light flies",
+	"Удар по массе: %s   (` — переключить)": "Mass impact: %s   (` — toggle)",
+	"вкл — масса бойцов решает: тяжёлый держит удар, лёгкий отлетает": "on — fighter mass matters: heavy takes the hit, light flies off",
+	"выкл — урон только от скорости и детали": "off — damage from speed and part only"
 }

@@ -120,6 +120,9 @@ func _pass() -> Dictionary:
 	menu.headset.overlay.visible = false
 	menu.set_focus(0, true)
 	await _wait(10)
+	# смена канала ТВ (_apply_tv) достраивает экран твином через 0.08 с реального времени: если кампания откроется раньше,
+	# канал «Следующий бой» дорисуется поверх её экранов в одном языке и не дорисуется в другом — ложные «налез» (23.10)
+	await get_tree().create_timer(0.3, true, false, true).timeout
 	menu.activate()
 	var c := menu.campaign
 	var guard := 0
