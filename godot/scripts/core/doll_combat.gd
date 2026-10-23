@@ -388,12 +388,21 @@ func _raw_damage(c: Dictionary, combo_mult: float) -> float:
 		return 0.0
 	if c["kind"] == "environment" and not (c["striker"] is Weapon):
 		return Damage.compute_env(float(c["mass"]), float(c["speed"]), target)
-	if ImpactModel.on and c["kind"] != "environment":
+	if _impact_on(c):
 		# удар по массе (ImpactModel): скорость с убывающей отдачей, урон × B по массам обоих бойцов (1.0 у равных по 40 кг)
 		var d := Damage.compute(float(c["mass"]), ImpactModel.speed_eff(float(c["speed"])), float(c["body_mult"]), float(c["weapon_mult"]),
 			combo_mult, 1.0, target, c["striker"] is Weapon)
 		return clampf(d * float(_impact(c)["dmg"]), 0.0, Tuning.DAMAGE_MAX)
 	return Damage.compute(float(c["mass"]), float(c["speed"]), float(c["body_mult"]), float(c["weapon_mult"]), combo_mult, 1.0, target, c["striker"] is Weapon)
+
+
+## Удар по массе включён и это бой: не о статику и жертва получает урон (гольф — incoming_mult 0: куклы-мячи толкаются по-старому).
+func _impact_on(c: Dictionary) -> bool:
+	if not ImpactModel.on or c["kind"] == "environment":
+		return false
+	var vp: RigidBody3D = c["victim_part"]
+	var v_doll: Doll = doll if doll != null else (_part_doll(vp) if is_instance_valid(vp) else null)
+	return v_doll == null or v_doll.incoming_mult > 0.0
 
 
 ## Множители удара по массе для кандидата c (ImpactModel.factors), считаются один раз: {"dmg", "kb", "rev"}. Бьющий — деталь куклы
@@ -404,12 +413,14 @@ func _impact(c: Dictionary) -> Dictionary:
 	var st: Object = c["striker"]
 	var vp: RigidBody3D = c["victim_part"]
 	var s_doll: Doll = _part_doll(st as Node) if is_instance_valid(st) and st is RigidBody3D and not (st is Weapon) else null
+	# жертва — моя кукла; без неё (DollCombat вне дерева, как в armor_probe) — кукла ударенной детали
+	var v_doll: Doll = doll if doll != null else (_part_doll(vp) if is_instance_valid(vp) else null)
 	var f: Dictionary
-	if s_doll != null and is_instance_valid(vp):
+	if s_doll != null and v_doll != null:
 		f = ImpactModel.factors((st as RigidBody3D).mass, s_doll.total_mass, ImpactModel.coupling(st as Node),
-			vp.mass, doll.total_mass, ImpactModel.coupling(vp))
-	elif is_instance_valid(vp):
-		f = ImpactModel.factors(float(c["mass"]), 0.0, 0.0, vp.mass, doll.total_mass, ImpactModel.coupling(vp))
+			vp.mass, v_doll.total_mass, ImpactModel.coupling(vp))
+	elif v_doll != null:
+		f = ImpactModel.factors(float(c["mass"]), 0.0, 0.0, vp.mass, v_doll.total_mass, ImpactModel.coupling(vp))
 	else:
 		f = {"dmg": 1.0, "kb": 1.0, "rev": 1.0}
 	c["imp"] = f
