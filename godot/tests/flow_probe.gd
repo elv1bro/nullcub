@@ -109,10 +109,24 @@ class Watcher extends Node:
 		get_tree().change_scene_to_file(WORKSHOP)
 		await _wait_scene(WORKSHOP, 20.0)
 		await _sec(1.0)
+		# мастерская поднимает автосейв и настройки из общего user:// (его делят все сессии и пробы на машине): оставшиеся там
+		# зеркало, инструмент, выделение или фокус в поле съедают первый Esc по правилам игры, и двух нажатий не хватает
+		# (проба краснела 2 раза из ~20, чисто — 16 из 16). Снимаем это до проверки и пишем, что было непусто.
+		var ws := get_tree().current_scene
+		var leftover := []
+		if ws.has_method("cancel_mirror"):
+			leftover = [ws.cancel_mirror(), ws.clear_tools(), ws.clear_selection()]
+		var fo := get_viewport().gui_get_focus_owner()
+		if fo != null:
+			leftover.append(String(fo.name))
+			fo.release_focus()
+		await _sec(0.2)
 		await _key(KEY_ESCAPE)
 		await _sec(0.3)
 		await _key(KEY_ESCAPE)
-		_check("workshop_double_esc_to_garage", await _wait_scene(MENU, 10.0), _scene())
+		var t_ms := Time.get_ticks_msec()
+		var back := await _wait_scene(MENU, 30.0)
+		_check("workshop_double_esc_to_garage", back, [_scene(), "%.1f с по часам" % ((Time.get_ticks_msec() - t_ms) / 1000.0), leftover])
 		menu = get_tree().current_scene
 		_check("workshop_return_focus", menu is GarageMenu and int(menu.get("focus")) == 2, menu.get("focus"))
 		# настройки

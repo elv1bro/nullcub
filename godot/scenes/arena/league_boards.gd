@@ -22,7 +22,11 @@ const HALL_SEGMENTS := 11
 const RIBBON_LOCAL := Vector3(0.0, 0.08, 0.125)   # лицо борта секции: панель 1 м, передняя грань z = 0.12
 const CURVED_R := 26.0                            # радиус дуги Ad_Banner_Curved (центр окружности = центр зала)
 const CURVED_Y := 10.3                            # под бортом верхнего яруса (13 м), над головами 2-го
-const CURVED_DEG := [236.0, 270.0, 304.0]
+# между колоннами каркаса: колонны на чётных стыках секций (ARC_FROM 196° + 148°/11 × 0, 2, 4…, tools/build_null_hall.gd
+# _structure), дуги — у нечётных стыков 3, 5, 7. На 236/270/304° стойки резали надписи («NULL LEAG|», «SEA|SON»). Дуга (R 26)
+# дальше колонн (R 22.8), поэтому в игровом кадре шире промежутка между ними: крайние уменьшены и сдвинуты к центру кадра
+# (подобрано по null_hall_snapshot, кадр 1). [угол°, масштаб]
+const CURVED := [[196.0 + 148.0 / 11.0 * 3.0 + 2.8, 0.84], [196.0 + 148.0 / 11.0 * 5.0, 0.92], [196.0 + 148.0 / 11.0 * 7.0 - 1.5, 0.88]]
 
 static var _mats := {}
 
@@ -98,17 +102,20 @@ func _dome(host: Node3D) -> void:
 				continue
 			# лента — дочерний узел секции: стоит на её борту при любой раскладке зала
 			place("Ad_Ribbon", RIBBONS[(s + t * 2) % RIBBONS.size()], seg, RIBBON_LOCAL, 0.0, 0.6)
-	for i in range(CURVED_DEG.size()):
-		var a := deg_to_rad(CURVED_DEG[i])
+	for c in CURVED:
+		var a := deg_to_rad(float(c[0]))
 		var p := Vector3(CURVED_R * cos(a), CURVED_Y, CURVED_R * sin(a))
 		var d := Vector3(-p.x, 0.0, -p.z).normalized()
-		place("Ad_Banner_Curved", "banner_curved", self, p, rad_to_deg(atan2(d.x, d.z)), 0.7)
+		var n := place("Ad_Banner_Curved", "banner_curved", self, p, rad_to_deg(atan2(d.x, d.z)), 0.7)
+		if n != null:
+			n.scale = Vector3.ONE * float(c[1])
 
 
 # --- Свалка -----------------------------------------------------------------------------------------------------------
 # Поле боя Свалки: x −18…18, z −1…1 (ScrapArena.arena_bounds); отвалы-бермы на z −3.4…−4.2, горы на z −12…−13.
 func _scrap() -> void:
-	place("Ad_Billboard_Pole", "board_fight_night", self, Vector3(-9.5, -2.2, -13.5), 8.0, 0.55)
+	# y −0.4, а не −2.2 (как правый): в кадре старта (scrap_snapshot start) щит стоял прямо за головой P2 на скате
+	place("Ad_Billboard_Pole", "board_fight_night", self, Vector3(-9.5, -0.4, -13.5), 8.0, 0.55)
 	place("Ad_Billboard_Pole", "board_scrap_cup", self, Vector3(11.5, -2.2, -14.5), -10.0, 0.55)
 	place("Ad_Flag", "flag_null", self, Vector3(-14.5, -1.0, -7.0), 15.0, 0.5)
 	place("Ad_Flag", "flag_null", self, Vector3(15.5, -1.0, -7.5), -15.0, 0.5)
