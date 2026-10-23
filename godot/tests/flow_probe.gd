@@ -73,6 +73,10 @@ class Watcher extends Node:
 		await _key(KEY_2)
 		await _sec(0.9)
 		await _key(KEY_ENTER)
+		# быстрый бой сначала открывает «ВЫБОР БОЙЦА» (docs/plan-demo/FIGHTER_SELECT.md); Enter — «Обычный»
+		await _sec(0.3)
+		_check("quick_opens_fighter_select", String(menu.get("state")) == "pick" and menu.get("pick") != null, menu.get("state"))
+		await _key(KEY_ENTER)
 		_check("enter_quick_to_dome", await _wait_scene(QUICK), _scene())
 		await _sec(1.0)
 		await _key(KEY_ESCAPE)

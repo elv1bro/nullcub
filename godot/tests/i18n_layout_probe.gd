@@ -152,6 +152,22 @@ func _pass() -> Dictionary:
 	shots["modes:memo"] = _scan(modes.get("memo"))   # памятка — поверх экрана: тексты под ней закрыты, сравниваем только её
 	modes.queue_free()
 	await _wait(5)
+	# «ВЫБОР БОЙЦА» и «Быстрая сборка» (FIGHTER_SELECT.md): без «Моего бойца» (на каждой машине свой), выбран «Человек»; конструктор —
+	# с ответами по умолчанию и постоянным вариантом (на каждом языке тот же чертёж)
+	FighterPick.last = {}
+	var fs := FighterSelect.open_over(self, {"title": tr("БЫСТРЫЙ БОЙ · купол Old NULL Hall"), "include_saved": false, "dry_run": true})
+	await _wait(5)
+	fs.select(maxi(fs.index_of("preset", "kit_human"), 0), true)
+	await _wait(SETTLE)
+	shots["fighter_select:roster"] = _scan(fs.get_parent())
+	fs._seed_base = 7
+	fs._variant = 0
+	fs.open_builder()
+	await _wait(SETTLE)
+	shots["fighter_select:builder"] = _scan(fs.get_parent())
+	fs.close()
+	FighterPick.last = {}
+	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
 	GauntletRun.save_path = "user://_probe_layout_gauntlet.cfg"   # «Испытание» (GAUNTLET.md): рекорд забега — не в рекорды игрока

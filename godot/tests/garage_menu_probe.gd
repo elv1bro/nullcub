@@ -234,6 +234,16 @@ func _run() -> void:
 	_check("digit_jump", menu.focus == 2, menu.focus, 2)
 	await _key(KEY_ESCAPE)
 	_check("esc_to_exit", menu.focus == GarageMenu.ITEMS.size() - 1, menu.focus)
+	# 4б. «2» → Enter: «Быстрый бой» сначала открывает «ВЫБОР БОЙЦА» поверх гаража (docs/plan-demo/FIGHTER_SELECT.md), Esc — назад
+	await _key(KEY_2)
+	await _settle()
+	await _key(KEY_ENTER)
+	await get_tree().process_frame
+	var pick_ok: bool = menu.state == "pick" and menu.pick != null and nav.is_empty()
+	await _key(KEY_ESCAPE)
+	await get_tree().process_frame
+	_check("quick_opens_fighter_select", pick_ok and menu.state == "menu" and menu.pick == null and menu.focus == 1 and nav.is_empty(),
+		[pick_ok, menu.state, menu.focus, nav.size()])
 	# 5. до боя: «1» → Enter (2 нажатия), нырок в телевизор и эфир кампании без смены сцены (garage_campaign.gd)
 	await _key(KEY_1)
 	await _settle()
