@@ -52,13 +52,32 @@ SCRAP CUP — кубок Свалки). Реальных марок нет; «Ra
   флага NULL за отвалами (z −7…−7.5, x ±15). Щит на ногах (`Ad_Billboard`) и щиты joints/cores/nulltv сделаны, но пока
   не поставлены (запас для Руин / Void / мастерской).
 
-Сейчас картинки собраны **без codex**: лимит codex исчерпан до 29.10.2026 18:09. `arena_ads.py` берёт кадры codex, что
-уже в репо (`docs/steam/keyart_wide`, плакаты, эмблема, фото Свалки из гаража), и набирает надписи Oswald; «товары»
-спонсоров (шарнир, ядро) нарисованы там же. Перегенерация через codex:
+С 23.10 (днём) щиты, баннер и флаг — **из codex** (`arena_ads.py --codex`); LED-ленты по-прежнему набраны Oswald (текст
+на ленте 9:1 надёжнее набирать, чем рисовать). Без `--codex` `arena_ads.py` собирает всё из кадров codex, что уже в репо
+(`docs/steam/keyart_wide`, плакаты, эмблема, фото Свалки из гаража) + надписи Oswald — запасной путь.
+
+Прогон 23.10 — 8 заданий, 8 картинок, все приняты (каждую смотрели целиком и крупно: текст, марки, название игры):
+
+| Задание | Размер codex | Куда | Что на картинке |
+|---|---|---|---|
+| `ad_fight_night` | 1672×941 | `board_fight_night` (Свалка, левый щит) | NULL LEAGUE / FIGHT NIGHT, две куклы бьются в куполе |
+| `ad_joints` | 1672×941 | `board_joints` (запас) | ORBIT JOINTS / HOLDS IN ZERO-G. (точка в конце — от codex, читается) |
+| `ad_cores` | 1672×941 | `board_cores` (запас) | VOLTA CORES / MORE CHARGE PER HIT, ядро с молниями; самый яркий щит — для тёмных арен ставить с glow ниже |
+| `ad_nulltv` | 1672×941 | `board_nulltv` (запас) | NULL TV, ● LIVE FROM THE DOME, N0 с микрофоном машет; бегущая строка на заднем плане размыта, букв не видно |
+| `ad_scrap_cup` | 1672×941 | `board_scrap_cup` (Свалка, правый щит) | SCRAP CUP / BUILT FROM JUNK трафаретом, кукла на куче лома, магнит крана |
+| `ad_banner_wide` | 2172×724 (3:1) | `banner_curved` (купол, 3 дуги) | NULL LEAGUE ◯ SEASON ZERO, эмблема — купол над куклой; при обрезке до 6:1 текст и эмблема целы (средняя половина по высоте) |
+| `ad_vertical` | 887×1774 (1:2) | `flag_null` (Свалка, 2 флага) | NULL столбиком, кукла вверх ногами над куполом, ZERO-G мелко внизу (в игре читается только NULL) |
+| `hero_wide` | 2172×724 (3:1) | `docs/steam/hero_wide.jpg` → `capsules/library_hero_3840x1240.jpg` | те же две куклы и N0 с камерой, что в keyart, панорама купола с трибунами; без текста и логотипов. Вписан ×1.77 без растяжения (обрезка 40 пкс по высоте) |
+
+Отбраковка: ни одной (кривых букв, чужих марок, «Ragdoll Master» не было). Исходники PNG codex в git не кладутся —
+в репо только результат (`assets/textures/arena_ads/*.jpg`, `docs/steam/hero_wide.jpg`, капсулы).
+Codex рисует 16:9 как 1672×941, «ultra-wide» — 2172×724 (3:1, шире не даёт), 1:2 — 887×1774.
+
+Перегенерация через codex (`codex_gen.py` запускать из корня репо — пути `refs` в заданиях от корня):
 
 ```bash
+python3 godot/tools/codex_art/codex_gen.py godot/tools/codex_art/jobs_arena_ads.json /абс/папка/ads 4   # <id>.png; готовые пропускает
 cd godot/tools/codex_art
-python3 codex_gen.py jobs_arena_ads.json /абс/папка/ads 4      # <id>.png по заданиям
 python3 arena_ads.py --codex /абс/папка/ads                    # щиты/баннер/флаг из codex, ленты — набор; hero_wide.png → docs/steam/hero_wide.jpg
 python3 steam_capsules.py                                      # library_hero возьмёт docs/steam/hero_wide.jpg
 cd ../.. && /Applications/Blender.app/Contents/MacOS/Blender -b --python tools/blender/arena_ads.py -- --export   # только если менялись модели
@@ -73,15 +92,24 @@ gtimeout 900 /usr/bin/arch -arm64 /usr/local/bin/godot --headless --path . --imp
 
 ## Проверено
 
+- Реклама из codex (23.10): `--import` чисто; `null_hall_snapshot` (окно через `tools/godot_nofocus.sh`, 1600×900) — OK 12/12:
+  баннеры NULL LEAGUE · SEASON ZERO читаются над бойцами, янтарь на тёмных трибунах — как графика эфира, на кукол не
+  тянет; ленты прежние. `scrap_snapshot` `shots=wide+start+fight` — все проверки ok, `fight_readable_P1` 0.474,
+  `P2` 0.143 (порог 0.08): щиты FIGHT NIGHT / SCRAP CUP и флаги NULL читаются, в бою уходят в DOF и под плашки HUD.
+  В кадре `start` щит FIGHT NIGHT стоит прямо за головой P2 (расстановка, не картинка) — кукла читается по обводке.
 - `loading_probe` зелёная; снимок лоадера — арт справа, текст слева читается (шторка-градиент).
 - `garage_menu_shots` (title/quick/trophies/workshop/settings) — знамя, фото и плакаты на стенах, 0 SCRIPT ERROR.
 
 ## Открыто
 
-- Реклама на аренах — пока только купол и Свалка (см. выше); Руины, Void, мастерская — без щитов. Картинки — сборка без codex.
+- Реклама на аренах — пока только купол и Свалка (см. выше); Руины, Void, мастерская — без щитов. Картинки щитов,
+  баннера и флага — codex (23.10), ленты — набор.
+- Купол: изогнутые баннеры частично закрыты вертикальными стойками каркаса (на снимке «NULL LEAG|», «SEA|SON») —
+  углы `CURVED_DEG` в `league_boards.gd` стоило бы сдвинуть между стойками; не правилось.
 - Экраны ТВ `tv_build` / `tv_opponent` — прежние (рисуются генератором, кадров веб-прототипа в них нет).
 - Капсулы Steam нарезаны: `docs/steam/capsules/` (header 920×430, small 462×174, main 1232×706, vertical 748×896, library 600×900,
   hero 3840×1240, logo 1280×720 на прозрачности) — `python3 godot/tools/codex_art/steam_capsules.py`. Hero (23.10) больше не
-  растянут: keyart_wide по высоте (×1.32) в центре, бока — размытое притемнённое зеркало кадра; когда появится
-  `docs/steam/hero_wide.jpg` (codex, задание `hero_wide`), берётся он. Перед подачей лучше настоящий широкий арт.
+  растянут. С 23.10 (днём) hero — из `docs/steam/hero_wide.jpg` (codex 2172×724, задание `hero_wide`), вписан ×1.77
+  без растяжения; без этого файла — прежний запасной путь (keyart_wide ×1.32 в центре, бока — размытое зеркало).
+  Для подачи 3840 пкс он мягковат (апскейл) — при случае перерисовать крупнее.
   Название юридически не проверено (`BRAND.md`).
