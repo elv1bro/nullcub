@@ -15,9 +15,16 @@ const GLOW_ALBEDO := Color(0.09, 0.025, 0.2)   # проход «взрослог
 const GLOW_EMISSION := Color(0.3, 0.07, 0.62)
 const GLOW_ENERGY := 0.6
 const FACE_ENERGY := 1.0
+## Аоэлюн (ядро kit_core_aoe_*) — проход 2 «взрослого вида» (C LEAGUE PRO: керамика, графит, латунь): свет суставов и пояса — тусклый
+## янтарь, как AOE_MATS League_Glow (tools/build_league.gd), а не фиолет Лиги.
+const AOE_TAG := "_aoe_"
+const AOE_ALBEDO := Color(0.12, 0.05, 0.015)
+const AOE_EMISSION := Color(0.9, 0.42, 0.12)
+const AOE_ENERGY := 0.4
 const CONNECTOR_PREFIX := "Connector_"
 
 static var _glow: StandardMaterial3D
+static var _glow_aoe: StandardMaterial3D
 static var _face_cache: Dictionary = {}   # исходный материал Face (с фото) -> копия со свечением
 
 ## Сколько поверхностей перекрашено / шаров ужато / лиц засвечено последним apply() — для проб.
@@ -25,6 +32,7 @@ var shirt_surfaces := 0
 var connectors := 0
 var faces := 0
 var applied := false
+var _aoe := false
 
 
 func _ready() -> void:
@@ -45,16 +53,34 @@ func _ready() -> void:
 		d.ready.connect(apply, CONNECT_ONE_SHOT)
 
 
-static func glow_material() -> StandardMaterial3D:
+static func glow_material(aoe := false) -> StandardMaterial3D:
+	if aoe:
+		if _glow_aoe == null:
+			_glow_aoe = _make_glow(AOE_ALBEDO, AOE_EMISSION, AOE_ENERGY)
+		return _glow_aoe
 	if _glow == null:
-		_glow = StandardMaterial3D.new()
-		_glow.resource_name = "Shirt_League"   # Shirt* — BodyPaint и дальше считает поверхность «цветом игрока» (без краски)
-		_glow.albedo_color = GLOW_ALBEDO
-		_glow.roughness = 0.35
-		_glow.emission_enabled = true
-		_glow.emission = GLOW_EMISSION
-		_glow.emission_energy_multiplier = GLOW_ENERGY
+		_glow = _make_glow(GLOW_ALBEDO, GLOW_EMISSION, GLOW_ENERGY)
 	return _glow
+
+
+static func _make_glow(albedo: Color, emission: Color, energy: float) -> StandardMaterial3D:
+	var g := StandardMaterial3D.new()
+	g.resource_name = "Shirt_League"   # Shirt* — BodyPaint и дальше считает поверхность «цветом игрока» (без краски)
+	g.albedo_color = albedo
+	g.roughness = 0.35
+	g.emission_enabled = true
+	g.emission = emission
+	g.emission_energy_multiplier = energy
+	return g
+
+
+## Боец Аоэлюн: ядро чертежа — деталь набора Аоэлюн.
+static func is_aoe(doll: Node) -> bool:
+	var bp: Variant = doll.get("blueprint") if doll != null else null
+	if not bp is BodyBlueprint:
+		return false
+	var core: PartDef = (bp as BodyBlueprint).core_def()
+	return core != null and String(core.id).contains(AOE_TAG)
 
 
 func apply() -> void:
@@ -62,6 +88,7 @@ func apply() -> void:
 	shirt_surfaces = 0
 	connectors = 0
 	faces = 0
+	_aoe = is_aoe(d)
 	_walk(d)
 	applied = true
 
@@ -86,7 +113,7 @@ func _surfaces(mi: MeshInstance3D) -> void:
 			continue
 		var nm := String(m.resource_name)
 		if nm.begins_with("Shirt"):
-			mi.set_surface_override_material(s, glow_material())
+			mi.set_surface_override_material(s, glow_material(_aoe))
 			shirt_surfaces += 1
 		elif nm.begins_with("Face") and m is BaseMaterial3D:
 			mi.set_surface_override_material(s, _face_glow(m as BaseMaterial3D))

@@ -7,7 +7,7 @@
 
 [resource]
 resource_name = "Base_PaintYellow"
-albedo_color = Color(0.54685426, 0.41687012, 0.18281268, 1)
+albedo_color = Color(0.46135613, 0.38109186, 0.22091636, 1)
 albedo_texture = ExtResource("1_v6h4w")
 metallic = 1.0
 metallic_texture = ExtResource("2_cpcse")

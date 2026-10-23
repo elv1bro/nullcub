@@ -120,6 +120,7 @@ func _ready() -> void:
 	super._ready()
 	spawn_in_pose = snap
 	_apply_paint()
+	SponsorMarks.apply(self)   # декали спонсоров NULL TV (проход 2 «взрослого вида», docs/plan-demo/grownup_art/README.md)
 	active_rig = ActiveRig.attach_if_needed(self)
 	set_pose(_bp_pose)
 	if snap:

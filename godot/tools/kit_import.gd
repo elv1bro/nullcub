@@ -9,6 +9,10 @@
 extends EditorScenePostImport
 
 const MAT_DIR := "res://assets/materials/kit/"
+## Аоэлюн (glb Kit_*Aoe*): сначала assets/materials/kit/aoe/<роль>.tres (проход 2 «взрослого вида», tools/build_league.gd AOE_MATS),
+## нет файла — общий материал роли.
+const AOE_TAG := "Aoe"
+const AOE_DIR := MAT_DIR + "aoe/"
 
 
 func _post_import(scene: Node) -> Object:
@@ -48,6 +52,9 @@ func _kit_material(cur: Material, surface_name: String, cache: Dictionary) -> Ma
 			continue
 		if not cache.has(role):
 			var path := MAT_DIR + role + ".tres"
+			var own := AOE_DIR + role + ".tres"
+			if get_source_file().get_file().contains(AOE_TAG) and ResourceLoader.exists(own):
+				path = own
 			cache[role] = load(path) if ResourceLoader.exists(path) else null
 		if cache[role] != null:
 			return cache[role]
