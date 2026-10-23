@@ -6,8 +6,11 @@
 ##   справа  — выбранный: портрет, масса, энергия, детали, запас ❤, на чём ЛКМ; кнопки В БОЙ и В МАСТЕРСКУЮ;
 ##   БЫСТРАЯ СБОРКА — вместо карточек три вопроса (стиль, чем бить, особенность) → сборка сразу в превью; ЕЩЁ ВАРИАНТ — те же ответы,
 ##           другой вариант.
-## Клавиши: стрелки / WASD-геймпад ui_* — выбор, Enter — В БОЙ, R — кубик, Q — быстрая сборка, M — в мастерскую, Esc — назад
-## (из конструктора — к карточкам). В конструкторе ↑↓ — вопрос, ←→ или 1–4 — ответ, N — ещё вариант. Мышь: клик — выбрать,
+##   НАРИСУЙ — вместо карточек холст (docs/plan-demo/SKETCH_FIGHTER.md): каракуля мышью → SketchBuild собирает бойца, превью справа
+##           обновляется после штриха с паузой; последний эскиз сессии — карточка «Прошлый эскиз» (FighterPick.sketch).
+## Клавиши: стрелки / WASD-геймпад ui_* — выбор, Enter — В БОЙ, R — кубик, Q — быстрая сборка, D — нарисовать, M — в мастерскую,
+## Esc — назад (из конструктора и холста — к карточкам). В конструкторе ↑↓ — вопрос, ←→ или 1–4 — ответ, N — ещё вариант. На холсте
+## ЛКМ — штрих, ПКМ / Backspace — отменить штрих, C — очистить, S — симметрия, N — ещё вариант. Мышь: клик — выбрать,
 ## клик по выбранной — в бой.
 ## Сигналы: chosen(bp) — null значит «Обычный» (кукла режима без подмены); cancelled; workshop_requested(bp) — открыть мастерскую
 ## (bp — что положить на стенд, null — как есть).
@@ -71,6 +74,80 @@ var _quick_b: Button
 var _back_b: Button
 var _hint_l: Label
 var _closed := false
+## Холст «Нарисуй»: штрихи игрока (без зеркальных копий), симметрия, вариант деталей, последний SketchBuild.generate.
+var sketch_open := false
+var sketch_strokes: Array = []
+var sketch_sym := true
+var sketch_seed := 0
+var sketch_res: Dictionary = {}
+var sketch_all: Array = []                       # штрихи с зеркальными копиями (их и читает SketchBuild)
+var sketch_mirror_of: PackedInt32Array = []      # у копии — индекс исходного штриха, иначе −1
+var _sketch: Control
+var _pad: SketchPad
+var _sketch_line: Label
+var _sym_b: Button
+var _sketch_dirty := -1.0                        # ≥ 0 — секунды до пересборки (пауза после штриха)
+var _sketch_ver := 0
+const SKETCH_DEBOUNCE := 0.35
+## Цвета штрихов по роли (что из штриха вышло).
+const ROLE_COLORS := {"core": ShowTokens.AMBER, "head": ShowTokens.NULL_BLUE, "limb": ShowTokens.TEXT, "segment": ShowTokens.TEXT,
+	"tip": Color(1.0, 0.42, 0.32), "deco": Color(0.75, 0.9, 0.4), "ignored": Color(0.64, 0.69, 0.78, 0.45)}
+
+
+## Холст эскиза: ЛКМ — штрих, ПКМ — отменить последний. Координаты штрихов — локальные (размер = SketchBuild.CANVAS).
+class SketchPad extends Control:
+	var fs: FighterSelect
+	var cur := PackedVector2Array()
+	var drawing := false
+
+	func _gui_input(e: InputEvent) -> void:
+		var mb := e as InputEventMouseButton
+		if mb != null:
+			if mb.button_index == MOUSE_BUTTON_LEFT:
+				if mb.pressed:
+					drawing = true
+					cur = PackedVector2Array([mb.position.clamp(Vector2.ZERO, size)])
+				elif drawing:
+					drawing = false
+					if cur.size() >= 2:
+						fs.add_stroke(cur)
+					cur = PackedVector2Array()
+				queue_redraw()
+				accept_event()
+			elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
+				drawing = false
+				cur = PackedVector2Array()
+				fs.undo_stroke()
+				accept_event()
+			return
+		var mm := e as InputEventMouseMotion
+		if mm != null and drawing:
+			var p := mm.position.clamp(Vector2.ZERO, size)
+			if cur.is_empty() or cur[cur.size() - 1].distance_to(p) >= 3.0:
+				cur.append(p)
+				queue_redraw()
+			accept_event()
+
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.02, 0.03, 0.06, 0.85))
+		for x in range(40, int(size.x), 40):
+			for y in range(40, int(size.y), 40):
+				draw_rect(Rect2(Vector2(x - 1, y - 1), Vector2(2, 2)), Color(1, 1, 1, 0.08))
+		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, 0.14), false, 1.0)
+		if fs.sketch_sym:
+			draw_dashed_line(Vector2(size.x * 0.5, 10), Vector2(size.x * 0.5, size.y - 10), Color(ShowTokens.NULL_BLUE, 0.35), 2.0, 12.0)
+		var roles: PackedStringArray = (fs.sketch_res.get("info", {}) as Dictionary).get("roles", PackedStringArray())
+		var fresh := fs._sketch_dirty < 0.0 and roles.size() == fs.sketch_all.size()
+		for i in fs.sketch_all.size():
+			var st: PackedVector2Array = fs.sketch_all[i]
+			if st.size() < 2:
+				continue
+			var col: Color = FighterSelect.ROLE_COLORS.get(roles[i], ShowTokens.TEXT) if fresh else ShowTokens.TEXT
+			if i < fs.sketch_mirror_of.size() and fs.sketch_mirror_of[i] >= 0:
+				col.a *= 0.5
+			draw_polyline(st, col, 4.0, true)
+		if cur.size() >= 2:
+			draw_polyline(cur, ShowTokens.TEXT, 4.0, true)
 
 
 ## Открыть экран поверх host (свой CanvasLayer поверх всего, что у хозяина). opts: title, allow_default, include_saved, dry_run.
@@ -137,8 +214,13 @@ func _fill_cards() -> void:
 	var last_bp: Variant = FighterPick.last.get("bp", null)
 	if String(FighterPick.last.get("kind", "")) in ["quick", "dice"] and last_bp is BodyBlueprint:
 		mine.append({"kind": "last", "id": "last", "title": tr("Прошлая сборка"), "sub": String(FighterPick.last.get("line", "")), "bp": last_bp})
+	if FighterPick.sketch.get("bp", null) is BodyBlueprint:
+		var sk := FighterPick.sketch
+		mine.append({"kind": "sketch_last", "id": "sketch_last", "title": tr("Прошлый эскиз"), "sub": String(sk.get("line", "")),
+			"bp": sk["bp"], "key": "fs:sketch_last:%d" % hash([sk.get("strokes", []), sk.get("seed", 0), sk.get("sym", true)])})
 	mine.append({"kind": "dice", "id": "dice", "title": tr("Кубик"), "sub": tr("случайная сборка"), "bp": null})
 	mine.append({"kind": "builder", "id": "builder", "title": tr("Быстрая сборка"), "sub": tr("три вопроса"), "bp": null})
+	mine.append({"kind": "sketch", "id": "sketch", "title": tr("Нарисуй"), "sub": tr("эскиз мышью"), "bp": null})
 	_add_section(tr("МОЙ БОЕЦ"), mine)
 	var groups := {}
 	var order: Array = []
@@ -170,7 +252,8 @@ func _add_section(title: String, items: Array) -> void:
 		var c: Dictionary = it
 		c["section"] = sections.size() - 1
 		var i := cards.size()
-		c["key"] = "fs:%s:%s" % [String(c["kind"]), String(c["id"])]
+		if not c.has("key"):
+			c["key"] = "fs:%s:%s" % [String(c["kind"]), String(c["id"])]
 		if c["bp"] != null and String(c["sub"]) == "":
 			c["sub"] = "%.0f %s · %d %s" % [(c["bp"] as BodyBlueprint).total_mass(), tr("кг"), (c["bp"] as BodyBlueprint).nodes.size(), tr("дет.")]
 		cards.append(c)
@@ -183,6 +266,9 @@ func _preselect() -> int:
 	if want_kind in ["quick", "dice"]:
 		want_kind = "last"
 		want_id = "last"
+	elif want_kind == "sketch":
+		want_kind = "sketch_last"
+		want_id = "sketch_last"
 	for i in cards.size():
 		if String(cards[i]["kind"]) == want_kind and String(cards[i]["id"]) == want_id:
 			return i
@@ -193,6 +279,8 @@ func _preselect() -> int:
 func current_bp() -> BodyBlueprint:
 	if builder_open:
 		return quick.get("bp", null) as BodyBlueprint
+	if sketch_open:
+		return sketch_res.get("bp", null) as BodyBlueprint
 	if sel < 0 or sel >= cards.size():
 		return null
 	return cards[sel]["bp"] as BodyBlueprint
@@ -234,11 +322,27 @@ func confirm() -> void:
 		FighterPick.last = {"kind": "quick", "id": "quick", "bp": bp, "line": QuickBuild.answers_line(answers)}
 		chosen.emit(bp)
 		return
+	if sketch_open:
+		if _sketch_dirty >= 0.0:
+			rebuild_sketch()
+		var sbp := sketch_res.get("bp", null) as BodyBlueprint
+		if sbp == null:
+			return
+		var line := String((sketch_res.get("info", {}) as Dictionary).get("line", ""))
+		_remember_sketch()
+		FighterPick.last = {"kind": "sketch", "id": "sketch_last", "bp": sbp, "line": line}
+		chosen.emit(sbp)
+		return
 	var c: Dictionary = cards[sel]
 	match String(c["kind"]):
 		"builder":
 			open_builder()
 			return
+		"sketch":
+			open_sketch()
+			return
+		"sketch_last":
+			FighterPick.last = {"kind": "sketch", "id": "sketch_last", "bp": c["bp"], "line": String(c["sub"])}
 		"dice":
 			if c["bp"] == null:
 				_roll_into_dice()
@@ -253,6 +357,9 @@ func confirm() -> void:
 func cancel() -> void:
 	if builder_open:
 		close_builder()
+		return
+	if sketch_open:
+		close_sketch()
 		return
 	cancelled.emit()
 
@@ -293,6 +400,8 @@ func _roll_into_dice() -> void:
 
 
 func open_builder() -> void:
+	if sketch_open:
+		_hide_sketch()
 	builder_open = true
 	_scroll.visible = false
 	_builder.visible = true
@@ -338,6 +447,158 @@ func _show_quick() -> void:
 		tr("Вариант %d. Не то — «Ещё вариант» или другой ответ.") % _variant)
 
 
+# ------------------------------------------------------------------ холст «Нарисуй»
+
+## Открыть холст вместо карточек (с прошлым эскизом сессии, если он есть и холст пуст).
+func open_sketch() -> void:
+	if builder_open:
+		builder_open = false
+		_builder.visible = false
+	sketch_open = true
+	_scroll.visible = false
+	_sketch.visible = true
+	if sketch_strokes.is_empty() and FighterPick.sketch.has("strokes"):
+		sketch_strokes = (FighterPick.sketch["strokes"] as Array).duplicate()
+		sketch_sym = bool(FighterPick.sketch.get("sym", true))
+		sketch_seed = int(FighterPick.sketch.get("seed", 0))
+	_style_sym()
+	rebuild_sketch()
+	_update_hint()
+
+
+## К карточкам (эскиз остаётся карточкой «Прошлый эскиз»).
+func close_sketch() -> void:
+	if _sketch_dirty >= 0.0:
+		rebuild_sketch()
+	_hide_sketch()
+	_scroll.visible = true
+	_refill_cards()
+	_update_hint()
+
+
+func _hide_sketch() -> void:
+	sketch_open = false
+	_sketch_dirty = -1.0
+	_sketch.visible = false
+	if _pad != null:
+		_pad.drawing = false
+		_pad.cur = PackedVector2Array()
+
+
+func add_stroke(st: PackedVector2Array) -> void:
+	sketch_strokes.append(st)
+	_sketch_changed()
+
+
+func undo_stroke() -> void:
+	if not sketch_strokes.is_empty():
+		sketch_strokes.pop_back()
+		_sketch_changed()
+
+
+func clear_sketch() -> void:
+	sketch_strokes.clear()
+	_sketch_changed()
+
+
+func toggle_sym() -> void:
+	sketch_sym = not sketch_sym
+	_style_sym()
+	_sketch_changed()
+
+
+## Ещё вариант: тот же рисунок, другие детали из тех же пулов.
+func sketch_variant() -> void:
+	sketch_seed += 1
+	rebuild_sketch()
+
+
+func _sketch_changed() -> void:
+	_mirror_sketch()
+	_sketch_dirty = SKETCH_DEBOUNCE
+	if _pad != null:
+		_pad.queue_redraw()
+
+
+func _mirror_sketch() -> void:
+	if sketch_sym:
+		var m := SketchBuild.with_mirror(sketch_strokes, SketchBuild.CANVAS.x * 0.5)
+		sketch_all = m["strokes"]
+		sketch_mirror_of = m["mirror_of"]
+	else:
+		sketch_all = sketch_strokes.duplicate()
+		sketch_mirror_of = PackedInt32Array()
+		sketch_mirror_of.resize(sketch_all.size())
+		sketch_mirror_of.fill(-1)
+
+
+## Собрать бойца по рисунку сейчас (без паузы) и показать в превью.
+func rebuild_sketch() -> void:
+	_sketch_dirty = -1.0
+	_mirror_sketch()
+	sketch_res = SketchBuild.generate(sketch_all, sketch_seed, SketchBuild.CANVAS)
+	_sketch_ver += 1
+	var bp := sketch_res.get("bp", null) as BodyBlueprint
+	var line := String((sketch_res.get("info", {}) as Dictionary).get("line", ""))
+	if not sketch_strokes.is_empty():
+		_remember_sketch()
+	_sketch_line.text = line
+	_show_detail(bp, "fs:sketch:%d" % _sketch_ver, tr("Эскиз"), line, tr("Вариант %d. Не то — дорисуй или N — ещё вариант.") % (sketch_seed + 1))
+	if _pad != null:
+		_pad.queue_redraw()
+
+
+func _remember_sketch() -> void:
+	var bp := sketch_res.get("bp", null) as BodyBlueprint
+	if bp == null:
+		return
+	FighterPick.sketch = {"bp": bp, "line": String((sketch_res.get("info", {}) as Dictionary).get("line", "")),
+		"strokes": sketch_strokes.duplicate(), "sym": sketch_sym, "seed": sketch_seed}
+
+
+func _process(delta: float) -> void:
+	if _sketch_dirty >= 0.0:
+		_sketch_dirty -= delta
+		if _sketch_dirty < 0.0:
+			rebuild_sketch()
+
+
+## Карточки заново (после холста появилась / сменилась карточка «Прошлый эскиз»).
+func _refill_cards() -> void:
+	var keep := String(cards[sel]["kind"]) if sel >= 0 and sel < cards.size() else ""
+	for c in _grid_box.get_children():
+		_grid_box.remove_child(c)
+		c.queue_free()
+	_fill_cards()
+	var i := index_of(keep)
+	if keep in ["sketch", "sketch_last"] and index_of("sketch_last") >= 0:
+		i = index_of("sketch_last")
+	select(maxi(i, 0), true)
+
+
+func _style_sym() -> void:
+	if _sym_b != null:
+		_sym_b.text = tr("СИММЕТРИЯ: ВКЛ  (S)") if sketch_sym else tr("СИММЕТРИЯ: ВЫКЛ  (S)")
+
+
+func _sketch_input(e: InputEvent, key: int) -> bool:
+	if e.is_action_pressed("ui_accept") or key == KEY_ENTER or key == KEY_KP_ENTER:
+		confirm()
+	elif key == KEY_BACKSPACE:
+		undo_stroke()
+	elif key == KEY_C:
+		clear_sketch()
+	elif key == KEY_S:
+		toggle_sym()
+	elif key == KEY_N:
+		sketch_variant()
+	elif key == KEY_M:
+		to_workshop()
+	else:
+		return false
+	return true
+
+
 static func _options(q: String) -> Array:
 	match q:
 		"style":
@@ -377,12 +638,17 @@ func _unhandled_input(e: InputEvent) -> void:
 	var key := k.physical_keycode if k != null and k.pressed and not k.echo else KEY_NONE
 	if e.is_action_pressed("ui_cancel") or key == KEY_ESCAPE:
 		cancel()
+	elif sketch_open:
+		if not _sketch_input(e, key):
+			return
 	elif e.is_action_pressed("ui_accept") or key == KEY_ENTER or key == KEY_KP_ENTER:
 		confirm()
 	elif key == KEY_R:
 		roll_dice()
 	elif key == KEY_Q and not builder_open:
 		open_builder()
+	elif key == KEY_D and not builder_open:
+		open_sketch()
 	elif key == KEY_M:
 		to_workshop()
 	elif builder_open:
@@ -453,7 +719,7 @@ func _step_row(i: int, d: int) -> int:
 
 
 func _on_card_click(i: int) -> void:
-	if builder_open:
+	if builder_open or sketch_open:
 		return
 	if i == sel:
 		confirm()
@@ -512,8 +778,9 @@ func _show_detail(bp: BodyBlueprint, key: String, title: String, group: String, 
 			if tex != null:
 				_d_pic.texture = tex
 				_d_ph.visible = false
-	_fight_b.disabled = builder_open and bp == null
-	_fight_b.text = tr("БЫСТРАЯ СБОРКА  ▸") if not builder_open and sel < cards.size() and String(cards[sel]["kind"]) == "builder" else tr("В БОЙ  (Enter)")
+	_fight_b.disabled = (builder_open or sketch_open) and bp == null
+	var kind := String(cards[sel]["kind"]) if not builder_open and not sketch_open and sel < cards.size() else ""
+	_fight_b.text = tr("БЫСТРАЯ СБОРКА  ▸") if kind == "builder" else (tr("НАРИСОВАТЬ  ▸") if kind == "sketch" else tr("В БОЙ  (Enter)"))
 
 
 func _stat(caption: String, value: String) -> void:
@@ -556,6 +823,10 @@ func _card_note(i: int) -> String:
 			return tr("Случайные ответы конструктора. R — бросить ещё.")
 		"builder":
 			return tr("Три вопроса — и боец готов. Q или Enter — открыть.")
+		"sketch":
+			return tr("Нарисуй бойца мышью — игра соберёт его из деталей. D или Enter — открыть холст.")
+		"sketch_last":
+			return tr("Последний эскиз этой сессии. D — дорисовать.")
 	return ""
 
 
@@ -594,8 +865,11 @@ func _style_questions() -> void:
 
 
 func _update_hint() -> void:
+	if sketch_open:
+		_hint_l.text = tr("ЛКМ — штрих · ПКМ или Backspace — отменить · C — очистить · S — симметрия · N — ещё вариант · Enter — в бой · M — мастерская · Esc — к бойцам")
+		return
 	_hint_l.text = tr("↑↓ — вопрос · ←→ или 1–4 — ответ · N — ещё вариант · R — кубик · Enter — в бой · Esc — к бойцам") if builder_open \
-		else tr("Стрелки — выбор · Enter — в бой · R — кубик · Q — быстрая сборка · M — мастерская · Esc — назад")
+		else tr("Стрелки — выбор · Enter — в бой · R — кубик · Q — быстрая сборка · D — нарисовать · M — мастерская · Esc — назад")
 
 
 func _set_card_text(i: int) -> void:
@@ -611,6 +885,8 @@ static func _ph_glyph(kind: String) -> String:
 			return "?"
 		"builder":
 			return "+"
+		"sketch":
+			return "~"
 		"default":
 			return "N0"
 	return "?"
@@ -726,6 +1002,7 @@ func _build() -> void:
 	_grid_box.custom_minimum_size = Vector2(GRID_W, 0)
 	_scroll.add_child(_grid_box)
 	_build_builder()
+	_build_sketch()
 	_build_detail()
 	_hint_l = _label("", ShowTokens.text(500), 18, ShowTokens.MUTED)
 	_hint_l.position = Vector2(GRID_X, BOTTOM + 30)
@@ -810,6 +1087,89 @@ func _build_builder() -> void:
 	row.add_child(more)
 	var back := _plate_button(tr("← К БОЙЦАМ  (Esc)"), 24)
 	back.pressed.connect(close_builder)
+	row.add_child(back)
+
+
+## Холст «Нарисуй»: слева холст, справа правила (цвет точки — цвет штриха такой роли), снизу — что прочитано и кнопки.
+func _build_sketch() -> void:
+	_sketch = Control.new()
+	_sketch.name = "Sketch"
+	_sketch.position = Vector2(GRID_X, TOP)
+	_sketch.size = Vector2(GRID_W, BOTTOM - TOP)
+	_sketch.visible = false
+	_sketch.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(_sketch)
+	var t := _label(tr("НАРИСУЙ БОЙЦА"), ShowTokens.title(700), 40, ShowTokens.TEXT)
+	t.size = Vector2(GRID_W, 52)
+	_sketch.add_child(t)
+	_pad = SketchPad.new()
+	_pad.name = "Pad"
+	_pad.fs = self
+	_pad.position = Vector2(0, 60)
+	_pad.size = SketchBuild.CANVAS
+	_pad.mouse_filter = Control.MOUSE_FILTER_STOP
+	_pad.mouse_default_cursor_shape = Control.CURSOR_CROSS
+	_pad.clip_contents = true
+	_sketch.add_child(_pad)
+	var rx := SketchBuild.CANVAS.x + 28.0
+	var rw := GRID_W - rx
+	var rh := _label(tr("КАК РИСОВАТЬ"), ShowTokens.title(650), 24, ShowTokens.AMBER)
+	rh.position = Vector2(rx, 60)
+	rh.size = Vector2(rw, 34)
+	_sketch.add_child(rh)
+	var rules := [["core", "круг — тело: маленький — быстрый, большой — тяжёлый"], ["head", "круг поменьше над телом — голова"],
+		["limb", "линии от тела — руки и ноги; длинная — два звена"], ["tip", "зигзаг на конце руки — оружие"],
+		["tip", "кружок на конце — булава"], ["tip", "волна от руки — кистень"], ["limb", "волна от тела — щупальце"],
+		["tip", "короткий штрих у кисти — кулак"], ["deco", "штрих от головы вверх — рога"]]
+	var y := 104.0
+	for r in rules:
+		var dot := ColorRect.new()
+		dot.color = ROLE_COLORS[r[0]]
+		dot.position = Vector2(rx, y + 9)
+		dot.size = Vector2(10, 10)
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_sketch.add_child(dot)
+		var l := _label(tr(String(r[1])), ShowTokens.text(500), 18, ShowTokens.TEXT)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.clip_text = true
+		l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		l.position = Vector2(rx + 20, y)
+		l.size = Vector2(rw - 20, 50)
+		_sketch.add_child(l)
+		y += 56.0
+	var sym := _label(tr("Симметрия: штрих с одной стороны повторяется на другой."), ShowTokens.text(500), 16, ShowTokens.MUTED)
+	sym.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sym.clip_text = true
+	sym.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	sym.position = Vector2(rx, y + 4)
+	sym.size = Vector2(rw, 46)
+	_sketch.add_child(sym)
+	_sketch_line = _label("", ShowTokens.title(650), 26, ShowTokens.AMBER)
+	_sketch_line.position = Vector2(0, 60 + SketchBuild.CANVAS.y + 10)
+	_sketch_line.size = Vector2(GRID_W, 38)
+	_sketch_line.clip_text = true
+	_sketch_line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_sketch.add_child(_sketch_line)
+	var row := HBoxContainer.new()
+	row.position = Vector2(0, 60 + SketchBuild.CANVAS.y + 56)
+	row.size = Vector2(GRID_W, 52)
+	row.add_theme_constant_override("separation", 12)
+	_sketch.add_child(row)
+	var more := _plate_button(tr("ЕЩЁ ВАРИАНТ  (N)"), 20)
+	more.pressed.connect(sketch_variant)
+	row.add_child(more)
+	var undo := _plate_button(tr("ОТМЕНИТЬ  (⌫)"), 20)
+	undo.pressed.connect(undo_stroke)
+	row.add_child(undo)
+	var clr := _plate_button(tr("ОЧИСТИТЬ  (C)"), 20)
+	clr.pressed.connect(clear_sketch)
+	row.add_child(clr)
+	_sym_b = _plate_button("", 20)
+	_sym_b.pressed.connect(toggle_sym)
+	row.add_child(_sym_b)
+	_style_sym()
+	var back := _plate_button(tr("← К БОЙЦАМ  (Esc)"), 20)
+	back.pressed.connect(close_sketch)
 	row.add_child(back)
 
 
