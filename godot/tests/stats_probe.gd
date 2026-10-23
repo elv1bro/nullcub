@@ -4,6 +4,7 @@ var scene_path := "res://scenes/playground.tscn"
 var frames := 240
 var shot := ""
 var native := false
+var textop := 0   # textop=N — N самых крупных текстур из материалов сцены и SubViewport (оценка: ш×в×байт/пиксель×4/3 на мипы)
 var warm := 90
 var n := 0
 var ms: Array = []
@@ -20,6 +21,7 @@ func _ready() -> void:
 					"frames": frames = int(p[1])
 					"shot": shot = p[1]
 					"native": native = p[1] != "0"
+					"textop": textop = int(p[1])
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	var ps := load(scene_path) as PackedScene
@@ -92,6 +94,8 @@ func _report() -> void:
 	var k := float(a.size())
 	print("  render: draw=%.0f prims=%.0f objs=%.0f gpu=%.2fms rcpu=%.2fms | script: process=%.2fms physics=%.2fms" % [sums["draw"] / k, sums["prims"] / k, sums["objs"] / k, sums["gpu"] / k, sums["cpu"] / k, sums["tproc"] / k, sums["tphys"] / k])
 	print("  memory: texture=%.0f MB buffer=%.0f MB video=%.0f MB static=%.0f MB | nodes=%d objects=%d" % [Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED) * mb, Performance.get_monitor(Performance.RENDER_BUFFER_MEM_USED) * mb, Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) * mb, Performance.get_monitor(Performance.MEMORY_STATIC) * mb, Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Performance.get_monitor(Performance.OBJECT_COUNT)])
+	if textop > 0:
+		_tex_top(mb)
 	print("  physics3d: active=%d pairs=%d islands=%d" % [Performance.get_monitor(Performance.PHYSICS_3D_ACTIVE_OBJECTS), Performance.get_monitor(Performance.PHYSICS_3D_COLLISION_PAIRS), Performance.get_monitor(Performance.PHYSICS_3D_ISLAND_COUNT)])
 	var keys: Array = c.keys()
 	keys.sort()
@@ -102,3 +106,86 @@ func _report() -> void:
 	if shot != "":
 		get_viewport().get_texture().get_image().save_png(shot)
 	get_tree().quit(0)
+
+func _tex_top(mb: float) -> void:
+	var seen := {}
+	_tex_walk(get_tree().root, seen)
+	var rows: Array = []
+	for t in seen.values():
+		rows.append(t)
+	rows.sort_custom(func(x, y): return float(x[0]) > float(y[0]))
+	var total := 0.0
+	for r in rows:
+		total += float(r[0])
+	print("  textures seen: %d, ≈ %.0f MB" % [rows.size(), total * mb])
+	for r in rows.slice(0, textop):
+		print("  tex %6.1f MB %s" % [float(r[0]) * mb, r[1]])
+func _tex_add(t: Texture, seen: Dictionary, where: String) -> void:
+	if t == null or seen.has(t.get_rid()):
+		return
+	var t2 := t as Texture2D
+	if t2 == null:
+		seen[t.get_rid()] = [0.0, "%s %s" % [t.get_class(), where]]
+		return
+	var bpp := 4.0
+	var fmt := "?"
+	if t2 is CompressedTexture2D:
+		var f := (t2 as CompressedTexture2D).get_format()
+		fmt = str(f)
+		bpp = 1.0 if f >= Image.FORMAT_DXT1 and f != Image.FORMAT_DXT1 and f != Image.FORMAT_RGTC_R and f != Image.FORMAT_ETC2_RGB8 else (0.5 if f >= Image.FORMAT_DXT1 else (4.0 if f == Image.FORMAT_RGBA8 or f == Image.FORMAT_RGB8 else 4.0))
+	var b := t2.get_width() * t2.get_height() * bpp * (4.0 / 3.0 if t2.has_mipmaps() else 1.0) if t2.has_method("has_mipmaps") else t2.get_width() * t2.get_height() * bpp
+	seen[t.get_rid()] = [b, "%dx%d fmt=%s %s %s" % [t2.get_width(), t2.get_height(), fmt, t.resource_path if t.resource_path != "" else t.get_class(), where]]
+func _tex_mat(m: Material, seen: Dictionary, where: String) -> void:
+	if m == null:
+		return
+	for pr in m.get_property_list():
+		var v: Variant = m.get(pr["name"])
+		if v is Texture:
+			_tex_add(v, seen, where)
+	if m is ShaderMaterial and (m as ShaderMaterial).shader != null:
+		for u in (m as ShaderMaterial).shader.get_shader_uniform_list():
+			var v2: Variant = (m as ShaderMaterial).get_shader_parameter(u["name"])
+			if v2 is Texture:
+				_tex_add(v2, seen, where)
+	if m.next_pass != null:
+		_tex_mat(m.next_pass, seen, where)
+func _tex_walk(n: Node, seen: Dictionary) -> void:
+	var where := String(n.name)
+	if n is SubViewport:
+		var sv := n as SubViewport
+		seen[sv.get_texture().get_rid()] = [float(sv.size.x * sv.size.y * 4 * 2), "SubViewport %dx%d %s" % [sv.size.x, sv.size.y, n.get_path()]]
+	if n is GeometryInstance3D:
+		_tex_mat((n as GeometryInstance3D).material_override, seen, where)
+		_tex_mat((n as GeometryInstance3D).material_overlay, seen, where)
+	if n is MeshInstance3D:
+		var mi := n as MeshInstance3D
+		for i in mi.get_surface_override_material_count():
+			_tex_mat(mi.get_surface_override_material(i), seen, where)
+		if mi.mesh != null:
+			for i in mi.mesh.get_surface_count():
+				_tex_mat(mi.mesh.surface_get_material(i), seen, where)
+	if n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh != null and (n as MultiMeshInstance3D).multimesh.mesh != null:
+		var mm := (n as MultiMeshInstance3D).multimesh.mesh
+		for i in mm.get_surface_count():
+			_tex_mat(mm.surface_get_material(i), seen, where)
+	if n is SpriteBase3D:
+		_tex_add((n as SpriteBase3D).get("texture"), seen, where)
+	if n is Decal:
+		for k in ["texture_albedo", "texture_normal", "texture_emission"]:
+			_tex_add(n.get(k), seen, where)
+	if n is WorldEnvironment and (n as WorldEnvironment).environment != null and (n as WorldEnvironment).environment.sky != null:
+		_tex_mat((n as WorldEnvironment).environment.sky.sky_material, seen, where)
+	if n is CanvasItem:
+		for k in ["texture"]:
+			if k in n and n.get(k) is Texture:
+				_tex_add(n.get(k), seen, where)
+		_tex_mat((n as CanvasItem).material, seen, where)
+	if n is GPUParticles3D:
+		var gp := n as GPUParticles3D
+		for i in gp.draw_passes:
+			var dm := gp.get_draw_pass_mesh(i)
+			if dm != null:
+				for j in dm.get_surface_count():
+					_tex_mat(dm.surface_get_material(j), seen, where)
+	for ch in n.get_children():
+		_tex_walk(ch, seen)
