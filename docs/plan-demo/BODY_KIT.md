@@ -129,7 +129,7 @@
     - Краски `Base_Paint*` приглушены (сигнальный красный, стальной синий, охра, олива; tint — множитель `worn_paint`, `swatch` = среднее карты × tint). `kit_probe` ΔE76 ≥ 30 до `PLAYER_COLORS` — 45–62.
     - `CoreGlow` тлеющий (energy 0.5). `Face` — визор: `python3 godot/tools/gen_face_visor.py` пишет `face_default.png` и атлас выражений; `gen_kit_face.py` пишет старое лицо только с `--old-face`.
     - Эмиссия `Face` — та же картинка (`emission_texture`), а `emission` = чёрный: у StandardMaterial3D с оператором ADD свечение = `(emission + карта) × energy`, белый `emission` заливал визор серым.
-    - `KIT_MATS` в `kit_common.py` (Blender) с новыми папками **не синхронизирован**: лист-каталог показывает старый вид.
+    - Проход 2 (23.10): `KIT_MATS` в `kit_common.py` синхронизирован с `MATS` — те же папки `kit/tex/`, `tint`, `roughness_scale`; металличность — константа = `metal` × среднее карты; плоский запасной = `swatch`. `craft_parts.pbr_folder` берёт WebP из `kit/tex/` и переводит в PNG кэша. Список различий Blender/Godot выше — история до прохода 2 (свет и небо кадра по-прежнему другие). `Base_PaintYellow` — хаки-охра, `Base_Bone` / `Bone` — тёплая серая керамика (`worn_paint`), `CORE_GLOW_STRENGTH` 0.67.
   - Новая роль: `kit_import.gd` ставит `.tres` только при импорте glb. glb, импортированные до появления `<Роль>.tres`, остаются с плоским материалом. Builder пишет предупреждение «новая роль …: touch …glb, затем --import».
 
 ## 3. Сцены и данные деталей (`tools/build_body_kit.gd`)

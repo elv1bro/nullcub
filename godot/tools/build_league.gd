@@ -21,6 +21,7 @@ const MODULAR_SCRIPT := "res://scripts/body/modular_doll.gd"
 const BLUEPRINT_SCRIPT := "res://scripts/body/body_blueprint.gd"
 const LOOK_SCRIPT := "res://scripts/league/league_look.gd"
 const FACE_TEX := "res://assets/textures/league/league_face.png"
+const FACE_TEX_AOE := "res://assets/textures/league/league_face_aoe.png"   # тот же глаз в янтаре (проход 2 «взрослого вида»)
 
 ## роль → параметры (цвета линейные): albedo, rough, metal, glow + energy, alpha, rim (кромка силуэта: чёрный глянец в тёмном зале)
 ## Проход «взрослого вида» 23.10 (docs/plan-demo/grownup_art/): pbr — папка текстур кита (tex/<папка>, tools/gen_kit_grownup_tex.py),
@@ -36,6 +37,16 @@ const MATS := {
 	"Pro_Glow": {"albedo": [0.02, 0.09, 0.26], "rough": 0.3, "metal": 0.0, "glow": [0.12, 0.42, 0.9], "energy": 0.8},
 	"Pro_Carbon": {"albedo": [1.0, 1.0, 1.0], "pbr": "carbon", "rough": 1.0, "metal": 0.2, "rim": 0.15},
 	"Pro_Heat": {"albedo": [0.18, 0.06, 0.015], "rough": 0.35, "metal": 0.0, "glow": [1.0, 0.38, 0.08], "energy": 0.45},
+}
+## Аоэлюн (детали kit_*_aoe_*, glb Kit_*Aoe*) — проход 2 «взрослого вида» (docs/plan-demo/grownup_art/README.md): те же роли League_*,
+## но в стиле C LEAGUE PRO — графит вместо красной «плоти», латунь вместо фиолетового панциря, тусклый янтарь вместо неона. Пишутся в
+## assets/materials/kit/aoe/<роль>.tres (resource_name = роль: FrameDress / SquadLook / пробы ищут по имени); подставляет пост-импорт
+## tools/kit_import.gd для glb с «Aoe» в имени. Base_Bone — общий материал кита («Керамика», ось материалов), он в build_body_kit.gd.
+const AOE_DIR := DIR + "aoe/"
+const AOE_MATS := {
+	"League_Flesh": {"albedo": [0.45, 0.45, 0.48], "pbr": "gunmetal", "rough": 0.85, "metal": 0.45, "rim": 0.15},
+	"League_Void": {"albedo": [0.85, 0.8, 0.75], "pbr": "aged_brass", "rough": 1.0, "metal": 0.85},
+	"League_Glow": {"albedo": [0.12, 0.05, 0.015], "rough": 0.35, "metal": 0.0, "glow": [0.9, 0.42, 0.12], "energy": 0.4},
 }
 const TEX_DIR := DIR + "tex/"
 
@@ -273,8 +284,15 @@ func _err(msg: String) -> void:
 
 
 func _build_mats() -> void:
-	for role in MATS:
-		var d: Dictionary = MATS[role]
+	_write_mats(MATS, DIR)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(AOE_DIR))
+	_write_mats(AOE_MATS, AOE_DIR)
+	print("build_league: %d materials + %d Аоэлюн" % [MATS.size(), AOE_MATS.size()])
+
+
+func _write_mats(table: Dictionary, dir: String) -> void:
+	for role in table:
+		var d: Dictionary = table[role]
 		var m := StandardMaterial3D.new()
 		m.resource_name = role
 		var a: Array = d["albedo"]
@@ -295,10 +313,9 @@ func _build_mats() -> void:
 			m.rim_enabled = true
 			m.rim = float(d["rim"])
 			m.rim_tint = 0.6
-		var err := ResourceSaver.save(m, DIR + role + ".tres")
+		var err := ResourceSaver.save(m, dir + role + ".tres")
 		if err != OK:
 			_err("%s — %d" % [role, err])
-	print("build_league: %d materials" % MATS.size())
 
 
 ## Карты tex/<папка>/{albedo,roughness,metallic,normal}.webp (как _tex в build_body_kit.gd): roughness / metallic материала — множители.
@@ -352,7 +369,7 @@ func _build_fighters() -> void:
 		var nodes: Array[Dictionary] = [{"uid": "T", "part": f["core"], "parent": "", "anchor": "", "name": "Torso"},
 			{"uid": "H", "part": f["head"], "parent": "T", "anchor": "Anchor_Neck", "name": "Head"}]
 		if league_look:
-			nodes[1]["face"] = FACE_TEX
+			nodes[1]["face"] = FACE_TEX_AOE if String(f["core"]).contains("_aoe_") else FACE_TEX
 		var next := 0
 		var control := ""
 		for ch in f.get("chains", []):

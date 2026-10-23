@@ -63,10 +63,42 @@
 `sbs_*.jpg` — до и после рядом. Исходники лежат в `before/` и `after/`. Снимает
 `godot/tests/grownup_snapshot.tscn` (окно через `godot/tools/godot_bg.sh`, аргумент `out=<папка>,tag=<метка>`).
 
+## Проход 2 (23.10): манекен, детали QuickBuild, Аоэлюн, Blender, спонсоры
+
+Кадры — `pass2/`: `sbs_*.jpg` — до (043c205b) и после рядом, `sbs_sketch_*.jpg` — превью бойца «Нарисуй» (детали QuickBuild),
+исходники после — `pass2/after/`. Массы, энергия и число деталей на кадрах не изменились (физику не трогали).
+
+- **Манекен `doll.tscn`** (`scripts/look/mannequin_look.gd`, зовёт `doll.gd`): светлый клён Wood_* → потемневшее матовое
+  дерево (tint, шероховатость 1; деталь-нормаль убрана — detail выводит материал из прохода краски, paint_probe), шарниры и штифты — `Joint.tres` / `Pin.tres` кита.
+  Цвет игрока (Shirt*) и лицо не трогаются.
+- **Детали QuickBuild и «Нарисуй»** (`assets/models/body/parts/*.glb`: киянка, топор, меч, булава, крюк, щит, рукояти, цепь…):
+  `.import` переключены на `tools/parts_import.gd` — материалы по роли из `assets/materials/kit/` (новые PBR-папки), как у кита.
+  Роль `Face` у старых голов остаётся (плашка под фото). Меши не меняются.
+- **Аоэлюн** — графит, латунь, тёплая керамика, янтарь вместо розово-кремового и фиолетового, только материалами:
+  - `build_league.gd` AOE_MATS пишет `assets/materials/kit/aoe/{League_Flesh,League_Void,League_Glow}.tres`
+    (gunmetal, aged_brass, янтарное свечение 0.4);
+  - `kit_import.gd`: glb с `Aoe` в имени берут `aoe/<роль>.tres`, если файл есть;
+  - `LeagueLook` для чертежей `*_aoe_*` — янтарный пояс вместо фиолетового;
+  - `Base_Bone` / `Bone` — тёплая серая керамика на `worn_paint` (глобально: kit_probe требует, чтобы Base_* совпадал с
+    MaterialDef), `Base_PaintYellow` — хаки-охра (ΔE76 до цветов игроков 53.8).
+  - После `build_league.gd` уже импортированные glb Аоэлюн надо переимпортировать: `touch godot/assets/models/body/kit/Kit_*Aoe*.glb`,
+    затем `godot --headless --path godot --import` (одного удаления `.md5` мало).
+- **Blender** (`tools/blender/kit_common.py`): `KIT_MATS` — зеркало `MATS` (папки `kit/tex/`, tint, шероховатость, металличность =
+  `metal` × среднее карты, плоский запасной = swatch), Gem и `CORE_GLOW_STRENGTH` (0.67) — как в Godot. `craft_parts.pbr_folder`
+  читает WebP из `kit/tex/` и пишет PNG в кэш. Лист-каталог в Blender не пересобирался (не проверено).
+- **Спонсоры** (`scripts/look/sponsor_marks.gd`, зовёт `ModularDoll._ready`): VOLTA CORES на груди ядра над окошком CoreGlow,
+  ORBIT JOINTS на плечах, NULL TV на бёдрах. Наклейки BodyPaint (меш-декаль), Shirt* и коннекторы пропускаются — цвет игрока
+  не перекрыт; цвет — тёплый белый на тёмной детали, графит на светлой. Нет у бойцов с `LeagueLook` (лига, Аоэлюн) и у врагов
+  PvE (`EnemyLook.setup` снимает). В чертёж не пишутся, мастерская их не редактирует.
+  - Картинки — `assets/textures/sponsors/*.png` (orbit_joints, volta_cores, null_tv, scrap_cup, null_league, ng_07; белое на
+    прозрачном). Нарезаны из листа **codex** (задание `jobs_sponsor_decals.json` в scratchpad сессии, лист 2×3), надписи
+    проверены глазами. scrap_cup, null_league, ng_07 — запас, пока не наклеиваются.
+
 ## Не сделано
 
 - Пропорции голов и ядер (меши Blender). Менять их — значит менять коллайдеры, а это задача другой сессии.
-- Деревянный манекен (`doll.tscn`) с запечёнными текстурами — поменялась только наклейка лица.
-- Розово-кремовые детали Аоэлюн (роли `Aoe_*` и плоские материалы из glb) — не перекрашены.
-- Зеркало ролей для Blender (`tools/blender/kit_common.py` KIT_MATS) не синхронизировано с новыми папками.
-- Декали со спонсорами (ORBIT JOINTS, VOLTA CORES) на деталях — только на досках, в игру не перенесены.
+- Фиолетовый глаз Аоэлюн (поверхность `Face` головы, `LeagueLook` её не трогает) и фиолет Лиги (league_*) оставлены.
+- На бочке-торсе (kit_human, kit_brawler) окошко ядра высоко — VOLTA CORES над ним ужимается почти до точки; на сферах с поясом
+  (pro_titan) места нет — наклейки на груди нет.
+- Название материала «Кость» (`data/body/materials/bone.tres`) осталось, хотя вид теперь — керамика.
+- Лист-каталог Blender с синхронизированными `KIT_MATS` не перерисован.

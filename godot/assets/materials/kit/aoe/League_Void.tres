@@ -1,0 +1,16 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_brass/albedo.webp" id="1_vsbop"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_brass/metallic.webp" id="2_v5dxg"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_brass/normal.webp" id="3_8beqv"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_brass/roughness.webp" id="4_0qrmr"]
+
+[resource]
+resource_name = "League_Void"
+albedo_color = Color(0.9309246, 0.9063318, 0.88082504, 1)
+albedo_texture = ExtResource("1_vsbop")
+metallic = 0.85
+metallic_texture = ExtResource("2_v5dxg")
+roughness_texture = ExtResource("4_0qrmr")
+normal_enabled = true
+normal_texture = ExtResource("3_8beqv")

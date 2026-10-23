@@ -15,7 +15,7 @@ nodes = Array[Dictionary]([{
 "uid": "T"
 }, {
 "anchor": "Anchor_Neck",
-"face": "res://assets/textures/league/league_face.png",
+"face": "res://assets/textures/league/league_face_aoe.png",
 "name": "Head",
 "parent": "T",
 "part": "kit_head_aoe_watcher",

@@ -312,6 +312,7 @@ func _ready() -> void:
 	for m in _find_meshes(self):
 		(m as GeometryInstance3D).gi_mode = GeometryInstance3D.GI_MODE_DYNAMIC
 
+	MannequinLook.apply(self)   # «взрослый вид»: старое дерево и сталь суставов манекена v3 (только материалы; grownup_art/README.md)
 	_recolor(self, SHIRT_MATERIAL, Tuning.PLAYER_COLORS[clampi(player_index, 0, 3)])  # self: обмотки, ремень и мазки краски на всех частях
 
 	if skin_scene != "":

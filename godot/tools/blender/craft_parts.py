@@ -75,6 +75,7 @@ if bpy is not None:
 GODOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT = os.path.join(GODOT, "assets", "models", "body", "parts")
 PBR_DIR = os.path.join(GODOT, "assets", "textures", "pbr")
+KIT_TEX_DIR = os.path.join(GODOT, "assets", "materials", "kit", "tex")
 SHEET_PNG = os.path.abspath(os.path.join(GODOT, "..", "docs", "plan-demo", "img", "craft-parts-v1.png"))
 RENDER_TMP = os.environ.get("CRAFT_RENDER_TMP") or os.path.join(tempfile.gettempdir(), "craft_parts_render")
 TRI_BUDGET = 3000
@@ -141,20 +142,32 @@ _MATS = {}
 MAT_STATUS = {}
 
 
-def pbr_ready(folder):
+def _pbr_src(folder):
+    """Папка набора и расширение карт: assets/textures/pbr/<папка> (PNG, tools/blender/textures.py) или карты кита
+    assets/materials/kit/tex/<папка> (WebP, tools/gen_kit_grownup_tex.py — KIT_MATS kit_common.py, проход 2 «взрослого вида»)."""
     d = os.path.join(PBR_DIR, folder)
-    return all(os.path.exists(os.path.join(d, f)) for f in ("albedo.png", "roughness.png", "normal.png"))
+    if os.path.exists(os.path.join(d, "albedo.png")):
+        return d, ".png"
+    k = os.path.join(KIT_TEX_DIR, folder)
+    if os.path.exists(os.path.join(k, "albedo.webp")):
+        return k, ".webp"
+    return d, ".png"
+
+
+def pbr_ready(folder):
+    d, ext = _pbr_src(folder)
+    return all(os.path.exists(os.path.join(d, f + ext)) for f in ("albedo", "roughness", "normal"))
 
 
 def pbr_folder(name):
     """Уменьшенная копия набора PBR в кэше (TEX_SIZE): детали мелкие, 2048² на каждую — лишние мегабайты в glb."""
-    src = os.path.join(PBR_DIR, name)
-    if TEX_SIZE >= 2048:
+    src, ext = _pbr_src(name)
+    if TEX_SIZE >= 2048 and ext == ".png":
         return src
     dst = os.path.join(CACHE, str(TEX_SIZE), name)
     os.makedirs(dst, exist_ok=True)
     for ch in ("albedo", "roughness", "normal", "metallic"):
-        s = os.path.join(src, ch + ".png")
+        s = os.path.join(src, ch + ext)   # WebP кита → PNG кэша (textured_material ищет *.png)
         d = os.path.join(dst, ch + ".png")
         if not os.path.exists(s):
             if os.path.exists(d):
