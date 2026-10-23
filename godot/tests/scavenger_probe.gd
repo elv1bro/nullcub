@@ -431,6 +431,7 @@ func _bots(max_s: float, level: int, seed_: int) -> void:
 	var last_pos := {}
 	var still := {}
 	var stuck_max := 0.0
+	var stuck_who := ""
 	var tok_max := 0
 	var t := 0.0
 	var sample := 0.0
@@ -462,7 +463,12 @@ func _bots(max_s: float, level: int, seed_: int) -> void:
 			else:
 				last_pos[id] = p
 				still[id] = 0.0
-			stuck_max = maxf(stuck_max, float(still.get(id, 0.0)))
+			var st := float(still.get(id, 0.0))
+			if st > stuck_max:
+				stuck_max = st
+				if st >= 10.0 and fmod(st, 5.0) < 0.01:
+					stuck_who = _stuck_note(dd)
+					print("  stuck %.1f с: %s" % [st, stuck_who])
 	var finished := over_count > 0
 	var reason := String(over_results.get("reason", ""))
 	_check("bots_finish", finished, "конец %s за %.0f с" % [reason, sm.fight_time])
@@ -476,10 +482,55 @@ func _bots(max_s: float, level: int, seed_: int) -> void:
 	_check("bots_ko", sm.kos.size() >= 1, "KO %d" % sm.kos.size())
 	_check("bots_invariant", inv_bad == 0, "нарушений %d; первое: %s; жетонов максимум %d" % [inv_bad, inv_first, tok_max])
 	_check("bots_in_bounds", out_bad == 0, "вне арены %d; первое: %s" % [out_bad, out_first])
-	_check("bots_not_stuck", stuck_max < STUCK_LIMIT_S, "дольше всех на месте %.1f с" % stuck_max)
+	_check("bots_not_stuck", stuck_max < STUCK_LIMIT_S, "дольше всех на месте %.1f с%s" % [stuck_max, ("; " + stuck_who) if stuck_who != "" else ""])
 	var winner: Object = over_results.get("winner")
 	if finished:
-		_check("bots_winner", reason != "last" or (is_instance_valid(winner) and (winner as Doll).alive),
-			"победитель %s, ничья %s" % [ScavMatch.doll_name(winner), str(over_results.get("draw", false))])
+		# Ничья в «last» честна только при двойном KO в один тик физики (оба последних выбыли в одном Engine physics frame,
+		# живых нет) — так по правилам SCAVENGER.md («равны первые двое — ничья»); любая другая ничья в «last» — дефект.
+		# Тик берём из Match.ko_records["physics_frame"], не из kos[t]: fight_time между KO двух кукол одного тика может
+		# прибавить delta (Match стоит в дереве между ними) — 81.38 / 81.40 в одном тике.
+		var last2: Array = sm.kos.slice(maxi(sm.kos.size() - 2, 0))
+		var rec2: Array = sm.ko_records.slice(maxi(sm.ko_records.size() - 2, 0))
+		var double_ko := sm.alive_dolls().is_empty() and rec2.size() == 2 \
+			and int((rec2[0] as Dictionary).get("physics_frame", -1)) == int((rec2[1] as Dictionary).get("physics_frame", -2))
+		_check("bots_winner", reason != "last" or (is_instance_valid(winner) and (winner as Doll).alive) or double_ko,
+			"победитель %s, ничья %s%s; последние KO %s" % [ScavMatch.doll_name(winner), str(over_results.get("draw", false)),
+			" (двойной KO в один тик)" if double_ko else "", str(last2)])
 	info["bots"] = {"reason": reason, "time_s": snappedf(sm.fight_time, 0.1), "pickups": sm.pickups.size(), "kos": sm.kos.size(),
 		"drops": sm.drops.size(), "best_parts": best, "winner": ScavMatch.doll_name(winner), "tally": tally}
+
+
+## Что делает кукла, стоящая на месте (для разбора bots_not_stuck).
+func _stuck_note(d: Doll) -> String:
+	var b := d.get_node_or_null("ScavBrain")
+	var p := d.centre_of_mass()
+	var v := Vector2.ZERO
+	var tor: RigidBody3D = d.parts.get("Torso", null)
+	if tor != null:
+		v = Vector2(tor.linear_velocity.x, tor.linear_velocity.y)
+	var s := "%s t=%.1f pos=(%.1f,%.1f) v=%.2f in=%s parts=%d stun=%s ctl=%s" % [ScavMatch.doll_name(d), sm.fight_time, p.x, p.y, v.length(),
+		str(d.input_vec), sm.parts_count(d), d.is_stunned(), d.control_enabled]
+	if b != null:
+		var tg: Variant = b.get("target")
+		var gp: Variant = b.get("goal_part")
+		s += " state=%s want=%s target=%s goal=%s active=%s proc=%s" % [str(b.get("state")), str(b.get("want")),
+			ScavMatch.doll_name(tg) if is_instance_valid(tg) else "-", str((gp as Node3D).global_position) if is_instance_valid(gp) else "-",
+			str(b.call("is_active")), str(b.is_physics_processing())]
+	# кто рядом из чужих тел (во что упёрся): шар 0.9 м у ЦМ, без своих деталей
+	var q := PhysicsShapeQueryParameters3D.new()
+	var sph := SphereShape3D.new()
+	sph.radius = 0.9
+	q.shape = sph
+	q.transform = Transform3D(Basis(), p)
+	var own: Array[RID] = []
+	for part in d.parts.values():
+		if part is CollisionObject3D:
+			own.append((part as CollisionObject3D).get_rid())
+	q.exclude = own
+	var near: PackedStringArray = []
+	for h in d.get_world_3d().direct_space_state.intersect_shape(q, 8):
+		var c: Object = h.get("collider")
+		if c is Node:
+			near.append("%s@%s" % [(c as Node).name, str((c as Node).get_parent().name)])
+	s += " near=[%s]" % ", ".join(near)
+	return s

@@ -404,6 +404,15 @@ func _flow() -> void:
 	var p1 := pg.fight.get_node("P1") as Doll
 	_check("flow_fight_1", pg.screen == GauntletPlayground.Screen.FIGHT and not pg.start_ui.visible and pg.fight.get_parent() == pg.stage
 		and _in_fight() and int(pg.fight.get("index")) == 0, "бой 1 в Stage, фаза FIGHT")
+	# G-3 / G-4 (VISUAL_PASS_2310): фишка плашек — номер боя забега, KO-карточка — титул соперника с лестницы, не «P2»
+	var lt := pg.fight.get_node_or_null("LowerThirds") as LowerThirds
+	var chip0 := String(lt.info_for(0).get("chip", "")) if lt != null else "-"
+	var chip1 := String(lt.info_for(1).get("chip", "")) if lt != null else "-"
+	_check("flow_plates_fight_no", chip0 == tr("бой %d из %d") % [1, GauntletRun.fights()]
+		and chip1 == tr("соперник %d из %d") % [1, GauntletRun.fights()], "фишки плашек: «%s» / «%s»" % [chip0, chip1])
+	var hud := pg.fight.get("hud") as Hud
+	var ko2 := hud.ko_name(1) if hud != null else "-"
+	_check("flow_ko_card_rival_title", ko2 == GauntletRun.rival_title(0).to_upper() and ko2 != "P2", "на KO-карточке P2: «%s»" % ko2)
 	# снимок как после боя: оторвана крупная ветка, урон 25
 	var limb := _pick_limb(pg.run)
 	var snap := GauntletRun.snapshot(p1)

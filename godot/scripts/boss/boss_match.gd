@@ -481,11 +481,13 @@ func stability_mult() -> float:
 	return 1.0
 
 
+## На итогах (OVER) часы стоят там, где кончился бой, а не 0:00: иначе «0:00» вверху спорит с «время боя 0:26» на панели
+## (VISUAL_PASS_2310, B-3). Время вышло — и там 0:00.
 func time_left_s() -> float:
 	match phase:
 		Phase.COUNTDOWN:
 			return time_limit_s
-		Phase.FIGHT:
+		Phase.FIGHT, Phase.OVER:
 			return maxf(time_limit_s - fight_time, 0.0)
 	return 0.0
 

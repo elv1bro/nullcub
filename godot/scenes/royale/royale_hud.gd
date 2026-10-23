@@ -420,7 +420,7 @@ func _draw_marks_r(cam: Camera3D, to_canvas: Transform2D, vp: Vector2, view: Dol
 
 func _draw_card(vp: Vector2, me: Doll) -> void:
 	var tc := colour(me)
-	var r := Rect2(24.0, vp.y - CARD.y - 22.0, CARD.x, CARD.y)
+	var r := Rect2(24.0, vp.y - CARD.y - CARD_BOTTOM, CARD.x, CARD.y)
 	_round(r, Color(0.03, 0.035, 0.05, 0.82), tc.lightened(0.2), 0, 12)
 	canvas.draw_rect(Rect2(r.position, Vector2(r.size.x, 5.0)), tc.lightened(0.2))
 	var cc := r.position + Vector2(76.0, 92.0)
@@ -482,7 +482,7 @@ func _weapon_pic_c(r: Rect2, id: String, c: Color, fallback: String) -> void:
 
 func _draw_weapon_r(vp: Vector2, me: Doll) -> void:
 	var tc := colour(me)
-	var r := Rect2(vp.x - 24.0 - CARD.x, vp.y - CARD.y - 22.0, CARD.x, CARD.y)
+	var r := Rect2(vp.x - 24.0 - CARD.x, vp.y - CARD.y - CARD_BOTTOM, CARD.x, CARD.y)
 	_round(r, Color(0.03, 0.035, 0.05, 0.82), tc.lightened(0.2), 0, 12)
 	canvas.draw_rect(Rect2(r.position, Vector2(r.size.x, 5.0)), tc.lightened(0.2))
 	var g := SquadMatch.gun_of(me)

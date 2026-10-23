@@ -16,12 +16,17 @@ const BEAM_R := 0.55
 const BLINK_HZ := 4.0
 const PULSE_HZ := 1.1
 const NEUTRAL := Color(0.86, 0.9, 0.95)
+const OUTLINE_LETTER := Color(0, 0, 0)
+const LETTER_H := 1.6               # м: высота буквы (font_size 160 × pixel_size 0.01)
 
 var index := 0
 var external_input := true
 var player_index := -1
 var dm: DominationMatch
 var colour := NEUTRAL
+## Буква гаснет до этой доли, пока на экране стоит за табло HUD (ставит DominationHud каждый кадр; VISUAL_PASS_2310 D-6).
+var letter_alpha_target := 1.0
+var _letter_a := 1.0
 var _t := 0.0
 var _ring: MeshInstance3D
 var _rim: MeshInstance3D
@@ -122,7 +127,7 @@ func _ready() -> void:
 	_letter.font_size = 160
 	_letter.pixel_size = 0.01
 	_letter.outline_size = 36
-	_letter.outline_modulate = Color(0, 0, 0, 0.85)
+	_letter.outline_modulate = Color(OUTLINE_LETTER, 0.85)
 	_letter.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	_letter.shaded = false
 	_letter.no_depth_test = false
@@ -159,10 +164,17 @@ func _process(delta: float) -> void:
 	_fill_mat.emission = fc
 	_beam_mat.albedo_color = Color(colour, (0.14 + 0.1 * pulse) * (1.0 if owner >= 0 else 0.5))
 	_beam_mat.emission = colour
-	_letter.modulate = ring_c
+	_letter_a = move_toward(_letter_a, letter_alpha_target, delta * 4.0)
+	_letter.modulate = Color(ring_c, _letter_a)
+	_letter.outline_modulate = Color(OUTLINE_LETTER, 0.85 * _letter_a)
 	if _light != null:
 		_light.light_color = colour
 		_light.light_energy = (0.9 + 0.5 * pulse) * (1.3 if owner >= 0 else 0.7)
+
+
+## Центр буквы в мире — HUD проверяет, не стоит ли она за табло.
+func letter_point() -> Vector3:
+	return _letter.global_position if _letter != null else global_position
 
 
 ## Центр зоны — для стрелок HUD.

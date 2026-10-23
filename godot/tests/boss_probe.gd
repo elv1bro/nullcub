@@ -431,6 +431,10 @@ func _rules() -> void:
 	await _wait(1.2)
 	_check("hud_win_panel", pg.hud.end_panel.visible and pg.hud.end_title.text == tr("ТИТАН ПОВЕРЖЕН!") and pg.hud.end_sub.text.contains(tr("голова оторвана")),
 		"табличка «%s» · %s" % [pg.hud.end_title.text, pg.hud.end_sub.text])
+	# B-3 (VISUAL_PASS_2310): часы на итогах — сколько оставалось, когда бой кончился, а не 0:00.
+	var clock_end := BossHud.clock_text(bm.time_limit_s - float(over_results.get("match_time", 0.0)))
+	_check("hud_clock_frozen", pg.hud.clock.text == clock_end and pg.hud.clock.text != BossHud.clock_text(0.0),
+		"часы «%s», ждём «%s» (время боя %s)" % [pg.hud.clock.text, clock_end, BossHud.clock_text(float(over_results.get("match_time", 0.0)))])
 	# --- запас 0 → победа
 	bm.restart()
 	await _until(func() -> bool: return bm.play_state == "play", 6.0)

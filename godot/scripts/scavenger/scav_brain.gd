@@ -8,6 +8,10 @@
 ##   • approach / retreat — наскок на соперника (как в «Охоте за головами»): выбирает того, у кого деталей меньше, с учётом
 ##     расстояния;
 ##   • idle — раунд не идёт: висит на месте.
+## Загнанный в угол не бегает вечно: если в flee за FLEE_STALL_S не оторвался от сильного ещё на FLEE_GAIN_M (упёрся в стену, в угол
+## арены или в настил снизу, или тот не отстаёт; эпизод не рвётся, пока сильный пропадает из виду меньше чем на FLEE_FORGET_S —
+## иначе бот дёргается flee ↔ fetch у детали рядом с сильным, проба 23.10: 49 с у тележки), страх выключается на BRAVE_S — бот берёт детали и дерётся как обычно. Застревание — по площади, как у SquadBrain: под настилом выход
+## вбок к центру арены и вниз, а не вверх (проба 23.10: бот 29–104 с жал вверх под настилом Свалки у края, bots_not_stuck).
 ## Уровень 1..3 — Tuning.SCAV_BOT_LEVELS; Match.respawn_doll создаёт мозг заново — уровень из default_level.
 class_name ScavBrain
 extends EnemyBrain
@@ -19,6 +23,14 @@ const CLIMB_FROM_M := 0.8
 const CLIMB_SCALE_M := 1.5
 const FAR_DASH_M := 7.0
 const PREY_PARTS_M := 2.0   # выбор цели: −1 деталь у соперника ≈ на 2 м ближе
+const FLEE_STALL_S := 2.5   # в бегстве столько не оторвался от сильного ещё на FLEE_GAIN_M — загнан, страх выключается
+const FLEE_GAIN_M := 1.0
+const FLEE_FORGET_S := 3.0  # сильного не было рядом дольше — новый эпизод бегства; короче — тот же (дёрганье flee ↔ fetch у одной детали)
+const BRAVE_S := 6.0
+const STUCK_RADIUS_M := 0.8 # «жмёт, а топчется»: ЦМ не вышел из круга за STUCK_AREA_S
+const STUCK_AREA_S := 2.0
+## Выход из застревания по кругу: x — от центра арены «к центру» (+), y — вверх.
+const UNSTICK_DIRS := [Vector2(0.9, -0.45), Vector2(0.6, 0.85), Vector2(-0.6, 0.85), Vector2(1.0, 0.0)]
 
 static var default_level := 2
 
@@ -33,6 +45,13 @@ var want_parts := 6
 var goal_part: RigidBody3D = null
 var _goal_t := 0.0
 var _ban: Dictionary = {}   # instance_id жетона → время бана (до)
+var _brave_until := -1.0
+var _flee_best := 0.0
+var _flee_anchor_t := 0.0
+var _flee_seen_t := -100.0
+var _stuck_anchor := Vector2.ZERO
+var _stuck_anchor_t := 0.0
+var _unstick_n := 0
 
 
 func _setup() -> void:
@@ -108,7 +127,7 @@ func nearest_part(r: float) -> RigidBody3D:
 
 ## Соперник, от которого стоит уйти (сильно больше деталей и близко), или null.
 func threat() -> Doll:
-	if sm == null or not fear:
+	if sm == null or not fear or _time < _brave_until:
 		return null
 	var mine := sm.parts_count(doll)
 	var best: Doll = null
@@ -147,6 +166,16 @@ func _think(delta: float) -> void:
 	var mine := sm.parts_count(doll)
 	# --- уйти от сильного
 	var th := threat()
+	if th != null:
+		var gap := my_pos().distance_to(com2(th))
+		if _time - _flee_seen_t > FLEE_FORGET_S or gap > _flee_best + FLEE_GAIN_M:
+			_flee_best = gap
+			_flee_anchor_t = _time
+		elif _time - _flee_anchor_t > FLEE_STALL_S:
+			_brave_until = _time + BRAVE_S   # загнан в угол: дальше без страха
+			counters["cornered"] = int(counters.get("cornered", 0)) + 1
+			th = null
+		_flee_seen_t = _time
 	if th != null:
 		go("flee")
 		var away := my_pos() - com2(th)
@@ -232,3 +261,33 @@ func _attack() -> void:
 
 func _stuck_allowed() -> bool:
 	return state in ["approach", "retreat", "idle", "fetch", "flee"]
+
+
+## Застревание поверх EnemyBrain (там «жмёт, а стоит» и выход всегда вверх-вбок): ещё «жмёт, а топчется» в круге STUCK_RADIUS_M
+## за STUCK_AREA_S. Выход — по кругу UNSTICK_DIRS; если жмёт вверх, первым — вбок к центру и вниз (из-под настила).
+func _tick_stuck(delta: float) -> void:
+	if _time < _unstick_until:
+		want = _unstick_dir
+		return
+	var me := my_pos()
+	var pushing := _stuck_allowed() and want.length() >= STUCK_INPUT
+	if not pushing or me.distance_to(_stuck_anchor) > STUCK_RADIUS_M:
+		_stuck_anchor = me
+		_stuck_anchor_t = _time
+		if not pushing:
+			_unstick_n = 0
+	_stuck_t = _stuck_t + delta if pushing and my_vel().length() < STUCK_SPEED else 0.0
+	if _stuck_t < STUCK_S and (state == "idle" or _time - _stuck_anchor_t < STUCK_AREA_S):
+		return
+	_stuck_t = 0.0
+	_stuck_anchor = me
+	_stuck_anchor_t = _time
+	_unstick_until = _time + UNSTICK_S
+	var b := arena_bounds()
+	var cx := b.get_center().x if b.size.x > 0.0 else 0.0
+	var sx := signf(cx - me.x) if absf(cx - me.x) > 0.5 else (-signf(want.x) if absf(want.x) > 0.2 else 1.0)
+	var i := _unstick_n if want.y > 0.3 else _unstick_n + 1
+	var d: Vector2 = UNSTICK_DIRS[i % UNSTICK_DIRS.size()]
+	_unstick_n += 1
+	_unstick_dir = Vector2(d.x * sx, d.y)
+	counters["unstick"] = int(counters.get("unstick", 0)) + 1
