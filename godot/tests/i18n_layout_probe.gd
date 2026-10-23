@@ -165,8 +165,23 @@ func _pass() -> Dictionary:
 	fs.open_builder()
 	await _wait(SETTLE)
 	shots["fighter_select:builder"] = _scan(fs.get_parent())
+	# холст «Нарисуй» (SKETCH_FIGHTER.md): человечек — тело, голова, правая рука и нога; симметрия добавляет левые
+	fs.close_builder()
+	FighterPick.sketch = {}
+	var sc := SketchBuild.CANVAS * 0.5
+	var ring := func(c: Vector2, r: float) -> PackedVector2Array:
+		var o := PackedVector2Array()
+		for k in 41:
+			o.append(c + Vector2.from_angle(TAU * k / 40.0) * r)
+		return o
+	fs.sketch_strokes = [ring.call(sc, 85.0), ring.call(sc + Vector2(0, -123), 34.0),
+		PackedVector2Array([sc + Vector2(75, -40), sc + Vector2(220, -110)]), PackedVector2Array([sc + Vector2(40, 75), sc + Vector2(60, 250)])]
+	fs.open_sketch()
+	await _wait(SETTLE)
+	shots["fighter_select:sketch"] = _scan(fs.get_parent())
 	fs.close()
 	FighterPick.last = {}
+	FighterPick.sketch = {}
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же

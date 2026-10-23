@@ -329,8 +329,8 @@ func _ui() -> void:
 	var bg := fs.get_node_or_null("Bg") as Control
 	var full: bool = fs.size.is_equal_approx(vsz) and bg != null and bg.size.is_equal_approx(vsz)
 	_check("ui_full_screen", full, "экран %s, Bg %s, кадр %s" % [fs.size, bg.size if bg != null else Vector2.ZERO, vsz])
-	_check("ui_cards", fs.cards.size() == roster.size() + 3 and String(fs.cards[0]["kind"]) == "default" and fs.index_of("dice") >= 0
-		and fs.index_of("builder") >= 0, "карточек %d (ростер %d + «Обычный», кубик, быстрая сборка)" % [fs.cards.size(), roster.size()])
+	_check("ui_cards", fs.cards.size() == roster.size() + 4 and String(fs.cards[0]["kind"]) == "default" and fs.index_of("dice") >= 0
+		and fs.index_of("builder") >= 0 and fs.index_of("sketch") >= 0, "карточек %d (ростер %d + «Обычный», кубик, быстрая сборка, «Нарисуй»)" % [fs.cards.size(), roster.size()])
 	_check("ui_starts_on_default", fs.sel == 0 and fs.current_bp() == null, "sel %d" % fs.sel)
 	# стрелки: → и ↓ двигают выбор, ↓ из «МОЙ БОЕЦ» уходит в первый раздел ростера
 	await _key(KEY_RIGHT)

@@ -14,7 +14,9 @@ const SKIP := ["kit_empty", "open_empty"]
 ## Порядок групп ростера: префикс id → группа (подпись — ключ перевода).
 const GROUPS := [["kit_", "Кит"], ["league_", "Лига NULL"], ["pro_", "Про-лига"], ["aoe_", "Аоэлюн"], ["set_", "Наборы"], ["", "Шаблоны"]]
 
-static var last: Dictionary = {}       # {kind, id[, bp, line]} последнего выбора: kind = default | preset | saved | quick | dice
+static var last: Dictionary = {}       # {kind, id[, bp, line]} последнего выбора: kind = default | preset | saved | quick | dice | sketch
+## Последний эскиз сессии (docs/plan-demo/SKETCH_FIGHTER.md): {bp, line, strokes, sym, seed} — карточка «Прошлый эскиз» и холст с ним.
+static var sketch: Dictionary = {}
 ## «В мастерскую» с экрана выбора не в гараже: чертёж, который гараж положит на стенд, открыв мастерскую (Flow.reopen_workshop).
 static var pending_workshop: BodyBlueprint = null
 
