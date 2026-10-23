@@ -29,6 +29,7 @@ const BRAWL := "res://scenes/playground_brawl.tscn"
 const INFECTION := "res://scenes/playground_infection.tscn"
 const HEADHUNT := "res://scenes/playground_headhunt.tscn"
 const TUG := "res://scenes/playground_tug.tscn"
+const DODGEBALL := "res://scenes/playground_dodgeball.tscn"   # «Вышибалы 3 на 3» (DODGEBALL.md): HUD, тосты, табличка итогов
 const KING := "res://scenes/playground_king.tscn"
 const HOCKEY := "res://scenes/playground_sport_hockey.tscn"   # спорт-зал, хоккей (HOCKEY.md): своя подсказка и подпись HUD
 const MODES_100 := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» реестра (MODES_100.md)
@@ -149,7 +150,7 @@ func _pass() -> Dictionary:
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, KING, HOCKEY, MODES_100]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, DODGEBALL, KING, HOCKEY, MODES_100]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		if p == CLIMB:
 			ClimbMatch.best_time = -1.0   # лучшее время сессии — static: на каждом языке экран тот же («—»)
@@ -202,6 +203,17 @@ func _pass() -> Dictionary:
 			tgm._finish("score")
 			await _wait(SETTLE * 3)
 			shots["tug:end"] = _scan(inst)
+		if p == DODGEBALL:   # «Вышибалы 3 на 3» (DODGEBALL.md): тост ловли под таймером, потом табличка итогов с таблицей бойцов
+			var dbh := (inst as DodgeballPlayground).hud
+			dbh.toast(tr("ПОЙМАЛ!"))
+			dbh.toast(tr("ВЫБИТ %s") % "P3")
+			await _wait(SETTLE)
+			shots["dodgeball:toast"] = _scan(inst)
+			var dbm := inst.get_node("Match") as DodgeballMatch
+			dbm.score = [2, 1]
+			dbm._finish("score")
+			await _wait(SETTLE * 3)
+			shots["dodgeball:end"] = _scan(inst)
 		if p == KING:   # «Царь горы» (KING.md): ещё табличка итогов с таблицей бойцов
 			var kgm := inst.get_node("Match") as KingMatch
 			kgm.scores = {0: 60.0, 1: 41.5, 2: 12.0, 3: 33.0, 4: 7.0}
