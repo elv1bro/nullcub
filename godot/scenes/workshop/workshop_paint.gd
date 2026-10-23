@@ -132,7 +132,7 @@ var _mouse := Vector2(-1, -1)
 var _stroke: Dictionary = {}
 var _sdrag: Dictionary = {}                # перетаскивание наклейки {ref, twin, start, moved, hit, twin_hit, bake}
 var _pattern_queue: Array = []             # [[uid, kind, colors, seed, mirror_x]] — раскраски по очереди
-var _pattern_job: Dictionary = {}          # деталь в работе: {uid, h, tmp: PaintLayer, job, col}
+var _pattern_job: Dictionary = {}          # деталь в работе: {uid, h, tmp: PaintLayer, job, col, drawn}
 var _pattern_total := 0
 var _pattern_kind_now := ""
 var _pan_acc := 0.0                        # трекпад: накопленная прокрутка / щипок до шага колеса
@@ -1182,11 +1182,18 @@ func _same_handed(a: String, b: String) -> bool:
 	return (da > 0.0) == (db > 0.0)
 
 
-## Очередь раскраски — не дольше budget_us мкс (0 — до конца): деталь рисуется в черновик срезами (PaintLayer.pattern_run), готовая —
-## в живой слой, текстура, node.paint, «пуф». Очередь кончилась — подсказка, «*» у названия.
+## Очередь раскраски — не дольше budget_us мкс (0 — до конца): деталь рисуется в черновик пачками строк (PaintLayer.pattern_run), готовая —
+## в живой слой, текстура, node.paint, «пуф». Бюджет проверяется перед каждой неделимой работой (взять деталь, порисовать, отдать готовую):
+## шаг выходит за бюджет не больше чем на одну такую работу (≈ 1 мс), а не на «дорисовать срез + отдать деталь + взять следующую»
+## подряд. Очередь кончилась — подсказка, «*» у названия.
 func _pattern_step(budget_us := PATTERN_BUDGET_US) -> void:
 	var t0 := Time.get_ticks_usec()
 	while true:
+		var left := 0
+		if budget_us > 0:
+			left = budget_us - int(Time.get_ticks_usec() - t0)
+			if left <= 0:
+				break
 		if _pattern_job.is_empty():
 			if _pattern_queue.is_empty():
 				break
@@ -1200,15 +1207,14 @@ func _pattern_step(budget_us := PATTERN_BUDGET_US) -> void:
 				continue
 			var tmp := (h["layer"] as PaintLayer).blank_like()
 			_pattern_job = {"uid": uid, "h": h, "tmp": tmp, "job": tmp.pattern_begin(String(e[1]), e[2], int(e[3]), Vector3.UP, bool(e[4])),
-				"col": (e[2] as Array)[0] if not (e[2] as Array).is_empty() else Color(1.0, 0.8, 0.5)}
-		var left := 0
-		if budget_us > 0:
-			left = budget_us - int(Time.get_ticks_usec() - t0)
-			if left <= 0:
-				break
-		var tl: PaintLayer = _pattern_job["tmp"]
-		if not tl.pattern_run(_pattern_job["job"], left):
+				"col": (e[2] as Array)[0] if not (e[2] as Array).is_empty() else Color(1.0, 0.8, 0.5), "drawn": false}
 			continue
+		var tl: PaintLayer = _pattern_job["tmp"]
+		if not bool(_pattern_job["drawn"]):
+			_pattern_job["drawn"] = tl.pattern_run(_pattern_job["job"], left)
+			continue
+		# готовая — в живой слой, текстуру и чертёж (zstd) одним куском: слой и node.paint меняются вместе (новая раскраска бросает
+		# деталь в работе — живой слой тогда остаётся как был)
 		var hj: Dictionary = _pattern_job["h"]
 		var uid2 := String(_pattern_job["uid"])
 		var layer: PaintLayer = hj["layer"]

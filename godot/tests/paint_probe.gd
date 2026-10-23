@@ -9,7 +9,7 @@
 ##     зажат: stamp / fill не переполняют байт, rgb ≤ a; erase обнуляет, частичный — половина, слабый ластик (нажим 0.1) доводит
 ##     слой до пустого; fill / clear; выборка — не предумноженный цвет; to_dict / from_dict — те же байты, пустой слой после zstd
 ##     < 1 КБ, битые словари → null (и размеры, которых for_aabb не даёт: 4000 × 4 × 4, 2³, габарит 1 мкм); pattern всех видов
-##     детерминирован seed (другой seed — другие байты, кроме gradient), не пустой; частями (pattern_begin / pattern_run по 1 мкс) —
+##     детерминирован seed (другой seed — другие байты, кроме gradient), не пустой; частями (pattern_begin / pattern_run по 1 мкс, и с mirror_x) —
 ##     байт в байт как целиком; mirror_x — ровно отражение по X рисунка слоя с отражённым габаритом; текстура (размеры, грязные
 ##     срезы, set_data / mark_dirty — отмена в живом слое);
 ##     скорость: spray радиусом 5 см на детали в 40 ячеек (ячейка 8 мм) — среднее < SPRAY_MS_MAX;
@@ -338,7 +338,7 @@ func _check_patterns() -> void:
 			if a.data[i] > 0:
 				alpha_cells += 1
 		r[kind] = {"ms": snappedf(ms, 0.1), "cells": a.cell_count(), "painted_cells": alpha_cells}
-	# частями (срез за вызов) — байт в байт как целиком; mirror_x — ровно отражение рисунка слоя с отражённым по X габаритом
+	# частями (пачка строк за вызов) — байт в байт как целиком; mirror_x — ровно отражение рисунка слоя с отражённым по X габаритом
 	var box_l := AABB(Vector3(-0.08, -0.277, -0.063), Vector3(0.12, 0.249, 0.126))   # не по центру x: как кисти старой куклы
 	var box_r := AABB(Vector3(-(box_l.position.x + box_l.size.x), box_l.position.y, box_l.position.z), box_l.size)
 	var slab_bad := []
@@ -353,6 +353,16 @@ func _check_patterns() -> void:
 			calls += 1
 		if part.data != one.data or calls < 2:
 			slab_bad.append([kind, calls])
+		# то же с отражением (правая деталь старой куклы во всей кукле): строки переворачиваются пачками
+		var one_m := PaintLayer.for_aabb(box_l)
+		one_m.pattern(kind, [], 21, Vector3.UP, true)
+		var part_m := PaintLayer.for_aabb(box_l)
+		var job_m := part_m.pattern_begin(kind, [], 21, Vector3.UP, true)
+		var calls_m := 1
+		while not part_m.pattern_run(job_m, 1):
+			calls_m += 1
+		if part_m.data != one_m.data or calls_m < 2:
+			slab_bad.append([kind, "mirror_x", calls_m])
 		var ll := PaintLayer.for_aabb(box_l)
 		ll.pattern(kind, [], 21)
 		var lr := PaintLayer.for_aabb(box_r)
@@ -379,7 +389,7 @@ func _check_patterns() -> void:
 				moved += 1
 		if mism > 0 or ll.res != lr.res or moved > 0:
 			mirror_bad.append([kind, mism, moved])
-	_check(slab_bad.is_empty(), "pattern_begin / pattern_run по срезу — байт в байт как pattern целиком", slab_bad)
+	_check(slab_bad.is_empty(), "pattern_begin / pattern_run пачками строк (и с mirror_x) — байт в байт как pattern целиком", slab_bad)
 	_check(mirror_bad.is_empty(), "pattern mirror_x — точное отражение по X рисунка на отражённом габарите (все виды)", mirror_bad)
 	var over := PaintLayer.for_aabb(box)
 	over.fill(Color(0, 0, 1))
