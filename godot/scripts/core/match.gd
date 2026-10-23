@@ -941,6 +941,10 @@ func on_env_slam(doll: Doll, part: String, speed: float, position: Vector3, norm
 
 
 func _emit_env_slam(ctx: Dictionary) -> void:
+	# Отложенный вызов: к этому кадру матч или кукла уже могли уйти из дерева (смена бойца ModePlayer.swap_p1, выгрузка сцены).
+	var doll: Variant = ctx.get("doll")
+	if not is_inside_tree() or not is_instance_valid(doll) or not (doll as Node).is_inside_tree():
+		return
 	env_slam.emit(ctx)
 
 

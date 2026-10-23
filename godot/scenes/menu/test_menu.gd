@@ -278,6 +278,11 @@ var _shots := {}                # id → Texture2D или null
 var _stick := 0
 var _sb := {}                   # стили карточек
 var _launching := false
+## Дуэльные карточки → экран «ВЫБОР БОЙЦА», выбранный боец уходит через эту карточку реестра.
+const DUEL_MODES := {"quick": "duel_classic", "ruins": "ruins_classic", "workshop_arena": "workshop_classic", "void": "void_classic",
+	"scrap": "scrap_classic"}
+@export var pick_fighter := true
+var pick: FighterSelect = null
 
 
 func _ready() -> void:
@@ -383,11 +388,43 @@ func launch(i := -1) -> void:
 	elif path.contains("playground_domination"):
 		SquadSettings.mode = "dom"
 		SquadSettings.ask = true
+	var duel := String(DUEL_MODES.get(last_id, ""))
+	if duel != "" and pick_fighter:
+		_open_pick(path, duel)
+		return
+	_start(path, null, "")
+
+
+## Запуск: bp == null — сцена режима как есть; иначе карточка реестра duel с бойцом экрана выбора (ModeRun.launch → ModePlayer.swap_p1).
+func _start(path: String, bp: BodyBlueprint, duel: String) -> void:
 	launched.emit(path)
 	if dry_run:
 		return
 	_launching = true
-	Loading.change_scene(path, "ПОДКЛЮЧЕНИЕ", String(mode()["title"]))
+	if bp != null and duel != "":
+		ModeRun.launch(ModeCatalog.by_id(duel), {"player_blueprint": bp})
+	else:
+		Loading.change_scene(path, "ПОДКЛЮЧЕНИЕ", String(mode()["title"]))
+
+
+# ---------------------------------------------------------------- «ВЫБОР БОЙЦА» перед дуэлью (docs/plan-demo/FIGHTER_SELECT.md)
+
+func _open_pick(path: String, duel: String) -> void:
+	pick = FighterSelect.open_over(self, {"title": tr(String(mode()["title"])), "dry_run": dry_run})
+	pick.chosen.connect(func(bp: BodyBlueprint) -> void:
+		_close_pick()
+		_start(path, bp, duel))
+	pick.cancelled.connect(_close_pick)
+	pick.workshop_requested.connect(func(bp: BodyBlueprint) -> void:
+		_close_pick()
+		if not dry_run:
+			FighterPick.open_workshop(get_tree(), bp))
+
+
+func _close_pick() -> void:
+	if pick != null:
+		pick.close()
+	pick = null
 
 
 func back() -> void:
@@ -412,6 +449,8 @@ func set_memo(on: bool) -> void:
 
 func _unhandled_input(e: InputEvent) -> void:
 	if Loading.showing and not dry_run:
+		return
+	if pick != null:   # экран выбора бойца ловит ввод сам
 		return
 	if e is InputEventJoypadMotion:
 		_on_stick(e as InputEventJoypadMotion)

@@ -212,9 +212,13 @@ func _check_click() -> void:
 	_mouse(MOUSE_BUTTON_LEFT, pos, true)
 	_mouse(MOUSE_BUTTON_LEFT, pos, false)
 	await _frames(5)
+	# дуэль: второй клик открывает «ВЫБОР БОЙЦА» (docs/plan-demo/FIGHTER_SELECT.md), Enter на «Обычном» — запуск
+	var picked: bool = menu.get("pick") != null and launched.is_empty()
+	await _key(KEY_ENTER)
+	await _frames(5)
 	var want := String(((menu.get("list") as Array)[1] as Dictionary)["scene"])
-	_check("modes_click", sel1 == 1 and none and launched == [want],
-		"первый клик: выбрана %d, запусков %d; второй клик: %s" % [sel1, 0 if none else launched.size(), launched])
+	_check("modes_click", sel1 == 1 and none and picked and menu.get("pick") == null and launched == [want],
+		"первый клик: выбрана %d, запусков %d; второй клик → выбор бойца %s; Enter: %s" % [sel1, 0 if none else launched.size(), picked, launched])
 
 
 func _check_launch() -> void:
