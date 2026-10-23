@@ -4,6 +4,11 @@
 ##     HOCKEY_GOALIE_OUT_M от линии (и не выше перекладины) — встать между шайбой и воротами; соперник отстал — снова за шайбой;
 ##     то же, когда шайба летит в мои ворота быстрее HOCKEY_THREAT_SPEED, а я дальше от них, чем она (не догнать — встать в воротах,
 ##     с ускорением);
+##   • правила 23.10 (HOCKEY.md, Tuning.HOCKEY_CREASE_M …): защитник — соперник ближе к шайбе на HOCKEY_DEFEND_MARGIN_M (на любой
+##     половине, если шайба едет к моим воротам быстрее HOCKEY_DEFEND_SPEED) — тоже вратарь; шайба на чужой половине дальше
+##     HOCKEY_BOT_REACH_X от центра — тоже домой (бот играет на своей половине); вбрасывание у соперника — жду дома, пока шайба не
+##     перейдёт центр (не дольше HOCKEY_FACEOFF_HOLD_S, _faceoff_hold); шайба летит в створ ближе HOCKEY_LUNGE_M — бросок на неё (lunge, с ускорением): касание в своей
+##     вратарской — сейв (SportMatch._save); вратарь соперника держит шайбу — нападающий ждёт за его вратарской;
 ##   • в ударе у шайбы ближе HOCKEY_SPIN_NEAR_M — раскрутка (Doll.request_spin): клюшка в кисти описывает дугу и подметает лёд.
 ## Уровни 1..3 — Tuning.HOCKEY_BOT_LEVELS (тяга, прицел, упреждение, ускорение, раскрутка, вратарь); уровень новых мозгов —
 ## SportBrain.default_level (Match.respawn_doll пересоздаёт мозг без настроек; K на площадке меняет его).
@@ -13,6 +18,8 @@ extends SportBrain
 var use_spin := true
 var use_goalie := true
 var goalie_dash := true
+var _crossed := false   # после вбрасывания соперника шайба уже была на моей половине
+var _faceoff_seen := -1   # sm.faceoff_n, для которого считан _crossed
 
 
 func _brain_ready() -> void:
@@ -33,7 +40,16 @@ func _think(delta: float) -> void:
 		want = hover_vec()
 		return
 	var b := ball.pos2() + ball.vel2() * lead_s
-	if use_goalie and _goalie_needed(b):
+	if sm.save_hold_s() > 0.0:
+		_during_save()
+		return
+	if use_goalie and (_goalie_needed(b) or _faceoff_hold()):
+		if _lunge_ok():
+			go("lunge")
+			want = steer(ball.pos2() + ball.vel2() * 0.15, 1.0)
+			if goalie_dash:
+				dash()
+			return
 		go("goalie")
 		var gp := _goalie_route(b)
 		want = steer(gp, max_in)
@@ -57,10 +73,11 @@ func _aim_point(_b: Vector2) -> Vector2:
 	return Vector2(dir * (float(r["goal_x"]) + 1.2), Puck.rest_y())
 
 
-## Шайба на своей половине и соперник к ней ближе меня — или шайба летит в мои ворота, а я дальше от них, чем она (не догнать —
+## Правила 23.10: бот играет на своей половине (до HOCKEY_BOT_REACH_X за центр) — шайба глубже у соперника: домой, на луч
+## вратаря (как в аэрохоккее — бросок через всё поле, у вратаря есть время). Иначе: шайба на своей половине и соперник к ней ближе меня — или шайба летит в мои ворота, а я дальше от них, чем она (не догнать —
 ## встать в воротах).
 func _goalie_needed(b: Vector2) -> bool:
-	if _threat():
+	if _threat() or _defender_needed(b) or b.x * dir > Tuning.HOCKEY_BOT_REACH_X:
 		return true
 	if b.x * dir > 0.0:
 		return false
@@ -70,6 +87,51 @@ func _goalie_needed(b: Vector2) -> bool:
 	var me := my_pos()
 	var o := Vector2(opp.centre_of_mass().x, opp.centre_of_mass().y)
 	return o.distance_to(b) + 0.5 < me.distance_to(b)
+
+
+## Правила 23.10: защитник — соперник ведёт шайбу ко мне (ближе к ней на HOCKEY_DEFEND_MARGIN_M, шайба едет к моим воротам
+## быстрее HOCKEY_DEFEND_SPEED) на любой половине: домой, а не наперегонки (вратарь опаздывал: шайба 4.5 м/с, кукла с вбрасывания
+## у центра). Шайба стоит или уходит на чужую половину — защитник выходит на неё (иначе вратарь стоял в воротах весь матч).
+func _defender_needed(b: Vector2) -> bool:
+	var opp := _opponent()
+	if opp == null or ball.vel2().x * dir > -Tuning.HOCKEY_DEFEND_SPEED:
+		return false
+	var o := Vector2(opp.centre_of_mass().x, opp.centre_of_mass().y)
+	return o.distance_to(b) + Tuning.HOCKEY_DEFEND_MARGIN_M < my_pos().distance_to(b)
+
+
+## Правила 23.10: вбрасывание после гола или сейва — у соперника (sm.faceoff_team), на его половине: я жду дома, пока шайба не
+## перейдёт центр ко мне (или HOCKEY_FACEOFF_HOLD_S часов), а не бегу отнимать её у его ворот (гол через 6 с после вбрасывания).
+func _faceoff_hold() -> bool:
+	if _faceoff_seen != sm.faceoff_n:
+		_faceoff_seen = sm.faceoff_n
+		_crossed = false
+	if sm.faceoff_team < 0 or sm.faceoff_team == team:
+		return false
+	if ball.pos2().x * dir < 0.0:
+		_crossed = true
+	return not _crossed and sm.fight_time - sm.faceoff_clock < Tuning.HOCKEY_FACEOFF_HOLD_S
+
+
+## Бросок вратаря: шайба едет к моим воротам и уже близко — на неё, а не на луч (касание во вратарской — сейв).
+func _lunge_ok() -> bool:
+	var p := ball.pos2()
+	var v := ball.vel2()
+	if v.x * dir > -1.0 or ball.freeze:
+		return false
+	var gx := float(sm.rules()["goal_x"])
+	return my_pos().distance_to(p) < Tuning.HOCKEY_LUNGE_M and -p.x * dir > gx - Tuning.HOCKEY_CREASE_M - 2.0
+
+
+## Вратарь держит шайбу (сейв): свой — на луче вратаря; нападающий — ждёт у края чужой вратарской, ниже полёта выброса.
+func _during_save() -> void:
+	var gx := float(sm.rules()["goal_x"])
+	if sm.save_team() == team:
+		go("goalie")
+		want = steer(_goalie_point(ball.pos2()), max_in)
+		return
+	go("wait")
+	want = steer(Vector2(dir * (gx - Tuning.HOCKEY_CREASE_M - 1.0), 0.9), max_in)
 
 
 func _threat() -> bool:

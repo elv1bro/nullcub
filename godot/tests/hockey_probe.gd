@@ -86,7 +86,7 @@ func _check(id: String, cond: bool, detail: Variant = "") -> void:
 
 
 func _args() -> Dictionary:
-	var out := {"only": "", "max_s": "330", "level": "2", "trace": "0", "out": "", "seed": "0"}
+	var out := {"only": "", "max_s": "420", "level": "2", "trace": "0", "out": "", "seed": "0"}
 	for a in OS.get_cmdline_user_args():
 		for part in String(a).split(","):
 			var kv := part.split("=")
@@ -343,17 +343,32 @@ func _rules() -> void:
 	_check("goal_through_line", crossed and sm.score == [1, 0] and sm.play_state == "goal", "счёт %s, состояние %s" % [sm.score, sm.play_state])
 	var hud_l: Label = (pg.get_node("SportHud") as SportHud).labels[0]
 	_check("hud_score", hud_l.text == "1" and arena.score == [1, 0], "HUD «%s», табло %s" % [hud_l.text, arena.score])
-	# расстановка после гола
+	# расстановка после гола; правила 23.10: вбрасывание на половине пропустившей команды (P2) в HOCKEY_FACEOFF_X от центра,
+	# пауза с отсчётом (COUNTDOWN, куклы без управления, шайба заморожена)
 	var old_p1 := _doll(0)
 	var got_kick := await _until(func() -> bool: return sm.play_state == "kickoff", Tuning.SPORT_GOAL_PAUSE_S + 1.0)
 	p1 = _doll(0)
 	p2 = _doll(1)
-	_check("reset_after_goal", got_kick and puck.freeze and puck.global_position.distance_to(arena.ball_spawn(sm.serve_team)) < 0.05
-		and sm.phase == Match.Phase.COUNTDOWN and p1 != old_p1 and absf(_x(p1) + Tuning.SPORT_SPAWN_X) < 1.0 and absf(_x(p2) - Tuning.SPORT_SPAWN_X) < 1.0,
-		"шайба %s, P1 x=%.1f, P2 x=%.1f" % [puck.global_position, _x(p1), _x(p2)])
+	var fo := puck.global_position
+	_check("reset_after_goal", got_kick and puck.freeze and sm.phase == Match.Phase.COUNTDOWN and p1 != old_p1
+		and absf(_x(p1) + Tuning.SPORT_SPAWN_X) < 1.0 and absf(_x(p2) - Tuning.SPORT_SPAWN_X) < 1.0,
+		"шайба %s, P1 x=%.1f, P2 x=%.1f" % [fo, _x(p1), _x(p2)])
+	_check("faceoff_after_goal", got_kick and sm.serve_team == 1 and sm.faceoff_team == 1 and absf(fo.x - Tuning.HOCKEY_FACEOFF_X) < 0.05
+		and absf(fo.z) < 0.01 and not p1.control_enabled and not p2.control_enabled,
+		"пропустила команда %d, вбрасывание x=%.2f (ждём +%.1f — половина P2), управление P1 %s P2 %s" % [sm.serve_team, fo.x,
+		Tuning.HOCKEY_FACEOFF_X, p1.control_enabled, p2.control_enabled])
+	var froze := 0.0
+	while sm.play_state == "kickoff" and froze < 3.0:
+		await get_tree().physics_frame
+		froze += TICK
+		if not puck.freeze or puck.global_position.distance_to(fo) > 0.01:
+			break
+	_check("faceoff_freeze", sm.play_state == "play" and froze >= sm.kickoff_s - 0.05 and froze <= sm.kickoff_s + 0.2,
+		"шайба стояла %.2f с (отсчёт %.2f с), дальше %s" % [froze, sm.kickoff_s, sm.play_state])
 	await _until(func() -> bool: return sm.play_state == "play", 3.0)
 	await _until(_sticks_ok, 2.0)
 	_check("sticks_after_goal", _sticks_ok() and sm.sticks.given >= 4, "выдано %d" % sm.sticks.given)
+	await _save_rule()
 	# не гол: над перекладиной в сторону ворот, и шайба «появилась» за линией без пересечения
 	var gx := float(r["goal_x"])
 	_put_puck(Vector2(gx - 0.6, Tuning.HOCKEY_GOAL_H + 0.45), Vector2(5.0, 0.0))
@@ -414,6 +429,60 @@ func _rules() -> void:
 		and _doll(0).get_node_or_null("ArmAssist") != null, "вид %s" % sm.sport)
 
 
+## Правила 23.10: шайба в своей вратарской коснулась вратаря — сейв: свисток (play_state "save", часы стоят, шайба заморожена перед
+## ним), счёт тот же; через HOCKEY_SAVE_HOLD_S — вбрасывание на половине вратаря (serve_team — его команда). Вне вратарской — не сейв.
+func _save_rule() -> void:
+	var p1 := _doll(0)
+	var p2 := _doll(1)
+	var gx := float(Tuning.SPORTS["hockey"]["goal_x"])
+	_place(p2, Vector2(Tuning.SPORT_SPAWN_X, 1.0))
+	# вне вратарской: P1 у центра, шайба в него — не сейв
+	_place(p1, Vector2(-3.0, 0.9))
+	var n0 := sm.saves.size()
+	_put_puck(Vector2(-1.5, _ice_y()), Vector2(-3.0, 0.0))
+	puck.last_touch = p2
+	await _wait(1.0)
+	_check("save_not_outside", sm.saves.size() == n0 and sm.play_state == "play", "сейвов %d → %d, состояние %s" % [n0, sm.saves.size(), sm.play_state])
+	# во вратарской: P1 у своих ворот, шайба по льду в него
+	var score0: Array = sm.score.duplicate()
+	_place(p1, Vector2(-gx + 0.3, 0.9))
+	await get_tree().physics_frame
+	_put_puck(Vector2(-gx + Tuning.HOCKEY_CREASE_M - 0.2, _ice_y()), Vector2(-3.0, 0.0))
+	puck.last_touch = p2
+	var t0 := sm.fight_time
+	var saved := await _until(func() -> bool: return sm.saves.size() > n0 or sm.score != score0, 2.0)
+	var sv: Dictionary = sm.saves.back() if sm.saves.size() > n0 else {}
+	var held := puck.global_position
+	_check("save_in_crease", saved and sm.saves.size() == n0 + 1 and sm.score == score0 and sm.play_state == "save" and puck.freeze
+		and int(sv.get("team", -1)) == 0 and int(sv.get("keeper", -1)) == 0 and SportMatch.in_crease(Vector2(held.x, held.y), 0),
+		"сейвов %d → %d, счёт %s, состояние %s, шайба %s, сейв %s" % [n0, sm.saves.size(), sm.score, sm.play_state, held, sv])
+	await _wait(Tuning.HOCKEY_SAVE_HOLD_S * 0.5)
+	_check("save_clock_stops", absf(sm.fight_time - t0) < 0.5 and sm.play_state == "save" and puck.global_position.distance_to(held) < 0.01,
+		"часы %.2f → %.2f, шайба стоит: %s" % [t0, sm.fight_time, puck.global_position.distance_to(held) < 0.01])
+	var kick := await _until(func() -> bool: return sm.play_state == "kickoff", Tuning.HOCKEY_SAVE_HOLD_S + 0.5)
+	var fo := puck.global_position
+	_check("save_faceoff_keeper_half", kick and sm.serve_team == 0 and sm.faceoff_team == 0 and absf(fo.x + Tuning.HOCKEY_FACEOFF_X) < 0.05 and puck.freeze,
+		"вбрасывание команды %d в x=%.2f (ждём −%.1f — половина вратаря P1)" % [sm.serve_team, fo.x, Tuning.HOCKEY_FACEOFF_X])
+	await _until(func() -> bool: return sm.play_state == "play", 3.0)
+	await _until(_sticks_ok, 2.0)
+	# шайба вне игры: держится выше HOCKEY_HIGH_Y дольше HOCKEY_HIGH_S (последней трогал P1) — свисток, вбрасывание у P2, счёт тот же
+	score0 = sm.score.duplicate()
+	var hw0 := sm.high_whistles
+	var held_s := 0.0
+	while sm.play_state == "play" and held_s < Tuning.HOCKEY_HIGH_S + 1.0:
+		_put_puck(Vector2(1.0, Tuning.HOCKEY_HIGH_Y + 2.0))
+		puck.last_touch = _doll(0)
+		await get_tree().physics_frame
+		held_s += TICK
+	var hk := await _until(func() -> bool: return sm.play_state == "kickoff", Tuning.HOCKEY_SAVE_HOLD_S + 0.5)
+	_check("high_puck_whistle", sm.high_whistles == hw0 + 1 and held_s >= Tuning.HOCKEY_HIGH_S - 0.05 and held_s <= Tuning.HOCKEY_HIGH_S + 0.2
+		and hk and sm.serve_team == 1 and absf(puck.global_position.x - Tuning.HOCKEY_FACEOFF_X) < 0.05 and sm.score == score0,
+		"свистков %d → %d через %.2f с, вбрасывание команды %d в x=%.2f, счёт %s" % [hw0, sm.high_whistles, held_s, sm.serve_team,
+		puck.global_position.x, sm.score])
+	await _until(func() -> bool: return sm.play_state == "play", 3.0)
+	await _until(_sticks_ok, 2.0)
+
+
 # ------------------------------------------------------------------ боты
 
 func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
@@ -452,6 +521,10 @@ func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
 	var tick_n := 0
 	var tick_prev := Time.get_ticks_usec()
 	var top := 0.0
+	# правила 23.10: бот играет на своей половине — шайба глубоко у соперника (дальше HOCKEY_BOT_REACH_X + 1 м за центр), а он за ней
+	# не лезет: ЦМ не дальше той же черты (до правил 23.10 бот шёл за шайбой до чужих ворот)
+	var deep := [0, 0]
+	var home := [0, 0]
 	while sm.phase != Match.Phase.OVER and t < max_s:
 		await get_tree().physics_frame
 		t += TICK
@@ -477,7 +550,15 @@ func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
 			var c := dd.centre_of_mass()
 			if not bounds.grow(0.5).has_point(c):
 				out_dolls += 1
-			if sm.play_state != "play":
+			var tm := SportMatch.team_of(dd)
+			var ad := SportMatch.attack_dir(tm)
+			if sm.play_state == "play" and p.x * ad > Tuning.HOCKEY_BOT_REACH_X + 1.0:
+				deep[tm] += 1
+				if c.x * ad < Tuning.HOCKEY_BOT_REACH_X + 1.0:
+					home[tm] += 1
+			var st := String((dd.get_node_or_null("SportBrain") as SportBrain).state) if dd.get_node_or_null("SportBrain") != null else ""
+			if sm.play_state != "play" or st == "goalie" or st == "lunge":
+				# правила 23.10: бот играет на своей половине — вратарь ждёт в воротах, пока шайба у соперника (это не застревание)
 				anchor.erase(dd.player_index)
 				continue
 			var a: Array = anchor.get(dd.player_index, [c, 0.0])
@@ -500,7 +581,16 @@ func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
 	info["bots"] = {"level": level, "seed": seed_, "sim_s": snappedf(t, 0.1), "clock_s": snappedf(sm.fight_time, 0.1), "score": sm.score.duplicate(),
 		"goals": sm.goals.duplicate(true), "reason": String(over_results.get("reason", "")), "touches": puck.touches - touches0,
 		"rescues": sm.ball_rescues, "kos": kos, "escaped_ticks": escaped, "dolls_out_ticks": out_dolls, "puck_top_y": snappedf(top, 0.01),
-		"stuck_max_s": snappedf(stuck_max, 0.1), "stuck_who": stuck_who, "sticks_given": sm.sticks.given if sm.sticks != null else -1}
+		"stuck_max_s": snappedf(stuck_max, 0.1), "stuck_who": stuck_who, "sticks_given": sm.sticks.given if sm.sticks != null else -1,
+		"saves": sm.saves.duplicate(true), "high_whistles": sm.high_whistles, "home_share": [snappedf(float(home[0]) / maxf(1.0, deep[0]), 0.01), snappedf(float(home[1]) / maxf(1.0, deep[1]), 0.01)],
+		"deep_s": [snappedf(deep[0] * TICK, 0.1), snappedf(deep[1] * TICK, 0.1)]}
+	var gts: Array = [0.0]
+	for g: Dictionary in sm.goals:
+		gts.append(float(g["t"]))
+	var ivs: Array = []
+	for i in range(1, gts.size()):
+		ivs.append(snappedf(float(gts[i]) - float(gts[i - 1]), 0.1))
+	info["bots"]["goal_intervals"] = ivs
 	info["phys_ms"] = {"avg": snappedf(phys_sum / maxf(1.0, phys_n), 0.01), "max": snappedf(phys_max, 0.01),
 		"tick_wall_avg": snappedf(tick_sum / maxf(1.0, tick_n), 0.01)}
 	_check("bots_match_ends", sm.phase == Match.Phase.OVER and sm.fight_time <= 300.0 + 0.5,
@@ -508,4 +598,8 @@ func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
 	_check("bots_puck_in_hall", escaped == 0, "тиков вне зала: %d, выше всего %.1f м" % [escaped, top])
 	_check("bots_dolls_in_hall", out_dolls == 0, "тиков кукол вне зала: %d" % out_dolls)
 	_check("bots_not_stuck", stuck_max < STUCK_LIMIT_S, "дольше всех на месте %.1f с: %s" % [stuck_max, stuck_who])
+	var hs: Array = info["bots"]["home_share"]
+	_check("bots_home_half", float(hs[0]) >= 0.8 and float(hs[1]) >= 0.8,
+		"шайба глубоко у соперника — бот не за ней: P1 %.0f %% из %.0f с, P2 %.0f %% из %.0f с; сейвов %d" % [float(hs[0]) * 100.0,
+		float(info["bots"]["deep_s"][0]), float(hs[1]) * 100.0, float(info["bots"]["deep_s"][1]), sm.saves.size()])
 	_check("bots_touch_puck", puck.touches - touches0 >= 10, "касаний %d, голов %d, нокаутов %d" % [puck.touches - touches0, int(sm.score[0]) + int(sm.score[1]), kos])
