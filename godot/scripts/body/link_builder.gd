@@ -18,8 +18,9 @@ static func build(d: Node3D, l: Dictionary, ba: RigidBody3D, bb: RigidBody3D) ->
 	if not KitLink.is_type(t) or ba == null or bb == null or ba == bb:
 		return {}
 	var info := KitLink.info(t)
-	var wa: Vector3 = ba.global_transform * (l.get("pa", Vector3.ZERO) as Vector3)
-	var wb: Vector3 = bb.global_transform * (l.get("pb", Vector3.ZERO) as Vector3)
+	var ends := flat_ends(ba.global_transform * (l.get("pa", Vector3.ZERO) as Vector3), bb.global_transform * (l.get("pb", Vector3.ZERO) as Vector3))
+	var wa: Vector3 = ends[0]
+	var wb: Vector3 = ends[1]
 	var length := wa.distance_to(wb)
 	if length < KitLink.MIN_LEN * 0.5:
 		return {}
@@ -68,6 +69,17 @@ static func build(d: Node3D, l: Dictionary, ba: RigidBody3D, bb: RigidBody3D) ->
 				prev = seg
 			rec["joints"].append(_joint(d, "%s_J%d" % [nm, n], wb, Basis.IDENTITY, prev, bb, false))
 	return rec
+
+
+## Концы связки в одной плоскости боя: z обоих — среднее. Тела куклы заперты по z и крутятся только вокруг Z (axis_lock), тела связки
+## копируют те же замки (_body). Точки pa / pb мастерская берёт на поверхности деталей — спереди торса z = +0.12, на ноге +0.07: связка
+## между ними шла наклонно к плоскости боя, локальная Z её тел смотрела мимо мировой Z (_basis_along), и Jolt крутил такое звено вокруг
+## наклонной оси, а сдвиг по z заперт и шарниры связки держат ось Z мира — почти вырожденная система, импульсы в сотни м/с и NaN во всей
+## кукле в первые кадры (автосейв «Человек (кукла v3) *», 23.10, tests/autosave_spawn_probe). В плоскости — звенья крутятся вокруг Z мира;
+## смещение точки по z на суставе для запертых по z тел ничего не меняет.
+static func flat_ends(wa: Vector3, wb: Vector3) -> Array:
+	var z := (wa.z + wb.z) * 0.5
+	return [Vector3(wa.x, wa.y, z), Vector3(wb.x, wb.y, z)]
 
 
 ## Тело-стержень от from до to (локальная +Y — вдоль), капсула радиуса r; физические флаги — как у детали-образца like.
@@ -196,8 +208,9 @@ static func place(_d: Node3D, rec: Dictionary) -> void:
 	var bb: RigidBody3D = rec["b"]
 	if not is_instance_valid(ba) or not is_instance_valid(bb):
 		return
-	var wa: Vector3 = ba.global_transform * (rec.get("pa", Vector3.ZERO) as Vector3)
-	var wb: Vector3 = bb.global_transform * (rec.get("pb", Vector3.ZERO) as Vector3)
+	var ends := flat_ends(ba.global_transform * (rec.get("pa", Vector3.ZERO) as Vector3), bb.global_transform * (rec.get("pb", Vector3.ZERO) as Vector3))
+	var wa: Vector3 = ends[0]
+	var wb: Vector3 = ends[1]
 	var bodies: Array = rec["bodies"]
 	var n := bodies.size()
 	for i in range(n):
