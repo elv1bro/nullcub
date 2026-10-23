@@ -1,19 +1,19 @@
 ---
 name: godot-no-focus-steal
-description: "Оконные пробы Godot на macOS не должны красть фокус: запуск через godot/tools/godot_nofocus.sh (DYLD-вставка), что НЕ работает"
+description: "Оконные пробы Godot на macOS не должны красть фокус: невидимо через godot/tools/godot_bg.sh (1×1 окно + SubViewport, как fgame), что НЕ работает"
 metadata:
   node_type: memory
   type: feedback
   originSessionId: 3a354f6a-291d-4e05-ae92-a7f57233623d
-  modified: 2026-10-02T12:59:51.091Z
+  modified: 2026-10-23T12:00:00.000Z
 ---
 
-Оконные пробы Godot (снимки, клипы, perf — всё без `--headless`) запускать через `godot/tools/godot_nofocus.sh`, не голым `godot` и не с `--always-on-top`.
+Оконные пробы Godot (снимки, клипы — всё без `--headless`) запускать **невидимо** через `godot/tools/godot_bg.sh` (или `godot_nofocus.sh`, он теперь вызывает его же), не голым `godot` и не с `--always-on-top`. Пример: `GODOT_BIN=/usr/local/bin/godot godot/tools/godot_bg.sh --path godot --resolution 1600x900 --fixed-fps 60 res://tests/null_hall_snapshot.tscn -- args`.
 
-**Why:** 02.10 автор спросил, можно ли гонять тесты без перехвата фокуса. Обычный запуск делает Godot frontmost-приложением (~15% кадров пробы) и забирает клавиатуру, пока человек работает.
+**Why:** 02.10 автор попросил гонять тесты без перехвата фокуса; 23.10 — «все тесты запускай в фоне без потери фокуса как проект на fgame». Прежний вариант (видимое окно + accessory) всё равно мелькал окном.
 
-**How to apply:** обёртка подставляет `DYLD_INSERT_LIBRARIES=godot/.godot/nofocus/libnofocus.dylib` (исходник `godot/tools/nofocus/nofocus.m`, собирается сама при первом вызове) и глушит `activateIgnoringOtherApps:`/`activate`/`activateWithOptions:`, а политику ставит accessory. Замер по pid frontmost (`lsappinfo info -only pid $(lsappinfo front)`): 0 из 100–300 замеров, exit 0 на hud_snapshot, hitfx_snapshot (`--fixed-fps 60`), perf_probe.
+**How to apply:** godot_bg.sh (порт fgame/tools/godot_bg) делает проект-обёртку в `~/Library/Caches/null-gravity-bg/rp-<md5>` (ссылки на всё из godot/ + override.cfg: главная сцена `res://tools/godot_bg/bgrun.tscn`, окно 1×1 прозрачное no_focus), bgrun.gd ставит окно в (-20000,-20000), unfocusable, mouse_passthrough и рисует сцену пробы в SubViewport размера `--resolution` (снимки через get_viewport().get_texture() работают; если окно «невидимо» — force_draw). nofocus.m (DYLD через `arch -arm64 -e`): политика Prohibited, глушит activate*, makeKeyWindow, TransformProcessType; звук Dummy. Проверено 23.10: doll_snapshot и null_hall_snapshot rc=0, Godot ни разу не frontmost. Не годится для проб с change_scene/current_scene/размером окна и для perf — им `NOFOCUS_VISIBLE=1 godot/tools/godot_nofocus.sh` (старый видимый режим, nofocus_visible.m).
 
-Что НЕ работает (проверено на Godot 4.7.2, всё равно frontmost): `--position -4000,-4000`; `display/window/size/no_focus=true` (override.cfg); `open -g -j`. Перепаковка Godot.app с `LSUIElement` + `codesign --force` — не делать: бинарь падает SIGKILL, macOS показывает системные диалоги (CoreServicesUIAgent). `DYLD_*` вырезается системным `arch`, поэтому только через `arch -arm64 -e DYLD_INSERT_LIBRARIES=…`. Окно за экраном (`--position`) троттлится — FPS вдвое ниже, для perf_probe не использовать. При замере фокуса учитывай чужие окна: другие сессии тоже гоняют `godot`, различать по pid, не по имени.
+Что НЕ работает (Godot 4.7.2): `--position -4000,-4000`; только `no_focus=true` в override.cfg; `open -g -j`; перепаковка Godot.app с LSUIElement + codesign (SIGKILL). `DYLD_*` системный `arch` вырезает — только `arch -arm64 -e`. Чужие окна других сессий различать по pid.
 
 Related: [[godot-test-workflow]]
