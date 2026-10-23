@@ -23,8 +23,11 @@ signal score_changed(score: Array)
 signal goal_scored(team: int, scorer: Doll, own_goal: bool)
 signal sport_changed(id: String)
 signal kickoff(serve_team: int)
+## ХОККЕЙ (HOCKEY.md, правила 23.10): вратарь команды team накрыл шайбу в своей вратарской.
+signal puck_saved(team: int, keeper: Doll)
 
 const GOAL_COLOUR := Color(1.0, 0.85, 0.3)
+const SAVE_COLOUR := Color(0.55, 0.85, 1.0)
 const KO_SLOWMO_S := 0.45
 ## Статистика, которая через розыгрыши складывается; остальное (hardest_hit, max_speed, combo_max…) — максимум.
 const SUM_STATS := ["damage_dealt", "damage_taken", "weapon_hits", "wall_collisions", "air_time", "rotations", "flight_distance",
@@ -54,6 +57,19 @@ var _corner_s := 0.0
 var _balls: Array = []
 var _hockey_on := false
 var sticks: HockeySticks
+## ХОККЕЙ, правила 23.10 (Tuning.HOCKEY_CREASE_M …): журнал сейвов для проб [{t, team, keeper}]; _save_team — чей вратарь накрыл
+## шайбу (пауза play_state "save", потом вбрасывание на его половине); _save_by — кукла, коснувшаяся шайбы в своей вратарской.
+var saves: Array = []
+## Вбрасывание не первое (после гола или сейва): чья шайба (serve_team, −1 — первое или не хоккей) и часы fight_time в этот миг —
+## для роли ботов «соперник вбрасывающего ждёт дома» (HockeyBrain, Tuning.HOCKEY_FACEOFF_HOLD_S).
+var faceoff_team := -1
+var faceoff_clock := 0.0
+var faceoff_n := 0
+## Шайба выше HOCKEY_HIGH_Y дольше HOCKEY_HIGH_S — «вне игры» (свисток, вбрасывание): счётчик для проб и сколько уже висит.
+var high_whistles := 0
+var _high_s := 0.0
+var _save_team := -1
+var _save_by: Doll = null
 
 
 func _ready() -> void:
@@ -73,6 +89,9 @@ func _late_ready() -> void:
 	for n in get_tree().get_nodes_in_group(SportBall.GROUP):
 		if not _balls.has(n):
 			_balls.append(n)
+	for b in _balls:
+		if b is Puck:
+			(b as Puck).touched.connect(_on_puck_touched)
 	_apply_sport()
 	super._late_ready()
 
@@ -198,6 +217,10 @@ func begin() -> void:
 	_first_kickoff = true
 	_respawns.clear()
 	_banked.clear()
+	saves.clear()
+	high_whistles = 0
+	_save_team = -1
+	_save_by = null
 	_place_ball()
 	play_state = "kickoff"
 	super.begin()
@@ -224,8 +247,20 @@ func _place_ball() -> void:
 	var pos := Vector3(0.0, float(rules().get("ball_y", 3.0)), 0.0)
 	if a != null and a.has_method("ball_spawn"):
 		pos = a.call("ball_spawn", serve_team)
+	pos = hockey_faceoff_spot(pos)
+	faceoff_team = serve_team if _hockey_on and not _first_kickoff else -1
+	faceoff_clock = fight_time
+	faceoff_n += 1
 	ball.place(pos)
 	_ball_prev = ball.pos2()
+
+
+## ХОККЕЙ, правила 23.10: точка вбрасывания. Первое — по центру (арена); после гола — на половине пропустившей команды
+## (serve_team) в HOCKEY_FACEOFF_X от центра: забившая начинает в защите и успевает к своим воротам.
+func hockey_faceoff_spot(arena_spot: Vector3) -> Vector3:
+	if not _hockey_on or _first_kickoff:
+		return arena_spot
+	return Vector3(-attack_dir(serve_team) * Tuning.HOCKEY_FACEOFF_X, arena_spot.y, 0.0)
 
 
 ## Ввод мяча: первый — вместо FIGHT! базового матча (сброс кукол и часов), следующие — часы и статистика идут дальше.
@@ -269,6 +304,9 @@ func _hockey_carry() -> void:
 ## ввода, короткий отсчёт.
 func _kickoff() -> void:
 	_respawns.clear()
+	_save_team = -1
+	_save_by = null
+	_high_s = 0.0
 	for d in dolls():
 		_bank_stats(d as Doll)
 		_respawn_as_is(d as Doll)
@@ -309,6 +347,8 @@ func _physics_process(delta: float) -> void:
 				time_left.emit(time_left_s())
 				_check_score()
 				_hockey_carry()
+				_hockey_saves()
+				_hockey_high(delta)
 				if play_state == "play":
 					_tick_idle_ball()
 					if phase == Phase.FIGHT and fight_time >= time_limit_s:
@@ -319,6 +359,11 @@ func _physics_process(delta: float) -> void:
 				_goal_t -= delta
 				if _goal_t <= 0.0:
 					_after_goal()
+			elif play_state == "save":   # ХОККЕЙ: вратарь накрыл шайбу — пауза, потом вбрасывание у него
+				_goal_t -= delta
+				if _goal_t <= 0.0:
+					serve_team = _save_team
+					_kickoff()
 	if ball != null:
 		_ball_prev = ball.pos2()
 
@@ -340,6 +385,111 @@ func knockback_mult() -> float:
 
 func stability_mult() -> float:
 	return 1.0
+
+
+# --- ХОККЕЙ: вратарская и сейв (правила 23.10, HOCKEY.md) ---
+
+## Точка p во вратарской команды team (у её ворот: команда 0 защищает левые, x < 0).
+static func in_crease(p: Vector2, team: int) -> bool:
+	var gx := float(Tuning.SPORTS["hockey"]["goal_x"])
+	return p.x * -attack_dir(team) > gx - Tuning.HOCKEY_CREASE_M and p.y < Tuning.HOCKEY_CREASE_H
+
+
+## Касание шайбы куклой (SportBall.touched, тело или клюшка): шайба во вратарской команды этой куклы — сейв в ближайшем тике
+## матча (заморозка тела — не из сигнала физики).
+func _on_puck_touched(d: Doll) -> void:
+	if not _hockey_on or play_state != "play" or ball == null or ball.freeze or not is_instance_valid(d):
+		return
+	if in_crease(ball.pos2(), team_of(d)):
+		_save_by = d
+
+
+## Сейв: шайба во вратарской команды касается её куклы — новое касание (сигнал) или тело / клюшка, которые уже прижаты к шайбе
+## (SportBall.touched не повторяется, пока контакт не прервётся: вратарь, заехавший вместе с шайбой, иначе завозил её в ворота).
+func _hockey_saves() -> void:
+	if not _hockey_on or play_state != "play" or ball == null or ball.freeze:
+		_save_by = null
+		return
+	var d := _save_by
+	_save_by = null
+	if d == null or not is_instance_valid(d) or not d.alive:
+		d = _crease_contact()
+	if d != null and in_crease(ball.pos2(), team_of(d)):
+		_save(d)
+
+
+## Кукла-хозяин вратарской, где шайба, чьё тело или клюшка сейчас касается шайбы; нет — null.
+func _crease_contact() -> Doll:
+	var p := ball.pos2()
+	var team := 0 if in_crease(p, 0) else (1 if in_crease(p, 1) else -1)
+	if team < 0:
+		return null
+	for body in ball.get_colliding_bodies():
+		var d := SportBall.doll_of(body)
+		var w := body as Weapon
+		if d == null and w != null and w.is_held() and is_instance_valid(w.holder):
+			var hd: Variant = w.holder.get("doll")
+			if is_instance_valid(hd) and hd is Doll:
+				d = hd
+		if d != null and d.alive and team_of(d) == team:
+			return d
+	return null
+
+
+## Сейв: шайба замирает перед вратарём (над льдом, к полю от него), пауза HOCKEY_SAVE_HOLD_S (часы стоят), потом вбрасывание на
+## половине вратаря (serve_team = его команда): роли меняются — теперь он в атаке, а нападавший успевает домой.
+func _save(keeper: Doll) -> void:
+	var team := team_of(keeper)
+	var c := keeper.centre_of_mass()
+	var gx := float(rules()["goal_x"])
+	var x := clampf(c.x + attack_dir(team) * 0.8, -gx + 0.4, gx - 0.4)
+	var y := clampf(c.y + 0.5, 0.5, 2.0)
+	_whistle(team, Vector3(x, y, 0.0))
+	ball.last_touch = keeper
+	saves.append({"t": snappedf(fight_time, 0.01), "team": team, "keeper": keeper.player_index, "score": score.duplicate()})
+	puck_saved.emit(team, keeper)
+	announce.emit(tr("СЕЙВ!"), SAVE_COLOUR, "countdown")
+
+
+## Свисток (сейв, шайба вне игры): шайба замирает в точке at, часы стоят HOCKEY_SAVE_HOLD_S (play_state "save"), потом вбрасывание
+## на половине команды team (serve_team).
+func _whistle(team: int, at: Vector3) -> void:
+	_save_team = team
+	play_state = "save"
+	_goal_t = Tuning.HOCKEY_SAVE_HOLD_S
+	ball.freeze = true
+	ball.linear_velocity = Vector3.ZERO
+	ball.angular_velocity = Vector3.ZERO
+	ball.global_transform = Transform3D(Basis.IDENTITY, at)
+	ball.reset_physics_interpolation()
+	_ball_prev = ball.pos2()
+
+
+## Шайба вне игры (правила 23.10): выше HOCKEY_HIGH_Y дольше HOCKEY_HIGH_S подряд (кукла катала её по потолку, бот соперника ждал в
+## воротах — матч стоял минуту) — свисток, вбрасывание на половине команды, которая её не трогала последней.
+func _hockey_high(delta: float) -> void:
+	if not _hockey_on or play_state != "play" or ball == null or ball.freeze:
+		_high_s = 0.0
+		return
+	_high_s = _high_s + delta if ball.pos2().y > Tuning.HOCKEY_HIGH_Y else 0.0
+	if _high_s < Tuning.HOCKEY_HIGH_S:
+		return
+	_high_s = 0.0
+	var lt := ball.last_touch
+	var team := 1 - team_of(lt) if lt != null and is_instance_valid(lt) else serve_team
+	high_whistles += 1
+	_whistle(team, ball.global_position)
+	announce.emit(tr("ШАЙБА ВНЕ ИГРЫ"), SAVE_COLOUR, "countdown")
+
+
+## Пауза сейва: сколько ещё (0 — не сейв). Для ботов и HUD.
+func save_hold_s() -> float:
+	return _goal_t if play_state == "save" else 0.0
+
+
+## Чей вратарь держит шайбу (−1 — никто).
+func save_team() -> int:
+	return _save_team if play_state == "save" else -1
 
 
 # --- счёт ---
@@ -476,7 +626,7 @@ func _tick_respawns(delta: float) -> void:
 		if is_instance_valid(d) and (d as Doll).is_inside_tree() and not (d as Doll).alive:
 			_bank_stats(d as Doll)
 			var nd := _respawn_as_is(d as Doll)
-			nd.control_enabled = play_state == "play" or play_state == "goal"
+			nd.control_enabled = play_state == "play" or play_state == "goal" or play_state == "save"
 			hp_changed.emit(nd, nd.hp, nd.max_hp)
 
 

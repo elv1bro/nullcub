@@ -21,6 +21,10 @@ const HAND_BASE := "Hand"
 ## Как оружие лежит в кисти: 0° = продолжение руки (+X оружия вдоль -Y кисти, «вниз»),
 ## 90° = в сторону от тела (как в R16, голова молота вбок). Для правой кисти зеркалится.
 @export var hold_angle_deg := 90.0
+## Зеркальный хват (23.10, HOCKEY.md): у оружия с крюком (Tuning.WEAPON[id].mirror — клюшка) поворот на 180° вокруг рукояти.
+## Без него крюк смотрит в +X мира в любой кисти (поворот хвата hold_angle_deg крюк не зеркалит) — у команды, бьющей влево,
+## крюк был загнут к своим воротам, у бьющей вправо — к чужим. Мета ставит HockeySticks.give по направлению атаки куклы.
+const MIRROR_META := &"weapon_mirror"
 ## Точка хвата в локальных координатах кисти (центр кисти чуть к пальцам).
 @export var hand_grip_offset := Vector3(0, -0.03, 0)
 
@@ -175,6 +179,8 @@ func attach(hand_name: String, weapon: Weapon) -> bool:
 		return false
 	var side := _hand_side(hand_name, h)
 	var basis: Basis = h.global_transform.basis * Basis(Vector3(0, 0, 1), deg_to_rad(-90.0 + hold_angle_deg * side))
+	if doll.get_meta(MIRROR_META, false) and bool((Tuning.WEAPON.get(weapon.weapon_id, {}) as Dictionary).get("mirror", false)):
+		basis = basis * Basis(Vector3(1, 0, 0), PI)   # зеркальный хват: поворот на 180° вокруг рукояти (+X оружия)
 	var grip_g := hand_grip_global(hand_name)
 	# оружие не должно бить хозяина
 	for part in doll.parts.values():
