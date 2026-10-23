@@ -1,0 +1,83 @@
+[gd_resource type="Resource" script_class="BodyBlueprint" format=3]
+
+[ext_resource type="Script" path="res://scripts/body/body_blueprint.gd" id="1_q6oc2"]
+
+[resource]
+script = ExtResource("1_q6oc2")
+id = "_autosave"
+title = "Человек (кукла v3) *"
+nodes = Array[Dictionary]([{
+"anchor": "",
+"name": "Torso",
+"parent": "",
+"part": "kit_core_boiler",
+"uid": "T"
+}, {
+"anchor": "Anchor_Neck",
+"name": "Head",
+"parent": "T",
+"part": "junk_head_cracked",
+"uid": "H"
+}, {
+"anchor": "Anchor_Shoulder_L",
+"parent": "T",
+"part": "kit_limb_basic_l",
+"uid": "1"
+}, {
+"anchor": "Anchor_Hip_L",
+"parent": "T",
+"part": "kit_limb_aoe_whip_l",
+"uid": "4"
+}, {
+"anchor": "Anchor_Hip_R",
+"parent": "T",
+"part": "kit_limb_basic_la",
+"uid": "A"
+}, {
+"anchor": "Anchor_Side_L",
+"parent": "T",
+"part": "kit_limb_basic_l",
+"uid": "7"
+}, {
+"anchor": "Anchor_Back",
+"channel": 1,
+"parent": "T",
+"part": "kit_active_booster",
+"uid": "9"
+}, {
+"anchor": "Anchor_Shoulder_R",
+"parent": "T",
+"part": "junk_hand",
+"uid": "0"
+}, {
+"anchor": "Anchor_Side_R",
+"parent": "T",
+"part": "junk_upper_limb",
+"uid": "8"
+}, {
+"anchor": "Anchor_End",
+"parent": "4",
+"part": "kit_limb_aoe_sinew_l",
+"uid": "2"
+}, {
+"anchor": "Anchor_End",
+"parent": "7",
+"part": "kit_limb_tentacle_l",
+"uid": "3"
+}, {
+"anchor": "Anchor_End",
+"parent": "1",
+"part": "kit_limb_tentacle_l",
+"uid": "5"
+}])
+control = PackedStringArray()
+control_rmb = PackedStringArray()
+links = Array[Dictionary]([{
+"a": "T",
+"b": "A",
+"id": "1",
+"len": 0.152,
+"pa": Vector3(-0.066274524, -0.2488929, 0.119999886),
+"pb": Vector3(-0.013594389, 0.11706507, 0.06865072),
+"type": "rope"
+}])
