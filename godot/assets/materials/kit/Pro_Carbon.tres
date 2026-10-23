@@ -1,10 +1,16 @@
 [gd_resource type="StandardMaterial3D" format=3]
 
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/carbon/albedo.webp" id="1_txumy"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/carbon/normal.webp" id="2_5yupq"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/carbon/roughness.webp" id="3_b1auj"]
+
 [resource]
 resource_name = "Pro_Carbon"
-albedo_color = Color(0.18974829, 0.19641912, 0.20906562, 1)
+albedo_texture = ExtResource("1_txumy")
 metallic = 0.2
-roughness = 0.6
+roughness_texture = ExtResource("3_b1auj")
+normal_enabled = true
+normal_texture = ExtResource("2_5yupq")
 rim_enabled = true
-rim = 0.25
+rim = 0.15
 rim_tint = 0.6

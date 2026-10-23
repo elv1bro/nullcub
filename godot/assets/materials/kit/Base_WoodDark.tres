@@ -1,8 +1,8 @@
 [gd_resource type="StandardMaterial3D" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/wood_dark/albedo.webp" id="1_fn8i4"]
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/wood_dark/normal.webp" id="2_1vc83"]
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/wood_dark/roughness.webp" id="3_6tscc"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_wood_dark/albedo.webp" id="1_fn8i4"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_wood_dark/normal.webp" id="2_1vc83"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_wood_dark/roughness.webp" id="3_6tscc"]
 
 [resource]
 resource_name = "Base_WoodDark"

@@ -124,6 +124,12 @@
     - `Steel`, `Brass`, `Rust`, `RustDark` в `KIT_MATS` перекрывают `craft_parts.MAT_DEFS` только для кита.
   - **Роли без пользователей.** В glb кита сейчас нет ролей `Joint`, `Pin`, `Screen`, `Rust`, `RustRed`. Соединители — `Iron` / `Steel` / `Brass` / `Shirt_Kit`, ржавчина кита — `Base_Rust` / `Base_RustRed` / `RustDark`, стекло фонаря — `Glass`. Их `.tres` — запас на будущее: правки в них на вид не влияют. `Base_Rust` и `Base_RustRed` с теми же числами используются (по 4 поверхности).
   - Материалы генерирует `tools/build_body_kit.gd`: таблица `MATS` в нём повторяет `KIT_MATS` (ключи: `pbr`, `tint` — линейный, может быть > 1; `rough`; `metal` — множитель карты metallic или металличность плоского; `flat`; `alpha`; `glow`, `energy`; `swatch`).
+  - **Взрослый вид (23.10, `docs/plan-demo/grownup_art/README.md`).** Числа выше про `Iron` / `CoreGlow` / `Face` — история; действующие — в `MATS` builder'а.
+    - Роли кита переведены на процедурные папки `tex/{worn_paint,gunmetal,oxide,oxide_paint,aged_wood,aged_wood_dark,aged_planks,aged_brass,rubber,carbon}/`. Их пишет `python3 godot/tools/gen_kit_grownup_tex.py` (бесшовные 512², WebP, с нормалями), не `gen_kit_face.py`.
+    - Краски `Base_Paint*` приглушены (сигнальный красный, стальной синий, охра, олива; tint — множитель `worn_paint`, `swatch` = среднее карты × tint). `kit_probe` ΔE76 ≥ 30 до `PLAYER_COLORS` — 45–62.
+    - `CoreGlow` тлеющий (energy 0.5). `Face` — визор: `python3 godot/tools/gen_face_visor.py` пишет `face_default.png` и атлас выражений; `gen_kit_face.py` пишет старое лицо только с `--old-face`.
+    - Эмиссия `Face` — та же картинка (`emission_texture`), а `emission` = чёрный: у StandardMaterial3D с оператором ADD свечение = `(emission + карта) × energy`, белый `emission` заливал визор серым.
+    - `KIT_MATS` в `kit_common.py` (Blender) с новыми папками **не синхронизирован**: лист-каталог показывает старый вид.
   - Новая роль: `kit_import.gd` ставит `.tres` только при импорте glb. glb, импортированные до появления `<Роль>.tres`, остаются с плоским материалом. Builder пишет предупреждение «новая роль …: touch …glb, затем --import».
 
 ## 3. Сцены и данные деталей (`tools/build_body_kit.gd`)

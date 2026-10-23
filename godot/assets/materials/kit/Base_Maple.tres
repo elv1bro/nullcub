@@ -1,11 +1,12 @@
 [gd_resource type="StandardMaterial3D" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/maple_light/albedo.webp" id="1_afmcu"]
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/maple_light/normal.webp" id="2_2wcxa"]
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/maple_light/roughness.webp" id="3_o763n"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_wood/albedo.webp" id="1_afmcu"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_wood/normal.webp" id="2_2wcxa"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/aged_wood/roughness.webp" id="3_o763n"]
 
 [resource]
 resource_name = "Base_Maple"
+albedo_color = Color(1.1766552, 1.1515225, 1.1027949, 1)
 albedo_texture = ExtResource("1_afmcu")
 roughness_texture = ExtResource("3_o763n")
 normal_enabled = true

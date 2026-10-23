@@ -1,11 +1,16 @@
 [gd_resource type="StandardMaterial3D" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/paint_marks/albedo.webp" id="1_huqtj"]
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/paint_marks/roughness.webp" id="2_dekfy"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/worn_paint/albedo.webp" id="1_33jv4"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/worn_paint/metallic.webp" id="2_qcbgq"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/worn_paint/normal.webp" id="3_oje8a"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/worn_paint/roughness.webp" id="4_13uv3"]
 
 [resource]
 resource_name = "Base_PaintWhite"
-albedo_color = Color(0.9063318, 0.8962439, 0.86504203, 1)
-albedo_texture = ExtResource("1_huqtj")
-roughness = 0.75
-roughness_texture = ExtResource("2_dekfy")
+albedo_color = Color(0.83228356, 0.8209799, 0.7977378, 1)
+albedo_texture = ExtResource("1_33jv4")
+metallic = 1.0
+metallic_texture = ExtResource("2_qcbgq")
+roughness_texture = ExtResource("4_13uv3")
+normal_enabled = true
+normal_texture = ExtResource("3_oje8a")

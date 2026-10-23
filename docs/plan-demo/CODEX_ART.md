@@ -90,6 +90,20 @@ gtimeout 900 /usr/bin/arch -arm64 /usr/local/bin/godot --headless --path . --imp
 Проверка: `tests/null_hall_snapshot.tscn` (окно; `role_materials` принимает и `assets/materials/ads/`), `tests/modes_shots.tscn`
 `only=quick+scrap` — щиты читаются и не лезут в бой; `match_probe scene=scrap`, `modes_probe`, `run_gate.sh` зелёные.
 
+## Доски «взрослого вида» бойцов (23.10)
+
+Автор: бойцы выглядят «ужасно детские». Сделали три доски направлений — `godot/tools/codex_art/jobs_grownup.json`, результат в
+`docs/plan-demo/grownup_art/boards/`:
+
+- `dir_a_test_rig` — краш-тест-манекены;
+- `dir_b_scrapyard` — свалочная техника;
+- `dir_c_league_pro` — моторспорт и телеэфир Лиги.
+
+Все три — без отказов. У досок свой стиль: в `codex_gen.py` поле `style` задания перекрывает общий стиль-ключ, потому что
+общий `STYLE` тянет к нынешнему виду игры, а доски должны были от него уйти. Выбрали **C** и добавили износ из B и визор с меткой краш-теста из A.
+Разбор, что сделано в игре, и кадры «до / после» — в `docs/plan-demo/grownup_art/README.md`. Спонсоры на досках — те же
+выдуманные (ORBIT JOINTS, VOLTA CORES, NULL TV). В игру декали спонсоров не перенесены.
+
 ## Проверено
 
 - Реклама из codex (23.10): `--import` чисто; `null_hall_snapshot` (окно через `tools/godot_nofocus.sh`, 1600×900) — OK 12/12:

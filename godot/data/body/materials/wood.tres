@@ -8,4 +8,4 @@ script = ExtResource("1_kujic")
 id = "wood"
 title = "Дерево"
 surface = ExtResource("2_7at7x")
-swatch = Color(0.80946815, 0.6651851, 0.48452926, 1)
+swatch = Color(0.4222509, 0.35912356, 0.2974853, 1)

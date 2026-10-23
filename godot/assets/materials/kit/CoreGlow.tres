@@ -2,8 +2,8 @@
 
 [resource]
 resource_name = "CoreGlow"
-albedo_color = Color(0.58383155, 0.3491902, 0.15170372, 1)
+albedo_color = Color(0.43662706, 0.2716998, 0.12835404, 1)
 roughness = 0.3
 emission_enabled = true
-emission = Color(1, 0.5370987, 0.18974829, 1)
-emission_energy_multiplier = 0.9
+emission = Color(1, 0.6342527, 0.3133042, 1)
+emission_energy_multiplier = 0.5

@@ -8,5 +8,5 @@ script = ExtResource("1_qofu3")
 id = "paint_red"
 title = "Бордовая краска"
 surface = ExtResource("2_csml5")
-swatch = Color(0.47312066, 0.12315822, 0.26479155, 1)
+swatch = Color(0.34580213, 0.12315822, 0.1428257, 1)
 friction = 0.5

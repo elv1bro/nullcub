@@ -11,9 +11,9 @@ extends Node
 
 const JOINT_SCALE := 0.55
 const FACE_TEX := "res://assets/textures/league/league_face.png"
-const GLOW_ALBEDO := Color(0.16, 0.03, 0.4)
-const GLOW_EMISSION := Color(0.5, 0.12, 1.0)
-const GLOW_ENERGY := 1.6
+const GLOW_ALBEDO := Color(0.09, 0.025, 0.2)   # проход «взрослого вида» 23.10: темнее и глуше (было 0.16, 0.03, 0.4 и энергия 1.6)
+const GLOW_EMISSION := Color(0.3, 0.07, 0.62)
+const GLOW_ENERGY := 0.6
 const FACE_ENERGY := 1.0
 const CONNECTOR_PREFIX := "Connector_"
 
@@ -100,7 +100,7 @@ func _face_glow(src: BaseMaterial3D) -> BaseMaterial3D:
 	if dup.albedo_texture == null:
 		dup.albedo_texture = load(FACE_TEX) as Texture2D
 	dup.emission_enabled = true
-	dup.emission = Color.WHITE
+	dup.emission = Color.BLACK     # оператор ADD: (emission + карта) × энергия — с белым светилось всё стекло, а не глаз
 	dup.emission_texture = dup.albedo_texture
 	dup.emission_energy_multiplier = FACE_ENERGY
 	dup.roughness = 0.6            # матовое стекло: глянец отражал свет зала, и тёмный визор выходил серым
