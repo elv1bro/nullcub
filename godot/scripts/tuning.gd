@@ -1815,8 +1815,8 @@ const GAUNTLET_ARENA := {
 ## Лестница соперников: пресет тела (data/body/blueprints/<preset>.tres), уровень бота (1..4 — RIVAL_LEVELS, 5 — GAUNTLET_LEVEL5),
 ## тяга (Doll.thrust_mult) и запас (× ❤ деталей). Растёт всё сразу: «сила» соперника (GauntletRun.power) строго растёт по ступеням.
 const GAUNTLET_LADDER := [
-	{"preset": "kit_horned", "level": 1, "thrust": 1.0, "hp": 1.0},
-	{"preset": "kit_devil", "level": 1, "thrust": 1.03, "hp": 1.0},
+	{"preset": "kit_horned", "level": 1, "thrust": 0.9, "hp": 0.7},     # 23.10: вход в забег мягче боя 1 кампании — урон ещё 9 боёв с тобой
+	{"preset": "kit_devil", "level": 1, "thrust": 0.96, "hp": 0.85},
 	{"preset": "kit_brawler", "level": 2, "thrust": 1.05, "hp": 1.05},
 	{"preset": "kit_skull", "level": 2, "thrust": 1.08, "hp": 1.08},
 	{"preset": "kit_king", "level": 3, "thrust": 1.1, "hp": 1.1},
