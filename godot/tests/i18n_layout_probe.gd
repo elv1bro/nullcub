@@ -1,6 +1,6 @@
 ## Проба вёрстки на всех языках (headless): текст другого языка не должен вылезать или налезать там, где русский помещался.
 ## Эталон — русский (под него рисовался интерфейс). Для каждого экрана (гараж: титул / пункты / настройки / трофеи, кампания в ТВ,
-## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, «Подъём: проба стены» вдвоём и её финиш, «Стенка на стенку 5×5» и её итоги, «Заражение», «Охота за головами», «Перетягивание», «Царь горы», хоккей, экран «РЕЖИМЫ» реестра, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
+## мастерская, экран «ВСЕ РЕЖИМЫ» (длинная карточка стычки и памятка клавиш), HUD купола с меткой СТАЗИСА и плашками бойцов эфира, спорт-зал, «Стычка 3 на 3» и её итоги, «Бомба касанием», «Гонка: 10 точек», «Гонка: трасса» и её итоги, «Королевская битва», «Гольф: кукла — мяч», «Головоломки вдвоём» и их итоги, «Подъём: проба стены» вдвоём и её финиш, «Стенка на стенку 5×5» и её итоги, «Заражение», «Охота за головами», «Перетягивание», «Царь горы», «Собери себя» и его итоги, хоккей, экран «РЕЖИМЫ» реестра, панель «ВИД», табло KO-кино и фоторежим) снимаются прямоугольники всех видимых Label / Button / RichTextLabel / LineEdit на русском, потом то же на каждом
 ## найденном языке (locale/*.json) и на растянутом qps (+35 % длины, Loc.PSEUDO). Новая беда = её не было на русском:
 ##   • «вылез за экран»  — текст выходит за окно, а на русском не выходил;
 ##   • «налез на соседа» — два текста пересеклись (≥ 4 % меньшего), а на русском нет;
@@ -30,6 +30,7 @@ const INFECTION := "res://scenes/playground_infection.tscn"
 const HEADHUNT := "res://scenes/playground_headhunt.tscn"
 const TUG := "res://scenes/playground_tug.tscn"
 const KING := "res://scenes/playground_king.tscn"
+const SCAVENGER := "res://scenes/playground_scavenger.tscn"   # «Собери себя» (SCAVENGER.md): плашки деталей, итоги
 const HOCKEY := "res://scenes/playground_sport_hockey.tscn"   # спорт-зал, хоккей (HOCKEY.md): своя подсказка и подпись HUD
 const MODES_100 := "res://scenes/menu/modes_menu.tscn"   # экран «РЕЖИМЫ» реестра (MODES_100.md)
 const VIEW := Rect2(0, 0, 1920, 1080)
@@ -149,7 +150,7 @@ func _pass() -> Dictionary:
 	await _wait(5)
 	RacePlayground.best_path = "user://_probe_layout_race.cfg"   # «Гонка» (RACE.md): итоги пишут рекорд P1 — не в рекорды игрока
 	TrackPlayground.best_path = "user://_probe_layout_track.cfg"   # «Гонка: трасса» (RACE_TRACK.md) — так же
-	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, KING, HOCKEY, MODES_100]:
+	for p in [WORKSHOP, HALL, SPORT, SQUAD, BOMB, RACE, TRACK, ROYALE, GOLF, PUZZLE, CLIMB, CONVOY, BRAWL, INFECTION, HEADHUNT, TUG, KING, SCAVENGER, HOCKEY, MODES_100]:
 		Stasis.set_on(p == HALL)   # в куполе — с меткой режима СТАЗИС на HUD (StasisBadge, STASIS.md)
 		if p == CLIMB:
 			ClimbMatch.best_time = -1.0   # лучшее время сессии — static: на каждом языке экран тот же («—»)
@@ -209,6 +210,11 @@ func _pass() -> Dictionary:
 			kgm._finish("score")
 			await _wait(SETTLE * 3)
 			shots["king:end"] = _scan(inst)
+		if p == SCAVENGER:   # «Собери себя» (SCAVENGER.md): ещё табличка итогов с таблицей бойцов
+			var svm := inst.get_node("Match") as ScavMatch
+			svm._finish("timeout")
+			await _wait(SETTLE * 3)
+			shots["scavenger:end"] = _scan(inst)
 		if p == RACE:   # «Гонка: 10 точек» (RACE.md): ещё табличка итогов с таблицей мест
 			var rmm := inst.get_node("Match") as RaceMatch
 			rmm.scores = {0: 10, 1: 7, 2: 4, 3: 9}

@@ -1600,3 +1600,52 @@ const HOCKEY_BOT_LEVELS := {
 	2: {"max_in": 0.88, "aim_error_m": 0.3, "lead_s": 0.2, "dash": true, "spin": true, "goalie": true},
 	3: {"max_in": 1.0, "aim_error_m": 0.12, "lead_s": 0.3, "dash": true, "spin": true, "goalie": true},
 }
+
+# --- СОБЕРИ СЕБЯ: торс против торса (docs/plan-demo/SCAVENGER.md, MODES_IDEAS.md Б6) ---
+## Пятеро «Человеков» (kit_human, запас из деталей) на Свалке, все против всех. Старт — только торс и голова; SCAV_PARTS_N
+## конечностей лежат по карте (подсвечены, пульсируют). Своя деталь ближе SCAV_PICK_M к лежащей — та прикручивается на свободное
+## гнездо того же вида (UpperArm / LowerArm / Hand / UpperLeg / LowerLeg / Foot; кисть — только на предплечье, и т. д.), запас растёт.
+## Оторванное в бою снова ложится на карту (своё — нельзя взять SCAV_OWN_LOCK_S, чужое — SCAV_DROP_LOCK_S). KO (голова или запас 0)
+## — всё тело рассыпается деталями. Побеждает последний живой; в SCAV_TIME_S — у кого больше деталей (равно — запас).
+const SCAV_DOLLS := 5
+const SCAV_PARTS_N := 20
+const SCAV_PICK_M := 0.9
+const SCAV_TIME_S := 300.0
+const SCAV_MAX_PARTS := 12
+## Виды деталей на карте по кругу точек: плечо и бедро чаще (без них нижнее не прикрутить).
+const SCAV_SCATTER_KINDS := ["upper_arm", "upper_leg", "lower_arm", "hand", "upper_arm", "lower_leg", "upper_leg", "lower_arm", "foot", "upper_arm",
+	"lower_arm", "upper_leg", "hand", "upper_arm", "lower_leg", "upper_leg", "lower_arm", "foot", "upper_arm", "hand"]
+const SCAV_SCATTER_JITTER_M := 1.2
+const SCAV_DROP_LIFT_M := 0.6
+const SCAV_START_CLEAR_M := 3.0              # стартовые детали — не ближе к точкам появления (и не в столбе под ними)
+## Точки появления (x, y) по player_index — на уступах Свалки, не над ямой.
+const SCAV_SPAWN := [Vector2(0.6, 0.6), Vector2(14.4, 4.6), Vector2(-16.0, 7.0), Vector2(2.5, 5.8), Vector2(-12.0, 3.8)]
+const SCAV_COLORS := BOMB_COLORS
+## Ход: голый торс медленнее (× BARE), полный набор — быстрее (× FULL); тяга масштабируется на массу (без деталей не «ракета»).
+const SCAV_BARE_SPEED := 0.85
+const SCAV_FULL_SPEED := 1.12
+const SCAV_DROP_LOCK_S := 0.35
+const SCAV_OWN_LOCK_S := 1.5
+const SCAV_KO_BURST := Vector2(2.0, 4.5)     # м/с разлёта деталей с выбитого (мин, макс)
+const SCAV_KO_LOCK_S := 0.6
+const SCAV_KO_SLOWMO_S := 0.6
+## Подсветка лежащей детали: цвет, частота пульса (Гц), альфа (мин, макс), раздув оболочки (м).
+const SCAV_GLOW_COLOR := Color(0.4, 0.95, 1.0)
+const SCAV_GLOW_HZ := 1.6
+const SCAV_GLOW_ALPHA := Vector2(0.18, 0.6)
+const SCAV_GLOW_GROW_M := 0.025
+## Камера: человек + до SCAV_FOCUS_N ближайших живых не дальше SCAV_FOCUS_M; HUD — стрелки к SCAV_HUD_ARROWS ближним деталям за кадром.
+const SCAV_FOCUS_M := 9.0
+const SCAV_FOCUS_N := 2
+const SCAV_HUD_ARROWS := 3
+## Бот (ScavBrain): want — сколько деталей собрать, прежде чем охотиться; fear — без деталей удирать от собранного; остальное — EnemyBrain.
+const SCAV_BOT_LEVELS := {
+	1: {"max_in": 0.8, "want": 6, "fear": false, "dash": false, "reaction_s": 0.35, "lead_s": 0.2, "aim_error_m": 0.6, "retreat_s": 1.6},
+	2: {"max_in": 0.92, "want": 6, "fear": true, "dash": true, "reaction_s": 0.25, "lead_s": 0.3, "aim_error_m": 0.35, "retreat_s": 1.3},
+	3: {"max_in": 1.0, "want": 6, "fear": true, "dash": true, "reaction_s": 0.15, "lead_s": 0.4, "aim_error_m": 0.2, "retreat_s": 1.0},
+}
+const SCAV_BOT_PART_M := 4.0                 # годная деталь ближе — бот берёт её даже в охоте
+const SCAV_BOT_FEAR_M := 6.0                 # fear: соперник ближе и деталей у него больше на SCAV_BOT_FEAR_GAP — бот держится подальше
+const SCAV_BOT_FEAR_GAP := 2
+const SCAV_BOT_GIVEUP_S := 6.0               # не достал деталь за столько — бросить её на SCAV_BOT_BAN_S
+const SCAV_BOT_BAN_S := 8.0

@@ -2772,5 +2772,20 @@
 	"играть": "play",
 	"в избранное": "to favorites",
 	"случайный": "random",
-	"назад": "back"
+	"назад": "back",
+	"СОБЕРИ СЕБЯ": "BUILD YOURSELF",
+	"P1: WASD + Shift — коснись светящейся детали, она прикрутится; выбей соперника — его детали твои": "P1: WASD + Shift — touch a glowing part and it bolts on; knock out a rival — their parts are yours",
+	"ПОЛНЫЙ НАБОР!": "FULL SET!",
+	"+1 ДЕТАЛЬ": "+1 PART",
+	"ТЫ ПОБЕДИЛ": "YOU WIN",
+	"ПОБЕДА: %s": "WINNER: %s",
+	"последний на ногах": "last one standing",
+	"время вышло · больше деталей": "time's up · most parts",
+	"ДЕТАЛЕЙ": "PARTS",
+	"ПОДОБРАЛ": "PICKED UP",
+	"ДЕТАЛИ %d/%d": "PARTS %d/%d",
+	"ДЕТАЛЬ · %d м": "PART · %d m",
+	"Собери себя": "Build Yourself",
+	"5 бойцов · руки и ноги на земле": "5 fighters · arms and legs on the ground",
+	"Пятеро на Свалке, у всех только торс и голова. Руки и ноги светятся по карте: коснись — прикрутится, запаса больше. Выбил соперника — его детали твои. Последний на ногах побеждает.": "Five on the Scrapyard, each just a torso and a head. Arms and legs glow around the map: touch one and it bolts on, more reserve. Knock out a rival — their parts are yours. Last one standing wins."
 }
