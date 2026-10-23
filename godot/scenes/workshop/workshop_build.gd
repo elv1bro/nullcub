@@ -1147,6 +1147,20 @@ func load_path(path: String) -> bool:
 	return true
 
 
+## Положить на стенд готовый чертёж (экран «ВЫБОР БОЙЦА» → «В мастерскую»): копия, с историей — Ctrl+Z вернёт прежнюю сборку.
+func load_blueprint(src: BodyBlueprint) -> bool:
+	if src == null or not CraftEdit.structural_errors(src).is_empty():
+		return false
+	var bp := CraftEdit.dup_body(src)
+	_push_history()
+	_adopt(bp)
+	clear_selection()
+	_rebuild()
+	_frame_h = 0.0
+	_say(tr("Загружено: %s") % bp.title.trim_suffix(" *"), COL_OK)
+	return true
+
+
 # =================================================================== стенд и верстак
 
 ## «Запас из деталей» (PartHp, docs/plan-demo/WORKSHOP_V4.md; стандарт с 06.10, клавиша «;» выключает) — та же клавиша, что в бою: ❤ деталей
@@ -1708,7 +1722,7 @@ func end_drag(screen_pos: Vector2) -> Dictionary:
 		recent_parts.remove_at(recent_parts.find(part_id))
 		recent_parts.insert(0, part_id)
 	_snap_fx("body", nu, t, d)
-	if move != "" and nu != "":
+	if nu != "":   # паспорт — о том, что только что встало (и при переносе, и новой детали из каталога)
 		select_stand(nu)
 	# v0.3 §56: встала — экран чистый (щелчок, вспышка и энергия говорят сами); сообщение — только о замене
 	if String(t["replace"]) != "" and move == "":

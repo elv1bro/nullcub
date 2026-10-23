@@ -8,6 +8,6 @@ script = ExtResource("1_2ybil")
 id = "planks"
 title = "Доски"
 surface = ExtResource("2_1mema")
-swatch = Color(0.7014107, 0.5657284, 0.4100209, 1)
+swatch = Color(0.39875868, 0.34064344, 0.28707156, 1)
 density = 0.9
 friction = 0.65

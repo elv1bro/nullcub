@@ -27,7 +27,7 @@ const ITEMS := [
 	{"id": "quick", "title": "БЫСТРЫЙ БОЙ", "l1": "Выставочный матч · двое за одной клавиатурой", "l2": "Купол Old NULL Hall · поле NULL, мембрана, голос зрителей",
 		"spot": "Quick", "zone": "gate", "tv": "quick", "go": "res://scenes/playground_null_hall.tscn", "via": "IntoGate",
 		"n0": "Выставочный — это без очков, но с синяками."},
-	{"id": "workshop", "title": "МАСТЕРСКАЯ", "l1": "Сборка бойца · детали, шарниры, краска", "l2": "ENERGY ядра — сколько деталей потянет тело",
+	{"id": "workshop", "title": "МАСТЕРСКАЯ", "l1": "Сборка бойца · детали, шарниры, краска", "l2": "Энергия ядра — сколько деталей потянет тело",
 		"spot": "Workshop", "zone": "bench", "tv": "build", "go": "res://scenes/workshop/workshop_build.tscn", "via": "IntoStand",
 		"n0": "Говорят, в боксе 07 кто-то собирает бойца из табуреток."},
 	{"id": "fighter", "title": "БОЕЦ", "l1": "Стена экранов · показатели сборки", "l2": "Масса, энергия, детали, шарниры, запас ❤",
@@ -64,12 +64,17 @@ const EXHIBIT_FOV := 38.0
 const OPPONENT_PIC_PRESET := "kit_horned"           # tv/tv_opponent.png — кадр этого бойца (tools/gen_garage_textures.py)
 
 @export var dry_run := false
+## БЫСТРЫЙ БОЙ — сначала экран «ВЫБОР БОЙЦА» (FighterSelect); false — сразу в купол куклой режима, как до него.
+@export var pick_fighter := true
+## Карточка реестра, через которую уходит выбранный боец (купол Old NULL Hall, без модификаторов).
+const QUICK_MODE := "duel_classic"
 ## Живой эфир (scenes/menu/tv_bout.gd: две куклы на арене Void в своём 3D-мире телевизора); false или `-- menu_live_tv=0` —
 ## вместо него смена кадров из assets/textures/garage/tv.
 @export var live_tv := true
 @export var move_time := 0.75
 
-var state := "title"            # title | menu | settings | trophies | workshop | campaign | leaving
+var state := "title"            # title | menu | settings | trophies | workshop | campaign | leaving | fighter | pick
+var pick: FighterSelect = null  # экран «ВЫБОР БОЙЦА», пока открыт
 var _campaign: CampaignState = null
 var _campaign_read := false
 var focus := 0
@@ -184,6 +189,9 @@ func _ready() -> void:
 					set_focus(i, true)
 					flow.last_item = i
 			workshop.open()
+			if FighterPick.pending_workshop != null and workshop.ws != null:   # «В мастерскую» с экрана выбора бойца вне гаража
+				workshop.ws.load_blueprint(FighterPick.pending_workshop)
+			FighterPick.pending_workshop = null
 
 
 # ---------------------------------------------------------------- состояние и ввод
@@ -240,6 +248,15 @@ func activate() -> void:
 	if go == "":
 		_say(tr(String(SOON.get(id, "Скоро."))))
 		return
+	if id == "quick" and pick_fighter:
+		_open_pick()
+		return
+	_leave(id, go)
+
+
+## Уход из гаража в бой: свет, камера к воротам, затемнение, потом _go (bp — боец с экрана «ВЫБОР БОЙЦА», null — кукла режима).
+func _leave(id: String, go: String, bp: BodyBlueprint = null) -> void:
+	var it: Dictionary = ITEMS[focus]
 	state = "leaving"
 	var tw := create_tween()
 	tw.tween_property(ui, "modulate:a", 0.0, 0.35)
@@ -249,7 +266,7 @@ func activate() -> void:
 	var t2 := create_tween()
 	t2.tween_interval(0.85)
 	t2.tween_property(fade, "color:a", 1.0, 0.3)
-	t2.tween_callback(_go.bind(go))
+	t2.tween_callback(_go.bind(go, bp))
 
 
 ## N0 летит к тому, на что смотрит герой на пункте id (камера — в точке пункта spot).
@@ -417,13 +434,57 @@ func _scene_label(path: String) -> String:
 	return path.get_file().get_basename()
 
 
-func _go(target: String) -> void:
+func _go(target: String, bp: BodyBlueprint = null) -> void:
 	var flow := get_node_or_null("/root/Flow")
 	if flow != null:
 		flow.last_item = focus
 	navigated.emit(target)
-	if not dry_run:
+	if dry_run:
+		return
+	if bp != null:   # боец с экрана выбора — единственным путём режимов: ModeRun.launch(opts.player_blueprint) → ModePlayer.swap_p1
+		ModeRun.launch(ModeCatalog.by_id(QUICK_MODE), {"player_blueprint": bp})
+	else:
 		Loading.change_scene(target, "ПОДКЛЮЧЕНИЕ", _scene_label(target))
+
+
+# ---------------------------------------------------------------- «ВЫБОР БОЙЦА» перед быстрым боем (docs/plan-demo/FIGHTER_SELECT.md)
+
+func _open_pick() -> void:
+	state = "pick"
+	_say("")
+	pick = FighterSelect.open_over(self, {"title": tr("БЫСТРЫЙ БОЙ · купол Old NULL Hall"), "dry_run": dry_run})
+	pick.chosen.connect(_on_pick_chosen)
+	pick.cancelled.connect(_on_pick_cancelled)
+	pick.workshop_requested.connect(_on_pick_workshop)
+
+
+func _close_pick() -> void:
+	if pick != null:
+		pick.close()
+	pick = null
+
+
+func _on_pick_chosen(bp: BodyBlueprint) -> void:
+	_close_pick()
+	state = "menu"
+	_leave("quick", String(ITEMS[focus]["go"]), bp)
+
+
+func _on_pick_cancelled() -> void:
+	_close_pick()
+	state = "menu"
+	set_focus(focus, true)
+
+
+func _on_pick_workshop(bp: BodyBlueprint) -> void:
+	_close_pick()
+	state = "menu"
+	for i in ITEMS.size():
+		if String(ITEMS[i]["id"]) == "workshop":
+			set_focus(i, true)
+	workshop.open()
+	if bp != null and workshop.ws != null:
+		workshop.ws.load_blueprint(bp)
 
 
 func _exit_sequence() -> void:
@@ -451,7 +512,7 @@ func _exit_sequence() -> void:
 func _unhandled_input(e: InputEvent) -> void:
 	if Loading.showing:
 		return
-	if state == "leaving" or state == "workshop" or state == "campaign":   # в мастерской и в эфире ввод — их собственный
+	if state == "leaving" or state == "workshop" or state == "campaign" or state == "pick":   # у экрана выбора бойца ввод свой   # в мастерской и в эфире ввод — их собственный
 		return
 	if state == "settings":
 		if settings_ui.handle_input(e):
@@ -638,7 +699,7 @@ func _build_tv(mode: String) -> void:
 			_tv_pic(TV_DIR + "tv_build.png", Rect2(40, 92, 300, 394))
 			_tv_bar(tr("КАРТОЧКА БОЙЦА"), tr("БОКС 07"))
 			_tv_text(tr("ГРОМИЛА"), Vector2(360, 140), 90, Color(1, 1, 1), f_head)
-			_tv_text(tr("МАССА      57 КГ\nДЕТАЛЕЙ    14\nENERGY     91 / 100"), Vector2(366, 268), 30, Color(0.75, 0.9, 1.0), f_mono)
+			_tv_text(tr("МАССА      57 КГ\nДЕТАЛЕЙ    14\nЭНЕРГИЯ    91 / 100"), Vector2(366, 268), 30, Color(0.75, 0.9, 1.0), f_mono)
 		"replay":
 			_tv_img(TV_DIR + "tv_replay.png")
 			_tv_bar(tr("▶ ПОВТОР"), tr("ТЫ vs ПОЛЕНО · KO 0:47"))

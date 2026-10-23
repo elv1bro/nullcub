@@ -23,18 +23,21 @@ const LOOK_SCRIPT := "res://scripts/league/league_look.gd"
 const FACE_TEX := "res://assets/textures/league/league_face.png"
 
 ## роль → параметры (цвета линейные): albedo, rough, metal, glow + energy, alpha, rim (кромка силуэта: чёрный глянец в тёмном зале)
+## Проход «взрослого вида» 23.10 (docs/plan-demo/grownup_art/): pbr — папка текстур кита (tex/<папка>, tools/gen_kit_grownup_tex.py),
+## albedo тогда — множитель карты; свечение приглушено (было 1.2–1.3 — неоновые ореолы читались игрушкой), фиолет темнее.
 const MATS := {
-	"League_Void": {"albedo": [0.045, 0.036, 0.07], "rough": 0.25, "metal": 0.5, "rim": 0.45},
-	"League_Glow": {"albedo": [0.1, 0.02, 0.22], "rough": 0.3, "metal": 0.0, "glow": [0.55, 0.12, 1.0], "energy": 1.3},
-	"League_Cyan": {"albedo": [0.03, 0.2, 0.28], "rough": 0.3, "metal": 0.0, "glow": [0.15, 0.8, 1.0], "energy": 1.2},
-	"League_Crystal": {"albedo": [0.35, 0.72, 0.95], "rough": 0.05, "metal": 0.1, "glow": [0.2, 0.6, 1.0], "energy": 0.5, "alpha": 0.55},
-	"League_Gold": {"albedo": [0.85, 0.58, 0.2], "rough": 0.3, "metal": 0.6},
-	"League_Flesh": {"albedo": [0.26, 0.018, 0.035], "rough": 0.35, "metal": 0.0, "glow": [0.35, 0.02, 0.06], "energy": 0.25, "rim": 0.3},
-	# про-лига Земли (tools/blender/kit_pro.py PRO_MATS): голубой свет линз и сопел, матовый карбон, оранжевый жар реактора
-	"Pro_Glow": {"albedo": [0.03, 0.16, 0.5], "rough": 0.3, "metal": 0.0, "glow": [0.1, 0.4, 1.0], "energy": 1.2},
-	"Pro_Carbon": {"albedo": [0.03, 0.032, 0.036], "rough": 0.6, "metal": 0.2, "rim": 0.25},
-	"Pro_Heat": {"albedo": [0.3, 0.1, 0.02], "rough": 0.3, "metal": 0.0, "glow": [1.0, 0.4, 0.05], "energy": 1.2},
+	"League_Void": {"albedo": [0.32, 0.30, 0.42], "pbr": "gunmetal", "rough": 0.7, "metal": 0.6, "rim": 0.3},
+	"League_Glow": {"albedo": [0.06, 0.015, 0.13], "rough": 0.35, "metal": 0.0, "glow": [0.32, 0.08, 0.66], "energy": 0.6},
+	"League_Cyan": {"albedo": [0.025, 0.12, 0.16], "rough": 0.35, "metal": 0.0, "glow": [0.12, 0.6, 0.8], "energy": 0.75},
+	"League_Crystal": {"albedo": [0.25, 0.45, 0.6], "rough": 0.08, "metal": 0.1, "glow": [0.15, 0.4, 0.7], "energy": 0.3, "alpha": 0.6},
+	"League_Gold": {"albedo": [1.0, 1.0, 1.0], "pbr": "aged_brass", "rough": 1.0, "metal": 0.85},
+	"League_Flesh": {"albedo": [0.17, 0.02, 0.03], "rough": 0.45, "metal": 0.0, "glow": [0.25, 0.02, 0.04], "energy": 0.15, "rim": 0.2},
+	# про-лига Земли (tools/blender/kit_pro.py PRO_MATS): голубой свет линз и сопел, карбон с переплетением, жар реактора
+	"Pro_Glow": {"albedo": [0.02, 0.09, 0.26], "rough": 0.3, "metal": 0.0, "glow": [0.12, 0.42, 0.9], "energy": 0.8},
+	"Pro_Carbon": {"albedo": [1.0, 1.0, 1.0], "pbr": "carbon", "rough": 1.0, "metal": 0.2, "rim": 0.15},
+	"Pro_Heat": {"albedo": [0.18, 0.06, 0.015], "rough": 0.35, "metal": 0.0, "glow": [1.0, 0.38, 0.08], "energy": 0.45},
 }
+const TEX_DIR := DIR + "tex/"
 
 ## Бойцы лиги — предложение облачной сессии (имена, роли и бюджет энергии — решения автора). Цепь: [якорь ядра (без _L / _R — пара),
 ## детали, rest_deg, декор / броня на последний сегмент, имена тел]. Правая сторона — те же углы (зеркалит ModularDoll).
@@ -278,6 +281,8 @@ func _build_mats() -> void:
 		m.albedo_color = Color(a[0], a[1], a[2]).linear_to_srgb()
 		m.roughness = float(d["rough"])
 		m.metallic = float(d["metal"])
+		if d.has("pbr"):
+			_apply_pbr(m, String(d["pbr"]))
 		if d.has("glow"):
 			var g: Array = d["glow"]
 			m.emission_enabled = true
@@ -294,6 +299,25 @@ func _build_mats() -> void:
 		if err != OK:
 			_err("%s — %d" % [role, err])
 	print("build_league: %d materials" % MATS.size())
+
+
+## Карты tex/<папка>/{albedo,roughness,metallic,normal}.webp (как _tex в build_body_kit.gd): roughness / metallic материала — множители.
+func _apply_pbr(m: StandardMaterial3D, folder: String) -> void:
+	var alb := TEX_DIR + folder + "/albedo.webp"
+	if not ResourceLoader.exists(alb):
+		_err("нет %s — python3 godot/tools/gen_kit_grownup_tex.py, затем --import" % alb)
+		return
+	m.albedo_texture = load(alb)
+	var rough := TEX_DIR + folder + "/roughness.webp"
+	if ResourceLoader.exists(rough):
+		m.roughness_texture = load(rough)
+	var metal := TEX_DIR + folder + "/metallic.webp"
+	if ResourceLoader.exists(metal):
+		m.metallic_texture = load(metal)
+	var nrm := TEX_DIR + folder + "/normal.webp"
+	if ResourceLoader.exists(nrm):
+		m.normal_enabled = true
+		m.normal_texture = load(nrm)
 
 
 ## Сцена пресета — текстом: кукла ModularDoll с чертежом (и LeagueLook у бойцов лиги). Не PackedScene.pack: в режиме -s

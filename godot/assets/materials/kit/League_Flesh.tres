@@ -2,11 +2,11 @@
 
 [resource]
 resource_name = "League_Flesh"
-albedo_color = Color(0.54685426, 0.1428257, 0.20598418, 1)
-roughness = 0.35
+albedo_color = Color(0.4492039, 0.15170372, 0.18974829, 1)
+roughness = 0.45
 emission_enabled = true
-emission = Color(0.6262097, 0.15170372, 0.2716998, 1)
-emission_energy_multiplier = 0.25
+emission = Color(0.5370987, 0.15170372, 0.22091636, 1)
+emission_energy_multiplier = 0.15
 rim_enabled = true
-rim = 0.3
+rim = 0.2
 rim_tint = 0.6

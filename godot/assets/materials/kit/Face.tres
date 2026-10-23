@@ -5,4 +5,7 @@
 [resource]
 resource_name = "Face"
 albedo_texture = ExtResource("1_ped4v")
-roughness = 0.55
+roughness = 0.35
+emission_enabled = true
+emission_energy_multiplier = 0.9
+emission_texture = ExtResource("1_ped4v")

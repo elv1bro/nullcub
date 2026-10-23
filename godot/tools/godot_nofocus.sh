@@ -1,18 +1,23 @@
 #!/bin/bash
-# Запуск Godot с окном так, чтобы он не забирал фокус (macOS). Вместо `godot …`:
+# Оконная проба Godot без кражи фокуса (macOS). Вместо `godot …`:
 #   godot/tools/godot_nofocus.sh --path godot --resolution 1280x720 res://tests/hud_snapshot.tscn -- "players=2"
-# Окно рисуется как обычно (скриншоты, --write-movie, --fixed-fps работают), но приложение не активируется:
-# клавиатура и передний план остаются у человека. --always-on-top и --position за экраном не нужны
-# (второе троттлится macOS — FPS вдвое ниже; для perf_probe окно за экраном не использовать).
+# По умолчанию — НЕВИДИМО, через godot_bg.sh (окно 1×1 за экраном, кадр во внутреннем SubViewport, без Dock и фокуса;
+# по образцу проекта fgame). NOFOCUS_VISIBLE=1 — прежний режим: окно на экране, но приложение не активируется
+# (для perf-замеров и проб, которые меняют сцену или трогают размер окна — им SubViewport не подходит).
 # Не macOS или нет clang — просто запускает godot как есть. Для --headless-проб обёртка не нужна.
 # Переменные: GODOT_BIN (по умолчанию godot из PATH).
 set -euo pipefail
 
 GODOT_BIN="${GODOT_BIN:-godot}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC="$HERE/nofocus/nofocus.m"
+
+if [[ "${NOFOCUS_VISIBLE:-0}" != "1" ]]; then
+	exec "$HERE/godot_bg.sh" "$@"
+fi
+
+SRC="$HERE/nofocus/nofocus_visible.m"
 LIB_DIR="$HERE/../.godot/nofocus"   # .godot/ в .gitignore
-LIB="$LIB_DIR/libnofocus.dylib"
+LIB="$LIB_DIR/libnofocus_visible.dylib"
 
 if [[ "$(uname -s)" != "Darwin" ]] || ! command -v clang >/dev/null 2>&1; then
 	exec "$GODOT_BIN" "$@"

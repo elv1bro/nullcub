@@ -1,4 +1,7 @@
-"""Атлас выражений лиц бойцов (docs/plan-demo/look/faces.md, проход по картинке LOOK_PASS.md, направление look-faces). Pillow, без
+"""УСТАРЕЛ с прохода «взрослого вида» 23.10: атлас и наклейку пишет tools/gen_face_visor.py (визор, LED-полосы). Этот скрипт
+перезапишет их старым мультяшным лицом — запускать только для сравнения.
+
+Атлас выражений лиц бойцов (docs/plan-demo/look/faces.md, проход по картинке LOOK_PASS.md, направление look-faces). Pillow, без
 Blender и Godot. Запуск из корня репозитория:
     python3 godot/tools/gen_face_atlas.py [--sheet out.png]
 затем godot --headless --path godot --import.

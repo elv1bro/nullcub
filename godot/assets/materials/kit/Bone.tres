@@ -1,10 +1,16 @@
 [gd_resource type="StandardMaterial3D" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/paint_marks/albedo.webp" id="1_mguas"]
-[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/paint_marks/roughness.webp" id="2_47sl1"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/worn_paint/albedo.webp" id="1_s8d4x"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/worn_paint/metallic.webp" id="2_6166u"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/worn_paint/normal.webp" id="3_oa2wn"]
+[ext_resource type="Texture2D" path="res://assets/materials/kit/tex/worn_paint/roughness.webp" id="4_g7jgx"]
 
 [resource]
 resource_name = "Bone"
-albedo_color = Color(0.935741, 0.886004, 0.7735731, 1)
-albedo_texture = ExtResource("1_mguas")
-roughness_texture = ExtResource("2_47sl1")
+albedo_color = Color(0.86504203, 0.8209799, 0.735357, 1)
+albedo_texture = ExtResource("1_s8d4x")
+metallic = 1.0
+metallic_texture = ExtResource("2_6166u")
+roughness_texture = ExtResource("4_g7jgx")
+normal_enabled = true
+normal_texture = ExtResource("3_oa2wn")
