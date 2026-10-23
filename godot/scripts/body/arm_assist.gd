@@ -262,6 +262,10 @@ var _ik: Dictionary = {}              # IK плеча и локтя (см. _setu
 var _override_target := Vector3.ZERO
 var _grab_requested := false
 var _pending_release: Array = []   # [body, t_min, t_max]
+## Какие части этой куклы рука сама внесла в исключения предмета (id предмета → [RigidBody3D]). Снимаются ровно они:
+## оторванной кисти уже нет в doll.parts, а по doll.parts исключение с ней осталось бы на мяче навсегда, и после
+## освобождения детали get_collision_exceptions() сыпал «Parameter "body" is null» (вышибалы, VISUAL_PASS_2310).
+var _exc_parts: Dictionary = {}
 var _credit: ThrownCredit = null
 var _wp_saved: Variant = null      # прежний WeaponPickup.auto_pickup, пока мы его держим выключенным
 var _wp_block_until := -1.0
@@ -747,9 +751,9 @@ func _physics_process(delta: float) -> void:
 		return
 	if primary:
 		_tick_reattach()   # и без управляемой детали: её саму могли оторвать, вернуть можно касанием
+	_tick_pending_release()   # и без управляемой детали: кисть оторвали с предметом в руке — исключения с ним всё равно снять
 	if part == null:
 		return
-	_tick_pending_release()
 	var dead := not doll.alive or doll.is_broken() or not is_instance_valid(part) or not is_instance_valid(torso)
 	if dead:
 		if held != null:
@@ -1110,6 +1114,8 @@ func toggle_grab() -> void:
 
 ## Можно ли схватить тело (без проверки расстояния).
 func can_grab(b: Node) -> bool:
+	if part == null or not is_instance_valid(part):
+		return false   # кисть оторвана (_on_part_detached): хватать нечем, grab() упал бы на _z_angle(null)
 	var rb := b as RigidBody3D
 	if rb == null or not is_instance_valid(rb) or rb.freeze or rb == held:
 		return false
@@ -1180,10 +1186,12 @@ func grab(b: RigidBody3D) -> bool:
 	_overstretch_t = 0.0
 	var cp := closest_point(b, grip_global())
 	anchor_local = b.to_local(cp)
-	var exc := b.get_collision_exceptions()
+	var mine: Array = _exc_parts.get(b.get_instance_id(), [])
 	for p in doll.parts.values():
-		if not exc.has(p):
+		if not mine.has(p):
 			b.add_collision_exception_with(p)   # Jolt хранит дубли: повторный захват до снятия исключений оставил бы копию навсегда
+			mine.append(p)
+	_exc_parts[b.get_instance_id()] = mine
 	var od := b.get_parent() as Doll
 	_credit = null
 	if od == null or not od.alive:
@@ -1398,9 +1406,10 @@ func _cancel_pending_release(b: RigidBody3D) -> void:
 func _remove_exceptions(b: RigidBody3D) -> void:
 	if not is_instance_valid(b) or b == held:
 		return
-	for p in doll.parts.values():
+	for p in _exc_parts.get(b.get_instance_id(), doll.parts.values()):
 		if is_instance_valid(p):
 			b.remove_collision_exception_with(p)
+	_exc_parts.erase(b.get_instance_id())
 
 
 ## Пересекается ли AABB предмета (с зазором RELEASE_CLEAR_M) с AABB частей куклы.

@@ -127,6 +127,12 @@ func _dome() -> void:
 	var lt := pg.get_node_or_null("LowerThirds") as LowerThirds
 	if _want("plates"):
 		_check("plates_attach", lt != null and lt.match_node == m, "LowerThirds рядом с матчем")
+		# Плашки «ИГРОК 1 / ИГРОК 2 · СЕРИЯ» — только 1 на 1: у босса (кооп), «Собери себя» (FFA 5) и вышибал (3 на 3) их нет.
+		var team_off := true
+		for mm: Match in [BossMatch.new(), ScavMatch.new(), DodgeballMatch.new()]:
+			team_off = team_off and not LowerThirds.wants(mm)
+			mm.free()
+		_check("plates_skip_team_modes", team_off and LowerThirds.wants(m), "плашки 1 на 1 не у босса / сборщика / вышибал (VISUAL_PASS_2310)")
 	if hs == null:
 		pg.queue_free()
 		return

@@ -151,7 +151,7 @@ func _run() -> void:
 		await _frames()
 		get_tree().quit(0)
 		return
-	var cases := ["reach", "zero_sum", "multi_pull", "throw_far", "throw_hit", "classes", "heavy", "toggle"]
+	var cases := ["reach", "zero_sum", "multi_pull", "throw_far", "throw_hit", "classes", "heavy", "toggle", "detach"]
 	for c in cases:
 		if case_filter != "" and case_filter != c:
 			continue
@@ -741,6 +741,37 @@ func _case_toggle() -> void:
 	_check("weapon_grab_key_drops", dropped and not repicked_early, [dropped, repicked_early], "[true, false]", "клавиша захвата бросает оружие; подбор выключен %.1f с" % ArmAssist.REPICK_BLOCK_S)
 	await _ticks(40)
 	info["weapon_auto_pickup_after"] = wp.auto_pickup
+
+
+## Оторвали кисть с ящиком в руке: исключения коллизий снимаются со всеми частями, и с оторванной кистью (её уже нет в
+## doll.parts), рука больше не хватает (VISUAL_PASS_2310: у вышибал мяч копил исключения, потом «Parameter "body" is null»).
+func _case_detach() -> void:
+	_new_world()
+	var p1 := _spawn_doll(DOLL_SCENE, 0.0, "p1", 0, true)
+	var arm := _arm(p1)
+	var crate := _spawn_prop(CRATE, Vector3(-1.35, 0.02, 0))
+	await _ticks(50)
+	var t1 := 0
+	while t1 < 90 and arm.held == null:
+		arm.set_target_override(arm.closest_point(crate, arm.root_point()) + Vector3(0, 0.08, 0))
+		await _ticks(1)
+		t1 += 1
+		if arm.candidate == crate:
+			arm.press_grab()
+			await _ticks(1)
+	var held := arm.held == crate
+	var hand := p1.detach_part(arm.part_name)
+	await _ticks(2)
+	var grab_after := arm.can_grab(crate)   # сразу: потом кисть может прирасти обратно касанием (_tick_reattach)
+	await _ticks(128)
+	var exc := crate.get_collision_exceptions()
+	var left := 0
+	for p in p1.parts.values():
+		if exc.has(p):
+			left += 1
+	var hand_exc := hand != null and exc.has(hand)
+	_check("detached_hand_exceptions", held and hand != null and not hand_exc and left == 0 and not grab_after,
+		[held, hand != null, hand_exc, left, grab_after], "[true, true, false, 0, false]", "кисть оторвана с ящиком в руке, через 2.2 с")
 
 
 # ------------------------------------------------------------------ кадры (не headless)

@@ -437,6 +437,11 @@ func _flow() -> void:
 	await get_tree().process_frame   # отложенные вызовы кадра физики (env_slam) — до снятия боя
 	pg.finish_fight(true, {"won": true, "duration_s": 20.0, "snapshot": snap})
 	await get_tree().physics_frame
+	# антракт: запас в тех же единицах, что ❤ в бою (ДРАЙВ ×1.5), а не голая Σ ❤ деталей (VISUAL_PASS_2310)
+	var fp := pg.run.pool_max() * _drive_k()
+	var want_line := tr("Запас на старт боя: %d из %d ❤\nНе хватает: %s").get_slice("\n", 0) % [int(roundf(pg.run.start_hp(fp))), int(roundf(fp))]
+	_check("flow_break_pool_units", is_equal_approx(pg.run.hp_scale, _drive_k()) and pg._break_body.text.begins_with(want_line),
+		"«%s» (ждём «%s»)" % [pg._break_body.text.get_slice("\n", 0), want_line])
 	pg.start_fight()   # починку не взяли — сгорела
 	await _until(_in_fight, 5.0)
 	p1 = pg.fight.get_node("P1") as Doll

@@ -87,6 +87,7 @@ func _on_gauntlet_phase(p: int) -> void:
 	_applied = true
 	if run != null and is_instance_valid(p1):
 		run.body_map(p1)
+		run.hp_scale = p1.max_hp / maxf(run.pool_max(), 1.0)
 		p1.hp = run.start_hp(p1.max_hp)
 		for n in run.wear:
 			if p1.joint_hp.has(n):

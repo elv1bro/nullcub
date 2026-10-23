@@ -124,7 +124,8 @@ func _ready() -> void:
 	hint.offset_left = 20.0
 	hint.offset_right = 1900.0
 	hint.offset_top = -96.0
-	hint.offset_bottom = -44.0
+	hint.offset_bottom = -44.0   # ниже — метка «Tab — управление» (ControlFeelPanel)
+	hint.grow_vertical = Control.GROW_DIRECTION_BEGIN   # две строки растут вверх, не на метку Tab
 	root.add_child(hint)
 	toast_label = _label("Toast", 26, Color.WHITE)
 	toast_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -259,7 +260,7 @@ func refresh_hint() -> void:
 	if playground != null and playground.get("p2_bot") != null:
 		p2b = bool(playground.get("p2_bot"))
 	var who := tr("U — P2 на стрелках") if p2b else tr("P2: стрелки + правый Ctrl + Enter (U — бот)")
-	hint.text = "%s    %s    %s" % [tr("P1: WASD + Shift — бей в светящуюся деталь, уходи от рывков"), who,
+	hint.text = "%s\n%s    %s" % [tr("P1: WASD + Shift — бей в светящуюся деталь, уходи от рывков"), who,
 		tr("K: уровень ботов    R: заново    Esc: пауза")]
 	hint.visible = true
 	hint.modulate.a = 1.0
