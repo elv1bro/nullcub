@@ -1,0 +1,50 @@
+[
+ {
+  "id": "ad_fight_night",
+  "aspect": "landscape 16:9",
+  "refs": ["godot/tools/codex_art/refs/ref_fighters.jpg"],
+  "prompt": "Flat front-on stadium LED billboard advertisement filling the whole frame edge to edge (no frame, no wall, no perspective). Two modular robot puppet fighters (like the references) clash mid-air in zero gravity, sparks and a flying arm part. Huge bold condensed title on the left: NULL LEAGUE, under it smaller: FIGHT NIGHT. Deep navy background with amber and cyan light streaks, bold graphic sports-broadcast design, high contrast, readable from far away. Only those words, no other text."
+ },
+ {
+  "id": "ad_joints",
+  "aspect": "landscape 16:9",
+  "refs": ["godot/tools/codex_art/refs/ref_kit.jpg"],
+  "prompt": "Flat front-on stadium billboard advertisement for a fictional sponsor that makes ball joints for robot puppet fighters, filling the whole frame (no frame, no wall, no perspective). A big glossy chrome ball joint with an amber ring on the right, glowing. Bold condensed brand name on the left: ORBIT JOINTS, under it the slogan: HOLDS IN ZERO-G. Clean product-ad layout, deep navy background, amber and cream type, cyan rim light. Only those words, no other text, no real brands."
+ },
+ {
+  "id": "ad_cores",
+  "aspect": "landscape 16:9",
+  "refs": ["godot/tools/codex_art/refs/ref_kit.jpg"],
+  "prompt": "Flat front-on stadium billboard advertisement for a fictional sponsor that makes energy power cores for robot fighters, filling the whole frame (no frame, no wall, no perspective). A glowing cyan hexagonal energy core cell with lightning arcs in the middle-right. Bold condensed brand name: VOLTA CORES, slogan under it: MORE CHARGE PER HIT. Energetic diagonal stripes, deep navy, electric cyan and amber, high contrast. Only those words, no other text, no real brands."
+ },
+ {
+  "id": "ad_nulltv",
+  "aspect": "landscape 16:9",
+  "refs": ["godot/tools/codex_art/refs/ref_n0.jpg"],
+  "prompt": "Flat front-on stadium billboard advertisement for the League TV channel, filling the whole frame (no frame, no wall, no perspective). The mascot drone N0 (small white round hovering robot with rabbit-ear antennae, dark screen face with happy cyan eyes, holding a microphone) on the right, waving. Big bold title on the left: NULL TV, under it: LIVE FROM THE DOME, a small red LIVE dot. Retro broadcast graphics, navy and amber with cyan glow. Only those words, no other text."
+ },
+ {
+  "id": "ad_scrap_cup",
+  "aspect": "landscape 16:9",
+  "refs": ["godot/tools/codex_art/refs/ref_fighters.jpg"],
+  "prompt": "Flat front-on weathered billboard advertisement filling the whole frame (no frame, no wall, no perspective). A battered modular robot puppet fighter stands on a pile of scrap metal raising a fist, a magnet crane behind, sunset orange sky. Big bold stencil title: SCRAP CUP, under it: BUILT FROM JUNK. Rusty painted-metal look with scratches and rivets, orange, rust, navy and cream. Only those words, no other text."
+ },
+ {
+  "id": "ad_banner_wide",
+  "aspect": "ultra-wide panoramic, as wide as possible (about 3:1)",
+  "refs": [],
+  "prompt": "Flat front-on long horizontal stadium perimeter banner, filling the whole frame edge to edge (no frame, no perspective). Deep navy with amber diagonal speed stripes and a thin cyan glow line along the top and bottom edges. In the middle a simple circular emblem (stylized dome arc over a tiny floating figure) between the words NULL LEAGUE on the left and SEASON ZERO on the right, bold condensed letters. Clean graphic design, must look fine when repeated side by side. Only those words, no other text."
+ },
+ {
+  "id": "ad_vertical",
+  "aspect": "portrait 1:2 (tall and narrow)",
+  "refs": ["godot/tools/codex_art/refs/ref_fighters.jpg"],
+  "prompt": "Flat front-on tall vertical stadium flag banner filling the whole frame (no pole, no background, no perspective). A modular robot puppet fighter floating upside down in zero gravity, limbs spread, glowing dome arc behind it. Big vertical bold title stacked letters at the top: NULL, at the bottom small: ZERO-G. Deep navy, amber, cyan accents, bold graphic poster design. Only those words, no other text."
+ },
+ {
+  "id": "hero_wide",
+  "aspect": "ultra-wide panoramic, as wide as the tool allows (target 3:1 cinematic banner)",
+  "refs": ["docs/steam/keyart_wide.jpg", "godot/tools/codex_art/refs/ref_fighters.jpg", "godot/tools/codex_art/refs/ref_n0.jpg"],
+  "prompt": "Ultra-wide cinematic panoramic key art banner for the game's store library hero image (same world and look as the first reference). Inside a huge glowing translucent dome membrane arena: two modular robot puppet fighters collide mid-air in zero gravity in the CENTRE of the frame, parts and sparks flying, the mascot drone N0 filming them a bit to the right; the left and right thirds show the curving dome wall, spotlights, floating debris and a packed stadium crowd far below, calm enough for text overlays. Keep all important content inside the middle horizontal band (the top and bottom 15% may be cropped). No text, no logos, no letters."
+ }
+]

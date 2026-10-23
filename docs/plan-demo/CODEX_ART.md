@@ -31,6 +31,46 @@ gtimeout 900 /usr/bin/arch -arm64 /usr/local/bin/godot --headless --path godot -
 палитра navy/amber/cyan, запрет на «Ragdoll Master») — в `STYLE` в `codex_gen.py`. Референсы — `refs/` (кадры игры).
 Подводный камень: codex без закрытого stdin ждёт ввода («Reading additional input from stdin…») — в скрипте `stdin=DEVNULL`.
 
+## Реклама на аренах (23.10)
+
+Щиты выдуманной Лиги NULL и её выдуманных спонсоров (ORBIT JOINTS — шарниры, VOLTA CORES — ядра, NULL TV — канал Лиги,
+SCRAP CUP — кубок Свалки). Реальных марок нет; «Ragdoll Master» нигде нет.
+
+| Что | Файлы |
+|---|---|
+| Модели (Blender) | `godot/tools/blender/arena_ads.py` → `godot/assets/models/arena/ads/*.glb` + `kit_report.json`: `Ad_Ribbon` (LED-лента борта 5.6×0.62 м, 46 tris), `Ad_Billboard` (щит 16:9 6.4×3.6 м на ногах, 1314), `Ad_Billboard_Pole` (тот же щит на ферме-мачте 7 м, 3522 / 4000), `Ad_Banner_Curved` (дуга R 26 м на 26°, полотно 2 м, 796), `Ad_Flag` (флаг 1:2 на мачте 6.2 м, 102) |
+| Материалы ролей | `godot/assets/materials/ads/Ad_*.tres` (ставит `tools/import/role_import.gd` по папке glb); полотно — роль `Ad_Screen`, картинку кладёт расстановка (surface override: альбедо + свечение той же картинкой) |
+| Картинки | `godot/tools/codex_art/arena_ads.py` → `godot/assets/textures/arena_ads/`: щиты `board_{fight_night,joints,cores,nulltv,scrap_cup}` 1024×576, ленты `ribbon_{league,joints,cores,nulltv}` 1800×200 (LED-сетка), `banner_curved` 2048×344, `flag_null` 512×1000 |
+| Задания codex | `godot/tools/codex_art/jobs_arena_ads.json` — 7 реклам (`ad_*`) + `hero_wide` (широкий арт для Steam, без текста) |
+| Расстановка | `godot/scenes/arena/league_boards.gd` (`LeagueBoards.attach(host, layout)`), вызов в `_ready()` арены: `null_hall.gd` (купол), `scrap.gd` (Свалка). Сгенерированные сцены (`tools/build_null_hall.gd`, `scrap.tscn`) не тронуты |
+
+Где стоят (всё — фон: вне поля боя, без коллизий, без теней):
+- **Купол** (`NullHall`, быстрый бой и пр.): лента на борту каждой из 33 секций трибун (`Stand_<ярус>_<секция>`, 4 ленты
+  по кругу), 3 изогнутых баннера «NULL LEAGUE · SEASON ZERO» на R 26 м, y 10.3 — в тёмной щели между 2-м и 3-м ярусом,
+  над головами бойцов.
+- **Свалка**: два щита на мачтах за горами (z −13.5…−14.5, по бокам кадра: FIGHT NIGHT слева, SCRAP CUP справа), два
+  флага NULL за отвалами (z −7…−7.5, x ±15). Щит на ногах (`Ad_Billboard`) и щиты joints/cores/nulltv сделаны, но пока
+  не поставлены (запас для Руин / Void / мастерской).
+
+Сейчас картинки собраны **без codex**: лимит codex исчерпан до 29.10.2026 18:09. `arena_ads.py` берёт кадры codex, что
+уже в репо (`docs/steam/keyart_wide`, плакаты, эмблема, фото Свалки из гаража), и набирает надписи Oswald; «товары»
+спонсоров (шарнир, ядро) нарисованы там же. Перегенерация через codex:
+
+```bash
+cd godot/tools/codex_art
+python3 codex_gen.py jobs_arena_ads.json /абс/папка/ads 4      # <id>.png по заданиям
+python3 arena_ads.py --codex /абс/папка/ads                    # щиты/баннер/флаг из codex, ленты — набор; hero_wide.png → docs/steam/hero_wide.jpg
+python3 steam_capsules.py                                      # library_hero возьмёт docs/steam/hero_wide.jpg
+cd ../.. && /Applications/Blender.app/Contents/MacOS/Blender -b --python tools/blender/arena_ads.py -- --export   # только если менялись модели
+gtimeout 900 /usr/bin/arch -arm64 /usr/local/bin/godot --headless --path . --import
+```
+
+Подводный камень: `craft_parts._obj` пересчитывает нормали «наружу» — у открытой дуги это выпуклая сторона, и Godot отсекал
+полотно `Ad_Banner_Curved` как заднюю грань (баннер не было видно). В `build_Ad_Banner_Curved` грани развёрнуты после `_obj`.
+
+Проверка: `tests/null_hall_snapshot.tscn` (окно; `role_materials` принимает и `assets/materials/ads/`), `tests/modes_shots.tscn`
+`only=quick+scrap` — щиты читаются и не лезут в бой; `match_probe scene=scrap`, `modes_probe`, `run_gate.sh` зелёные.
+
 ## Проверено
 
 - `loading_probe` зелёная; снимок лоадера — арт справа, текст слева читается (шторка-градиент).
@@ -38,8 +78,10 @@ gtimeout 900 /usr/bin/arch -arm64 /usr/local/bin/godot --headless --path godot -
 
 ## Открыто
 
-- Арт для арен (рекламные щиты Лиги в куполе) — пока нет: в моделях арен нет места под щит, это работа в Blender.
+- Реклама на аренах — пока только купол и Свалка (см. выше); Руины, Void, мастерская — без щитов. Картинки — сборка без codex.
 - Экраны ТВ `tv_build` / `tv_opponent` — прежние (рисуются генератором, кадров веб-прототипа в них нет).
 - Капсулы Steam нарезаны: `docs/steam/capsules/` (header 920×430, small 462×174, main 1232×706, vertical 748×896, library 600×900,
-  hero 3840×1240, logo 1280×720 на прозрачности) — `python3 godot/tools/codex_art/steam_capsules.py`. Hero растянут из 1672×941 —
-  перед подачей нужен рендер крупнее. Название юридически не проверено (`BRAND.md`).
+  hero 3840×1240, logo 1280×720 на прозрачности) — `python3 godot/tools/codex_art/steam_capsules.py`. Hero (23.10) больше не
+  растянут: keyart_wide по высоте (×1.32) в центре, бока — размытое притемнённое зеркало кадра; когда появится
+  `docs/steam/hero_wide.jpg` (codex, задание `hero_wide`), берётся он. Перед подачей лучше настоящий широкий арт.
+  Название юридически не проверено (`BRAND.md`).

@@ -4,7 +4,7 @@
 ## 3 — удар о мембрану: кукла P2 влетает в правый бок купола (поле ↗ 0.24 G), лента прогибается и светится,
 ## 4 — трибуна крупно: зрители-спрайты (crowd= — полный кадр отдельно). Две куклы (doll.tscn, заморожены) на спавнах, N0 висит у края поля.
 ## Проверки (exit 1): модули на месте (33 секции трибун, ≥ 1000 зрителей, ≥ 8 якорей и эмиттеров, 2 ворот, экран и табло),
-## материалы ролей пришли из assets/materials/null_hall, табло показывает гравитацию и обновляется при смене поля,
+## материалы ролей пришли из assets/materials/null_hall (реклама Лиги — из assets/materials/ads), табло показывает гравитацию и обновляется при смене поля,
 ## рост бойца в игровом кадре 8–12 % высоты. Отчёт — tests/null_hall_snapshot_report.json.
 extends Node3D
 
@@ -145,7 +145,9 @@ func _check_structure() -> void:
 		for i in range(mesh.get_surface_count()):
 			surfaces += 1
 			var m := mesh.surface_get_material(i)
-			if m == null or not String(m.resource_path).begins_with("res://assets/materials/null_hall/"):
+			# реклама Лиги (LeagueBoards, 23.10) — свои роли из assets/materials/ads (tools/blender/arena_ads.py)
+			var mp := String(m.resource_path) if m != null else ""
+			if not (mp.begins_with("res://assets/materials/null_hall/") or mp.begins_with("res://assets/materials/ads/")):
 				if flat.size() < 6:
 					flat.append("%s:%s" % [mi.name, m.resource_name if m != null else "null"])
 	_check("role_materials", flat.is_empty(), "%d surfaces, flat: %s" % [surfaces, flat])

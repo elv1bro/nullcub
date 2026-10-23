@@ -1,0 +1,61 @@
+{
+ "Ad_Banner_Curved": {
+  "tris": 796,
+  "budget": 3000,
+  "bytes": 39756,
+  "materials": [
+   "Ad_LightWarm",
+   "Ad_Screen",
+   "Ad_Steel",
+   "Ad_SteelDark"
+  ]
+ },
+ "Ad_Billboard": {
+  "tris": 1314,
+  "budget": 3000,
+  "bytes": 66052,
+  "materials": [
+   "Ad_LightCool",
+   "Ad_LightWarm",
+   "Ad_Screen",
+   "Ad_Steel",
+   "Ad_SteelDark",
+   "Ad_Yellow"
+  ]
+ },
+ "Ad_Billboard_Pole": {
+  "tris": 3522,
+  "budget": 4000,
+  "bytes": 193316,
+  "materials": [
+   "Ad_LightCool",
+   "Ad_LightWarm",
+   "Ad_Rubber",
+   "Ad_Screen",
+   "Ad_Steel",
+   "Ad_SteelDark",
+   "Ad_Yellow"
+  ]
+ },
+ "Ad_Flag": {
+  "tris": 102,
+  "budget": 3000,
+  "bytes": 10888,
+  "materials": [
+   "Ad_LightWarm",
+   "Ad_Screen",
+   "Ad_Steel",
+   "Ad_SteelDark",
+   "Ad_Yellow"
+  ]
+ },
+ "Ad_Ribbon": {
+  "tris": 46,
+  "budget": 3000,
+  "bytes": 4632,
+  "materials": [
+   "Ad_Screen",
+   "Ad_SteelDark"
+  ]
+ }
+}
