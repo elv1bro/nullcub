@@ -22,7 +22,7 @@
 ##   • pattern — раскраски stripes, camo, flames, dots, gradient, graffiti, детерминированы seed (координаты — метры в кадре корня
 ##     меша: полосы и горошек одного размера на всех деталях; для всей куклы мастерская даёт каждой детали свой seed); mirror_x —
 ##     тот же рисунок, отражённый по X кадра слоя (правая деталь старой куклы: корень меша Mesh_R не зеркальный, BODY_PAINT §6.1);
-##     частями — pattern_begin / pattern_run (срезы z до бюджета времени: мастерская не держит кадр на 40–80 мс).
+##     частями — pattern_begin / pattern_run (пачки строк до бюджета времени: мастерская не держит кадр на 40–80 мс).
 ## Живая текстура: make_texture() один раз, update_texture(tex) после штриха — пересобираются только грязные срезы z
 ## (у ImageTexture3D нет частичной загрузки: сам upload — вся текстура, ≤ 256 КБ).
 class_name PaintLayer
@@ -48,6 +48,7 @@ const SPRAY_DOT_FLOW := Vector2(0.3, 0.7)
 const SPRAY_SIGMA := 0.45
 ## Камуфляж: насколько меняется шум за 1 см (полоса смешения цветов у порога ≈ ячейка).
 const CAMO_EDGE := 0.06
+const PATTERN_CHUNK_CELLS := 256   # pattern_run: ячеек за пачку строк между проверками времени (≈ 0.25 мс; срез 40 × 40 — до 2 мс)
 const ZSTD_MAGIC := [0x28, 0xB5, 0x2F, 0xFD]
 
 var res := Vector3i(MIN_CELLS, MIN_CELLS, MIN_CELLS)
@@ -289,8 +290,11 @@ func pattern_begin(kind: String, colors: Array, pattern_seed: int, axis := Vecto
 	return {"kind": kind, "p": p, "z": z0, "mirror": mirror_x}
 
 
-## Рисовать срезы z задачи pattern_begin по порядку, пока не выйдет max_usec (0 — до конца); true — рисунок готов. Срез — целиком:
-## результат не зависит от того, на сколько кадров разбит. Грязные срезы помечаются (update_texture).
+## Рисовать задачу pattern_begin по порядку (срезы z, в срезе — строки y) пачками ≤ PATTERN_CHUNK_CELLS ячеек, пока не выйдет max_usec
+## (0 — до конца); true — рисунок готов. Ячейка зависит только от своих координат и подготовки pattern_begin — результат не зависит от
+## того, на сколько вызовов разбит (байт в байт как pattern). Время проверяется после каждой пачки, не после среза: срез большой
+## детали (40 × 40) — до 2 мс, под нагрузкой втрое дольше, и шаг очереди мастерской выходил за бюджет на срез. Грязные срезы
+## помечаются (update_texture).
 func pattern_run(job: Dictionary, max_usec := 0) -> bool:
 	if job.is_empty():
 		return true
@@ -298,34 +302,45 @@ func pattern_run(job: Dictionary, max_usec := 0) -> bool:
 	var p: Dictionary = job["p"]
 	var kind := String(job["kind"])
 	var mirror := bool(job["mirror"])
+	var z := int(job["z"])
+	var y := int(job.get("y", 0))
+	var rows := maxi(1, PATTERN_CHUNK_CELLS / res.x)
+	# массив пишется на месте: ссылка слоя снята на время рисования, иначе первая запись в d копировала бы весь массив (≤ 256 КБ
+	# на каждый вызов — на каждый шаг очереди)
 	var d := data
-	while int(job["z"]) < res.z:
-		var z := int(job["z"])
-		# отражение: срез переворачивается по x до и после рисунка — старая краска остаётся на месте (перестановка ячеек и
+	data = PackedByteArray()
+	while z < res.z:
+		var y1 := mini(y + rows, res.y)
+		# отражение: строки переворачиваются по x до и после рисунка — старая краска остаётся на месте (перестановка ячеек и
 		# «поверх» по ячейке перестановочны), рисунок ложится отражённым
 		if mirror:
-			_flip_x(d, z)
+			_flip_x(d, z, y, y1)
 		match kind:
 			"stripes":
-				_slab_stripes(d, p, z)
+				_slab_stripes(d, p, z, y, y1)
 			"camo":
-				_slab_camo(d, p, z)
+				_slab_camo(d, p, z, y, y1)
 			"flames":
-				_slab_flames(d, p, z)
+				_slab_flames(d, p, z, y, y1)
 			"dots":
-				_slab_dots(d, p, z)
+				_slab_dots(d, p, z, y, y1)
 			"gradient":
-				_slab_gradient(d, p, z)
+				_slab_gradient(d, p, z, y, y1)
 			"graffiti":
-				_slab_graffiti(d, p, z)
+				_slab_graffiti(d, p, z, y, y1)
 		if mirror:
-			_flip_x(d, z)
-		job["z"] = z + 1
+			_flip_x(d, z, y, y1)
 		_mark(z, z)
+		y = y1
+		if y >= res.y:
+			y = 0
+			z += 1
 		if max_usec > 0 and Time.get_ticks_usec() - t0 >= max_usec:
 			break
 	data = d
-	return int(job["z"]) >= res.z
+	job["z"] = z
+	job["y"] = y
+	return z >= res.z
 
 
 ## Цвет краски в точке p (кадр слоя) — трилинейно, как шейдер (предумноженный rgb и альфа по отдельности, потом rgb / a).
@@ -654,10 +669,10 @@ func _axis_centres(ax: int) -> PackedFloat32Array:
 	return out
 
 
-## Срез z массива d — строки задом наперёд по x (ячейка x ↔ res.x − 1 − x).
-func _flip_x(d: PackedByteArray, z: int) -> void:
+## Строки [y0, y1) среза z массива d — задом наперёд по x (ячейка x ↔ res.x − 1 − x).
+func _flip_x(d: PackedByteArray, z: int, y0: int, y1: int) -> void:
 	var nx := res.x
-	for y in res.y:
+	for y in range(y0, y1):
 		var a := ((z * res.y + y) * nx) * 4
 		var b := a + (nx - 1) * 4
 		while a < b:
@@ -695,7 +710,7 @@ func _prep_stripes(cols: Array, rng: RandomNumberGenerator, n: Vector3) -> Dicti
 	return {"cols": cols, "n": n, "bw": bw, "ph": ph, "s0": span.x, "cell": _cell.x}
 
 
-func _slab_stripes(d: PackedByteArray, p: Dictionary, z: int) -> void:
+func _slab_stripes(d: PackedByteArray, p: Dictionary, z: int, y0: int, y1: int) -> void:
 	var px: PackedFloat32Array = p["px"]
 	var py: PackedFloat32Array = p["py"]
 	var zz: float = (p["pz"] as PackedFloat32Array)[z]
@@ -706,8 +721,8 @@ func _slab_stripes(d: PackedByteArray, p: Dictionary, z: int) -> void:
 	var s0: float = p["s0"]
 	var cell: float = p["cell"]
 	var nc := cols.size()
-	var i := z * res.y * res.x * 4
-	for y in res.y:
+	var i := (z * res.y + y0) * res.x * 4
+	for y in range(y0, y1):
 		var yy := py[y]
 		for x in res.x:
 			var t := Vector3(px[x], yy, zz).dot(n) - s0 + ph
@@ -760,7 +775,7 @@ func _prep_camo(cols_in: Array, rng: RandomNumberGenerator, pattern_seed: int) -
 	return {"cols": cols, "noise": noise, "th": th, "e": CAMO_EDGE * _cell.x / 0.01}
 
 
-func _slab_camo(d: PackedByteArray, p: Dictionary, z: int) -> void:
+func _slab_camo(d: PackedByteArray, p: Dictionary, z: int, y0: int, y1: int) -> void:
 	var px: PackedFloat32Array = p["px"]
 	var py: PackedFloat32Array = p["py"]
 	var zz: float = (p["pz"] as PackedFloat32Array)[z]
@@ -769,8 +784,8 @@ func _slab_camo(d: PackedByteArray, p: Dictionary, z: int) -> void:
 	var th: Array = p["th"]
 	var nt := th.size()
 	var e: float = p["e"]
-	var i := z * res.y * res.x * 4
-	for y in res.y:
+	var i := (z * res.y + y0) * res.x * 4
+	for y in range(y0, y1):
 		var yy := py[y]
 		for x in res.x:
 			var v := noise.get_noise_3dv(Vector3(px[x], yy, zz))
@@ -820,7 +835,7 @@ func _prep_flames(cols_in: Array, rng: RandomNumberGenerator, n: Vector3, patter
 		"k": k, "ph": ph, "lean": lean, "base_h": base_h, "tips": tips, "noise": noise}
 
 
-func _slab_flames(d: PackedByteArray, p: Dictionary, z: int) -> void:
+func _slab_flames(d: PackedByteArray, p: Dictionary, z: int, y0: int, y1: int) -> void:
 	var px: PackedFloat32Array = p["px"]
 	var py: PackedFloat32Array = p["py"]
 	var zz: float = (p["pz"] as PackedFloat32Array)[z]
@@ -838,8 +853,8 @@ func _slab_flames(d: PackedByteArray, p: Dictionary, z: int) -> void:
 	var base_h: float = p["base_h"]
 	var tips: PackedFloat32Array = p["tips"]
 	var noise: FastNoiseLite = p["noise"]
-	var i := z * res.y * res.x * 4
-	for y in res.y:
+	var i := (z * res.y + y0) * res.x * 4
+	for y in range(y0, y1):
 		var yy := py[y]
 		for x in res.x:
 			var q := Vector3(px[x], yy, zz)
@@ -866,7 +881,7 @@ func _prep_dots(cols: Array, rng: RandomNumberGenerator) -> Dictionary:
 	return {"cols": cols, "sp": sp, "rad": rad, "off": off, "cell": _cell.x}
 
 
-func _slab_dots(d: PackedByteArray, p: Dictionary, z: int) -> void:
+func _slab_dots(d: PackedByteArray, p: Dictionary, z: int, y0: int, y1: int) -> void:
 	var px: PackedFloat32Array = p["px"]
 	var py: PackedFloat32Array = p["py"]
 	var zz: float = (p["pz"] as PackedFloat32Array)[z]
@@ -878,8 +893,8 @@ func _slab_dots(d: PackedByteArray, p: Dictionary, z: int) -> void:
 	var bg := cols.size() >= 2
 	var nd := maxi(cols.size() - 1, 1)
 	var c0: Color = cols[0]
-	var i := z * res.y * res.x * 4
-	for y in res.y:
+	var i := (z * res.y + y0) * res.x * 4
+	for y in range(y0, y1):
 		var yy := py[y]
 		for x in res.x:
 			var g := (Vector3(px[x], yy, zz) - off) / sp
@@ -908,7 +923,7 @@ func _prep_gradient(cols: Array, n: Vector3) -> Dictionary:
 	return {"cols": cols, "n": n, "s0": span.x, "ext": span.y - span.x}
 
 
-func _slab_gradient(d: PackedByteArray, p: Dictionary, z: int) -> void:
+func _slab_gradient(d: PackedByteArray, p: Dictionary, z: int, y0: int, y1: int) -> void:
 	var px: PackedFloat32Array = p["px"]
 	var py: PackedFloat32Array = p["py"]
 	var zz: float = (p["pz"] as PackedFloat32Array)[z]
@@ -917,8 +932,8 @@ func _slab_gradient(d: PackedByteArray, p: Dictionary, z: int) -> void:
 	var s0: float = p["s0"]
 	var ext: float = p["ext"]
 	var one := cols.size() == 1
-	var i := z * res.y * res.x * 4
-	for y in res.y:
+	var i := (z * res.y + y0) * res.x * 4
+	for y in range(y0, y1):
 		var yy := py[y]
 		for x in res.x:
 			var u := clampf((Vector3(px[x], yy, zz).dot(n) - s0) / ext, 0.0, 1.0)
@@ -1008,14 +1023,14 @@ func _prep_graffiti(cols: Array, rng: RandomNumberGenerator) -> Dictionary:
 	return {"fill": fill_cov, "line": line_cov, "fc": fc, "lc": cols[1] if cols.size() >= 2 else fc}
 
 
-func _slab_graffiti(d: PackedByteArray, p: Dictionary, z: int) -> void:
+func _slab_graffiti(d: PackedByteArray, p: Dictionary, z: int, y0: int, y1: int) -> void:
 	var fill_cov: PackedFloat32Array = p["fill"]
 	var line_cov: PackedFloat32Array = p["line"]
 	var fc: Color = p["fc"]
 	var lc: Color = p["lc"]
 	var nx := res.x
 	var ny := res.y
-	for y in ny:
+	for y in range(y0, y1):
 		var i := ((z * ny + y) * nx) * 4
 		var row := y * nx
 		for x in nx:
