@@ -334,7 +334,7 @@ func _rules() -> void:
 		"переезд %s, до следующего %.1f с" % [str(mv), km.zone_left])
 	_check("zone_in_focus", pg.zone.is_in_group(KingPlayground.FOCUS_GROUP), "зона в кадре камеры (людей нет)")
 
-	# --- до 60 → итоги
+	# --- до KING_SCORE_TO_WIN → итоги
 	_pin_zone(HOME_SPOT)
 	var w := _doll(4)
 	km.scores[4] = float(km.score_to_win) - 0.5
@@ -394,12 +394,18 @@ func _bots(max_s: float, level: int, trace: bool, seed_: int) -> void:
 	var phys_us := 0
 	var held_t := 0.0
 	var contested_t := 0.0
+	var top_at := {}   # очки лидера → когда (с игры) он их набрал впервые: по этой линии выбран KING_SCORE_TO_WIN (BALANCE_2210.md)
 	while over_count == 0 and km.fight_time < max_s:
 		var f0 := Time.get_ticks_usec()
 		await get_tree().physics_frame
 		phys_us += Time.get_ticks_usec() - f0
 		frames += 1
 		var playing := km.play_state == "play"
+		var lead := 0
+		for d in km.dolls():
+			lead = maxi(lead, int(_score((d as Doll).player_index)))
+		if lead > 0 and not top_at.has(lead):
+			top_at[lead] = snappedf(km.fight_time, 0.1)
 		if playing:
 			if km.zone_state == "held":
 				held_t += TICK
@@ -470,4 +476,4 @@ func _bots(max_s: float, level: int, trace: bool, seed_: int) -> void:
 		"hits": acc["hits"], "held_s": snappedf(held_t, 0.1), "contested_s": snappedf(contested_t, 0.1),
 		"stuck_max_s": snappedf(stuck_max, 0.1), "press_max_s": snappedf(press_max, 0.1), "brain_counters": states,
 		"ms_per_physics_frame": snappedf(wall_ms / maxf(frames, 1), 0.01),
-		"phys_ms": snappedf(float(phys_us) / 1000.0 / maxf(frames, 1), 0.01), "tally": over_results.get("tally", {})}
+		"phys_ms": snappedf(float(phys_us) / 1000.0 / maxf(frames, 1), 0.01), "tally": over_results.get("tally", {}), "top_at": top_at}

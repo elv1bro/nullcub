@@ -86,7 +86,7 @@ func _check(id: String, cond: bool, detail: Variant = "") -> void:
 
 
 func _args() -> Dictionary:
-	var out := {"only": "", "max_s": "330", "level": "2", "trace": "0", "out": ""}
+	var out := {"only": "", "max_s": "330", "level": "2", "trace": "0", "out": "", "seed": "0"}
 	for a in OS.get_cmdline_user_args():
 		for part in String(a).split(","):
 			var kv := part.split("=")
@@ -106,7 +106,7 @@ func _ready() -> void:
 	if _want(a, "rules"):
 		await _rules()
 	if _want(a, "bots"):
-		await _bots(float(a["max_s"]), int(a["level"]), String(a["trace"]) == "1")
+		await _bots(float(a["max_s"]), int(a["level"]), String(a["trace"]) == "1", int(a["seed"]))
 	await _unload()
 	_check("errors_script", errs.count == 0, "ошибок скриптов %d; первая: %s" % [errs.count, errs.first])
 	_check("errors_engine", errs.engine == 0, "ошибок движка %d; первая: %s" % [errs.engine, errs.engine_first])
@@ -269,7 +269,7 @@ func _rules() -> void:
 	var fb := arena.get_node("Floor/FloorBody") as StaticBody3D
 	_check("ice", HockeyRink.is_ice(arena) and fb.physics_material_override != null and is_equal_approx(fb.physics_material_override.friction, Tuning.HOCKEY_ICE_FRICTION),
 		"трение пола %s" % (fb.physics_material_override.friction if fb.physics_material_override != null else "нет"))
-	_check("puck_body", is_equal_approx(puck.mass, 0.5) and is_equal_approx(puck.physics_material_override.friction, 0.02)
+	_check("puck_body", is_equal_approx(puck.mass, float(Tuning.SPORTS["hockey"]["mass"])) and is_equal_approx(puck.physics_material_override.friction, 0.02)
 		and puck.angular_damp >= 5.0 and puck.axis_lock_angular_z and puck.axis_lock_linear_z and puck.is_in_group(Puck.PUCK_GROUP),
 		"масса %.2f, трение %.2f, угл. дамп %.1f" % [puck.mass, puck.physics_material_override.friction, puck.angular_damp])
 	_check("numbers", is_equal_approx(sm.time_limit_s, Tuning.HOCKEY_TIME_S) and sm.goals_to_win == 3
@@ -316,7 +316,29 @@ func _rules() -> void:
 	info["slide"] = {"dist_m": snappedf(dist, 0.01), "t_s": snappedf(t, 0.01), "v_end": snappedf(puck.linear_velocity.length(), 0.01), "hop_m": snappedf(hop, 0.001)}
 	_check("slide_8m", dist >= 8.0, "прошла %.1f м за %.1f с, скорость в конце %.1f м/с" % [dist, t, puck.linear_velocity.length()])
 	_check("slide_no_hop", hop < 0.05, "выше лёжки на %.3f м" % hop)
-	# гол только через линию: та же шайба доезжает до линии справа → гол команде 0
+	# потолок скорости шайбы (решено 22.10, BALANCE_2210.md): щелчок быстрее SPORTS.hockey.max_speed срезается — вратарь успевает
+	var cap := float(Tuning.SPORTS["hockey"]["max_speed"])
+	_put_puck(Vector2(-6.0, _ice_y()), Vector2(cap * 2.0, 0.0))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var v_cap := puck.linear_velocity.length()
+	_check("puck_speed_cap", v_cap <= cap + 0.05 and v_cap > cap * 0.8, "удар %.1f м/с → %.2f м/с (потолок %.1f)" % [cap * 2.0, v_cap, cap])
+	# ведущий шайбу медленнее (решено 22.10): касание P1 — у P1 потолок × HOCKEY_CARRY_SPEED_MULT, у P2 нет; через HOCKEY_CARRY_S — снова 1
+	_put_puck(Vector2(0.0, _ice_y()))
+	puck.last_touch = _doll(0)
+	puck.last_touch_t = puck.since_touch() + puck.last_touch_t
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var slow_p1 := _doll(0).speed_cap_mult
+	var slow_p2 := _doll(1).speed_cap_mult
+	await _wait(Tuning.HOCKEY_CARRY_S + 0.2)
+	var back_p1 := _doll(0).speed_cap_mult
+	_check("carry_slow", is_equal_approx(slow_p1, Tuning.HOCKEY_CARRY_SPEED_MULT) and is_equal_approx(slow_p2, 1.0) and is_equal_approx(back_p1, 1.0),
+		"P1 с шайбой ×%.2f, P2 ×%.2f, P1 через %.1f с ×%.2f" % [slow_p1, slow_p2, Tuning.HOCKEY_CARRY_S + 0.2, back_p1])
+	# гол только через линию: шайба доезжает до линии справа → гол команде 0 (с дампом шайбы 0.6 удар от левой стены до правых
+	# ворот не доезжает — новая шайба в 3 м от линии)
+	_put_puck(Vector2(float(r["goal_x"]) - 3.0, _ice_y()), Vector2(5.0, 0.0))
+	puck.last_touch = _doll(0)
 	var crossed := await _until(func() -> bool: return int(sm.score[0]) == 1, 3.0)
 	_check("goal_through_line", crossed and sm.score == [1, 0] and sm.play_state == "goal", "счёт %s, состояние %s" % [sm.score, sm.play_state])
 	var hud_l: Label = (pg.get_node("SportHud") as SportHud).labels[0]
@@ -394,8 +416,8 @@ func _rules() -> void:
 
 # ------------------------------------------------------------------ боты
 
-func _bots(max_s: float, level: int, trace: bool) -> void:
-	print("--- bots (уровень %d)" % level)
+func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
+	print("--- bots (уровень %d, seed %d)" % [level, seed_])
 	await _load(true, level, 0.5, Tuning.SPORT_KICKOFF_S)
 	var p1 := _doll(0)
 	SportBrain.default_level = level
@@ -407,6 +429,11 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 	HockeySticks.pickup_of(p1).drop_all()   # клюшка — заново в кисть со стороны атаки (у бота — Hand_L)
 	var brain2 := _doll(1).get_node_or_null("SportBrain")
 	_check("bots_brains", brain2 is HockeyBrain and (brain2 as HockeyBrain).level == level, str(brain2))
+	if seed_ != 0:
+		# серии прогонов (BALANCE_2210.md): ошибка прицела ботов — от seed, иначе матч ботов повторяется до тика
+		for br: Variant in [b, brain2]:
+			if is_instance_valid(br) and br is EnemyBrain:
+				(br as EnemyBrain)._rng.seed = hash(String((br as EnemyBrain).doll.name)) ^ 0x5eed ^ seed_
 	var bounds := (pg.get_node("SportHall") as SportHallArena).bounds()
 	var half := Tuning.SPORT_FIELD_HALF_W + 0.6
 	var t := 0.0
@@ -470,7 +497,7 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 				var c := (d as Doll).centre_of_mass()
 				line += "  P%d %s (%5.1f, %4.1f)" % [(d as Doll).player_index + 1, br.state if br != null else "-", c.x, c.y]
 			print(line)
-	info["bots"] = {"level": level, "sim_s": snappedf(t, 0.1), "clock_s": snappedf(sm.fight_time, 0.1), "score": sm.score.duplicate(),
+	info["bots"] = {"level": level, "seed": seed_, "sim_s": snappedf(t, 0.1), "clock_s": snappedf(sm.fight_time, 0.1), "score": sm.score.duplicate(),
 		"goals": sm.goals.duplicate(true), "reason": String(over_results.get("reason", "")), "touches": puck.touches - touches0,
 		"rescues": sm.ball_rescues, "kos": kos, "escaped_ticks": escaped, "dolls_out_ticks": out_dolls, "puck_top_y": snappedf(top, 0.01),
 		"stuck_max_s": snappedf(stuck_max, 0.1), "stuck_who": stuck_who, "sticks_given": sm.sticks.given if sm.sticks != null else -1}

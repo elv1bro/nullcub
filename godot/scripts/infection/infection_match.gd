@@ -219,6 +219,7 @@ func _next_round() -> void:
 	_set_phase(Phase.COUNTDOWN)
 	_countdown_left = Tuning.INFECTION_COUNTDOWN_S
 	_countdown_shown = -1
+	round_time = 0.0   # до _pick_first: иначе первый получал время заражения из конца прошлой партии и пауза TOUCH_GAP держала его
 	_pick_first()
 	round_started.emit(round_i)
 	if _countdown_left <= 0.0:

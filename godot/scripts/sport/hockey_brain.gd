@@ -12,6 +12,7 @@ extends SportBrain
 
 var use_spin := true
 var use_goalie := true
+var goalie_dash := true
 
 
 func _brain_ready() -> void:
@@ -23,6 +24,7 @@ func _brain_ready() -> void:
 	use_dash = bool(p["dash"])
 	use_spin = bool(p["spin"])
 	use_goalie = bool(p["goalie"])
+	goalie_dash = bool(p.get("goalie_dash", use_dash))
 
 
 func _think(delta: float) -> void:
@@ -33,13 +35,21 @@ func _think(delta: float) -> void:
 	var b := ball.pos2() + ball.vel2() * lead_s
 	if use_goalie and _goalie_needed(b):
 		go("goalie")
-		want = steer(_goalie_point(b), max_in)
-		if use_dash and _threat() and my_pos().distance_to(_goalie_point(b)) > DASH_FROM_M:
+		var gp := _goalie_route(b)
+		want = steer(gp, max_in)
+		if goalie_dash and (_threat() or gp != _goalie_point(b)) and my_pos().distance_to(gp) > DASH_FROM_M:
 			dash()
 		return
 	super._think(delta)
 	if use_spin and state == "strike" and my_pos().distance_to(ball.pos2()) < Tuning.HOCKEY_SPIN_NEAR_M:
 		doll.request_spin()
+
+
+## Решено 22.10 (BALANCE_2210.md): шайба на льду (y 0.08), а ЦМ куклы в погоне не ниже 0.9 (sport_brain) — расстояние до линии
+## удара не меньше 0.8 при допуске ALIGN_M 0.5 + 0.3 × отставание: у лежащей шайбы бот висел в «chase» десятки секунд
+## (hockey_probe bots_not_stuck, когда вратарь стал отбивать). Допуск — на разницу высот.
+func _align_slack(b: Vector2) -> float:
+	return maxf(0.0, 0.9 - b.y)
 
 
 func _aim_point(_b: Vector2) -> Vector2:
@@ -72,8 +82,20 @@ func _goalie_point(b: Vector2) -> Vector2:
 	var mouth := Vector2(-dir * float(r["goal_x"]), float(r["goal_h"]) * 0.5)
 	var to_b := b - mouth
 	var p := mouth + (to_b.normalized() if to_b.length() > 0.01 else Vector2(dir, 0.0)) * Tuning.HOCKEY_GOALIE_OUT_M
-	p.y = clampf(p.y, 0.7, float(r["goal_h"]) + 0.3)
+	p.y = clampf(p.y, Tuning.HOCKEY_GOALIE_Y_MIN, float(r["goal_h"]) + 0.3)
 	return p
+
+
+## Путь в ворота (решено 22.10, BALANCE_2210.md): шайба ближе к моим воротам, чем я, — прямая к воротам идёт сквозь шайбу и
+## нападающего за ней (вратарь ехал за ними по льду до самой линии); тогда — поверху: точка над шайбой на
+## HOCKEY_GOALIE_OVER_M и за ней к воротам, пока не обогнал шайбу, дальше — на луч вратаря.
+func _goalie_route(b: Vector2) -> Vector2:
+	var gp := _goalie_point(b)
+	var me := my_pos()
+	if me.x * dir < b.x * dir - Tuning.HOCKEY_GOALIE_PASS_M or b.x * dir < gp.x * dir + Tuning.HOCKEY_GOALIE_PASS_M:
+		return gp   # уже между шайбой и воротами — или шайба у самой линии, обгонять некуда
+	var x := maxf((b.x - dir * Tuning.HOCKEY_GOALIE_PASS_M * 2.0) * dir, gp.x * dir) * dir
+	return Vector2(x, maxf(b.y, 0.0) + Tuning.HOCKEY_GOALIE_OVER_M)
 
 
 func _opponent() -> Doll:

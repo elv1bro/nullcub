@@ -322,7 +322,7 @@ func stasis_allowed() -> bool:
 
 
 func knockback_mult() -> float:
-	return 1.0
+	return Tuning.KING_KNOCKBACK_MULT   # решено 22.10 (BALANCE_2210.md): отброс сильнее — из зоны выбивают, спорная реже
 
 
 func stability_mult() -> float:

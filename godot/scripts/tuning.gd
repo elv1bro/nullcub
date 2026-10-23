@@ -544,8 +544,8 @@ const SPORTS := {
 	"volleyball": {"title": "ВОЛЕЙБОЛ", "mass": 1.6, "gravity_scale": 0.85, "bounce": 0.7, "friction": 0.4, "lin_damp": 0.18, "ang_damp": 0.6,
 		"net_h": 3.4, "ball_y": 6.0, "serve_x": 4.5},
 	# ХОККЕЙ (HOCKEY.md, 08.10): шайба (Puck), не мяч; ворота 1.2 м у стен; вбрасывание — падает с 2 м. Числа шайбы — HOCKEY_PUCK_* ниже.
-	"hockey": {"title": "ХОККЕЙ", "mass": 0.5, "gravity_scale": 2.0, "bounce": 0.55, "friction": 0.02, "lin_damp": 0.1, "ang_damp": 6.0,
-		"goal_x": 9.2, "goal_h": 1.2, "ball_y": 2.0},
+	"hockey": {"title": "ХОККЕЙ", "mass": 1.0, "gravity_scale": 2.0, "bounce": 0.55, "friction": 0.02, "lin_damp": 0.35, "ang_damp": 6.0,
+		"goal_x": 9.2, "goal_h": 0.8, "ball_y": 2.0, "max_speed": 4.5},
 }
 const SPORT_ORDER := ["football", "basketball", "volleyball", "hockey"]   # hockey — ХОККЕЙ (HOCKEY.md)
 ## Бот спорт-зала (SportBrain): доля полной тяги, ошибка прицела (м), упреждение мяча (с), пользуется ли ускорением.
@@ -923,12 +923,14 @@ const BOMB_BOT_FLEE_MARGIN_M := Vector2(3.0, 3.5)   # кольцо бегств�
 ## Автор 06.10: «гонки — нужно быстрее собрать 10 пунктов, кто быстрее соберёт их»; «у всех одни и те же точки: если кто-то взял, то
 ## у тебя этой точки уже нет, и надо к следующей». RaceMatch (scripts/race/race_match.gd), бот RaceBrain, площадка scenes/race/.
 ## Сколько точек горит одновременно (1 — драка за каждую точку, 5 — больше маршрута; работает любое 1..6) и сколько собрать для победы.
-const RACE_VISIBLE := 3
+const RACE_VISIBLE := 1
 const RACE_TO_WIN := 10
 ## Взятие: любая деталь живой куклы ближе RACE_PICK_M к центру точки. Новая точка — на случайной свободной метке не ближе
 ## RACE_NEW_MIN_M к взявшему (и первые — не ближе этого к центру старта).
-const RACE_PICK_M := 0.9
-const RACE_NEW_MIN_M := 8.0
+const RACE_PICK_M := 0.65
+## Решено 22.10 (BALANCE_2210.md): Руины тесные — новая точка не дальше ~11 м, гонка шла 40–55 с; там взятие точнее.
+const RACE_PICK_M_MAP := {"ruins": 0.4}
+const RACE_NEW_MIN_M := 11.0
 ## KO → возврат через RACE_RESPAWN_S у последней точки, которую взяла эта кукла (не брала — на старте), на RACE_RESPAWN_DROP_M ниже
 ## центра точки (точка кукле по грудь, а не под ногами); первые RACE_SPAWN_SHIELD_S урон не проходит.
 const RACE_RESPAWN_S := 2.0
@@ -1419,15 +1421,17 @@ const BRAWL_BOT_COHESION_M := 9.0
 # --- ЗАРАЖЕНИЕ: коснулся — заразил (docs/plan-demo/INFECTION.md, MODES_IDEAS.md Б5, 08.10) ---
 ## Семеро в куполе Old NULL Hall (P1 + боты, P2 на стрелках — клавиша U). Один случайный — заражённый (зелёный): коснулся любой
 ## деталью любой детали здорового — тот заражён сразу (перекраска, вспышка, тост). Урона нет (Doll.incoming_mult = 0), только толчки.
-## Заражённые быстрее (INFECTION_ZOMBIE_*), но без руки мышью и без рывка (Заряд заперт). Партия INFECTION_ROUND_S: все заражены
+## Заражённые летают медленнее здоровых (INFECTION_ZOMBIE_*, решено 22.10), без руки мышью и без рывка (Заряд заперт). Партия INFECTION_ROUND_S: все заражены
 ## раньше — очко первому заражённому; кто-то дожил — очко каждому дожившему. Матч — INFECTION_ROUNDS партий, места по очкам.
 const INFECTION_DOLLS := 7
 const INFECTION_ROUNDS := 3
-const INFECTION_ROUND_S := 90.0
+const INFECTION_ROUND_S := 35.0
 ## Только что заражённый сам заражает не раньше этого (в куче заражение не прыгает по трём куклам за один тик).
 const INFECTION_TOUCH_GAP_S := 0.5
-const INFECTION_ZOMBIE_THRUST_MULT := 1.15
-const INFECTION_ZOMBIE_SPEED_MULT := 1.15
+## Решено 22.10 (BALANCE_2210.md): заражённые медленнее здоровых — ×0.85 (было ×1.15: зомби брали 15 партий из 15; при ×1.0 всех
+## заражали за 11–15 с), партия 35 с (была 90): при ×0.85 боты уровня 2 заражали всех за 15–38 с.
+const INFECTION_ZOMBIE_THRUST_MULT := 0.85
+const INFECTION_ZOMBIE_SPEED_MULT := 0.85
 const INFECTION_ROUND_PAUSE_S := 3.0            # партия кончилась — столько до следующей (или итогов матча)
 const INFECTION_COUNTDOWN_S := 2.0              # отсчёт перед каждой партией, кроме первой (первая — обычный COUNTDOWN_S)
 ## Последние INFECTION_PULSE_S партии — пульс мембраны и писк (как темп бомбы): пауза между ударами PULSE_SLOW_S → PULSE_FAST_S.
@@ -1460,7 +1464,7 @@ const INFECTION_BOT_FLEE_MARGIN_M := Vector2(3.0, 3.5)   # кольцо бегс
 ## все его головы и своя рассыпаются (HEADHUNT_DROP_LOCK_S их нельзя взять — разлетаются). Коснулся своей корзины (ближе
 ## HEADHUNT_BASKET_M) — чужие головы +1 каждая, свои — возвращены без очка. До HEADHUNT_SCORE_TO_WIN или HEADHUNT_TIME_S (больше очков).
 const HEADHUNT_TEAM := 3
-const HEADHUNT_SCORE_TO_WIN := 10
+const HEADHUNT_SCORE_TO_WIN := 7
 const HEADHUNT_TIME_S := 360.0
 const HEADHUNT_RESPAWN_S := 4.0
 const HEADHUNT_SPAWN_SHIELD_S := 1.5         # после возрождения урон не проходит столько с
@@ -1533,8 +1537,8 @@ const TUG_BOT_HOVER_Y := 0.1               # ЦМ бота над звеном �
 ## зоне один KING_STREAK_S подряд — «ЦАРЬ!», очки ×KING_STREAK_MULT, пока его не выбили. KO → возврат через KING_RESPAWN_S на случайной
 ## точке KING_SPAWN вне зоны. До KING_SCORE_TO_WIN очков или KING_TIME_S (больше очков).
 const KING_DOLLS := 5
-const KING_ZONE_R := 2.5
-const KING_ZONE_S := 30.0
+const KING_ZONE_R := 2.0
+const KING_ZONE_S := 15.0
 const KING_ZONE_WARN_S := 3.0
 const KING_ZONE_MIN_MOVE_M := 6.0
 ## Точки зоны внутри мембраны купола (эллипс 16 × 19 м от (0, 0), пол y ≈ 0): пол слева / по центру / справа, воздух на 4–5 м,
@@ -1542,9 +1546,12 @@ const KING_ZONE_MIN_MOVE_M := 6.0
 const KING_ZONE_SPOTS := [Vector2(-9.0, 2.2), Vector2(0.0, 2.2), Vector2(9.0, 2.2), Vector2(-6.0, 4.5), Vector2(6.0, 4.5),
 	Vector2(-3.0, 9.0), Vector2(3.0, 9.0), Vector2(0.0, 13.0)]
 const KING_POINT_PER_S := 1.0
-const KING_SCORE_TO_WIN := 60
+const KING_SCORE_TO_WIN := 20
 const KING_TIME_S := 300.0
-const KING_RESPAWN_S := 3.0
+const KING_RESPAWN_S := 4.0
+## Решено 22.10 (BALANCE_2210.md): отброс ударов в царе горы (KingMatch.knockback_mult) — сильнее обычного, чтобы из зоны выбивали и
+## она чаще была у одного, а не спорной (боты уровня 2: спорная 77–80 % матча при отбросе 1.0, 52–60 % при 2.0 с зоной 2 м / 15 с).
+const KING_KNOCKBACK_MULT := 2.0
 const KING_STREAK_S := 10.0
 const KING_STREAK_MULT := 2.0
 ## Точки появления: по player_index в начале матча, после KO — случайная из них вне зоны (не ближе KING_ZONE_R + KING_SPAWN_CLEAR_M).
@@ -1578,8 +1585,8 @@ const HOCKEY_GOALS_TO_WIN := 3            # матч до стольких го�
 const HOCKEY_TIME_S := 240.0              # основное время 4:00; равный счёт — золотой гол ещё HOCKEY_GOLDEN_S
 const HOCKEY_GOLDEN_S := 60.0             # золотой гол: матч целиком не дольше 5:00 игрового времени, дальше ничья
 const HOCKEY_KO_RESPAWN_S := 3.0          # нокаут — «удаление», возврат у своих ворот через столько
-const HOCKEY_GOAL_H := 1.2                # м: ворота низкие (SPORTS["hockey"].goal_h — то же число для SportMatch / SportBrain)
-const HOCKEY_GOAL_BACK_H := 1.45          # м: крыша ворот поднимается от перекладины к стене до этой высоты (HockeyRink)
+const HOCKEY_GOAL_H := 0.8                # м: ворота низкие (SPORTS["hockey"].goal_h — то же число для SportMatch / SportBrain)
+const HOCKEY_GOAL_BACK_H := 1.05          # м: крыша ворот поднимается от перекладины к стене до этой высоты (HockeyRink)
 ## Клюшка — оружие "stick" (scenes/weapons/weapon_stick.tscn, Tuning.WEAPON["stick"]) в кисти каждой куклы (HockeySticks.preferred_hand): даёт HockeySticks
 ## (scripts/sport/hockey_sticks.gd) на старте, после расстановки, после нокаута — новая (старая убирается), без клюшки дольше
 ## HOCKEY_STICK_REGIVE_S (кисть оторвана вместе с клюшкой) — новая в свободную кисть. Ничья клюшка на льду дольше ORPHAN_S — убирается.
@@ -1592,11 +1599,23 @@ const HOCKEY_STICK_ORPHAN_S := 4.0        # ничья клюшка лежит �
 ## шайбы в ударе — раскрутка (request_spin, замах клюшкой); шайба на своей половине и соперник к ней ближе (или шайба летит в свои
 ## ворота, а бот дальше от них) — вратарь:
 ## держится на луче «середина ворот → шайба» в HOCKEY_GOALIE_OUT_M от линии. Уровни 1..3: тяга, прицел, упреждение, ускорение, раскрутка, вратарь.
-const HOCKEY_GOALIE_OUT_M := 1.3
+const HOCKEY_GOALIE_OUT_M := 0.6
+## Нижняя граница точки вратаря по высоте ЦМ (решено 22.10, было 0.7): кукла висела над льдом на 1.5–2 м, шайба по льду проходила
+## под ногами; ниже ЦМ — ноги и клюшка у льда, в створе.
+const HOCKEY_GOALIE_Y_MIN := 0.3
+## Решено 22.10 (BALANCE_2210.md): шайба ближе к своим воротам, чем вратарь, — он не едет за ней по льду сквозь нападающего,
+## а летит поверху: точка на HOCKEY_GOALIE_OVER_M над шайбой и на 2 × HOCKEY_GOALIE_PASS_M за ней к воротам, пока не обгонит её на PASS_M.
+const HOCKEY_GOALIE_OVER_M := 1.6
+## Ведущий шайбу медленнее (SportMatch._hockey_carry, решено 22.10): касался шайбы за последние HOCKEY_CARRY_S — потолок скорости
+## × HOCKEY_CARRY_SPEED_MULT, защитник успевает встать между ним и воротами.
+const HOCKEY_CARRY_S := 0.6
+const HOCKEY_CARRY_SPEED_MULT := 0.6
+const HOCKEY_GOALIE_PASS_M := 0.8
 const HOCKEY_THREAT_SPEED := 2.0          # м/с: шайба летит к своим воротам быстрее, а бот дальше от них — вратарь (уровни 2–3)
 const HOCKEY_SPIN_NEAR_M := 1.7           # раскрутка, когда до шайбы ближе этого в ударе
+## dash — ускорение в атаке, goalie_dash — к воротам; решено 22.10: на уровне 2 в атаке без ускорения, к воротам — с ним.
 const HOCKEY_BOT_LEVELS := {
-	1: {"max_in": 0.7, "aim_error_m": 0.6, "lead_s": 0.1, "dash": false, "spin": false, "goalie": false},
-	2: {"max_in": 0.88, "aim_error_m": 0.3, "lead_s": 0.2, "dash": true, "spin": true, "goalie": true},
-	3: {"max_in": 1.0, "aim_error_m": 0.12, "lead_s": 0.3, "dash": true, "spin": true, "goalie": true},
+	1: {"max_in": 0.7, "aim_error_m": 0.6, "lead_s": 0.1, "dash": false, "spin": false, "goalie": false, "goalie_dash": false},
+	2: {"max_in": 0.88, "aim_error_m": 0.3, "lead_s": 0.2, "dash": false, "spin": true, "goalie": true, "goalie_dash": true},
+	3: {"max_in": 1.0, "aim_error_m": 0.12, "lead_s": 0.3, "dash": true, "spin": true, "goalie": true, "goalie_dash": true},
 }

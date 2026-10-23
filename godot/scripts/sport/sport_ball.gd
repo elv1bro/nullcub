@@ -25,6 +25,8 @@ var untouched_s := 0.0
 ## Наибольшая скорость мяча с начала розыгрыша (пробы: потолок скорости держится).
 var max_speed_seen := 0.0
 var external_input := true
+## Потолок скорости этого снаряда (м/с): Tuning.SPORTS[вид].max_speed, нет — SPORT_BALL_MAX_SPEED (шайба — свой, решено 22.10).
+var max_speed := Tuning.SPORT_BALL_MAX_SPEED
 ## Наименьшая скорость вверх после касания пола (м/с); 0 — обычный отскок.
 var floor_kick := 0.0
 var floor_kicks := 0
@@ -58,6 +60,7 @@ func apply_sport(id: String) -> void:
 	linear_damp = float(s["lin_damp"])
 	angular_damp = float(s["ang_damp"])
 	floor_kick = float(s.get("floor_kick", 0.0))
+	max_speed = float(s.get("max_speed", Tuning.SPORT_BALL_MAX_SPEED))
 	var pm := PhysicsMaterial.new()
 	pm.bounce = float(s["bounce"])
 	pm.friction = float(s["friction"])
@@ -65,6 +68,11 @@ func apply_sport(id: String) -> void:
 	for c in get_children():
 		if c is Node3D and String(c.name).begins_with("Model_"):
 			(c as Node3D).visible = String(c.name) == "Model_" + id
+
+
+## Секунд с последнего касания куклой (не касались — очень много).
+func since_touch() -> float:
+	return _time - last_touch_t
 
 
 func centre_of_mass() -> Vector3:
@@ -112,8 +120,8 @@ func _physics_process(delta: float) -> void:
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 	var v := state.linear_velocity
 	var sp := v.length()
-	if sp > Tuning.SPORT_BALL_MAX_SPEED:
-		state.linear_velocity = v * (Tuning.SPORT_BALL_MAX_SPEED / sp)
+	if sp > max_speed:
+		state.linear_velocity = v * (max_speed / sp)
 	if floor_kick > 0.0 and state.linear_velocity.y < floor_kick:
 		for i in state.get_contact_count():
 			# пол зала: статика под мячом на уровне пола (кольцо и крыша ворот мяч не подбрасывают)

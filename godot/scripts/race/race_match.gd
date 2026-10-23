@@ -30,6 +30,8 @@ const VISIBLE_MAX := 6
 @export var to_win: int = Tuning.RACE_TO_WIN
 @export var visible_count: int = Tuning.RACE_VISIBLE
 @export var respawn_s: float = Tuning.RACE_RESPAWN_S
+## Радиус взятия (м): Tuning.RACE_PICK_M, на тесной карте — свой (PlaygroundRace из Tuning.RACE_PICK_M_MAP).
+var pick_m: float = Tuning.RACE_PICK_M
 ## Зерно случайного выбора меток (пробы — повторяемость); 0 — каждый раз новое.
 @export var seed_value := 0
 
@@ -190,9 +192,9 @@ func _light_initial() -> void:
 		_light(i)
 
 
-## Проверка взятий (каждый тик боя): для каждой горящей точки — ближайшая деталь живой куклы; ближе RACE_PICK_M — взята.
+## Проверка взятий (каждый тик боя): для каждой горящей точки — ближайшая деталь живой куклы; ближе pick_m — взята.
 func _tick_points() -> void:
-	var r2 := Tuning.RACE_PICK_M * Tuning.RACE_PICK_M
+	var r2 := pick_m * pick_m
 	for p in lit_points():
 		var pos := (p as RacePoint).home
 		var best: Doll = null

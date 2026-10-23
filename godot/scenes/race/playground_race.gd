@@ -54,6 +54,7 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	RaceBrain.default_level = bot_level
+	match_node.pick_m = float(Tuning.RACE_PICK_M_MAP.get(map_id, Tuning.RACE_PICK_M))
 	for c in get_children():
 		if c is Node3D and c.has_method("spawn_points"):
 			arena = c
