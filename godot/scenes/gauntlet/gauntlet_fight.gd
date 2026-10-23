@@ -66,7 +66,10 @@ func setup_gauntlet(player_bp: BodyBlueprint, r: GauntletRun, i: int, bot := fal
 		var m := $Match as Match
 		m.time_limit_s = time_limit_s
 		m.hard_timeout_s = time_limit_s * 2.0
-	info = {"player_name": tr("Игрок"), "rival_title": GauntletRun.rival_title(i)}
+	# Фишка плашек LowerThirds — номер боя забега, а не «СЕРИЯ 0 – 0» сессии (VISUAL_PASS_2310, G-3).
+	info = {"player_name": tr("Игрок"), "rival_title": GauntletRun.rival_title(i),
+		"player_record": tr("бой %d из %d") % [i + 1, GauntletRun.fights()],
+		"rival_record": tr("соперник %d из %d") % [i + 1, GauntletRun.fights()]}
 	($UI/Hint as Label).text = tr("Испытание · бой %d из %d · %s · WASD + Shift + Space, мышь — тяги · Esc — пауза") % [
 		i + 1, GauntletRun.fights(), GauntletRun.arena_title(i)]
 

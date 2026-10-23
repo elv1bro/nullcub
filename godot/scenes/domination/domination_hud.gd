@@ -11,6 +11,8 @@ extends SquadHud
 const ZONE_R := 24.0
 const ZONE_GAP := 66.0
 const ZONE_DARK := Color(0.06, 0.07, 0.09, 0.82)
+const TOP_BAND_HALF_W := 380.0      # пол-ширины верхнего блока (табло 2 × 250 + таймер 190 + скосы)
+const LETTER_UNDER_HUD_A := 0.12    # буква зоны за табло — почти прозрачна
 
 
 func _ready() -> void:
@@ -140,7 +142,10 @@ func _draw_my_zone(vp: Vector2, y: float) -> void:
 func _draw_flags(cam: Camera3D, to_canvas: Transform2D, vp: Vector2, me: Doll) -> void:
 	super._draw_flags(cam, to_canvas, vp, me)
 	var m := dm()
-	if m == null or me == null or m.zones.size() != m.zone_count():
+	if m == null:
+		return
+	_fade_letters(cam, to_canvas, vp)
+	if me == null or m.zones.size() != m.zone_count():
 		return
 	for i in m.zone_count():
 		var p := m.zone_centre(i)
@@ -150,6 +155,25 @@ func _draw_flags(cam: Camera3D, to_canvas: Transform2D, vp: Vector2, me: Doll) -
 		if sp.x > 0.0 and sp.y > 0.0 and sp.x < vp.x and sp.y < vp.y:
 			continue
 		_zone_arrow(sp, vp, i, me.centre_of_mass().distance_to(p))
+
+
+## 3D-буква зоны, что на экране попала за верхний блок HUD (табло, круги A/B/C, строка «ТОЧКА …»), гаснет — не читается сквозь
+## табло и не спорит с ним (VISUAL_PASS_2310 D-6). Блок — по центру сверху, ширина табло.
+func _fade_letters(cam: Camera3D, to_canvas: Transform2D, vp: Vector2) -> void:
+	var band := Rect2(vp.x * 0.5 - TOP_BAND_HALF_W, 0.0, TOP_BAND_HALF_W * 2.0, TOP + 78.0 + 36.0 + 14.0 + ZONE_R * 2.0 + 26.0 + 40.0)
+	for zn in dm().zone_nodes:
+		if not is_instance_valid(zn):
+			continue
+		var z := zn as DominationZone
+		var c := z.letter_point()
+		var hidden := false
+		if not cam.is_position_behind(c):
+			var a: Vector2 = to_canvas * cam.unproject_position(c + Vector3(0.0, DominationZone.LETTER_H * 0.5, 0.0))
+			var b: Vector2 = to_canvas * cam.unproject_position(c - Vector3(0.0, DominationZone.LETTER_H * 0.5, 0.0))
+			var h := absf(b.y - a.y)
+			var box := Rect2(Vector2((a.x + b.x) * 0.5 - h * 0.4, minf(a.y, b.y)), Vector2(h * 0.8, h))
+			hidden = band.intersects(box)
+		z.letter_alpha_target = LETTER_UNDER_HUD_A if hidden else 1.0
 
 
 func _zone_arrow(sp: Vector2, vp: Vector2, i: int, metres: float) -> void:

@@ -39,6 +39,9 @@ const DIGIT_RISE := 46.0
 const AIM_DASH := 0.35            # м: штрих луча прицела
 const TREE_S := 4.5               # древо после нового уровня висит столько (с), ждёт выбор ветки — пока не выбрана
 const CARD := Vector2(470.0, 176.0)
+const CARD_BOTTOM := 44.0         # низ карточек бойца/оружия над краем: ниже — метка «Tab — управление» (ControlFeelPanel), VISUAL_PASS_2310 D-5
+const NAME_EDGE := 10.0           # мировая подпись бойца не ближе к краю кадра (D-3)
+const NAME_PAD_R := 30.0   # отступ строки имени от правого края карточки игрока (с обводкой 5 px)
 const STATE_COLOURS := {"ready": Color(1.0, 1.0, 1.0), "cooldown": Color(1.0, 0.86, 0.25), "reload": Color(1.0, 0.36, 0.3),
 	"empty": Color(1.0, 0.25, 0.22), "charging": Color(0.45, 0.92, 1.0), "none": Color(1.0, 0.25, 0.22)}
 const CLASS_ICONS := {"brawler": "fist", "sniper": "scope", "raider": "shell"}
@@ -451,7 +454,7 @@ func _draw_all() -> void:
 	_draw_me(vp, me)
 	_draw_weapon(vp, me)
 	if picking:
-		_draw_classes(vp, me)
+		_draw_classes(vp, me, match_node.play_state == "play")
 	elif not _tree.is_empty():
 		_draw_tree(vp, me)
 	if cam != null and me.alive and match_node.play_state == "play":
@@ -476,6 +479,9 @@ func _text(at: Vector2, text: String, px: int, col: Color, align := HORIZONTAL_A
 	if max_w > 0.0 and w > max_w:
 		size = maxi(int(float(px) * max_w / w), 9)
 		w = _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+		while w > max_w and size > 9:   # ширина шрифта не строго пропорциональна размеру — дожать, чтобы не вылезать за max_w
+			size -= 1
+			w = _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 	var x := at.x
 	if align == HORIZONTAL_ALIGNMENT_CENTER:
 		x -= w * 0.5
@@ -681,7 +687,7 @@ func _draw_me(vp: Vector2, me: Doll) -> void:
 	var tc := SquadMatch.team_colour(t)
 	var lo := match_node.loadout(pi)
 	var cls := String(lo["class"])
-	var r := Rect2(24.0, vp.y - CARD.y - 22.0, CARD.x, CARD.y)
+	var r := Rect2(24.0, vp.y - CARD.y - CARD_BOTTOM, CARD.x, CARD.y)
 	_round(r, Color(0.03, 0.035, 0.05, 0.82), tc.lightened(0.2), 0, 12)
 	canvas.draw_rect(Rect2(r.position, Vector2(r.size.x, 5.0)), tc.lightened(0.2))
 	# значок класса в кольце опыта, номер уровня
@@ -696,10 +702,11 @@ func _draw_me(vp: Vector2, me: Doll) -> void:
 	var x0 := r.position.x + 152.0
 	var wcol := r.end.x - x0 - 18.0
 	var br := String(lo["branch"])
+	var name_w := r.end.x - x0 - NAME_PAD_R   # строка «имя · класс · подкласс» с отступом от правого края карточки (D-4)
 	var cls_t := tr(String(Tuning.SQUAD_CLASSES[cls]["title"]))
 	if br != "":
 		cls_t += " · " + branch_title(cls, br)
-	_text(Vector2(x0, r.position.y + 38.0), "%s · %s" % [name_of(me), cls_t], 25, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT, wcol)
+	_text(Vector2(x0, r.position.y + 38.0), "%s · %s" % [name_of(me), cls_t], 25, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT, name_w)
 	# HP
 	var hp := me.hp if me.alive else 0.0
 	var hpr := Rect2(x0 + 30.0, r.position.y + 54.0, wcol - 90.0, 24.0)
@@ -738,7 +745,7 @@ func _draw_me(vp: Vector2, me: Doll) -> void:
 func _draw_weapon(vp: Vector2, me: Doll) -> void:
 	var t := SquadMatch.team_of(me)
 	var tc := SquadMatch.team_colour(t)
-	var r := Rect2(vp.x - 24.0 - CARD.x, vp.y - CARD.y - 22.0, CARD.x, CARD.y)
+	var r := Rect2(vp.x - 24.0 - CARD.x, vp.y - CARD.y - CARD_BOTTOM, CARD.x, CARD.y)
 	_round(r, Color(0.03, 0.035, 0.05, 0.82), tc.lightened(0.2), 0, 12)
 	canvas.draw_rect(Rect2(r.position, Vector2(r.size.x, 5.0)), tc.lightened(0.2))
 	var g := SquadMatch.gun_of(me)
@@ -801,21 +808,23 @@ func _draw_weapon(vp: Vector2, me: Doll) -> void:
 
 # --- выбор класса ---
 
-func _draw_classes(vp: Vector2, me: Doll) -> void:
+## Выбор класса: на отсчёте — большие карточки над карточкой бойца; пока P1 мёртв в бою (compact) — узкая полоса внизу между карточками
+## бойца и оружия: номер, картинка, название, HP — центр кадра со своим боем не закрывается (VISUAL_PASS_2310 D-2).
+func _draw_classes(vp: Vector2, me: Doll, compact := false) -> void:
 	var pi := me.player_index
 	var lo := match_node.loadout(pi)
 	var t := SquadMatch.team_of(me)
 	var tc := SquadMatch.team_colour(t)
 	var n := Tuning.SQUAD_CLASS_ORDER.size()
-	var cw := 330.0
-	var ch := 336.0
-	var gap := 22.0
+	var cw := 280.0 if compact else 330.0
+	var ch := 124.0 if compact else 336.0
+	var gap := 14.0 if compact else 22.0
 	var total := cw * n + gap * (n - 1)
 	var x0 := vp.x * 0.5 - total * 0.5
-	var y0 := vp.y - CARD.y - 40.0 - ch
+	var y0 := vp.y - CARD_BOTTOM - ch if compact else vp.y - CARD.y - 40.0 - ch
 	var pending := String(lo["next_class"]) != String(lo["class"])
 	var title := tr("ВЫБЕРИ КЛАСС · ЖМИ 1–%d") % n + ("  ·  " + tr("сменится при возврате") if pending else "")
-	_text(Vector2(vp.x * 0.5, y0 - 16.0), title, 28, GOLD, HORIZONTAL_ALIGNMENT_CENTER, total)
+	_text(Vector2(vp.x * 0.5, y0 - (12.0 if compact else 16.0)), title, 22 if compact else 28, GOLD, HORIZONTAL_ALIGNMENT_CENTER, total)
 	for k in n:
 		var id := String(Tuning.SQUAD_CLASS_ORDER[k])
 		var c: Dictionary = Tuning.SQUAD_CLASSES[id]
@@ -824,19 +833,28 @@ func _draw_classes(vp: Vector2, me: Doll) -> void:
 		_round(r, Color(0.04, 0.045, 0.065, 0.9 if on else 0.78), tc.lightened(0.3) if on else Color(1, 1, 1, 0.12), 3 if on else 1, 12)
 		if on:
 			_round(r.grow(6.0), Color(0, 0, 0, 0), Color(tc.r, tc.g, tc.b, 0.35 + 0.25 * absf(sin(_pulse * 3.0))), 3, 16, false)
-		canvas.draw_circle(r.position + Vector2(28.0, 28.0), 18.0, GOLD if on else Color(1, 1, 1, 0.2))
-		_text(r.position + Vector2(28.0, 37.0), str(k + 1), 24, INK if on else Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, 0.0, 0)
+		var nc := r.position + (Vector2(22.0, 22.0) if compact else Vector2(28.0, 28.0))
+		canvas.draw_circle(nc, 15.0 if compact else 18.0, GOLD if on else Color(1, 1, 1, 0.2))
+		_text(nc + Vector2(0.0, 8.0 if compact else 9.0), str(k + 1), 20 if compact else 24, INK if on else Color.WHITE,
+			HORIZONTAL_ALIGNMENT_CENTER, 0.0, 0)
+		var hp_s := tr("HP %d") % int(c["hp"])
+		if float(c["armor"]) > 0.0:
+			hp_s += " · " + tr("БРОНЯ %d") % int(c["armor"])
+		if float(c.get("zoom", 1.0)) > 1.0:
+			hp_s += " · " + tr("ОБЗОР ×%.1f") % float(c["zoom"])
+		if compact:
+			_weapon_pic(Rect2(r.position + Vector2(40.0, 6.0), Vector2(cw - 80.0, 62.0)), String(c["icon"]), t,
+				String(CLASS_ICONS.get(id, "star")))
+			_text(Vector2(r.get_center().x, r.position.y + 94.0), tr(String(c["title"])), 26,
+				Color.WHITE if on else Color(1, 1, 1, 0.85), HORIZONTAL_ALIGNMENT_CENTER, cw - 24.0)
+			_text(Vector2(r.get_center().x, r.position.y + 115.0), hp_s, 16, ARMOR_COLOUR, HORIZONTAL_ALIGNMENT_CENTER, cw - 24.0)
+			continue
 		_weapon_pic(Rect2(r.position + Vector2(40.0, 30.0), Vector2(cw - 80.0, 120.0)), String(c["icon"]), t,
 			String(CLASS_ICONS.get(id, "star")))
 		_text(Vector2(r.get_center().x, r.position.y + 186.0), tr(String(c["title"])), 34, Color.WHITE if on else Color(1, 1, 1, 0.85),
 			HORIZONTAL_ALIGNMENT_CENTER, cw - 24.0)
 		_text_wrap(Vector2(r.get_center().x, r.position.y + 214.0), tr(String(c["note"])), 18, Color(1, 1, 1, 0.72), HORIZONTAL_ALIGNMENT_CENTER,
 			cw - 28.0, 2)
-		var hp_s := tr("HP %d") % int(c["hp"])
-		if float(c["armor"]) > 0.0:
-			hp_s += " · " + tr("БРОНЯ %d") % int(c["armor"])
-		if float(c.get("zoom", 1.0)) > 1.0:
-			hp_s += " · " + tr("ОБЗОР ×%.1f") % float(c["zoom"])
 		_text(Vector2(r.get_center().x, r.position.y + 262.0), hp_s, 19, ARMOR_COLOUR, HORIZONTAL_ALIGNMENT_CENTER, cw - 24.0)
 		var names: Array = []
 		for b in c["branch_order"]:
@@ -992,7 +1010,10 @@ func _draw_marks(cam: Camera3D, to_canvas: Transform2D, vp: Vector2, me: Doll) -
 		_icon(String(CLASS_ICONS.get(cls, "star")), r.position + Vector2(-12.0, BAR_H * 0.5), 16.0, c)
 		var txt := name_of(d)
 		var fs := 18 if d != me else 20
-		_text(sp + Vector2(0.0, -10.0), txt, fs, Color.WHITE if d == me else c, HORIZONTAL_ALIGNMENT_CENTER)
+		# подпись по центру над головой, но целиком в кадре: у края прижимается внутрь (VISUAL_PASS_2310 D-3)
+		var half := _font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x * 0.5 + 4.0
+		var nx := clampf(sp.x, NAME_EDGE + half, maxf(vp.x - NAME_EDGE - half, NAME_EDGE + half))
+		_text(Vector2(nx, sp.y - 10.0), txt, fs, Color.WHITE if d == me else c, HORIZONTAL_ALIGNMENT_CENTER)
 		var bx := sp.x - 20.0
 		for k in Tuning.SQUAD_BOOSTS:
 			if match_node.boost_left(d, k) > 0.0:

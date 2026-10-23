@@ -60,7 +60,7 @@ var _sfx: Node = null
 var _quiet := 0
 var _rng := RandomNumberGenerator.new()
 var _accel0: Dictionary = {}       # instance_id куклы → разгон полной куклы (thrust_mass / total_mass)
-var _ko_t: Dictionary = {}         # instance_id куклы → fight_time KO
+var _ko_t: Dictionary = {}         # instance_id куклы → тик физики KO (не fight_time: KO одного тика могут разойтись на delta)
 var _sweep_wait: Dictionary = {}   # instance_id куклы → true: разбор оторванного уже запланирован
 var _glow: StandardMaterial3D
 var _glow_t := 0.0
@@ -761,7 +761,7 @@ func _on_doll_ko(attacker: Node, record: Dictionary, victim: Doll) -> void:
 	tally[victim.player_index] = tv
 	if killer != null and tally.has(killer.player_index):
 		(tally[killer.player_index] as Dictionary)["kos"] = int(tally[killer.player_index]["kos"]) + 1
-	_ko_t[victim.get_instance_id()] = fight_time
+	_ko_t[victim.get_instance_id()] = Engine.get_physics_frames()
 	kos.append({"t": snappedf(fight_time, 0.01), "victim": victim.player_index, "attacker": killer.player_index if killer != null else -1,
 		"parts": had, "kind": String(record.get("kind", ""))})
 	var id := victim.get_instance_id()

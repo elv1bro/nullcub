@@ -247,7 +247,17 @@ func _on_ko(victim: Object, _attacker: Variant, _record: Dictionary) -> void:
 		p.set_ko(true)
 	var colour: Color = Tuning.PLAYER_COLORS[clampi(idx, 0, Tuning.PLAYER_COLORS.size() - 1)] if idx >= 0 else Color.WHITE
 	announcer.clear()   # KO! Match объявил до сигнала ko — карточка пишет его сама
-	ko_card.show_card("P%d" % (idx + 1) if idx >= 0 else "", colour)
+	ko_card.show_card(ko_name(idx), colour)
+
+
+## Подпись выбитого на карточке KO: своё имя плашки (кампания, Испытание: титул соперника с лестницы), иначе «P2».
+func ko_name(idx: int) -> String:
+	if idx < 0:
+		return ""
+	var p := panel_for(idx)
+	if p != null and p.display_name != "":
+		return p.display_name.to_upper()
+	return "P%d" % (idx + 1)
 
 
 func _on_match_over(winner: Object, match_results: Dictionary) -> void:
