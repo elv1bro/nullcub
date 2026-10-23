@@ -110,7 +110,11 @@ gtimeout 900 /usr/bin/arch -arm64 /usr/local/bin/godot --headless --path . --imp
   баннеры NULL LEAGUE · SEASON ZERO читаются над бойцами, янтарь на тёмных трибунах — как графика эфира, на кукол не
   тянет; ленты прежние. `scrap_snapshot` `shots=wide+start+fight` — все проверки ok, `fight_readable_P1` 0.474,
   `P2` 0.143 (порог 0.08): щиты FIGHT NIGHT / SCRAP CUP и флаги NULL читаются, в бою уходят в DOF и под плашки HUD.
-  В кадре `start` щит FIGHT NIGHT стоит прямо за головой P2 (расстановка, не картинка) — кукла читается по обводке.
+  В кадре `start` щит FIGHT NIGHT стоял прямо за головой P2 — с 23.10 (вечер) поднят на мачте (y −2.2 → −0.4), низ щита
+  над головами зоны старта; `fight_readable` прежние (P1 0.265, P2 0.12).
+- Купол (23.10, вечер): изогнутые баннеры закрывали стойки каркаса («NULL LEAG|», «SEA|SON»). Теперь дуги стоят между колоннами
+  (у нечётных стыков секций, `CURVED` в `league_boards.gd`), крайние уменьшены (0.84 / 0.88) и сдвинуты к центру кадра — в
+  кадре 1 `null_hall_snapshot` все три «NULL LEAGUE ◯ SEASON ZERO» читаются целиком; проба OK 12/12.
 - `loading_probe` зелёная; снимок лоадера — арт справа, текст слева читается (шторка-градиент).
 - `garage_menu_shots` (title/quick/trophies/workshop/settings) — знамя, фото и плакаты на стенах, 0 SCRIPT ERROR.
 
@@ -118,8 +122,6 @@ gtimeout 900 /usr/bin/arch -arm64 /usr/local/bin/godot --headless --path . --imp
 
 - Реклама на аренах — пока только купол и Свалка (см. выше); Руины, Void, мастерская — без щитов. Картинки щитов,
   баннера и флага — codex (23.10), ленты — набор.
-- Купол: изогнутые баннеры частично закрыты вертикальными стойками каркаса (на снимке «NULL LEAG|», «SEA|SON») —
-  углы `CURVED_DEG` в `league_boards.gd` стоило бы сдвинуть между стойками; не правилось.
 - Экраны ТВ `tv_build` / `tv_opponent` — прежние (рисуются генератором, кадров веб-прототипа в них нет).
 - Капсулы Steam нарезаны: `docs/steam/capsules/` (header 920×430, small 462×174, main 1232×706, vertical 748×896, library 600×900,
   hero 3840×1240, logo 1280×720 на прозрачности) — `python3 godot/tools/codex_art/steam_capsules.py`. Hero (23.10) больше не
