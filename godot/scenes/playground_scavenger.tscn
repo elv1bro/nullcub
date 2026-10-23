@@ -1,0 +1,34 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scenes/scavenger/playground_scavenger.gd" id="1_pg"]
+[ext_resource type="PackedScene" uid="uid://scraparena01" path="res://scenes/arena/scrap.tscn" id="2_arena"]
+[ext_resource type="Script" path="res://scenes/camera/dynamic_camera.gd" id="3_cam"]
+[ext_resource type="Script" path="res://scripts/scavenger/scav_match.gd" id="4_match"]
+[ext_resource type="Script" path="res://scenes/scavenger/scav_hud.gd" id="5_hud"]
+
+[node name="PlaygroundScavenger" type="Node3D"]
+script = ExtResource("1_pg")
+
+[node name="Scrap" parent="." groups=["arena"] instance=ExtResource("2_arena")]
+
+[node name="Dolls" type="Node3D" parent="."]
+
+[node name="Parts" type="Node3D" parent="."]
+
+[node name="Camera" type="Camera3D" parent="." groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 16)
+fov = 45.0
+script = ExtResource("3_cam")
+arena_path = NodePath("../Scrap")
+target_group = "scav_focus"
+padding = 3.0
+min_half_height = 5.0
+max_half_height = 9.0
+
+[node name="Match" type="Node" parent="."]
+script = ExtResource("4_match")
+camera_path = NodePath("../Camera")
+arena_path = NodePath("../Scrap")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5_hud")
