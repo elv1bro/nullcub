@@ -89,7 +89,7 @@ func _think(_delta: float) -> void:
 	var rel := me - b
 	var along := rel.dot(ad)
 	var side := rel - ad * along
-	if along < -BEHIND_M and side.length() < ALIGN_M + (-along) * 0.3:
+	if along < -BEHIND_M and side.length() < ALIGN_M + (-along) * 0.3 + _align_slack(b):
 		if state != "strike":
 			note_attack()
 		go("strike")
@@ -113,6 +113,11 @@ func _think(_delta: float) -> void:
 		goal = b + perp * signf(s) * AROUND_M - ad * 0.2
 	goal.y = maxf(goal.y, 0.9)
 	want = steer(goal, max_in)
+
+
+## Допуск сверх ALIGN_M на линию удара: 0 — мячи. Хоккей (HockeyBrain) — шайба лежит на льду ниже, чем опускается ЦМ куклы.
+func _align_slack(_b: Vector2) -> float:
+	return 0.0
 
 
 ## Куда должен лететь мяч.

@@ -363,6 +363,17 @@ func _rules() -> void:
 	_brains_off()
 	var first3 := im.first_i
 	var z3 := im.first
+	# первый заражённый новой партии заражает сразу после FIGHT (часы партии обнулены до выбора первого; раньше он нёс время
+	# заражения из прошлой партии и пауза INFECTION_TOUCH_GAP_S держала его до этой секунды — партии 2–3 без заражений, 22.10)
+	_spread_all()
+	var v3 := im.healthy()[0] as Doll
+	_place(z3, Vector2(0.0, 1.3))
+	_place(v3, Vector2(1.05, 1.3))
+	var t3 := im.round_time
+	var first_touch := await _until(func() -> bool: return im.is_infected(v3), 1.5)
+	_check("first_infects_next_round", first_touch and int(im.infections[-1]["from"]) == first3 and int(im.infections[-1]["round"]) == 3,
+		"партия 3: %s → %s %s за %.2f с (с начала партии %.2f с)" % [InfectionMatch.doll_name(z3), InfectionMatch.doll_name(v3),
+		"заразил" if first_touch else "НЕ заразил", im.round_time - t3, im.round_time])
 	for d in im.healthy():
 		im.infect(d, z3)
 	var done := await _until(func() -> bool: return over_count > 0, Tuning.INFECTION_ROUND_PAUSE_S + 1.0)

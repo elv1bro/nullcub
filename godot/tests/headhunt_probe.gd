@@ -463,4 +463,5 @@ func _bots(max_s: float, level: int, trace: bool) -> void:
 	info["bots"] = {"level": level, "fight_s": snappedf(hm.fight_time, 0.1), "score": hm.score.duplicate(), "deliveries": hm.deliveries.size(),
 		"kos": hm.kos.size(), "hits": acc["hits"], "picks": hm.carry.picks, "stuck_max_s": snappedf(stuck_max, 0.1),
 		"press_max_s": snappedf(press_max, 0.1), "brain_counters": states, "ms_per_physics_frame_wall": snappedf(wall_ms / maxf(frames, 1), 0.01),
-		"tally": over_results.get("tally", {})}
+		"tally": over_results.get("tally", {}), "reason": String(over_results.get("reason", "")),
+		"delivery_log": hm.deliveries.duplicate(true)}

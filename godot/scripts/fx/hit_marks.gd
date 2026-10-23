@@ -83,6 +83,15 @@ static func _add_to_mesh(mi: MeshInstance3D, world_pos: Vector3, r: float, pw: f
 		mat.set_shader_parameter("chip_rough", look[3])
 		st = {"mat": mat, "marks": []}
 		mi.set_meta(META, st)
+		# Меш уходит из дерева (кукла заменена при возврате, конец матча) — оверлей снять, пока материал жив, вернуть, если меш
+		# вернулся (переподвешивание): иначе при освобождении куклы в dummy-рендере (headless-пробы) на каждый меш со следами
+		# «Parameter "material" is null» (P3, решено 22.10, BALANCE_2210.md).
+		mi.tree_exiting.connect(func() -> void:
+			if is_instance_valid(mi) and mi.material_overlay == mat:
+				mi.material_overlay = null)
+		mi.tree_entered.connect(func() -> void:
+			if is_instance_valid(mi) and mi.material_overlay == null and not (mi.get_meta(META, {}) as Dictionary).is_empty():
+				mi.material_overlay = mat)
 	if mi.material_overlay != st["mat"] and mi.material_overlay == null:
 		mi.material_overlay = st["mat"]   # чужой оверлей (рентген крита) не трогаем — вернётся наш, когда кат кончится
 	var inv := mi.global_transform.affine_inverse()

@@ -254,6 +254,17 @@ func _start_fight() -> void:
 	announce.emit(tr("PLAY!"), ANNOUNCE_COLORS["fight"], "fight" if first else "countdown")
 
 
+## Хоккей: кто касался шайбы за последние HOCKEY_CARRY_S, летит медленнее — потолок скорости × HOCKEY_CARRY_SPEED_MULT. Защитник
+## догоняет ведущего шайбу и встаёт между ним и воротами (решено 22.10, BALANCE_2210.md: без этого боты забивали с вбрасывания за 3–5 с).
+func _hockey_carry() -> void:
+	if not _hockey_on or ball == null:
+		return
+	for d in dolls():
+		var dd := d as Doll
+		var carry := is_instance_valid(ball.last_touch) and ball.last_touch == dd and ball.since_touch() < Tuning.HOCKEY_CARRY_S
+		dd.speed_cap_mult = Tuning.HOCKEY_CARRY_SPEED_MULT if carry else 1.0
+
+
 ## Расстановка на новый ввод после гола: куклы — заново на своих точках (keeps_damage — какими были, иначе целые), мяч — на точку
 ## ввода, короткий отсчёт.
 func _kickoff() -> void:
@@ -297,6 +308,7 @@ func _physics_process(delta: float) -> void:
 				fight_time += delta
 				time_left.emit(time_left_s())
 				_check_score()
+				_hockey_carry()
 				if play_state == "play":
 					_tick_idle_ball()
 					if phase == Phase.FIGHT and fight_time >= time_limit_s:
