@@ -24,6 +24,7 @@ func _ready() -> void:
 	apply_sport(sport)
 	set_score(0, 0)
 	NullLook.attach(self, NullLook.KIND_HALL)   # пыль поля NULL (docs/plan-demo/look/null.md)
+	LeagueBoards.attach(self, LeagueBoards.LAYOUT_SPORT)   # щиты спонсоров у пола задней стены (league_boards.gd)
 
 
 func apply_sport(id: String) -> void:

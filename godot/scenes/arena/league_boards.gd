@@ -1,5 +1,6 @@
 ## Реклама Лиги NULL на аренах (23.10.2026): LED-ленты на бортах трибун купола, изогнутые баннеры под верхним ярусом,
-## щиты на фермах-мачтах и флаги за полем Свалки. Ставится в рантайме из _ready() арены (как NullLook) — сгенерированные
+## щиты на фермах-мачтах и флаги за полем Свалки, борта у пола задней стены спорт-зала (щиты спонсоров ORBIT JOINTS,
+## VOLTA CORES, NULL TV). Ставится в рантайме из _ready() арены (как NullLook) — сгенерированные
 ## сцены (tools/build_null_hall.gd, scenes/arena/scrap.tscn) не трогаются.
 ##
 ## Только фон: всё стоит вне поля боя (купол — на радиусе трибун 24–27 м, Свалка — z ≤ −7 за отвалами), коллизий нет
@@ -11,6 +12,7 @@ extends Node3D
 
 const LAYOUT_DOME := "dome"
 const LAYOUT_SCRAP := "scrap"
+const LAYOUT_SPORT := "sport"
 
 const MODEL := "res://assets/models/arena/ads/%s.glb"
 const TEX := "res://assets/textures/arena_ads/%s.jpg"
@@ -43,6 +45,8 @@ static func attach(host: Node3D, layout: String) -> LeagueBoards:
 			b._dome(host)
 		LAYOUT_SCRAP:
 			b._scrap()
+		LAYOUT_SPORT:
+			b._sport()
 	return b
 
 
@@ -119,3 +123,46 @@ func _scrap() -> void:
 	place("Ad_Billboard_Pole", "board_scrap_cup", self, Vector3(11.5, -2.2, -14.5), -10.0, 0.55)
 	place("Ad_Flag", "flag_null", self, Vector3(-14.5, -1.0, -7.0), 15.0, 0.5)
 	place("Ad_Flag", "flag_null", self, Vector3(15.5, -1.0, -7.5), -15.0, 0.5)
+
+
+# --- спорт-зал --------------------------------------------------------------------------------------------------------
+# Задняя стена z −5.2 (tools/build_sport_hall.gd Z_BACK), табло по центру на y 3.4. Под табло — ряд бортов у пола, как
+# реклама за полем на стадионе: экран 16:9 на тонкой раме, свечение слабое — за куклами и мячом не должно спорить с ними.
+const SPORT_Z := -5.2 + 0.3
+const SPORT_PANEL := Vector2(2.2, 2.2 * 9.0 / 16.0)
+const SPORT_BOARDS := [["board_joints", -3.7], ["board_nulltv", 0.0], ["board_cores", 3.7]]   # колонны каркаса на x ±5.6 (z −4.3) — щиты внутри них
+
+
+func _sport() -> void:
+	for sb in SPORT_BOARDS:
+		panel(String(sb[0]), self, Vector3(float(sb[1]), 0.25 + SPORT_PANEL.y * 0.5, SPORT_Z), SPORT_PANEL, 0.35)
+
+
+## Плоский экран с картинкой tex_name в тёмной раме (без модели кита: для стен, где щит на ногах или мачте не встаёт).
+func panel(tex_name: String, parent: Node3D, pos: Vector3, size: Vector2, glow := 0.5) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Ad_Panel_" + tex_name
+	root.position = pos
+	parent.add_child(root)
+	var frame := MeshInstance3D.new()
+	frame.name = "Frame"
+	var bm := BoxMesh.new()
+	bm.size = Vector3(size.x + 0.12, size.y + 0.12, 0.08)
+	var fm := StandardMaterial3D.new()
+	fm.albedo_color = Color(0.06, 0.065, 0.075)
+	fm.metallic = 0.6
+	fm.roughness = 0.5
+	bm.material = fm
+	frame.mesh = bm
+	frame.position.z = -0.05
+	frame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(frame)
+	var scr := MeshInstance3D.new()
+	scr.name = "Ad_Screen"
+	var q := QuadMesh.new()
+	q.size = size
+	scr.mesh = q
+	scr.material_override = screen_material(tex_name, glow)
+	scr.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(scr)
+	return root
