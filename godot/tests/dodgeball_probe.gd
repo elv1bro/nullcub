@@ -454,8 +454,12 @@ func _bots(level: int, trace: bool) -> void:
 		"hits": hits, "catches": catches, "brain_total": DodgeballBrain.total, "dead_why": why, "outs": dm.events.filter(
 			func(e: Dictionary) -> bool: return String(e["kind"]) == "out").size()}
 	var wt := int(over_results.get("winner_team", -1))
-	_check("bots_match_finishes", over_count == 1 and wt >= 0 and dm.fight_time >= BOTS_MIN_S and dm.fight_time <= BOTS_MAX_S,
-		"итоги %d, победа команды %d, счёт %s, матч %.0f с (окно %d–%d)" % [over_count, wt, str(dm.score), dm.fight_time, int(BOTS_MIN_S),
+	# Ничья по правилам (DODGEBALL_TIME_S, равный счёт и поровну на поле) — тоже исход, если раунды реально выигрывались (счёт ≥ 1:1):
+	# с моделью удара по массе траектории расходятся, и зерно пробы иногда упирается в лимит при [1, 1].
+	var fair_draw := bool(over_results.get("draw", false)) and dm.fight_time >= dm.time_limit_s - 0.5 and int(dm.score[0]) == int(dm.score[1]) \
+		and int(dm.score[0]) >= 1
+	_check("bots_match_finishes", over_count == 1 and (wt >= 0 or fair_draw) and dm.fight_time >= BOTS_MIN_S and dm.fight_time <= BOTS_MAX_S,
+		"итоги %d, победа команды %d%s, счёт %s, матч %.0f с (окно %d–%d)" % [over_count, wt, " (ничья по времени)" if fair_draw else "", str(dm.score), dm.fight_time, int(BOTS_MIN_S),
 			int(BOTS_MAX_S)])
 	_check("bots_throw_and_hit", throws >= 10 and hits >= 2 and hits + catches >= 4,   # выбивают и попаданием, и ловлей
 		"бросков %d, попаданий %d, поймано %d, мёртвые мячи %s" % [throws, hits, catches, str(why)])
