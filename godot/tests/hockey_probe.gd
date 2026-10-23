@@ -232,6 +232,16 @@ func _sticks_ok() -> bool:
 	return true
 
 
+## Решено 23.10: крюк клюшки — к своим воротам у обеих команд (HockeySticks.mirror_for). Крюк лежит по +Y клюшки, рукоять — +X;
+## клюшка рукоятью вниз (+X = −Y мира) держит крюк по x мира со знаком basis.z.z — от позы не зависит (клюшка в плоскости XY).
+## Возвращает знак «крюк × направление атаки»: −1 — назад (к своим воротам), +1 — вперёд, 0 — клюшки нет.
+func _hook_sign(d: Doll) -> float:
+	var w := HockeySticks.stick_of(d)
+	if w == null or not is_instance_valid(w):
+		return 0.0
+	return signf(w.global_basis.z.z * SportMatch.attack_dir(SportMatch.team_of(d)))
+
+
 func _stick_hand(d: Doll) -> String:
 	var wp := HockeySticks.pickup_of(d)
 	if wp == null:
@@ -279,6 +289,9 @@ func _rules() -> void:
 	await _until(_sticks_ok, 2.0)
 	_check("sticks_start", _sticks_ok() and _stick_hand(p1) == Tuning.HOCKEY_STICK_HAND and _stick_hand(p2) == "Hand_R"
 		and sm.sticks != null and sm.sticks.given == 2, "P1 %s, P2 %s, выдано %d" % [_stick_hand(p1), _stick_hand(p2), sm.sticks.given if sm.sticks != null else -1])
+	# симметрия команд: крюк у обеих к своим воротам (до 23.10 у P1 — к чужим, у P2 — к своим: боты P2 выигрывали 9 из 10)
+	_check("stick_hook_mirrored", _hook_sign(p1) < 0.0 and _hook_sign(p2) < 0.0,
+		"крюк × атака: P1 %+.0f (%s), P2 %+.0f (%s); −1 — к своим воротам" % [_hook_sign(p1), _stick_hand(p1), _hook_sign(p2), _stick_hand(p2)])
 	# вбрасывание: шайба падает с 2 м по центру и ложится без подскока
 	var spawn := arena.ball_spawn(0)
 	_check("faceoff_spot", spawn.distance_to(Vector3(0.0, 2.0, 0.0)) < 0.01, str(spawn))
@@ -367,7 +380,8 @@ func _rules() -> void:
 		"шайба стояла %.2f с (отсчёт %.2f с), дальше %s" % [froze, sm.kickoff_s, sm.play_state])
 	await _until(func() -> bool: return sm.play_state == "play", 3.0)
 	await _until(_sticks_ok, 2.0)
-	_check("sticks_after_goal", _sticks_ok() and sm.sticks.given >= 4, "выдано %d" % sm.sticks.given)
+	_check("sticks_after_goal", _sticks_ok() and sm.sticks.given >= 4 and _hook_sign(_doll(0)) < 0.0 and _hook_sign(_doll(1)) < 0.0,
+		"выдано %d, крюк × атака: P1 %+.0f, P2 %+.0f" % [sm.sticks.given, _hook_sign(_doll(0)), _hook_sign(_doll(1))])
 	await _save_rule()
 	# не гол: над перекладиной в сторону ворот, и шайба «появилась» за линией без пересечения
 	var gx := float(r["goal_x"])
@@ -525,6 +539,7 @@ func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
 	# не лезет: ЦМ не дальше той же черты (до правил 23.10 бот шёл за шайбой до чужих ворот)
 	var deep := [0, 0]
 	var home := [0, 0]
+	var hook_fwd := [0, 0]   # тиков, когда клюшка куклы держит крюк к чужим воротам (23.10: должно быть 0)
 	while sm.phase != Match.Phase.OVER and t < max_s:
 		await get_tree().physics_frame
 		t += TICK
@@ -552,6 +567,8 @@ func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
 				out_dolls += 1
 			var tm := SportMatch.team_of(dd)
 			var ad := SportMatch.attack_dir(tm)
+			if _hook_sign(dd) > 0.0:
+				hook_fwd[tm] += 1
 			if sm.play_state == "play" and p.x * ad > Tuning.HOCKEY_BOT_REACH_X + 1.0:
 				deep[tm] += 1
 				if c.x * ad < Tuning.HOCKEY_BOT_REACH_X + 1.0:
@@ -602,4 +619,18 @@ func _bots(max_s: float, level: int, trace: bool, seed_ := 0) -> void:
 	_check("bots_home_half", float(hs[0]) >= 0.8 and float(hs[1]) >= 0.8,
 		"шайба глубоко у соперника — бот не за ней: P1 %.0f %% из %.0f с, P2 %.0f %% из %.0f с; сейвов %d" % [float(hs[0]) * 100.0,
 		float(info["bots"]["deep_s"][0]), float(hs[1]) * 100.0, float(info["bots"]["deep_s"][1]), sm.saves.size()])
+	# симметрия сторон (23.10): одна партия баланс не меряет — счёт по командам для серий (BALANCE_2210.md); крюк — у обоих ботов назад
+	var own := [0, 0]
+	var real := [0, 0]
+	for g: Dictionary in sm.goals:
+		if bool(g.get("own_goal", false)):
+			own[int(g["team"])] += 1
+		else:
+			real[int(g["team"])] += 1
+	var svs := [0, 0]
+	for s: Dictionary in sm.saves:
+		svs[int(s["team"])] += 1
+	info["bots"]["sides"] = {"goals_real": real, "goals_own_credit": own, "saves": svs, "hook_fwd_ticks": hook_fwd}
+	_check("bots_hook_mirrored", hook_fwd[0] == 0 and hook_fwd[1] == 0,
+		"тиков с крюком к чужим воротам: P1 %d, P2 %d (бот P1 — Hand_L, P2 — Hand_R; клюшек выдано %d)" % [hook_fwd[0], hook_fwd[1], sm.sticks.given])
 	_check("bots_touch_puck", puck.touches - touches0 >= 10, "касаний %d, голов %d, нокаутов %d" % [puck.touches - touches0, int(sm.score[0]) + int(sm.score[1]), kos])

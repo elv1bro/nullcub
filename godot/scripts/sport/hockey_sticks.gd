@@ -20,6 +20,10 @@ var _orphan: Dictionary = {}      # instance_id клюшки → секунд н
 
 func _ready() -> void:
 	sm = get_parent() as SportMatch
+	# зеркальный хват (mirror_for) — до первого тика новой куклы: её WeaponPickup может сам подобрать лежащую клюшку раньше give
+	sm.doll_replaced.connect(func(_o: Doll, n: Doll) -> void: _mark(n))
+	for d in sm.dolls():
+		_mark(d as Doll)
 
 
 func _exit_tree() -> void:
@@ -66,6 +70,7 @@ func _physics_process(delta: float) -> void:
 		if not dd.alive or not dd.is_inside_tree():
 			continue
 		alive_ids[dd.get_instance_id()] = true
+		_mark(dd)
 		if stick_of(dd) != null:
 			_without.erase(dd.get_instance_id())
 			continue
@@ -105,6 +110,18 @@ static func preferred_hand(d: Doll) -> String:
 	return "Hand_L" if SportMatch.team_of(d) == 0 else "Hand_R"
 
 
+## Решено 23.10 (BALANCE_2210.md): крюк клюшки у обеих команд загнут назад, к своим воротам. Без зеркала крюк смотрел в +X мира
+## в любой кисти: у P1 (бьёт вправо) — вперёд, у P2 — назад; в серии ботов (сиды 1–10) P2 выиграл 9 из 10, P1 — 0 своих голов.
+## «Оба вперёд» — 5 ничьих из 10; «оба назад» (взято) — победы 4 : 6, медиана интервала 62.2 с. Человек за P1 (Hand_R) — тоже.
+static func mirror_for(d: Doll) -> bool:
+	return SportMatch.attack_dir(SportMatch.team_of(d)) > 0.0
+
+
+static func _mark(d: Doll) -> void:
+	if d != null and is_instance_valid(d):
+		d.set_meta(WeaponPickup.MIRROR_META, mirror_for(d))
+
+
 ## Новая клюшка в кисть куклы. false — кисти нет (оторваны обе) или кукла держит что-то в обеих.
 func give(d: Doll) -> bool:
 	if d == null or not is_instance_valid(d) or not d.alive:
@@ -113,6 +130,7 @@ func give(d: Doll) -> bool:
 	if wp == null:
 		wp = WeaponPickup.attach_to(d)
 	wp.hold_angle_deg = Tuning.HOCKEY_STICK_HOLD_DEG
+	_mark(d)
 	var hand := ""
 	var names: Array = wp.hand_names()
 	var pref := preferred_hand(d)

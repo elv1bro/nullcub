@@ -311,7 +311,8 @@ const WEAPON := {
 	"sword": {"mass": 1.5, "damage_mult": 1.6, "length": 0.93},
 	"axe": {"mass": 3.0, "damage_mult": 1.3, "length": 0.90},
 	"pan": {"mass": 2.0, "damage_mult": 1.5, "length": 0.80},
-	"stick": {"mass": 1.0, "damage_mult": 0.5, "length": 1.45},   # ХОККЕЙ (HOCKEY.md): клюшка — лёгкая, длинная, урон вполовину
+	"stick": {"mass": 1.0, "damage_mult": 0.5, "length": 1.45, "mirror": true},   # ХОККЕЙ (HOCKEY.md): клюшка — лёгкая, длинная, урон вполовину;
+	# mirror — у оружия есть крюк: кукла с метой WeaponPickup.MIRROR_META держит его зеркально (23.10, HockeySticks.mirror_for)
 }
 
 # --- удар-презентация и крит (docs/plan-demo/HIT_FX.md, 29.09): уровни light / heavy / crit / ko / ko_crit ---
