@@ -90,10 +90,16 @@ func _ready() -> void:
 	announcer.set_anchors_preset(Control.PRESET_CENTER)
 	announcer.offset_top = -170.0
 	announcer.offset_bottom = -170.0
+	# Растёт в обе стороны от центра, как в boss/scav/bomb_hud: иначе плашка
+	# растёт только вправо и длинное «СОПЕРНИК ВЗЯЛ ТОЧКУ C» уезжает за край.
+	announcer.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	announcer.grow_vertical = Control.GROW_DIRECTION_BOTH
 	announcer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var st := VBoxContainer.new()
 	st.name = "Stack"
 	st.set_anchors_preset(Control.PRESET_CENTER)
+	st.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	st.grow_vertical = Control.GROW_DIRECTION_BOTH
 	st.alignment = BoxContainer.ALIGNMENT_CENTER
 	st.add_theme_constant_override("separation", -10)
 	st.mouse_filter = Control.MOUSE_FILTER_IGNORE

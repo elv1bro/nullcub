@@ -261,7 +261,7 @@ func show_break() -> void:
 
 
 func _fill_body() -> void:
-	var pool := run.pool_max()
+	var pool := run.fight_pool()
 	var lost: PackedStringArray = []
 	for n in run.lost_roots():
 		lost.append(run.title_of(n))

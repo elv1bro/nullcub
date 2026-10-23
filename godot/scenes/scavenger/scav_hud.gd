@@ -20,6 +20,7 @@ const BAR_W := 64.0
 const BAR_H := 7.0
 const EDGE := 46.0
 const ARROW := 16.0
+const ARROW_GAP := 56.0   # стрелки к деталям ближе этого на краю экрана сливаются в одну (подписи не налезают)
 const PLATE_W := 150.0
 const PLATE_GAP := 10.0
 const POP_S := 1.2
@@ -128,7 +129,8 @@ func _ready() -> void:
 	hint.offset_left = 20.0
 	hint.offset_right = 1900.0
 	hint.offset_top = -96.0
-	hint.offset_bottom = -44.0
+	hint.offset_bottom = -44.0   # ниже — метка «Tab — управление» (ControlFeelPanel)
+	hint.grow_vertical = Control.GROW_DIRECTION_BEGIN   # две строки растут вверх, не на метку Tab
 	root.add_child(hint)
 	toast_label = _label("Toast", 26, Color.WHITE)
 	toast_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -249,7 +251,7 @@ func refresh_hint() -> void:
 	if playground != null and playground.get("p2_human") != null:
 		p2h = bool(playground.get("p2_human"))
 	var who := tr("P2: стрелки + правый Ctrl + Enter (U — бот)") if p2h else tr("U — P2 на стрелках")
-	hint.text = "%s    %s    %s" % [tr("P1: WASD + Shift — коснись светящейся детали, она прикрутится; выбей соперника — его детали твои"), who,
+	hint.text = "%s\n%s    %s" % [tr("P1: WASD + Shift — коснись светящейся детали, она прикрутится; выбей соперника — его детали твои"), who,
 		tr("K: уровень ботов    R: заново    Esc: пауза")]
 	hint.visible = true
 	hint.modulate.a = 1.0
@@ -468,8 +470,22 @@ func _draw_marks() -> void:
 		elif from != Vector3.INF and match_node.token_wanted_by(t, main):
 			off.append([Vector2(tp.x - from.x, tp.y - from.y).length(), spt])
 	off.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
-	for i in mini(off.size(), Tuning.SCAV_HUD_ARROWS):
-		_edge_arrow(font, rect, off[i][1], gc, tr("ДЕТАЛЬ · %d м") % int(round(float(off[i][0]))))
+	# Детали кучей в одной стороне дают стрелки в одну точку края — подписи
+	# ложились друг на друга («ДЕТАЛЬ · 13 м» дважды). Ближняя из кучи — одна стрелка.
+	var used: Array[Vector2] = []
+	for o in off:
+		if used.size() >= Tuning.SCAV_HUD_ARROWS:
+			break
+		var at := _edge_point(rect, o[1])
+		var near := false
+		for u in used:
+			if u.distance_to(at) < ARROW_GAP:
+				near = true
+				break
+		if near:
+			continue
+		used.append(at)
+		_edge_arrow(font, rect, o[1], gc, tr("ДЕТАЛЬ · %d м") % int(round(float(o[0]))))
 
 
 func _over_head(cam: Camera3D, to_canvas: Transform2D, d: Doll) -> Vector2:
@@ -491,17 +507,23 @@ func _text_c(font: Font, at: Vector2, txt: String, px: int, col: Color) -> void:
 
 
 ## Стрелка у края rect в сторону точки p (экран), подпись рядом.
-func _edge_arrow(font: Font, rect: Rect2, p: Vector2, col: Color, txt: String) -> void:
+## Точка на краю rect по лучу из его центра к p (экран).
+func _edge_point(rect: Rect2, p: Vector2) -> Vector2:
 	var c := rect.get_center()
 	var d := p - c
-	if d.length() < 1.0:
-		return
 	var k := INF
 	if absf(d.x) > 0.001:
 		k = minf(k, (rect.size.x * 0.5) / absf(d.x))
 	if absf(d.y) > 0.001:
 		k = minf(k, (rect.size.y * 0.5) / absf(d.y))
-	var at := c + d * k
+	return c + d * k if k != INF else c
+
+
+func _edge_arrow(font: Font, rect: Rect2, p: Vector2, col: Color, txt: String) -> void:
+	var d := p - rect.get_center()
+	if d.length() < 1.0:
+		return
+	var at := _edge_point(rect, p)
 	var dir := d.normalized()
 	var side := Vector2(-dir.y, dir.x)
 	var tri := PackedVector2Array([at + dir * ARROW, at - dir * ARROW * 0.6 + side * ARROW * 0.8, at - dir * ARROW * 0.6 - side * ARROW * 0.8])

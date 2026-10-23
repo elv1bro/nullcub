@@ -33,6 +33,7 @@ var repaired := ""                    # что починили в послед�
 var last: Dictionary = {}             # итог последнего боя: won, draw, reason, duration_s, hp, max_hp, lost_now
 var history: Array = []               # [{step, won, reason, duration_s}]
 var best_before := 0                  # рекорд до этого забега (экран итога: «новый рекорд»)
+var hp_scale := 1.0                   # запас бойца на FIGHT! / Σ ❤ деталей (ДРАЙВ ×1.5); не в сейве — ставит бой (GauntletFight)
 
 
 static func fights() -> int:
@@ -176,6 +177,12 @@ func record_result(won: bool, info: Dictionary, snap: Dictionary) -> void:
 
 
 # ------------------------------------------------------------------ починка
+
+## Запас на старт боя в единицах боя (как max_hp куклы на FIGHT!): Σ ❤ оставшихся деталей × hp_scale. Экран антракта
+## пишет его, а не голую Σ ❤: иначе при ДРАЙВЕ «осталось 130 из 150» в бою и «запас 80 из 100» строкой ниже (VISUAL_PASS_2310).
+func fight_pool() -> float:
+	return pool_max() * hp_scale
+
 
 ## Запас бойца из оставшихся деталей (как Match._parts_hp без ДРАЙВА).
 func pool_max() -> float:
