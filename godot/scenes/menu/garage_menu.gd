@@ -27,7 +27,7 @@ const ITEMS := [
 	{"id": "quick", "title": "БЫСТРЫЙ БОЙ", "l1": "Выставочный матч · двое за одной клавиатурой", "l2": "Купол Old NULL Hall · поле NULL, мембрана, голос зрителей",
 		"spot": "Quick", "zone": "gate", "tv": "quick", "go": "res://scenes/playground_null_hall.tscn", "via": "IntoGate",
 		"n0": "Выставочный — это без очков, но с синяками."},
-	{"id": "workshop", "title": "МАСТЕРСКАЯ", "l1": "Сборка бойца · детали, шарниры, краска", "l2": "ENERGY ядра — сколько деталей потянет тело",
+	{"id": "workshop", "title": "МАСТЕРСКАЯ", "l1": "Сборка бойца · детали, шарниры, краска", "l2": "Энергия ядра — сколько деталей потянет тело",
 		"spot": "Workshop", "zone": "bench", "tv": "build", "go": "res://scenes/workshop/workshop_build.tscn", "via": "IntoStand",
 		"n0": "Говорят, в боксе 07 кто-то собирает бойца из табуреток."},
 	{"id": "fighter", "title": "БОЕЦ", "l1": "Стена экранов · показатели сборки", "l2": "Масса, энергия, детали, шарниры, запас ❤",
@@ -699,7 +699,7 @@ func _build_tv(mode: String) -> void:
 			_tv_pic(TV_DIR + "tv_build.png", Rect2(40, 92, 300, 394))
 			_tv_bar(tr("КАРТОЧКА БОЙЦА"), tr("БОКС 07"))
 			_tv_text(tr("ГРОМИЛА"), Vector2(360, 140), 90, Color(1, 1, 1), f_head)
-			_tv_text(tr("МАССА      57 КГ\nДЕТАЛЕЙ    14\nENERGY     91 / 100"), Vector2(366, 268), 30, Color(0.75, 0.9, 1.0), f_mono)
+			_tv_text(tr("МАССА      57 КГ\nДЕТАЛЕЙ    14\nЭНЕРГИЯ    91 / 100"), Vector2(366, 268), 30, Color(0.75, 0.9, 1.0), f_mono)
 		"replay":
 			_tv_img(TV_DIR + "tv_replay.png")
 			_tv_bar(tr("▶ ПОВТОР"), tr("ТЫ vs ПОЛЕНО · KO 0:47"))

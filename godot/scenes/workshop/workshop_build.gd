@@ -1722,7 +1722,7 @@ func end_drag(screen_pos: Vector2) -> Dictionary:
 		recent_parts.remove_at(recent_parts.find(part_id))
 		recent_parts.insert(0, part_id)
 	_snap_fx("body", nu, t, d)
-	if move != "" and nu != "":
+	if nu != "":   # паспорт — о том, что только что встало (и при переносе, и новой детали из каталога)
 		select_stand(nu)
 	# v0.3 §56: встала — экран чистый (щелчок, вспышка и энергия говорят сами); сообщение — только о замене
 	if String(t["replace"]) != "" and move == "":

@@ -821,6 +821,7 @@ func _build_config_popup() -> void:
 	config_popup.offset_right = -PAD - RIGHT_W - 10.0
 	config_popup.offset_left = config_popup.offset_right - 360.0
 	config_popup.offset_top = TOP_Y + TOP_H + 10.0
+	config_popup.grow_horizontal = Control.GROW_DIRECTION_BEGIN   # шире 360 — растёт влево, не на паспорт
 	var cv := config_popup.get_child(0) as VBoxContainer
 	config_title = Label.new()
 	WsStyle.label(config_title, WsStyle.SIZE_S)
@@ -837,6 +838,26 @@ func _open_config() -> void:
 	if not config_popup.visible:
 		_toggle_popup(config_popup)
 	_refresh_part()
+	_place_config()
+
+
+## Окно «Настроить» — слева от правой панели по её настоящей ширине (панель шире RIGHT_W, если паспорт не влез).
+func _place_config() -> void:
+	if right == null or not right.is_inside_tree():
+		return
+	var gap := root.size.x - right.get_rect().position.x
+	config_popup.offset_right = -maxf(PAD + RIGHT_W, gap) - 10.0
+	config_popup.offset_left = config_popup.offset_right - 360.0
+
+
+## Есть что настраивать: свой шарнир или тяга (у ядра и детали прямо на ядре без шарнира — нечего).
+func _config_available(uid: String, n: Dictionary) -> bool:
+	if String(n.get("parent", "")) == "":
+		return false
+	if ctl.blueprint.joint_type_of(uid) != "":
+		return true
+	var host := CraftEdit.host_uid(ctl.blueprint, uid)
+	return host != "" and host != CraftEdit.root_uid(ctl.blueprint)
 
 
 func _popup(n: String, min_size: Vector2) -> PanelContainer:
@@ -1958,7 +1979,7 @@ func _refresh_part() -> void:
 		del.disabled = root_part
 		del.pressed.connect(func() -> void: ctl.delete_selected())
 		part_actions.add_child(del)
-		if not root_part:
+		if _config_available(uid, n):
 			var cfg := _action("gear", "", tr("Настроить: шарнир и тяга"))
 			cfg.size_flags_horizontal = Control.SIZE_SHRINK_END
 			cfg.custom_minimum_size = Vector2(40, 40)
@@ -1990,6 +2011,10 @@ func _refresh_config(d: PartDef, on_stand: bool, uid: String, n: Dictionary) -> 
 		if config_popup.visible:
 			_close_popups()
 		return
+	if not _config_available(uid, n):
+		if config_popup.visible:
+			_close_popups()
+		return
 	config_title.text = tr("Настроить: %s") % PartNames.of(d)
 	var jt := ctl.blueprint.joint_type_of(uid)
 	var has_joint := jt != "" and String(n.get("parent", "")) != ""
@@ -2003,6 +2028,7 @@ func _refresh_config(d: PartDef, on_stand: bool, uid: String, n: Dictionary) -> 
 			b.toggle_mode = true
 			b.focus_mode = Control.FOCUS_NONE
 			WsStyle.apply_button(b, "chip")
+			b.add_theme_font_size_override("font_size", WsStyle.SIZE_S)
 			b.set_pressed_no_signal(tid == jt)
 			b.pressed.connect(func() -> void:
 				ctl.set_joint(uid, tid)
@@ -2023,6 +2049,7 @@ func _refresh_config(d: PartDef, on_stand: bool, uid: String, n: Dictionary) -> 
 			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			b.tooltip_text = tr("Без тяги") if pid == "" else tr("Тянется за мышью, пока зажата %s") % tr(String(PULL_TITLES[pid]))
 			WsStyle.apply_button(b, "chip")
+			b.add_theme_font_size_override("font_size", WsStyle.SIZE_S)
 			b.set_pressed_no_signal(pid == cur)
 			b.pressed.connect(func() -> void:
 				ctl.set_pull(uid, pid)
