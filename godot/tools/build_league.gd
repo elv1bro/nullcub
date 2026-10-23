@@ -21,6 +21,7 @@ const MODULAR_SCRIPT := "res://scripts/body/modular_doll.gd"
 const BLUEPRINT_SCRIPT := "res://scripts/body/body_blueprint.gd"
 const LOOK_SCRIPT := "res://scripts/league/league_look.gd"
 const FACE_TEX := "res://assets/textures/league/league_face.png"
+const FACE_TEX_AOE := "res://assets/textures/league/league_face_aoe.png"   # тот же глаз в янтаре (проход 2 «взрослого вида»)
 
 ## роль → параметры (цвета линейные): albedo, rough, metal, glow + energy, alpha, rim (кромка силуэта: чёрный глянец в тёмном зале)
 ## Проход «взрослого вида» 23.10 (docs/plan-demo/grownup_art/): pbr — папка текстур кита (tex/<папка>, tools/gen_kit_grownup_tex.py),
@@ -40,7 +41,7 @@ const MATS := {
 ## Аоэлюн (детали kit_*_aoe_*, glb Kit_*Aoe*) — проход 2 «взрослого вида» (docs/plan-demo/grownup_art/README.md): те же роли League_*,
 ## но в стиле C LEAGUE PRO — графит вместо красной «плоти», латунь вместо фиолетового панциря, тусклый янтарь вместо неона. Пишутся в
 ## assets/materials/kit/aoe/<роль>.tres (resource_name = роль: FrameDress / SquadLook / пробы ищут по имени); подставляет пост-импорт
-## tools/kit_import.gd для glb с «Aoe» в имени. Base_Bone — общий материал кита («Кость», ось материалов), он в build_body_kit.gd.
+## tools/kit_import.gd для glb с «Aoe» в имени. Base_Bone — общий материал кита («Керамика», ось материалов), он в build_body_kit.gd.
 const AOE_DIR := DIR + "aoe/"
 const AOE_MATS := {
 	"League_Flesh": {"albedo": [0.45, 0.45, 0.48], "pbr": "gunmetal", "rough": 0.85, "metal": 0.45, "rim": 0.15},
@@ -368,7 +369,7 @@ func _build_fighters() -> void:
 		var nodes: Array[Dictionary] = [{"uid": "T", "part": f["core"], "parent": "", "anchor": "", "name": "Torso"},
 			{"uid": "H", "part": f["head"], "parent": "T", "anchor": "Anchor_Neck", "name": "Head"}]
 		if league_look:
-			nodes[1]["face"] = FACE_TEX
+			nodes[1]["face"] = FACE_TEX_AOE if String(f["core"]).contains("_aoe_") else FACE_TEX
 		var next := 0
 		var control := ""
 		for ch in f.get("chains", []):
